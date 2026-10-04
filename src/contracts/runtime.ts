@@ -1,0 +1,138 @@
+// Runtime shapes and services shared across modules.
+
+import type { GameData, Stats, Weather } from "./data";
+import type {
+  Button, Dir, ItemId, JingleId, MapId, MarkId, MoveId, MusicId, SfxId,
+  SpeciesId, StatusId, TrainerId,
+} from "./ids";
+import type { TimeOfDay, WorldData } from "./world";
+
+/** One Quickened plant the player (or a trainer) owns. */
+export interface Quickened {
+  uid: string;
+  species: SpeciesId;
+  nickname?: string;
+  level: number;
+  exp: number;
+  hp: number;                   // current
+  stats: Stats;                 // computed at current level (hp = max hp)
+  ivs: Stats;                   // 0..15 (Gen 2 DVs)
+  evs: Stats;
+  moves: { id: MoveId; pp: number }[]; // up to 4
+  status: StatusId | null;
+  friendship: number;           // 0..255
+  sport: boolean;               // shiny ("sport")
+  metAt?: { map: MapId; level: number };
+}
+
+export interface GameState {
+  version: 1;
+  playerName: string;
+  rivalName: string;
+  money: number;
+  party: Quickened[];           // max 6
+  box: Quickened[];             // specimen cabinet storage
+  bag: Record<string, number>;  // ItemId -> qty
+  flags: Record<string, boolean>;
+  marks: MarkId[];
+  herbarium: { seen: SpeciesId[]; caught: SpeciesId[] };
+  position: { map: MapId; x: number; y: number; facing: Dir };
+  heal: { map: MapId; x: number; y: number };  // last greenhouse
+  playTimeMs: number;
+  options: { textSpeed: "slow" | "mid" | "fast" };
+}
+
+export interface BattleRequest {
+  kind: "wild" | "trainer";
+  trainer?: TrainerId;
+  wild?: { species: SpeciesId; level: number };
+  canLose?: boolean;            // story battles (rival #1): no whiteout on loss
+  backdrop?: "grass" | "bog" | "water" | "indoor" | "night";
+}
+export type BattleOutcome = "won" | "lost" | "fled" | "caught";
+
+export interface Scene {
+  /** If true, the scene below is drawn first (menus, text boxes over the map). */
+  transparent?: boolean;
+  enter?(): void;
+  exit?(): void;
+  update(dt: number): void;
+  draw(g: CanvasRenderingContext2D): void;
+}
+
+export interface SceneStack {
+  push(scene: Scene): void;
+  pop(): Scene | undefined;
+  replace(scene: Scene): void;
+  top(): Scene | undefined;
+  /** Push a scene and resolve when it pops itself (via the provided `done`). */
+  run<T>(factory: (done: (result: T) => void) => Scene): Promise<T>;
+}
+
+export interface Input {
+  pressed(b: Button): boolean;  // went down this frame
+  held(b: Button): boolean;
+  /** Key-repeat for menus: true on press, then every few frames while held. */
+  repeat(b: Button): boolean;
+}
+
+export interface Assets {
+  image(path: string): HTMLImageElement | undefined; // undefined if missing
+  has(path: string): boolean;
+  loadAll(paths: string[], onProgress?: (done: number, total: number) => void): Promise<void>;
+}
+
+export interface AudioService {
+  playMusic(id: MusicId): void; // no-op if already playing
+  stopMusic(fadeFrames?: number): void;
+  current(): MusicId | null;
+  playSfx(id: SfxId): void;
+  playJingle(id: JingleId): Promise<void>; // pauses music, resumes after
+  /** Species cry, synthesised per species id (deterministic). */
+  playCry(species: SpeciesId): Promise<void>;
+  unlock(): void;               // call on first user input (autoplay policy)
+  setVolume(music: number, sfx: number): void;
+}
+
+export interface UiKit {
+  drawText(g: CanvasRenderingContext2D, text: string, x: number, y: number, color?: string): void;
+  drawWindow(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void;
+  measure(text: string): number;
+  wrap(text: string, maxCols: number): string[];
+  /** Text box at the bottom of the screen; resolves after the last page. */
+  say(text: string, opts?: { speaker?: string; autoClose?: boolean }): Promise<void>;
+  /** Menu of options; resolves with the chosen index, or -1 if cancelled (B). */
+  choose(options: string[], opts?: { prompt?: string; x?: number; y?: number; cancel?: boolean }): Promise<number>;
+  yesNo(prompt: string): Promise<boolean>;
+}
+
+export interface Screens {
+  /** Party menu. mode "pick" resolves with a party index (or -1). */
+  party(opts?: { mode: "view" | "pick"; prompt?: string }): Promise<number>;
+  /** Bag. In battle, resolves with the chosen item id (or null). */
+  bag(opts?: { inBattle: boolean }): Promise<ItemId | null>;
+  herbarium(): Promise<void>;
+  summary(partyIndex: number): Promise<void>;
+  cabinet(): Promise<void>;     // party <-> box storage
+  shop(stock: ItemId[]): Promise<void>;
+  options(): Promise<void>;
+}
+
+export interface GameContext {
+  state: GameState;
+  data: GameData;
+  world: WorldData;
+  input: Input;
+  scenes: SceneStack;
+  assets: Assets;
+  audio: AudioService;
+  ui: UiKit;
+  screens: Screens;
+  rng(): number;                // [0, 1)
+  timeOfDay(): TimeOfDay;
+  battle(req: BattleRequest): Promise<BattleOutcome>;
+  save: { write(): void; read(): GameState | null; exists(): boolean; clear(): void };
+}
+
+/** Battle-side weather is shared with move data. */
+export type { Weather };
