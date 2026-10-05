@@ -50,7 +50,7 @@ the art registry (`src/art/`) resolves each one:
 
 | Logical path | Resolves to |
 |---|---|
-| `assets/species/<id>/<kind>.png` (`kind`: front, front__2, front__3, back, icon, icon__2) | `species/<id>/`: `frames[...]` |
+| `assets/species/<id>/<kind>.png` (`kind`: front, front__2 … front__8, back, icon, icon__2) | `species/<id>/`: `frames[...]` |
 | `assets/species/<id>/<kind>.png?sport` | the same frame, with the palette swapped to `sport` |
 | `assets/tiles/<key>.png`, `<key>__2.png` | the tileset that defines `<key>`: `base` frame 1 / 2 |
 | `assets/tiles/<key>~<n>.png` | that tile's `alts[n-1]` |
@@ -86,9 +86,28 @@ test fails.
 
 | Frame | Size | Required | Notes |
 |---|---|---|---|
-| front | 56x56 | first one | 1–3 frames: the battle idle cycle, ping-ponged, same registration; faces left |
+| front | 56x56 | first one | 1–8 frames, same registration, facing left. How they play is set by `anim` (below); with no `anim`, the first ≤3 ping-pong as the idle. |
 | back | 48x48 | first one | exactly 1 frame |
 | icon | 16x16 | first one | 1–2 frames: party menu and follower |
+
+**Animation (`anim`, optional).** This is a Crystal-style per-species
+animation. Each step is `[frame, ticks]`: the front frame index (0 = the
+first `front` file) and how long it shows, in 60 fps ticks.
+
+```json
+"anim": {
+  "intro": [[0, 8], [1, 6], [2, 6], [3, 10], [2, 6], [1, 6], [0, 1]],
+  "idle":  [[0, 40], [4, 20]]
+}
+```
+
+- `intro` plays **once** whenever the species appears (sent out or met in
+  battle, a Herbarium page opening). It must end on frame 0.
+- `idle` loops after that. If it's omitted, the creature holds frame 0.
+- With no `anim` at all, the legacy behaviour applies (the first ≤3 front
+  frames ping-pong).
+- Every frame index must exist in `frames.front`. Packs can override `anim`
+  like any other field.
 
 **Indexed colour.** This rule is what makes palette tools and art packs work.
 - `palette` has exactly 4 colours, ordered darkest to lightest. Index 0 is

@@ -100,6 +100,12 @@ export type ArtImage = HTMLImageElement | HTMLCanvasElement;
  * the art registry resolves each to a bundle image or sheet cell, applying any
  * active art packs.
  */
+/** One step of a species animation: [front frame index (0 = front, 1 = front__2, ...), duration in 60 fps ticks]. */
+export type AnimStep = [frame: number, ticks: number];
+/** Crystal-style species animation (docs/ART.md section 3). `intro` plays once when the species
+ *  appears (battle entry, Herbarium page) and ends on frame 0; `idle` loops afterwards. */
+export interface SpeciesAnim { intro?: AnimStep[]; idle?: AnimStep[] }
+
 export interface Assets {
   image(path: string): ArtImage | undefined; // undefined while loading or if missing
   /** Loaded and ready to draw. */
@@ -108,6 +114,8 @@ export interface Assets {
   exists(path: string): boolean;
   /** Preload. With no `paths`, loads the whole art registry (every bundle). */
   loadAll(paths?: string[], onProgress?: (done: number, total: number) => void): Promise<void>;
+  /** The species bundle's `anim` (after art packs are applied), if it has one. */
+  speciesAnim?(id: import("./ids").SpeciesId): SpeciesAnim | undefined;
 }
 
 export interface AudioService {

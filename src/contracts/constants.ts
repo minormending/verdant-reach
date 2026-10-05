@@ -89,12 +89,15 @@ export const portraitPath = (key: TrainerPortraitKey) => `assets/trainers/${key}
  *  icon.png 16x16 (party menu; optional icon__2.png second frame).
  * 4 colours + transparency, GBC style.
  */
-export type SpeciesSpriteKind = "front" | "front__2" | "front__3" | "back" | "icon" | "icon__2";
+export type SpeciesSpriteKind =
+  | "front" | "front__2" | "front__3" | "front__4" | "front__5" | "front__6" | "front__7" | "front__8"
+  | "back" | "icon" | "icon__2";
 /** `opts.sport` asks for the sport (shiny) colouring: an exact per-colour swap to the
  *  bundle's `sport` palette (Round 4; replaces the old runtime hue shift). */
 export const speciesPath = (id: SpeciesId, kind: SpeciesSpriteKind, opts: { sport?: boolean } = {}) =>
   `assets/species/${id}/${kind}.png${opts.sport ? "?sport" : ""}`;
-/** Battle idle animation: front, front__2[, front__3] cycle (optional frames; ping-pong). */
+/** Front frames: front, front__2 .. front__8 (optional). How they play comes from the bundle's
+ *  `anim` (see SpeciesAnim / docs/ART.md); with no `anim`, the first ≤3 ping-pong as the idle. */
 
 /** Story illustrations: 160x144 PNG. */
 export const stillPath = (key: import("./ids").StillKey) => `assets/stills/${key}.png`;
