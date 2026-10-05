@@ -1,0 +1,98 @@
+// Shared helpers for authoring world data: the tile legend, script shorthands
+// and small builders (item pickups, locked doors, signs).
+
+import type { Cond, Dir, ItemId, NpcDef, ScriptCmd, TileKey } from "../contracts";
+
+/**
+ * One legend for every map. `@` marks a structure footprint (the structure
+ * image covers it; the engine treats it as solid except the door).
+ */
+export const LEGEND: Record<string, TileKey> = {
+  ".": "grass",
+  ",": "tall_grass",
+  "*": "flowers",
+  ":": "path",
+  "+": "dirt",
+  "s": "sand",
+  "~": "water",
+  "b": "bog",
+  "=": "boardwalk",
+  "v": "ledge_down",
+  "T": "tree",
+  "M": "maple_tree",
+  "X": "tapped_maple",
+  "H": "hedge",
+  "B": "bramble_bush",
+  "o": "rock",
+  "#": "fence",
+  "S": "sign",
+  "m": "mailbox",
+  "w": "floor_wood",
+  "t": "floor_tile",
+  "g": "floor_greenhouse",
+  "r": "rug",
+  "E": "mat_exit",
+  "W": "wall",
+  "O": "window",
+  "C": "counter",
+  "D": "table",
+  "K": "bookshelf",
+  "p": "plant_pot",
+  "P": "planter_bed",
+  "Z": "bed",
+  "c": "specimen_cabinet",
+  "U": "stairs_up",
+  "u": "stairs_down",
+  "%": "water_channel",
+  "_": "void",
+  "@": "path",
+};
+
+// --- script shorthands -------------------------------------------------------
+
+export const say = (text: string, speaker?: string): ScriptCmd =>
+  speaker ? { op: "say", text, speaker } : { op: "say", text };
+export const flag = (name: string, value = true): ScriptCmd =>
+  value ? { op: "setFlag", flag: name } : { op: "setFlag", flag: name, value };
+export const when = (spec: Record<string, boolean>): Cond =>
+  Object.entries(spec).map(([f, is]) => ({ flag: f, is }));
+export const ifFlags = (spec: Record<string, boolean>, then: ScriptCmd[], els?: ScriptCmd[]): ScriptCmd =>
+  els ? { op: "if", when: when(spec), then, else: els } : { op: "if", when: when(spec), then };
+export const ifNight = (then: ScriptCmd[], els: ScriptCmd[]): ScriptCmd =>
+  ({ op: "ifTime", time: ["night"], then, else: els });
+export const moveNpc = (npc: string, ...path: Dir[]): ScriptCmd => ({ op: "moveNpc", npc, path });
+export const movePlayer = (...path: Dir[]): ScriptCmd => ({ op: "movePlayer", path });
+export const face = (who: string, dir: Dir | "toPlayer"): ScriptCmd => ({ op: "face", who, dir });
+export const emote = (who: string, e: "!" | "?" | "..." | "♪"): ScriptCmd => ({ op: "emote", who, emote: e });
+export const wait = (frames: number): ScriptCmd => ({ op: "wait", frames });
+export const give = (item: ItemId, qty = 1): ScriptCmd => (qty === 1 ? { op: "giveItem", item } : { op: "giveItem", item, qty });
+export const end: ScriptCmd = { op: "end" };
+
+/** Repeat a direction n times. */
+export const steps = (dir: Dir, n: number): Dir[] => Array.from({ length: n }, () => dir);
+
+// --- builders ---------------------------------------------------------------
+
+export type Scripts = Record<string, ScriptCmd[]>;
+
+/**
+ * Item pickups ("item balls"). Per the engine convention, an `item_pickup` NPC
+ * without a script gives the item named by its id ("glass_pod", "glass_pod_2"),
+ * says "found", and hides for good (flag `picked_<mapId>_<npcId>`).
+ */
+export function pickups(list: { item: ItemId; x: number; y: number; n?: number }[]): NpcDef[] {
+  return list.map((p) => ({
+    id: p.n && p.n > 1 ? `${p.item}_${p.n}` : p.item,
+    sprite: "item_pickup", x: p.x, y: p.y, facing: "down", movement: "static",
+  }));
+}
+
+/** Item id a script-less pickup NPC gives (mirrors the engine rule). */
+export const pickupItem = (npcId: string): string => npcId.replace(/^item_/, "").replace(/_\d+$/, "");
+
+/** A door with no interior: a line of flavour, then step back off the step. */
+export const lockedDoor = (...lines: string[]): ScriptCmd[] => [
+  { op: "sfx", id: "bump" },
+  ...lines.map((l) => say(l)),
+  movePlayer("down"),
+];

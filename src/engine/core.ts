@@ -62,9 +62,9 @@ export function createInput(onFirstInput: () => void): Input & { endFrame(): voi
   };
 }
 
-export function createSceneStack(): SceneStack & { all(): Scene[] } {
+export function createSceneStack(): SceneStack & { all(): Scene[]; clear(): void } {
   const stack: Scene[] = [];
-  const api: SceneStack & { all(): Scene[] } = {
+  const api: SceneStack & { all(): Scene[]; clear(): void } = {
     push(s) { stack.push(s); s.enter?.(); },
     pop() { const s = stack.pop(); s?.exit?.(); return s; },
     replace(s) { api.pop(); api.push(s); },
@@ -81,24 +81,50 @@ export function createSceneStack(): SceneStack & { all(): Scene[] } {
       });
     },
     all: () => stack,
+    clear() { while (stack.length) api.pop(); },
   };
   return api;
 }
 
-export function createAssets(): Assets {
+export interface EngineAssets extends Assets {
+  /** True once a load for this path has failed (the file does not exist). */
+  isMissing(path: string): boolean;
+}
+
+/**
+ * Image store. `loadAll` preloads; `image()` also lazy-loads anything not yet
+ * requested (returns undefined until it arrives). Missing paths log once.
+ */
+export function createAssets(): EngineAssets {
   const images = new Map<string, HTMLImageElement>();
   const missing = new Set<string>();
-  const loadOne = (path: string) =>
-    new Promise<void>((resolve) => {
-      if (images.has(path) || missing.has(path)) return resolve();
+  const pending = new Map<string, Promise<void>>();
+  const loadOne = (path: string): Promise<void> => {
+    if (images.has(path) || missing.has(path)) return Promise.resolve();
+    const inflight = pending.get(path);
+    if (inflight) return inflight;
+    const p = new Promise<void>((resolve) => {
       const img = new Image();
-      img.onload = () => { images.set(path, img); resolve(); };
-      img.onerror = () => { missing.add(path); resolve(); };
+      img.onload = () => { images.set(path, img); pending.delete(path); resolve(); };
+      img.onerror = () => {
+        missing.add(path);
+        pending.delete(path);
+        console.warn(`[assets] missing: ${path}`);
+        resolve();
+      };
       img.src = path;
     });
+    pending.set(path, p);
+    return p;
+  };
   return {
-    image: (p) => images.get(p),
+    image(p) {
+      const img = images.get(p);
+      if (!img && !missing.has(p) && typeof Image !== "undefined") void loadOne(p);
+      return img;
+    },
     has: (p) => images.has(p),
+    isMissing: (p) => missing.has(p),
     async loadAll(paths, onProgress) {
       let done = 0;
       await Promise.all(paths.map((p) => loadOne(p).then(() => onProgress?.(++done, paths.length))));
@@ -114,6 +140,11 @@ export function runLoop(
   onTick: (dtMs: number) => void,
 ) {
   const step = 1000 / FPS;
+  // `?timer` drives the loop with setTimeout (for embedded/hidden test panes
+  // where requestAnimationFrame is throttled).
+  const useTimer = typeof location !== "undefined" && new URLSearchParams(location.search).has("timer");
+  const schedule = (f: (now: number) => void) =>
+    useTimer ? setTimeout(() => f(performance.now()), 1000 / FPS) : requestAnimationFrame(f);
   let acc = 0;
   let last = performance.now();
   const frame = (now: number) => {
@@ -131,7 +162,12 @@ export function runLoop(
     g.fillStyle = "#000";
     g.fillRect(0, 0, SCREEN_W, SCREEN_H);
     for (let i = Math.max(0, from); i < all.length; i++) all[i].draw(g);
-    requestAnimationFrame(frame);
+    schedule(frame);
   };
-  requestAnimationFrame(frame);
+  schedule(frame);
+}
+
+/** Pop every scene (works on any SceneStack). */
+export function clearScenes(scenes: SceneStack): void {
+  while (scenes.top()) scenes.pop();
 }

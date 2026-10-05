@@ -1,0 +1,173 @@
+// Every trainer in the slice. Teams follow docs/SLICE.md; species stay at or
+// past their growth level unless the story says otherwise (Bram's graft collar).
+
+import type { SpeciesId, TrainerDef } from "../contracts";
+
+type Team = TrainerDef["team"];
+
+function trainer(
+  id: string,
+  name: string,
+  className: string,
+  portrait: TrainerDef["portrait"],
+  team: Team,
+  lines: { intro: string; defeat: string; after: string },
+  extra: Partial<TrainerDef> = {},
+): TrainerDef {
+  const top = Math.max(...team.map((m) => m.level));
+  return {
+    id, name, className, portrait, team,
+    prize: extra.prize ?? top * 20,
+    ai: extra.ai ?? "basic",
+    music: extra.music ?? "battle_trainer",
+    ...lines,
+    ...extra,
+  };
+}
+
+const T = (species: SpeciesId, level: number, moves?: string[]) => (moves ? { species, level, moves } : { species, level });
+
+// --- route trainers ---------------------------------------------------------
+
+const routeTrainers: TrainerDef[] = [
+  trainer("schoolkid_milo", "MILO", "SCHOOLKID", "schoolkid", [T("dandelion_bud", 4)], {
+    intro: "Teacher says these are weeds. I say they're FIGHTERS!",
+    defeat: "Blown away like fluff...",
+    after: "One seed head holds up to 200 seeds. That's a lot of fluff!",
+  }),
+  trainer("gardener_rosa", "ROSA", "GARDENER", "gardener", [T("sunflower_seedling", 5), T("dandelion_bud", 6)], {
+    intro: "My seedlings follow the sun. Let's see them follow orders!",
+    defeat: "Wilted in the noon heat!",
+    after: "Only young sunflowers track the sun. Grown ones just face east.",
+  }),
+  trainer("birdwatcher_alder", "ALDER", "BIRDWATCHER", "birdwatcher", [T("dandelion_bud", 6), T("fern_fiddlehead", 6)], {
+    intro: "Shh! I was waiting for a finch. You'll do instead!",
+    defeat: "Flew right past me.",
+    after: "Goldfinches feast on dandelion seeds. Watch the clocks!",
+  }),
+  trainer("beekeeper_mae", "MAE", "BEEKEEPER", "beekeeper", [T("sunflower_seedling", 6), T("pumpkin_blossom", 7)], {
+    intro: "Easy now. My bees and I don't like surprises!",
+    defeat: "Bzz... that stung.",
+    after: "Pumpkin flowers open at dawn and shut by noon. My bees rise early!",
+  }),
+  trainer("hiker_gus", "GUS", "HIKER", "hiker", [T("fern_fiddlehead", 9), T("nettle_sprout", 10)], {
+    intro: "Ferns are older than the dinosaurs! Show some respect!",
+    defeat: "Rolled me like a fiddlehead!",
+    after: "Ferns spread by spores, not seeds. Look under a frond!",
+  }),
+  trainer("florist_petra", "PETRA", "FLORIST", "florist", [T("bramble_blossom", 9), T("sunflower_bud", 12)], {
+    intro: "A bouquet needs a thorn or two. Care to test mine?",
+    defeat: "My arrangement is ruined!",
+    after: "Brambles are in the rose family. Thorns run in the family!",
+  }),
+  trainer("birdwatcher_owen", "OWEN", "BIRDWATCHER", "birdwatcher", [T("moonflower_seed", 10), T("moonflower_vine", 12)], {
+    intro: "Owls, moths, me. The night shift! Ready?",
+    defeat: "Out-hooted!",
+    after: "Moonflowers open at dusk for hawkmoths. I come for the moths.",
+  }),
+];
+
+// --- conservatory juniors ----------------------------------------------------
+
+const juniors: TrainerDef[] = [
+  trainer("jr_hazel", "HAZEL", "JR.GARDENER", "gardener", [T("bramble_blossom", 7), T("fern_fiddlehead", 8)], {
+    intro: "HOLLIS laid this maze himself. You won't get through me!",
+    defeat: "Lost in my own hedge...",
+    after: "A laid hedge is cut half through and bent. It keeps growing!",
+  }),
+  trainer("jr_linden", "LINDEN", "JR.GARDENER", "gardener", [T("pumpkin_blossom", 8), T("bramble_blossom", 8)], {
+    intro: "Nobody reaches HOLLIS without passing me!",
+    defeat: "Okay, okay. Go on through.",
+    after: "HOLLIS is gentle. His plants are not.",
+  }),
+  trainer("jr_sorrel", "SORREL", "JR.GARDENER", "gardener", [T("sundew_rosette", 13), T("unfurling_fern", 14)], {
+    intro: "Mind the boardwalk! And mind my hunters!",
+    defeat: "Stuck fast...",
+    after: "Bogs are short on nitrogen. So these plants eat bugs for it!",
+  }),
+  trainer("jr_tansy", "TANSY", "SCHOOLKID", "schoolkid", [T("flytrap_seedling", 13), T("sundew_rosette", 14)], {
+    intro: "I'm NELL's best student! Snap snap!",
+    defeat: "Snapped shut on nothing!",
+    after: "A flytrap only shuts if two hairs are touched. Clever, huh?",
+  }),
+];
+
+// --- leaders ------------------------------------------------------------------
+
+const leaders: TrainerDef[] = [
+  trainer("hollis", "HOLLIS", "WARDEN", "hollis", [T("fern_fiddlehead", 8, ["vine_lash", "curl_up", "sap_drain"]), T("bramble_berry", 10, ["thorn_jab", "vine_lash", "burr_hitch", "sap_seal"])], {
+    intro: "A hedge isn't a wall. It's a home. Show me who's chosen to live with you.",
+    defeat: "Well grown. Well grown indeed.",
+    after: "Tend them, and they'll tend you back.",
+  }, { ai: "smart", music: "battle_leader", mark: "bramble_mark", prize: 1100, items: [{ item: "water_flask", qty: 2 }] }),
+  trainer("nell", "NELL", "WARDEN", "nell_pitcher", [T("flytrap_seedling", 13), T("sundew_rosette", 14), T("young_flytrap", 16)], {
+    intro: "My little hunters are SO hungry today. Shall we?",
+    defeat: "Oh! Snapped shut on an empty trap!",
+    after: "Feed them flies, never hamburger. They can't digest fat!",
+  }, { ai: "smart", music: "battle_leader", mark: "sundew_mark", prize: 1700, items: [{ item: "spring_water", qty: 2 }] }),
+];
+
+// --- Rootstock ------------------------------------------------------------------
+
+const rootstock = (id: string, team: Team, lines: { intro: string; defeat: string; after: string }) =>
+  trainer(id, "GRUNT", "ROOTSTOCK", "grunt", team, lines, { music: "battle_rootstock" });
+
+const villains: TrainerDef[] = [
+  rootstock("grunt_r3", [T("nettle_sprout", 9), T("bramble_blossom", 10)], {
+    intro: "Field survey. Official. Move along, sprout!",
+    defeat: "Not in the survey plan!",
+    after: "Forget you saw me. I'm a... surveyor.",
+  }),
+  rootstock("grunt_grove_1", [T("nettle_sprout", 11), T("maple_samara", 12)], {
+    intro: "This sugarbush is under study! Out!",
+    defeat: "My sample jar! Careful!",
+    after: "Sap carries signals. That's all I know. Honest.",
+  }),
+  rootstock("grunt_grove_2", [T("bramble_berry", 12), T("nettle_sprout", 12)], {
+    intro: "Another nosy botanist? Our collars will fix you!",
+    defeat: "Collars didn't help...",
+    after: "The collars make them listen. Mostly.",
+  }),
+  rootstock("grunt_grove_3", [T("maple_samara", 12), T("maple_sapling", 13)], {
+    intro: "SHEARS said nobody gets past! Nobody!",
+    defeat: "SHEARS is gonna prune ME now.",
+    after: "Go on, then. SHEARS will cut you down to size.",
+  }),
+  trainer("shears", "SHEARS", "ADMIN", "shears", [T("bramble_berry", 12), T("maple_sapling", 14)], {
+    intro: "Snip, snip. Let's cut you back to the root.",
+    defeat: "Cut short. Hmph.",
+    after: "Every branch answers to the root, kid.",
+  }, { ai: "smart", music: "battle_rootstock", prize: 1400 }),
+];
+
+// --- rival BRAM: three variants per battle, by the player's starter -------------
+// Bram always holds the starter strong against the player's:
+//   player oak  -> Bram chili   player chili -> Bram lily   player lily -> Bram oak
+
+export type StarterLine = "oak" | "chili" | "lily";
+export const STARTER_LINES: StarterLine[] = ["oak", "chili", "lily"];
+export const STARTER_SPECIES: Record<StarterLine, [SpeciesId, SpeciesId, SpeciesId]> = {
+  oak: ["oak_acorn", "oak_sapling", "great_oak"],
+  chili: ["chili_blossom", "green_chili", "red_chili"],
+  lily: ["lily_seedpod", "lily_pad", "giant_water_lily"],
+};
+/** The line strong against the given one. */
+export const COUNTER: Record<StarterLine, StarterLine> = { oak: "chili", chili: "lily", lily: "oak" };
+
+const rivals: TrainerDef[] = STARTER_LINES.flatMap((line) => [
+  trainer(`rival_1_${line}`, "BRAM", "RIVAL", "bram", [T(STARTER_SPECIES[line][0], 5)], {
+    intro: "Plants are tools. This one's mine now.",
+    defeat: "...Fine. The tool was blunt.",
+    after: "My father fixes things. So do I.",
+  }, { ai: "smart", prize: 300 }),
+  trainer(`rival_2_${line}`, "BRAM", "RIVAL", "bram",
+    [T("bramble_berry", 11), T("dandelion", 13), T(STARTER_SPECIES[line][1], 14)], {
+      intro: "You again. Let's get this over with.",
+      defeat: "The collar should've... No. Forget it.",
+      after: "Next time I won't hold back.",
+    }, { ai: "smart", prize: 1500 }),
+]);
+
+export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals].map((t) => [t.id, t]),
+);

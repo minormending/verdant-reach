@@ -1,0 +1,218 @@
+// Species. Gen 2–style balance:
+//  - starter lines total ~310 / 405 / 525 and grow at 16 and 32;
+//  - wild three-stage lines total ~255–290 / 350–370 / 465–490 and grow at
+//    roughly 11–14 and 22–26 (SLICE.md);
+//  - two-stage lines (sundew, nettle) total ~300 / ~460 and grow once (16–18).
+// Stat personalities: oak = physical bulk, chili = fast special attacker,
+// lily = special wall; dandelion = fast and frail; pumpkin = slow tank;
+// flytrap = glass-cannon physical; moonflower = special night attacker.
+//
+// Growth rate mapping to the Gen 2 curves (see growth.ts):
+//   fast -> "fast", medium -> "medium fast" (n^3), slow -> "slow".
+// Starters are "medium" so the player's starter reaches 16 near
+// Conservatory 2 in a 60–90 minute slice.
+//
+// Learnsets: level-1 entries are the starting moves (a STAB attack plus a
+// status move). Later stages share the line's list and add their own moves;
+// the growth level itself often teaches a signature move.
+
+import type { GrowthTrigger, MoveId, Species, SpeciesId, Stats, TypeId } from "../contracts";
+
+type L = [number, MoveId][];
+const st = (hp: number, atk: number, def: number, spa: number, spd: number, spe: number): Stats =>
+  ({ hp, atk, def, spa, spd, spe });
+// Sorted by level; a move listed twice (e.g. a line's base list plus a
+// growth-move list) is kept only at its earliest level.
+const learn = (...lists: L[]): Species["learnset"] => {
+  const seen = new Set<string>();
+  return lists.flat().sort((a, b) => a[0] - b[0])
+    .filter(([, move]) => !seen.has(move) && seen.add(move) !== undefined)
+    .map(([level, move]) => ({ level, move }));
+};
+const vigor = (level: number): GrowthTrigger => ({ kind: "vigor", level });
+
+interface Def {
+  id: SpeciesId; name: string; line: string; stage: 1 | 2 | 3;
+  types: [TypeId] | [TypeId, TypeId]; base: Stats; rate: Species["growthRate"];
+  catchRate: number; baseExp: number; ev: Partial<Stats>;
+  activity?: Species["activity"];
+  grows?: [SpeciesId, GrowthTrigger];
+  learnset: Species["learnset"];
+}
+
+function sp(d: Def): Species {
+  return {
+    id: d.id, name: d.name, line: d.line, stage: d.stage, types: d.types,
+    baseStats: d.base, growthRate: d.rate, catchRate: d.catchRate, baseExp: d.baseExp,
+    evYield: d.ev, activity: d.activity ?? "any",
+    growsInto: d.grows ? { species: d.grows[0], trigger: d.grows[1] } : undefined,
+    learnset: d.learnset,
+  };
+}
+
+// ------------------------------------------------------------------ learnsets
+const OAK: L = [[1, "vine_lash"], [1, "sap_seal"], [6, "root_tap"], [7, "pale_touch"], [9, "acorn_drop"], [13, "curl_up"], [14, "splinter"],
+  [17, "photosynthesise"], [20, "root_snare"], [24, "leaf_edge"], [28, "bark_skin"], [33, "spore_cloud"], [38, "timber"]];
+const CHILI: L = [[1, "ember_seed"], [1, "unfurl"], [6, "seed_burst"], [9, "capsaicin"], [13, "smoulder"],
+  [17, "sun_flare"], [20, "chili_burst"], [24, "leaf_edge"], [28, "sun_track"], [33, "sap_drain"], [38, "wildfire"]];
+const LILY: L = [[1, "dew_drop"], [1, "sap_seal"], [6, "pad_slap"], [7, "hoarfrost"], [9, "rain_call"], [12, "cold_mist"], [13, "undertow"],
+  [17, "sap_drain"], [20, "mist_veil"], [24, "flood"], [28, "photosynthesise"], [33, "pale_bloom"], [38, "downpour"]];
+const DANDELION: L = [[1, "pollen_puff"], [1, "perfume"], [5, "quick_snap"], [8, "sap_drain"], [12, "wind_scatter"],
+  [16, "unfurl"], [20, "seed_burst"], [24, "sunbeam"], [29, "photosynthesise"], [34, "leaf_gale"], [40, "petal_storm"]];
+const BRAMBLE: L = [[1, "thorn_jab"], [1, "bristle"], [5, "vine_lash"], [8, "burr_hitch"], [11, "sap_seal"],
+  [15, "spine_volley"], [19, "root_tap"], [24, "thorn_lash"], [29, "leaf_edge"], [34, "bark_skin"], [40, "hook_thorns"]];
+const SUNFLOWER: L = [[1, "pollen_puff"], [1, "sun_track"], [5, "sap_drain"], [9, "seed_burst"], [12, "allelopathy"],
+  [16, "photosynthesise"], [20, "sun_flare"], [24, "sunbeam"], [30, "unfurl"], [35, "leaf_gale"], [40, "petal_storm"]];
+const PUMPKIN: L = [[1, "vine_lash"], [1, "curl_up"], [5, "seed_burst"], [9, "sap_seal"], [14, "acorn_drop"],
+  [18, "root_tap"], [22, "smoulder"], [26, "gourd_slam"], [31, "bark_skin"], [36, "rot_touch"], [40, "timber"]];
+const FERN: L = [[1, "vine_lash"], [1, "curl_up"], [5, "sap_drain"], [9, "leaf_edge"], [13, "night_fold"],
+  [17, "fossil_print"], [21, "spore_cloud"], [25, "old_growth"], [30, "leaf_gale"], [35, "red_resin"], [40, "primal_frond"]];
+const FLYTRAP: L = [[1, "quick_snap"], [1, "nectar_lure"], [5, "vine_lash"], [8, "sticky_dew"], [12, "snap_trap"],
+  [16, "digest"], [20, "bristle"], [24, "pitfall"], [29, "leaf_edge"], [34, "curl_up"], [40, "hook_thorns"]];
+const SUNDEW: L = [[1, "dew_grasp"], [1, "sticky_dew"], [5, "pollen_puff"], [9, "nectar_lure"], [13, "digest"],
+  [18, "sun_track"], [22, "photosynthesise"], [27, "sunbeam"], [32, "pitfall"], [38, "petal_storm"]];
+const MAPLE: L = [[1, "samara_spin"], [1, "sugar_rush"], [5, "sap_drain"], [9, "sap_seal"], [12, "leaf_edge"],
+  [16, "sap_spout"], [20, "root_tap"], [25, "hoarfrost"], [30, "bark_skin"], [35, "leaf_gale"], [40, "timber"]];
+const NETTLE: L = [[1, "thorn_jab"], [1, "bristle"], [5, "sting_hairs"], [9, "root_snare"], [13, "spine_volley"],
+  [16, "allelopathy"], [21, "burr_hitch"], [26, "thorn_lash"], [32, "pitfall"], [38, "hook_thorns"]];
+const MOONFLOWER: L = [[1, "pale_touch"], [1, "night_fold"], [5, "pollen_puff"], [8, "wither"], [12, "spore_cloud"],
+  [16, "moonbeam"], [20, "dodder_coil"], [25, "perfume"], [30, "pale_bloom"], [35, "sunbeam"], [40, "petal_storm"]];
+
+const ALL: Species[] = [
+  // ------------------------------------------------------------- starters
+  sp({ id: "oak_acorn", name: "Oak Acorn", line: "oak", stage: 1, types: ["wood"],
+    base: st(52, 54, 64, 42, 54, 44), rate: "medium", catchRate: 45, baseExp: 64, ev: { def: 1 },
+    grows: ["oak_sapling", vigor(16)], learnset: learn(OAK) }),
+  sp({ id: "oak_sapling", name: "Oak Sapling", line: "oak", stage: 2, types: ["wood"],
+    base: st(68, 70, 82, 56, 70, 59), rate: "medium", catchRate: 45, baseExp: 141, ev: { def: 1, hp: 1 },
+    grows: ["great_oak", vigor(32)], learnset: learn(OAK, [[16, "bark_skin"]]) }),
+  sp({ id: "great_oak", name: "Great Oak", line: "oak", stage: 3, types: ["wood"],
+    base: st(95, 95, 105, 75, 95, 60), rate: "medium", catchRate: 45, baseExp: 208, ev: { def: 2, hp: 1 },
+    learnset: learn(OAK, [[16, "bark_skin"], [32, "gourd_slam"], [44, "old_growth"]]) }),
+
+  sp({ id: "chili_blossom", name: "Chili Flower", line: "chili", stage: 1, types: ["fire"],
+    base: st(39, 48, 40, 62, 46, 75), rate: "medium", catchRate: 45, baseExp: 65, ev: { spe: 1 },
+    grows: ["green_chili", vigor(16)], learnset: learn(CHILI) }),
+  sp({ id: "green_chili", name: "Green Chili", line: "chili", stage: 2, types: ["fire"],
+    base: st(56, 62, 55, 82, 60, 90), rate: "medium", catchRate: 45, baseExp: 142, ev: { spa: 1, spe: 1 },
+    grows: ["red_chili", vigor(32)], learnset: learn(CHILI, [[16, "smoulder"]]) }),
+  sp({ id: "red_chili", name: "Red Chili", line: "chili", stage: 3, types: ["fire"],
+    base: st(75, 80, 70, 110, 80, 110), rate: "medium", catchRate: 45, baseExp: 209, ev: { spa: 3 },
+    learnset: learn(CHILI, [[16, "smoulder"], [32, "red_resin"], [44, "petal_storm"]]) }),
+
+  sp({ id: "lily_seedpod", name: "Lily Seedpod", line: "lily", stage: 1, types: ["water"],
+    base: st(50, 42, 50, 62, 64, 52), rate: "medium", catchRate: 45, baseExp: 63, ev: { spd: 1 },
+    grows: ["lily_pad", vigor(16)], learnset: learn(LILY) }),
+  sp({ id: "lily_pad", name: "Lily Pad", line: "lily", stage: 2, types: ["water"],
+    base: st(66, 56, 64, 82, 84, 64), rate: "medium", catchRate: 45, baseExp: 140, ev: { spd: 2 },
+    grows: ["giant_water_lily", vigor(32)], learnset: learn(LILY, [[16, "mist_veil"]]) }),
+  sp({ id: "giant_water_lily", name: "Giant Lily", line: "lily", stage: 3, types: ["water"],
+    base: st(90, 70, 90, 108, 107, 60), rate: "medium", catchRate: 45, baseExp: 207, ev: { spd: 3 },
+    learnset: learn(LILY, [[16, "mist_veil"], [32, "petal_storm"], [44, "curl_up"]]) }),
+
+  // ------------------------------------------------------------- dandelion (fast, frail)
+  sp({ id: "dandelion_bud", name: "Lion's Tooth", line: "dandelion", stage: 1, types: ["bloom"],
+    base: st(40, 40, 35, 45, 40, 60), rate: "medium", catchRate: 255, baseExp: 50, ev: { spe: 1 },
+    grows: ["dandelion", vigor(12)], learnset: learn(DANDELION) }),
+  sp({ id: "dandelion", name: "Dandelion", line: "dandelion", stage: 2, types: ["bloom"],
+    base: st(55, 50, 45, 65, 55, 85), rate: "medium", catchRate: 120, baseExp: 119, ev: { spe: 2 },
+    grows: ["dandelion_clock", vigor(24)], learnset: learn(DANDELION) }),
+  sp({ id: "dandelion_clock", name: "Seed Clock", line: "dandelion", stage: 3, types: ["bloom"],
+    base: st(70, 60, 55, 85, 75, 120), rate: "medium", catchRate: 45, baseExp: 176, ev: { spe: 3 },
+    learnset: learn(DANDELION, [[24, "wind_scatter"]]) }),
+
+  // ------------------------------------------------------------- bramble (wood/thorn bruiser)
+  sp({ id: "bramble_blossom", name: "Bramble Bud", line: "bramble", stage: 1, types: ["wood", "thorn"],
+    base: st(50, 55, 50, 30, 40, 40), rate: "medium", catchRate: 190, baseExp: 58, ev: { atk: 1 },
+    grows: ["bramble_berry", vigor(11)], learnset: learn(BRAMBLE) }),
+  sp({ id: "bramble_berry", name: "Brambleberry", line: "bramble", stage: 2, types: ["wood", "thorn"],
+    base: st(65, 75, 70, 40, 55, 55), rate: "medium", catchRate: 120, baseExp: 127, ev: { atk: 2 },
+    grows: ["blackberry", vigor(24)], learnset: learn(BRAMBLE) }),
+  sp({ id: "blackberry", name: "Blackberry", line: "bramble", stage: 3, types: ["wood", "thorn"],
+    base: st(80, 100, 90, 55, 70, 75), rate: "medium", catchRate: 45, baseExp: 185, ev: { atk: 3 },
+    learnset: learn(BRAMBLE, [[24, "seed_burst"]]) }),
+
+  // ------------------------------------------------------------- sunflower (day; special)
+  sp({ id: "sunflower_seedling", name: "Sun Seedling", line: "sunflower", stage: 1, types: ["bloom"],
+    base: st(45, 40, 40, 55, 45, 30), rate: "medium", catchRate: 235, baseExp: 52, ev: { spa: 1 },
+    activity: "day", grows: ["sunflower_bud", vigor(12)], learnset: learn(SUNFLOWER) }),
+  sp({ id: "sunflower_bud", name: "Sun Bud", line: "sunflower", stage: 2, types: ["bloom"],
+    base: st(65, 50, 55, 75, 60, 45), rate: "medium", catchRate: 120, baseExp: 120, ev: { spa: 2 },
+    activity: "day", grows: ["sunflower", { kind: "vigor_day", level: 24 }], learnset: learn(SUNFLOWER) }),
+  sp({ id: "sunflower", name: "Sunflower", line: "sunflower", stage: 3, types: ["bloom"],
+    base: st(90, 70, 75, 110, 85, 50), rate: "medium", catchRate: 45, baseExp: 182, ev: { spa: 3 },
+    activity: "day", learnset: learn(SUNFLOWER, [[24, "sun_flare"]]) }),
+
+  // ------------------------------------------------------------- pumpkin (slow tank)
+  sp({ id: "pumpkin_blossom", name: "Pumpkin Bud", line: "pumpkin", stage: 1, types: ["wood"],
+    base: st(60, 55, 60, 35, 40, 25), rate: "slow", catchRate: 120, baseExp: 62, ev: { hp: 1 },
+    grows: ["green_pumpkin", vigor(14)], learnset: learn(PUMPKIN) }),
+  sp({ id: "green_pumpkin", name: "Green Gourd", line: "pumpkin", stage: 2, types: ["wood"],
+    base: st(85, 70, 85, 45, 55, 30), rate: "slow", catchRate: 90, baseExp: 135, ev: { hp: 2 },
+    grows: ["pumpkin", vigor(26)], learnset: learn(PUMPKIN, [[14, "gourd_slam"]]) }),
+  sp({ id: "pumpkin", name: "Pumpkin", line: "pumpkin", stage: 3, types: ["wood"],
+    base: st(115, 95, 110, 55, 75, 35), rate: "slow", catchRate: 45, baseExp: 196, ev: { hp: 3 },
+    learnset: learn(PUMPKIN, [[14, "gourd_slam"]]) }),
+
+  // ------------------------------------------------------------- fern (wood -> wood/dragon; ancient)
+  sp({ id: "fern_fiddlehead", name: "Fiddlehead", line: "fern", stage: 1, types: ["wood"],
+    base: st(40, 50, 45, 35, 45, 50), rate: "medium", catchRate: 190, baseExp: 55, ev: { atk: 1 },
+    grows: ["unfurling_fern", vigor(13)], learnset: learn(FERN) }),
+  sp({ id: "unfurling_fern", name: "Fern Frond", line: "fern", stage: 2, types: ["wood"],
+    base: st(55, 70, 60, 50, 60, 70), rate: "medium", catchRate: 120, baseExp: 124, ev: { atk: 1, spe: 1 },
+    grows: ["ostrich_fern", vigor(25)], learnset: learn(FERN) }),
+  sp({ id: "ostrich_fern", name: "Ostrich Fern", line: "fern", stage: 3, types: ["wood", "dragon"],
+    base: st(70, 95, 80, 70, 80, 90), rate: "medium", catchRate: 45, baseExp: 190, ev: { atk: 2, spe: 1 },
+    learnset: learn(FERN, [[25, "primal_frond"]]) }),
+
+  // ------------------------------------------------------------- flytrap (physical glass cannon)
+  sp({ id: "flytrap_seedling", name: "Tiny Flytrap", line: "flytrap", stage: 1, types: ["bug"],
+    base: st(40, 60, 40, 30, 35, 55), rate: "medium", catchRate: 190, baseExp: 60, ev: { atk: 1 },
+    grows: ["young_flytrap", vigor(12)], learnset: learn(FLYTRAP) }),
+  sp({ id: "young_flytrap", name: "Flytrap", line: "flytrap", stage: 2, types: ["bug"],
+    base: st(55, 85, 55, 40, 50, 75), rate: "medium", catchRate: 120, baseExp: 130, ev: { atk: 2 },
+    grows: ["venus_flytrap", vigor(22)], learnset: learn(FLYTRAP) }),
+  sp({ id: "venus_flytrap", name: "Venus Trap", line: "flytrap", stage: 3, types: ["bug"],
+    base: st(70, 120, 75, 55, 65, 100), rate: "medium", catchRate: 45, baseExp: 192, ev: { atk: 3 },
+    learnset: learn(FLYTRAP, [[22, "pitfall"]]) }),
+
+  // ------------------------------------------------------------- sundew (two stages)
+  sp({ id: "sundew_rosette", name: "Dew Rosette", line: "sundew", stage: 1, types: ["bug"],
+    base: st(50, 45, 50, 60, 60, 35), rate: "medium", catchRate: 150, baseExp: 75, ev: { spa: 1 },
+    grows: ["sundew", vigor(18)], learnset: learn(SUNDEW) }),
+  sp({ id: "sundew", name: "Sundew", line: "sundew", stage: 2, types: ["bug", "bloom"],
+    base: st(75, 65, 75, 100, 90, 55), rate: "medium", catchRate: 60, baseExp: 172, ev: { spa: 2 },
+    learnset: learn(SUNDEW, [[18, "sun_flare"]]) }),
+
+  // ------------------------------------------------------------- maple (tending; frost at the end)
+  sp({ id: "maple_samara", name: "Maple Samara", line: "maple", stage: 1, types: ["wood"],
+    base: st(40, 45, 40, 45, 45, 55), rate: "medium", catchRate: 190, baseExp: 54, ev: { spe: 1 },
+    grows: ["maple_sapling", vigor(12)], learnset: learn(MAPLE) }),
+  sp({ id: "maple_sapling", name: "Maple Sprout", line: "maple", stage: 2, types: ["wood"],
+    base: st(60, 60, 60, 65, 65, 60), rate: "medium", catchRate: 75, baseExp: 128, ev: { spa: 1, spd: 1 },
+    grows: ["sugar_maple", { kind: "tending", friendship: 220 }], learnset: learn(MAPLE) }),
+  sp({ id: "sugar_maple", name: "Sugar Maple", line: "maple", stage: 3, types: ["wood", "frost"],
+    base: st(85, 80, 80, 95, 90, 65), rate: "medium", catchRate: 45, baseExp: 195, ev: { spa: 2, spd: 1 },
+    learnset: learn(MAPLE, [[1, "frost_bloom"], [30, "cold_snap"], [38, "snowdrift"]]) }),
+
+  // ------------------------------------------------------------- nettle (two stages)
+  sp({ id: "nettle_sprout", name: "Nettle Shoot", line: "nettle", stage: 1, types: ["thorn"],
+    base: st(45, 65, 45, 35, 45, 60), rate: "medium", catchRate: 120, baseExp: 72, ev: { atk: 1 },
+    grows: ["stinging_nettle", vigor(16)], learnset: learn(NETTLE) }),
+  sp({ id: "stinging_nettle", name: "Great Nettle", line: "nettle", stage: 2, types: ["thorn"],
+    base: st(70, 100, 70, 50, 65, 95), rate: "medium", catchRate: 60, baseExp: 168, ev: { atk: 2 },
+    learnset: learn(NETTLE, [[16, "thorn_lash"]]) }),
+
+  // ------------------------------------------------------------- moonflower (night only)
+  sp({ id: "moonflower_seed", name: "Moon Seed", line: "moonflower", stage: 1, types: ["ghost"],
+    base: st(40, 35, 40, 60, 50, 50), rate: "medium", catchRate: 190, baseExp: 62, ev: { spa: 1 },
+    activity: "night", grows: ["moonflower_vine", vigor(12)], learnset: learn(MOONFLOWER) }),
+  sp({ id: "moonflower_vine", name: "Moon Vine", line: "moonflower", stage: 2, types: ["ghost"],
+    base: st(55, 50, 55, 80, 65, 65), rate: "medium", catchRate: 120, baseExp: 128, ev: { spa: 2 },
+    activity: "night", grows: ["moonflower", { kind: "vigor_night", level: 22 }], learnset: learn(MOONFLOWER) }),
+  sp({ id: "moonflower", name: "Moonflower", line: "moonflower", stage: 3, types: ["ghost", "bloom"],
+    base: st(75, 60, 70, 110, 90, 80), rate: "medium", catchRate: 45, baseExp: 188, ev: { spa: 3 },
+    activity: "night", learnset: learn(MOONFLOWER, [[22, "pale_bloom"]]) }),
+];
+
+export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;

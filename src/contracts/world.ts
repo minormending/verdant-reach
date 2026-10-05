@@ -27,6 +27,9 @@ export interface MapDef {
   /** Rows of single characters; `legend` maps each character to a tile. */
   tiles: string[];
   legend: Record<string, TileKey>;
+  /** Legend overrides applied while their condition holds (e.g. the grove's
+   *  tapped maples become plain maples once `grove_cleared`). First match wins. */
+  legendWhen?: { when: Cond; legend: Record<string, TileKey> }[];
   /** Tile used beyond the map edge (e.g. "tree" outdoors, "void" indoors). */
   border: TileKey;
   structures: { key: StructureKey; x: number; y: number }[];
