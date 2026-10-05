@@ -7,7 +7,7 @@ export const TYPES = [
 ] as const;
 export type TypeId = (typeof TYPES)[number];
 
-/** The vertical-slice roster (Prologue + Act 1). Lines evolve left to right. */
+/** The playable roster (Prologue -> Chapter 4). Lines evolve left to right. */
 export const SPECIES_IDS = [
   // Starters
   "oak_acorn", "oak_sapling", "great_oak",                    // wood
@@ -33,6 +33,12 @@ export const SPECIES_IDS = [
   "rose_bud", "wild_rose",                                    // thorn/bloom
   "pitcher_sprout", "pitcher_plant",                          // bug/water
   "snapdragon_sprout", "snapdragon",                          // dragon/bloom (rare gift)
+  // Round 4: Chapter 4 (Route 4 orchard, Glasshouse City, the Palm House)
+  "apple_pip", "apple_sapling", "apple_tree",                 // wood/bloom (Route 4 orchard)
+  "orchid_keiki", "orchid_spike", "moth_orchid",              // bloom (Palm House; Flora's ace)
+  "monstera_cutting", "monstera",                             // wood (Palm House)
+  "lotus_seed", "sacred_lotus",                               // water/bloom (Palm House pool)
+  "paradise_shoot", "bird_of_paradise",                       // bloom/fire? (Palm House, rare)
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 
@@ -54,6 +60,17 @@ export const MAP_IDS = [
   "sugarbush_greenhouse",   // healing centre
   "sugarbush_grove",        // dungeon: Rootstock tapping Quickened maples
   "sugarbush_conservatory", // Conservatory 2 (Nell Pitcher, Bug) in the bog
+  // Round 4: Chapter 4
+  "route_4",                // Sugarbush -> Glasshouse City (orchard + river)
+  "glasshouse_city",        // the city under the glass dome
+  "palm_house",             // tropical glasshouse inside the dome (wild encounters)
+  "glasshouse_greenhouse",  // healing centre
+  "glasshouse_market",      // the big market (shop, two counters)
+  "glasshouse_nursery",     // Nursery Garden (breeding: house + yard)
+  "glasshouse_relay",       // the Root Relay research station
+  "glasshouse_conservatory",// Conservatory 3 (Flora Vance, Bloom)
+  "glasshouse_house",       // residents' house (Pip, a quest giver)
+  "route_5",                // Glasshouse City -> Hedgerow (short loop; brambles need PRUNE)
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -75,7 +92,7 @@ export const TILES = {
   maple_tree:   { walk: false },
   tapped_maple: { walk: false },                // story: tapped by Rootstock
   hedge:        { walk: false },
-  bramble_bush: { walk: false },                // needs Prune later (not in slice)
+  bramble_bush: { walk: false, fieldMove: "prune" }, // PRUNE clears it (Round 4)
   rock:         { walk: false },
   fence:        { walk: false },
   sign:         { walk: false, interact: true },
@@ -127,6 +144,27 @@ export const TILES = {
   glass_wall:     { walk: false },               // conservatory glazing
   workbench:      { walk: false, interact: true },
   microscope:     { walk: false, interact: true },
+  // --- Round 4: Chapter 4 ----------------------------------------------------
+  bramble_stump:  { walk: true },                // a pruned bramble (drawn where PRUNE cut one)
+  paving:         { walk: true },                // city flagstones
+  tropical_grass: { walk: true, encounter: "grass" }, // Palm House undergrowth
+  orchard_tree:   { walk: false },               // apple trees (canopy group "orchard")
+  fallen_apples:  { walk: true },
+  stepping_stones:{ walk: true },                // across shallow river water
+  palm_tree:      { walk: false },
+  iron_railing:   { walk: false },
+  market_stall:   { walk: false, interact: true },
+  fountain_basin: { walk: false, water: true },  // small decorative pool edge
+  console:        { walk: false, interact: true }, // Root Relay listening desk
+  sensor_post:    { walk: false, interact: true }, // buried-sensor head, outdoors or in
+  server_rack:    { walk: false },
+  cable_floor:    { walk: true },
+  seed_tray:      { walk: false },
+  potting_bench:  { walk: false, interact: true },
+  rose_trellis:   { walk: false },               // Conservatory 3 maze walls
+  rose_bed:       { walk: false },
+  floor_marble:   { walk: true },
+  stage_floor:    { walk: true },
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -136,7 +174,13 @@ export interface TileProps {
   water?: boolean;
   ledge?: "down";
   interact?: boolean;
+  /** A field move clears this tile (sets flag `pruned_<map>_<x>_<y>`; then drawn as bramble_stump, walkable). */
+  fieldMove?: FieldMove;
 }
+
+/** Field moves (HM equivalents). No move slots: each is unlocked by a key item. */
+export const FIELD_MOVES = { prune: { item: "pruning_shears" } } as const;
+export type FieldMove = keyof typeof FIELD_MOVES;
 
 /** Multi-tile buildings drawn from one image; footprint is solid except the
  *  door. Structures without a door are scenery (barn doors are painted shut). */
@@ -153,6 +197,15 @@ const STRUCTURE_SPECS = {
   well:         { w: 2, h: 2 },
   big_oak:      { w: 3, h: 3 },                  // landmark tree
   big_maple:    { w: 2, h: 2 },
+  // Round 4: Glasshouse City
+  relay_station:     { w: 6, h: 4, door: { x: 2, y: 3 } }, // Root Relay (sensor mast on the roof)
+  nursery_garden:    { w: 5, h: 3, door: { x: 2, y: 2 } }, // potting shed + glass lean-to
+  palm_house:        { w: 6, h: 4, door: { x: 3, y: 3 } }, // curved glass house
+  city_house:        { w: 4, h: 4, door: { x: 1, y: 3 } }, // two-storey townhouse
+  market_large:      { w: 6, h: 4, door: { x: 3, y: 3 } }, // the GLASSHOUSE MARKET
+  rose_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 3
+  fountain:          { w: 3, h: 3 },                       // city square centrepiece
+  relay_mast:        { w: 1, h: 3 },                       // listening mast (scenery)
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
@@ -173,6 +226,10 @@ export const CHARACTERS = [
   "lever",                       // interactable switch (2 frames: off/on rows ok)
   "valve",                       // bog water valve (puzzle)
   "harvest_bush",                // fruiting bush: DOWN row = ripe, UP row = picked
+  // Round 4: Chapter 4
+  "flora_vance", "wren", "nursery_keeper", "nursery_keeper_b",
+  "researcher", "orchardist", "arranger", "reporter", "gentleman",
+  "rose_gate",                   // Conservatory 3 trellis gate (hide via visibleWhen to open)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -180,6 +237,7 @@ export type CharacterKey = (typeof CHARACTERS)[number];
 export const TRAINER_PORTRAITS = [
   "bram", "hollis", "nell_pitcher", "shears", "grunt",
   "gardener", "schoolkid", "birdwatcher", "hiker", "beekeeper", "florist",
+  "flora_vance", "orchardist", "arranger", "researcher", "gentleman", // Round 4
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -190,17 +248,19 @@ export const MUSIC = [
   "rival_appears", "rootstock_appears", "battle_wild", "battle_trainer",
   "battle_leader", "battle_rootstock", "victory_wild", "victory_trainer",
   "victory_leader", "slice_end",
+  "glasshouse_city", "palm_house", "root_relay", // Round 4
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 
 /** Short non-looping cues that pause music while they play. */
-export const JINGLES = ["heal", "caught", "growth", "mark", "item_get", "level_up", "quest"] as const;
+export const JINGLES = ["heal", "caught", "growth", "mark", "item_get", "level_up", "quest", "sprouted"] as const;
 export type JingleId = (typeof JINGLES)[number];
 
 export const SFX = [
   "select", "cancel", "cursor", "bump", "door", "ledge", "menu_open", "save",
   "encounter", "hit", "hit_super", "hit_weak", "wilt", "stat_up", "stat_down",
   "pod_throw", "pod_shake", "pod_click", "exp_tick", "run", "text_blip",
+  "prune", "sprout", "pulse", // Round 4
 ] as const;
 export type SfxId = (typeof SFX)[number];
 
@@ -222,6 +282,7 @@ export const REQUIRED_ITEMS = [
   "field_herbarium", "centuryheart_seed", "fennimores_letter", // key items
   "wild_berry", "rose_hip",                   // harvested from bushes: heal / cure
   "syrup_jar",                                // key item for the SAP RUN quest
+  "pruning_shears",                           // key item: unlocks the PRUNE field move
 ] as const;
 export type RequiredItemId = (typeof REQUIRED_ITEMS)[number];
 export type ItemId = RequiredItemId | (string & {});
@@ -229,12 +290,15 @@ export type MoveId = string;
 export type TrainerId = string;
 export type ScriptId = string;
 
-/** Pressed Marks (badges) available in the slice. */
-export const MARKS = ["bramble_mark", "sundew_mark"] as const;
+/** Pressed Marks (badges) available so far. */
+export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark"] as const;
 export type MarkId = (typeof MARKS)[number];
 
 /** Full-screen 160x144 illustrations shown during key story beats. */
-export const STILLS = ["bloom", "greenhouse_morning", "theft", "grove_taps", "graft_collar", "vale_call"] as const;
+export const STILLS = [
+  "bloom", "greenhouse_morning", "theft", "grove_taps", "graft_collar", "vale_call",
+  "glasshouse_dome", "relay_pulse", // Round 4
+] as const;
 export type StillKey = (typeof STILLS)[number];
 
 export type Dir = "up" | "down" | "left" | "right";

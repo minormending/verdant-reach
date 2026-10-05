@@ -23,8 +23,10 @@ import * as route_3 from "./maps/route_3";
 import * as sugarbush from "./maps/sugarbush";
 import * as sugarbush_grove from "./maps/sugarbush_grove";
 import * as sugarbush_conservatory from "./maps/sugarbush_conservatory";
+import { ROUND4_STUBS } from "./maps/round4_stubs";
 
 const maps: Record<MapId, MapDef> = {
+  ...ROUND4_STUBS, // ROUND4-STUB: replaced by real maps
   player_home: player_home.player_home,
   herbarium: herbarium.herbarium,
   herbarium_roof: herbarium_roof.herbarium_roof,

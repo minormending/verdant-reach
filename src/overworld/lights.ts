@@ -1,3 +1,4 @@
+import type { ArtImage } from "../contracts";
 // Night lighting: emissive masks pulled from the art itself (window glass on
 // structures, the lamp head on lamp_post tiles), warm halos, and the
 // time-of-day tint. Masks are computed once per image and cached.
@@ -72,13 +73,13 @@ function readPixels(img: CanvasImageSource & { width: number; height: number }):
   }
 }
 
-const windowCache = new WeakMap<HTMLImageElement, HTMLCanvasElement | null>();
+const windowCache = new WeakMap<ArtImage, HTMLCanvasElement | null>();
 
 /**
  * The lit-window layer for a structure image: warm glass pixels plus a soft
  * 1px glow ring, transparent elsewhere. Null when the image has no windows.
  */
-export function windowGlow(img: HTMLImageElement): HTMLCanvasElement | null {
+export function windowGlow(img: ArtImage): HTMLCanvasElement | null {
   if (windowCache.has(img)) return windowCache.get(img)!;
   let result: HTMLCanvasElement | null = null;
   const px = readPixels(img);
@@ -110,10 +111,10 @@ export function windowGlow(img: HTMLImageElement): HTMLCanvasElement | null {
   return result;
 }
 
-const lampCache = new WeakMap<HTMLImageElement, { mask: HTMLCanvasElement | null; cx: number; cy: number }>();
+const lampCache = new WeakMap<ArtImage, { mask: HTMLCanvasElement | null; cx: number; cy: number }>();
 
 /** Lamp head pixels and their centre (tile-local), from a lamp_post tile image. */
-export function lampInfo(img: HTMLImageElement | undefined): { mask: HTMLCanvasElement | null; cx: number; cy: number } {
+export function lampInfo(img: ArtImage | undefined): { mask: HTMLCanvasElement | null; cx: number; cy: number } {
   const fallback: { mask: HTMLCanvasElement | null; cx: number; cy: number } = { mask: null, cx: 8, cy: 4 };
   if (!img) return fallback;
   const hit = lampCache.get(img);
@@ -198,10 +199,10 @@ export function makeScreenCanvas(): HTMLCanvasElement | null {
   return c;
 }
 
-const nightGlassCache = new WeakMap<HTMLImageElement, HTMLCanvasElement | null>();
+const nightGlassCache = new WeakMap<ArtImage, HTMLCanvasElement | null>();
 
 /** Interior window tiles at night: the glass shows a deep-blue night sky with a star. */
-export function nightGlass(img: HTMLImageElement): HTMLCanvasElement | null {
+export function nightGlass(img: ArtImage): HTMLCanvasElement | null {
   if (nightGlassCache.has(img)) return nightGlassCache.get(img)!;
   let result: HTMLCanvasElement | null = null;
   const px = readPixels(img);

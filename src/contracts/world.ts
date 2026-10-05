@@ -124,6 +124,13 @@ export type ScriptCmd =
   | { op: "harvest"; id: string; item: ItemId; qty?: number }
   | { op: "startQuest"; quest: string }                   // sets quest_<id>_started, notes "NEW NOTE" toast
   | { op: "completeQuest"; quest: string }                // sets quest_<id>_done + "quest" jingle
+  // --- Round 4 ---------------------------------------------------------------
+  /** The Nursery Garden keeper's whole counter flow: board a plant (party picker),
+   *  check on boarders, collect a ready seed (joins the party as a seed), take a
+   *  plant back (with the boarding fee). The engine writes the menu text. */
+  | { op: "nursery" }
+  /** True while a seed is waiting at the Nursery (the yard keeper's hint). */
+  | { op: "ifNurserySeed"; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "endSlice" }                                    // "to be continued" card -> title
   | { op: "end" };
 

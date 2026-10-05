@@ -146,6 +146,8 @@ const BACKDROPS: Record<Backdrop, BackdropDef> = {
     sky: ["#9898c8", "#a8a8d4", "#b8b8dc", "#c4c4e4"], far: "#8890b8", farLight: "#9ca4c8", ground: "#c0c8d8", groundAlt: "#b0b8cc",
     ramp: ["#c8d4e4", "#98a8c4", "#687894", "#384058"],
   },
+  // ROUND4-STUB: the battle owner designs the real glasshouse backdrop
+  get glasshouse() { return BACKDROPS.grass; },
 };
 
 export function backdropBg(kind: Backdrop): string {

@@ -23,6 +23,10 @@ export interface Quickened {
   friendship: number;           // 0..255
   sport: boolean;               // shiny ("sport")
   metAt?: { map: MapId; level: number };
+  /** Round 4: an unsprouted seed from the Nursery Garden. While present it sits in the
+   *  party as a seed (no battling, no moves shown); each overworld step counts down,
+   *  and at 0 the engine plays the sprouting scene and deletes this field. */
+  seed?: { steps: number };
 }
 
 export interface GameState {
@@ -46,6 +50,9 @@ export interface GameState {
   };
   /** harvestId -> ISO date (YYYY-MM-DD) last picked. */
   harvested?: Record<string, string>;
+  /** Round 4: the Nursery Garden in Glasshouse City. Up to 2 plants board there;
+   *  they gain 1 exp per player step. `steps` counts toward the next seed check. */
+  nursery?: { slots: Quickened[]; steps: number; seedReady: boolean };
 }
 
 export interface BattleRequest {
@@ -53,7 +60,7 @@ export interface BattleRequest {
   trainer?: TrainerId;
   wild?: { species: SpeciesId; level: number };
   canLose?: boolean;            // story battles (rival #1): no whiteout on loss
-  backdrop?: "grass" | "bog" | "water" | "indoor" | "night";
+  backdrop?: "grass" | "bog" | "water" | "indoor" | "night" | "glasshouse";
 }
 export type BattleOutcome = "won" | "lost" | "fled" | "caught";
 
@@ -82,10 +89,24 @@ export interface Input {
   repeat(b: Button): boolean;
 }
 
+/** What `Assets.image` returns: a whole PNG, or a canvas cut from a sheet / palette-swapped. */
+export type ArtImage = HTMLImageElement | HTMLCanvasElement;
+
+/**
+ * Round 4: art is served from swappable bundles (see docs/ART.md). Callers keep
+ * asking for the LOGICAL paths built by the path helpers in constants.ts
+ * (`assets/tiles/water@5__2.png`, `assets/species/oak_acorn/front.png?sport`, ...);
+ * the art registry resolves each to a bundle image or sheet cell, applying any
+ * active art packs.
+ */
 export interface Assets {
-  image(path: string): HTMLImageElement | undefined; // undefined if missing
+  image(path: string): ArtImage | undefined; // undefined while loading or if missing
+  /** Loaded and ready to draw. */
   has(path: string): boolean;
-  loadAll(paths: string[], onProgress?: (done: number, total: number) => void): Promise<void>;
+  /** Provided by some bundle (or legacy file), whether or not it has loaded yet. */
+  exists(path: string): boolean;
+  /** Preload. With no `paths`, loads the whole art registry (every bundle). */
+  loadAll(paths?: string[], onProgress?: (done: number, total: number) => void): Promise<void>;
 }
 
 export interface AudioService {

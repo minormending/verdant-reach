@@ -273,6 +273,10 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
 
   // ------------------------------------------------------------------ slice end
   // Bittersweet, hopeful: F major with a borrowed B-flat minor sigh.
+  // ROUND4-STUB: placeholders until the audio owner composes these (getters alias existing tracks)
+  get glasshouse_city() { return ARRANGEMENTS.small_town; },
+  get palm_house() { return ARRANGEMENTS.route; },
+  get root_relay() { return ARRANGEMENTS.herbarium; },
   slice_end: {
     bpm: 84, harmony: "arp8", harmonyTone: "v5 @1 q5 ~6", bass: "half", bassTone: "v13 q7", drums: "none",
     chords: "F | Am | Bb | C | Dm | Am | Bb | C | Dm | Bb | F | C | Bb | Bbm | F | F",

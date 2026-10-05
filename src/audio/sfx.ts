@@ -40,6 +40,7 @@ export const JINGLE_DEFS: Record<JingleId, SongDef> = {
     wave: "v15 q6 o3 a4. e4 a4",
   }),
   // A warm "task done" cadence in F (I-V-I), a touch gentler than ITEM_GET.
+  get sprouted() { return JINGLE_DEFS.growth; }, // ROUND4-STUB
   quest: j(140, {
     p1: "v12 @2 q6 o5 f8 a8 o6 c8 f4 e8 f4.",
     p2: "v8 @1 q6 o5 c8 f8 a8 o6 c4 c8 c4.",
@@ -72,5 +73,8 @@ export const SFX_DEFS: Record<SfxId, SongDef> = {
   pod_click:  j(150, { p1: "v11 @2 %1 q8 o6 c32 r32 o6 g16", noise: "v8 @1 %1 o6 c32" }),
   exp_tick:   j(150, { p1: "v9 @2 %1 q8 o6 e64" }),
   run:        j(150, { noise: "v7 @0 %1 o4 c32 r32 o4 d32 r32 o4 e32 r16", p1: "v8 @1 q8 p12 r16 o5 c16" }),
+  get prune() { return SFX_DEFS.bump; },  // ROUND4-STUB
+  get sprout() { return SFX_DEFS.select; }, // ROUND4-STUB
+  get pulse() { return SFX_DEFS.encounter; }, // ROUND4-STUB
   text_blip:  j(150, { p1: "v8 @2 %1 q6 o6 c64" }),
 };

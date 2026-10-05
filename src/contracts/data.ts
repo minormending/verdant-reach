@@ -36,7 +36,22 @@ export interface Species {
   activity: "any" | "day" | "night"; // when it appears / is strongest (photoperiod)
   growsInto?: { species: SpeciesId; trigger: GrowthTrigger };
   learnset: { level: number; move: MoveId }[]; // level 1 entries = starting moves
+  /** Nursery Garden (Round 4): two Quickened that share a group can cross-pollinate
+   *  and set a seed. Omitted or [] = can't set seed (legendaries, the Centuryheart). */
+  pollination?: PollinationGroup[];
 }
+
+/** Pollination groups: loosely, how the real plant is pollinated / where it grows. */
+export const POLLINATION_GROUPS = [
+  "meadow",     // open-field flowers, bee-pollinated (clover, dandelion, sunflower)
+  "woodland",   // trees, shrubs and woodland edge (oak, maple, holly, bramble)
+  "wetland",    // water and bog margins (lily, lotus, cattail)
+  "carnivore",  // carnivorous plants (flytrap, sundew, pitcher)
+  "garden",     // cultivated beds and orchards (pumpkin, chili, mint, rose, apple)
+  "tropical",   // glasshouse exotics (orchid, monstera, bird of paradise)
+  "spore",      // ferns: no flowers; they only pair with other ferns
+] as const;
+export type PollinationGroup = (typeof POLLINATION_GROUPS)[number];
 
 export type MoveEffect =
   | { kind: "status"; status: StatusId; chance: number; target: "foe" | "self" }

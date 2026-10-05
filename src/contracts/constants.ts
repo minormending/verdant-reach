@@ -29,9 +29,15 @@ export const UI = {
 export const TIME_OF_DAY = { morningStart: 4, dayStart: 10, nightStart: 18 } as const;
 
 // ---------------------------------------------------------------------------
-// ASSET CONVENTIONS (paths are relative to the site root, files live under
-// public/). The art agent produces these; the engine loads them by path.
+// ASSET CONVENTIONS. Each helper below builds a LOGICAL asset path. Since
+// Round 4 these no longer have to be real files: the art registry (src/art/,
+// docs/ART.md) resolves them to swappable bundles under public/art/: species
+// folders, tileset sheets, structure/character bundles and image sets. Code
+// keeps calling ctx.assets.image(<logical path>) exactly as before.
 // ---------------------------------------------------------------------------
+
+/** Root of the art bundles (served from public/art/). */
+export const ART_ROOT = "art";
 
 /** 16x16 PNG. Optional second animation frame: `${key}__2.png` (water, tall_grass, flowers). */
 export const tilePath = (key: TileKey, frame: 1 | 2 = 1) =>
@@ -53,6 +59,10 @@ export const AUTOTILE: Partial<Record<TileKey, string>> = {
   glass_wall: "glass_wall", wall: "wall",
   // forests join into one canopy mass with edges on the open sides
   tree: "tree", maple_tree: "maple", tapped_maple: "maple",
+  // Round 4
+  paving: "paving", tropical_grass: "tropical_grass", orchard_tree: "orchard",
+  iron_railing: "iron_railing", rose_trellis: "rose_trellis", fountain_basin: "water",
+  stepping_stones: "water", // stones sit in the river; water edges flow round them
 };
 /** Ground variation: `${key}~1.png`..`${key}~3.png` (if present) are picked by a
  *  position hash so large fields never look stamped. Base tile = variant 0. */
@@ -79,8 +89,11 @@ export const portraitPath = (key: TrainerPortraitKey) => `assets/trainers/${key}
  *  icon.png 16x16 (party menu; optional icon__2.png second frame).
  * 4 colours + transparency, GBC style.
  */
-export const speciesPath = (id: SpeciesId, kind: "front" | "front__2" | "front__3" | "back" | "icon" | "icon__2") =>
-  `assets/species/${id}/${kind}.png`;
+export type SpeciesSpriteKind = "front" | "front__2" | "front__3" | "back" | "icon" | "icon__2";
+/** `opts.sport` asks for the sport (shiny) colouring: an exact per-colour swap to the
+ *  bundle's `sport` palette (Round 4; replaces the old runtime hue shift). */
+export const speciesPath = (id: SpeciesId, kind: SpeciesSpriteKind, opts: { sport?: boolean } = {}) =>
+  `assets/species/${id}/${kind}.png${opts.sport ? "?sport" : ""}`;
 /** Battle idle animation: front, front__2[, front__3] cycle (optional frames; ping-pong). */
 
 /** Story illustrations: 160x144 PNG. */
@@ -90,5 +103,6 @@ export const stillPath = (key: import("./ids").StillKey) => `assets/stills/${key
 export const itemIconPath = (id: string) => `assets/items/${id}.png`;
 
 /** 160x144 title screen art and other full-screen UI images. */
-export const uiPath = (name: "title" | "title_logo" | "pod" | "pod_open" | "mark_bramble" | "mark_sundew" | "battle_ground") =>
+export const uiPath = (name: "title" | "title_logo" | "pod" | "pod_open" | "mark_bramble" | "mark_sundew" | "mark_rose" | "battle_ground"
+  | "seed" | "seed__2" | "seed_big") => // Round 4: Nursery seed — 16x16 party icon (2 frames) and 56x56 summary/sprouting art
   `assets/ui/${name}.png`;

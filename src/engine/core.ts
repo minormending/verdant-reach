@@ -124,8 +124,9 @@ export function createAssets(): EngineAssets {
       return img;
     },
     has: (p) => images.has(p),
+    exists: (p) => images.has(p) || pending.has(p), // ROUND4-STUB: the art registry (src/art/) replaces this store
     isMissing: (p) => missing.has(p),
-    async loadAll(paths, onProgress) {
+    async loadAll(paths = [], onProgress) {
       let done = 0;
       await Promise.all(paths.map((p) => loadOne(p).then(() => onProgress?.(++done, paths.length))));
     },

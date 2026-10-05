@@ -2,7 +2,7 @@
 // encounters, interactions, whiteout, and the host for the script
 // interpreter. Entry point: createOverworldScene(ctx, opts).
 
-import type {
+import type { ArtImage,
   Ambient, BattleOutcome, BattleRequest, Dir, GameContext, MapDef, MapId, Quickened, Scene, ScriptCmd, ScriptId,
   SpeciesId, StillKey,
 } from "../contracts";
@@ -111,7 +111,7 @@ class Overworld implements Scene {
   /** Species the follower last showed (null = inactive), to pop it back in on changes. */
   followerSpecies: SpeciesId | null = null;
   /** Full-screen story illustration over the map (still / stillClear). */
-  still: { key: StillKey; img: HTMLImageElement } | null = null;
+  still: { key: StillKey; img: ArtImage } | null = null;
   toasts: { kind: ToastKind; title: string; at: number }[] = [];
 
   constructor(private ctx: GameContext, private opts: OverworldOpts) {
