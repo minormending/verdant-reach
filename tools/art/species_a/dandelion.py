@@ -85,17 +85,17 @@ def clock_front():
     s.render()
     # the seeds' tips cluster at the heart; pappus rays read as fine lavender
     # ticks in the shaded half only
-    s.paint(c.circle(gx + 1, gy + 1, 2.4), 1)
     for k in range(18):
         a = 2 * np.pi * k / 18 + 0.2
-        for r in (6.5, 7.5, 11.0, 12.0):
-            x, y = int(gx + 1 + np.cos(a) * r), int(gy + 1 + np.sin(a) * r)
-            if s.t[y, x] == 3 and np.cos(a) + np.sin(a) > 0.3 and (k + int(r)) % 2:
-                s.px([(x, y)], 2)
+        if k % 2:
+            continue
+        pts = [(int(gx + 1 + np.cos(a) * r), int(gy + 1 + np.sin(a) * r)) for r in (10.0, 11.4)]
+        if all(s.t[y, x] == 3 for x, y in pts) and np.cos(a) + np.sin(a) > 0.3:
+            s.px(pts, 2)
     # two seeds drifting off to the upper left
-    seed = ["0.0.0.0", ".03330.", "..030..", "...0...", "...0...", "..010..", "...0..."]
+    seed = ["..000..", ".03330.", "0333330", ".00000.", "..0....", "..0....", ".010...", ".010...", "..0...."]
     s.rows(2, 2, seed)
-    s.rows(7, 12, ["0.0.0", ".030.", "..0..", "..0..", ".010.", "..0.."])
+    s.rows(8, 13, [".000.", "03330", ".000.", ".0...", "010..", "010..", ".0..."])
     s.clean()
     return s.image()
 
@@ -161,22 +161,19 @@ def clock_back():
     s.add(stem, tones=(1, 1, 1), flat=True)
     s.add(globe, tones=(2, 3, 3), shade=(6, 6), close=3)
     s.render()
-    s.paint(c.circle(gx + 2, gy + 3, 2.6), 1)
-    s.rows(40, 2, ["0.0.0.0", ".03330.", "..030..", "...0...", "...0...", "..010..", "...0..."])
+    s.rows(40, 2, ["..000..", ".03330.", "0333330", ".00000.", "....0..", "....0..", "...010.", "...010.", "....0.."])
     s.clean()
     return s.image()
 
 
-EMPTY_ICON = ["................"] * 16
 
 
 def make(id_):
-    import icons
-    f, b, pal, ic = {
-        "dandelion_bud": (bud_front, bud_back, BUD, icons.dbud),
-        "dandelion": (lion_front, lion_back, LION, icons.lion),
-        "dandelion_clock": (clock_front, clock_back, CLOCK, icons.clock),
+    f, b, pal = {
+        "dandelion_bud": (bud_front, bud_back, BUD),
+        "dandelion": (lion_front, lion_back, LION),
+        "dandelion_clock": (clock_front, clock_back, CLOCK),
     }[id_]
     front = f()
-    i1, i2 = icons.icon_for(id_, front)
+    i1, i2 = icons.icon_for(id_, lambda: icons.plain(f), pal)
     return {"front": front, "back": b(), "icon": i1, "icon__2": i2}

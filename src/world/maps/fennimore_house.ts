@@ -3,7 +3,7 @@ import { LEGEND, type Scripts } from "../build";
 
 // OLD FENNIMORE's cottage: fifty years of botany in one room. Shelves of field
 // notes, the hearth with his armchair and rug, a bench with the old microscope,
-// seed crates, a barrel of potting soil, and pots on every free tile.
+// more shelves, and pots on every free tile.
 //
 //            0123456789
 export const fennimore_house: MapDef = {
@@ -15,12 +15,12 @@ export const fennimore_house: MapDef = {
   legend: LEGEND,
   tiles: [
     "WWOOWWWOOW", // 0
-    "WKKpFpKwJW", // 1
+    "WKKKFKKwJW", // 1
     "WhwrrrwwQW", // 2
     "WDwrrrwwJW", // 3
-    "WDhwwwwwpW", // 4
-    "W8wwwwwwYW", // 5
-    "WZp7wwwppW", // 6
+    "WDhwwwwwwW", // 4
+    "WKwwwwwwKW", // 5
+    "WZDwwwwKKW", // 6
     "WWWWEWWWWW", // 7
   ],
   structures: [],

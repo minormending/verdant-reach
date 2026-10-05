@@ -1,8 +1,8 @@
 """Oak line: oak_acorn -> oak_sapling -> great_oak.
 
 Signature feature: the scaly acorn cap. The acorn wears it, the sapling
-grows out of a split acorn still wearing it, and the great oak carries
-acorns under a crown whose lower edge repeats the scale pattern.
+still wears it as a hat over its first oak leaves, and the great oak
+carries a new crop of acorns under its crown.
 """
 
 from px import Sprite, icon_rows, squash, bob, shift, lobed_leaf, blob
@@ -50,7 +50,7 @@ def acorn_back():
     s = Sprite(48, 48, ACORN, crop_bottom=True)
     c = s.c
     cx, cy = 24, 25
-    nut = blob(c, [(24, 30), (10, 33), (6, 42), (8, 49), (40, 49), (42, 42), (38, 33)])
+    nut = blob(c, [(24, 30), (9, 33), (6, 40), (11, 48.5), (37, 48.5), (42, 40), (39, 33)])
     cap = c.ellipse(cx, cy, 21.5, 13.5)
     stalk = c.curve([(24, 15), (23.5, 9), (21, 6), (17, 6.5)], 4.6, 3.0)
     s.add(nut, tones=(1, 2, 3), shade=(5, 3), band=(3, 5, c.Y > 39), cast=3)
@@ -62,24 +62,6 @@ def acorn_back():
     return s.image()
 
 
-ACORN_ICON = [
-    "................",
-    "........00......",
-    ".......01100....",
-    ".....00110110...",
-    "....0121212110..",
-    "...012121211110.",
-    "...011111111110.",
-    "....0000000000..",
-    "....0322222210..",
-    "....0322222210..",
-    "....0232222110..",
-    ".....022221110..",
-    ".....02221110...",
-    "......0211110...",
-    ".......01100....",
-    "........00......",
-]
 
 # --------------------------------------------------------------------------- sapling
 
@@ -134,24 +116,6 @@ def sapling_back():
     return s.image()
 
 
-SAPLING_ICON = [
-    "......000.......",
-    ".....03220......",
-    "..00.022210.00..",
-    ".0320.02210.0220",
-    ".03222.021002221",
-    "..022210101222100"[:16],
-    "...00011011110..",
-    "......0110000...",
-    ".....0221110....",
-    "....022211110...",
-    "....0221111100..",
-    ".....01111110...",
-    "......011110....",
-    "......011110....",
-    ".....01212110...",
-    "......000000....",
-]
 
 # --------------------------------------------------------------------------- great oak
 
@@ -209,33 +173,14 @@ def oak_back():
     return s.image()
 
 
-OAK_ICON = [
-    ".....000000.....",
-    "...0022222200...",
-    "..022233322210..",
-    ".02233322222110.",
-    ".02222222221110.",
-    "0222222222111110",
-    "0122222221111110",
-    "0112221111111100",
-    ".0111111111110..",
-    "..000011000000..",
-    ".....0110.......",
-    ".....0110.......",
-    ".....0110.......",
-    "....011110......",
-    "...01111110.....",
-    "....000000......",
-]
 
 
 def make(id_):
-    import icons
-    f, b, pal, ic = {
-        "oak_acorn": (acorn_front, acorn_back, ACORN, icons.acorn),
-        "oak_sapling": (sapling_front, sapling_back, SAPLING, icons.sapling),
-        "great_oak": (oak_front, oak_back, OAK, icons.oak),
+    f, b, pal = {
+        "oak_acorn": (acorn_front, acorn_back, ACORN),
+        "oak_sapling": (sapling_front, sapling_back, SAPLING),
+        "great_oak": (oak_front, oak_back, OAK),
     }[id_]
     front = f()
-    i1, i2 = icons.icon_for(id_, front)
+    i1, i2 = icons.icon_for(id_, lambda: icons.plain(f), pal)
     return {"front": front, "back": b(), "icon": i1, "icon__2": i2}

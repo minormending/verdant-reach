@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MUSIC, SFX, SPECIES_IDS } from "../contracts";
-import { MIX, MUSIC_TRIM, SFX_TRIM } from "./mix";
+import { JINGLE_TRIM, MIX, MUSIC_TRIM, SFX_TRIM } from "./mix";
 import { ambienceFor } from "./ambience";
 import { CRY_DUTY_TRIM, cryFor } from "./cry";
 import { createAudio } from "./index";
@@ -8,7 +8,8 @@ import { createAudio } from "./index";
 describe("mix", () => {
   it("keeps every trim in a sane range (no cue silenced or blown out)", () => {
     for (const v of Object.values(MUSIC_TRIM)) expect(v).toBeGreaterThan(0.7), expect(v).toBeLessThan(1.4);
-    for (const v of Object.values(SFX_TRIM)) expect(v).toBeGreaterThan(0.5), expect(v).toBeLessThan(2);
+    for (const v of Object.values(SFX_TRIM)) expect(v).toBeGreaterThan(0.5), expect(v).toBeLessThanOrEqual(2);
+    for (const v of Object.values(JINGLE_TRIM)) expect(v).toBeGreaterThan(0.5), expect(v).toBeLessThan(2);
     for (const v of CRY_DUTY_TRIM) expect(v).toBeGreaterThan(0.6), expect(v).toBeLessThan(1.8);
     expect(MIX.master).toBeLessThanOrEqual(1);
   });

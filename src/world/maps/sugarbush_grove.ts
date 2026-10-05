@@ -25,8 +25,8 @@ export const sugarbush_grove: MapDef = {
     // x: 0123456789012345678901234567
     "MMMMMMMMMMMMMMMMMMMMMMMMMMMM", // 0
     "MMMMMMMMMX7.J8..87XMMMMMMMMM", // 1  SHEARS's clearing: drums, crates, bench
-    "MMMMMMMMX.........7XMMMMMMMM", // 2
-    "MMMMMMMM7..........7MMMMMMMM", // 3
+    "MMMMMMMMX..+++++..7XMMMMMMMM", // 2
+    "MMMMMMMM7...+++....7MMMMMMMM", // 3
     "MMMMMMMMX5.....35..XMMMMMMMM", // 4
     "MMMMMMMMMMMMX..XMMMMMMMMMMMM", // 5  the cleft (trigger)
     "MMMM..5.MMMMM..MMMMMMMMMMMMM", // 6  GLASS POD nook at 7,6
@@ -35,9 +35,9 @@ export const sugarbush_grove: MapDef = {
     "MMMM..MMMMMMMMMMMMMMMMMMMMMM", // 9
     "MMMX..XMMMMMMMMMMMMMMMMMMMMM", // 10
     "MM,,.....78MM.,MMMMMMMMMMMMM", // 11 ROOTSTOCK camp; GLASS POD behind crates
-    "MM,,..J.....8.,MMMMMMMMMMMMM", // 12
-    "MM..........88.MMMMMMMMMMMMM", // 13
-    "MM..4.....,,,..MMMMMMMMMMMMM", // 14
+    "MM,,.+J++...8.,MMMMMMMMMMMMM", // 12
+    "MM..+++++...88.MMMMMMMMMMMMM", // 13
+    "MM..4+++..,,,..MMMMMMMMMMMMM", // 14
     "MM.........7........XMMMMMMM", // 15 grunt 2 watches the camp mouth
     "MM.,,,...MMM........MMMMMMMM", // 16
     "MMM,,,..MMMMMMMMMX..MMMMMMMM", // 17

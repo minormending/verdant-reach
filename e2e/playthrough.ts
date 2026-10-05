@@ -298,7 +298,7 @@ async function face(d: Dir) {
 }
 
 /** Talk to an NPC by id (walks next to it, or across a counter). */
-export async function talkTo(id: string): Promise<boolean> {
+export async function talkTo(id: string, quiet = false): Promise<boolean> {
   for (let attempt = 0; attempt < 4; attempt++) {
     await settle();
     const o = ow();
@@ -330,7 +330,7 @@ export async function talkTo(id: string): Promise<boolean> {
       if (!idle() || report.texts.length > before) { await advance(); return true; }
     }
   }
-  issue("talk-failed", `could not talk to "${id}"`);
+  if (!quiet) issue("talk-failed", `could not talk to "${id}"`);
   return false;
 }
 
@@ -459,7 +459,7 @@ async function solvePuzzle(goalNpc: string): Promise<boolean> {
     const objs = o.npcs.filter((n) => /lever|valve/.test(n.sprite) && o.visible(n));
     if (!objs.length) return false;
     for (const obj of objs) {
-      await talkTo(obj.id);
+      await talkTo(obj.id, true); // some levers are out of reach until another is pulled
       const g2 = ow()!.npcs.find((n) => n.id === goalNpc);
       if (g2 && (await canReachNextTo(g2))) return true;
     }
@@ -511,90 +511,113 @@ async function newGameFromTitle(): Promise<boolean> {
 export async function storyPlaythrough(opts: { boost: number; starter: "oak" | "chili" | "lily" }) {
   instrument();
   const st = () => ctx().state;
+  const party = () => st().party.map((q) => `${q.species}:${q.level}`).join(",");
+  // Every beat is skipped when its flag is already set, so a `?dev=world&play=1&flags=...`
+  // jump-in resumes the story from that point.
 
   // --- Chapter 1 -------------------------------------------------------------
-  await nav("herbarium");
-  await settle();
-  await talkTo("vale_gh");
-  beat("vale in the greenhouse");
-  await talkTo(`pot_${opts.starter}`);
-  await settle();
-  await expectFlag(`starter: ${opts.starter}`, "got_starter", `party=${st().party.map((q) => `${q.species}:${q.level}`).join(",")}`);
+  if (!flag("got_starter")) {
+    await nav("herbarium");
+    await settle();
+    await talkTo("vale_gh");
+    beat("vale in the greenhouse");
+    await talkTo(`pot_${opts.starter}`);
+    await settle();
+    await expectFlag(`starter: ${opts.starter}`, "got_starter", `party=${party()}`);
+  }
   boostParty(opts.boost);
 
-  await nav("fennimore_house");
-  await talkTo("fennimore");
-  await expectFlag("fennimore gives the seed", "got_seed");
+  if (!flag("got_seed")) {
+    await nav("fennimore_house");
+    await talkTo("fennimore");
+    await expectFlag("fennimore gives the seed", "got_seed");
+  }
 
-  // PIP's demo fires on the way back through ROUTE 1.
-  await nav("fallowfield");
   if (!flag("pip_demo_done")) {
-    await nav("route_1");
-    await trigger("pip_demo");
+    // PIP's demo fires on the way back through ROUTE 1.
     await nav("fallowfield");
+    if (!flag("pip_demo_done")) {
+      await nav("route_1");
+      await trigger("pip_demo");
+      await nav("fallowfield");
+    }
+    await expectFlag("pip's catching demo", "pip_demo_done");
   }
-  await expectFlag("pip's catching demo", "pip_demo_done");
 
-  await nav("herbarium");
-  await settle();
-  await expectFlag("theft at the herbarium", "theft_seen");
-  await nav("fallowfield");
-  await settle();
-  if (!flag("rival_1_done")) {
-    const o = ow()!;
-    if (o.npcs.some((n) => n.id === "bram" && o.visible(n))) await talkTo("bram");
+  if (!flag("theft_seen")) {
+    await nav("herbarium");
+    await settle();
+    await expectFlag("theft at the herbarium", "theft_seen");
   }
-  await expectFlag("rival battle 1", "rival_1_done", `beat=${flag("beat_rival_1_" + counter(opts.starter))}`);
-  await nav("herbarium");
-  await settle();
-  await expectFlag("vale's letter, pods and flasks", "got_pods", `pods=${st().bag["terrarium_pod"] ?? 0}`);
+  if (!flag("rival_1_done")) {
+    await nav("fallowfield");
+    await settle();
+    if (!flag("rival_1_done")) {
+      const o = ow()!;
+      if (o.npcs.some((n) => n.id === "bram" && o.visible(n))) await talkTo("bram");
+    }
+    await expectFlag("rival battle 1", "rival_1_done", `won=${flag("beat_rival_1_" + counter(opts.starter))}`);
+  }
+  if (!flag("got_pods")) {
+    await nav("herbarium");
+    await settle();
+    await expectFlag("vale's letter, pods and flasks", "got_pods", `pods=${st().bag["terrarium_pod"] ?? 0}`);
+  }
 
   // --- Chapter 2 -------------------------------------------------------------
-  await nav("bramblegate");
-  beat("arrived in bramblegate", true, `party=${st().party.map((q) => `${q.species}:${q.level}`).join(",")}`);
-  await nav("bramblegate_conservatory");
-  if (!(await solvePuzzle("hollis"))) issue("puzzle", "could not reach HOLLIS");
-  await talkTo("hollis");
-  await expectFlag("HOLLIS: bramble mark", "beat_hollis", `marks=${JSON.stringify(st().marks ?? "")}`);
-  await nav("bramblegate");
-  await settle();
-  beat("grunt sighting", flag("saw_grunt_bg"));
+  if (!flag("beat_hollis")) {
+    await nav("bramblegate");
+    beat("arrived in bramblegate", true, `party=${party()}`);
+    await nav("bramblegate_conservatory");
+    if (!(await solvePuzzle("hollis"))) issue("puzzle", "could not reach HOLLIS");
+    await talkTo("hollis");
+    await expectFlag("HOLLIS: bramble mark", "beat_hollis", `marks=${JSON.stringify(st().marks ?? "")}`);
+  }
+  if (!flag("saw_grunt_bg")) {
+    await nav("bramblegate");
+    await settle();
+    beat("grunt sighting", flag("saw_grunt_bg"));
+  }
 
-  await nav("route_3");
-  await settle();
   if (!flag("beat_grunt_r3")) {
-    const o = ow()!;
-    if (o.map.def.triggers.some((t) => t.script === "r3_grunt")) await trigger("r3_grunt");
-    else if (o.npcs.some((n) => n.id === "grunt" && o.visible(n))) await talkTo("grunt");
+    await nav("route_3");
+    await settle();
+    if (!flag("beat_grunt_r3")) {
+      const o = ow()!;
+      if (o.map.def.triggers.some((t) => t.script === "r3_grunt")) await trigger("r3_grunt");
+      else if (o.npcs.some((n) => n.id === "grunt" && o.visible(n))) await talkTo("grunt");
+    }
+    await expectFlag("route 3 grunt", "beat_grunt_r3");
   }
-  await expectFlag("route 3 grunt", "beat_grunt_r3");
-  await nav("sugarbush");
-  beat("arrived in sugarbush");
 
-  await nav("sugarbush_grove");
-  for (const g of ["grunt1", "grunt2", "grunt3"]) {
-    const o = ow()!;
-    const n = o.npcs.find((a) => a.id === g);
-    if (n && o.visible(n) && n.def?.trainer && !flag(`beat_${n.def.trainer}`)) await talkTo(g);
+  // --- Chapter 3 -------------------------------------------------------------
+  if (!flag("grove_cleared")) {
+    await nav("sugarbush");
+    beat("arrived in sugarbush");
+    await nav("sugarbush_grove");
+    for (const g of ["grunt1", "grunt2", "grunt3"]) {
+      const o = ow()!;
+      const n = o.npcs.find((a) => a.id === g);
+      if (n && o.visible(n) && n.def?.trainer && !flag(`beat_${n.def.trainer}`)) await talkTo(g);
+    }
+    await talkTo("shears");
+    await expectFlag("SHEARS: grove cleared", "grove_cleared");
   }
-  await talkTo("shears");
-  await expectFlag("SHEARS: grove cleared", "grove_cleared");
-  await nav("sugarbush");
-  await settle();
   if (!flag("rival_2_done")) {
-    const o = ow()!;
-    const tr = o.map.def.triggers.find((t) => t.script === "rival_2");
-    if (tr) await trigger("rival_2");
-    else if (o.npcs.some((n) => n.id === "bram" && o.visible(n))) await talkTo("bram");
+    await nav("sugarbush");
+    await settle();
+    if (!flag("rival_2_done")) {
+      const o = ow()!;
+      const tr = o.map.def.triggers.find((t) => t.script === "rival_2");
+      if (tr) await trigger("rival_2");
+      else if (o.npcs.some((n) => n.id === "bram" && o.visible(n))) await talkTo("bram");
+    }
+    await expectFlag("rival battle 2", "rival_2_done");
   }
-  await expectFlag("rival battle 2", "rival_2_done");
 
   await nav("sugarbush_conservatory");
   if (!(await solvePuzzle("nell"))) issue("puzzle", "could not reach NELL");
-  // talkTo returns after the whole chain: battle, mark, VALE's call, save prompt, end card.
-  const o = ow()!;
-  const n = o.npcs.find((a) => a.id === "nell")!;
-  void n;
+  // NELL's talk runs the whole chain: battle, mark, VALE's call, save prompt, end card.
   await talkToUntilEnd("nell");
 }
 

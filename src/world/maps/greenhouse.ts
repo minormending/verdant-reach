@@ -13,20 +13,20 @@ const ROWS = {
     "WPPpgggpPPW", // 1  grow beds behind the keeper
     "WYgggggggYW", // 2  keeper at 5,2
     "WcCCCCCCCKW", // 3  counter; SPECIMEN CABINET at 1,3
-    "WgggggggggW", // 4
+    "WwwwggggggW", // 4  a wood-floored tea nook
     "WhDhgggggpW", // 5  tea table and chairs
     "WPggrrrggPW", // 6
     "WPpgrrrgpYW", // 7
     "WWWWWEWWWWW", // 8
   ],
-  // SUGARBUSH: a warm stove, a maple in a pot and a barrel of last year's syrup.
+  // SUGARBUSH: a warm stove, a maple in a pot and a cosy corner by the fire.
   sugarbush: [
     "WWOOOOOOOWW", // 0
     "WPPpgggpPPW", // 1
     "WYgggggggYW", // 2
-    "WcCCCCCCCVW", // 3  stove at 9,3
-    "WgggggggggW", // 4
-    "WhDhggggg7W", // 5
+    "WcCCCCCCCVW", // 3  stove at 9,3 (on the wood)
+    "WwwwggggwwW", // 4  wood floor by the stove and the tea table
+    "WhDhgggwwpW", // 5
     "WPggrrrggYW", // 6
     "WYpgrrrgpPW", // 7
     "WWWWWEWWWWW", // 8

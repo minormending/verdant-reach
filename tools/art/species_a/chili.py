@@ -38,18 +38,22 @@ def blossom_front():
     s = Sprite(56, 56, BLOSSOM)
     c = s.c
     cx, cy = 23, 37
-    stem = c.curve([(32, 28), (37, 18), (44, 12), (50, 13), (52, 18)], 4.0, 2.8)
-    leaf = c.leaf((41, 15), (55, 29), 11, bend=-2.2, tip=1.4)
+    stem = c.curve([(32, 28), (37, 18), (44, 11), (50, 11), (53, 15)], 4.0, 2.8)
+    leaf = c.leaf((37, 19), (47, 33), 10, bend=-2.0, tip=1.4)
+    bud = c.leaf((53, 15), (52.5, 25), 6.4, power=0.7, tip=1.6, base=0.8)
+    budcal = c.ellipse(53, 16, 3.4, 2.4)
     sep = star(c, 31, 29, 5, 2.5, 8.0, sy=0.9, rot=-60)
     s.add(leaf, tones=(1, 2, 2), shade=(2, 2), close=2)
     s.add(stem, tones=(1, 1, 1), flat=True)
+    s.add(bud, tones=(2, 3, 3), shade=(1, 1))
+    s.add(budcal, tones=(1, 1, 1), flat=True)
     s.add(sep, tones=(1, 1, 2), shade=(2, 2))
     order = [3, 2, 4, 1, 0]  # far petals first
     for k in order:
         a = np.radians(-126 + 72 * k)
-        p1 = (cx + np.cos(a) * 20, cy + np.sin(a) * 16.5)
+        p1 = (cx + np.cos(a) * 21, cy + np.sin(a) * 17.5)
         p0 = (cx + np.cos(a) * 1.5, cy + np.sin(a) * 1.2)
-        m = c.leaf(p0, p1, 13.0, bend=1.6, power=0.62, tip=2.2, base=0.6)
+        m = c.leaf(p0, p1, 13.0, bend=2.2, power=0.62, tip=2.8, base=0.6)
         s.add(m, tones=(2, 3, 3), shade=(2, 2), line="black")
     s.render()
     # flower eye: a dark-green throat ringed with black anthers, pale pistil
@@ -59,9 +63,9 @@ def blossom_front():
         a = np.radians(-126 + 36 + 72 * k)
         x, y = int(round(cx - 0.5 + np.cos(a) * 3.5)), int(round(cy - 0.5 + np.sin(a) * 3.2))
         s.px([(x, y)], 0)
-    s.px([(int(cx) - 1, int(cy) - 1)], 3)
-    for x, y in [(43, 17), (44, 19), (45, 20), (46, 22), (47, 23), (48, 25), (49, 26)]:
-        if s.t[y, x] > 0:
+    s.px([(int(cx) - 1, int(cy) - 1), (int(cx) - 1, int(cy) - 2)], 3)
+    for x, y in [(39, 21), (40, 23), (41, 24), (42, 26), (43, 27), (44, 29)]:
+        if s.t[y, x] == 2:
             s.px([(x, y)], 1)
     s.clean()
     return s.image()
@@ -74,7 +78,7 @@ RED_PATH = spline([(38, 14), (44, 25), (42, 38), (33, 48), (21, 51), (11, 46), (
 def green_front():
     s = Sprite(56, 56, GREEN)
     c = s.c
-    body = c.stroke(GREEN_PATH, 18, 2.4) | c.ellipse(29, 17, 9, 5)
+    body = c.stroke(GREEN_PATH, 18, 2.4) & (c.Y > 13)
     cap = calyx(c, 29, 13, 19, 8)
     stem = c.curve([(30, 10), (31, 4), (27, 1.5), (22, 3)], 3.6, 2.6)
     s.add(body, tones=(1, 2, 2), dark=0.14, round=7)
@@ -89,7 +93,7 @@ def green_front():
 def red_front():
     s = Sprite(56, 56, RED)
     c = s.c
-    body = c.stroke(RED_PATH, 22, 2.2) | c.ellipse(38, 16, 11, 6)
+    body = c.stroke(RED_PATH, 22, 2.2) & (c.Y > 13)
     cap = calyx(c, 38, 12, 22, 9)
     stem = c.curve([(39, 9), (38, 3), (33, 1.5), (29, 3.5)], 4.0, 2.8)
     s.add(body, tones=(1, 2, 2), dark=0.12, round=8)
@@ -140,6 +144,13 @@ def pod_back(pal, path, w0, w1, cap_w, cap_h, cap_tones, body_tones, stem_ctrl):
     s.add(cal, tones=cap_tones, shade=(2, 2), band=(1, 2, c.X < cx), line="black")
     s.add(stem, tones=cap_tones, shade=(2, 0))
     s.render()
+    # sepal seams radiating from the stem across the cap
+    for a in (200, 240, 300, 340):
+        r = np.radians(a)
+        for k in np.arange(3.0, cap_w * 0.42, 0.5):
+            x, y = int(round(cx + np.cos(r) * k)), int(round(cy + 1 - np.sin(r) * k * cap_h))
+            if 0 <= y < 48 and s.owner[y, x] == 1 and s.t[y, x] > 0:
+                s.px([(x, y)], 1 if cap_tones[1] != 1 else 0)
     s.clean()
     return s
 
@@ -158,16 +169,14 @@ def red_back():
     return s.image()
 
 
-EMPTY_ICON = ["................"] * 16
 
 
 def make(id_):
-    import icons
-    f, b, pal, ic = {
-        "chili_blossom": (blossom_front, blossom_back, BLOSSOM, icons.blossom_c),
-        "green_chili": (green_front, green_back, GREEN, icons.green_c),
-        "red_chili": (red_front, red_back, RED, icons.red_c),
+    f, b, pal = {
+        "chili_blossom": (blossom_front, blossom_back, BLOSSOM),
+        "green_chili": (green_front, green_back, GREEN),
+        "red_chili": (red_front, red_back, RED),
     }[id_]
     front = f()
-    i1, i2 = icons.icon_for(id_, front)
+    i1, i2 = icons.icon_for(id_, lambda: icons.plain(f), pal)
     return {"front": front, "back": b(), "icon": i1, "icon__2": i2}

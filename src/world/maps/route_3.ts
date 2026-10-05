@@ -34,10 +34,10 @@ export const route_3: MapDef = {
     "TTy....:......,,,,.TTT", // 9
     "TT*....::::...,,,,.TTT", // 10 OWEN watches the bend
     "TTT.,,,...:..*..,,.TTT", // 11
-    "TT..,,,,..:.........TT", // 12
+    "TT..,,,,..:....*....TT", // 12
     "TT.,,,,,..::::..y...TT", // 13
     "TT..,,,..S...:....,.TT", // 14 NIGHT MEADOW sign
-    "TTT..........:...,,,TT", // 15
+    "TTT.**4......:...,,,TT", // 15
     "TTTT*.......::..TTTTTT", // 16
     "TTTTTT....::..TTTTTTTT", // 17
     "TTTTTTTT..:.TTTTTTTTTT", // 18
@@ -64,7 +64,7 @@ export const route_3: MapDef = {
     "TT.,,:.....HvvvvvvvTTT", // 39 ledge: the quick way back to town
     "TT.,,:.....H..,,,..TTT", // 40
     "TT.,,::::::H..,,,..TTT", // 41
-    "TT.....*..:...,,,..TTT", // 42
+    "TT.....*..::..,,,..TTT", // 42
     "TTTT......::..*....TTT", // 43
     "TTTTT..y.S::.....TTTTT", // 44
     "TTTTTTTT..::..TTTTTTTT", // 45

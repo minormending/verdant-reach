@@ -26,10 +26,10 @@ export const herbarium_roof: MapDef = {
     "TTTAAA:AAATT", // 3  the path up the far slope
     "q~~~~~2~~~~q", // 4  the river and its footbridge
     "############", // 5  railing
-    "#YwwwwwwwwY#", // 6  new game: <PLAYER> 5,6 beside VALE 6,6
-    "#pwwwwwwwwp#", // 7
-    "#9wwwwwwwwS#", // 8
-    "#6wwwwwwww7#", // 9
+    "#PwwwwwwwwP#", // 6  new game: <PLAYER> 5,6 beside VALE 6,6
+    "#Pwwwwwwwwh#", // 7
+    "#hwwwwwwwwP#", // 8
+    "#PwwwwwwwwP#", // 9
     "#PPwwwwwwwu#", // 10
     "############", // 11
   ],
@@ -42,7 +42,6 @@ export const herbarium_roof: MapDef = {
       visibleWhen: when({ got_starter: true }) },
   ],
   signs: [
-    { x: 10, y: 8, text: "OBSERVATION DECK. On a clear day: the river, the crags and the far slope." },
   ],
   triggers: [],
 };

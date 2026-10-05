@@ -57,13 +57,13 @@ export const sugarbush_conservatory: MapDef = {
     "Wbbb=bbqPPbbb===bW", // 6  west lane | east lane (valve 2 at 16,6)
     "Wbqq=bbq~~bqq=bqqW", // 7
     "Wbbb=qqq~0bbb=bbbW", // 8  SORREL at 1,8
-    "Wqbb=bbb~~qbb=bqbW", // 9
-    "WPbb=bqPP~qqq=bbbW", // 10 TANSY at 16,10
+    "Wqbb=bbb~~qbb=b0bW", // 9
+    "WPbb=b0PP~qqq=bbbW", // 10 TANSY at 16,10
     "Wbbb=bbbPPbbb=bbqW", // 11
     "WaaadaaaPPeeeieeeW", // 12 channel A (crossing 4,12) | channel B (crossing 13,12)
     "Wbbb==========bbbW", // 13
-    "Wqbbbbbbb=bbbbbbqW", // 14 valve 1 at 8,14
-    "WPPqbbbbb=bbbbqPPW", // 15
+    "W0bbbbbbb=bb0bbb0W", // 14 valve 1 at 8,14
+    "WPPq0bbbb=bbb0qPPW", // 15
     "WPPPqbbb===bbqPPPW", // 16
     "WWWWWWWWWEWWWWWWWW", // 17
   ],

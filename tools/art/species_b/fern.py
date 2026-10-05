@@ -216,18 +216,19 @@ ICON_UNFURL = [
 def front_ostrich():
     s = Sprite(72, 72, PAL, sc=0.95)
     bx, by = 36, 71
+    lean = lambda pts: [(x - (by - y) * 0.07, y) for x, y in pts]   # the vase leans in (left)
     blade = lambda mx: (lambda t: mx * math.sin(math.pi * min(1, 0.06 + t * 0.97)) ** 0.75)
     # inner fronds (behind): tall and nearly upright
-    frond(s, [(bx + 1, by), (bx + 5, 50), (bx + 9, 30), (bx + 12, 15)], blade(12), k=1)
-    frond(s, [(bx - 1, by), (bx - 5, 50), (bx - 8, 30), (bx - 10, 14)], blade(12), k=1)
+    frond(s, lean([(bx + 1, by), (bx + 5, 50), (bx + 9, 30), (bx + 12, 15)]), blade(12), k=1)
+    frond(s, lean([(bx - 1, by), (bx - 5, 50), (bx - 8, 30), (bx - 10, 14)]), blade(12), k=1)
     # outer fronds: arching out and over, tips drooping
-    frond(s, [(bx + 2, by), (bx + 10, 50), (bx + 18, 30), (bx + 24, 20), (bx + 27, 22)], blade(13), k=2)
-    frond(s, [(bx - 2, by), (bx - 10, 50), (bx - 18, 30), (bx - 24, 20), (bx - 27, 22)], blade(13), k=2)
+    frond(s, lean([(bx + 2, by), (bx + 10, 50), (bx + 18, 30), (bx + 24, 20), (bx + 27, 22)]), blade(13), k=2)
+    frond(s, lean([(bx - 2, by), (bx - 10, 50), (bx - 18, 30), (bx - 24, 20), (bx - 27, 22)]), blade(13), k=2)
+    # the heart: one last fiddlehead rising out of the vase
+    crozier(s, lean([(bx, by), (bx, 52), (bx - 1, 38)]), bx - 7, 32, 5.5, 3.6, 3.2, cw=False)
     # front pair, shorter, leaning out
-    frond(s, [(bx, by), (bx + 6, 56), (bx + 14, 44), (bx + 20, 38)], blade(11), k=2)
-    frond(s, [(bx, by), (bx - 6, 56), (bx - 14, 44), (bx - 20, 38)], blade(11), k=2)
-    # the heart: one last fiddlehead rising from the middle
-    crozier(s, [(bx, by), (bx, 58), (bx, 48)], bx - 3, 43, 4.5, 3.5, 3.0, cw=False)
+    frond(s, lean([(bx, by), (bx + 6, 56), (bx + 14, 46), (bx + 20, 40)]), blade(11), k=2)
+    frond(s, lean([(bx, by), (bx - 6, 56), (bx - 14, 46), (bx - 20, 40)]), blade(11), k=2)
     return s
 
 

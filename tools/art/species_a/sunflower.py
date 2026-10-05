@@ -48,17 +48,16 @@ def bud_front():
     lfR = c.leaf((32, 34), (52, 26), 13, bend=-2.5, power=0.6, tip=1.3, base=0.8)
     lfS = c.leaf((32, 50), (46, 55), 8, power=0.6, tip=1.3)
     bracts = star(c, 21, 15, 9, 7.5, 14.0, sx=1.0, sy=0.85, rot=-20)
+    crown = star(c, 20.0, 10.0, 5, 6.0, 10.5, sx=1.1, sy=0.9, rot=-90)
     bud = c.ellipse(21, 14, 9.0, 8.0, -15)
     s.add(lfR, tones=(1, 2, 2), dark=0.12, round=4)
     s.add(stem, tones=(1, 2, 2), dark=0.05)
     s.add(lfS, tones=(1, 2, 2), dark=0.12, round=3)
     s.add(lfL, tones=(1, 2, 2), dark=0.12, round=4)
-    s.add(bracts, tones=(1, 1, 2), dark=0.2, round=4)
-    s.add(bud, tones=(1, 2, 2), dark=0.14, round=5, line="dark")
+    s.add(bracts, tones=(1, 1, 2), shade=(2, 2), close=1)
+    s.add(crown, tones=(3, 3, 3), flat=True, line="black")
+    s.add(bud, tones=(1, 2, 2), shade=(3, 3), line="black")
     s.render()
-    # yellow petal tips peeking from the top of the bud
-    for x, y in [(16, 7), (17, 7), (19, 6), (20, 6), (22, 6), (23, 6), (25, 7)]:
-        s.px([(x, y), (x, y - 1)], 3)
     s.clean()
     return s.image()
 
@@ -177,23 +176,26 @@ def sun_back():
     s.add(lf, tones=(1, 3, 3), flat=True)
     s.add(stem, tones=(1, 3, 3), shade=(3, 0))
     petal_ring(s, c, hx, hy, 14, 8, 22, 8, 0.95, 0.85, 0, (1, 2, 2), line="dark", shade=(1, 1))
-    s.add(c.ellipse(hx, hy, 12, 10.5), tones=(1, 3, 3), shade=(3, 3), line="black")
-    s.add(star(c, hx, hy, 9, 7.0, 11.5, sx=1, sy=0.88, rot=-90), tones=(1, 3, 3), shade=(2, 2), line="dark")
+    s.add(c.ellipse(hx, hy, 12, 10.5), tones=(0, 3, 3), shade=(2, 2), line="black")
+    for k in range(9):
+        a = np.radians(-90 + 40 * k + 20)
+        p1 = (hx + np.cos(a) * 11.5, hy + np.sin(a) * 10.0)
+        s.add(c.leaf((hx + np.cos(a) * 3, hy + np.sin(a) * 2.6), p1, 6.0, power=0.7, tip=1.8), tones=(0, 3, 3),
+              shade=(1, 1), line="black")
+    s.add(c.ellipse(hx + 0.5, hy + 0.5, 4.0, 3.5), tones=(0, 3, 3), shade=(1, 1), line="black")
     s.render()
     s.clean()
     return s.image()
 
 
-EMPTY_ICON = ["................"] * 16
 
 
 def make(id_):
-    import icons
-    f, b, pal, ic = {
-        "sunflower_seedling": (seedling_front, seedling_back, SEED, icons.seedling),
-        "sunflower_bud": (bud_front, bud_back, BUD, icons.sbud),
-        "sunflower": (sun_front, sun_back, SUN, icons.sun),
+    f, b, pal = {
+        "sunflower_seedling": (seedling_front, seedling_back, SEED),
+        "sunflower_bud": (bud_front, bud_back, BUD),
+        "sunflower": (sun_front, sun_back, SUN),
     }[id_]
     front = f()
-    i1, i2 = icons.icon_for(id_, front)
+    i1, i2 = icons.icon_for(id_, lambda: icons.plain(f), pal)
     return {"front": front, "back": b(), "icon": i1, "icon__2": i2}

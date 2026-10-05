@@ -15,12 +15,12 @@ export const player_home: MapDef = {
   legend: LEGEND,
   tiles: [
     "WWOOWWWOOW", // 0
-    "WKKpwFwVCW", // 1
+    "WKKKwFwVCW", // 1
     "WZwwwwwwwW", // 2
-    "WYwrrrwwDW", // 3
+    "WhwrrrwwDW", // 3
     "WwwrrrwwDW", // 4
-    "WpwrrrwhDW", // 5
-    "WwwwwwwwpW", // 6
+    "WDwrrrwhDW", // 5
+    "WwwwwwwwKW", // 6
     "WWWWEWWWWW", // 7
   ],
   structures: [],

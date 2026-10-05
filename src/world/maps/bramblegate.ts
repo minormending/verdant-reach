@@ -23,12 +23,12 @@ export const bramblegate: MapDef = {
     // x: 0123456789012345678901234567
     "TTTTTTTTTTTTT::TTTTTTTTTTTTT", // 0
     "TBBBBBBBBBBB.::.BBBBBBBBBBBT", // 1  north bramble arch (WARDEN)
-    "TB.*Y....Y*.6116.y..y.*f*.BT", // 2
+    "TB.*f....f*.6116.y..y.*f*.BT", // 2
     "TB*.@@@@@@.*L11..@@@@.@@@@BT", // 3  CONSERVATORY, GREENHOUSE, cottage
     "TBII@@@@@@IIL11..@@@@.@@@@BT", // 4  glazed wings
     "TBII@@@@@@IIL11.S@@@@.@@@@BT", // 5
     "TBII@@@@@@IIL11111111111*.BT", // 6
-    "TB*.Y00100Y*L11.*f*.9..y*.BT", // 7  lily pools either side of the walk
+    "TB*.6001006*L11.*f*.9..y*.BT", // 7  lily pools either side of the walk
     "TBf..00100.fL116.......TT.BT", // 8
     "TBLLLLLNLLLLL11.........T.BT", // 9  brick court wall, gate
     "TB....S::::::11...........BT", // 10

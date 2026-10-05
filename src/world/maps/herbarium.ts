@@ -1,7 +1,7 @@
 import type { MapDef } from "../../contracts";
 import { LEGEND, ifFlags, movePlayer, say, when, type Scripts } from "../build";
 
-// DR. VALE's lab (west) and the glass greenhouse wing (east), joined by an open
+// DR. VALE's lab (west, old oak boards) and the glass greenhouse wing (east), joined by an open
 // doorway at 11,6. The lab: stairs to the observation deck, the archive shelves,
 // the specimen cabinets (labelled drawers of pressed sheets), the microscope
 // bench, VALE's desk and the archivist's reading table. The greenhouse: planters
@@ -23,17 +23,17 @@ export const herbarium: MapDef = {
   legend: LEGEND,
   tiles: [
     "WWOOWWOOWWWIIIIIIIII", // 0
-    "WUtKKKtccKKIYPPPPPYI", // 1
-    "WttttttttttIgggggggI", // 2
-    "WJttDDDptttIgPPPPPgI", // 3
-    "WQtttttttttIgggggggI", // 4
-    "WJtttttJQJtIggggggYI", // 5
-    "WttttttttttgggggggPI", // 6
-    "WtttttthDDhIggggggPI", // 7
-    "WctttttttttIgPPgggPI", // 8
-    "WctrrrttttKIggggggPI", // 9
-    "WttrrrttttKI%%%gggPI", // 10
-    "WptrrrttttpIYPPpggYI", // 11
+    "WUwKKKwccKKIYPPPPPYI", // 1
+    "WwwwwwwwwwwIgggggggI", // 2
+    "WJwwDDDwwwwIgPPPPPgI", // 3
+    "WQwwwwwwwwwIgggggggI", // 4
+    "WJwwwwwJQJwIggggggYI", // 5
+    "WwwwwwwwwwwgggggggPI", // 6
+    "WwwwwwwhDDhIggggggPI", // 7
+    "WcwwwwwwwwwIgPPgggPI", // 8
+    "WcwrrrwwwwKIggggggPI", // 9
+    "WwwrrrwwwwKI%%%gggPI", // 10
+    "WKwrrrwwwwKIYPPpggYI", // 11
     "WWWWEWWWWWWIIIIIIIII", // 12
   ],
   structures: [],

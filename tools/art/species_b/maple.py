@@ -133,8 +133,10 @@ def front_sapling():
 
 def back_sapling():
     s = Sprite(48, 72, PAL_SAPLING)
-    trunk = s.curve([(24, 72), (24, 58), (23, 44), (24, 34)], (5.0, 3.0))
+    trunk = s.curve([(24, 72), (24, 58), (23, 44), (24, 24)], (5.0, 2.6))
     tid = s.part(trunk, base=1, k=1, sh_tone=0, line=0)
+    for a, b in (((23, 50), (13, 44)), ((24, 48), (35, 45)), ((23, 38), (15, 30)), ((24, 36), (32, 30))):
+        s.part(s.curve([a, b], (2.4, 1.6)), base=1, k=0, line=0, merge=[tid])
     maple_leaf(s, 11, 42, 18, ang=-1.1)
     maple_leaf(s, 37, 44, 18, ang=1.15)
     maple_leaf(s, 33, 28, 19, ang=0.5)

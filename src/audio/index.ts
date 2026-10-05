@@ -8,7 +8,7 @@ import { MUSIC_DEFS } from "./music";
 import { JINGLE_DEFS, SFX_DEFS } from "./sfx";
 import { cryFor } from "./cry";
 import { parseSong, type ParsedSong, type SongDef } from "./song";
-import { DEFAULT_VOLUME, MUSIC_TRIM, SFX_TRIM } from "./mix";
+import { DEFAULT_VOLUME, JINGLE_TRIM, MUSIC_TRIM, SFX_TRIM } from "./mix";
 import { AmbienceBed, ambienceFor, clockTimeOfDay } from "./ambience";
 
 export interface AudioDebug {
@@ -110,7 +110,7 @@ export function createAudio(): AudioService {
           jingles--;
           if (jingles === 0 && current && !music) startMusic(resumeTick);
           resolve();
-        });
+        }, JINGLE_TRIM[id] ?? 1);
       });
     },
 

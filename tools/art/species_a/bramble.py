@@ -53,9 +53,12 @@ def drupe_centres(cx, cy, rx, ry, dx=6.0, dy=5.0):
 
 
 def berry_mask(c, cx, cy, rx, ry, r=3.0):
+    """Ellipse with drupelet bumps all round its rim (a bumpy, round berry)."""
     m = c.ellipse(cx, cy, rx, ry)
-    for x, y in drupe_centres(cx, cy, rx, ry):
-        m |= c.circle(x, y, r)
+    n = max(8, int(2 * np.pi * np.sqrt((rx * rx + ry * ry) / 2) / 5.2))
+    for k in range(n):
+        a = 2 * np.pi * (k + 0.5) / n
+        m |= c.circle(cx + np.cos(a) * (rx - 0.6), cy + np.sin(a) * (ry - 0.6), r * 0.9)
     return m
 
 
@@ -81,7 +84,6 @@ def paint_drupes(s, cx, cy, rx, ry, glints=3):
                 xx, yy = x0 + i, y0 + j
                 if 0 <= xx < s.w and 0 <= yy < s.h and s.t[yy, xx] > 0:
                     s.t[yy, xx] = int(ch)
-                    s.protect[yy, xx] = True
 
 
 def cane_mask(c, path, w0, w1, every=7, size=3.8, start=0.1, end=0.9, side=1):
@@ -129,13 +131,13 @@ def blossom_front():
             if s.t[y, x] == 3:
                 s.px([(x, y)], 2)
     # centre: a knot of green-to-berry drupelets ringed by stamens
-    s.paint(c.circle(cx, cy, 5.2), 2)
-    for k in range(12):
-        a = 2 * np.pi * k / 12
-        x, y = int(round(cx + np.cos(a) * 5.0 - 0.5)), int(round(cy + np.sin(a) * 4.6 - 0.5))
-        s.px([(x, y)], 0 if k % 2 else 1)
-    s.paint(c.circle(cx, cy, 2.8), 1)
-    s.px([(int(cx) - 1, int(cy) - 1), (int(cx), int(cy) - 1)], 2)
+    s.paint(c.circle(cx - 0.5, cy - 0.5, 5.4), 1)
+    for k in range(10):
+        a = 2 * np.pi * k / 10 + 0.3
+        x, y = int(round(cx - 0.5 + np.cos(a) * 4.6)), int(round(cy - 0.5 + np.sin(a) * 4.3))
+        s.px([(x, y)], 0)
+    s.paint(c.circle(cx - 0.5, cy - 0.5, 2.6), 2)
+    s.px([(int(cx) - 1, int(cy) - 1), (int(cx) - 2, int(cy) - 1)], 3)
     s.clean()
     return s.image()
 
@@ -153,7 +155,7 @@ def berry_front():
     leaf2 = c.leaf((40, 47), (54, 52), 9, bend=1.0, power=0.6, teeth=5, tooth=0.3, tip=1.3)
     sep = star(c, 17.5, 23.5, 6, 3.0, 10.5, sx=1.1, sy=0.5, rot=-90 + 30)
     s.add(leaf2, tones=(1, 3, 3), shade=(2, 2), close=2)
-    s.add(cane, tones=(0, 1, 1), shade=(3, 0), prune=False)
+    s.add(cane, tones=(0, 1, 1), shade=(2, 0), prune=False)
     s.add(leaf, tones=(1, 3, 3), shade=(2, 2), close=2)
     s.add(berry_mask(c, bx, by, brx, bry), tones=(1, 1, 1), flat=True)
     s.add(sep, tones=(1, 3, 3), shade=(1, 1))
@@ -194,8 +196,8 @@ def blossom_back():
     s = Sprite(48, 48, BLOSSOM, crop_bottom=True)
     c = s.c
     cx, cy = 22, 26
-    cane_p = spline([(cx, cy), (30, 34), (37, 41), (44, 48)])
-    cane = cane_mask(c, cane_p, 5.0, 6.0, every=9, size=3.6, start=0.3, end=0.95)
+    cane_p = spline([(cx, cy), (25, 34), (27, 41), (27, 48)])
+    cane = cane_mask(c, cane_p, 4.0, 5.0, every=9, size=3.4, start=0.45, end=0.95)
     for k in (2, 3, 1, 4, 0):
         a = np.radians(-90 + 72 * k)
         p0 = (cx + np.cos(a) * 2, cy + np.sin(a) * 1.7)
@@ -247,16 +249,14 @@ def black_back():
     return s.image()
 
 
-EMPTY_ICON = ["................"] * 16
 
 
 def make(id_):
-    import icons
-    f, b, pal, ic = {
-        "bramble_blossom": (blossom_front, blossom_back, BLOSSOM, icons.bblossom),
-        "bramble_berry": (berry_front, berry_back, BERRY, lambda p: icons.berry(p, [(7, 6), (8, 2), (12, 1), (13, 5), (12, 15.6)], 6, 10, 5, 5, (4, 8))),
-        "blackberry": (black_front, black_back, BLACK, lambda p: icons.berry(p, [(6, 5), (7, 1.5), (12, 1), (14, 5), (13, 15.6)], 6.5, 10, 5.6, 5.4, (4, 7))),
+    f, b, pal = {
+        "bramble_blossom": (blossom_front, blossom_back, BLOSSOM),
+        "bramble_berry": (berry_front, berry_back, BERRY),
+        "blackberry": (black_front, black_back, BLACK),
     }[id_]
     front = f()
-    i1, i2 = icons.icon_for(id_, front)
+    i1, i2 = icons.icon_for(id_, lambda: icons.plain(f), pal)
     return {"front": front, "back": b(), "icon": i1, "icon__2": i2}

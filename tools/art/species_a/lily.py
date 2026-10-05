@@ -45,31 +45,19 @@ def spikes(s: Sprite, cx, cy, every=3, length=2, ymax=None, phase=0):
 def pod_front():
     s = Sprite(56, 56, POD)
     c = s.c
-    bud = blob(c, [(22, 11), (15, 20), (12, 33), (14, 46), (22, 52), (36, 52), (43, 46), (44, 33), (39, 21), (29, 13)])
-    sepL = c.leaf((24, 48), (5, 54.5), 10, bend=1.5, tip=1.6)
-    sepR = c.leaf((33, 48), (51, 54.5), 10, bend=-1.5, tip=1.6)
+    bud = blob(c, [(17, 8), (17, 14), (13, 24), (12, 36), (15, 47), (22, 52), (36, 52), (43, 46), (44, 33), (40, 21), (31, 14), (23, 12)])
+    sepL = c.leaf((24, 48), (4, 50), 10, bend=3.0, tip=1.6)
+    sepR = c.leaf((33, 48), (52, 50), 10, bend=-3.0, tip=1.6)
     s.add(sepR, tones=(1, 1, 2), shade=(2, 2))
     s.add(sepL, tones=(1, 2, 2), shade=(2, 2))
     s.add(bud, tones=(1, 2, 3), shade=(5, 3), band=(3, 5, (c.Y > 20) & (c.Y < 40)), cast=2)
     s.render()
     # meridian ribs from the tip give the dome its volume
-    for ctrl in ([(21, 13), (16, 28), (17, 48)], [(22, 13), (24, 31), (27, 50)], [(24, 13), (33, 30), (37, 48)]):
+    for ctrl in ([(19, 13), (15, 28), (17, 48)], [(21, 14), (24, 31), (27, 50)], [(24, 14), (34, 29), (38, 48)]):
         for x, y in bezier(ctrl, 50):
             x, y = int(x), int(y)
             if s.t[y, x] in (2, 3):
-                s.px([(x, y)], 1)
-    # spines: short cream prickles pointing outward, in staggered rows
-    cx, cy = 28, 40
-    for j, y in enumerate(range(18, 50, 4)):
-        for x in range(10 + (j % 2) * 3, 48, 6):
-            if s.owner[y, x] != 2 or s.t[y, x] <= 0:
-                continue
-            d = np.array([x - cx, y - cy], float)
-            d /= np.linalg.norm(d) + 1e-9
-            x2, y2 = int(round(x + d[0])), int(round(y + d[1] - 1))
-            tone = 3 if s.t[y, x] == 2 else 0
-            if 0 < s.t[y2, x2]:
-                s.px([(x, y), (x2, y2)], tone)
+                s.px([(x, y)], 1, protect=False)
     spikes(s, 28, 36, every=3, length=2, ymax=47)
     s.clean()
     return s.image()
@@ -87,7 +75,7 @@ def pad_front():
     s.render()
     # pale lip along the rim's top edge; ribs on the near outer wall
     lip = c.ellipse(28, 43.0, 27.0, 11.5) & ~c.ellipse(28, 43.6, 27.0, 11.5)
-    s.paint(lip & (c.Y < 40), 3, only=[1])
+    s.paint(lip & (c.Y < 40) & (s.owner == 0), 3, only=[1])
     for x in range(4, 54, 3):
         col = [y for y in range(46, 56) if s.t[y, x] == 1 and s.owner[y, x] == 0]
         if len(col) >= 2:
@@ -98,12 +86,12 @@ def pad_front():
         for r in np.arange(8, 26, 0.4):
             x, y = int(28 + np.cos(a) * r), int(44 - np.sin(a) * r * 0.39)
             if 0 <= x < 56 and s.t[y, x] == 2:
-                s.px([(x, y)], 3)
-    # bud: prickles + spines
-    for j, y in enumerate(range(22, 41, 4)):
-        for x in range(20 + (j % 2) * 3, 37, 5):
-            if s.owner[y, x] == 2 and s.t[y, x] == 1 and s.t[y - 1, x - 1] == 1:
-                s.px([(x, y), (x - 1, y - 1)], 3)
+                s.px([(x, y)], 3, protect=False)
+    for ctrl in ([(25, 19), (21, 30), (23, 41)], [(26, 19), (30, 30), (31, 41)]):
+        for x, y in bezier(ctrl, 30):
+            x, y = int(x), int(y)
+            if s.owner[y, x] == 2 and s.t[y, x] == 1:
+                s.px([(x, y)], 0, protect=False)
     spikes(s, 27, 32, every=3, length=2, ymax=36)
     s.clean()
     return s.image()
@@ -150,18 +138,7 @@ def pod_back():
         for x, y in bezier(ctrl, 50):
             x, y = int(x), int(y)
             if s.t[y, x] in (2, 3):
-                s.px([(x, y)], 1)
-    cx, cy = 25, 34
-    for j, y in enumerate(range(13, 46, 4)):
-        for x in range(9 + (j % 2) * 3, 42, 6):
-            if s.owner[y, x] != 2 or s.t[y, x] <= 0:
-                continue
-            d = np.array([x - cx, y - cy], float)
-            d /= np.linalg.norm(d) + 1e-9
-            x2, y2 = int(round(x + d[0])), int(round(y + d[1] - 1))
-            tone = 3 if s.t[y, x] == 2 else 0
-            if 0 < s.t[y2, x2]:
-                s.px([(x, y), (x2, y2)], tone)
+                s.px([(x, y)], 1, protect=False)
     spikes(s, 25, 30, every=3, length=2, ymax=40)
     s.clean()
     return s.image()
@@ -180,17 +157,18 @@ def pad_back():
     s.add(bud, tones=(0, 1, 3), shade=(3, 2), band=(2, 3, (c.Y < 26) & (c.X < 22)))
     s.render()
     lip = c.ellipse(24, 37, 25.0, 14.0) & ~c.ellipse(24, 37.6, 25.0, 14.0)
-    s.paint(lip & (c.Y < 34), 3, only=[1])
+    s.paint(lip & (c.Y < 34) & (s.owner == 0), 3, only=[1])
     for k in range(13):
         a = np.radians(200 - 18.5 * k)
         for r in np.arange(8, 25, 0.4):
             x, y = int(24 + np.cos(a) * r), int(38 - np.sin(a) * r * 0.53)
             if 0 <= x < 48 and 0 <= y < 48 and s.t[y, x] == 2:
-                s.px([(x, y)], 3)
-    for j, y in enumerate(range(17, 36, 4)):
-        for x in range(18 + (j % 2) * 3, 32, 5):
-            if s.owner[y, x] == 2 and s.t[y, x] == 1 and s.t[y - 1, x - 1] == 1:
-                s.px([(x, y), (x - 1, y - 1)], 3)
+                s.px([(x, y)], 3, protect=False)
+    for ctrl in ([(23, 14), (19, 25), (21, 36)], [(24, 14), (28, 25), (28, 36)]):
+        for x, y in bezier(ctrl, 30):
+            x, y = int(x), int(y)
+            if s.owner[y, x] == 2 and s.t[y, x] == 1:
+                s.px([(x, y)], 0, protect=False)
     spikes(s, 24, 27, every=3, length=2, ymax=30)
     s.clean()
     return s.image()
@@ -223,16 +201,14 @@ def lily_back():
     return s.image()
 
 
-EMPTY_ICON = ["................"] * 16
 
 
 def make(id_):
-    import icons
-    f, b, pal, ic = {
-        "lily_seedpod": (pod_front, pod_back, POD, icons.seedpod),
-        "lily_pad": (pad_front, pad_back, PAD, icons.pad),
-        "giant_water_lily": (lily_front, lily_back, LILY, icons.waterlily),
+    f, b, pal = {
+        "lily_seedpod": (pod_front, pod_back, POD),
+        "lily_pad": (pad_front, pad_back, PAD),
+        "giant_water_lily": (lily_front, lily_back, LILY),
     }[id_]
     front = f()
-    i1, i2 = icons.icon_for(id_, front)
+    i1, i2 = icons.icon_for(id_, lambda: icons.plain(f), pal)
     return {"front": front, "back": b(), "icon": i1, "icon__2": i2}

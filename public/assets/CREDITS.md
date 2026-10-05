@@ -11,24 +11,24 @@ share-alike, non-commercial or no-derivatives licences).
 
 | Species | Photo | Author | Licence | Source |
 |---|---|---|---|---|
-| oak_acorn * | oak/baby.jpg | Steve Hurst, USDA-NRCS PLANTS Database | Public Domain (US government work) | https://commons.wikimedia.org/wiki/File:Quercus_alba_acorn.jpg |
-| oak_sapling | oak/teen.jpg | Lex Joy (iNaturalist user lexjoy) | CC BY 4.0 | https://www.inaturalist.org/observations/7134597 |
-| great_oak | oak/adult.jpg | AnRo0002 | CC0 | https://commons.wikimedia.org/wiki/File:20130425Quercus_robur01.jpg |
-| chili_blossom | chili/baby.jpg | Paul Zucker | CC BY 3.0 | https://commons.wikimedia.org/wiki/File:Efflorescence_(262728773).jpeg |
-| green_chili | chili/teen.jpg | ALAMIN | CC BY 4.0 | https://commons.wikimedia.org/wiki/File:Green_chili_pepper_on_plant_Bangladesh_1.jpg |
-| red_chili | chili/adult.jpg | James Bowe | CC BY 2.0 | https://www.flickr.com/photos/29848680@N08/6018808766 |
-| lily_seedpod | water_lily/baby.jpg | Bilby | CC BY 3.0 | https://commons.wikimedia.org/wiki/File:Victoria_amazonica_bud.jpg |
-| lily_pad | water_lily/teen.jpg | Pablo Cauã da Silva Toledo (iNaturalist user pablocauapc) | CC BY 4.0 | https://www.inaturalist.org/observations/320465149 |
-| giant_water_lily | water_lily/adult.jpg | David Stanley from Nanaimo, Canada | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Victoria_Amazonica_Flower_(14013432784).jpg |
-| dandelion_bud | dandelion/baby.jpg | Conall (conall..) | CC BY 2.0 | https://www.flickr.com/photos/16176711@N02/53680710936 |
-| dandelion | dandelion/teen.jpg | Agnieszka Kwiecień (Nova) | CC BY 2.5 | https://commons.wikimedia.org/wiki/File:Taraxacum_officinale_100.jpg |
-| dandelion_clock | dandelion/adult.jpg | Martin Ehrensberger | CC0 | https://commons.wikimedia.org/wiki/File:20180515_Dscf0118_2_Jpg_(259503189).jpeg |
-| bramble_blossom | bramble/baby.jpg | Sandy Wolkenberg (sadawolk) | CC BY 4.0 | https://www.inaturalist.org/observations/286952347 |
-| bramble_berry * | bramble/teen.jpg | Juraj Ahel (xeniorn) | CC BY 4.0 | https://www.inaturalist.org/observations/97085332 |
-| blackberry | bramble/adult.jpg | Alan Rockefeller (alan_rockefeller) | CC BY 4.0 | https://www.inaturalist.org/observations/379271552 |
-| sunflower_seedling | sunflower/baby.jpg | Hildabast | CC0 | https://commons.wikimedia.org/wiki/File:Dwarf_sunflower_seedling.jpg |
-| sunflower_bud | sunflower/teen_alt.jpg | Loïc Mathieu (frontyardscientist, iNaturalist) | CC BY 4.0 | https://www.inaturalist.org/observations/333769628 |
-| sunflower | sunflower/adult_alt.jpg | Renee Grayson | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Nuwu_Pahsats_garden_sunflower.jpg |
+| oak_acorn * † | oak/baby.jpg | Steve Hurst, USDA-NRCS PLANTS Database | Public Domain (US government work) | https://commons.wikimedia.org/wiki/File:Quercus_alba_acorn.jpg |
+| oak_sapling † | oak/teen.jpg | Lex Joy (iNaturalist user lexjoy) | CC BY 4.0 | https://www.inaturalist.org/observations/7134597 |
+| great_oak † | oak/adult.jpg | AnRo0002 | CC0 | https://commons.wikimedia.org/wiki/File:20130425Quercus_robur01.jpg |
+| chili_blossom † | chili/baby.jpg | Paul Zucker | CC BY 3.0 | https://commons.wikimedia.org/wiki/File:Efflorescence_(262728773).jpeg |
+| green_chili † | chili/teen.jpg | ALAMIN | CC BY 4.0 | https://commons.wikimedia.org/wiki/File:Green_chili_pepper_on_plant_Bangladesh_1.jpg |
+| red_chili † | chili/adult.jpg | James Bowe | CC BY 2.0 | https://www.flickr.com/photos/29848680@N08/6018808766 |
+| lily_seedpod † | water_lily/baby.jpg | Bilby | CC BY 3.0 | https://commons.wikimedia.org/wiki/File:Victoria_amazonica_bud.jpg |
+| lily_pad † | water_lily/teen.jpg | Pablo Cauã da Silva Toledo (iNaturalist user pablocauapc) | CC BY 4.0 | https://www.inaturalist.org/observations/320465149 |
+| giant_water_lily † | water_lily/adult.jpg | David Stanley from Nanaimo, Canada | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Victoria_Amazonica_Flower_(14013432784).jpg |
+| dandelion_bud † | dandelion/baby.jpg | Conall (conall..) | CC BY 2.0 | https://www.flickr.com/photos/16176711@N02/53680710936 |
+| dandelion † | dandelion/teen.jpg | Agnieszka Kwiecień (Nova) | CC BY 2.5 | https://commons.wikimedia.org/wiki/File:Taraxacum_officinale_100.jpg |
+| dandelion_clock † | dandelion/adult.jpg | Martin Ehrensberger | CC0 | https://commons.wikimedia.org/wiki/File:20180515_Dscf0118_2_Jpg_(259503189).jpeg |
+| bramble_blossom † | bramble/baby.jpg | Sandy Wolkenberg (sadawolk) | CC BY 4.0 | https://www.inaturalist.org/observations/286952347 |
+| bramble_berry * † | bramble/teen.jpg | Juraj Ahel (xeniorn) | CC BY 4.0 | https://www.inaturalist.org/observations/97085332 |
+| blackberry † | bramble/adult.jpg | Alan Rockefeller (alan_rockefeller) | CC BY 4.0 | https://www.inaturalist.org/observations/379271552 |
+| sunflower_seedling † | sunflower/baby.jpg | Hildabast | CC0 | https://commons.wikimedia.org/wiki/File:Dwarf_sunflower_seedling.jpg |
+| sunflower_bud † | sunflower/teen_alt.jpg | Loïc Mathieu (frontyardscientist, iNaturalist) | CC BY 4.0 | https://www.inaturalist.org/observations/333769628 |
+| sunflower † | sunflower/adult_alt.jpg | Renee Grayson | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Nuwu_Pahsats_garden_sunflower.jpg |
 | pumpkin_blossom | pumpkin/baby.jpg | Roberto Daniel Avila (robertodesu) | CC BY 4.0 | https://www.inaturalist.org/observations/306575047 |
 | green_pumpkin | pumpkin/teen.jpg | tracydekalb | CC BY 2.0 | https://www.flickr.com/photos/11540627@N03/3966532785 |
 | pumpkin | pumpkin/adult_alt.jpg | hello-julie | CC BY 2.0 | https://www.flickr.com/photos/71443175@N00/1445655616 |
@@ -50,6 +50,8 @@ share-alike, non-commercial or no-derivatives licences).
 | moonflower | moonflower/adult.jpg | Epibase | CC BY 3.0 | https://commons.wikimedia.org/wiki/File:Ipomoea.alba.jpg |
 
 \* See the notes below: the photo shows a related species or variety stand-in.
+
+† Hand-pixelled in `tools/art/species_a/` (front, back and icons); the photo was the drawing reference, not traced.
 
 ### Notes on stand-in species
 

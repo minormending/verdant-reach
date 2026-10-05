@@ -31,7 +31,7 @@ export const sugarbush: MapDef = {
     "Mqbbb=bbbb#...::.y*...MM.5..MM", // 8
     "Mb0~~=bbbq#...::......@@@@.f.M", // 9  GREENHOUSE
     "Mq~~0=bbbb#.61111116..@@@@.*.M", // 10 the square
-    "Mbbbb=======:1111@@1.S@@@@.**M", // 11 boardwalk gate; the SUGAR MAPLE
+    "Mbbbb=======11111@@1.S@@@@.**M", // 11 boardwalk gate; the SUGAR MAPLE
     "Mqbbbbbqbb#S.1111@@111111....M", // 12
     "M~~0bbbbbq#.69111116...*y*...M", // 13
     "M~0bbbqbbb#...::.....y*......M", // 14

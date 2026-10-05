@@ -19,6 +19,7 @@ from PIL import Image
 from scipy import ndimage
 
 K = "#181818"
+NO_INNER = False   # icon renders: skip internal part lines (they'd swamp a 16px miniature)
 CROSS = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], bool)
 LIGHT = np.array([-1.0, -1.15, 1.25])
 LIGHT /= np.linalg.norm(LIGHT)
@@ -223,7 +224,7 @@ class Sprite:
             t[vis] = self._light(p, vis, owner, i)[vis]
         # internal lines against parts behind
         for i, p in enumerate(self.parts):
-            if p.line == "none":
+            if p.line == "none" or NO_INNER:
                 continue
             vis = owner == i
             behind = (owner >= 0) & (owner < i)
@@ -374,22 +375,25 @@ class Sprite:
                     self.t[y, x] = v
                     self.protect[y, x] = True
 
-    def clean(self, passes=2):
-        """Remove orphan pixels: a body pixel with no same-tone 4-neighbour."""
+    def clean(self, passes=3, force=False):
+        """Remove orphan pixels: a body pixel with no same-tone neighbour (8-way)
+        takes the commonest body tone around it. Protected pixels stay."""
         t = self.t
+        N8 = ((-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
         for _ in range(passes):
             changed = False
             for y in range(self.h):
                 for x in range(self.w):
                     v = t[y, x]
-                    if v <= 0 or self.protect[y, x]:
+                    if v <= 0 or (self.protect[y, x] and not force):
                         continue
-                    nb = [t[yy, xx] for yy, xx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1))
-                           if 0 <= yy < self.h and 0 <= xx < self.w]
+                    nb = [t[y + dy, x + dx] for dy, dx in N8 if 0 <= y + dy < self.h and 0 <= x + dx < self.w]
                     if v in nb:
                         continue
-                    body = [n for n in nb if n > 0]
+                    body = [n for n in nb[:4] if n > 0] or [n for n in nb if n > 0]
                     if not body:
+                        if force:
+                            t[y, x] = 0      # a lone fill pixel in the outline: make it outline
                         continue
                     t[y, x] = max(set(body), key=body.count)
                     changed = True
@@ -398,6 +402,7 @@ class Sprite:
         return self
 
     def image(self) -> Image.Image:
+        self.clean(force=True)       # final guarantee: no orphan pixels anywhere
         a = np.zeros((self.h, self.w, 4), np.uint8)
         for k in range(4):
             a[self.t == k] = self.pal[k] + (255,)

@@ -2,7 +2,7 @@
 // set by rendering everything offline (e2e/audiomix.ts) and comparing
 // short-term loudness, not by ear; see the notes beside each number.
 
-import type { MusicId, SfxId } from "../contracts";
+import type { JingleId, MusicId, SfxId } from "../contracts";
 import type { Chip } from "./engine";
 
 /** Default option volumes (Options screen scales these). */
@@ -12,18 +12,20 @@ export const DEFAULT_VOLUME = { music: 0.8, sfx: 0.9 } as const;
 // "loud" = loudest 400 ms RMS). Before this pass music sat at about -14 dBFS
 // with peaks at -0.7, jingles 5.5 dB over the music and clipping into the
 // compressor, and cries spread over 7 dB. Targets now:
-//   music  ~ -17 dBFS loud, peaks under -3      (master -3 dB)
-//   jingles ~ music + 1.5 dB                     (-4 dB)
-//   cries  ~ music + 1 dB, spread under 4 dB     (+1.3 dB, per-duty trim in cry.ts)
-//   SFX    UI blips 3-6 dB under music, impacts within 2 dB of it
-//   ambience 20-26 dB under the music it plays with (ambience.ts)
+//   music   ~ -17 dBFS loud, peaks under -2     (master -3 dB)
+//   jingles ~ music + 1.5 dB                     (-6.7 dB)
+//   cries   ~ music + 1 dB, spread under 3 dB    (+1.3 dB, per-duty trim in cry.ts)
+//   SFX     UI blips 3-6 dB under music, impacts within 2 dB of it (+1.9 dB)
+//   ambience 20-27 dB under the music it plays with (ambience.ts)
+// Measured after: music -15.9..-17.9 (mean -16.8, peak -2.2); cries -15.1..-18;
+// meadow bed -38.5, night -43.3, forest -39.4, town -43.
 export const MIX = {
   master: 0.567,
   glueThresholdDb: -12,
   /** Jingles ride the music bus so they follow the music volume. */
-  jingle: 1.7,
+  jingle: 1.25,
   /** Short SFX notes need a boost to read over the music. */
-  sfx: 2.4,
+  sfx: 3.0,
   cry: 2.8,
   ambience: 1,
 } as const;
@@ -38,7 +40,7 @@ export const MUSIC_TRIM: Partial<Record<MusicId, number>> = {
 
 /** Per-effect gain: quiet UI blips up, the long hot ones down. */
 export const SFX_TRIM: Partial<Record<SfxId, number>> = {
-  cursor: 1.58,     // -29.3 -> -25.3: must read in menus over music
+  cursor: 2.0,      // the shortest blip in the game: must still read in menus over music
   menu_open: 1.41,  // -24.5 -> -21.5
   hit_weak: 1.58,   // -24.9 -> -20.9: a weak hit is still a hit
   door: 1.41,       // -21.3 -> -18.3
@@ -47,6 +49,11 @@ export const SFX_TRIM: Partial<Record<SfxId, number>> = {
   save: 0.79,       // -13.1 -> -15.1
   stat_up: 0.79,    // -13.1 -> -15.1
   stat_down: 0.84,
+};
+
+/** Per-jingle gain. */
+export const JINGLE_TRIM: Partial<Record<JingleId, number>> = {
+  level_up: 1.4,    // a two-beat flourish; measured 5 dB under the other jingles
 };
 
 export type Route = "music" | "jingle" | "sfx" | "cry" | "ambience";

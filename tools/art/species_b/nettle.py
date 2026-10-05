@@ -149,8 +149,8 @@ def front_nettle():
     toothed_leaf(s, (30, 27), (37, 11), 8, bend=0.12, k=2)
     toothed_leaf(s, (29, 26), (26, 8), 7, k=1, vein=False)
     # catkins hang in the gap under the top pair
-    catkin(s, 32, 41, -11, n=5)
-    catkin(s, 38, 41, 11, n=5)
+    catkin(s, 32, 41, -8, n=4)
+    catkin(s, 38, 41, 8, n=4)
     edge_beads(s, s.leafmask, spacing=7, region=s.ellipse(34, 26, 40, 24))
     return s
 

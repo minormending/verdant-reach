@@ -13,7 +13,7 @@ import { MUSIC_DEFS } from "../src/audio/music";
 import { JINGLE_DEFS, SFX_DEFS } from "../src/audio/sfx";
 import { cryFor } from "../src/audio/cry";
 import { parseSong, songSeconds } from "../src/audio/song";
-import { DEFAULT_VOLUME, MUSIC_TRIM, SFX_TRIM, routeFor, type Route } from "../src/audio/mix";
+import { DEFAULT_VOLUME, JINGLE_TRIM, MUSIC_TRIM, SFX_TRIM, routeFor, type Route } from "../src/audio/mix";
 import { AmbienceBed, type AmbienceKind } from "../src/audio/ambience";
 
 const RATE = 44100;
@@ -32,18 +32,21 @@ function stats(id: string, buf: AudioBuffer, from = 0): Level {
   const aH = Math.exp((-2 * Math.PI * 4000) / RATE);
   const win = Math.floor(0.4 * RATE);
   let wsum = 0, loud = 0;
-  const sq: number[] = [];
+  const ring = new Float64Array(win);
+  let filled = 0;
   for (let i = start; i < d.length; i++) {
     const x = d[i];
     sum += x * x; n++;
     peak = Math.max(peak, Math.abs(x));
     lp += aL * (x - lp); low += lp * lp;
     hpOut = aH * (hpOut + x - hpPrev); hpPrev = x; high += hpOut * hpOut;
-    sq.push(x * x); wsum += x * x;
-    if (sq.length > win) wsum -= sq.shift()!;
-    if (sq.length === win) loud = Math.max(loud, wsum / win);
+    const k = (i - start) % win;
+    wsum += x * x - ring[k];
+    ring[k] = x * x;
+    filled++;
+    if (filled >= win) loud = Math.max(loud, wsum / win);
   }
-  if (sq.length < win) loud = wsum / Math.max(1, sq.length);
+  if (filled < win) loud = wsum / Math.max(1, filled);
   return {
     id, seconds: r1(n / RATE),
     rmsDb: r1(db(Math.sqrt(sum / Math.max(1, n)))),
@@ -87,7 +90,7 @@ export async function measureJingles(ids: readonly JingleId[] = JINGLES): Promis
   for (const id of ids) {
     const def = JINGLE_DEFS[id];
     const len = songSeconds(parseSong(def)) + 0.4;
-    out.push(stats(id, await render(len, (chip) => playAll(chip, def, "jingle", len))));
+    out.push(stats(id, await render(len, (chip) => playAll(chip, def, "jingle", len, JINGLE_TRIM[id] ?? 1))));
   }
   return out;
 }

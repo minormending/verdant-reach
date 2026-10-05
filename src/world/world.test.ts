@@ -159,7 +159,7 @@ describe("validator self-check", () => {
   it("lets signs give flavour to interactable furniture only", () => {
     const w = clone();
     w.maps.herbarium.signs.push({ x: 2, y: 2, text: "A floor." });
-    expect(validateWorld(w).join("\n")).toMatch(/\[herbarium\] sign at 2,2 is on floor_tile/);
+    expect(validateWorld(w).join("\n")).toMatch(/\[herbarium\] sign at 2,2 is on floor_wood/);
   });
   it("catches missing scripts and trainers", () => {
     const w = clone();

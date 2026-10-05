@@ -2,7 +2,7 @@ import type { MapDef } from "../../contracts";
 import { LEGEND, ifFlags, ifNight, say, type Scripts } from "../build";
 
 // The MARKET: a narrow brick shop. The clerk sits behind the counter on the
-// left; shelves of pods and flasks line the back wall, sacks and crates stand
+// left; shelves of pods and flasks line the back wall, a sample table stands
 // by the door, and a display table holds today's specials.
 export const bramblegate_market: MapDef = {
   id: "bramblegate_market",
@@ -14,12 +14,12 @@ export const bramblegate_market: MapDef = {
   tiles: [
     // x: 0123456789
     "WWOOWWOOWW", // 0
-    "WKKKKKK87W", // 1
+    "WKKKKKKKKW", // 1
     "WwCwwwwwwW", // 2
     "WwCwwDDwwW", // 3
     "WwCwwDDwwW", // 4
     "WpwwwwwwYW", // 5
-    "W87wrrwwpW", // 6
+    "WpDwrrwwpW", // 6
     "WWWWEWWWWW", // 7
   ],
   structures: [],
