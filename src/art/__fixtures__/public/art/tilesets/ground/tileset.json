@@ -1,0 +1,39 @@
+{
+  "format": "verdant.tileset/1",
+  "id": "ground",
+  "name": "Ground",
+  "tileSize": 16,
+  "sheet": "sheet.png",
+  "columns": 4,
+  "tiles": {
+    "grass": {
+      "base": 0,
+      "alts": [
+        1
+      ]
+    },
+    "water": {
+      "base": [
+        2,
+        3
+      ],
+      "masks": {
+        "5": [
+          4,
+          5
+        ],
+        "15": [
+          2,
+          3
+        ]
+      }
+    },
+    "path": {
+      "base": 6
+    }
+  },
+  "credits": "fixture",
+  "source": {
+    "kind": "edited"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "sheet": "extra.png",
+  "columns": 1,
+  "tiles": {
+    "grass": {
+      "base": 0
+    }
+  }
+}

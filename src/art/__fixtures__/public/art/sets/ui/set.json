@@ -1,0 +1,17 @@
+{
+  "format": "verdant.imageset/1",
+  "id": "ui",
+  "logicalDir": "assets/ui",
+  "images": {
+    "title_logo": {
+      "file": "title_logo.png",
+      "size": [
+        8,
+        4
+      ],
+      "source": {
+        "kind": "edited"
+      }
+    }
+  }
+}

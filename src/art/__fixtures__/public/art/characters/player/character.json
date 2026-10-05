@@ -1,0 +1,20 @@
+{
+  "format": "verdant.character/1",
+  "id": "player",
+  "sheet": "sheet.png",
+  "frame": [
+    16,
+    16
+  ],
+  "rows": [
+    "down",
+    "up",
+    "left",
+    "right"
+  ],
+  "columns": [
+    "stand",
+    "stepA",
+    "stepB"
+  ]
+}

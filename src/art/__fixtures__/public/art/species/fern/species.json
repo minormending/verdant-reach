@@ -1,0 +1,33 @@
+{
+  "format": "verdant.species/1",
+  "id": "fern",
+  "palette": [
+    "#181818",
+    "#204020",
+    "#40a040",
+    "#c0f0c0"
+  ],
+  "sport": [
+    "#181818",
+    "#403820",
+    "#c0a040",
+    "#f8f0c0"
+  ],
+  "frames": {
+    "front": [
+      "front.png",
+      "front__2.png"
+    ],
+    "back": [
+      "back.png"
+    ],
+    "icon": [
+      "icon.png"
+    ]
+  },
+  "credits": "fixture",
+  "source": {
+    "kind": "edited"
+  },
+  "futureField": true
+}

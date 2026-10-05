@@ -7,7 +7,6 @@ import type { GameContext, Scene } from "./contracts";
 import { uiPath } from "./contracts";
 import { createAssets, createCanvas, createInput, createSceneStack, runLoop } from "./engine/core";
 import { createGameContext, playClock } from "./engine/context";
-import { ASSET_PATHS } from "./assets/manifest";
 import { setAudioSuspended } from "./audio";
 import {
   createLoadingScene, createPause, createShell, installErrorScreen, pauseOnFocusLoss, platformFlags,
@@ -67,7 +66,8 @@ async function boot() {
       if (playClock.running && !pause.paused) game.state.playTimeMs += dt;
     });
     await assets.loadAll([uiPath("title_logo")]);
-    await assets.loadAll(ASSET_PATHS, (d, t) => loading.progress(d, t));
+    // The whole art registry: every bundle (and any legacy file not yet migrated).
+    await assets.loadAll(undefined, (d, t) => loading.progress(d, t));
     await loading.finish();
     scenes.pop();
 

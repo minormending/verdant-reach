@@ -4,6 +4,7 @@
 
 import { FPS, SCREEN_H, SCREEN_W } from "../contracts";
 import type { Assets, Button, Input, Scene, SceneStack } from "../contracts";
+import { createArtAssets } from "../art";
 
 export function createCanvas(): { canvas: HTMLCanvasElement; g: CanvasRenderingContext2D } {
   const canvas = document.getElementById("screen") as HTMLCanvasElement;
@@ -92,45 +93,14 @@ export interface EngineAssets extends Assets {
 }
 
 /**
- * Image store. `loadAll` preloads; `image()` also lazy-loads anything not yet
- * requested (returns undefined until it arrives). Missing paths log once.
+ * The asset store is the art registry (src/art/, docs/ART.md): logical paths
+ * resolve to swappable bundles under public/art/ (with art packs, sheet cells
+ * and exact sport palettes), falling back to legacy public/assets/ files.
+ * `image()` lazy-loads anything not yet loaded; `loadAll()` with no paths
+ * preloads the whole registry.
  */
 export function createAssets(): EngineAssets {
-  const images = new Map<string, HTMLImageElement>();
-  const missing = new Set<string>();
-  const pending = new Map<string, Promise<void>>();
-  const loadOne = (path: string): Promise<void> => {
-    if (images.has(path) || missing.has(path)) return Promise.resolve();
-    const inflight = pending.get(path);
-    if (inflight) return inflight;
-    const p = new Promise<void>((resolve) => {
-      const img = new Image();
-      img.onload = () => { images.set(path, img); pending.delete(path); resolve(); };
-      img.onerror = () => {
-        missing.add(path);
-        pending.delete(path);
-        console.warn(`[assets] missing: ${path}`);
-        resolve();
-      };
-      img.src = path;
-    });
-    pending.set(path, p);
-    return p;
-  };
-  return {
-    image(p) {
-      const img = images.get(p);
-      if (!img && !missing.has(p) && typeof Image !== "undefined") void loadOne(p);
-      return img;
-    },
-    has: (p) => images.has(p),
-    exists: (p) => images.has(p) || pending.has(p), // ROUND4-STUB: the art registry (src/art/) replaces this store
-    isMissing: (p) => missing.has(p),
-    async loadAll(paths = [], onProgress) {
-      let done = 0;
-      await Promise.all(paths.map((p) => loadOne(p).then(() => onProgress?.(++done, paths.length))));
-    },
-  };
+  return createArtAssets();
 }
 
 /** Fixed-timestep loop. Draws the stack bottom-up from the last opaque scene. */
