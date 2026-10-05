@@ -21,7 +21,9 @@ export function ambienceFor(music: MusicId | null, tod: TimeOfDay): AmbienceKind
     case "route": return night ? "night" : "meadow";
     case "route_night": return "night";
     case "fallowfield":
-    case "small_town": return night ? "night" : "town";
+    case "small_town":
+    case "glasshouse_city": return night ? "night" : "town";
+    case "palm_house": return "forest";  // under glass: a still, close hush with the odd bird
     case "sugarbush_grove": return "forest";
     case "prologue_bloom": return "night";
     default: return "none";

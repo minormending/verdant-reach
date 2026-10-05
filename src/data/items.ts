@@ -31,6 +31,13 @@ const LIST: Item[] = [
   { id: "plant_food", name: "Plant Food", pocket: "items", price: 1200,
     description: "Slow feed: 10 PP to every move.",
     effect: { kind: "restore_pp", amount: 10 }, usableInBattle: true, usableInField: true },
+  // Round 4: Glasshouse Market plant care. Cheaper than neem: one status each.
+  { id: "aloe_gel", name: "Aloe Gel", pocket: "items", price: 150,
+    description: "Cool aloe sap. Soothes a scorch.",
+    effect: { kind: "cure_status", status: "scorch" }, usableInBattle: true, usableInField: true },
+  { id: "cloche", name: "Glass Cloche", pocket: "items", price: 150,
+    description: "A warm glass bell. Thaws frostbite.",
+    effect: { kind: "cure_status", status: "frostbite" }, usableInBattle: true, usableInField: true },
 
   // Harvested from bushes (regrow daily); sellable, not stocked by default.
   { id: "wild_berry", name: "Wild Berry", pocket: "items", price: 200,
@@ -52,6 +59,16 @@ const LIST: Item[] = [
     effect: { kind: "none" }, usableInBattle: false, usableInField: false },
   { id: "syrup_jar", name: "Syrup Jar", pocket: "key", price: 0,
     description: "Fresh maple syrup for the BAKER.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
+  // Round 4
+  { id: "pruning_shears", name: "Garden Shears", pocket: "key", price: 0,
+    description: "Oiled and sharp. PRUNES brambles.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
+  { id: "fan_letter", name: "Fan Letter", pocket: "key", price: 0,
+    description: "For FLORA VANCE. Smells of roses.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
+  { id: "signed_photo", name: "Signed Photo", pocket: "key", price: 0,
+    description: "FLORA, mid-wink. \"Kisses! F.V.\"",
     effect: { kind: "none" }, usableInBattle: false, usableInField: false },
 ];
 

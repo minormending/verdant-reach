@@ -39,8 +39,15 @@ export const JINGLE_DEFS: Record<JingleId, SongDef> = {
     p2: "v8 @1 q6 o5 e8 a8 o6 c+8 e4 d8 c+4",
     wave: "v15 q6 o3 a4. e4 a4",
   }),
+  // A seed sprouts: a crack, a rising C arpeggio that tips into F (the
+  // shoot unfolding), then home. Warmer and smaller than GROWTH.
+  sprouted: j(132, {
+    p1: "v11 @2 q6 o5 c8 e8 g8 o6 c8 r8 o5 a8 o6 c8 f8 e4. d8 c2",
+    p2: "v7 @1 q6 o4 g8 o5 c8 e8 g8 r8 f8 a8 o6 c8 o5 g4. f8 e2",
+    wave: "v14 q6 o3 c4 c4 f4 f4 g4. g8 o2 c2",
+    noise: "v7 @1 s16 r16 r8 r4 r2 @0 r4 s8 s8 x2",
+  }),
   // A warm "task done" cadence in F (I-V-I), a touch gentler than ITEM_GET.
-  get sprouted() { return JINGLE_DEFS.growth; }, // ROUND4-STUB
   quest: j(140, {
     p1: "v12 @2 q6 o5 f8 a8 o6 c8 f4 e8 f4.",
     p2: "v8 @1 q6 o5 c8 f8 a8 o6 c4 c8 c4.",
@@ -73,8 +80,11 @@ export const SFX_DEFS: Record<SfxId, SongDef> = {
   pod_click:  j(150, { p1: "v11 @2 %1 q8 o6 c32 r32 o6 g16", noise: "v8 @1 %1 o6 c32" }),
   exp_tick:   j(150, { p1: "v9 @2 %1 q8 o6 e64" }),
   run:        j(150, { noise: "v7 @0 %1 o4 c32 r32 o4 d32 r32 o4 e32 r16", p1: "v8 @1 q8 p12 r16 o5 c16" }),
-  get prune() { return SFX_DEFS.bump; },  // ROUND4-STUB
-  get sprout() { return SFX_DEFS.select; }, // ROUND4-STUB
-  get pulse() { return SFX_DEFS.encounter; }, // ROUND4-STUB
+  // Shears: a breathy "shh" of blades sliding, then a bright metallic snip.
+  prune:      j(150, { noise: "v9 @0 %1 p-12 o6 c32 r64 v13 @1 %1 p0 o7 c32 r32", p1: "v8 @3 %1 q8 r32 r64 p-7 o7 c32 r32" }),
+  // A seed coat cracks (metallic tick, low knock) and the shoot pops up.
+  sprout:     j(150, { noise: "v12 @1 %1 o6 c32 v9 o4 c32 r16", p1: "v11 @2 %1 q8 r16 p12 o5 c16 p0 o6 g32" }),
+  // One deep throb from under the valley: a falling triangle swell and a soft kick.
+  pulse:      j(100, { wave: "v15 %3 q8 ~20 p-3 o2 c4.", noise: "v11 k8 r4", p1: "v5 @1 %4 q8 p-3 o3 c4." }),
   text_blip:  j(150, { p1: "v8 @2 %1 q6 o6 c64" }),
 };

@@ -37,6 +37,8 @@ export const MUSIC_TRIM: Partial<Record<MusicId, number>> = {
   battle_rootstock: 1.12,  // -15.5 -> -14.5
   conservatory: 0.91,      // -12.8 -> -13.6
   victory_trainer: 0.95,   // -12.9 -> -13.3
+  root_relay: 1.25,        // -19.6 -> -17.7 (a sparse hum and pad: kept under the rest, like the grove)
+  palm_house: 1.06,        // -17.5 -> -17.0
 };
 
 /** Per-effect gain: quiet UI blips up, the long hot ones down. */
@@ -50,6 +52,8 @@ export const SFX_TRIM: Partial<Record<SfxId, number>> = {
   save: 0.79,       // -13.1 -> -15.1
   stat_up: 0.79,    // -13.1 -> -15.1
   stat_down: 0.84,
+  prune: 1.5,       // -23.0 -> -19.5: a field action, not a menu blip
+  pulse: 0.6,       // -10.2 -> -14.6: a deep triangle swell carries a lot of energy
 };
 
 /** Per-jingle gain. */

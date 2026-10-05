@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DATA } from "./index";
-import { REQUIRED_ITEMS, SPECIES_IDS, STATUSES, TYPES } from "../contracts";
+import { POLLINATION_GROUPS, REQUIRED_ITEMS, SPECIES_IDS, STATUSES, TYPES } from "../contracts";
 import type { GrowthTrigger } from "../contracts";
+import { wrapText } from "../ui/font";
 
 const species = Object.values(DATA.species);
 
@@ -126,6 +127,64 @@ describe("round 3 lines", () => {
   });
 });
 
+describe("round 4 lines", () => {
+  const total = (id: keyof typeof DATA.species) => Object.values(DATA.species[id].baseStats).reduce((a, b) => a + b, 0);
+  const R4 = [
+    ["apple_pip", "apple_sapling", "apple_tree"], ["orchid_keiki", "orchid_spike", "moth_orchid"],
+    ["monstera_cutting", "monstera"], ["lotus_seed", "sacred_lotus"], ["paradise_shoot", "bird_of_paradise"],
+  ] as const;
+
+  it("follow the Gen 2 stat bands with ~40-level learnsets", () => {
+    for (const line of R4) {
+      const last = line[line.length - 1];
+      expect(DATA.species[last].growsInto, last).toBeUndefined();
+      for (let i = 0; i < line.length - 1; i++) expect(DATA.species[line[i]].growsInto?.species, line[i]).toBe(line[i + 1]);
+      const bands: [number, number][] = line.length === 3 ? [[255, 290], [350, 370], [465, 490]] : [[275, 320], [420, 470]];
+      line.forEach((id, i) => {
+        expect(total(id), id).toBeGreaterThanOrEqual(bands[i][0]);
+        expect(total(id), id).toBeLessThanOrEqual(bands[i][1]);
+        const ls = DATA.species[id].learnset;
+        expect(ls.length, id).toBeGreaterThanOrEqual(10);
+        expect(ls[ls.length - 1].level, id).toBeGreaterThanOrEqual(36);
+      });
+    }
+  });
+
+  it("teach their real-plant signature moves", () => {
+    const sig: [keyof typeof DATA.species, string][] = [
+      ["apple_sapling", "windfall"], ["moth_orchid", "false_nectar"], ["moth_orchid", "long_bloom"], ["orchid_keiki", "velamen"],
+      ["monstera", "fenestrate"], ["monstera_cutting", "aerial_root"], ["sacred_lotus", "lotus_effect"],
+      ["sacred_lotus", "pod_shower"], ["bird_of_paradise", "pollen_perch"],
+    ];
+    for (const [id, mv] of sig) expect(DATA.species[id].learnset.map((l) => l.move), id).toContain(mv);
+    // A cutting's leaves are whole: monstera only fenestrates once mature.
+    expect(DATA.species.monstera_cutting.learnset.map((l) => l.move)).not.toContain("fenestrate");
+  });
+
+  it("Flora's ace is grown by 22, and the bird of paradise is the rare top line", () => {
+    const t = DATA.species.orchid_spike.growsInto!.trigger;
+    expect(t.kind === "vigor_night" && t.level <= 22).toBe(true);
+    expect(DATA.species.paradise_shoot.catchRate).toBeLessThanOrEqual(45);
+    expect(total("bird_of_paradise")).toBe(Math.max(total("monstera"), total("sacred_lotus"), total("bird_of_paradise")));
+  });
+});
+
+describe("pollination", () => {
+  it("every species has valid groups shared by its whole line; ferns only pair with ferns", () => {
+    const byLine = new Map<string, string>();
+    for (const s of species) {
+      expect(s.pollination?.length, s.id).toBeGreaterThan(0);
+      for (const g of s.pollination!) expect(POLLINATION_GROUPS, s.id).toContain(g);
+      const key = JSON.stringify(s.pollination);
+      if (byLine.has(s.line)) expect(key, s.id).toBe(byLine.get(s.line));
+      byLine.set(s.line, key);
+      if (s.pollination!.includes("spore")) expect(s.pollination, s.id).toEqual(["spore"]);
+    }
+    for (const g of POLLINATION_GROUPS) expect(species.some((s) => s.pollination!.includes(g)), g).toBe(true);
+    expect(DATA.species.fern_fiddlehead.pollination).toEqual(["spore"]);
+  });
+});
+
 describe("moves", () => {
   const moves = Object.values(DATA.moves);
   it("has ~60 well-formed moves across all types and categories", () => {
@@ -136,6 +195,8 @@ describe("moves", () => {
       expect(DATA.moves[m.id]).toBe(m);
       expect(m.name.length, m.name).toBeLessThanOrEqual(12);
       expect(m.description.length, m.id).toBeLessThanOrEqual(36);
+      // The summary screen shows exactly two 18-column lines (screens/summary.ts).
+      expect(wrapText(m.description, 18).length, `${m.id}: ${m.description}`).toBeLessThanOrEqual(2);
       expect(m.pp).toBeGreaterThan(0);
       if (m.category === "status") expect(m.power, m.id).toBe(0);
       for (const e of m.effects) if (e.kind === "status") expect(STATUSES).toContain(e.status);

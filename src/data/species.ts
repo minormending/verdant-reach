@@ -20,7 +20,7 @@
 // status move). Later stages share the line's list and add their own moves;
 // the growth level itself often teaches a signature move.
 
-import type { GrowthTrigger, MoveId, Species, SpeciesId, Stats, TypeId } from "../contracts";
+import type { GrowthTrigger, MoveId, PollinationGroup, Species, SpeciesId, Stats, TypeId } from "../contracts";
 
 type L = [number, MoveId][];
 const st = (hp: number, atk: number, def: number, spa: number, spd: number, spe: number): Stats =>
@@ -44,6 +44,39 @@ interface Def {
   learnset: Species["learnset"];
 }
 
+// Nursery Garden pollination groups, by line (every stage of a line shares
+// them). Loosely: how the real plant is pollinated and where it grows; see
+// POLLINATION_GROUPS in contracts/data.ts. Two groups = a "bridge" line that
+// can set seed with either.
+const POLLINATION: Record<string, PollinationGroup[]> = {
+  oak: ["woodland"],                 // wind-pollinated forest tree
+  chili: ["garden"],                 // a kitchen-garden crop
+  lily: ["wetland", "tropical"],     // Amazon river lily, the glasshouse classic
+  dandelion: ["meadow"],
+  bramble: ["woodland"],             // hedges and wood edges
+  sunflower: ["meadow", "garden"],   // field crop and cottage-garden giant
+  pumpkin: ["garden"],
+  fern: ["spore"],                   // no flowers at all: ferns pair only with ferns
+  flytrap: ["carnivore"],
+  sundew: ["carnivore", "wetland"],
+  maple: ["woodland"],
+  nettle: ["woodland"],              // wind-pollinated hedge-bottom weed
+  moonflower: ["garden", "tropical"],// a tropical vine grown in night gardens
+  clover: ["meadow"],
+  cattail: ["wetland"],
+  foxglove: ["meadow", "woodland"],  // bumblebee flower of woodland clearings
+  holly: ["woodland"],
+  mint: ["garden"],
+  rose: ["garden", "woodland"],      // the dog rose: hedgerow and garden
+  pitcher: ["carnivore", "wetland"],
+  snapdragon: ["garden"],
+  apple: ["garden"],                 // orchards (and apples need a partner variety)
+  orchid: ["tropical"],
+  monstera: ["tropical"],
+  lotus: ["wetland", "tropical"],
+  paradise: ["tropical"],
+};
+
 function sp(d: Def): Species {
   return {
     id: d.id, name: d.name, line: d.line, stage: d.stage, types: d.types,
@@ -51,6 +84,7 @@ function sp(d: Def): Species {
     evYield: d.ev, activity: d.activity ?? "any",
     growsInto: d.grows ? { species: d.grows[0], trigger: d.grows[1] } : undefined,
     learnset: d.learnset,
+    pollination: POLLINATION[d.line] ?? [],
   };
 }
 
@@ -99,6 +133,20 @@ const PITCHER: L = [[1, "slick_rim"], [1, "nectar_lure"], [5, "dew_drop"], [8, "
   [15, "undertow"], [22, "pitfall_slurp"], [25, "pitfall"], [28, "rain_call"], [32, "mist_veil"], [36, "flood"], [40, "downpour"]];
 const SNAPDRAGON: L = [[1, "dragon_nip"], [1, "perfume"], [5, "pollen_puff"], [9, "vine_lash"], [13, "red_resin"],
   [17, "dragon_snap"], [21, "unfurl"], [25, "old_growth"], [29, "sunbeam"], [33, "primal_frond"], [37, "leaf_gale"], [40, "petal_storm"]];
+
+// Round 4 lines (Route 4 orchard and the Palm House). Signature moves are
+// learned where the real plant does the thing: a monstera only fenestrates
+// once it's mature, an apple only blossoms as a grown tree.
+const APPLE: L = [[1, "vine_lash"], [1, "sap_seal"], [5, "seed_burst"], [9, "sap_drain"], [13, "root_tap"],
+  [17, "windfall"], [21, "leaf_edge"], [25, "bark_skin"], [30, "photosynthesise"], [35, "leaf_gale"], [40, "timber"]];
+const ORCHID: L = [[1, "pollen_puff"], [1, "perfume"], [5, "velamen"], [9, "wind_scatter"], [12, "false_nectar"],
+  [16, "sun_track"], [20, "moonbeam"], [25, "sunbeam"], [29, "spore_cloud"], [34, "unfurl"], [40, "petal_storm"]];
+const MONSTERA: L = [[1, "vine_lash"], [1, "sap_seal"], [5, "sap_drain"], [9, "root_snare"], [13, "seed_burst"],
+  [17, "aerial_root"], [21, "leaf_edge"], [26, "photosynthesise"], [30, "root_tap"], [34, "bark_skin"], [38, "leaf_gale"], [42, "timber"]];
+const LOTUS: L = [[1, "dew_drop"], [1, "perfume"], [5, "pollen_puff"], [9, "lotus_effect"], [13, "undertow"],
+  [17, "pod_shower"], [21, "mist_veil"], [25, "photosynthesise"], [30, "rain_call"], [34, "flood"], [38, "petal_storm"], [42, "downpour"]];
+const PARADISE: L = [[1, "pollen_puff"], [1, "sun_track"], [5, "ember_seed"], [9, "perfume"], [13, "smoulder"],
+  [17, "pollen_perch"], [21, "sun_flare"], [25, "sunbeam"], [30, "unfurl"], [34, "petal_storm"], [38, "wildfire"]];
 
 const ALL: Species[] = [
   // ------------------------------------------------------------- starters
@@ -304,6 +352,58 @@ const ALL: Species[] = [
   sp({ id: "snapdragon", name: "Snapdragon", line: "snapdragon", stage: 2, types: ["dragon", "bloom"],
     base: st(76, 96, 72, 86, 70, 70), rate: "slow", catchRate: 45, baseExp: 180, ev: { atk: 2, spa: 1 },
     activity: "day", learnset: learn(SNAPDRAGON, [[22, "old_growth"]]) }),
+
+  // ============================================================== Round 4 lines
+  // ------------------------------------------------------------- apple (wood -> wood/bloom; sturdy physical orchard tree)
+  // Grows at 18, then into a blossoming tree by tending, "a tree you cared
+  // for". Only the grown tree is part bloom: real apples flower after years.
+  sp({ id: "apple_pip", name: "Apple Pip", line: "apple", stage: 1, types: ["wood"],
+    base: st(50, 55, 50, 40, 45, 40), rate: "medium", catchRate: 190, baseExp: 58, ev: { atk: 1 },
+    activity: "day", grows: ["apple_sapling", vigor(18)], learnset: learn(APPLE) }),
+  sp({ id: "apple_sapling", name: "Apple Whip", line: "apple", stage: 2, types: ["wood"],
+    base: st(65, 75, 70, 50, 60, 45), rate: "medium", catchRate: 75, baseExp: 130, ev: { atk: 1, def: 1 },
+    activity: "day", grows: ["apple_tree", { kind: "tending", friendship: 220 }], learnset: learn(APPLE) }),
+  sp({ id: "apple_tree", name: "Apple Tree", line: "apple", stage: 3, types: ["wood", "bloom"],
+    base: st(90, 100, 90, 70, 85, 50), rate: "medium", catchRate: 45, baseExp: 192, ev: { atk: 2, def: 1 },
+    activity: "day", learnset: learn(APPLE, [[1, "pollen_puff"], [1, "unfurl"], [30, "sunbeam"], [44, "petal_storm"]]) }),
+
+  // ------------------------------------------------------------- moth orchid (bloom; fast special attacker, night grower)
+  // Flora's ace. Grows at 16, then on a night-time level-up from 22 (moth
+  // orchids take in CO2 at night), like the moonflower. Top of the band.
+  sp({ id: "orchid_keiki", name: "Orchid Keiki", line: "orchid", stage: 1, types: ["bloom"],
+    base: st(45, 35, 45, 60, 55, 50), rate: "medium", catchRate: 120, baseExp: 64, ev: { spa: 1 },
+    activity: "night", grows: ["orchid_spike", vigor(16)], learnset: learn(ORCHID) }),
+  sp({ id: "orchid_spike", name: "Orchid Spike", line: "orchid", stage: 2, types: ["bloom"],
+    base: st(58, 42, 58, 80, 72, 60), rate: "medium", catchRate: 60, baseExp: 135, ev: { spa: 2 },
+    activity: "night", grows: ["moth_orchid", { kind: "vigor_night", level: 22 }], learnset: learn(ORCHID) }),
+  sp({ id: "moth_orchid", name: "Moth Orchid", line: "orchid", stage: 3, types: ["bloom"],
+    base: st(75, 45, 70, 110, 95, 85), rate: "medium", catchRate: 45, baseExp: 196, ev: { spa: 3 },
+    activity: "night", learnset: learn(ORCHID, [[22, "long_bloom"]]) }),
+
+  // ------------------------------------------------------------- monstera (wood; physical bruiser, grows late)
+  sp({ id: "monstera_cutting", name: "Monstera Tip", line: "monstera", stage: 1, types: ["wood"],
+    base: st(55, 55, 55, 45, 50, 40), rate: "medium", catchRate: 150, baseExp: 66, ev: { atk: 1 },
+    grows: ["monstera", vigor(24)], learnset: learn(MONSTERA) }),
+  sp({ id: "monstera", name: "Monstera", line: "monstera", stage: 2, types: ["wood"],
+    base: st(90, 90, 85, 60, 75, 60), rate: "medium", catchRate: 60, baseExp: 162, ev: { atk: 1, hp: 1 },
+    learnset: learn(MONSTERA, [[24, "fenestrate"]]) }),
+
+  // ------------------------------------------------------------- lotus (water -> water/bloom; special wall)
+  sp({ id: "lotus_seed", name: "Lotus Seed", line: "lotus", stage: 1, types: ["water"],
+    base: st(50, 40, 55, 55, 60, 45), rate: "medium", catchRate: 150, baseExp: 66, ev: { spd: 1 },
+    grows: ["sacred_lotus", vigor(26)], learnset: learn(LOTUS) }),
+  sp({ id: "sacred_lotus", name: "Sacred Lotus", line: "lotus", stage: 2, types: ["water", "bloom"],
+    base: st(80, 50, 85, 95, 100, 55), rate: "medium", catchRate: 60, baseExp: 164, ev: { spd: 2 },
+    learnset: learn(LOTUS, [[26, "sunbeam"]]) }),
+
+  // ------------------------------------------------------------- bird of paradise (bloom -> bloom/fire; rare, fast mixed attacker)
+  // Rare by day in the Palm House, slow to grow (28): the strongest new line.
+  sp({ id: "paradise_shoot", name: "Paradise Bud", line: "paradise", stage: 1, types: ["bloom"],
+    base: st(50, 62, 48, 58, 45, 57), rate: "slow", catchRate: 45, baseExp: 72, ev: { atk: 1 },
+    activity: "day", grows: ["bird_of_paradise", vigor(28)], learnset: learn(PARADISE) }),
+  sp({ id: "bird_of_paradise", name: "Crane Flower", line: "paradise", stage: 2, types: ["bloom", "fire"],
+    base: st(70, 95, 65, 95, 65, 80), rate: "slow", catchRate: 45, baseExp: 182, ev: { atk: 1, spa: 1 },
+    activity: "day", learnset: learn(PARADISE, [[28, "chili_burst"]]) }),
 ];
 
 export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;

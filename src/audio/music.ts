@@ -271,12 +271,53 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
       d4 o5b4 g4 b4 | a4. b8 o6c+4 e4 | d2 o5a4 f+4 | d2. r4 |`,
   },
 
+  // ------------------------------------------------------------------ glasshouse city
+  // Grand and airy: a Victorian promenade in E-flat. A stately walking bass
+  // under glassy arpeggios, a lead that climbs like ironwork arches, and a
+  // chromatic C7 turn in the second half (the city showing off).
+  glasshouse_city: {
+    bpm: 104, harmony: "arp8", harmonyTone: "v5 @1 q5", bass: "walk", bassTone: "v14 q6", drums: "soft", drumTone: "v5",
+    chords: "Eb | Bb | Cm | Ab | Eb | Fm Bb | Eb | Bb7 | Ab | Bb | Gm | Cm | Fm | Bb7 | Eb | Eb | C7 | Fm | Bb | Gm | Ab | Bb7 | Eb | Eb",
+    melody: `${SOFT}
+      o5e-4. f8 g4 b-4 | a-4. g8 f2 | g4 o6c4 o5b-8a-8 g4 | f2. e-4 |
+      e-4. f8 g4 b-4 | o6c4 o5a-4 b-4 o6d4 | e-2. o5b-4 | a-4 g4 f4 d4 |
+      c4. e-8 a-4 o6c4 | d4. c8 o5b-2 | b-4 o6d4 g4 f8e-8 | e-2. o5g4 |
+      a-4. g8 f4 c4 | d4 f4 a-4 o6d4 | e-2. o5b-4 | g4 b-4 o6e-4 r4 |
+      e4. d8 c4 o5b-4 | a-2 f4 c4 | d4 f4 b-4 o6d4 | d4. c8 o5b-4 g4 |
+      a-4 o6c4 e-4 c4 | o5b-4. a-8 f4 d4 | e-2. f8g8 | e-2 r2 |`,
+  },
+
+  // ------------------------------------------------------------------ palm house
+  // Humid, lush, gently exotic: D dorian with a reedy, breathy 12.5% lead
+  // (a wooden flute), sixteenth-note arpeggios like dripping leaves, a lazy
+  // shuffle and a maj7 haze. 16 bars that loop seamlessly into A7 -> Dm7.
+  palm_house: {
+    bpm: 92, harmony: "arp16", harmonyTone: "v4 @1 q4 ~6", bass: "half", bassTone: "v13 q7", drums: "shuffle", drumTone: "v4", fillEvery: 0,
+    chords: "Dm7 | G | Dm7 | G | Fmaj7 | Em7 | Dm7 | Am7 | Bbmaj7 | C | Am7 | Dm7 | Gm7 | C | Bbmaj7 | A7",
+    melody: `v10 @0 q7 ~14
+      o5a4. f8 e8d8 r4 | b4 a8g8 b4. o6d8 | c4. o5a8 f8e8 d4 | e4 d8 o4b8 o5d2 |
+      e4. f8 a4 o6c4 | o5b4. a8 g4 e4 | f4 e8d8 c4 d4 | e2. r4 |
+      d4. f8 a4 o6d4 | c4. o5b-8 g4 e4 | a4 g8e8 c4 e4 | d2. r4 |
+      b-4. a8 g4 d4 | e4 g4 o6c4 o5b-4 | a2 f4 d4 | c+4 e4 g4 e4 |`,
+  },
+
+  // ------------------------------------------------------------------ root relay
+  // A hum, pulses and curiosity, slightly uncanny: a steady eighth-note
+  // throb in the bass (the network's heartbeat), held pad chords with
+  // no root, a ticking console, and a questioning lead full of rests.
+  // C minor that keeps slipping sideways (Abmaj7, Dbmaj7, sus chords).
+  root_relay: {
+    bpm: 90, harmony: "pad", harmonyTone: "v4 @0 q8 ~8", bass: "pulse", bassTone: "v13 q4", drums: "tick", drumTone: "v3", fillEvery: 0,
+    chords: "Cm | Abmaj7 | Cm | Gsus4 | Cm | Abmaj7 | Dbmaj7 | G | Fm | Abmaj7 | Cm | Bbsus2 | Abmaj7 | Dbmaj7 | Gsus4 | G",
+    melody: `v9 @1 q6 ~10
+      r4 o5g4 a-8g8 r4 | r8 c8 e-8 g8 o6c2 | o5b4 g4 r2 | d4. c8 d2 |
+      r4 g4 a-8g8 r4 | r8 c8 e-8 g8 o6e-2 | d-4 c4 o5a-4 f4 | g2. r4 |
+      a-4. g8 f4 c4 | e-4 g4 o6c4 d4 | e-2. r4 | c4 o5b-4 f4 c4 |
+      e-4. f8 g4 o6c4 | f2 e-4 c4 | o5d2 c2 | o4b2. r4 |`,
+  },
+
   // ------------------------------------------------------------------ slice end
   // Bittersweet, hopeful: F major with a borrowed B-flat minor sigh.
-  // ROUND4-STUB: placeholders until the audio owner composes these (getters alias existing tracks)
-  get glasshouse_city() { return ARRANGEMENTS.small_town; },
-  get palm_house() { return ARRANGEMENTS.route; },
-  get root_relay() { return ARRANGEMENTS.herbarium; },
   slice_end: {
     bpm: 84, harmony: "arp8", harmonyTone: "v5 @1 q5 ~6", bass: "half", bassTone: "v13 q7", drums: "none",
     chords: "F | Am | Bb | C | Dm | Am | Bb | C | Dm | Bb | F | C | Bb | Bbm | F | F",

@@ -241,6 +241,60 @@ const LIST: HerbariumEntry[] = [
   // Source: https://en.wikipedia.org/wiki/Antirrhinum_majus
   h("snapdragon", "Antirrhinum majus", "Dragon Bloom", 1.0, 2.5,
     "Squeeze a snapdragon flower at the sides and its jaws gape open, which is how it got its name. Bumblebees are strong enough to pry their way in."),
+
+  // ---------------------------------------------------------------- Round 4
+  // Fact: apples don't grow true from seed; every pip is a new variety, so named kinds are grafted.
+  // Source: https://extension.psu.edu/hobbiest-gardening-growing-fruit-tree-plants-from-seed
+  h("apple_pip", "Malus domestica", "Pip", 0.05, 0.1,
+    "It rolls off on its own, never quite like its parents. Plant an apple pip and you get a brand-new kind of apple, which is why named apples are grafted instead."),
+  // Fact: most apple varieties are self-incompatible and need pollen from a different variety.
+  // Source: https://extension.umaine.edu/fruit/growing-fruit-trees-in-maine/pollination-requirements/
+  h("apple_sapling", "Malus domestica", "Whip", 1.5, 6.0,
+    "Growers call a young unbranched tree a whip. It sulks when left alone, and with reason: most apples need pollen from a different variety to set fruit."),
+  // Fact: the wild apple Malus sieversii of the Tian Shan, Kazakhstan, is the main ancestor of the eating apple.
+  // Source: https://www.smithsonianmag.com/travel/saving-the-apples-ancient-ancestor-in-the-forests-of-kazakhstan-180983493/
+  h("apple_tree", "Malus domestica", "Orchard", 4.0, 300,
+    "It drops its best fruit on those who look after it. Every eating apple descends mainly from wild apple forests in the Tian Shan mountains of Kazakhstan."),
+
+  // Fact: "keiki" is Hawaiian for baby or child; orchids grow keikis, clone plantlets, on the flower spike.
+  // Source: https://www.aos.org/orchid-care/what-is-growing-on-the-flower-stem
+  h("orchid_keiki", "Phalaenopsis hybrid", "Keiki", 0.05, 0.1,
+    "It clings to its parent's flower stem until its roots are ready. Keiki is the Hawaiian word for baby, and each one is an exact clone of its mother."),
+  // Fact: orchid seeds are dust-fine with no food store, and need a mycorrhizal fungus to germinate.
+  // Source: https://www.humboldtorchids.org/seeds.php
+  h("orchid_spike", "Phalaenopsis hybrid", "Flower Spike", 0.4, 0.4,
+    "It raises its spike slowly, saving every bloom for the right moment. Orchid seeds are as fine as dust, with no food inside, and only sprout if a fungus feeds them."),
+  // Fact: Phalaenopsis is from Greek phalaina (moth) + opsis (appearance): the flowers look like moths.
+  // Source: https://www.aos.org/orchid-care/orchid-care-and-culture-sheets/phalaenopsis-culture-sheet/phalaenopsis-the-genus
+  h("moth_orchid", "Phalaenopsis hybrid", "Moth Bloom", 0.7, 1.2,
+    "Its blooms hover in the gloom like great moths. The name Phalaenopsis means moth-like, because its flowers were thought to look like moths in flight."),
+
+  // Fact: Monstera seedlings grow toward the darkest part of the horizon, which leads them to a tree to climb (skototropism).
+  // Source: https://www.science.org/doi/10.1126/science.190.4216.804 (Strong & Ray 1975, Monstera gigantea)
+  h("monstera_cutting", "Monstera deliciosa", "Cutting", 0.3, 0.8,
+    "It shuffles away from the light, which seems backwards. Young monstera vines grow toward the darkest shadow they can see, because a shadow usually means a tree to climb."),
+  // Fact: Monstera deliciosa fruit takes over a year to ripen; unripe fruit is full of stinging calcium oxalate crystals.
+  // Source: https://en.wikipedia.org/wiki/Monstera_deliciosa
+  h("monstera", "Monstera deliciosa", "Split Leaf", 2.5, 40,
+    "It shares its fruit with no one until it's ready. A monstera fruit takes over a year to ripen, and before then it is full of needle-like crystals that sting the mouth."),
+
+  // Fact: a sacred lotus seed about 1,300 years old (radiocarbon-dated) was germinated (Shen-Miller et al.).
+  // Source: https://www.cambridge.org/core/services/aop-cambridge-core/content/view/950DD5CB3E32BA6D99A79CAB5D75B038/S0960258502000144a.pdf/sacred-lotus-the-long-living-fruits-of-china-antique.pdf
+  h("lotus_seed", "Nelumbo nucifera", "Seed", 0.02, 0.01,
+    "It can wait a very long time. A lotus seed from a dry lakebed in China, carbon-dated at about 1,300 years old, still sprouted."),
+  // Fact: lotus flowers make their own heat and hold themselves at about 30-36 C for 2-4 days (Seymour & Schultze-Motel 1996).
+  // Source: https://www.nature.com/articles/383305a0
+  h("sacred_lotus", "Nelumbo nucifera", "Lotus", 1.5, 8.0,
+    "It rises spotless out of the mud. Its flower makes its own heat, holding itself at about 30 to 35 C for days, even on cold nights."),
+
+  // Fact: Joseph Banks named Strelitzia after Queen Charlotte, born a princess of Mecklenburg-Strelitz.
+  // Source: https://en.wikipedia.org/wiki/Strelitzia
+  h("paradise_shoot", "Strelitzia reginae", "Crane Bud", 0.4, 1.0,
+    "It holds its head high, as if waiting to be announced. The plant is named Strelitzia after Queen Charlotte, a princess of Mecklenburg-Strelitz."),
+  // Fact: sunbirds perch on the flower; their weight opens the blue petals and dusts their feet with pollen.
+  // Source: https://en.wikipedia.org/wiki/Strelitzia_reginae
+  h("bird_of_paradise", "Strelitzia reginae", "Bird Flower", 1.5, 12,
+    "Also called the bird of paradise. When a sunbird lands on the blue petals to drink, its weight springs them open and dusts its feet with pollen."),
 ];
 
 export const HERBARIUM = Object.fromEntries(LIST.map((e) => [e.species, e])) as Record<SpeciesId, HerbariumEntry>;
