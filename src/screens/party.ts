@@ -7,7 +7,7 @@ import { applyItem, consumeItem, isMedicine } from "../battle/logic/items";
 import { itemGrowthTarget } from "../battle/logic/exp";
 import { qName, STATUS_ABBR } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
-import { clearScreen, drawCursor, drawHpBar, drawIcon, drawLevel, drawStatusBadge, drawTextRight, drawTiny, pad, preload } from "./kit/draw";
+import { drawCursor, drawHpBar, drawIcon, drawLevel, drawStatusBadge, drawTextRight, drawWiltBadge, pad, preload } from "./kit/draw";
 import { fmt } from "./kit/text";
 import { Menu, ScreenUi } from "./kit/widgets";
 import { runGrowth } from "./flows/growth";
@@ -43,13 +43,37 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
   const shownHp = new Map<string, number>();
   let hideCursor = false;
 
-  const draw = (g: CanvasRenderingContext2D) => {
-    frame++;
-    clearScreen(g, UI.white);
-    party().forEach((q, i) => drawRow(ctx, g, q, i, i === index, frame, shownHp.get(q.uid) ?? q.hp));
+  const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
+    frame = f;
+    // soft zebra rows; empty slots show as pale dashed plots
+    for (let i = 0; i < 6; i++) {
+      g.fillStyle = i % 2 ? "#eef4e2" : "#f8f8f0";
+      g.fillRect(0, i * ROW_H, 160, ROW_H);
+    }
+    for (let i = party().length; i < 6; i++) {
+      g.fillStyle = "#d8e0c8";
+      for (let x = 10; x < 150; x += 4) g.fillRect(x, i * ROW_H + 8, 2, 1);
+    }
+    if (swapFrom >= 0) {
+      g.fillStyle = "#d8e8f8";
+      g.fillRect(0, swapFrom * ROW_H, 160, ROW_H);
+    }
+    if (!hideCursor) {
+      g.fillStyle = "#f8f0b8";
+      g.fillRect(0, index * ROW_H, 160, ROW_H);
+      g.fillStyle = UI.dark;
+      g.fillRect(0, index * ROW_H, 160, 1);
+      g.fillRect(0, index * ROW_H + ROW_H - 1, 160, 1);
+    }
+    party().forEach((q, i) => {
+      // rows slide in from the right as the menu opens
+      const k = Math.max(0, Math.min(1, (frame - i * 2) / 8));
+      const off = Math.round((1 - k) * (1 - k) * 80);
+      drawRow(ctx, g, q, i, i === index && !hideCursor, frame, shownHp.get(q.uid) ?? q.hp, off);
+    });
     if (!hideCursor) {
       if (swapFrom >= 0) drawCursor(ctx, g, 0, swapFrom * ROW_H + 4, true);
-      drawCursor(ctx, g, 0, index * ROW_H + 4);
+      drawCursor(ctx, g, 0, index * ROW_H + 4, false, frame);
     }
     ui?.draw(g);
   };
@@ -164,21 +188,19 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
   return runFlowScene<number>(ctx, { draw, main, fallback: -1 });
 }
 
-function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i: number, selected: boolean, frame: number, hp: number) {
+function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i: number, selected: boolean, frame: number, hp: number, off = 0) {
   const y = i * ROW_H;
+  const x = off;
+  // icons bob faster the healthier they are (and fastest when selected), as in Crystal
   const speed = hp <= 0 ? 0 : hp / q.stats.hp > 0.5 ? (selected ? 6 : 16) : hp / q.stats.hp > 0.2 ? (selected ? 10 : 24) : (selected ? 16 : 32);
   const f = speed === 0 ? 0 : Math.floor(frame / speed) % 2;
-  drawIcon(ctx, g, q.species, 8, y, f, q.sport);
+  const hop = selected && speed > 0 && Math.floor(frame / speed) % 4 === 1 ? -1 : 0;
+  drawIcon(ctx, g, q.species, 8 + x, y + hop, f, q.sport);
   const name = qName(ctx.data, q);
-  ctx.ui.drawText(g, name.slice(0, 12), 24, y);
-  drawLevel(ctx, g, q.level, 124, y);
-  drawHpBar(g, 24, y + 9, Math.max(0, hp), q.stats.hp, 48);
-  if (q.hp <= 0) {
-    g.fillStyle = "#808080";
-    g.fillRect(83, y + 9, 15, 7);
-    drawTiny(g, "WLT", 85, y + 10, UI.white);
-  } else if (q.status) {
-    drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 83, y + 9);
-  }
-  drawTextRight(ctx, g, `${pad(Math.max(0, Math.round(hp)), 3)}/${pad(q.stats.hp, 3)}`, 156, y + 8);
+  ctx.ui.drawText(g, name.slice(0, 12), 24 + x, y, hp <= 0 ? "#707070" : undefined);
+  drawLevel(ctx, g, q.level, 124 + x, y);
+  drawHpBar(g, 24 + x, y + 9, Math.max(0, hp), q.stats.hp, 48);
+  if (q.hp <= 0) drawWiltBadge(g, 83 + x, y + 9);
+  else if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 83 + x, y + 9, frame);
+  drawTextRight(ctx, g, `${pad(Math.max(0, Math.round(hp)), 3)}/${pad(q.stats.hp, 3)}`, 157 + x, y + 8);
 }

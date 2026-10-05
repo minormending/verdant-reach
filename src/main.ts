@@ -1,63 +1,98 @@
 // Boot: assemble the GameContext from each module's entry point, then start
-// the title screen (or a dev scene with ?dev=<module>).
+// the title screen (or a dev scene with ?dev=<module>). The page shell
+// (scaling, touch controls, fullscreen, pause, error card) lives in
+// src/platform.
 
 import type { GameContext, Scene } from "./contracts";
-import { SCREEN_W, UI } from "./contracts";
+import { uiPath } from "./contracts";
 import { createAssets, createCanvas, createInput, createSceneStack, runLoop } from "./engine/core";
 import { createGameContext, playClock } from "./engine/context";
 import { ASSET_PATHS } from "./assets/manifest";
-import { drawText } from "./ui/kit";
+import { setAudioSuspended } from "./audio";
+import {
+  createLoadingScene, createPause, createShell, installErrorScreen, pauseOnFocusLoss, platformFlags,
+} from "./platform";
 
 const devModules = import.meta.glob<{ default: (ctx: GameContext) => Scene | Promise<Scene> }>("./*/dev.ts");
 
 async function boot() {
-  const { g } = createCanvas();
+  const { canvas, g } = createCanvas();
+  const flags = platformFlags();
+  let ticks = 0;
   let ctx: GameContext | undefined;
-  const input = createInput(() => ctx?.audio.unlock());
   const scenes = createSceneStack();
-  const assets = createAssets();
-  ctx = createGameContext({ input, scenes, assets });
-  if (import.meta.env.DEV) {
-    (window as unknown as { __vr: unknown }).__vr = { ctx, scenes };
-    void import("./overworld/devDriver").then((m) => m.installDevDriver(scenes));
-  }
 
-  // Loading bar while the art preloads.
-  let loaded = 0;
-  let total = ASSET_PATHS.length;
-  const loading: Scene = {
-    update() {},
-    draw(gg) {
-      gg.fillStyle = "#000";
-      gg.fillRect(0, 0, SCREEN_W, 144);
-      if (total > 0) {
-        drawText(gg, "LOADING", 52, 60, UI.light);
-        gg.fillStyle = UI.dark;
-        gg.fillRect(40, 74, 80, 4);
-        gg.fillStyle = UI.light;
-        gg.fillRect(40, 74, Math.round((80 * loaded) / total), 4);
-      }
+  const errors = installErrorScreen({
+    canvas, g,
+    ticks: () => ticks,
+    onShow(redraw) {
+      try { ctx?.audio.stopMusic(10); } catch { /* audio is optional */ }
+      // If the loop is still alive (a boot failure), keep the card on screen.
+      scenes.clear();
+      scenes.push({ update() {}, draw: redraw });
     },
-  };
-  scenes.push(loading);
-
-  runLoop(g, scenes, input, (dt) => {
-    if (playClock.running && ctx) ctx.state.playTimeMs += dt;
   });
 
-  await assets.loadAll(ASSET_PATHS, (d, t) => { loaded = d; total = t; });
-  scenes.pop();
+  try {
+    const input = createInput(() => ctx?.audio.unlock());
+    const assets = createAssets();
+    ctx = createGameContext({ input, scenes, assets });
+    const game = ctx;
+    // Touch only grants audio permission on pointerup/touchend, not pointerdown.
+    const unlock = () => game.audio.unlock();
+    addEventListener("pointerup", unlock);
+    addEventListener("touchend", unlock);
 
-  const dev = new URLSearchParams(location.search).get("dev");
-  const loader = dev ? devModules[`./${dev}/dev.ts`] : undefined;
-  if (dev && !loader) console.warn(`[dev] no dev scene at src/${dev}/dev.ts`);
-  if (loader) {
-    const mod = await loader();
-    scenes.push(await mod.default(ctx));
-  } else {
-    const { createTitleScene } = await import("./ui/title");
-    scenes.push(createTitleScene(ctx));
+    if (flags.shell) createShell(canvas, unlock);
+    else canvas.style.imageRendering = "pixelated";
+
+    let booted = false;
+    const pause = createPause({
+      scenes, input,
+      allowed: () => booted && !errors.shown,
+      onChange: (on) => setAudioSuspended(game.audio, on),
+    });
+    if (flags.pauseOnBlur) pauseOnFocusLoss(pause, canvas);
+
+    if (import.meta.env.DEV) {
+      (window as unknown as { __vr: unknown }).__vr = { ctx, scenes, pause };
+      void import("./overworld/devDriver").then((m) => m.installDevDriver(scenes));
+    }
+
+    // Logo first, so the loading screen can show it, then everything else.
+    const loading = createLoadingScene(assets);
+    scenes.push(loading);
+    runLoop(g, scenes, input, (dt) => {
+      ticks++;
+      if (playClock.running && !pause.paused) game.state.playTimeMs += dt;
+    });
+    await assets.loadAll([uiPath("title_logo")]);
+    await assets.loadAll(ASSET_PATHS, (d, t) => loading.progress(d, t));
+    await loading.finish();
+    scenes.pop();
+
+    const params = new URLSearchParams(location.search);
+    const dev = params.get("dev");
+    const loader = dev ? devModules[`./${dev}/dev.ts`] : undefined;
+    if (dev && !loader) console.warn(`[dev] no dev scene at src/${dev}/dev.ts`);
+    if (loader) {
+      const mod = await loader();
+      scenes.push(await mod.default(game));
+    } else {
+      const { createTitleScene } = await import("./ui/title");
+      scenes.push(createTitleScene(game));
+    }
+    booted = true;
+
+    // Dev only: ?e2e=<suite> runs the automated playthrough (see e2e/README).
+    if (import.meta.env.DEV && params.get("e2e")) {
+      const e2e = await import("../e2e/playthrough");
+      (window as unknown as { __e2e: unknown }).__e2e = e2e;
+      void e2e.autorun(params.get("e2e")!);
+    }
+  } catch (err) {
+    errors.fatal(err);
   }
 }
 
-boot();
+void boot();

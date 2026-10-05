@@ -46,6 +46,7 @@ export const tilePath = (key: TileKey, frame: 1 | 2 = 1) =>
  */
 export const AUTOTILE: Partial<Record<TileKey, string>> = {
   water: "water", pond_lily: "water", water_channel: "water",
+  reeds: "water", bridge: "water", // water flows into reed beds and under bridges
   path: "path", stone_path: "stone_path", dirt: "dirt", sand: "sand",
   bog: "bog", boardwalk: "boardwalk", tall_grass: "tall_grass",
   hedge: "hedge", fence: "fence", stone_wall: "stone_wall", cliff: "cliff",

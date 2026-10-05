@@ -7,7 +7,7 @@ import { itemGrowthTarget } from "../battle/logic/exp";
 import { consumeItem, isMedicine } from "../battle/logic/items";
 import { getItem, itemName } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
-import { clearScreen, drawCursor, drawMoreArrow, drawTextRight } from "./kit/draw";
+import { clearScreen, cursorBob, drawCursor, drawItemIcon, drawMoreArrow, drawTextRight } from "./kit/draw";
 import { fmt, playerName } from "./kit/text";
 import { ListView, Menu, ScreenUi } from "./kit/widgets";
 
@@ -38,20 +38,35 @@ export function bagScreen(ctx: GameContext, opts: BagOpts): Promise<ItemId | nul
   };
   const entries = () => [...items(), "__cancel"];
 
-  const draw = (g: CanvasRenderingContext2D) => {
-    frame++;
+  const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
+    frame = f;
     clearScreen(g, "#e8f0d8");
     // Pocket label + vasculum (the botanist's collecting tin)
     g.fillStyle = UI.dark;
     g.fillRect(0, 0, 40, 22);
     POCKETS[pocket].name.forEach((n, i, a) => ctx.ui.drawText(g, n, 20 - n.length * 4, (a.length > 1 ? 3 : 7) + i * 9, UI.white));
-    drawVasculum(g, 0, 34 + slide, pocket);
+    drawVasculum(g, 0, 22 + slide, pocket);
+    // the selected item, held up on a little tag
+    const sel = list ? entries()[list.index] : undefined;
+    if (sel && sel !== "__cancel") {
+      g.fillStyle = "#5a3a20";
+      g.fillRect(19, 61, 1, 3);
+      g.fillStyle = UI.black;
+      g.fillRect(9, 64, 22, 20);
+      g.fillStyle = "#f8f4e4";
+      g.fillRect(10, 65, 20, 18);
+      if (!drawItemIcon(ctx, g, sel, 12, 66 - cursorBob(frame))) {
+        g.fillStyle = "#c8b890";
+        g.fillRect(16, 70, 8, 8);
+      }
+    }
     for (let i = 0; i < 3; i++) {
       g.fillStyle = i === pocket ? UI.dark : "#b0c0a0";
-      g.fillRect(8 + i * 9, 82, 6, 4);
+      g.fillRect(12 + i * 6, 88, 4, 4);
     }
-    ctx.ui.drawText(g, "◀", 0, 88);
-    ctx.ui.drawText(g, "▶", 32, 88);
+    const nudge = cursorBob(frame);
+    ctx.ui.drawText(g, "◀", 0 - nudge, 86);
+    ctx.ui.drawText(g, "▶", 32 + nudge, 86);
     // List
     ctx.ui.drawWindow(g, 40, 0, 120, 96);
     if (list) {
@@ -67,7 +82,7 @@ export function bagScreen(ctx: GameContext, opts: BagOpts): Promise<ItemId | nul
           if (getItem(ctx.data, id).pocket !== "key") drawTextRight(ctx, g, `×${pad2(ctx.state.bag[id] ?? 0)}`, 152, y + 8);
         }
       }
-      drawCursor(ctx, g, 48, 8 + (list.index - list.scroll) * 16, !!ui && ui.overlays.length > 0);
+      drawCursor(ctx, g, 48, 8 + (list.index - list.scroll) * 16, !!ui && ui.overlays.length > 0, list.frame);
       if (list.canScrollDown()) drawMoreArrow(ctx, g, 144, 86, frame);
       if (list.canScrollUp()) drawMoreArrow(ctx, g, 144, 2, frame, "up");
     }

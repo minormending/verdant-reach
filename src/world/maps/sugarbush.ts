@@ -1,86 +1,99 @@
 import type { MapDef } from "../../contracts";
-import { LEGEND, ifFlags, ifNight, lockedDoor, say, when, type Scripts } from "../build";
+import { OUTDOOR, ifFlags, ifNight, lockedDoor, say, when, type Scripts } from "../build";
 
-// Maple-syrup town. Tapped maples line the lane north into the grove; the
-// SUGAR SHACK lodge stands by them. West, behind a fence, the bog boardwalk
-// leads to NELL PITCHER's CONSERVATORY.
+// SUGARBUSH: a maple-syrup town in autumn. The south road climbs past a
+// pumpkin patch to the square, where the great SUGAR MAPLE stands. North of
+// the square, the grove lane runs between tapped maples hung with sap buckets
+// up to SUGARBUSH GROVE; the SUGAR SHACK and its woodpile sit just east of it.
+// West, behind a fence, is the bog. The CONSERVATORY stands in it like a
+// lantern, and a boardwalk leads to it from a gate a worried villager guards.
+//
+// The taps come out (X -> plain maple) once ROOTSTOCK leaves the grove.
 export const sugarbush: MapDef = {
   id: "sugarbush",
   name: "SUGARBUSH",
   outdoor: true,
   music: "small_town",
   border: "maple_tree",
-  legend: LEGEND,
-  // The taps come out once ROOTSTOCK leaves the grove.
+  legend: OUTDOOR,
   legendWhen: [{ when: [{ flag: "grove_cleared", is: true }], legend: { X: "maple_tree" } }],
+  ambient: "leaves",
   tiles: [
-    "MMMMMMMMMMMMMM::MMMMMMMMMMMMMM", // 0
-    "MMMMMMMMMMMMXX::XXMMMMMMMMMMMM", // 1
-    "MMMMMMMMMMMMXX::XXM..........M", // 2
-    "Mb@@@@@@bbbMXX::XXM.MM..X....M", // 3
-    "Mb@@@@@@bbbMXX::XXM.......X..M", // 4
-    "Mb@@@@@@~~bM..::...@@@@@.....M", // 5
-    "Mb@@@@@@bbbM.S::...@@@@@.....M", // 6
-    "Mbbbb=bbbbbM..::...@@@@@.....M", // 7
-    "Mbbbb======M..::.....:...X...M", // 8
-    "Mbbbbbbbbb=M..::::::::.......M", // 9
-    "Mb~~~bbbbb=M..::.............M", // 10
-    "Mb~~~bbbbb==::::.....M...M...M", // 11
-    "Mbbbbbbbbbb#S.::...........M.M", // 12
-    "M~~~~bbbbbb#..::..@@@@.***...M", // 13
-    "M~~~~bbbbbb#..::..@@@@.***...M", // 14
-    "M###########..::.S@@@@.......M", // 15
-    "M.............::....:......M.M", // 16
-    "M.**M.......M.:::::::........M", // 17
-    "M.....@@@@....::.......@@@@..M", // 18
-    "M.....@@@@....::.......@@@@..M", // 19
-    "MM....@@@@...S::.......@@@@..M", // 20
-    "M......:......::........:....M", // 21
-    "M......::::::::::::::::::....M", // 22
-    "M.M......***..::.............M", // 23
-    "M...........M.::.M.........M.M", // 24
-    "MMMMMMMMMMMMMM::MMMMMMMMMMMMMM", // 25
+    // x: 012345678901234567890123456789
+    "MMMMMMMMMMMMMM::MMMMMMMMMMMMMM", // 0  to the GROVE
+    "MMMMMMMMMMMMXX::XXMMMMMMMMMMMM", // 1  the tapped grove lane
+    "Mqb0~~0bbqMMX7::7XMMMMMMMMMMMM", // 2
+    "Mb@@@@@@bbMMX.::.XMM.@@@@@7X.M", // 3  CONSERVATORY in the bog; SUGAR SHACK
+    "Mb@@@@@@bqMMX7::7XM..@@@@@.X7M", // 4
+    "Mb@@@@@@qbMMX.::.....@@@@@...M", // 5
+    "Mb@@@@@@bbMMX7::.......:..34.M", // 6  woodpile
+    "Mbbbb=bbqbMMMS::::::::::.7.7.M", // 7  sap buckets
+    "Mqbbb=bbbb#...::.y*...MM.5..MM", // 8
+    "Mb0~~=bbbq#...::......@@@@.f.M", // 9  GREENHOUSE
+    "Mq~~0=bbbb#.61111116..@@@@.*.M", // 10 the square
+    "Mbbbb=======:1111@@1.S@@@@.**M", // 11 boardwalk gate; the SUGAR MAPLE
+    "Mqbbbbbqbb#S.1111@@111111....M", // 12
+    "M~~0bbbbbq#.69111116...*y*...M", // 13
+    "M~0bbbqbbb#...::.....y*......M", // 14
+    "M##########...::.9.....MM....M", // 15
+    "M..M....####..::....MM.......M", // 16
+    "M..@@@@.#kk#..::......@@@@...M", // 17 pumpkin patch
+    "M..@@@@.#GG#..::......@@@@.4.M", // 18
+    "M..@@@@.####..::......@@@@...M", // 19
+    "M...:...3.....::.......:..M..M", // 20
+    "M...::::::::::::::::::::.....M", // 21
+    "M.y*....M.....::......MM...M.M", // 22
+    "MM......MMM..S::...MM.....MMMM", // 23
+    "MMMMMMMMMMMMM.::.MMMMMMMMMMMMM", // 24
+    "MMMMMMMMMMMMMM::MMMMMMMMMMMMMM", // 25 to ROUTE 3
   ],
   structures: [
     { key: "conservatory", x: 2, y: 3 }, // door 5,6
-    { key: "lodge", x: 19, y: 5 },       // door 21,7
-    { key: "greenhouse", x: 18, y: 13 }, // door 20,15
-    { key: "house_small", x: 23, y: 18 }, // door 24,20
-    { key: "house_small", x: 6, y: 18 },  // door 7,20
+    { key: "lodge", x: 21, y: 3 },       // door 23,5 (SUGAR SHACK)
+    { key: "greenhouse", x: 22, y: 9 },  // door 24,11
+    { key: "big_maple", x: 17, y: 11 },
+    { key: "house_small", x: 3, y: 17 }, // door 4,19
+    { key: "house_small", x: 22, y: 17 }, // door 23,19
   ],
   warps: [
-    { x: 14, y: 0, to: "sugarbush_grove", toX: 13, toY: 24, facing: "up" },
-    { x: 15, y: 0, to: "sugarbush_grove", toX: 14, toY: 24, facing: "up" },
+    { x: 14, y: 0, to: "sugarbush_grove", toX: 13, toY: 26, facing: "up" },
+    { x: 15, y: 0, to: "sugarbush_grove", toX: 14, toY: 26, facing: "up" },
     { x: 14, y: 25, to: "route_3", toX: 10, toY: 1, facing: "down" },
     { x: 15, y: 25, to: "route_3", toX: 11, toY: 1, facing: "down" },
-    { x: 5, y: 6, to: "sugarbush_conservatory", toX: 9, toY: 14, facing: "up" },
-    { x: 20, y: 15, to: "sugarbush_greenhouse", toX: 4, toY: 6, facing: "up" },
+    { x: 5, y: 6, to: "sugarbush_conservatory", toX: 9, toY: 16, facing: "up" },
+    { x: 24, y: 11, to: "sugarbush_greenhouse", toX: 5, toY: 7, facing: "up" },
   ],
   npcs: [
+    // Stands on the boardwalk gate until the grove is cleared.
     { id: "gatekeeper", sprite: "villager_a", x: 11, y: 11, facing: "right", movement: "static", script: "sb_gatekeeper",
       visibleWhen: when({ grove_cleared: false }) },
+    // rival_2: BRAM takes the same spot; the player steps on 12,11, east of him.
     { id: "bram", sprite: "bram", x: 11, y: 11, facing: "right", movement: "static", script: "rival_2",
       visibleWhen: when({ grove_cleared: true, rival_2_done: false }) },
-    { id: "syrupmaker", sprite: "villager_b", x: 23, y: 9, facing: "left", movement: "look_around", script: "sb_syrupmaker" },
-    { id: "tapper", sprite: "hiker", x: 13, y: 5, facing: "up", movement: "look_around", script: "sb_tapper" },
-    { id: "pip", sprite: "pip", x: 8, y: 16, facing: "down", movement: "look_around", script: "sb_pip",
+    { id: "syrupmaker", sprite: "villager_b", x: 26, y: 7, facing: "down", movement: "look_around", script: "sb_syrupmaker" },
+    { id: "tapper", sprite: "hiker", x: 16, y: 5, facing: "left", movement: "look_around", script: "sb_tapper" },
+    { id: "pip", sprite: "pip", x: 19, y: 14, facing: "down", movement: "look_around", script: "sb_pip",
       visibleWhen: when({ pip_demo_done: true }) },
-    { id: "elder", sprite: "elder", x: 26, y: 16, facing: "left", movement: "static", script: "sb_elder" },
-    { id: "kid", sprite: "kid", x: 10, y: 22, facing: "down", movement: "wander", script: "sb_kid" },
-    { id: "bogfan", sprite: "florist", x: 3, y: 21, facing: "right", movement: "look_around", script: "sb_bogfan" },
+    { id: "elder", sprite: "elder", x: 14, y: 13, facing: "left", movement: "static", script: "sb_elder" },
+    { id: "kid", sprite: "kid", x: 16, y: 17, facing: "down", movement: "wander", script: "sb_kid" },
+    { id: "bogfan", sprite: "florist", x: 11, y: 14, facing: "left", movement: "look_around", script: "sb_bogfan" },
+    { id: "cat", sprite: "cat", x: 5, y: 20, facing: "down", movement: "wander", script: "sb_cat" },
+    { id: "dog", sprite: "dog", x: 26, y: 15, facing: "left", movement: "wander", script: "sb_dog" },
+    { id: "bird", sprite: "bird", x: 6, y: 22, facing: "right", movement: "wander", script: "sb_bird" },
   ],
   signs: [
-    { x: 13, y: 20, text: "SUGARBUSH. Sweetest sap in the VERDANT REACH." },
-    { x: 13, y: 6, text: "SUGARBUSH GROVE. Please don't disturb the trees." },
-    { x: 17, y: 15, text: "GREENHOUSE. Water, light and rest for tired QUICKENED." },
-    { x: 12, y: 12, text: "BOG BOARDWALK to SUGARBUSH CONSERVATORY. WARDEN: NELL PITCHER." },
+    { x: 13, y: 23, text: "SUGARBUSH. Sweetest sap in the VERDANT REACH." },
+    { x: 13, y: 7, text: "SUGARBUSH GROVE. Please don't disturb the trees." },
+    { x: 21, y: 11, text: "GREENHOUSE. Water, light and rest for tired QUICKENED." },
+    { x: 11, y: 12, text: "BOG BOARDWALK to the CONSERVATORY. WARDEN: NELL PITCHER." },
   ],
   triggers: [
     { x: 12, y: 11, script: "rival_2", when: when({ grove_cleared: true, rival_2_done: false }) },
-    { x: 21, y: 7, script: "sb_door_lodge" },
-    { x: 24, y: 20, script: "sb_door_a" },
-    { x: 7, y: 20, script: "sb_door_b" },
+    { x: 23, y: 5, script: "sb_door_lodge" },
+    { x: 23, y: 19, script: "sb_door_a" },
+    { x: 4, y: 19, script: "sb_door_b" },
   ],
+  onEnter: "sb_enter",
   encounters: {
     bog: {
       rate: 10,
@@ -94,19 +107,23 @@ export const sugarbush: MapDef = {
 };
 
 export const scripts: Scripts = {
+  sb_enter: [
+    ifFlags({ sb_arrival_seen: false, grove_cleared: false }, [{ op: "call", script: "sugarbush_arrival" }]),
+  ],
   sb_gatekeeper: [
+    { op: "face", who: "gatekeeper", dir: "toPlayer" },
     say("Sorry, love. Nobody goes down the boardwalk today."),
-    say("NELL's out there with her hunters, and the bog's in a mood. The whole town is."),
-    say("It's the maples. Somebody's tapped the grove and they're drying out."),
-    say("Sort out the grove up north and I'll gladly step aside."),
+    say("The bog's in a mood. NELL says her hunters won't settle."),
+    say("It's the maples. Somebody's tapped the whole grove dry."),
+    say("Sort out the grove up north, and I'll gladly step aside."),
   ],
   sb_syrupmaker: [
     ifFlags({ grove_cleared: true }, [
-      say("The sap's running again! Forty buckets of sap boil down to one of syrup."),
+      say("The sap's running! Forty buckets boil down to one of syrup."),
       say("Sweet work, and slow. Like everything worth doing."),
     ], [
       say("No sap, no syrup. Strangers tapped the QUICKENED maples and took it all."),
-      say("They didn't even boil it. Just bottled it raw. \"For study,\" they said."),
+      say("They didn't even boil it. Bottled it raw. \"For study,\" they said."),
     ]),
   ],
   sb_tapper: [
@@ -118,13 +135,24 @@ export const scripts: Scripts = {
     ]),
   ],
   sb_pip: [
-    say("<PLAYER>! Maple seeds are called samaras. They spin down like helicopters!"),
-    say("Spinning slows their fall, so the wind can carry them far from the parent tree."),
+    ifFlags({ grove_cleared: true }, [
+      say("<PLAYER>! Maple leaves turn red when the tree stops making green!"),
+      say("The red was hiding underneath all summer. Isn't that amazing?"),
+    ], [
+      say("<PLAYER>! Maple seeds are called samaras. They spin like helicopters!"),
+      say("Spinning slows their fall, so the wind carries them far away."),
+    ]),
   ],
   sb_elder: [
     ifNight(
       [say("Listen. Hear that? The bog hums some nights. Always has, since I was a girl.")],
-      [say("SUGARBUSH has tapped these maples for three hundred years. Never like this.")],
+      [ifFlags({ grove_cleared: true }, [
+        say("Three hundred years this town has tapped those maples. Gently."),
+        say("You gave them back their dignity, botanist."),
+      ], [
+        say("That SUGAR MAPLE was here before the town. We built around it."),
+        say("Its leaves should be scarlet by now. They're going brown."),
+      ])],
     ),
   ],
   sb_kid: [
@@ -135,8 +163,25 @@ export const scripts: Scripts = {
     ]),
   ],
   sb_bogfan: [
-    say("NELL PITCHER studies carnivorous plants. She calls them her little hunters."),
-    say("A sundew's leaves are covered in sticky dew. Bugs land and can't leave."),
+    ifFlags({ beat_nell: true }, [
+      say("You beat NELL? Did her flytrap snap at you? It snaps at everyone."),
+    ], [
+      say("NELL PITCHER keeps carnivorous plants. She calls them her little hunters."),
+      say("A sundew's leaves are beaded with sticky dew. Bugs land, and stay."),
+    ]),
+  ],
+  sb_cat: [
+    say("The cat is watching a falling leaf with total seriousness."),
+  ],
+  sb_dog: [
+    ifFlags({ grove_cleared: true }, [
+      say("The dog rolls in a pile of maple leaves, delighted with itself."),
+    ], [
+      say("The dog sniffs at the grove lane and whines."),
+    ]),
+  ],
+  sb_bird: [
+    say("A nuthatch, walking headfirst down a trunk. Showing off."),
   ],
   sb_door_lodge: [
     ifFlags({ grove_cleared: true }, [
@@ -146,5 +191,5 @@ export const scripts: Scripts = {
     ], lockedDoor("SUGAR SHACK. A sign: \"Closed. No sap, no syrup.\"")),
   ],
   sb_door_a: lockedDoor("It's locked. The windowsill is lined with tiny jars of syrup."),
-  sb_door_b: lockedDoor("It's locked. A cat glares at you from the window."),
+  sb_door_b: lockedDoor("It's locked. Pumpkin seeds are drying on a tray by the step."),
 };

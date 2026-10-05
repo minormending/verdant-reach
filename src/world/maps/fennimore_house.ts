@@ -1,7 +1,11 @@
 import type { MapDef } from "../../contracts";
 import { LEGEND, type Scripts } from "../build";
 
-// OLD FENNIMORE's study: shelves of notebooks, potted curiosities.
+// OLD FENNIMORE's cottage: fifty years of botany in one room. Shelves of field
+// notes, the hearth with his armchair and rug, a bench with the old microscope,
+// seed crates, a barrel of potting soil, and pots on every free tile.
+//
+//            0123456789
 export const fennimore_house: MapDef = {
   id: "fennimore_house",
   name: "FENNIMORE's HOUSE",
@@ -10,21 +14,26 @@ export const fennimore_house: MapDef = {
   border: "void",
   legend: LEGEND,
   tiles: [
-    "WWWOOWWOOW", // 0
-    "WKKKwwppKW", // 1
-    "WwwwwwwwwW", // 2
-    "WwDDwwwppW", // 3
-    "WwDDwwwwwW", // 4
-    "WwwwwwwwwW", // 5
-    "WpwwrrwwpW", // 6
+    "WWOOWWWOOW", // 0
+    "WKKpFpKwJW", // 1
+    "WhwrrrwwQW", // 2
+    "WDwrrrwwJW", // 3
+    "WDhwwwwwpW", // 4
+    "W8wwwwwwYW", // 5
+    "WZp7wwwppW", // 6
     "WWWWEWWWWW", // 7
   ],
   structures: [],
-  warps: [{ x: 4, y: 7, to: "hedgerow", toX: 12, toY: 6, facing: "down" }],
+  warps: [{ x: 4, y: 7, to: "hedgerow", toX: 13, toY: 8, facing: "down" }],
   npcs: [
     { id: "fennimore", sprite: "fennimore", x: 5, y: 3, facing: "down", movement: "static", script: "fennimore" },
   ],
-  signs: [],
+  signs: [
+    { x: 1, y: 1, text: "FIELD NOTES, VOLS. 1 to 50. Volume 51 is still blank." },
+    { x: 8, y: 2, text: "An old brass microscope. A label on it: \"NOT to be lent to IMOGEN.\"" },
+    { x: 8, y: 1, text: "Seed packets, labelled in tiny writing. One empty packet just says \"ROLLS.\"" },
+    { x: 8, y: 3, text: "A half-written letter, crossed out three times. \"IMOGEN, I think...\"" },
+  ],
   triggers: [],
 };
 

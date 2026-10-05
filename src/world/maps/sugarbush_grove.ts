@@ -1,9 +1,14 @@
 import type { MapDef } from "../../contracts";
-import { LEGEND, pickups, when, type Scripts } from "../build";
+import { OUTDOOR, pickups, when, type Scripts } from "../build";
 
-// Dungeon: a maze of sugar maples, many of them tapped by ROOTSTOCK. Three
-// grunts guard the lanes; SHEARS waits in the clearing at the top. A dead-end
-// west branch hides GLASS PODS.
+// SUGARBUSH GROVE (dungeon). A maze of sugar maples, the tapped ones (X)
+// trailing tubing. From the entrance clearing the lane forks: west to a
+// grassy dead end with a RAIN JAR, east up a narrow lane where a grunt waits
+// in a side gap, looking across it. The lane opens into ROOTSTOCK's camp
+// (crates, sap drums, a workbench), watched by a second grunt. GLASS PODS sit
+// behind the crates. A trail north-west climbs to a long avenue with a third
+// grunt at the far end, then a cleft opens onto the top clearing, ringed with
+// tapped maples and sap drums, where SHEARS waits.
 const hideWhenCleared = when({ grove_cleared: false });
 
 export const sugarbush_grove: MapDef = {
@@ -12,56 +17,62 @@ export const sugarbush_grove: MapDef = {
   outdoor: true,
   music: "sugarbush_grove",
   border: "maple_tree",
-  legend: LEGEND,
+  legend: OUTDOOR,
   // The taps come out once ROOTSTOCK leaves the grove.
   legendWhen: [{ when: [{ flag: "grove_cleared", is: true }], legend: { X: "maple_tree" } }],
+  ambient: "leaves",
   tiles: [
+    // x: 0123456789012345678901234567
     "MMMMMMMMMMMMMMMMMMMMMMMMMMMM", // 0
-    "MMMMMMMX.,,,........XMMMMMMM", // 1
-    "MMMMMMMM.,,,........MMMMMMMM", // 2
-    "MMMMMMMX............XMMMMMMM", // 3
-    "MMMMMMMM..X......X..MMMMMMMM", // 4
-    "MMMMMMMM............MMMMMMMM", // 5
-    "MMMMMMMMMMMM..MMMMMMMMMMMMMM", // 6
-    "MMMMMMMMMMMM..MMMMMMMMMMMMMM", // 7
-    "MMMMMMMMMMMX..XMMMMMMMMMMMMM", // 8
-    "MMMMMMMMMMMM.....,,,.....MMM", // 9
-    "MMM........M.............MMM", // 10
-    "MMM........MMMMMMMMMMMX..MMM", // 11
-    "MMM..MMM...MMMXMMMMMMMM..XMM", // 12
-    "MMM,,MMM...MMMM......XM,,MMM", // 13
-    "MMM,,MMM...MMMM......MM,,MMM", // 14
-    "MMX,,MMMMMMMMMM........,,MMM", // 15
-    "MMM,,MMMMMMMMMM,,,,..MM..MMM", // 16
-    "MMM,,MMMMMMMMMX,,,,..MM..MMM", // 17
-    "MMM..MMMMMMMMMMMMMMMMMM..MMM", // 18
-    "MMM..XMMMXMMMMMMMMXMMMM..MMM", // 19
-    "MMM...,,,....::...MMMMX..MMM", // 20
-    "MMM...,,,....::....,,,...MMM", // 21
-    "MMMMMMMMMM...::....,,,...XMM", // 22
-    "MMMMMMMMMM...::...MMMMMMMMMM", // 23
-    "MMMMMMMMMMMMM::MMMMMMMMMMMMM", // 24
-    "MMMMMMMMMMMMM::MMMMMMMMMMMMM", // 25
+    "MMMMMMMMMX7.J8..87XMMMMMMMMM", // 1  SHEARS's clearing: drums, crates, bench
+    "MMMMMMMMX.........7XMMMMMMMM", // 2
+    "MMMMMMMM7..........7MMMMMMMM", // 3
+    "MMMMMMMMX5.....35..XMMMMMMMM", // 4
+    "MMMMMMMMMMMMX..XMMMMMMMMMMMM", // 5  the cleft (trigger)
+    "MMMM..5.MMMMM..MMMMMMMMMMMMM", // 6  GLASS POD nook at 7,6
+    "MMMM.XMMMMMMM..MMMMMMMMMMMMM", // 7
+    "MMMM..,,.......XMMMMMMMMMMMM", // 8  the avenue; grunt 3 at its far end
+    "MMMM..MMMMMMMMMMMMMMMMMMMMMM", // 9
+    "MMMX..XMMMMMMMMMMMMMMMMMMMMM", // 10
+    "MM,,.....78MM.,MMMMMMMMMMMMM", // 11 ROOTSTOCK camp; GLASS POD behind crates
+    "MM,,..J.....8.,MMMMMMMMMMMMM", // 12
+    "MM..........88.MMMMMMMMMMMMM", // 13
+    "MM..4.....,,,..MMMMMMMMMMMMM", // 14
+    "MM.........7........XMMMMMMM", // 15 grunt 2 watches the camp mouth
+    "MM.,,,...MMM........MMMMMMMM", // 16
+    "MMM,,,..MMMMMMMMMX..MMMMMMMM", // 17
+    "MMMMMMMMMMMMMMMMMM.,,.MMMMMM", // 18
+    "MMMMMMMMMMMMMMMMMMMX..XMMMMM", // 19
+    "MMMMMMMMMMMMMMMMMMMM,,MMMMMM", // 20
+    "MMMMMMMMMMMMMMMMM.....MMMMMM", // 21 grunt 1 in the side gap
+    "MMMMMMMMMMMMMMMMMM....MMMMMM", // 22
+    "MM.,,MMMMMMMMMMMX.....MMMMMM", // 23 RAIN JAR dead end
+    "MM,,,,..4.............MMMMMM", // 24 entrance clearing, the fork
+    "MMMMMMX......::.....XMMMMMMM", // 25
+    "MMMMMMMMMMMM.::.MMMMMMMMMMMM", // 26
+    "MMMMMMMMMMMMM::MMMMMMMMMMMMM", // 27 to SUGARBUSH
   ],
   structures: [],
   warps: [
-    { x: 13, y: 25, to: "sugarbush", toX: 14, toY: 1, facing: "down" },
-    { x: 14, y: 25, to: "sugarbush", toX: 15, toY: 1, facing: "down" },
+    { x: 13, y: 27, to: "sugarbush", toX: 14, toY: 1, facing: "down" },
+    { x: 14, y: 27, to: "sugarbush", toX: 15, toY: 1, facing: "down" },
   ],
   npcs: [
-    { id: "grunt1", sprite: "grunt", x: 24, y: 17, facing: "down", trainer: "grunt_grove_1", sight: 3, visibleWhen: hideWhenCleared },
-    { id: "grunt2", sprite: "grunt", x: 20, y: 10, facing: "right", trainer: "grunt_grove_2", sight: 3, visibleWhen: hideWhenCleared },
-    { id: "grunt3", sprite: "grunt", x: 13, y: 7, facing: "down", trainer: "grunt_grove_3", sight: 3, visibleWhen: hideWhenCleared },
+    { id: "grunt1", sprite: "grunt", x: 17, y: 21, facing: "right", trainer: "grunt_grove_1", sight: 4, visibleWhen: hideWhenCleared },
+    { id: "grunt2", sprite: "grunt", x: 12, y: 15, facing: "right", trainer: "grunt_grove_2", sight: 4, visibleWhen: hideWhenCleared },
+    { id: "grunt3", sprite: "grunt", x: 14, y: 8, facing: "left", trainer: "grunt_grove_3", sight: 4, visibleWhen: hideWhenCleared },
     { id: "shears", sprite: "shears", x: 13, y: 2, facing: "down", movement: "static", script: "shears", visibleWhen: hideWhenCleared },
+    { id: "bird", sprite: "bird", x: 10, y: 24, facing: "left", movement: "wander", script: "grove_bird",
+      visibleWhen: when({ grove_cleared: true }) },
     ...pickups([
-      { item: "glass_pod", x: 10, y: 10 },
-      { item: "glass_pod", x: 18, y: 14, n: 2 },
-      { item: "rain_jar", x: 9, y: 14 },
+      { item: "glass_pod", x: 13, y: 11 },
+      { item: "glass_pod", x: 7, y: 6, n: 2 },
+      { item: "rain_jar", x: 2, y: 23 },
     ]),
   ],
   signs: [],
   triggers: [
-    { x: 12, y: 5, w: 2, script: "shears", when: hideWhenCleared },
+    { x: 13, y: 5, w: 2, script: "shears", when: hideWhenCleared },
   ],
   encounters: {
     grass: {
@@ -75,4 +86,8 @@ export const sugarbush_grove: MapDef = {
   },
 };
 
-export const scripts: Scripts = {};
+export const scripts: Scripts = {
+  grove_bird: [
+    { op: "say", text: "A woodpecker drums on a maple, testing the bark where the taps were." },
+  ],
+};

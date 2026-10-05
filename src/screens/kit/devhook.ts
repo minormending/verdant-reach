@@ -29,21 +29,32 @@ export function installDevHook(ctx: GameContext) {
     for (let i = Math.max(0, from); i < all.length; i++) all[i].draw(g);
   };
   const drain = async () => { for (let i = 0; i < 20; i++) await null; };
-  (window as unknown as { __vr: unknown }).__vr = {
+  // `?freeze`: the real loop stops updating scenes; only step() advances
+  // time, so screenshots land on exact frames.
+  let frozen = new URLSearchParams(location.search).has("freeze");
+  let stepping = false;
+  const realTop = ctx.scenes.top.bind(ctx.scenes);
+  const idle = { update() {}, draw() {} };
+  (ctx.scenes as { top: () => unknown }).top = () => (frozen && !stepping ? (realTop() ? idle : undefined) : realTop());
+  const w = window as unknown as { __vr?: Record<string, unknown> };
+  w.__vr = Object.assign(w.__vr ?? {}, {
     ctx,
+    freeze(on = true) { frozen = on; },
     /** Run `frames` updates; `press` is pressed on the first one. */
     async step(frames = 1, press?: Button | Button[], hold?: Button[]) {
       held = new Set(hold ?? []);
+      stepping = true;
       for (let i = 0; i < frames; i++) {
         injected = new Set(i === 0 && press ? (Array.isArray(press) ? press : [press]) : []);
         ctx.scenes.top()?.update(1000 / 60);
         injected = new Set();
         await drain();
       }
+      stepping = false;
       held = new Set();
       render();
       return ctx.scenes.top() ? "ok" : "empty";
     },
     render,
-  };
+  });
 }

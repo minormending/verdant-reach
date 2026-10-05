@@ -3,7 +3,7 @@
 // images or labelled boxes, and NPCs / warps / triggers / signs are marked.
 // Unreachable walkable tiles are tinted red. Validation errors are listed.
 
-import { MAP_IDS, STRUCTURES, characterPath, structurePath, tilePath } from "../contracts";
+import { AUTOTILE, MAP_IDS, STRUCTURES, characterPath, structurePath, tileAltPath, tilePath, tileVariantPath } from "../contracts";
 import type { GameContext, MapDef, MapId, Scene, TileKey } from "../contracts";
 import { flood, grid, validateWorld, walkable } from "./validate";
 import { createOverworldScene } from "../overworld";
@@ -18,6 +18,13 @@ const COLORS: Partial<Record<TileKey, string>> = {
   window: "#98c8e8", counter: "#806040", table: "#9a7050", bookshelf: "#6a4a30", plant_pot: "#c86838",
   planter_bed: "#5a4028", bed: "#7090d0", specimen_cabinet: "#40a0a0", stairs_up: "#e0e0e0",
   stairs_down: "#909090", water_channel: "#3060a8", void: "#000000",
+  // polish-pass set dressing (flat stand-ins until the art lands)
+  flowers_red: "#e86060", flowers_yellow: "#f0d040", stone_path: "#b8b8b0", bridge: "#b88850",
+  mushrooms: "#c89070", gate_open: "#d8b888", chair: "#a07040", stump: "#7a5030", log: "#8a5a30",
+  lamp_post: "#383840", barrel: "#9a6030", crate: "#b89060", bench: "#a87848", pond_lily: "#3870c0",
+  reeds: "#6a8a40", cliff: "#806a50", stone_wall: "#909088", garden_plot: "#6a4a2a", crops: "#b0c040",
+  scarecrow: "#d8b040", haybale: "#e8c860", fireplace: "#a04020", stove: "#505058", potted_tree: "#3a8a3a",
+  glass_wall: "#b8e0e8", workbench: "#8a6a48", microscope: "#d0d0e0",
 };
 
 /**
@@ -63,7 +70,7 @@ export default function worldDev(ctx: GameContext): Scene {
   nav.style.marginBottom = "8px";
   for (const id of MAP_IDS) {
     const a = document.createElement("a");
-    a.href = `?dev=world&map=${id}&scale=${scale}`;
+    a.href = `?dev=world&map=${id}&scale=${scale}${params.has("grid") ? "&grid=1" : ""}${params.has("timer") ? "&timer" : ""}`;
     a.textContent = id;
     a.style.marginRight = "10px";
     a.style.color = id === current ? "#ffe060" : "#a8d098";
@@ -117,10 +124,29 @@ function render(ctx: GameContext, map: MapDef, canvas: HTMLCanvasElement, scale:
   g.imageSmoothingEnabled = false;
 
   const gr = grid(map);
+  // Mirror the engine's tile choice: an autotile edge variant when the art has
+  // one, else a ground variant picked by position hash, else the base tile.
+  const has = (p: string) => ctx.assets.has(p);
+  const group = (x: number, y: number): string | undefined => {
+    if (x < 0 || y < 0 || x >= w || y >= h) return undefined;
+    const k = map.legend[map.tiles[y][x]];
+    return AUTOTILE[k];
+  };
+  const pick = (key: TileKey, x: number, y: number): string => {
+    const grp = AUTOTILE[key];
+    if (grp) {
+      const same = (nx: number, ny: number) => nx < 0 || ny < 0 || nx >= w || ny >= h || group(nx, ny) === grp;
+      const mask = (same(x, y - 1) ? 1 : 0) | (same(x + 1, y) ? 2 : 0) | (same(x, y + 1) ? 4 : 0) | (same(x - 1, y) ? 8 : 0);
+      if (has(tileVariantPath(key, mask))) return tileVariantPath(key, mask);
+    }
+    const alt = (((x * 73856093) ^ (y * 19349663)) >>> 0) % 4;
+    if (alt && has(tileAltPath(key, alt as 1 | 2 | 3))) return tileAltPath(key, alt as 1 | 2 | 3);
+    return tilePath(key);
+  };
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const key = map.legend[map.tiles[y][x]];
-      const img = ctx.assets.image(tilePath(key));
+      const img = ctx.assets.image(pick(key, x, y));
       if (img) g.drawImage(img, x * T, y * T);
       else {
         g.fillStyle = COLORS[key] ?? "#ff00ff";
@@ -155,6 +181,14 @@ function render(ctx: GameContext, map: MapDef, canvas: HTMLCanvasElement, scale:
   g.fillStyle = "rgba(255,0,0,0.35)";
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     if (walkable(gr, x, y) && !reach.has(`${x},${y}`)) g.fillRect(x * T, y * T, T, T);
+  }
+
+  // &grid=1: the 10x9 screen grid, for judging each screen's composition
+  if (new URLSearchParams(location.search).get("grid")) {
+    g.strokeStyle = "rgba(255,255,255,0.35)";
+    g.lineWidth = 1;
+    for (let x = 0; x <= w; x += 10) { g.beginPath(); g.moveTo(x * T + 0.5, 0); g.lineTo(x * T + 0.5, h * T); g.stroke(); }
+    for (let y = 0; y <= h; y += 9) { g.beginPath(); g.moveTo(0, y * T + 0.5); g.lineTo(w * T, y * T + 0.5); g.stroke(); }
   }
 
   // triggers

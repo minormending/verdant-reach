@@ -6,7 +6,7 @@ import { TEXTBOX } from "../contracts";
 import { addItem, consumeItem } from "../battle/logic/items";
 import { getItem, itemName } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
-import { drawCursor, drawMoreArrow, drawTextRight } from "./kit/draw";
+import { drawCursor, drawItemIcon, drawMoreArrow, drawTextRight } from "./kit/draw";
 import { ListView, Menu, ScreenUi } from "./kit/widgets";
 
 const MAX_MONEY = 999999;
@@ -19,8 +19,8 @@ export function shopScreen(ctx: GameContext, stock: ItemId[]): Promise<void> {
   let frame = 0;
   const forSale = stock.filter((id) => getItem(ctx.data, id).price > 0);
 
-  const draw = (g: CanvasRenderingContext2D) => {
-    frame++;
+  const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
+    frame = f;
     ctx.ui.drawWindow(g, 0, 0, 88, 24);
     ctx.ui.drawText(g, "$", 8, 8);
     drawTextRight(ctx, g, String(ctx.state.money), 80, 8);
@@ -35,7 +35,16 @@ export function shopScreen(ctx: GameContext, stock: ItemId[]): Promise<void> {
         const right = selling ? `×${String(ctx.state.bag[id] ?? 0).padStart(2, " ")}` : `$${it.price}`;
         drawTextRight(ctx, g, right, 152, y + 8);
       }
-      drawCursor(ctx, g, 40, 32 + (list.index - list.scroll) * 16, ui.overlays.length > 0);
+      drawCursor(ctx, g, 40, 32 + (list.index - list.scroll) * 16, ui.overlays.length > 0, list.frame);
+      // the item under the cursor, and how many are already in the bag
+      const cur = listItems[list.index];
+      if (cur) {
+        ctx.ui.drawWindow(g, 0, 48, 32, 48);
+        drawItemIcon(ctx, g, cur, 8, 56);
+        g.fillStyle = "#306850";
+        const have = ctx.state.bag[cur] ?? 0;
+        ctx.ui.drawText(g, String(Math.min(99, have)).padStart(2, " "), 8, 80);
+      }
       if (list.canScrollDown()) drawMoreArrow(ctx, g, 144, 82, frame);
       if (list.canScrollUp()) drawMoreArrow(ctx, g, 144, 22, frame, "up");
     }

@@ -4,8 +4,12 @@
 import {
   JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STRUCTURES, TILES, TEXTBOX,
 } from "../contracts";
-import type { MapDef, MapId, ScriptCmd, TileKey, WorldData } from "../contracts";
+import type { Ambient, MapDef, MapId, ScriptCmd, TileKey, WorldData } from "../contracts";
 import { pickupItem } from "./build";
+
+/** Every `Ambient` value (src/contracts/world.ts). Kept exhaustive by the type. */
+const AMBIENT_VALUES: Record<Ambient, true> = { none: true, pollen: true, leaves: true, fireflies: true, rain: true, mist: true, spores: true };
+const AMBIENTS = new Set<string>(Object.keys(AMBIENT_VALUES));
 
 export interface Grid {
   w: number;
@@ -149,6 +153,20 @@ export function validateWorld(world: WorldData): string[] {
     });
     const g = grid(map);
 
+    // ambient particles
+    if (map.ambient !== undefined && !AMBIENTS.has(map.ambient)) errs.push(`${where} bad ambient ${map.ambient}`);
+    if (map.ambient === "fireflies" && !map.outdoor) errs.push(`${where} fireflies indoors never show (night tint is outdoor only)`);
+
+    // legendWhen: every override maps a character the map uses to a real tile,
+    // and the swapped-in tiles are checked for reachability like the base map.
+    for (const [i, lw] of (map.legendWhen ?? []).entries()) {
+      for (const [ch, t] of Object.entries(lw.legend)) {
+        if (!(t in TILES)) errs.push(`${where} legendWhen[${i}] '${ch}' -> unknown tile ${t}`);
+        if (!(ch in map.legend)) errs.push(`${where} legendWhen[${i}] '${ch}' is not in the base legend`);
+        if (!map.tiles.some((row) => row.includes(ch))) errs.push(`${where} legendWhen[${i}] '${ch}' is never used in the tiles`);
+      }
+    }
+
     // structures sit on '@' cells, and every '@' is covered
     const covered = new Set<string>();
     for (const s of map.structures) {
@@ -206,9 +224,11 @@ export function validateWorld(world: WorldData): string[] {
 
     // signs
     const signAt = new Set(map.signs.map((s) => `${s.x},${s.y}`));
+    // Signs sit on sign posts and mailboxes, or give flavour text to any other
+    // interactable tile (a microscope, a workbench, a shelf of field notes).
     for (const s of map.signs) {
       const t = g.tile(s.x, s.y);
-      if (t !== "sign" && t !== "mailbox") errs.push(`${where} sign at ${s.x},${s.y} is on ${t}`);
+      if (!t || !("interact" in TILES[t])) errs.push(`${where} sign at ${s.x},${s.y} is on ${t}`);
     }
     map.tiles.forEach((row, y) => [...row].forEach((_, x) => {
       const t = g.tile(x, y);
@@ -277,6 +297,30 @@ export function validateWorld(world: WorldData): string[] {
       for (let dy = 0; dy < (t.h ?? 1); dy++) for (let dx = 0; dx < (t.w ?? 1); dx++) if (has(t.x + dx, t.y + dy)) any = true;
       if (!any) errs.push(`${where} trigger ${t.script} at ${t.x},${t.y} unreachable`);
     }
+    // Scenery (doorless structures) must not cut the map: everything reachable
+    // without them must stay reachable with them.
+    const scenery = map.structures.filter((s) => STRUCTURES[s.key] && !STRUCTURES[s.key].door);
+    if (scenery.length) {
+      const open = grid({ ...map, structures: map.structures.filter((s) => STRUCTURES[s.key]?.door) });
+      // Treat the scenery footprint itself as solid in the open grid, so we only
+      // compare paths around it, not the cells it covers.
+      const covers = new Set<string>();
+      for (const s of scenery) {
+        const def = STRUCTURES[s.key];
+        for (let dy = 0; dy < def.h; dy++) for (let dx = 0; dx < def.w; dx++) covers.add(`${s.x + dx},${s.y + dy}`);
+      }
+      const solidScenery: Grid = { ...open, structureSolid: (x, y) => open.structureSolid(x, y) || covers.has(`${x},${y}`) };
+      // Per entry point, so a second way in can't mask a cut path.
+      blocked: for (const st of starts) {
+        const withScenery = flood(solidScenery, [st]);
+        for (const k of flood(open, [st])) {
+          if (covers.has(k) || withScenery.has(k)) continue;
+          errs.push(`${where} scenery blocks the way from ${st.x},${st.y} to ${k}`);
+          break blocked;
+        }
+      }
+    }
+
     // soft-lock: from every reachable tile some warp must still be reachable
     if (map.warps.length) {
       for (const k of reach) {
@@ -315,6 +359,7 @@ export function validateWorld(world: WorldData): string[] {
       case "sfx": if (!sfx.has(c.id)) errs.push(`${at} unknown sfx ${c.id}`); break;
       case "jingle": if (!jingles.has(c.id)) errs.push(`${at} unknown jingle ${c.id}`); break;
       case "call": if (!world.scripts[c.script]) errs.push(`${at} calls missing ${c.script}`); break;
+      case "ambient": if (!AMBIENTS.has(c.kind)) errs.push(`${at} unknown ambient ${c.kind}`); break;
       case "warp": {
         const m = world.maps[c.to];
         if (!m) errs.push(`${at} warp to missing map ${c.to}`);

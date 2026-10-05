@@ -2,13 +2,11 @@
 // when art is missing), structures, character sheets, emotes, tints,
 // the map-name sign and battle-intro transitions.
 
-import type { Assets, CharacterKey, StructureKey, TileKey, TimeOfDay } from "../contracts";
+import type { Assets, CharacterKey, Dir, StructureKey, TileKey } from "../contracts";
 import { CHAR_ROWS, SCREEN_H, SCREEN_W, STRUCTURES, TILE, UI, characterPath, structurePath, tilePath } from "../contracts";
 import { drawImagePath, drawMissing, imageMissing } from "../engine/gfx";
 import { drawText, drawWindow } from "../ui/kit";
-import type { Actor } from "./actor";
-
-export const ANIMATED: ReadonlySet<TileKey> = new Set<TileKey>(["water", "tall_grass", "flowers"]);
+import type { CellArt } from "./autotile";
 
 /** Flat colours used only when a tile's art is missing (keeps dev maps readable). */
 const FALLBACK: Partial<Record<TileKey, [string, string]>> = {
@@ -25,9 +23,18 @@ const FALLBACK: Partial<Record<TileKey, [string, string]>> = {
   planter_bed: ["#6a5030", "#4a9a48"], bed: ["#e0e0f0", "#c05050"], specimen_cabinet: ["#607890", "#405870"],
   stairs_up: ["#a09080", "#706050"], stairs_down: ["#807060", "#504030"], water_channel: ["#5088d0", "#88b0e8"],
   void: ["#000000", "#000000"],
+  flowers_red: ["#88c070", "#e05040"], flowers_yellow: ["#88c070", "#f8d040"], stone_path: ["#c8c8b8", "#a0a090"],
+  bridge: ["#c89868", "#8a5030"], mushrooms: ["#88c070", "#d86048"], gate_open: ["#88c070", "#a08060"],
+  chair: ["#c89868", "#8a5030"], stump: ["#a06830", "#583818"], log: ["#a06830", "#583818"],
+  lamp_post: ["#88c070", "#383840"], barrel: ["#a06830", "#583818"], crate: ["#d8a060", "#8a5030"],
+  bench: ["#88c070", "#8a5030"], pond_lily: ["#4878c8", "#58a040"], reeds: ["#68a060", "#386030"],
+  cliff: ["#a89070", "#685040"], stone_wall: ["#b8b8b0", "#787878"], garden_plot: ["#8a5030", "#58a040"],
+  crops: ["#8a5030", "#98d060"], scarecrow: ["#88c070", "#c88850"], haybale: ["#e8c860", "#b89030"],
+  fireplace: ["#787878", "#e88030"], stove: ["#585860", "#383840"], potted_tree: ["#c86838", "#58a040"],
+  glass_wall: ["#b8e8e0", "#70b8b0"], workbench: ["#c88850", "#8a5030"], microscope: ["#e8e0c8", "#383840"],
 };
 
-function drawFallbackTile(g: CanvasRenderingContext2D, t: TileKey, x: number, y: number, frame2: boolean) {
+export function drawFallbackTile(g: CanvasRenderingContext2D, t: TileKey, x: number, y: number, frame2: boolean) {
   const [a, b] = FALLBACK[t] ?? ["#f800f8", "#780078"];
   g.fillStyle = a;
   g.fillRect(x, y, TILE, TILE);
@@ -72,42 +79,27 @@ function drawFallbackTile(g: CanvasRenderingContext2D, t: TileKey, x: number, y:
   g.fillRect(x, y, 2, 2);
 }
 
-const loggedFallback = new Set<string>();
-
-export function drawTile(g: CanvasRenderingContext2D, assets: Assets, t: TileKey, x: number, y: number, frame: number) {
-  const second = ANIMATED.has(t) && Math.floor(frame / 32) % 2 === 1;
-  if (second && drawImagePath(g, assets, tilePath(t, 2), 0, 0, TILE, TILE, x, y, TILE, TILE, { placeholder: false })) return;
-  const path = tilePath(t);
-  const img = assets.image(path);
-  if (img) {
-    g.drawImage(img, 0, 0, TILE, TILE, x, y, TILE, TILE);
-    return;
-  }
-  if (imageMissing(assets, path) && !loggedFallback.has(path)) {
-    loggedFallback.add(path);
-    console.warn(`[art] missing tile ${path}; drawing fallback colours`);
-  }
-  drawFallbackTile(g, t, x, y, second);
-}
-
-/** Lower part of a tall-grass tile, drawn over a character standing in it. */
-export function drawGrassOverlay(g: CanvasRenderingContext2D, assets: Assets, x: number, y: number, frame: number) {
-  const second = Math.floor(frame / 32) % 2 === 1;
-  const p2 = tilePath("tall_grass", 2);
-  const p1 = tilePath("tall_grass");
-  const img = (second && assets.image(p2)) || assets.image(p1);
-  if (img) {
-    g.drawImage(img, 0, 8, TILE, 8, x, y + 8, TILE, 8);
-    return;
+/** Lower half of a tall-grass cell, drawn over a character standing in it. */
+export function drawGrassOverlay(
+  g: CanvasRenderingContext2D, assets: Assets, art: CellArt | null, x: number, y: number, second: boolean, sway = 0,
+) {
+  const paths = art ? [second && art.path2 ? art.path2 : art.path, tilePath("tall_grass")] : [tilePath("tall_grass")];
+  for (const p of paths) {
+    const img = assets.image(p);
+    if (img) {
+      g.drawImage(img, 0, 8, TILE, 8, x + sway, y + 8, TILE, 8);
+      return;
+    }
   }
   g.save();
   g.beginPath();
   g.rect(x, y + 8, TILE, 8);
   g.clip();
-  drawFallbackTile(g, "tall_grass", x, y, second);
+  drawFallbackTile(g, "tall_grass", x + sway, y, second);
   g.restore();
 }
 
+/** A structure image, bottom-aligned on its footprint (art may rise above it). */
 export function drawStructure(g: CanvasRenderingContext2D, assets: Assets, key: StructureKey, x: number, y: number) {
   const spec = STRUCTURES[key];
   const w = spec.w * TILE;
@@ -115,7 +107,7 @@ export function drawStructure(g: CanvasRenderingContext2D, assets: Assets, key: 
   const path = structurePath(key);
   const img = assets.image(path);
   if (img) {
-    g.drawImage(img, 0, 0, img.width, img.height, x, y + h - img.height, img.width, img.height);
+    g.drawImage(img, 0, 0, img.width, img.height, Math.round(x + (w - img.width) / 2), y + h - img.height, img.width, img.height);
     return;
   }
   if (!imageMissing(assets, path)) return;
@@ -125,34 +117,73 @@ export function drawStructure(g: CanvasRenderingContext2D, assets: Assets, key: 
   if (spec.door) g.fillRect(x + spec.door.x * TILE + 3, y + spec.door.y * TILE + 2, TILE - 6, TILE - 2);
 }
 
-/** Draw one character frame. Sheets narrower than 48px are static objects. */
+/** Top-left (screen px) where a structure's image is drawn, plus the image itself. */
+export function structureImage(assets: Assets, key: StructureKey, x: number, y: number) {
+  const spec = STRUCTURES[key];
+  const img = assets.image(structurePath(key));
+  if (!img) return null;
+  return { img, x: Math.round(x + (spec.w * TILE - img.width) / 2), y: y + spec.h * TILE - img.height };
+}
+
+/** Objects that never turn to face the player and use rows as states. */
+const OBJECT_SPRITES: ReadonlySet<CharacterKey> = new Set<CharacterKey>([
+  "item_pickup", "potted_plant", "lever", "valve", "hedge_gate",
+]);
+
+/**
+ * Sheet row for a character. Puzzle objects follow the flag convention:
+ * an NPC id `lever:<flag>` or `valve:<flag>` shows the UP row while that flag
+ * is true (the "on" frame) and the DOWN row otherwise.
+ */
+export function rowFor(id: string, sprite: CharacterKey, facing: Dir, flags: Record<string, boolean>): Dir {
+  if (sprite === "lever" || sprite === "valve") {
+    const m = /^(?:lever|valve):(.+)$/.exec(id);
+    if (m) return flags[m[1]] ? "up" : "down";
+  }
+  return facing;
+}
+
+/** Draw one character frame. Sheets narrower than 48px are static objects (16px rows = states). */
 export function drawCharacter(
-  g: CanvasRenderingContext2D, assets: Assets, sprite: CharacterKey, col: number, facing: Actor["facing"], x: number, y: number,
+  g: CanvasRenderingContext2D, assets: Assets, sprite: CharacterKey, col: number, facing: Dir, x: number, y: number,
 ) {
   const path = characterPath(sprite);
   const img = assets.image(path);
   if (img && img.width < 48) {
-    g.drawImage(img, 0, 0, TILE, TILE, x, y, TILE, TILE);
+    const rows = Math.floor(img.height / TILE);
+    const row = rows > 1 ? Math.min(rows - 1, CHAR_ROWS[facing]) : 0;
+    g.drawImage(img, 0, row * TILE, TILE, TILE, x, y, TILE, TILE);
     return;
   }
   drawImagePath(g, assets, path, col * TILE, CHAR_ROWS[facing] * TILE, TILE, TILE, x, y, TILE, TILE);
 }
 
+/** Erase a character frame's silhouette from a layer (used on the light layer). */
+export function eraseCharacter(
+  g: CanvasRenderingContext2D, assets: Assets, sprite: CharacterKey, col: number, facing: Dir, x: number, y: number,
+) {
+  g.globalCompositeOperation = "destination-out";
+  drawCharacter(g, assets, sprite, col, facing, x, y);
+  g.globalCompositeOperation = "source-over";
+}
+
 export function isStaticObject(assets: Assets, sprite: CharacterKey): boolean {
-  if (sprite === "item_pickup" || sprite === "potted_plant") return true;
+  if (OBJECT_SPRITES.has(sprite)) return true;
   const img = assets.image(characterPath(sprite));
   return !!img && img.width < 48;
 }
 
-export function drawShadow(g: CanvasRenderingContext2D, x: number, y: number) {
-  g.fillStyle = "rgba(24,24,24,0.45)";
-  g.fillRect(x + 3, y + 13, 10, 2);
-  g.fillRect(x + 5, y + 12, 6, 4);
+/** Ground shadow under a hopping/flying character; shrinks as it rises. */
+export function drawShadow(g: CanvasRenderingContext2D, x: number, y: number, lift = 0) {
+  g.fillStyle = "rgba(24,24,40,0.40)";
+  const shrink = lift > 6 ? 2 : lift > 2 ? 1 : 0;
+  g.fillRect(x + 4 + shrink, y + 13, 8 - shrink * 2, 3);
+  g.fillRect(x + 3 + shrink, y + 14, 10 - shrink * 2, 1);
 }
 
 export function drawEmote(g: CanvasRenderingContext2D, kind: string, x: number, y: number, t: number) {
-  // Pops in over 4 frames.
-  const by = y - (t < 4 ? t * 4 : 16);
+  // Pops in over 4 frames with a 1px overshoot.
+  const by = y - (t < 4 ? t * 4 : t < 6 ? 17 : 16);
   g.fillStyle = UI.black;
   g.fillRect(x + 1, by, 14, 14);
   g.fillRect(x, by + 1, 16, 12);
@@ -167,55 +198,89 @@ export function drawEmote(g: CanvasRenderingContext2D, kind: string, x: number, 
   g.fillRect(x + 6, by + 13, 2, 1);
   const glyph = kind === "..." ? "…" : kind;
   const color = kind === "!" ? "#e83018" : kind === "♪" ? "#3870e8" : UI.black;
-  drawText(g, glyph, x + (glyph === "!" ? 4 : 4), by + 3, color);
+  drawText(g, glyph, x + 4, by + 3, color);
 }
 
-/** Outdoor time-of-day tint over the world layer. */
-export function drawTint(g: CanvasRenderingContext2D, tod: TimeOfDay) {
-  if (tod === "day") return;
-  g.save();
-  g.globalCompositeOperation = "multiply";
-  g.fillStyle = tod === "night" ? "#6878d0" : "#ffe6c4";
-  g.fillRect(0, 0, SCREEN_W, SCREEN_H);
-  if (tod === "morning") {
-    g.globalCompositeOperation = "screen";
-    g.fillStyle = "rgba(80,40,0,0.10)";
-    g.fillRect(0, 0, SCREEN_W, SCREEN_H);
+/** 7x7 pressed-leaf motif for the location sign, lit from the top-left. */
+function drawLeaf(g: CanvasRenderingContext2D, x: number, y: number) {
+  for (let yy = 0; yy < 7; yy++) {
+    for (let xx = 0; xx < 7; xx++) {
+      const along = xx - yy;          // along the midrib (bottom-left -> top-right)
+      const across = xx + yy - 6;     // <0 lit side, 0 midrib, >0 shade side
+      const a = Math.abs(along);
+      const w = a <= 1 ? 2 : a <= 3 ? 1 : a <= 4 ? 0 : -1;
+      let c: string | null = null;
+      if (Math.abs(across) <= w) c = across < 0 ? "#98d060" : across === 0 ? "#3c7830" : "#58a040";
+      if (xx === 0 && yy === 6) c = "#285828"; // stem
+      if (!c) continue;
+      g.fillStyle = c;
+      g.fillRect(x + xx, y + yy, 1, 1);
+    }
   }
-  g.restore();
 }
 
-/** Location sign that slides in at the top-left. `t` counts frames since entry. */
+/**
+ * Location sign that slides down from the top-left (ease-out), holds, and
+ * slides back up (ease-in). A pressed leaf sits before the name.
+ */
 export function drawMapName(g: CanvasRenderingContext2D, name: string, t: number) {
-  const HOLD = 120;
-  const SLIDE = 8;
-  if (t > HOLD + SLIDE * 2) return;
-  let off = 0;
-  if (t < SLIDE) off = (SLIDE - t) * 3;
-  else if (t > HOLD + SLIDE) off = (t - HOLD - SLIDE) * 3;
-  const w = Math.max(80, Array.from(name).length * 8 + 16);
-  drawWindow(g, 0, -off, w, 24);
-  drawText(g, name, 8, 8 - off);
+  const IN = 14;
+  const HOLD = 130;
+  const OUT = 12;
+  if (t > IN + HOLD + OUT) return;
+  const h = 26;
+  let off: number;
+  if (t < IN) {
+    const k = 1 - t / IN;
+    off = Math.round(k * k * (h + 2));
+  } else if (t > IN + HOLD) {
+    const k = (t - IN - HOLD) / OUT;
+    off = Math.round(k * k * (h + 2));
+  } else off = 0;
+  const w = Math.max(88, Array.from(name).length * 8 + 30);
+  const y = 2 - off;
+  drawWindow(g, 2, y, w, h, { shadow: true });
+  drawLeaf(g, 9, y + 9);
+  drawText(g, name, 20, y + 9);
 }
 
 // ---------------------------------------------------------------------------
 // Battle intro transitions
 // ---------------------------------------------------------------------------
 
-const SPIRAL: { x: number; y: number }[] = (() => {
-  const cols = SCREEN_W / 8;
-  const rows = SCREEN_H / 8;
-  const out: { x: number; y: number }[] = [];
-  let top = 0, left = 0, bottom = rows - 1, right = cols - 1;
+const COLS = SCREEN_W / 8;
+const ROWS = SCREEN_H / 8;
+
+/** Rank (0..1) of each 8x8 block in a clockwise spiral from the outside in. */
+const SPIRAL_RANK: number[] = (() => {
+  const order: number[] = [];
+  let top = 0, left = 0, bottom = ROWS - 1, right = COLS - 1;
   while (top <= bottom && left <= right) {
-    for (let x = left; x <= right; x++) out.push({ x, y: top });
+    for (let x = left; x <= right; x++) order.push(top * COLS + x);
     top++;
-    for (let y = top; y <= bottom; y++) out.push({ x: right, y });
+    for (let y = top; y <= bottom; y++) order.push(y * COLS + right);
     right--;
-    if (top <= bottom) { for (let x = right; x >= left; x--) out.push({ x, y: bottom }); bottom--; }
-    if (left <= right) { for (let y = bottom; y >= top; y--) out.push({ x: left, y }); left++; }
+    if (top <= bottom) { for (let x = right; x >= left; x--) order.push(bottom * COLS + x); bottom--; }
+    if (left <= right) { for (let y = bottom; y >= top; y--) order.push(y * COLS + left); left++; }
   }
-  return out;
+  const rank = new Array<number>(COLS * ROWS).fill(1);
+  order.forEach((b, i) => (rank[b] = i / (order.length - 1)));
+  return rank;
+})();
+
+/** Rank of each block in a two-armed pinwheel sweeping clockwise from 12 o'clock. */
+const PINWHEEL_RANK: number[] = (() => {
+  const rank: number[] = [];
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const dx = x + 0.5 - COLS / 2;
+      const dy = y + 0.5 - ROWS / 2;
+      let a = Math.atan2(dx, -dy); // 0 at the top, clockwise
+      if (a < 0) a += Math.PI * 2;
+      rank.push((a % Math.PI) / Math.PI);
+    }
+  }
+  return rank;
 })();
 
 export class BattleTransition {
@@ -231,7 +296,7 @@ export class BattleTransition {
     this.done = false;
     return new Promise((r) => (this.resolve = r));
   }
-  get total() { return this.kind === "trainer" ? 76 : 68; }
+  get total() { return this.kind === "trainer" ? 78 : 70; }
   clear() { this.kind = null; this.done = false; }
 
   tick() {
@@ -252,31 +317,33 @@ export class BattleTransition {
       return;
     }
     const t = this.t;
-    if (t < 24) {
-      // three flashes (inverted palette feel)
-      const phase = Math.floor(t / 4) % 2;
-      if (phase === 0) {
-        g.fillStyle = "rgba(248,248,248,0.85)";
+    const FLASH = 26;
+    if (t < FLASH) {
+      // Palette flashes: inverted, normal, inverted, normal, then a dim beat.
+      const phase = Math.floor(t / 4);
+      g.save();
+      if (phase === 0 || phase === 2) {
+        g.globalCompositeOperation = "difference";
+        g.fillStyle = "#f8f8f8";
         g.fillRect(0, 0, SCREEN_W, SCREEN_H);
-      } else {
-        g.fillStyle = "rgba(24,24,24,0.35)";
+      } else if (phase === 4 || phase === 5) {
+        g.fillStyle = phase === 4 ? "rgba(24,24,32,0.35)" : "rgba(24,24,32,0.6)";
         g.fillRect(0, 0, SCREEN_W, SCREEN_H);
       }
+      g.restore();
       return;
     }
-    g.fillStyle = "#000";
-    const k = (t - 24) / (this.total - 24);
-    if (this.kind === "trainer") {
-      const n = Math.floor(k * SPIRAL.length * 1.02);
-      for (let i = 0; i < Math.min(n, SPIRAL.length); i++) g.fillRect(SPIRAL[i].x * 8, SPIRAL[i].y * 8, 8, 8);
-    } else {
-      // Blinds closing from alternate sides, staggered by row.
-      const rows = SCREEN_H / 8;
-      for (let r = 0; r < rows; r++) {
-        const local = Math.max(0, Math.min(1, k * 1.6 - (r / rows) * 0.6));
-        const w = Math.round(local * SCREEN_W);
-        g.fillRect(r % 2 ? SCREEN_W - w : 0, r * 8, w, 8);
-      }
+    g.fillStyle = "rgba(24,24,32,0.6)";
+    g.fillRect(0, 0, SCREEN_W, SCREEN_H);
+    const k = (t - FLASH) / (this.total - FLASH - 4);
+    const ranks = this.kind === "trainer" ? SPIRAL_RANK : PINWHEEL_RANK;
+    const edge = 0.06;
+    for (let i = 0; i < ranks.length; i++) {
+      const r = ranks[i];
+      if (r > k) continue;
+      // The leading edge is a dark slate before going black: a softer sweep.
+      g.fillStyle = r > k - edge ? "#283040" : "#000";
+      g.fillRect((i % COLS) * 8, Math.floor(i / COLS) * 8, 8, 8);
     }
   }
 }

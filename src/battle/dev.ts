@@ -1,5 +1,5 @@
 // Dev route: ?dev=battle
-//   &mode=wild|trainer|leader   start straight into one battle (default: a hub menu)
+//   &mode=wild|trainer|leader|rootstock   start straight into one battle (default: a hub menu)
 //   &species=<id>&level=<n>     wild foe
 //   &trainer=<id>               trainer from WORLD (fallback: a fixture trainer)
 //   &backdrop=grass|bog|water|indoor|night
@@ -51,6 +51,7 @@ export default function devBattle(ctx: GameContext): Scene {
   const wildLevel = Number(q.get("level") ?? Math.max(2, lv - 2));
   const trainerId = q.get("trainer") ?? (trainers["gardener_rosa"] ? "gardener_rosa" : "dev_gardener");
   const leaderId = trainers["hollis"] ? "hollis" : "dev_hollis";
+  const rootstockId = trainers["shears"] ? "shears" : leaderId;
 
   const run = async (kind: string) => {
     let req: BattleRequest;
@@ -59,7 +60,7 @@ export default function devBattle(ctx: GameContext): Scene {
       const pool = Object.keys(ctx.data.species) as SpeciesId[];
       const s = pool[Math.floor(Math.random() * pool.length)];
       req = { kind: "wild", wild: { species: s, level: wildLevel }, backdrop };
-    } else req = { kind: "trainer", trainer: kind === "leader" ? leaderId : trainerId, backdrop };
+    } else req = { kind: "trainer", trainer: kind === "leader" ? leaderId : kind === "rootstock" ? rootstockId : trainerId, backdrop };
     const t = req.trainer ? trainers[req.trainer] : undefined;
     const music: MusicId = req.kind === "trainer" ? t?.music ?? "battle_trainer" : "battle_wild";
     ctx.audio.playMusic(music);
@@ -74,7 +75,7 @@ export default function devBattle(ctx: GameContext): Scene {
   const main = async () => {
     const mode = q.get("mode");
     if (mode) last = await run(mode);
-    const options = ["WILD", "RANDOM WILD", "TRAINER", "LEADER", "HEAL PARTY", "PARTY", "BAG"];
+    const options = ["WILD", "RANDOM WILD", "TRAINER", "LEADER", "ROOTSTOCK", "HEAL PARTY", "PARTY", "BAG"];
     let start = 0;
     for (;;) {
       ui.tb.show(last ? `Outcome: ${last.toUpperCase()}` : "Battle dev route.", "instant");
@@ -85,9 +86,10 @@ export default function devBattle(ctx: GameContext): Scene {
       else if (c === 1) last = await run("random");
       else if (c === 2) last = await run("trainer");
       else if (c === 3) last = await run("leader");
-      else if (c === 4) { healParty(st.party, ctx.data); last = "healed"; }
-      else if (c === 5) await ctx.screens.party({ mode: "view" });
-      else if (c === 6) await ctx.screens.bag({ inBattle: false });
+      else if (c === 4) last = await run("rootstock");
+      else if (c === 5) { healParty(st.party, ctx.data); last = "healed"; }
+      else if (c === 6) await ctx.screens.party({ mode: "view" });
+      else if (c === 7) await ctx.screens.bag({ inBattle: false });
     }
   };
   let started = false;

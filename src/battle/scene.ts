@@ -3,13 +3,13 @@
 // the event log back and drives the menus.
 
 import type {
-  BattleOutcome, BattleRequest, GameContext, ItemId, Quickened, Scene, SpeciesId, TrainerDef, TrainerPortraitKey,
-  Weather,
+  BattleOutcome, BattleRequest, GameContext, ItemId, MoveId, Quickened, Scene, SpeciesId, StatusId, TrainerDef,
+  TrainerPortraitKey, TypeId, Weather,
 } from "../contracts";
-import { portraitPath, speciesPath, TEXTBOX, UI } from "../contracts";
+import { portraitPath, speciesPath, TEXTBOX, UI, uiPath } from "../contracts";
 import { chooseFoeAction, type AiKind } from "./logic/ai";
 import {
-  active, canContinue, createBattleState, doSwitch, firstHealthy, hasUsableMove, resolveTurn, sendOutFoe,
+  active, canContinue, createBattleState, doSwitch, firstHealthy, hasUsableMove, resolveTurn, sendOutFoe, targetsFoe,
   type Action, type BattleEvent, type BattleState, type Side,
 } from "./logic/battle";
 import { attemptCapture, tryRun } from "./logic/capture";
@@ -19,19 +19,30 @@ import {
 import { applyItem, consumeItem, isMedicine } from "./logic/items";
 import { getItem, getMove, getSpecies, itemName, qName, speciesName, TYPE_NAMES } from "./logic/lookup";
 import { createQuickened, recalcStats, trainerIvs } from "./logic/stats";
-import { drawBackdrop, drawEnemyHud, drawPlayerHud, drawPodRow, drawStatWindow, drawTrainer, newHud, type HudView } from "./hud";
-import { drawWeather, ENEMY_CENTER, Fx, PLAYER_CENTER } from "./fx";
+import {
+  drawBackdrop, drawEnemyHud, drawPlayerHud, drawPodRow, drawStatWindow, drawTrainer, drawVersusBanner, newHud,
+  type BannerKind, type HudView,
+} from "./hud";
+import {
+  drawWeather, ENEMY_CENTER, ENEMY_GROUND, Fx, line, PLAYER_CENTER, PLAYER_GROUND, R, SpriteFxHost, type Pt,
+} from "./fx";
+import { animFor } from "./anims";
+import { playMoveFx } from "./movefx";
+import { effectivenessHint, FoeKnowledge, type EffHint } from "./hints";
 import { Flow } from "../screens/kit/flow";
-import { drawCursor, drawPod, drawSpecies, drawTiny, pad, preload } from "../screens/kit/draw";
+import { drawPod, drawSpecies, drawTiny, pad, preload, silhouette, speciesImage, TYPE_COLORS } from "../screens/kit/draw";
 import { fmt, hasHerbarium, markCaught, markSeen, playerName } from "../screens/kit/text";
 import { Menu, ScreenUi } from "../screens/kit/widgets";
 import { learnMoveFlow } from "../screens/flows/learn";
 import { runGrowth } from "../screens/flows/growth";
+import { askNickname } from "../screens/flows/nickname";
 import { showHerbariumEntry } from "../screens/herbarium";
 import { partyScreen } from "../screens/party";
 
 const ENEMY_HOME = { x: 96, y: 0 };
 const PLAYER_HOME = { x: 8, y: 40 };
+/** Where a thrown pod comes to rest on the foe's battle ground. */
+const POD_REST = { x: ENEMY_CENTER.x - 6, y: ENEMY_GROUND.y - 12 };
 
 interface SpriteView {
   species: SpeciesId | null;
@@ -52,6 +63,8 @@ interface TrainerView {
   dx: number;
 }
 
+interface PodView { x: number; y: number; open: boolean; visible: boolean; tilt: number; flash: boolean; dim: boolean }
+
 type Choice =
   | { kind: "move"; slot: number }
   | { kind: "switch"; index: number }
@@ -63,6 +76,7 @@ type Choice =
 
 export function createBattleScene(ctx: GameContext, req: BattleRequest, done: (o: BattleOutcome) => void): Scene {
   const b = new BattleScene(ctx, req, done);
+  if (import.meta.env?.DEV) (window as unknown as { __battle?: BattleScene }).__battle = b;
   return b;
 }
 
@@ -71,6 +85,7 @@ class BattleScene implements Scene {
   private flow: Flow;
   private ui: ScreenUi;
   private fx = new Fx();
+  private sprites = new SpriteFxHost();
   private frame = 0;
   private started = false;
   private finished = false;
@@ -80,6 +95,7 @@ class BattleScene implements Scene {
   private trainerName = "";
   private aiKind: AiKind = "wild";
   private backdrop: NonNullable<BattleRequest["backdrop"]>;
+  private knowledge: FoeKnowledge;
 
   private enemy = newSprite();
   private player = newSprite();
@@ -87,12 +103,15 @@ class BattleScene implements Scene {
   private playerTrainer: TrainerView = { key: "player_back", visible: false, dx: 0 };
   private enemyHud: HudView = newHud();
   private playerHud: HudView = newHud();
-  private podRows = { player: false, enemy: false, playerDx: 0, enemyDx: 0 };
-  private thrown: { x: number; y: number; open: number; visible: boolean; wobble: number } = { x: 0, y: 0, open: 0, visible: false, wobble: 0 };
+  private podRows = { player: false, enemy: false, playerDx: 0, enemyDx: 0, t: 1 };
+  private thrown: PodView = { x: 0, y: 0, open: false, visible: false, tilt: 0, flash: false, dim: false };
   private shake = { x: 0, y: 0 };
   private fade = 0; // 0..1 to black
   private weather: Weather | null = null;
   private overlayDraw: ((g: CanvasRenderingContext2D) => void) | null = null;
+  private banner: { kind: BannerKind; f: number; len: number } | null = null;
+  /** True while the player is choosing in a menu (idle status reminders play). */
+  private idle = false;
 
   private lastCmd = 0;
   private lastMove = 0;
@@ -104,6 +123,7 @@ class BattleScene implements Scene {
     this.ui = new ScreenUi(ctx, this.flow, { blip: false });
     this.ui.tb.autoFrames = 45;
     this.backdrop = req.backdrop ?? (ctx.timeOfDay() === "night" ? "night" : "grass");
+    this.knowledge = new FoeKnowledge([...ctx.state.herbarium.seen]);
   }
 
   // -------------------------------------------------------------------------
@@ -123,6 +143,10 @@ class BattleScene implements Scene {
     }
     this.frame++;
     this.fx.update();
+    this.sprites.update();
+    if (this.playerHud.flash > 0) this.playerHud.flash--;
+    if (this.banner) this.banner.f++;
+    if (this.idle && this.frame % 120 === 60) this.idleStatus();
     this.flow.tick();
   }
 
@@ -133,32 +157,32 @@ class BattleScene implements Scene {
   }
 
   draw(g: CanvasRenderingContext2D): void {
+    const sh = this.fx.shakeOffset();
     g.save();
-    g.translate(this.shake.x, this.shake.y);
-    drawBackdrop(g, this.backdrop, this.frame);
+    g.translate(this.shake.x + sh.x, this.shake.y + sh.y);
+    drawBackdrop(this.ctx, g, this.backdrop, this.frame);
     drawWeather(g, this.weather, this.frame);
+    this.fx.drawBack(g);
 
     // Enemy side
     if (this.enemyTrainer.visible) {
       drawTrainer(this.ctx, g, this.enemyTrainer.key, ENEMY_HOME.x + this.enemyTrainer.dx, ENEMY_HOME.y);
     }
-    this.drawSprite(g, this.enemy, "front", ENEMY_HOME, 56);
+    this.drawSprite(g, this.enemy, "front", ENEMY_HOME, 56, 1);
     // Player side
     if (this.playerTrainer.visible) {
       drawTrainer(this.ctx, g, "player_back", PLAYER_HOME.x + this.playerTrainer.dx, PLAYER_HOME.y);
     }
-    this.drawSprite(g, this.player, "back", PLAYER_HOME, 88);
+    this.drawSprite(g, this.player, "back", PLAYER_HOME, 88, 0);
 
-    if (this.podRows.enemy && this.trainer) drawPodRow(g, this.s.sides[1].party, 1, this.podRows.enemyDx);
-    if (this.podRows.player) drawPodRow(g, this.ctx.state.party, 0, this.podRows.playerDx);
+    if (this.podRows.enemy && this.trainer) drawPodRow(g, this.s.sides[1].party, 1, this.podRows.enemyDx, this.podRows.t);
+    if (this.podRows.player) drawPodRow(g, this.ctx.state.party, 0, this.podRows.playerDx, this.podRows.t);
 
-    drawEnemyHud(this.ctx, g, this.enemyHud, this.s && this.s.wild && !!this.enemyHud.q && this.ctx.state.herbarium.caught.includes(this.enemyHud.q.species));
-    drawPlayerHud(this.ctx, g, this.playerHud);
+    const caught = this.s && this.s.wild && !!this.enemyHud.q && this.ctx.state.herbarium.caught.includes(this.enemyHud.q.species);
+    drawEnemyHud(this.ctx, g, this.enemyHud, caught, this.frame);
+    drawPlayerHud(this.ctx, g, this.playerHud, this.frame);
 
-    if (this.thrown.visible) {
-      const wob = this.thrown.wobble;
-      drawPod(g, this.thrown.x + wob, this.thrown.y, "ok", this.thrown.open);
-    }
+    if (this.thrown.visible) this.drawThrownPod(g);
     this.fx.draw(g);
     g.restore();
 
@@ -167,6 +191,10 @@ class BattleScene implements Scene {
     }
     this.ui.draw(g);
     this.overlayDraw?.(g);
+    if (this.banner && this.trainer) {
+      const t = this.trainer;
+      drawVersusBanner(this.ctx, g, this.banner.kind, t.portrait, fmt(this.ctx, t.className).toUpperCase(), fmt(this.ctx, t.name).toUpperCase(), this.banner.f, this.banner.len);
+    }
     this.fx.drawFlash(g);
     if (this.fade > 0) {
       const step = Math.ceil(this.fade * 4) / 4;
@@ -175,11 +203,52 @@ class BattleScene implements Scene {
     }
   }
 
-  private drawSprite(g: CanvasRenderingContext2D, v: SpriteView, kind: "front" | "back", home: { x: number; y: number }, clipBottom: number) {
+  private drawSprite(g: CanvasRenderingContext2D, v: SpriteView, kind: "front" | "back", home: { x: number; y: number }, clipBottom: number, side: Side) {
     if (!v.visible || !v.species || v.hidden) return;
-    drawSpecies(this.ctx, g, v.species, kind, home.x + v.dx, home.y + v.dy, {
-      sport: v.sport, scale: v.scale, drop: v.drop, clipBottom, silhouette: v.silhouette ?? undefined,
-    });
+    const m = this.sprites.mods(side, this.frame);
+    if (m.hidden) return;
+    const x = home.x + v.dx + m.dx;
+    const y = home.y + v.dy + m.dy;
+    const sil = v.silhouette ?? m.tint ?? undefined;
+    drawSpecies(this.ctx, g, v.species, kind, x, y, { sport: v.sport, scale: v.scale, drop: v.drop, clipBottom, silhouette: sil });
+    if (m.shine !== null && !sil && v.scale === 1) this.drawShine(g, v, kind, x, y + v.drop, m.shine, clipBottom);
+  }
+
+  /** A diagonal white glint sweeping across a sprite (masked to its shape). */
+  private drawShine(g: CanvasRenderingContext2D, v: SpriteView, kind: "front" | "back", x: number, y: number, t: number, clipBottom: number) {
+    if (!v.species) return;
+    const size = kind === "front" ? 56 : 48;
+    const img = speciesImage(this.ctx, v.species, kind, { sport: v.sport });
+    const white = silhouette(`${v.species}:${kind}:${v.sport ? "s" : ""}`, img, "#f8f8f8");
+    const c = Math.round(-8 + t * (size * 2 + 8));
+    g.save();
+    g.beginPath();
+    for (let r = 0; r < size; r++) {
+      if (y + r >= clipBottom) break;
+      g.rect(x + c - r, y + r, 5, 1);
+      g.rect(x + c - r + 8, y + r, 2, 1);
+    }
+    g.clip();
+    g.drawImage(white, 0, 0, white.width, white.height, x, y, size, size);
+    g.restore();
+  }
+
+  /** The thrown pod (art if present, else the procedural pod), rocked by `tilt`. */
+  private drawThrownPod(g: CanvasRenderingContext2D) {
+    const p = this.thrown;
+    const img = this.ctx.assets.image(uiPath(p.open ? "pod_open" : "pod"));
+    const x = Math.round(p.x), y = Math.round(p.y);
+    if (!img) {
+      drawPod(g, x, y, p.dim ? "wilted" : "ok", p.open ? 3 : 0);
+      return;
+    }
+    const src: CanvasImageSource = p.flash ? silhouette(`pod:${p.open}`, img, "#f8f8f8") : img;
+    const h = img.height, w = img.width;
+    // rock about the base: shear rows by tilt (top moves most)
+    for (let r = 0; r < h; r++) {
+      const off = Math.round((p.tilt * (h - 1 - r)) / (h - 1));
+      g.drawImage(src, 0, r, w, 1, x - 2 + off, y - 1 + r, w, 1);
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -195,10 +264,6 @@ class BattleScene implements Scene {
     return this.ui.say(fmt(this.ctx, text), mode);
   }
 
-  private foeLabel(): string {
-    return (this.s.wild ? "Wild " : "Enemy ") + qName(this.data, this.foe());
-  }
-
   private setHud(side: Side) {
     const q = active(this.s, side);
     const h = side === 0 ? this.playerHud : this.enemyHud;
@@ -212,6 +277,24 @@ class BattleScene implements Scene {
   private hudOf(side: Side) { return side === 0 ? this.playerHud : this.enemyHud; }
   private viewOf(side: Side) { return side === 0 ? this.player : this.enemy; }
   private centerOf(side: Side) { return side === 0 ? PLAYER_CENTER : ENEMY_CENTER; }
+  private groundOf(side: Side) { return side === 0 ? PLAYER_GROUND : ENEMY_GROUND; }
+
+  /** Slide a HUD in from its side of the screen. */
+  private async slideHud(side: Side) {
+    const h = this.hudOf(side);
+    h.visible = true;
+    const from = side === 0 ? 96 : -96;
+    await this.flow.animate(10, (_i, t) => { h.dx = Math.round(from * (1 - t) * (1 - t)); });
+    h.dx = 0;
+  }
+
+  private idleStatus() {
+    for (const side of [0, 1] as Side[]) {
+      const h = this.hudOf(side);
+      const v = this.viewOf(side);
+      if (h.visible && h.status && v.visible && !this.fx.busy) this.fx.statusIdle(this.centerOf(side), h.status);
+    }
+  }
 
   private async preload() {
     const paths = new Set<string>();
@@ -222,6 +305,7 @@ class BattleScene implements Scene {
     }
     for (const q of this.s.sides[1].party) paths.add(speciesPath(q.species, "front"));
     paths.add(portraitPath("player_back"));
+    for (const u of ["pod", "pod_open", "battle_ground"] as const) paths.add(uiPath(u));
     if (this.trainer) paths.add(portraitPath(this.trainer.portrait));
     try {
       await Promise.race([preload(this.ctx, [...paths]), this.flow.wait(240)]);
@@ -298,6 +382,14 @@ class BattleScene implements Scene {
     return q;
   }
 
+  private bannerKind(): BannerKind | null {
+    const t = this.trainer;
+    if (!t) return null;
+    if (t.music === "battle_rootstock") return "rootstock";
+    if (t.mark || t.music === "battle_leader") return "leader";
+    return null;
+  }
+
   // -------------------------------------------------------------------------
   // Intro
   // -------------------------------------------------------------------------
@@ -306,7 +398,16 @@ class BattleScene implements Scene {
     const ctx = this.ctx;
     const f = this.flow;
     const foe = this.foe();
-    // Fade in from the engine's transition.
+    const banner = this.bannerKind();
+    // Leaders and Rootstock get a versus banner over black first.
+    if (banner) {
+      this.banner = { kind: banner, f: 0, len: 72 };
+      this.fade = 0;
+      await f.wait(this.banner.len);
+      this.banner = null;
+      this.fx.flashScreen("#f8f8f8", 3);
+      this.fade = 1;
+    }
     this.playerTrainer.visible = true;
     this.playerTrainer.dx = 152;
     if (this.trainer) {
@@ -320,38 +421,80 @@ class BattleScene implements Scene {
     }
     await f.animate(10, (_i, t) => { this.fade = 1 - t; });
     this.fade = 0;
-    await f.animate(48, (_i, t) => {
-      const k = Math.round((1 - t) * 152);
+    // Both sides glide in (eased, whole pixels).
+    await f.animate(44, (_i, t) => {
+      const k = Math.round((1 - t) * (1 - t) * 152);
       this.playerTrainer.dx = k;
       if (this.trainer) this.enemyTrainer.dx = -k; else this.enemy.dx = -k;
     });
+    this.playerTrainer.dx = 0;
+    if (this.trainer) this.enemyTrainer.dx = 0; else this.enemy.dx = 0;
     this.podRows.player = true;
+    this.podRows.t = 0;
     if (this.trainer) {
       this.podRows.enemy = true;
-      await f.animate(10, (_i, t) => {
-        this.podRows.playerDx = Math.round((1 - t) * 64);
-        this.podRows.enemyDx = -Math.round((1 - t) * 64);
+      await f.animate(28, (i, t) => {
+        this.podRows.t = t;
+        if (i % 5 === 0 && i < 26) ctx.audio.playSfx("cursor");
       });
       await this.say(`${this.trainerName} wants to battle!`, "wait");
       // Trainer steps aside and sends out the lead.
       this.podRows.enemy = false;
-      await f.animate(20, (_i, t) => { this.enemyTrainer.dx = Math.round(t * 72); });
+      await f.animate(20, (_i, t) => { this.enemyTrainer.dx = Math.round(t * t * 72); });
       this.enemyTrainer.visible = false;
       await this.sendOutFoeAnim(`${this.trainerName} sent out ${qName(this.data, foe)}!`);
     } else {
-      await f.animate(10, (_i, t) => { this.podRows.playerDx = Math.round((1 - t) * 64); });
+      // The wild Quickened catches the light: a glint, a hop, its cry.
+      this.sprites.add(1, "shine", 16);
+      await f.animate(16, (i, t) => {
+        this.podRows.t = t;
+        this.enemy.dy = -Math.round(Math.sin(Math.min(1, i / 10) * Math.PI) * 3);
+      });
+      this.enemy.dy = 0;
       void ctx.audio.playCry(foe.species);
       if (foe.sport) await f.wait(this.fx.sparkle(ENEMY_CENTER));
       markSeen(ctx, foe.species);
       this.setHud(1);
-      this.enemyHud.visible = true;
+      await this.slideHud(1);
       await this.say(`Wild ${qName(this.data, foe)} appeared!`, "wait");
     }
     // Player sends out the lead.
     this.podRows.player = false;
-    await f.animate(16, (_i, t) => { this.playerTrainer.dx = -Math.round(t * 64); });
+    await f.animate(16, (_i, t) => { this.playerTrainer.dx = -Math.round(t * t * 64); });
     this.playerTrainer.visible = false;
     await this.sendOutPlayerAnim();
+  }
+
+  /** Lob a pod along an arc, tumbling. */
+  private async lobPod(from: Pt, to: Pt, frames: number, arc: number) {
+    const p = this.thrown;
+    p.visible = true; p.open = false; p.flash = false; p.dim = false;
+    await this.flow.animate(frames, (i, t) => {
+      p.x = Math.round(from.x + (to.x - from.x) * t);
+      p.y = Math.round(from.y + (to.y - from.y) * t - Math.sin(t * Math.PI) * arc);
+      p.tilt = [0, 2, 0, -2][(i >> 1) % 4];
+    });
+    p.tilt = 0;
+  }
+
+  /** Pod pops open: flash, puff, the Quickened grows out of a white silhouette. */
+  private async popOut(side: Side, sport: boolean) {
+    const v = this.viewOf(side);
+    const c = this.centerOf(side);
+    this.thrown.open = true;
+    this.ctx.audio.playSfx("pod_click");
+    this.fx.puff(c);
+    v.visible = true;
+    v.dx = 0; v.drop = 0;
+    v.scale = 0.1;
+    v.silhouette = UI.white;
+    await this.flow.animate(6, () => undefined);
+    this.thrown.visible = false;
+    // grow in whole-pixel steps
+    await this.flow.animate(10, (_i, t) => { v.scale = [0.25, 0.5, 0.75, 1][Math.min(3, Math.floor(t * 4))]; });
+    v.scale = 1;
+    v.silhouette = null;
+    if (sport) await this.flow.wait(this.fx.sparkle(c));
   }
 
   private async sendOutFoeAnim(text: string) {
@@ -360,21 +503,16 @@ class BattleScene implements Scene {
     const v = this.enemy;
     v.species = foe.species;
     v.sport = foe.sport;
-    v.visible = true;
-    v.dx = 0; v.drop = 0;
-    v.scale = 0.1;
-    v.silhouette = UI.white;
+    v.visible = false;
     const say = this.say(text, "hold");
     this.ctx.audio.playSfx("pod_throw");
-    this.fx.puff(ENEMY_CENTER);
-    await this.flow.animate(12, (_i, t) => { v.scale = 0.1 + 0.9 * t; if (t > 0.6) v.silhouette = null; });
-    v.scale = 1; v.silhouette = null;
+    await this.lobPod({ x: 168, y: 4 }, { x: ENEMY_CENTER.x - 6, y: ENEMY_CENTER.y + 4 }, 14, 10);
+    await this.popOut(1, foe.sport);
     void this.ctx.audio.playCry(foe.species);
-    if (foe.sport) await this.flow.wait(this.fx.sparkle(ENEMY_CENTER));
     this.setHud(1);
-    this.enemyHud.visible = true;
+    await this.slideHud(1);
     await say;
-    await this.flow.wait(20);
+    await this.flow.wait(16);
   }
 
   private async sendOutPlayerAnim() {
@@ -382,27 +520,23 @@ class BattleScene implements Scene {
     const v = this.player;
     v.species = me.species;
     v.sport = me.sport;
-    v.visible = true;
-    v.dx = 0; v.drop = 0;
-    v.scale = 0.1;
-    v.silhouette = UI.white;
+    v.visible = false;
     const say = this.say(`Go! ${qName(this.data, me)}!`, "hold");
     this.ctx.audio.playSfx("pod_throw");
-    this.fx.puff(PLAYER_CENTER);
-    await this.flow.animate(12, (_i, t) => { v.scale = 0.1 + 0.9 * t; if (t > 0.6) v.silhouette = null; });
-    v.scale = 1; v.silhouette = null;
+    await this.lobPod({ x: -8, y: 76 }, { x: PLAYER_CENTER.x - 6, y: PLAYER_CENTER.y + 6 }, 14, 16);
+    await this.popOut(0, me.sport);
     void this.ctx.audio.playCry(me.species);
-    if (me.sport) await this.flow.wait(this.fx.sparkle(PLAYER_CENTER));
     this.setHud(0);
-    this.playerHud.visible = true;
+    await this.slideHud(0);
     await say;
-    await this.flow.wait(20);
+    await this.flow.wait(16);
   }
 
   private async withdrawAnim(side: Side) {
     const v = this.viewOf(side);
     v.silhouette = UI.white;
-    await this.flow.animate(10, (_i, t) => { v.scale = 1 - t; });
+    this.fx.puff(this.centerOf(side));
+    await this.flow.animate(10, (_i, t) => { v.scale = [1, 0.75, 0.5, 0.25][Math.min(3, Math.floor(t * 4))]; });
     v.visible = false;
     v.scale = 1;
     v.silhouette = null;
@@ -419,9 +553,11 @@ class BattleScene implements Scene {
       const cmd = new Menu(this.ctx, ["FIGHT", "BAG", "QUICKENED", "RUN"], {
         x: 0, y: TEXTBOX.y, w: 160, h: 48, cols: 2, colW: 88, spacing: 16, cancel: false, start: this.lastCmd,
       });
+      this.idle = true;
       const c = await this.ui.choose(cmd, (g) => {
         cmd.draw(g);
       });
+      this.idle = false;
       this.lastCmd = Math.max(0, c);
       if (c === 0) {
         const r = await this.fightMenu();
@@ -439,19 +575,31 @@ class BattleScene implements Scene {
     }
   }
 
+  /** SUPER / WEAK / NONE for the active move slots, if the foe is known. */
+  private moveHints(): EffHint[] {
+    const foe = this.foe();
+    if (!this.knowledge.knows(foe.species)) return this.me().moves.map(() => null);
+    const types = getSpecies(this.data, foe.species).types as readonly TypeId[];
+    return this.me().moves.map((m) => effectivenessHint(this.data, getMove(this.data, m.id), types));
+  }
+
   private async fightMenu(): Promise<Choice | null> {
     const me = this.me();
     if (!hasUsableMove(me)) return { kind: "move", slot: -1 };
     const labels = me.moves.map((m) => getMove(this.data, m.id).name.toUpperCase());
     while (labels.length < 4) labels.push("-");
+    const hints = this.moveHints();
     for (;;) {
       const menu = new Menu(this.ctx, labels, {
-        x: 32, y: TEXTBOX.y, w: 128, h: 48, spacing: 8, start: Math.min(this.lastMove, me.moves.length - 1),
+        x: 8, y: TEXTBOX.y, w: 152, h: 48, spacing: 8, start: Math.min(this.lastMove, me.moves.length - 1),
       });
+      this.idle = true;
       const r = await this.ui.choose(menu, (g) => {
         menu.draw(g);
+        hints.forEach((h, i) => { if (h) drawHintTag(g, h, 130, TEXTBOX.y + 8 + i * 8 + 1); });
         this.drawMoveInfo(g, menu.index);
       });
+      this.idle = false;
       if (r < 0) return null;
       if (r >= me.moves.length) continue;
       this.lastMove = r;
@@ -469,12 +617,16 @@ class BattleScene implements Scene {
     this.ctx.ui.drawWindow(g, 0, 56, 80, 40);
     if (!m) return;
     const mv = getMove(this.data, m.id);
+    const c = TYPE_COLORS[mv.type];
     this.ctx.ui.drawText(g, "TYPE/", 8, 64);
     const cat = mv.category === "physical" ? "PHY" : mv.category === "special" ? "SPC" : "STA";
     drawTiny(g, cat, 58, 65, UI.dark);
-    this.ctx.ui.drawText(g, TYPE_NAMES[mv.type] ?? String(mv.type).toUpperCase(), 16, 72);
+    g.fillStyle = c?.mid ?? UI.dark;
+    g.fillRect(8, 73, 3, 6);
+    this.ctx.ui.drawText(g, TYPE_NAMES[mv.type] ?? String(mv.type).toUpperCase(), 14, 72);
     drawTiny(g, "PP", 8, 82);
-    this.ctx.ui.drawText(g, `${pad(m.pp, 2)}/${pad(mv.pp, 2)}`, 24, 80);
+    const low = m.pp <= Math.max(1, Math.floor(mv.pp / 4));
+    this.ctx.ui.drawText(g, `${pad(m.pp, 2)}/${pad(mv.pp, 2)}`, 24, 80, m.pp === 0 ? UI.hpRed : low ? "#c07010" : undefined);
   }
 
   /** Party pick for a switch. Returns an index or -1. */
@@ -524,11 +676,20 @@ class BattleScene implements Scene {
     consumeItem(this.ctx.state.bag, item);
     await this.say(`${playerName(this.ctx)} used ${itemName(this.data, item)}!`, "auto");
     if (isActive) {
-      if (res.hpTo !== res.hpFrom) await this.animateHp(0, res.hpFrom, res.hpTo);
+      if (res.hpTo !== res.hpFrom) {
+        this.healSparkle(0);
+        await this.animateHp(0, res.hpFrom, res.hpTo);
+      }
       this.playerHud.status = q.status;
     }
     await this.say(res.text, "auto");
     return { kind: "used_item" };
+  }
+
+  private healSparkle(side: Side) {
+    const c = this.centerOf(side);
+    for (let i = 0; i < 8; i++) this.fx.add({ x: c.x + R(-16, 16), y: c.y + R(4, 18), vy: -0.8, shape: "twinkle", color: "#ffffff", color2: "#88e0a0", max: 16, delay: i * 2 });
+    this.sprites.add(side, "shine", 14);
   }
 
   private async tryRunAway(): Promise<Choice | null> {
@@ -564,45 +725,70 @@ class BattleScene implements Scene {
     const pod = getItem(this.data, item);
     const mult = pod.effect.kind === "pod" ? pod.effect.catchMultiplier : 1;
     await this.say(`${playerName(ctx)} used ${itemName(this.data, item)}!`, "hold");
-
-    // Arc from the player's side to the foe.
-    const t0 = this.thrown;
-    t0.visible = true;
-    t0.open = 0;
-    t0.wobble = 0;
-    ctx.audio.playSfx("pod_throw");
-    await this.flow.animate(26, (_i, t) => {
-      t0.x = Math.round(24 + (ENEMY_CENTER.x - 4 - 24) * t);
-      t0.y = Math.round(78 + (14 - 78) * t - Math.sin(t * Math.PI) * 36);
-    });
-    // Open and pull the foe in.
-    t0.open = 3;
-    this.fx.flash = { color: "rgba(255,255,255,0.6)", frames: 3 };
+    const r = attemptCapture(foe, species.catchRate, mult, ctx.state.herbarium.caught.length, ctx.rng);
+    const p = this.thrown;
     const v = this.enemy;
+
+    // 1. The throw: a high, tumbling arc from the player's side.
+    ctx.audio.playSfx("pod_throw");
+    const hit = { x: ENEMY_CENTER.x - 6, y: ENEMY_CENTER.y - 10 };
+    if (r.critical) this.fx.flashScreen("#f8e070", 2);
+    await this.lobPod({ x: 20, y: 80 }, hit, 26, 40);
+    // 2. Bounce off, open, beam the foe in.
+    await this.flow.animate(6, (_i, t) => { p.y = Math.round(hit.y - Math.sin(t * Math.PI) * 6); p.x = hit.x + Math.round(t * 2); });
+    p.open = true;
+    ctx.audio.playSfx("pod_click");
+    this.fx.flashScreen("#f8f8f8", 2);
+    const mouth = { x: p.x + 4, y: p.y + 4 };
+    this.fx.layer(16, (g, f) => {
+      if (f % 4 >= 3) return;
+      for (const [dx, dy] of [[-22, 6], [-12, 20], [0, 24], [12, 20], [22, 6]]) {
+        line(g, mouth.x, mouth.y, ENEMY_CENTER.x + dx - f, ENEMY_CENTER.y + dy - Math.floor(f / 2), f % 2 ? "#f8d048" : "#c89020");
+      }
+    });
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      this.fx.add({ x: mouth.x, y: mouth.y, shape: "twinkle", color: "#ffffff", color2: "#f8e070", max: 14, delay: 4 + i, to: { sx: ENEMY_CENTER.x + Math.cos(a) * 24, sy: ENEMY_CENTER.y + Math.sin(a) * 20, x: mouth.x, y: mouth.y, arc: 0 } });
+    }
     v.silhouette = UI.white;
-    await this.flow.animate(14, (_i, t) => { v.scale = 1 - t; v.dy = -Math.round(t * 16); });
+    await this.flow.wait(4);
+    await this.flow.animate(14, (_i, t) => {
+      v.scale = [1, 0.75, 0.5, 0.25, 0.125][Math.min(4, Math.floor(t * 5))];
+      v.dy = -Math.round(t * 14);
+    });
     v.visible = false;
     v.scale = 1; v.dy = 0; v.silhouette = null;
-    t0.open = 0;
-    await this.flow.wait(8);
-    // Drop to the ground with a bounce.
-    await this.flow.animate(14, (_i, t) => {
-      const bounce = t < 0.7 ? t / 0.7 : 1 - Math.sin(((t - 0.7) / 0.3) * Math.PI) * 0.15;
-      t0.y = Math.round(14 + (42 - 14) * bounce);
-    });
-    const r = attemptCapture(foe, species.catchRate, mult, ctx.state.herbarium.caught.length, ctx.rng);
-    await this.flow.wait(r.critical ? 10 : 20);
+    this.enemyHud.visible = false;
+    p.open = false;
+    await this.flow.wait(10);
+    // 3. Drop to the ground, two bounces.
+    const top = p.y;
+    await this.flow.animate(12, (_i, t) => { p.y = Math.round(top + (POD_REST.y - top) * t * t); p.x = Math.round(hit.x + 2 + (POD_REST.x - hit.x - 2) * t); });
+    ctx.audio.playSfx("bump");
+    for (const hgt of [7, 3]) {
+      await this.flow.animate(hgt * 2, (_i, t) => { p.y = Math.round(POD_REST.y - Math.sin(t * Math.PI) * hgt); });
+      ctx.audio.playSfx("bump");
+    }
+    p.y = POD_REST.y;
+    this.fx.dust({ x: POD_REST.x + 4, y: ENEMY_GROUND.y - 1 }, 4);
+    await this.flow.wait(r.critical ? 12 : 26);
+
+    // 4. Wobbles.
     for (let i = 0; i < r.shakes; i++) {
       ctx.audio.playSfx("pod_shake");
-      await this.flow.animate(16, (k) => { t0.wobble = [0, -1, -2, -2, -1, 0, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0][k] ?? 0; });
-      t0.wobble = 0;
-      await this.flow.wait(18);
+      await this.flow.animate(24, (k) => { p.tilt = [0, -1, -2, -3, -3, -2, -1, 0, 1, 2, 3, 3, 2, 1, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0][k] ?? 0; });
+      p.tilt = 0;
+      await this.flow.wait(i === r.shakes - 1 ? 22 : 30);
     }
     if (r.caught) {
+      // 5. Click: flash, a burst of stars, the pod settles dim.
       ctx.audio.playSfx("pod_click");
-      await this.flow.wait(this.fx.stars({ x: t0.x + 4, y: t0.y }));
+      p.flash = true;
+      await this.flow.wait(3);
+      p.flash = false;
+      await this.flow.wait(this.fx.stars({ x: p.x + 4, y: p.y + 2 }) - 6);
+      p.dim = true;
       const name = qName(this.data, foe);
-      this.enemyHud.visible = false;
       const jingle = ctx.audio.playJingle("caught");
       if (r.critical) await this.say("A critical capture!", "auto");
       await this.say(`Gotcha! ${name} was caught!`, "wait");
@@ -614,22 +800,31 @@ class BattleScene implements Scene {
         await this.say(`${name}'s data was added to the FIELD HERBARIUM.`, "wait");
         await showHerbariumEntry(ctx, foe.species);
       }
+      await askNickname(ctx, this.ui, foe);
+      const shown = qName(this.data, foe);
       if (this.party.length < 6) {
         this.party.push(foe);
       } else {
         ctx.state.box.push(foe);
-        await this.say(`${name} was sent to the CABINET.`, "wait");
+        await this.say(`${shown} was sent to the CABINET.`, "wait");
       }
-      t0.visible = false;
+      p.visible = false;
       return { kind: "caught" };
     }
-    // Broke free.
-    t0.visible = false;
-    this.fx.puff({ x: t0.x + 4, y: t0.y + 4 });
+    // Broke free: the pod bursts, the foe pops back out.
+    p.open = true;
+    ctx.audio.playSfx("pod_click");
+    this.fx.flashScreen("#f8f8f8", 2);
+    this.fx.puff({ x: p.x + 4, y: p.y + 4 });
+    await this.flow.wait(4);
+    p.visible = false;
+    p.open = false;
     v.visible = true;
     v.silhouette = UI.white;
-    await this.flow.animate(10, (_i, t) => { v.scale = t; });
+    await this.flow.animate(10, (_i, t) => { v.scale = [0.25, 0.5, 0.75, 1][Math.min(3, Math.floor(t * 4))]; });
     v.scale = 1; v.silhouette = null;
+    this.enemyHud.visible = true;
+    void ctx.audio.playCry(foe.species);
     const lines = [
       `Oh no! ${qName(this.data, foe)} broke free!`,
       "Aww! It appeared to be caught!",
@@ -645,41 +840,76 @@ class BattleScene implements Scene {
   // -------------------------------------------------------------------------
 
   private async play(events: BattleEvent[]) {
-    for (const e of events) await this.playOne(e);
+    // Within one turn, the same side repeating the same move is a multi-hit.
+    const seen = new Set<string>();
+    for (const e of events) {
+      const key = e.t === "anim" ? `${e.side}:${e.move}` : "";
+      await this.playOne(e, e.t === "anim" && seen.has(key));
+      if (key) seen.add(key);
+    }
   }
 
-  private async playOne(e: BattleEvent) {
+  /** Play a move animation for `side` (also used by the dev gallery). */
+  async playMoveAnim(side: Side, moveId: MoveId, repeat = false): Promise<void> {
+    const mv = getMove(this.data, moveId);
+    const spec = animFor(mv);
+    const other: Side = side === 0 ? 1 : 0;
+    const self = !targetsFoe(mv);
+    if (mv.category === "physical" && !self && !repeat) await this.lunge(side);
+    const stage = {
+      from: this.centerOf(side), to: this.centerOf(self ? side : other),
+      fromGround: this.groundOf(side), toGround: this.groundOf(self ? side : other),
+      userSide: side, sprites: this.sprites,
+    };
+    const multi = mv.effects.some((e) => e.kind === "multi_hit");
+    let n: number;
+    if (repeat && multi) {
+      // quick follow-up hits of a multi-hit move
+      n = 12;
+      this.fx.impact({ x: stage.to.x + R(-8, 8), y: stage.to.y + R(-8, 8) }, "#ffffff", TYPE_COLORS[mv.type]?.light ?? "#f8d040");
+    } else {
+      n = playMoveFx(this.fx, spec, mv.type, stage);
+    }
+    await this.flow.wait(n);
+  }
+
+  private async playOne(e: BattleEvent, repeat: boolean) {
     const f = this.flow;
     const ctx = this.ctx;
     switch (e.t) {
       case "text":
         await this.say(e.text, "auto");
         break;
-      case "anim": {
-        const from = this.centerOf(e.side);
-        const to = this.centerOf(e.side === 0 ? 1 : 0);
-        if (e.category === "physical" && !e.selfTarget) await this.lunge(e.side);
-        const n = this.fx.move(e.type, e.category, from, to, e.selfTarget);
-        await f.wait(n);
+      case "anim":
+        await this.playMoveAnim(e.side, e.move, repeat);
         break;
-      }
       case "hp": {
+        const h = this.hudOf(e.side);
+        const q = h.q ?? active(this.s, e.side);
         if (e.kind === "hit") {
           const eff = e.eff ?? 1;
           ctx.audio.playSfx(eff > 1 ? "hit_super" : eff < 1 ? "hit_weak" : "hit");
-          await this.hitFlash(e.side, eff > 1 || !!e.crit);
+          const big = eff > 1 || !!e.crit || (e.from - e.to) >= q.stats.hp / 3;
+          await this.hitReact(e.side, { big, crit: !!e.crit, eff });
+          if (e.side === 1) this.knowledge.learn(q.species);
         } else if (e.kind === "recoil") {
           ctx.audio.playSfx("hit_weak");
-          await this.hitFlash(e.side, false);
+          await this.hitReact(e.side, { big: false, crit: false, eff: 1 });
         } else if (e.kind === "drain") {
           const other: Side = e.side === 0 ? 1 : 0;
-          await f.wait(this.fx.drain(this.centerOf(other), this.centerOf(e.side)));
+          await f.wait(this.fx.drain(this.centerOf(other), this.centerOf(e.side)) - 12);
+        } else if (e.kind === "heal") {
+          this.healSparkle(e.side);
         }
         await this.animateHp(e.side, e.from, e.to);
         break;
       }
       case "status":
         this.hudOf(e.side).status = e.status;
+        if (e.status) {
+          // the new status announces itself once with its own puff
+          await f.wait(Math.min(24, this.fx.status(this.centerOf(e.side), e.status)));
+        }
         break;
       case "stat":
         ctx.audio.playSfx(e.up ? "stat_up" : "stat_down");
@@ -710,7 +940,11 @@ class BattleScene implements Scene {
         else await this.sendOutFoeAnim(`${this.trainerName} sent out ${qName(this.data, this.foe())}!`);
         break;
       case "miss":
+        // a whiff of air past the target
+        this.fx.add({ x: this.centerOf(e.side === 0 ? 1 : 0).x, y: this.centerOf(e.side === 0 ? 1 : 0).y, shape: "twinkle", color: "#ffffff", color2: "#c8d0d8", max: 10 });
+        break;
       case "item":
+        if (e.side === 1) this.healSparkle(1);
         break;
     }
   }
@@ -726,20 +960,25 @@ class BattleScene implements Scene {
     v.dx = 0; v.dy = 0;
   }
 
-  private async hitFlash(side: Side, shake: boolean) {
+  /** The hurt reaction: a white blink, then flicker; big hits shake, crits flash. */
+  private async hitReact(side: Side, o: { big: boolean; crit: boolean; eff: number }) {
     const v = this.viewOf(side);
-    await this.flow.animate(24, (i) => {
-      v.hidden = Math.floor(i / 4) % 2 === 0;
-      if (shake) this.shake.x = i < 16 ? (Math.floor(i / 2) % 2 === 0 ? 2 : -2) : 0;
+    if (o.crit) this.fx.flashScreen("#f8f8f8", 2);
+    if (o.big) this.fx.shake(o.eff > 1 ? 16 : 12, o.eff > 1 || o.crit ? 3 : 2, side === 1 ? "x" : "xy");
+    await this.flow.animate(26, (i) => {
+      if (i < 4) { v.silhouette = UI.white; v.hidden = false; }
+      else { v.silhouette = null; v.hidden = Math.floor((i - 4) / 4) % 2 === 0 && i < 22; }
+      if (o.crit && i === 6) this.fx.flashScreen("#f8f8f8", 1);
     });
     v.hidden = false;
-    this.shake.x = 0;
+    v.silhouette = null;
   }
 
   private async animateHp(side: Side, from: number, to: number) {
     const h = this.hudOf(side);
     const q = h.q ?? active(this.s, side);
     const max = Math.max(1, q.stats.hp);
+    // Crystal drains the bar about a pixel per frame (48px bar).
     const pxDiff = Math.abs(to - from) * 48 / max;
     const frames = Math.max(8, Math.min(64, Math.round(pxDiff * 1.3)));
     await this.flow.animate(frames, (_i, t) => { h.hp = from + (to - from) * t; });
@@ -753,10 +992,15 @@ class BattleScene implements Scene {
     void this.ctx.audio.playCry(q.species);
     await this.flow.wait(24);
     this.ctx.audio.playSfx("wilt");
-    await this.flow.animate(18, (_i, t) => { v.drop = Math.round(t * 56); });
+    this.fx.dust(this.groundOf(side), 6);
+    // slides down into its battle ground, accelerating
+    await this.flow.animate(16, (_i, t) => { v.drop = Math.round(t * t * 56); });
     v.visible = false;
     v.drop = 0;
-    this.hudOf(side).visible = false;
+    const h = this.hudOf(side);
+    await this.flow.animate(8, (_i, t) => { h.dx = Math.round((side === 0 ? 1 : -1) * t * 100); });
+    h.visible = false;
+    h.dx = 0;
     if (side === 0) addFriendship(q, -1);
   }
 
@@ -867,6 +1111,8 @@ class BattleScene implements Scene {
     for (let i = 0; i < levels; i++) {
       await fill(cur, 1);
       cur = 0;
+      h.flash = 28;
+      await this.flow.wait(10);
       h.exp = 0;
     }
     await fill(cur, to);
@@ -877,6 +1123,9 @@ class BattleScene implements Scene {
     if (isActive) {
       this.playerHud.level = up.level;
       this.playerHud.hp = q.hp;
+      this.playerHud.flash = Math.max(this.playerHud.flash, 28);
+      this.sprites.add(0, "shine", 16);
+      this.fx.sparkle(PLAYER_CENTER, "#f8e070", 10);
     }
     const jingle = this.ctx.audio.playJingle("level_up");
     await this.say(`${qName(this.data, q)} grew to level ${up.level}!`, "wait");
@@ -899,7 +1148,7 @@ class BattleScene implements Scene {
     ctx.audio.playMusic(leader ? "victory_leader" : "victory_trainer");
     this.enemyTrainer.visible = true;
     this.enemyTrainer.dx = 72;
-    await this.flow.animate(20, (_i, k) => { this.enemyTrainer.dx = Math.round((1 - k) * 72); });
+    await this.flow.animate(20, (_i, k) => { this.enemyTrainer.dx = Math.round((1 - k) * (1 - k) * 72); });
     this.enemyTrainer.dx = 0;
     await this.say(`${playerName(ctx)} defeated ${this.trainerName}!`, "wait");
     if (t.defeat) await this.say(t.defeat, "wait");
@@ -929,4 +1178,22 @@ class BattleScene implements Scene {
     await this.flow.animate(16, (_i, t) => { this.fade = Math.max(this.fade, t); });
     this.fade = 1;
   }
+
+  // -------------------------------------------------------------------------
+  // Dev helpers (window.__battle in dev builds)
+  // -------------------------------------------------------------------------
+
+  devSetWeather(w: Weather | null) { this.weather = w; }
+  devSetStatus(side: Side, st: StatusId | null) { this.hudOf(side).status = st; }
+  devSpeciesName(id: SpeciesId) { return speciesName(this.data, id); }
+}
+
+/** A small tab with SUPER / WEAK / NONE in the tiny font. */
+function drawHintTag(g: CanvasRenderingContext2D, hint: Exclude<EffHint, null>, x: number, y: number) {
+  const bg = hint === "SUPER" ? "#d04020" : hint === "WEAK" ? "#6878a0" : "#808080";
+  const w = hint.length * 4 + 3;
+  g.fillStyle = bg;
+  g.fillRect(x + 1, y - 1, w - 2, 7);
+  g.fillRect(x, y, w, 5);
+  drawTiny(g, hint, x + 2, y, UI.white);
 }

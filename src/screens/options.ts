@@ -4,7 +4,7 @@
 import type { GameContext, Input } from "../contracts";
 import { UI } from "../contracts";
 import { runFlowScene, type Flow } from "./kit/flow";
-import { clearScreen, drawCursor } from "./kit/draw";
+import { drawCursor, drawPaper, drawTiny } from "./kit/draw";
 
 const KEY = "verdant-reach-volume";
 const SPEEDS = ["slow", "mid", "fast"] as const;
@@ -46,27 +46,51 @@ export function optionsScreen(ctx: GameContext): Promise<void> {
   let row = 0;
   const ROWS = 4;
 
+  let frame = 0;
   const bar = (g: CanvasRenderingContext2D, x: number, y: number, n: number) => {
+    // ten little seedlings that grow taller with the volume
     for (let i = 0; i < 10; i++) {
-      g.fillStyle = i < n ? UI.dark : "#c8d8c0";
-      g.fillRect(x + i * 6, y + 1, 4, 6);
+      const on = i < n;
+      const h = 2 + Math.floor(i / 2);
+      g.fillStyle = on ? "#58a040" : "#d0d8c4";
+      g.fillRect(x + i * 6 + 1, y + 8 - h, 1, h);
+      g.fillStyle = on ? "#88c860" : "#d0d8c4";
+      g.fillRect(x + i * 6, y + 8 - h, 3, 1);
     }
+    g.fillStyle = "#8a6a48";
+    g.fillRect(x - 1, y + 8, 60, 1);
   };
 
-  const draw = (g: CanvasRenderingContext2D) => {
-    clearScreen(g, UI.white);
-    ctx.ui.drawWindow(g, 0, 0, 160, 144);
-    const speed = (ctx.state?.options?.textSpeed ?? "mid").toUpperCase();
-    ctx.ui.drawText(g, "TEXT SPEED", 16, 16);
-    ctx.ui.drawText(g, `:${speed}`, 88, 26);
-    ctx.ui.drawText(g, "MUSIC", 16, 44);
-    bar(g, 80, 54, vol.music);
-    ctx.ui.drawText(g, "SOUND", 16, 72);
-    bar(g, 80, 82, vol.sfx);
-    ctx.ui.drawText(g, "CANCEL", 16, 104);
-    const ys = [16, 44, 72, 104];
-    drawCursor(ctx, g, 8, ys[row]);
-    ctx.ui.drawText(g, "◀▶: change", 16, 124, UI.dark);
+  const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
+    frame = f;
+    drawPaper(g, 0, 0, 160, 144, "cream");
+    g.fillStyle = "#4a6a48";
+    g.fillRect(0, 0, 160, 12);
+    ctx.ui.drawText(g, "OPTIONS", 8, 2, "#f0e8c8");
+    const ys = [20, 50, 74, 104];
+    // row highlight
+    g.fillStyle = "#f8e898";
+    g.fillRect(4, ys[row] - 3, 152, row === 0 ? 26 : row === 3 ? 14 : 22);
+    const speed = ctx.state?.options?.textSpeed ?? "mid";
+    ctx.ui.drawText(g, "TEXT SPEED", 16, ys[0]);
+    SPEEDS.forEach((sp, i) => {
+      const x = 24 + i * 44;
+      const on = sp === speed;
+      g.fillStyle = on ? "#4a6a48" : "#e4dcc4";
+      g.fillRect(x - 3, ys[0] + 10, 40, 10);
+      ctx.ui.drawText(g, sp.toUpperCase(), x + (sp === "mid" ? 4 : 0), ys[0] + 11, on ? "#f8f8f0" : "#8a8068");
+    });
+    ctx.ui.drawText(g, "MUSIC", 16, ys[1]);
+    bar(g, 80, ys[1] - 1, vol.music);
+    drawTiny(g, String(vol.music).padStart(2, " "), 144, ys[1] + 2, "#6a5a40");
+    ctx.ui.drawText(g, "SOUND", 16, ys[2]);
+    bar(g, 80, ys[2] - 1, vol.sfx);
+    drawTiny(g, String(vol.sfx).padStart(2, " "), 144, ys[2] + 2, "#6a5a40");
+    ctx.ui.drawText(g, "DONE", 16, ys[3]);
+    drawCursor(ctx, g, 6, ys[row], false, frame);
+    ctx.ui.drawWindow(g, 0, 120, 160, 24);
+    const help = row === 0 ? "◀▶ text speed" : row === 3 ? "A: back" : "◀▶ volume";
+    ctx.ui.drawText(g, help, 8, 128, UI.dark);
   };
 
   const main = async (flow: Flow) => {

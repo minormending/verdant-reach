@@ -61,6 +61,14 @@ share-alike, non-commercial or no-derivatives licences).
 - **sugar_maple** (maple/adult.jpg): Flickr "Lone Tree", Florence/Omaha, Nebraska, tagged maple; species not stated (Acer sp., red-orange autumn crown, could be sugar or red maple). Lone round-crowned tree in a mown field with overcast sky; full crown + trunk in frame and well separated from background treeline. Chosen over the confirmed sugar maples (adult_alt/_alt2) because those crowns reach almost to the ground and the trunk is lost at 56px.
 - **moonflower_seed** (moonflower/baby.jpg): Full 1920x1440 download. RELATED SPECIES: Ipomoea tuboides (Hawaiian moon flower, a white night-blooming Ipomoea close to I. alba), no reuse-licensed I. alba seedling photo found. Pair of notched butterfly-shaped cotyledons from above on red soil; reads as a two-leaf seedling.
 
+### Pumpkin, fern, flytrap, sundew, maple, nettle and moonflower lines
+
+These 19 species (pumpkin_blossom to moonflower in the table above) are no
+longer traced. Their front, back and icon sprites are original hand-pixeled
+art, built shape by shape and pixel by pixel in `tools/art/species_b/`. The
+photos listed above were used only as reference for each plant's form and
+colour, and their photographers are credited for that.
+
 ## Everything else
 
 Tiles, buildings, overworld characters, trainer portraits, item icons, the

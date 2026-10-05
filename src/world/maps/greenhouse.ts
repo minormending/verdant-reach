@@ -1,13 +1,44 @@
-import type { MapDef, MapId } from "../../contracts";
-import { LEGEND, type Scripts } from "../build";
+import type { CharacterKey, MapDef, MapId } from "../../contracts";
+import { LEGEND, ifFlags, ifNight, say, type Scripts } from "../build";
 
-// The healing centre interior, shared by every town. The keeper stands behind
-// the counter; the specimen cabinet (party/box storage) is in the corner.
+// The healing centre interior. Every town's GREENHOUSE shares the iconic
+// shape: glass roof, a long counter with the keeper behind it under the grow
+// beds, the SPECIMEN CABINET in the corner, a red runner to the door. Each
+// town dresses its waiting nook differently.
+const ROWS = {
+  // BRAMBLEGATE: a reading corner with a bookshelf and a tea table.
+  bramblegate: [
+    // x: 0123456789A
+    "WWOOOOOOOWW", // 0
+    "WPPpgggpPPW", // 1  grow beds behind the keeper
+    "WYgggggggYW", // 2  keeper at 5,2
+    "WcCCCCCCCKW", // 3  counter; SPECIMEN CABINET at 1,3
+    "WgggggggggW", // 4
+    "WhDhgggggpW", // 5  tea table and chairs
+    "WPggrrrggPW", // 6
+    "WPpgrrrgpYW", // 7
+    "WWWWWEWWWWW", // 8
+  ],
+  // SUGARBUSH: a warm stove, a maple in a pot and a barrel of last year's syrup.
+  sugarbush: [
+    "WWOOOOOOOWW", // 0
+    "WPPpgggpPPW", // 1
+    "WYgggggggYW", // 2
+    "WcCCCCCCCVW", // 3  stove at 9,3
+    "WgggggggggW", // 4
+    "WhDhggggg7W", // 5
+    "WPggrrrggYW", // 6
+    "WYpgrrrgpPW", // 7
+    "WWWWWEWWWWW", // 8
+  ],
+};
+
 export function greenhouseMap(
   id: MapId,
   name: string,
+  rows: string[],
   exit: { to: MapId; x: number; y: number },
-  visitor: { script: string; sprite: "villager_a" | "villager_b" | "elder" | "kid" | "hiker" | "florist" },
+  visitor: { script: string; sprite: CharacterKey; x: number; y: number },
 ): MapDef {
   return {
     id,
@@ -16,57 +47,54 @@ export function greenhouseMap(
     music: "greenhouse",
     border: "void",
     legend: LEGEND,
-    tiles: [
-      "WWOOOOOOWW", // 0
-      "WcggggggpW", // 1
-      "WgPCCCCPgW", // 2
-      "WggggggggW", // 3
-      "WpggggggpW", // 4
-      "WggggggggW", // 5
-      "WPggrrggPW", // 6
-      "WWWWEWWWWW", // 7
-    ],
+    tiles: rows,
     structures: [],
-    warps: [{ x: 4, y: 7, to: exit.to, toX: exit.x, toY: exit.y, facing: "down" }],
+    warps: [{ x: 5, y: 8, to: exit.to, toX: exit.x, toY: exit.y, facing: "down" }],
     npcs: [
-      { id: "keeper", sprite: "greenhouse_keeper", x: 4, y: 1, facing: "down", movement: "static", script: "greenhouse_heal" },
-      { id: "visitor", sprite: visitor.sprite, x: 7, y: 4, facing: "left", movement: "wander", script: visitor.script },
+      { id: "keeper", sprite: "greenhouse_keeper", x: 5, y: 2, facing: "down", movement: "static", script: "greenhouse_heal" },
+      { id: "visitor", sprite: visitor.sprite, x: visitor.x, y: visitor.y, facing: "left", movement: "look_around", script: visitor.script },
     ],
     signs: [],
     triggers: [],
-    healPoint: { x: 4, y: 3 },
+    healPoint: { x: 5, y: 4 },
   };
 }
 
 export const bramblegate_greenhouse = greenhouseMap(
-  "bramblegate_greenhouse", "GREENHOUSE", { to: "bramblegate", x: 20, y: 7 },
-  { script: "bg_gh_visitor", sprite: "hiker" },
+  "bramblegate_greenhouse", "GREENHOUSE", ROWS.bramblegate, { to: "bramblegate", x: 19, y: 6 },
+  { script: "bg_gh_visitor", sprite: "hiker", x: 3, y: 5 },
 );
 export const sugarbush_greenhouse = greenhouseMap(
-  "sugarbush_greenhouse", "GREENHOUSE", { to: "sugarbush", x: 20, y: 16 },
-  { script: "sb_gh_visitor", sprite: "villager_b" },
+  "sugarbush_greenhouse", "GREENHOUSE", ROWS.sugarbush, { to: "sugarbush", x: 24, y: 12 },
+  { script: "sb_gh_visitor", sprite: "villager_b", x: 3, y: 5 },
 );
 
 export const scripts: Scripts = {
   greenhouse_heal: [
-    { op: "say", text: "Welcome to the GREENHOUSE! Water, light and warm soil for weary QUICKENED." },
+    say("Welcome to the GREENHOUSE! Water, light and warm soil for weary QUICKENED."),
     { op: "yesno", prompt: "Shall I tend to your QUICKENED?", yes: [
-      { op: "say", text: "Into the light they go..." },
+      say("Into the light they go..."),
       { op: "heal" },
-      { op: "say", text: "All watered and perked up! Come back any time." },
+      say("All watered and perked up! Come back any time."),
     ], no: [
-      { op: "say", text: "Come back any time." },
+      say("Come back any time. The lamps are always on."),
     ] },
   ],
   bg_gh_visitor: [
-    { op: "say", text: "That SPECIMEN CABINET in the corner? It stores the QUICKENED you can't carry." },
-    { op: "say", text: "You can only carry six. The rest wait in soil and soft light." },
+    ifNight([
+      say("The keeper leaves the grow lamps on all night. Plants count the dark, you know."),
+      say("Too little dark and some won't flower at all."),
+    ], [
+      say("That SPECIMEN CABINET stores the QUICKENED you can't carry."),
+      say("Six travel with you. The rest wait in soil and soft light."),
+    ]),
   ],
   sb_gh_visitor: [
-    { op: "if", when: [{ flag: "grove_cleared", is: true }], then: [
-      { op: "say", text: "My maple's leaves perked right up today. Did you do that? Thank you!" },
-    ], else: [
-      { op: "say", text: "I brought my maple sprout in. Its leaves went limp, like it had lost blood." },
-    ] },
+    ifFlags({ grove_cleared: true }, [
+      say("My maple sprout perked right up today. Did you do that? Thank you!"),
+    ], [
+      say("I brought my maple sprout in. Its leaves went limp, like it had lost blood."),
+      say("The keeper says it's sap. Something's draining the whole grove."),
+    ]),
   ],
 };

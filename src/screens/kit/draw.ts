@@ -40,6 +40,7 @@ const TINY: Record<string, string> = {
   "4": "101101111001001", "5": "111100110001110", "6": "011100111101111", "7": "111001010010010",
   "8": "111101111101111", "9": "111101111001110", ":": "000010000010000", "/": "001001010100100",
   ".": "000000000000010", "-": "000000111000000", "+": "000010111010000", " ": "000000000000000",
+  "'": "010010000000000", "J": "001001001101010", "Q": "010101101110011", "!": "010010010000010", "?": "110001010000010",
 };
 
 /** Draw tiny 3x5 text; each glyph advances 4px. */
@@ -123,12 +124,88 @@ export function drawExpBar(g: CanvasRenderingContext2D, x: number, y: number, fr
 // Cursors and arrows (drawn with the font's own glyphs)
 // ---------------------------------------------------------------------------
 
-export function drawCursor(ctx: GameContext, g: CanvasRenderingContext2D, x: number, y: number, hollow = false) {
-  ctx.ui.drawText(g, hollow ? "▷" : "▶", x, y);
+/** The cursor's 1px bob (active cursors only): 0 or 1 on a slow beat. */
+export function cursorBob(frame: number): number {
+  return Math.floor(frame / 20) % 2;
+}
+
+export function drawCursor(ctx: GameContext, g: CanvasRenderingContext2D, x: number, y: number, hollow = false, frame?: number) {
+  const bob = hollow || frame === undefined ? 0 : cursorBob(frame);
+  ctx.ui.drawText(g, hollow ? "▷" : "▶", x + bob, y);
 }
 
 export function drawMoreArrow(ctx: GameContext, g: CanvasRenderingContext2D, x: number, y: number, frame: number, dir: "down" | "up" = "down") {
   if (Math.floor(frame / 16) % 2 === 0) ctx.ui.drawText(g, dir === "down" ? "▼" : "▲", x, y);
+}
+
+/**
+ * Botanist's paper: a warm sheet with sparse fibres and flecks (cached per
+ * size and tone). Deterministic, so it never shimmers.
+ */
+const paperCache = new Map<string, HTMLCanvasElement>();
+export function drawPaper(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, tone: "cream" | "white" | "kraft" = "cream") {
+  const key = `${w}x${h}:${tone}`;
+  let c = paperCache.get(key);
+  if (!c) {
+    c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    const pg = c.getContext("2d")!;
+    const base = tone === "white" ? "#f8f6ee" : tone === "kraft" ? "#e0c898" : "#f4ecd4";
+    const fleck = tone === "white" ? "#e8e4d4" : tone === "kraft" ? "#c8ac78" : "#e4d8b4";
+    const fibre = tone === "white" ? "#eeeadc" : tone === "kraft" ? "#d4ba88" : "#ece2c4";
+    pg.fillStyle = base;
+    pg.fillRect(0, 0, w, h);
+    let seed = 1234567;
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+    pg.fillStyle = fibre;
+    for (let i = 0; i < (w * h) / 90; i++) {
+      const fx = Math.floor(rnd() * w), fy = Math.floor(rnd() * h), len = 2 + Math.floor(rnd() * 4);
+      if (rnd() < 0.5) pg.fillRect(fx, fy, len, 1); else pg.fillRect(fx, fy, 1, len);
+    }
+    pg.fillStyle = fleck;
+    for (let i = 0; i < (w * h) / 60; i++) pg.fillRect(Math.floor(rnd() * w), Math.floor(rnd() * h), 1, 1);
+    paperCache.set(key, c);
+  }
+  g.drawImage(c, Math.round(x), Math.round(y));
+}
+
+/** Bounds of the opaque pixels in an image (cached), e.g. to pin a sprite by its stem. */
+const boundsCache = new WeakMap<object, { x0: number; y0: number; x1: number; y1: number; baseX: number }>();
+export function opaqueBounds(img: HTMLImageElement | HTMLCanvasElement) {
+  const hit = boundsCache.get(img);
+  if (hit) return hit;
+  const w = img.width, h = img.height;
+  const out = { x0: 0, y0: 0, x1: w - 1, y1: h - 1, baseX: w >> 1 };
+  try {
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    const cg = c.getContext("2d")!;
+    cg.drawImage(img, 0, 0);
+    const d = cg.getImageData(0, 0, w, h).data;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (d[(y * w + x) * 4 + 3] < 128) continue;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    if (x1 >= 0) {
+      // the middle of the bottom-most opaque row: where the stem / base sits
+      let a = -1, b = -1;
+      for (let x = 0; x < w; x++) if (d[(y1 * w + x) * 4 + 3] >= 128) { if (a < 0) a = x; b = x; }
+      Object.assign(out, { x0, y0, x1, y1, baseX: Math.round((a + b) / 2) });
+    }
+  } catch {
+    /* tainted or not loaded: fall back to the full frame */
+  }
+  if (img.width) boundsCache.set(img, out);
+  return out;
+}
+
+/** A 16x16 item icon when the art exists; returns false if it doesn't. */
+export function drawItemIcon(ctx: GameContext, g: CanvasRenderingContext2D, id: string, x: number, y: number): boolean {
+  const img = ctx.assets.image(`assets/items/${id}.png`);
+  if (!img) return false;
+  g.drawImage(img, Math.round(x), Math.round(y));
+  return true;
 }
 
 /** Fill the whole screen with the menu background. */
@@ -404,11 +481,73 @@ export function drawLeaf(g: CanvasRenderingContext2D, x: number, y: number, colo
   for (let i = 1; i < 6; i++) g.fillRect(x + i, y + 6 - i, 1, 1);
 }
 
-/** A status badge in the tiny font on a coloured tab, 15x7. */
-export function drawStatusBadge(g: CanvasRenderingContext2D, status: StatusId, abbr: string, x: number, y: number) {
+/** 7x7 status icons, two frames each (a = main, b = dark, c = light). */
+const STATUS_ICONS: Record<StatusId, { pal: Record<string, string>; frames: [string[], string[]] }> = {
+  blight: {
+    pal: { a: "#9850b8", b: "#482060", c: "#e0b8f8" },
+    frames: [
+      ["....bb.", "...bcab", "....bb.", ".bbb...", "bcaab..", "baaab..", ".bbb..."],
+      ["...bb..", "..bcab.", "...bb..", "..bbb..", ".bcaab.", ".baaab.", "..bbb.."],
+    ],
+  },
+  scorch: {
+    pal: { a: "#f89028", b: "#c03010", c: "#f8e070" },
+    frames: [
+      ["...b...", "..bab..", "..bab.b", ".baab.b", "bacaabb", "bacccab", ".bbbbb."],
+      ["..b....", "..bab..", "b.bab..", "b.baab.", "bbacaab", "bacccab", ".bbbbb."],
+    ],
+  },
+  frostbite: {
+    pal: { a: "#88c8e8", b: "#3878a0", c: "#ffffff" },
+    frames: [
+      ["...b...", ".b.a.b.", "..aca..", "bacccab", "..aca..", ".b.a.b.", "...b..."],
+      ["...a...", ".a.b.a.", "..bcb..", "abcccba", "..bcb..", ".a.b.a.", "...a..."],
+    ],
+  },
+  dormant: {
+    pal: { a: "#5868a0", b: "#283868", c: "#c8d0f0" },
+    frames: [
+      ["....bbb", "......b", ".....b.", "bbbbbbb", "...b...", "..b....", ".bbbb.."],
+      ["...bbb.", ".....b.", "....b..", "bbbbbb.", "...b...", "..b....", ".bbbb.."],
+    ],
+  },
+  rootbound: {
+    pal: { a: "#a87040", b: "#4a2818", c: "#f0d040" },
+    frames: [
+      ["b.....b", ".b...b.", "..bab..", "..aca..", "..bab..", ".b...b.", "b.....b"],
+      ["b..c..b", ".b...b.", "..bab..", "c.aca.c", "..bab..", ".b...b.", "b..c..b"],
+    ],
+  },
+};
+
+/** An animated 7x7 status icon. */
+export function drawStatusIcon(g: CanvasRenderingContext2D, status: StatusId, x: number, y: number, frame = 0) {
+  const ic = STATUS_ICONS[status];
+  if (!ic) return;
+  const rows = ic.frames[Math.floor(frame / 24) % 2];
+  for (let r = 0; r < 7; r++) for (let c = 0; c < 7; c++) {
+    const ch = rows[r][c];
+    if (ch === ".") continue;
+    g.fillStyle = ic.pal[ch];
+    g.fillRect(x + c, y + r, 1, 1);
+  }
+}
+
+/** A status badge in the tiny font on a coloured tab, 15x7, then its icon (23 wide in all). */
+export function drawStatusBadge(g: CanvasRenderingContext2D, status: StatusId, abbr: string, x: number, y: number, frame = 0) {
   g.fillStyle = STATUS_COLORS[status];
   g.fillRect(x, y, 15, 7);
+  g.fillRect(x + 1, y - 1, 13, 9);
   drawTiny(g, abbr, x + 2, y + 1, UI.white);
+  drawStatusIcon(g, status, x + 17, y, frame);
+}
+
+/** The grey "wilted" tab used in place of a status badge. */
+export function drawWiltBadge(g: CanvasRenderingContext2D, x: number, y: number) {
+  g.fillStyle = "#808080";
+  g.fillRect(x, y, 15, 7);
+  g.fillRect(x + 1, y - 1, 13, 9);
+  drawTiny(g, "WLT", x + 2, y + 1, UI.white);
 }
 
 /** A type label as a tinted tab with the type name in the main font. */

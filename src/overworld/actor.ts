@@ -29,6 +29,19 @@ export class Actor {
   forceVisible: boolean | null = null;
   home: { x: number; y: number };
   aiTimer: number;
+  /** Set on the frame a ledge hop lands (cleared by the overworld). */
+  justLanded = false;
+  /** Ambient birds: flown away (invisible, not blocking) until they return. */
+  away = false;
+  /** Pixel offset + lift while flying off (birds), or null. */
+  fly: { t: number; dx: number } | null = null;
+  /** Small idle hop in place (frames left). */
+  bob = 0;
+  /** Sheet row last drawn for flag-driven objects (levers), and a clunk timer when it flips. */
+  lastRow: string | null = null;
+  clunk = 0;
+  /** Steps left in a wander burst (dogs trot a few tiles). */
+  burst = 0;
 
   constructor(public id: string, public sprite: CharacterKey, x: number, y: number, facing: Dir, public def?: NpcDef) {
     this.x = x;
@@ -47,14 +60,15 @@ export class Actor {
     const k = s.t / s.dur;
     const px = (s.fx + (s.tx - s.fx) * k) * TILE;
     const py = (s.fy + (s.ty - s.fy) * k) * TILE;
-    const lift = s.hop ? Math.round(Math.sin(Math.PI * k) * 8) : 0;
+    // Ledge hops rise fast and fall a touch quicker (a little weight), 8px high.
+    const lift = s.hop ? Math.round(Math.sin(Math.PI * Math.pow(k, 0.85)) * (s.dur <= 10 ? 4 : 8)) : 0;
     return { px: Math.round(px), py: Math.round(py), lift };
   }
 
   /** Start a one-tile (or two-tile hop) move. Position updates immediately (reserves the tile). */
-  begin(dir: Dir, dur: number, opts: { hop?: boolean } = {}): Promise<void> {
+  begin(dir: Dir, dur: number, opts: { hop?: boolean; dist?: number } = {}): Promise<void> {
     const { dx, dy } = DIRS[dir];
-    const dist = opts.hop ? 2 : 1;
+    const dist = opts.dist ?? (opts.hop ? 2 : 1);
     this.facing = dir;
     return new Promise((resolve) => {
       this.step = {
@@ -75,6 +89,7 @@ export class Actor {
     this.step.t++;
     if (this.step.t >= this.step.dur) {
       const r = this.step.resolve;
+      if (this.step.hop && this.step.dur > 10) this.justLanded = true;
       this.step = null;
       r?.();
       return true;

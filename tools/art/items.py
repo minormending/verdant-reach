@@ -16,29 +16,30 @@ def item(name, rows, key):
     ITEMS[name] = img_from_rows(rows, {".": None, "K": "k", **key})
 
 
-# acorn-shaped glass capsule with a wooden cap and a seedling inside
+# acorn-shaped glass capsule: a scaled wooden cap, glass body, seedling inside
 POD = [
     "................",
     ".......KK.......",
     "......KoK.......",
-    "...KKKKKKKKKK...",
-    "..KoOoOoOoOoOK..",
-    "..KOoOoOoOoOoK..",
+    "....KKKKKKKK....",
+    "...KOoOoOoOoK...",
+    "..KOoOoOoOoODK..",
+    "..KoOoOoOoODDK..",
     "..KKKKKKKKKKKK..",
-    "...KwqqqqqqqK...",
+    "...KwqqqqqqQK...",
     "...KwqqgGqqQK...",
-    "...KqwqgqqqQK...",
-    "...KqqqgqqQQK...",
-    "....KqqqqqQK....",
-    "....KqqqqQQK....",
-    ".....KqqQQK.....",
-    "......KQQK......",
+    "...KqwqqgqQJK...",
+    "....KqqqgqQK....",
+    "....KqqqqQJK....",
+    ".....KqqQJK.....",
+    "......KQJK......",
     ".......KK.......",
 ]
-item("terrarium_pod", POD, {"o": "o1", "O": "o2", "w": "white", "q": "q1", "Q": "q2", "g": "g1", "G": "g2"})
-# glass pod: clearer blue glass with a brass cap and a sparkle (grove only)
+item("terrarium_pod", POD, {"o": "o1", "O": "o2", "D": "o3", "w": "white", "q": "q1", "Q": "q2",
+                            "J": "q3", "g": "g1", "G": "g2"})
+# glass pod: a brass cap over clear blue glass, with a sparkle
 item("glass_pod", [r if i else "..............w." for i, r in enumerate(POD)],
-     {"o": "y1", "O": "y2", "w": "white", "q": "w1", "Q": "w2", "g": "g1", "G": "g2"})
+     {"o": "y1", "O": "y2", "D": "y3", "w": "white", "q": "w1", "Q": "w2", "J": "w3", "g": "g1", "G": "g2"})
 
 item("water_flask", [
     "................",
@@ -155,23 +156,43 @@ item("field_herbarium", [
 ], {"g": "f3", "G": "f1", "w": "s0", "l": "g1", "L": "g2", "y": "y1"})
 
 item("centuryheart_seed", [
-    ".......y........",
-    "..y.........y...",
+    ".......*........",
+    "..*.....*...*...",
     "......KKKK......",
-    ".....KyyYOK.....",
-    "....KywyyYOK....",
-    "....KwyyyYOK....",
+    ".....KwyyYK.....",
+    "....KwyyyYOK..*.",
+    "....KyyyYYOK....",
     "...KyyyyYYOOK...",
-    "...KyyyYYYOOK...",
-    "...KyyYYYOOOK...",
-    "...KYYYYOOOOK...",
-    "....KYYOOOOK....",
-    "....KOOOOOOK.y..",
-    ".y...KOOOOK.....",
+    "...KyyyYKYOOK...",
+    "...KyyYYKYOOK...",
+    "...KYYYYKOOOK...",
+    "....KYYYOOOK....",
+    "....KYYOOOcK....",
+    ".*...KOOOcK.....",
     "......KKKK......",
-    "...........y....",
+    "...........*....",
     "................",
-], {"y": "y0", "w": "white", "Y": "y1", "O": "y2"})
+], {"y": "y0", "w": "white", "Y": "y1", "O": "y2", "c": "y3", "*": "m0"})
+
+# plant food: a stubby bottle of amber liquid feed, green cap, leaf label
+item("plant_food", [
+    "................",
+    "......KKKK......",
+    "......KggK......",
+    "......KGGK......",
+    ".....KKKKKK.....",
+    "....KwmmmmMK....",
+    "...KwmmmmmmMK...",
+    "...KwKKKKKKMK...",
+    "...KmKllLlKMK...",
+    "...KmKlgGlKMK...",
+    "...KmKlLglKMK...",
+    "...KmKKKKKKMK...",
+    "...KmmmmmmMMK...",
+    "....KMMMMMMK....",
+    ".....KKKKKK.....",
+    "................",
+], {"g": "g1", "G": "g2", "w": "y0", "m": "m0", "M": "m1", "l": "s0", "L": "s1"})
 
 item("fennimores_letter", [
     "................",

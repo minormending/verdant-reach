@@ -48,7 +48,7 @@ def required() -> dict[str, tuple[int, int]]:
     for t in ("water", "tall_grass", "flowers"):
         req[f"assets/tiles/{t}__2.png"] = (16, 16)
     for m in re.finditer(r"^\s*([a-z_]+):\s*\{ w: (\d+), h: (\d+)", re.search(
-            r"export const STRUCTURES = \{(.*?)\n\} as const", src, re.S).group(1), re.M):
+            r"const STRUCTURE(?:S|_SPECS) = \{(.*?)\n\} as const", src, re.S).group(1), re.M):
         req[f"assets/structures/{m.group(1)}.png"] = (int(m.group(2)) * 16, int(m.group(3)) * 16)
     for c in const_list(src, "CHARACTERS"):
         req[f"assets/characters/{c}.png"] = (48, 64)

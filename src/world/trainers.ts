@@ -31,39 +31,39 @@ const T = (species: SpeciesId, level: number, moves?: string[]) => (moves ? { sp
 
 const routeTrainers: TrainerDef[] = [
   trainer("schoolkid_milo", "MILO", "SCHOOLKID", "schoolkid", [T("dandelion_bud", 4)], {
-    intro: "Teacher says these are weeds. I say they're FIGHTERS!",
-    defeat: "Blown away like fluff...",
-    after: "One seed head holds up to 200 seeds. That's a lot of fluff!",
+    intro: "Teacher says dandelions are weeds. I say they're FIGHTERS!",
+    defeat: "Blown away like fluff!",
+    after: "One fluffy head holds up to 200 seeds. I counted. Mostly.",
   }),
   trainer("gardener_rosa", "ROSA", "GARDENER", "gardener", [T("sunflower_seedling", 5), T("dandelion_bud", 6)], {
-    intro: "My seedlings follow the sun. Let's see them follow orders!",
+    intro: "My seedlings chase the sun all day. Let's see them chase you!",
     defeat: "Wilted in the noon heat!",
-    after: "Only young sunflowers track the sun. Grown ones just face east.",
+    after: "Young sunflowers follow the sun. Grown ones face east.",
   }),
   trainer("birdwatcher_alder", "ALDER", "BIRDWATCHER", "birdwatcher", [T("dandelion_bud", 6), T("fern_fiddlehead", 6)], {
-    intro: "Shh! I was waiting for a finch. You'll do instead!",
+    intro: "Shh! I was waiting for a goldfinch. You'll do instead!",
     defeat: "Flew right past me.",
-    after: "Goldfinches feast on dandelion seeds. Watch the clocks!",
+    after: "Goldfinches love dandelion seeds. Find the clocks, find the birds.",
   }),
   trainer("beekeeper_mae", "MAE", "BEEKEEPER", "beekeeper", [T("sunflower_seedling", 6), T("pumpkin_blossom", 7)], {
-    intro: "Easy now. My bees and I don't like surprises!",
+    intro: "Easy, now. My bees don't like surprises. Neither do I.",
     defeat: "Bzz... that stung.",
-    after: "Pumpkin flowers open at dawn and shut by noon. My bees rise early!",
+    after: "Pumpkin flowers open at dawn and shut by noon. My bees get up early!",
   }),
   trainer("hiker_gus", "GUS", "HIKER", "hiker", [T("fern_fiddlehead", 9), T("nettle_sprout", 10)], {
-    intro: "Ferns are older than the dinosaurs! Show some respect!",
-    defeat: "Rolled me like a fiddlehead!",
-    after: "Ferns spread by spores, not seeds. Look under a frond!",
+    intro: "Ferns were here before the dinosaurs. Show some respect!",
+    defeat: "Rolled up like a fiddlehead!",
+    after: "Ferns spread by spores, not seeds. Flip a frond and look!",
   }),
   trainer("florist_petra", "PETRA", "FLORIST", "florist", [T("bramble_blossom", 9), T("sunflower_bud", 12)], {
-    intro: "A bouquet needs a thorn or two. Care to test mine?",
-    defeat: "My arrangement is ruined!",
-    after: "Brambles are in the rose family. Thorns run in the family!",
+    intro: "Every bouquet needs a thorn or two. Care to test mine?",
+    defeat: "My arrangement! Ruined!",
+    after: "Brambles are cousins of the rose. Thorns run in the family!",
   }),
   trainer("birdwatcher_owen", "OWEN", "BIRDWATCHER", "birdwatcher", [T("moonflower_seed", 10), T("moonflower_vine", 12)], {
-    intro: "Owls, moths, me. The night shift! Ready?",
+    intro: "Owls, moths and me. The night shift! You in?",
     defeat: "Out-hooted!",
-    after: "Moonflowers open at dusk for hawkmoths. I come for the moths.",
+    after: "Moonflowers open at dusk for hawk moths. I come for the moths.",
   }),
 ];
 
@@ -71,24 +71,24 @@ const routeTrainers: TrainerDef[] = [
 
 const juniors: TrainerDef[] = [
   trainer("jr_hazel", "HAZEL", "JR.GARDENER", "gardener", [T("bramble_blossom", 7), T("fern_fiddlehead", 8)], {
-    intro: "HOLLIS laid this maze himself. You won't get through me!",
+    intro: "HOLLIS laid this maze himself. You won't get past me!",
     defeat: "Lost in my own hedge...",
-    after: "A laid hedge is cut half through and bent. It keeps growing!",
+    after: "A laid hedge is cut half through and bent over. And it keeps growing!",
   }),
   trainer("jr_linden", "LINDEN", "JR.GARDENER", "gardener", [T("pumpkin_blossom", 8), T("bramble_blossom", 8)], {
-    intro: "Nobody reaches HOLLIS without passing me!",
-    defeat: "Okay, okay. Go on through.",
-    after: "HOLLIS is gentle. His plants are not.",
+    intro: "Nobody reaches HOLLIS without getting past me first!",
+    defeat: "Fine, fine. Go on through.",
+    after: "HOLLIS is gentle. His brambles are not.",
   }),
   trainer("jr_sorrel", "SORREL", "JR.GARDENER", "gardener", [T("sundew_rosette", 13), T("unfurling_fern", 14)], {
-    intro: "Mind the boardwalk! And mind my hunters!",
+    intro: "Mind the boardwalk! And mind my hunters. They're peckish.",
     defeat: "Stuck fast...",
-    after: "Bogs are short on nitrogen. So these plants eat bugs for it!",
+    after: "Bogs are short on nitrogen. So these plants get theirs from bugs!",
   }),
   trainer("jr_tansy", "TANSY", "SCHOOLKID", "schoolkid", [T("flytrap_seedling", 13), T("sundew_rosette", 14)], {
     intro: "I'm NELL's best student! Snap snap!",
     defeat: "Snapped shut on nothing!",
-    after: "A flytrap only shuts if two hairs are touched. Clever, huh?",
+    after: "A flytrap only shuts if its hairs are touched twice. It counts!",
   }),
 ];
 
@@ -96,14 +96,14 @@ const juniors: TrainerDef[] = [
 
 const leaders: TrainerDef[] = [
   trainer("hollis", "HOLLIS", "WARDEN", "hollis", [T("fern_fiddlehead", 8, ["vine_lash", "curl_up", "sap_drain"]), T("bramble_berry", 10, ["thorn_jab", "vine_lash", "burr_hitch", "sap_seal"])], {
-    intro: "A hedge isn't a wall. It's a home. Show me who's chosen to live with you.",
-    defeat: "Well grown. Well grown indeed.",
-    after: "Tend them, and they'll tend you back.",
+    intro: "A hedge isn't a wall. It's a home. Show me who's chosen yours.",
+    defeat: "Ah. Deep roots on that one.",
+    after: "Tend them, and they'll tend you back. Always been the way.",
   }, { ai: "smart", music: "battle_leader", mark: "bramble_mark", prize: 1100, items: [{ item: "water_flask", qty: 2 }] }),
   trainer("nell", "NELL", "WARDEN", "nell_pitcher", [T("flytrap_seedling", 13), T("sundew_rosette", 14), T("young_flytrap", 16)], {
     intro: "My little hunters are SO hungry today. Shall we?",
-    defeat: "Oh! Snapped shut on an empty trap!",
-    after: "Feed them flies, never hamburger. They can't digest fat!",
+    defeat: "Oh! You're not on the menu after all!",
+    after: "Feed them flies, never hamburger. Meat just rots in the trap!",
   }, { ai: "smart", music: "battle_leader", mark: "sundew_mark", prize: 1700, items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
@@ -114,29 +114,29 @@ const rootstock = (id: string, team: Team, lines: { intro: string; defeat: strin
 
 const villains: TrainerDef[] = [
   rootstock("grunt_r3", [T("nettle_sprout", 9), T("bramble_blossom", 10)], {
-    intro: "Field survey. Official. Move along, sprout!",
-    defeat: "Not in the survey plan!",
-    after: "Forget you saw me. I'm a... surveyor.",
+    intro: "Official field survey. Move along, sprout!",
+    defeat: "That wasn't in the survey plan!",
+    after: "Forget you saw me. I'm a... surveyor. Of things.",
   }),
   rootstock("grunt_grove_1", [T("nettle_sprout", 11), T("maple_samara", 12)], {
-    intro: "This sugarbush is under study! Out!",
+    intro: "This sugarbush is under study. Authorised staff only!",
     defeat: "My sample jar! Careful!",
-    after: "Sap carries signals. That's all I know. Honest.",
+    after: "Sap carries signals, they told us. That's all I know. Honest.",
   }),
   rootstock("grunt_grove_2", [T("bramble_berry", 12), T("nettle_sprout", 12)], {
-    intro: "Another nosy botanist? Our collars will fix you!",
-    defeat: "Collars didn't help...",
-    after: "The collars make them listen. Mostly.",
+    intro: "Another nosy botanist? A collar'll sort you out!",
+    defeat: "The collars didn't help...",
+    after: "Collars make them listen. Mostly. They hate it, though.",
   }),
   rootstock("grunt_grove_3", [T("maple_samara", 12), T("maple_sapling", 13)], {
-    intro: "SHEARS said nobody gets past! Nobody!",
+    intro: "SHEARS said nobody gets past. NOBODY!",
     defeat: "SHEARS is gonna prune ME now.",
     after: "Go on, then. SHEARS will cut you down to size.",
   }),
   trainer("shears", "SHEARS", "ADMIN", "shears", [T("bramble_berry", 12), T("maple_sapling", 14)], {
-    intro: "Snip, snip. Let's cut you back to the root.",
-    defeat: "Cut short. Hmph.",
-    after: "Every branch answers to the root, kid.",
+    intro: "Let's prune you back to the root.",
+    defeat: "An inefficient result.",
+    after: "Every branch answers to the root, botanist.",
   }, { ai: "smart", music: "battle_rootstock", prize: 1400 }),
 ];
 
@@ -164,7 +164,7 @@ const rivals: TrainerDef[] = STARTER_LINES.flatMap((line) => [
     [T("bramble_berry", 11), T("dandelion", 13), T(STARTER_SPECIES[line][1], 14)], {
       intro: "You again. Let's get this over with.",
       defeat: "The collar should've... No. Forget it.",
-      after: "Next time I won't hold back.",
+      after: "Don't. Whatever you're about to say. Don't.",
     }, { ai: "smart", prize: 1500 }),
 ]);
 

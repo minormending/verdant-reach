@@ -23,7 +23,19 @@ export function seeded(seed: number): () => number {
   };
 }
 
-export interface CryShape { base: number; def: SongDef }
+export interface CryShape {
+  base: number;
+  def: SongDef;
+  /** Playback gain that evens out loudness across timbres (see CRY_DUTY_TRIM). */
+  level: number;
+  duty: number;
+}
+
+/**
+ * Loudness trim by lead duty. A thin 12.5% pulse carries far less energy than
+ * a 50% square, so without this cries spread over ~7 dB (measured offline).
+ */
+export const CRY_DUTY_TRIM = [1.55, 1.0, 0.69, 1.16]; // 12.5%, 25%, 50%, 75%: measured -19.8, -16.1, -12.8, -17.3 dB loud before trimming
 
 export function cryFor(species: SpeciesId): CryShape {
   const sp = DATA.species[species];
@@ -62,6 +74,8 @@ export function cryFor(species: SpeciesId): CryShape {
 
   return {
     base,
+    duty,
+    level: CRY_DUTY_TRIM[duty],
     def: {
       bpm: 150,
       loop: false,

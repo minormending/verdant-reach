@@ -31,10 +31,18 @@ export function drawTextOutlined(
 
 /**
  * GBC window: white fill, 1px white margin, 2px dark border with rounded
- * corners and a pale inner rule.
+ * corners and a pale inner rule. `shadow` adds a soft 2px drop shadow to the
+ * bottom-right (for windows floating over the map).
  */
-export function drawWindow(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+export function drawWindow(
+  g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, opts: { shadow?: boolean } = {},
+) {
   x = Math.round(x); y = Math.round(y);
+  if (opts.shadow) {
+    g.fillStyle = "rgba(16,24,32,0.30)";
+    g.fillRect(x + w, y + 4, 2, h - 3);
+    g.fillRect(x + 4, y + h, w - 2, 2);
+  }
   g.fillStyle = UI.white;
   g.fillRect(x, y, w, h);
   g.fillStyle = UI.black;
@@ -194,8 +202,10 @@ export class TextBox {
         drawText(g, text, TEXT_X, LINE_Y[i]);
       }
     }
-    if (this.waiting && Math.floor(this.frame / 16) % 2 === 0) {
-      drawText(g, "▼", TEXTBOX.x + TEXTBOX.w - 16, LINE_Y[1] + 9);
+    if (this.waiting) {
+      // The ▼ prompt bobs gently (1px) rather than blinking.
+      const bob = [0, 0, 1, 1][Math.floor(this.frame / 8) % 4];
+      drawText(g, "▼", TEXTBOX.x + TEXTBOX.w - 16, LINE_Y[1] + 8 + bob);
     }
   }
 }
@@ -228,6 +238,7 @@ export interface MenuOpts {
  *  chosen index, -1 on cancel, or null while still open. */
 export class Menu {
   index: number;
+  private frame = 0;
   x: number; y: number; w: number; h: number;
   spacing: number;
 
@@ -244,14 +255,15 @@ export class Menu {
   }
 
   update(input: Input): number | null {
+    this.frame++;
     const n = this.options.length;
     const wrap = this.opts.wrap !== false;
     if (input.repeat("up")) {
       const next = this.index > 0 ? this.index - 1 : wrap ? n - 1 : 0;
-      if (next !== this.index) { this.index = next; this.sfx("cursor"); }
+      if (next !== this.index) { this.index = next; this.frame = 0; this.sfx("cursor"); }
     } else if (input.repeat("down")) {
       const next = this.index < n - 1 ? this.index + 1 : wrap ? 0 : n - 1;
-      if (next !== this.index) { this.index = next; this.sfx("cursor"); }
+      if (next !== this.index) { this.index = next; this.frame = 0; this.sfx("cursor"); }
     }
     if (input.pressed("a")) { this.sfx("select"); return this.index; }
     if (input.pressed("b") && this.opts.cancel !== false) { this.sfx("cancel"); return -1; }
@@ -263,9 +275,16 @@ export class Menu {
   }
 
   draw(g: CanvasRenderingContext2D, opts: { cursor?: boolean } = {}) {
-    drawWindow(g, this.x, this.y, this.w, this.h);
+    drawWindow(g, this.x, this.y, this.w, this.h, { shadow: true });
     this.options.forEach((o, i) => drawText(g, o, this.x + 16, this.rowY(i)));
-    if (opts.cursor !== false) drawText(g, "▶", this.x + 8, this.rowY(this.index));
+    if (opts.cursor !== false) {
+      // The ▶ nudges right 1px on a slow beat (rests while you move it).
+      const bob = this.frame > 12 && Math.floor(this.frame / 16) % 2 === 1 ? 1 : 0;
+      drawText(g, "▶", this.x + 7 + bob, this.rowY(this.index));
+    } else {
+      // Hollow cursor marks the remembered choice while a sub-window is open.
+      drawText(g, "▷", this.x + 7, this.rowY(this.index));
+    }
   }
 }
 

@@ -23,15 +23,22 @@ export interface MapRuntime {
   doors: Set<string>;
   /** Active `legendWhen` overrides; refreshed from flags by the overworld. */
   legendOverride?: Record<string, TileKey>;
+  /** Which `legendWhen` entries are active ("" = none); changes invalidate tile caches. */
+  legendSig?: string;
 }
 
 /** Recompute flag-dependent legend overrides (cheap; called every frame). */
 export function refreshLegend(m: MapRuntime, flags: Record<string, boolean>): void {
+  const list = m.def.legendWhen ?? [];
+  let sig = "";
+  for (let i = 0; i < list.length; i++) if (checkCond(list[i].when, flags)) sig += `${i},`;
+  if (sig === m.legendSig) return;
   let merged: Record<string, TileKey> | undefined;
-  for (const o of m.def.legendWhen ?? []) {
+  for (const o of list) {
     if (checkCond(o.when, flags)) merged = { ...o.legend, ...merged };
   }
   m.legendOverride = merged;
+  m.legendSig = sig;
 }
 
 const warnedLegend = new Set<string>();

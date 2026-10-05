@@ -246,4 +246,31 @@ describe("script interpreter", () => {
     expect(scriptsAwardMark({ a: [{ op: "if", when: [], then: [{ op: "giveMark", mark: "sundew_mark" }] }] }, "sundew_mark")).toBe(true);
     expect(scriptsAwardMark({ a: [{ op: "say", text: "" }] }, "sundew_mark")).toBe(false);
   });
+
+  it("passes cutscene camera, ambient and flash ops to the host in order", async () => {
+    const { host } = setup();
+    const log: string[] = [];
+    host.camera = vi.fn(async (x: number, y: number, f?: number) => { log.push(`camera ${x},${y},${f ?? "-"}`); });
+    host.cameraReset = vi.fn(async (f?: number) => { log.push(`reset ${f ?? "-"}`); });
+    host.ambient = vi.fn((k) => { log.push(`ambient ${k}`); });
+    host.flash = vi.fn(async (c) => { log.push(`flash ${c}`); });
+    await runScript(host, [
+      { op: "camera", x: 12, y: 3, frames: 40 },
+      { op: "ambient", kind: "leaves" },
+      { op: "flash", color: "gold" },
+      { op: "camera", x: 1, y: 2 },
+      { op: "cameraReset" },
+      { op: "cameraReset", frames: 10 },
+    ]);
+    expect(log).toEqual(["camera 12,3,40", "ambient leaves", "flash gold", "camera 1,2,-", "reset -", "reset 10"]);
+  });
+
+  it("skips cutscene ops quietly on hosts that don't support them", async () => {
+    const { host, said } = setup();
+    await runScript(host, [
+      { op: "camera", x: 1, y: 1 }, { op: "cameraReset" }, { op: "ambient", kind: "rain" }, { op: "flash", color: "white" },
+      { op: "say", text: "after" },
+    ]);
+    expect(said).toEqual(["after"]);
+  });
 });

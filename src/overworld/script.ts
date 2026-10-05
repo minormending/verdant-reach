@@ -3,7 +3,7 @@
 // so the interpreter itself runs on a fake host in tests.
 
 import type {
-  BattleOutcome, BattleRequest, Dir, GameContext, GameData, ItemId, MapDef, MapId,
+  Ambient, BattleOutcome, BattleRequest, Dir, GameContext, GameData, ItemId, MapDef, MapId,
   MarkId, Quickened, ScriptCmd, ScriptId, SpeciesId, TimeOfDay,
 } from "../contracts";
 import { checkCond } from "./map";
@@ -34,6 +34,14 @@ export interface ScriptHost {
   endSlice(): Promise<void>;
   /** Optional: battle backdrop for scripted battles. */
   backdrop?(): BattleRequest["backdrop"];
+  /** Cutscene camera: eased pan to centre a tile; holds there until `cameraReset`. */
+  camera?(x: number, y: number, frames?: number): Promise<void>;
+  /** Eased pan back to the player, then follow again. */
+  cameraReset?(frames?: number): Promise<void>;
+  /** Override the map's ambient particles (until the next map load). */
+  ambient?(kind: Ambient): void;
+  /** Full-screen flash; resolves when it has faded. */
+  flash?(color: "white" | "gold"): Promise<void>;
 }
 
 /** Thrown to stop the running script (whiteout, end of slice). */
@@ -316,6 +324,15 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       }
       return;
     }
+    case "camera":
+      return host.camera?.(cmd.x, cmd.y, cmd.frames);
+    case "cameraReset":
+      return host.cameraReset?.(cmd.frames);
+    case "ambient":
+      host.ambient?.(cmd.kind);
+      return;
+    case "flash":
+      return host.flash?.(cmd.color);
     case "endSlice":
       await host.endSlice();
       throw new ScriptAbort("endSlice");

@@ -76,6 +76,10 @@ export const LEGEND: Record<string, TileKey> = {
   "h": "chair",
 };
 
+/** Outdoor maps: structure footprints sit on grass, so scenery with soft edges
+ *  (the well, the windmill, landmark trees) shows lawn rather than road. */
+export const OUTDOOR: Record<string, TileKey> = { ...LEGEND, "@": "grass" };
+
 // --- script shorthands -------------------------------------------------------
 
 export const say = (text: string, speaker?: string): ScriptCmd =>

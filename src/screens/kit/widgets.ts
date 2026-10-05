@@ -284,7 +284,7 @@ export class Menu implements Task {
     });
     if (opts.cursor !== false) {
       const p = this.itemPos(this.index);
-      drawCursor(this.ctx, g, p.x, p.y, opts.hollow);
+      drawCursor(this.ctx, g, p.x, p.y, opts.hollow, this.frame);
     }
   }
 }

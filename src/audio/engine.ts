@@ -3,6 +3,7 @@
 // Notes are scheduled slightly ahead on the audio clock by a light timer, so
 // timing doesn't depend on frame rate and there are no glitches.
 
+import { MIX } from "./mix";
 import {
   midiToHz, secondsPerTick, type ChannelId, type NoteEvent, type ParsedChannel, type ParsedSong,
 } from "./song";
@@ -12,14 +13,21 @@ const HIDDEN_LOOKAHEAD = 1.5; // when the tab is hidden (timers throttle to 1 Hz
 const TIMER_MS = 25;
 const ATTACK = 0.004;
 const RELEASE = 0.012;
-const MIX: Record<ChannelId, number> = { p1: 0.14, p2: 0.14, wave: 0.32, noise: 0.11 };
+const CHANNEL_MIX: Record<ChannelId, number> = { p1: 0.14, p2: 0.14, wave: 0.32, noise: 0.11 };
 
 export class Chip {
   readonly ctx: AudioContext;
   readonly master: GainNode;
+  /** Music volume (options), ducked under cries. Jingles play here too. */
   readonly musicBus: GainNode;
+  /** SFX volume (options): effects, cries and ambience. */
   readonly sfxBus: GainNode;
   readonly duckGain: GainNode;
+  /** Category trims (see mix.ts); each feeds one of the buses above. */
+  readonly jingleBus: GainNode;
+  readonly effectBus: GainNode;
+  readonly cryBus: GainNode;
+  readonly ambienceBus: GainNode;
   private pulse: PeriodicWave[] = [];
   private noise: AudioBuffer[] = [];
   private players = new Set<Player>();
@@ -27,26 +35,44 @@ export class Chip {
 
   constructor(ctx: AudioContext) {
     this.ctx = ctx;
+    // Glue compressor, then a fast safety limiter so stacked cues never clip.
     const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -12;
-    comp.ratio.value = 4;
+    comp.threshold.value = MIX.glueThresholdDb;
+    comp.knee.value = 6;
+    comp.ratio.value = 3;
+    comp.attack.value = 0.01;
+    comp.release.value = 0.2;
+    const limit = ctx.createDynamicsCompressor();
+    limit.threshold.value = -2;
+    limit.knee.value = 0;
+    limit.ratio.value = 20;
+    limit.attack.value = 0.001;
+    limit.release.value = 0.08;
     this.master = ctx.createGain();
-    this.master.gain.value = 0.8;
-    this.master.connect(comp).connect(ctx.destination);
+    this.master.gain.value = MIX.master;
+    this.master.connect(comp).connect(limit).connect(ctx.destination);
     this.duckGain = ctx.createGain();
     this.musicBus = ctx.createGain();
     this.sfxBus = ctx.createGain();
     this.musicBus.connect(this.duckGain).connect(this.master);
-    // SFX notes are short, so they get a boost to sit level with the music.
-    const sfxBoost = ctx.createGain();
-    sfxBoost.gain.value = 2.4;
-    this.sfxBus.connect(sfxBoost).connect(this.master);
+    this.sfxBus.connect(this.master);
+    const trim = (v: number, to: AudioNode) => { const g = ctx.createGain(); g.gain.value = v; g.connect(to); return g; };
+    this.jingleBus = trim(MIX.jingle, this.musicBus);
+    this.effectBus = trim(MIX.sfx, this.sfxBus);
+    this.cryBus = trim(MIX.cry, this.sfxBus);
+    this.ambienceBus = trim(MIX.ambience, this.sfxBus);
     for (const d of [0.125, 0.25, 0.5, 0.75]) this.pulse.push(pulseWave(ctx, d));
     this.noise = [lfsrNoise(ctx, false), lfsrNoise(ctx, true)];
   }
 
-  play(song: ParsedSong, bus: GainNode, onEnd?: () => void, startTick = 0): Player {
-    const p = new Player(this, song, bus, onEnd, startTick);
+  /** Stop the scheduler (offline renders, tests). */
+  dispose() {
+    if (this.timer !== null) { clearInterval(this.timer); this.timer = null; }
+    this.players.clear();
+  }
+
+  play(song: ParsedSong, bus: AudioNode, onEnd?: () => void, startTick = 0, level = 1): Player {
+    const p = new Player(this, song, bus, onEnd, startTick, level);
     this.players.add(p);
     this.ensureTimer();
     p.pump(this.lookahead());
@@ -74,7 +100,7 @@ export class Chip {
   voice(ch: ChannelId, ev: NoteEvent, t: number, spt: number, out: AudioNode): AudioScheduledSourceNode[] {
     const ctx = this.ctx;
     const dur = Math.max(0.012, ev.len * spt * (ev.gate / 8));
-    const peak = (ev.vol / 15) * MIX[ch];
+    const peak = (ev.vol / 15) * CHANNEL_MIX[ch];
     if (peak <= 0) return [];
     const g = ctx.createGain();
     envelope(g.gain, t, dur, peak, ev);
@@ -214,17 +240,18 @@ export class Player {
   private onEnd?: () => void;
   private endTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(chip: Chip, song: ParsedSong, bus: GainNode, onEnd?: () => void, startTick = 0) {
+  constructor(chip: Chip, song: ParsedSong, bus: AudioNode, onEnd?: () => void, startTick = 0, level = 1) {
     this.chip = chip;
     this.song = song;
     this.spt = secondsPerTick(song.bpm);
     this.onEnd = onEnd;
     this.out = chip.ctx.createGain();
+    this.out.gain.value = level;
     this.out.connect(bus);
     if (startTick > 0) {
       // fade back in when resuming mid-song
       this.out.gain.setValueAtTime(0, chip.ctx.currentTime);
-      this.out.gain.linearRampToValueAtTime(1, chip.ctx.currentTime + 0.25);
+      this.out.gain.linearRampToValueAtTime(level, chip.ctx.currentTime + 0.25);
     }
     this.seek(startTick, chip.ctx.currentTime + 0.03);
   }

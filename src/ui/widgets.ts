@@ -40,7 +40,7 @@ export function drawSaveInfo(
   ];
   if (info.savedAt) rows.push(["SAVED", formatDate(info.savedAt)]);
   const h = (rows.length - 1) * rowH + 8 + 16;
-  drawWindow(g, x, y, w, h);
+  drawWindow(g, x, y, w, h, { shadow: true });
   rows.forEach(([k, v], i) => {
     if (k === "SAVED") {
       drawText(g, v, x + w - 8 - Array.from(v).length * 8, y + 8 + i * rowH, UI.dark);

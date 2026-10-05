@@ -94,11 +94,14 @@ export function runFlowScene<T>(
   ctx: GameContext,
   opts: {
     transparent?: boolean;
-    draw: (g: CanvasRenderingContext2D) => void;
+    /** `frame` counts updates (not draws), so animation speed never depends on the display rate. */
+    draw: (g: CanvasRenderingContext2D, frame: number) => void;
     main: (flow: Flow) => Promise<T>;
     fallback: T;
     enter?: () => void;
     exit?: () => void;
+    /** Open with a quick stepped fade from white (default for opaque screens). */
+    fadeIn?: boolean;
   },
 ): Promise<T> {
   return ctx.scenes.run<T>((done) => {
@@ -106,6 +109,8 @@ export function runFlowScene<T>(
     let started = false;
     let finished = false;
     let drawErr = false;
+    let age = 0;
+    const fade = opts.fadeIn ?? !opts.transparent;
     const finish = (r: T) => {
       if (finished) return;
       finished = true;
@@ -116,6 +121,7 @@ export function runFlowScene<T>(
       enter: opts.enter,
       exit: opts.exit,
       update() {
+        age++;
         if (!started) {
           started = true;
           opts.main(flow).then(finish, (e) => {
@@ -127,10 +133,15 @@ export function runFlowScene<T>(
       },
       draw(g) {
         try {
-          opts.draw(g);
+          opts.draw(g, age);
         } catch (e) {
           if (!drawErr) console.error("[screens] draw failed", e);
           drawErr = true;
+        }
+        if (fade && age < 6) {
+          // palette-style fade: three flat steps, no gradients
+          g.fillStyle = ["rgba(248,248,248,0.75)", "rgba(248,248,248,0.5)", "rgba(248,248,248,0.25)"][age >> 1];
+          g.fillRect(0, 0, 160, 144);
         }
       },
     };

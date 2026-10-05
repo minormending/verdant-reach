@@ -43,12 +43,15 @@ describe("world data", () => {
   it("treats ledges as one-way", () => {
     const m = WORLD.maps.route_2;
     const g = grid(m);
-    // standing on the lower meadow, the plateau above the ledge is not reachable directly
-    const below = flood(g, [{ x: 15, y: 12 }]);
-    const above = flood(g, [{ x: 15, y: 10 }]);
-    expect(above.has("15,12")).toBe(true);
-    // the plateau is only reachable from below by walking around via the west climb
-    expect(below.has("15,10")).toBe(true);
+    // (15,9) is the plateau's ledge lip: hop down from the high meadow onto the lane strip.
+    expect(g.tile(15, 9)).toBe("ledge_down");
+    const below = flood(g, [{ x: 15, y: 10 }]);
+    const above = flood(g, [{ x: 15, y: 8 }]);
+    expect(above.has("15,10")).toBe(true);
+    // From below, the plateau is only reachable the long way: up the west climb.
+    expect(below.has("15,8")).toBe(true);
+    const climbBlocked = { ...m, tiles: m.tiles.map((r, y) => (y === 9 ? r.slice(0, 3) + "TTTTTT" + r.slice(9) : r)) };
+    expect(flood(grid(climbBlocked), [{ x: 15, y: 10 }]).has("15,8")).toBe(false);
   });
 
   it("offers a starter pot for each line, and three rival variants per battle", () => {
@@ -116,14 +119,14 @@ describe("validator self-check", () => {
   const clone = () => structuredClone(WORLD);
   it("catches ragged rows and unknown legend chars", () => {
     const w = clone();
-    w.maps.route_1.tiles[3] = w.maps.route_1.tiles[3] + "Q";
+    w.maps.route_1.tiles[3] = w.maps.route_1.tiles[3] + "&";
     const errs = validateWorld(w).join("\n");
     expect(errs).toMatch(/row 3 has length/);
-    expect(errs).toMatch(/'Q' has no valid tile/);
+    expect(errs).toMatch(/'&' has no valid tile/);
   });
   it("catches unreachable NPCs and warps", () => {
     const w = clone();
-    w.maps.route_1.tiles[0] = "TTTTTTTTTTTTTTTTTTTT";
+    w.maps.route_1.tiles[0] = "T".repeat(w.maps.route_1.tiles[0].length);
     w.maps.route_1.npcs.push({ id: "lost", sprite: "kid", x: 1, y: 1, facing: "down", script: "r1_walker" });
     const errs = validateWorld(w).join("\n");
     expect(errs).toMatch(/npc lost stands on solid/);
@@ -131,12 +134,32 @@ describe("validator self-check", () => {
   });
   it("catches a soft-lock below a ledge", () => {
     const w = clone();
-    // wall in the lower meadow of route 2 from the lane: a pit you can only hop into
+    // On route 2, wall in one tile under the plateau's lip: a pit you can only hop into.
     const m = w.maps.route_2;
-    m.tiles = m.tiles.map((r, y) => (y >= 12 ? r.replace(/[^T]/g, "T") : r));
-    m.tiles[12] = m.tiles[12].slice(0, 15) + "." + m.tiles[12].slice(16);
+    const set = (x: number, y: number, ch: string) => { m.tiles[y] = m.tiles[y].slice(0, x) + ch + m.tiles[y].slice(x + 1); };
+    m.tiles[10] = m.tiles[10].replace(/[^T]/g, "T");
+    set(15, 10, ".");
+    set(15, 11, "T");
     const errs = validateWorld(w).join("\n");
     expect(errs).toMatch(/soft-lock/);
+  });
+  it("catches bad ambients, dangling legendWhen chars and blocking scenery", () => {
+    const w = clone();
+    (w.maps.fallowfield as { ambient: string }).ambient = "snow";
+    w.maps.route_1.legendWhen = [{ when: [{ flag: "x", is: true }], legend: { "&": "grass" } }];
+    // a well dropped into ROUTE 1's hedged south lane cuts FALLOWFIELD off from the north
+    const r1 = w.maps.route_1;
+    for (const y of [35, 36]) r1.tiles[y] = r1.tiles[y].slice(0, 10) + "@@" + r1.tiles[y].slice(12);
+    r1.structures.push({ key: "well", x: 10, y: 35 });
+    const errs = validateWorld(w).join("\n");
+    expect(errs).toMatch(/bad ambient snow/);
+    expect(errs).toMatch(/legendWhen\[0\] '&' is not in the base legend/);
+    expect(errs).toMatch(/\[route_1\] scenery blocks the way/);
+  });
+  it("lets signs give flavour to interactable furniture only", () => {
+    const w = clone();
+    w.maps.herbarium.signs.push({ x: 2, y: 2, text: "A floor." });
+    expect(validateWorld(w).join("\n")).toMatch(/\[herbarium\] sign at 2,2 is on floor_tile/);
   });
   it("catches missing scripts and trainers", () => {
     const w = clone();

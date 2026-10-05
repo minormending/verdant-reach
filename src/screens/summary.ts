@@ -1,5 +1,7 @@
 // Summary: three pages (INFO / STATS / MOVES). Up/down changes Quickened,
-// left/right changes page, A on MOVES inspects each move.
+// left/right changes page (with a short slide). On MOVES, A enters the move
+// list (details for the move under the cursor); A or SELECT there picks a
+// move up, and A / SELECT on another swaps the two (an updated mechanic).
 
 import type { GameContext, Input, Quickened, SpeciesId, TypeId } from "../contracts";
 import { SPECIES_IDS, speciesPath, UI } from "../contracts";
@@ -8,32 +10,50 @@ import { getMove, getSpecies, qName, speciesName, STATUS_ABBR, TYPE_NAMES } from
 import { MAX_LEVEL } from "../battle/logic/stats";
 import { runFlowScene, type Flow } from "./kit/flow";
 import {
-  clearScreen, drawCursor, drawExpBar, drawHpBar, drawLevel, drawSpecies, drawStatusBadge, drawTextRight, drawTiny,
-  drawTypeTag, hline, pad, TYPE_COLORS, preload } from "./kit/draw";
+  cursorBob, drawCursor, drawExpBar, drawHpBar, drawLeaf, drawLevel, drawPaper, drawSpecies, drawStatusBadge,
+  drawTextRight, drawTiny, drawTypeTag, drawWiltBadge, hline, pad, TYPE_COLORS, preload,
+} from "./kit/draw";
 import { playerName } from "./kit/text";
 
 const PAGE_COLORS = ["#e070a8", "#58a040", "#3888e0"];
+const PAGE_DARK = ["#883060", "#285820", "#183888"];
 const PAGE_NAMES = ["INFO", "STATS", "MOVES"];
 
 export function herbariumNumber(species: SpeciesId): number {
   return SPECIES_IDS.indexOf(species) + 1;
 }
 
+/** Swap two of a Quickened's move slots (PP travels with its move). Returns true if anything moved. */
+export function swapMoves(q: Quickened, a: number, b: number): boolean {
+  if (a === b || a < 0 || b < 0 || a >= q.moves.length || b >= q.moves.length) return false;
+  const tmp = q.moves[a];
+  q.moves[a] = q.moves[b];
+  q.moves[b] = tmp;
+  return true;
+}
+
 export function summaryScreen(ctx: GameContext, list: Quickened[], start: number): Promise<number> {
   let idx = Math.max(0, Math.min(start, list.length - 1));
   let page = 0;
-  let moveCursor = -1; // >= 0 while inspecting moves
+  let moveCursor = -1; // >= 0 while in the move list
+  let swapFrom = -1;   // >= 0 while a move is picked up
   let frame = 0;
+  let slideDir = 0;    // page-change slide: direction and start frame
+  let slideAt = 0;
 
-  const draw = (g: CanvasRenderingContext2D) => {
-    frame++;
+  const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
+    frame = f;
+    const slide = slideDir * Math.max(0, 24 - (frame - slideAt) * 6);
     const q = list[idx];
-    clearScreen(g, UI.white);
+    drawPaper(g, 0, 0, 160, 144, "white");
     if (!q) return;
     drawHeader(ctx, g, q, page, frame);
+    g.save();
+    g.translate(slide, 0);
     if (page === 0) drawInfo(ctx, g, q);
     else if (page === 1) drawStats(ctx, g, q);
-    else drawMoves(ctx, g, q, moveCursor);
+    else drawMoves(ctx, g, q, moveCursor, swapFrom, frame);
+    g.restore();
   };
 
   const main = async (flow: Flow): Promise<number> => {
@@ -41,17 +61,33 @@ export function summaryScreen(ctx: GameContext, list: Quickened[], start: number
     void ctx.audio.playCry(list[idx].species);
     for (;;) {
       const t = {
-        result: "" as "" | "exit" | "inspect",
+        result: "" as "" | "exit",
         update(input: Input) {
+          const q = list[idx];
           if (moveCursor >= 0) {
-            const n = list[idx].moves.length;
+            const n = q.moves.length;
             if (input.repeat("up") && moveCursor > 0) { moveCursor--; ctx.audio.playSfx("cursor"); }
             else if (input.repeat("down") && moveCursor < n - 1) { moveCursor++; ctx.audio.playSfx("cursor"); }
-            if (input.pressed("b") || input.pressed("a")) { moveCursor = -1; ctx.audio.playSfx("cancel"); }
+            if (input.pressed("a") || input.pressed("select")) {
+              if (swapFrom < 0) {
+                swapFrom = moveCursor;
+                ctx.audio.playSfx("select");
+              } else {
+                if (swapMoves(q, swapFrom, moveCursor)) ctx.audio.playSfx("save");
+                else ctx.audio.playSfx("cancel");
+                swapFrom = -1;
+              }
+              return false;
+            }
+            if (input.pressed("b")) {
+              ctx.audio.playSfx("cancel");
+              if (swapFrom >= 0) swapFrom = -1;
+              else moveCursor = -1;
+            }
             return false;
           }
-          if (input.repeat("left") && page > 0) { page--; ctx.audio.playSfx("cursor"); }
-          else if (input.repeat("right") && page < 2) { page++; ctx.audio.playSfx("cursor"); }
+          if (input.repeat("left") && page > 0) { page--; slideDir = -1; slideAt = frame; ctx.audio.playSfx("cursor"); }
+          else if (input.repeat("right") && page < 2) { page++; slideDir = 1; slideAt = frame; ctx.audio.playSfx("cursor"); }
           else if (input.repeat("up") && list.length > 1) {
             idx = (idx + list.length - 1) % list.length;
             void ctx.audio.playCry(list[idx].species);
@@ -59,8 +95,9 @@ export function summaryScreen(ctx: GameContext, list: Quickened[], start: number
             idx = (idx + 1) % list.length;
             void ctx.audio.playCry(list[idx].species);
           }
-          if (input.pressed("a") && page === 2 && list[idx].moves.length > 0) {
+          if ((input.pressed("a") || input.pressed("select")) && page === 2 && q.moves.length > 0) {
             moveCursor = 0;
+            swapFrom = -1;
             ctx.audio.playSfx("select");
             return false;
           }
@@ -81,36 +118,45 @@ export function summaryScreen(ctx: GameContext, list: Quickened[], start: number
 }
 
 function drawHeader(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, page: number, frame: number) {
-  // Page tabs (top right), Crystal's coloured squares.
+  // a coloured band with the page tabs (Crystal's coloured squares)
+  g.fillStyle = PAGE_COLORS[page];
+  g.fillRect(0, 0, 160, 2);
   for (let i = 0; i < 3; i++) {
     const x = 112 + i * 16;
-    g.fillStyle = i === page ? PAGE_COLORS[i] : "#d8d8d8";
-    g.fillRect(x, 1, 14, 6);
+    const on = i === page;
+    g.fillStyle = on ? PAGE_COLORS[i] : "#d8d8d0";
+    g.fillRect(x, 2, 14, on ? 7 : 5);
+    if (on) { g.fillStyle = PAGE_DARK[i]; g.fillRect(x, 9, 14, 1); }
   }
-  drawTiny(g, PAGE_NAMES[page], 112, 9, PAGE_COLORS[page]);
+  drawTiny(g, PAGE_NAMES[page], 112, 11, PAGE_DARK[page]);
   if (page === 2) {
-    // Compact header on the moves page
-    ctx.ui.drawText(g, qName(ctx.data, q), 8, 16);
-    drawLevel(ctx, g, q.level, 8, 24);
-    hline(g, 0, 34, 160);
+    // compact header on the moves page: icon-sized portrait strip
+    ctx.ui.drawText(g, qName(ctx.data, q), 8, 8);
+    drawLevel(ctx, g, q.level, 8, 18);
+    if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 40, 19, frame);
+    hline(g, 0, 30, 160, PAGE_DARK[page]);
+    hline(g, 0, 31, 160, PAGE_COLORS[page]);
     return;
   }
-  void frame;
-  drawSpecies(ctx, g, q.species, "front", 0, 4, { sport: q.sport });
+  // the specimen: on a little mount with a soft shadow
+  g.fillStyle = "#e8e4d4";
+  g.fillRect(2, 6, 58, 54);
+  g.fillStyle = "#d0c8b0";
+  g.fillRect(2, 59, 58, 1);
+  g.fillRect(59, 6, 1, 54);
+  const bob = q.hp > 0 ? cursorBob(frame + 10) : 0;
+  drawSpecies(ctx, g, q.species, "front", 2, 4 - bob, { sport: q.sport });
   drawTiny(g, "NO.", 64, 18);
   ctx.ui.drawText(g, String(herbariumNumber(q.species)).padStart(3, "0"), 76, 16);
+  if (ctx.state.herbarium.caught.includes(q.species)) drawLeaf(g, 102, 17);
   ctx.ui.drawText(g, qName(ctx.data, q), 64, 26);
-  if (q.nickname) ctx.ui.drawText(g, `/${speciesName(ctx.data, q.species)}`, 64, 34);
-  drawLevel(ctx, g, q.level, 64, 44);
-  if (q.hp <= 0) {
-    g.fillStyle = "#808080";
-    g.fillRect(96, 45, 15, 7);
-    drawTiny(g, "WLT", 98, 46, UI.white);
-  } else if (q.status) {
-    drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 96, 45);
-  }
-  if (q.sport) ctx.ui.drawText(g, "♥SPORT", 112, 44, "#c08020");
-  hline(g, 0, 62, 160);
+  if (q.nickname) ctx.ui.drawText(g, `/${speciesName(ctx.data, q.species)}`.slice(0, 12), 64, 35, "#506050");
+  drawLevel(ctx, g, q.level, 64, 46);
+  if (q.hp <= 0) drawWiltBadge(g, 96, 47);
+  else if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 96, 47, frame);
+  if (q.sport) ctx.ui.drawText(g, "♥", 150, 46, "#c08020");
+  hline(g, 0, 62, 160, PAGE_DARK[page]);
+  hline(g, 0, 63, 160, PAGE_COLORS[page]);
 }
 
 function drawInfo(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened) {
@@ -121,7 +167,7 @@ function drawInfo(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened) {
     drawTypeTag(ctx, g, t, TYPE_NAMES[t], x, 68);
     x += ctx.ui.measure(TYPE_NAMES[t]) + 8;
   }
-  ctx.ui.drawText(g, `TENDED BY ${playerName(ctx)}`, 8, 80);
+  ctx.ui.drawText(g, `TENDED BY ${playerName(ctx)}`.slice(0, 19), 8, 80);
   const met = q.metAt ? ctx.world.maps?.[q.metAt.map]?.name : undefined;
   if (met) ctx.ui.drawText(g, `MET ${met.toUpperCase()}`.slice(0, 19), 8, 90);
   ctx.ui.drawText(g, "EXP POINTS", 8, 104);
@@ -135,51 +181,66 @@ function drawInfo(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened) {
 }
 
 function drawStats(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened) {
-  drawHpBar(g, 8, 68, q.hp, q.stats.hp, 48);
-  drawTextRight(ctx, g, `${pad(Math.max(0, q.hp), 3)}/${pad(q.stats.hp, 3)}`, 152, 67);
+  drawHpBar(g, 8, 69, q.hp, q.stats.hp, 48);
+  drawTextRight(ctx, g, `${pad(Math.max(0, q.hp), 3)}/${pad(q.stats.hp, 3)}`, 152, 68);
   const rows: [string, keyof Quickened["stats"]][] = [
     ["ATTACK", "atk"], ["DEFENCE", "def"], ["SPCL.ATK", "spa"], ["SPCL.DEF", "spd"], ["SPEED", "spe"],
   ];
+  const best = Math.max(...rows.map(([, k]) => q.stats[k]));
   rows.forEach(([label, k], i) => {
     const y = 80 + i * 10;
+    if (i % 2 === 0) { g.fillStyle = "#eef4e6"; g.fillRect(4, y - 1, 152, 10); }
     ctx.ui.drawText(g, label, 8, y);
+    // a small bar shows each stat relative to the strongest
+    const w = Math.max(1, Math.round((q.stats[k] / Math.max(1, best)) * 32));
+    g.fillStyle = "#c8dcb8";
+    g.fillRect(84, y + 2, 32, 4);
+    g.fillStyle = "#58a040";
+    g.fillRect(84, y + 2, w, 4);
     drawTextRight(ctx, g, String(q.stats[k]), 152, y);
   });
   // Bond: friendship as leaves (0..5)
   ctx.ui.drawText(g, "BOND", 8, 132);
   const leaves = Math.round((q.friendship / 255) * 5);
-  for (let i = 0; i < 5; i++) {
-    g.fillStyle = i < leaves ? "#58a040" : "#d0d0d0";
-    g.fillRect(56 + i * 10, 133, 6, 6);
-    g.fillRect(57 + i * 10, 132, 4, 8);
-  }
+  for (let i = 0; i < 5; i++) drawLeaf(g, 56 + i * 10, 132, i < leaves ? "#48a040" : "#d0d0c8");
 }
 
-function drawMoves(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, cursor: number) {
+function drawMoves(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, cursor: number, swapFrom: number, frame: number) {
   q.moves.forEach((m, i) => {
     const mv = getMove(ctx.data, m.id);
-    const y = 40 + i * 16;
+    const y = 36 + i * 16;
+    if (i === swapFrom) { g.fillStyle = "#d8e8f8"; g.fillRect(0, y - 2, 160, 16); }
+    else if (i === cursor) { g.fillStyle = "#f8f0b8"; g.fillRect(0, y - 2, 160, 16); }
     ctx.ui.drawText(g, mv.name.toUpperCase(), 16, y);
     const c = TYPE_COLORS[mv.type];
+    const label = TYPE_NAMES[mv.type] ?? "";
     g.fillStyle = c?.mid ?? "#808080";
-    g.fillRect(16, y + 9, 3, 5);
-    drawTiny(g, TYPE_NAMES[mv.type] ?? "", 22, y + 9, c?.dark ?? UI.black);
+    g.fillRect(16, y + 8, label.length * 4 + 3, 7);
+    drawTiny(g, label, 18, y + 9, UI.white);
     drawTiny(g, "PP", 104, y + 9);
-    ctx.ui.drawText(g, `${pad(m.pp, 2)}/${pad(mv.pp, 2)}`, 116, y + 8);
+    const low = m.pp <= Math.max(1, Math.floor(mv.pp / 4));
+    ctx.ui.drawText(g, `${pad(m.pp, 2)}/${pad(mv.pp, 2)}`, 116, y + 8, m.pp === 0 ? UI.hpRed : low ? "#c07010" : undefined);
   });
-  for (let i = q.moves.length; i < 4; i++) ctx.ui.drawText(g, "-", 16, 40 + i * 16);
+  for (let i = q.moves.length; i < 4; i++) ctx.ui.drawText(g, "-", 16, 36 + i * 16);
+  if (swapFrom >= 0) drawCursor(ctx, g, 6, 36 + swapFrom * 16, true);
   if (cursor >= 0) {
-    drawCursor(ctx, g, 8, 40 + cursor * 16);
+    drawCursor(ctx, g, 6, 36 + cursor * 16, false, frame);
     const m = q.moves[cursor];
     const mv = getMove(ctx.data, m.id);
-    ctx.ui.drawWindow(g, 0, 104, 160, 40);
+    ctx.ui.drawWindow(g, 0, 100, 160, 44);
     const cat = mv.category === "physical" ? "PHYSICAL" : mv.category === "special" ? "SPECIAL" : "STATUS";
-    drawTiny(g, `POW ${mv.power > 0 ? mv.power : "--"}`, 8, 110);
-    drawTiny(g, `ACC ${mv.accuracy === null ? "--" : mv.accuracy}`, 48, 110);
-    drawTiny(g, cat, 92, 110, UI.dark);
+    if (swapFrom >= 0) {
+      drawTiny(g, "SWAP WITH WHICH MOVE?", 8, 106, UI.dark);
+    } else {
+      drawTiny(g, `POW ${mv.power > 0 ? mv.power : "--"}`, 8, 106);
+      drawTiny(g, `ACC ${mv.accuracy === null ? "--" : mv.accuracy}`, 48, 106);
+      drawTiny(g, cat, 92, 106, UI.dark);
+    }
     const lines = ctx.ui.wrap(mv.description || "", 18).slice(0, 2);
-    lines.forEach((l, i) => ctx.ui.drawText(g, l, 8, 118 + i * 9));
+    lines.forEach((l, i) => ctx.ui.drawText(g, l, 8, 116 + i * 10));
   } else {
-    drawTiny(g, "A: DETAILS", 112, 136, UI.dark);
+    drawTiny(g, "A: DETAILS  SELECT: SWAP", 8, 104, UI.dark);
+    const hint = "PICK A MOVE, THEN ITS NEW SLOT";
+    drawTiny(g, hint, 8, 112, "#8a9a88");
   }
 }

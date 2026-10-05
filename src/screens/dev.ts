@@ -1,4 +1,4 @@
-// Dev route: ?dev=screens[&open=party|bag|herbarium|summary|cabinet|shop|options|growth]
+// Dev route: ?dev=screens[&open=party|bag|herbarium|summary|cabinet|shop|options|growth|nickname]
 // Opens each menu screen with a fixture party and bag.
 
 import { installDevHook } from "./kit/devhook";
@@ -10,6 +10,7 @@ import { Flow } from "./kit/flow";
 import { clearScreen } from "./kit/draw";
 import { Menu, ScreenUi } from "./kit/widgets";
 import { runGrowth } from "./flows/growth";
+import { askNickname } from "./flows/nickname";
 
 export default function devScreens(ctx: GameContext): Scene {
   installDevHook(ctx);
@@ -48,6 +49,15 @@ export default function devScreens(ctx: GameContext): Scene {
       case "cabinet": return ctx.screens.cabinet();
       case "shop": return ctx.screens.shop(["terrarium_pod", "water_flask", "neem_spray", "spring_water"]);
       case "options": return ctx.screens.options();
+      case "nickname": {
+        const q = st.party[0];
+        if (q) {
+          await askNickname(ctx, ui, q);
+          ui.tb.show(`Nickname: ${q.nickname ?? "(none)"}`, "instant");
+          await flow.wait(60);
+        }
+        return;
+      }
       case "growth": {
         const q = createQuickened(ctx.data, has("oak_acorn") ? "oak_acorn" : ids[0], 16, ctx.rng);
         const to = ctx.data.species[q.species]?.growsInto?.species;
@@ -56,7 +66,7 @@ export default function devScreens(ctx: GameContext): Scene {
       }
     }
   };
-  const names = ["party", "pick", "bag", "battlebag", "herbarium", "summary", "cabinet", "shop", "options", "growth"];
+  const names = ["party", "pick", "bag", "battlebag", "herbarium", "summary", "cabinet", "shop", "options", "growth", "nickname"];
   const main = async () => {
     const first = new URLSearchParams(location.search).get("open");
     if (first) await open(first);

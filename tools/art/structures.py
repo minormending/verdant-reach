@@ -1,9 +1,15 @@
-"""Multi-tile buildings -> public/assets/structures/<key>.png, (w*16)x(h*16).
+"""Multi-tile buildings and landmarks -> public/assets/structures/<key>.png.
 
-Drawn procedurally with a few pixel primitives plus hand-authored ASCII
-details (doors, windows, emblems). The door is always drawn inside the
-door tile from STRUCTURES (src/contracts/ids.ts), touching its bottom edge.
-Pixels outside the building are transparent (the map's ground tiles show).
+Each image is exactly (w*16)x(h*16) per STRUCTURES in src/contracts/ids.ts.
+Doors sit inside their door tile, touching its bottom edge; doorless
+structures (barn, windmill, well, big trees) are scenery. Pixels outside the
+silhouette are transparent and show the ground tiles underneath.
+
+Same rules as the tiles (docs/STYLE.md): the shared ramps from tiles.HEX,
+light from the top-left, dark hue-shifted edges instead of black outlines,
+eaves shadows under every roof and lit glass in every window.
+Review: tools/art/review/structures.png (each building on grass with a path
+to its door, and a mini town).
 """
 
 from __future__ import annotations
@@ -14,9 +20,10 @@ import numpy as np
 from PIL import Image
 
 import gbc
-from gbc import C, img_from_rows
+import tiles
+from tiles import IDX, RGBA
 
-STRUCTURES = {
+STRUCTURES = {          # mirrors src/contracts/ids.ts (w, h, door)
     "house_small": (4, 3, (1, 2)),
     "house_large": (5, 4, (2, 3)),
     "herbarium": (6, 4, (2, 3)),
@@ -24,38 +31,52 @@ STRUCTURES = {
     "market": (4, 3, (1, 2)),
     "conservatory": (6, 4, (3, 3)),
     "lodge": (5, 3, (2, 2)),
+    "barn": (5, 4, None),
+    "windmill": (3, 4, None),
+    "well": (2, 2, None),
+    "big_oak": (3, 3, None),
+    "big_maple": (2, 2, None),
 }
 
 # 3x5 sign font (Crystal's MART sign style).
 FONT = {
     "A": ["###", "#.#", "###", "#.#", "#.#"], "B": ["##.", "#.#", "##.", "#.#", "##."],
-    "C": ["###", "#..", "#..", "#..", "###"], "E": ["###", "#..", "##.", "#..", "###"],
-    "H": ["#.#", "#.#", "###", "#.#", "#.#"], "I": ["###", ".#.", ".#.", ".#.", "###"],
-    "K": ["#.#", "#.#", "##.", "#.#", "#.#"], "M": ["#.#", "###", "###", "#.#", "#.#"],
-    "R": ["##.", "#.#", "##.", "#.#", "#.#"], "T": ["###", ".#.", ".#.", ".#.", ".#."],
-    "U": ["#.#", "#.#", "#.#", "#.#", "###"], "S": ["###", "#..", "###", "..#", "###"],
-    "G": ["###", "#..", "#.#", "#.#", "###"], "O": ["###", "#.#", "#.#", "#.#", "###"],
-    "P": ["##.", "#.#", "##.", "#..", "#.."], "L": ["#..", "#..", "#..", "#..", "###"],
-    "N": ["#.#", "###", "###", "###", "#.#"], "D": ["##.", "#.#", "#.#", "#.#", "##."],
+    "C": ["###", "#..", "#..", "#..", "###"], "D": ["##.", "#.#", "#.#", "#.#", "##."],
+    "E": ["###", "#..", "##.", "#..", "###"], "F": ["###", "#..", "##.", "#..", "#.."],
+    "G": ["###", "#..", "#.#", "#.#", "###"], "H": ["#.#", "#.#", "###", "#.#", "#.#"],
+    "I": ["###", ".#.", ".#.", ".#.", "###"], "K": ["#.#", "#.#", "##.", "#.#", "#.#"],
+    "L": ["#..", "#..", "#..", "#..", "###"], "M": ["#.#", "###", "###", "#.#", "#.#"],
+    "N": ["##.", "#.#", "#.#", "#.#", "#.#"], "O": ["###", "#.#", "#.#", "#.#", "###"],
+    "P": ["##.", "#.#", "##.", "#..", "#.."], "R": ["##.", "#.#", "##.", "#.#", "#.#"],
+    "S": ["###", "#..", "###", "..#", "###"], "T": ["###", ".#.", ".#.", ".#.", ".#."],
+    "U": ["#.#", "#.#", "#.#", "#.#", "###"], "V": ["#.#", "#.#", "#.#", "#.#", ".#."],
+    "W": ["#.#", "#.#", "###", "###", "#.#"], "Y": ["#.#", "#.#", ".#.", ".#.", ".#."],
     " ": ["...", "...", "...", "...", "..."],
 }
+
+CLEAR = -1
 
 
 class Canvas:
     def __init__(self, w: int, h: int):
-        self.a = np.zeros((h, w, 4), np.uint8)
+        self.a = np.full((h, w), CLEAR, np.int16)
         self.w, self.h = w, h
 
     def px(self, x, y, c):
         if 0 <= x < self.w and 0 <= y < self.h:
-            self.a[y, x] = C[c] if isinstance(c, str) else c
+            self.a[y, x] = CLEAR if c is None else IDX[c]
+
+    def get(self, x, y):
+        if 0 <= x < self.w and 0 <= y < self.h:
+            v = self.a[y, x]
+            return None if v == CLEAR else tiles.NAMES[v]
+        return None
 
     def rect(self, x0, y0, x1, y1, c):
-        """Filled, inclusive."""
         x0, x1 = max(0, x0), min(self.w - 1, x1)
         y0, y1 = max(0, y0), min(self.h - 1, y1)
         if x0 <= x1 and y0 <= y1:
-            self.a[y0:y1 + 1, x0:x1 + 1] = C[c] if isinstance(c, str) else c
+            self.a[y0:y1 + 1, x0:x1 + 1] = CLEAR if c is None else IDX[c]
 
     def hline(self, x0, x1, y, c):
         self.rect(x0, y, x1, y, c)
@@ -63,28 +84,31 @@ class Canvas:
     def vline(self, x, y0, y1, c):
         self.rect(x, y0, x, y1, c)
 
-    def box(self, x0, y0, x1, y1, c):
-        self.hline(x0, x1, y0, c); self.hline(x0, x1, y1, c)
-        self.vline(x0, y0, y1, c); self.vline(x1, y0, y1, c)
+    def put(self, rows, key, x, y):
+        for j, r in enumerate(rows):
+            for i, ch in enumerate(r):
+                if ch == " " or ch not in key:
+                    continue
+                self.px(x + i, y + j, key[ch])
 
-    def paste(self, rows, key, x, y):
-        im = img_from_rows(rows, key)
-        a = gbc.to_array(im)
-        h, w = a.shape[:2]
-        sub = self.a[y:y + h, x:x + w]
-        m = a[: sub.shape[0], : sub.shape[1], 3] > 0
-        sub[m] = a[: sub.shape[0], : sub.shape[1]][m]
+    def recolor(self, x0, y0, x1, y1, src, dst):
+        sub = self.a[y0:y1 + 1, x0:x1 + 1]
+        sub[sub == IDX[src]] = IDX[dst]
 
-    def text(self, s, x, y, c):
+    def text(self, s, x, y, c, shadow=None):
         for ch in s:
             for j, row in enumerate(FONT[ch]):
                 for i, v in enumerate(row):
                     if v == "#":
+                        if shadow:
+                            self.px(x + i + 1, y + j + 1, shadow)
                         self.px(x + i, y + j, c)
             x += 4
 
-    def image(self):
-        return Image.fromarray(self.a, "RGBA")
+    def image(self) -> Image.Image:
+        rgba = RGBA[np.clip(self.a, 0, None)].copy()
+        rgba[self.a == CLEAR] = (0, 0, 0, 0)
+        return Image.fromarray(rgba, "RGBA")
 
 
 def text_w(s):
@@ -92,517 +116,893 @@ def text_w(s):
 
 
 # ------------------------------------------------------------ components ----
-def door(cv: Canvas, cell_x, cell_y, style="wood", top=None):
-    """Door inside the door tile, bottom-aligned. x0 = cell's left px."""
-    x0, y1 = cell_x * 16, cell_y * 16 + 15
-    yt = y1 - 15 if top is None else top
-    if style == "wood":
-        cv.rect(x0 + 2, yt, x0 + 13, y1, "o3")          # frame
-        cv.rect(x0 + 3, yt + 1, x0 + 12, y1, "o1")
-        cv.vline(x0 + 3, yt + 1, y1, "o0")
-        cv.vline(x0 + 12, yt + 1, y1, "o2")
-        for yy in range(yt + 4, y1, 4):
-            cv.hline(x0 + 4, x0 + 11, yy, "o2")
-        cv.px(x0 + 10, yt + (y1 - yt) // 2 + 1, "y1")
-        cv.px(x0 + 10, yt + (y1 - yt) // 2 + 2, "o3")
-    elif style == "glass":
-        cv.rect(x0 + 1, yt, x0 + 14, y1, "k")
-        cv.rect(x0 + 2, yt + 1, x0 + 13, y1, "q2")
-        cv.rect(x0 + 2, yt + 1, x0 + 7, y1, "q1")
-        cv.vline(x0 + 7, yt + 1, y1, "r0")
-        cv.vline(x0 + 8, yt + 1, y1, "r2")
-        for i in range(3):
-            cv.px(x0 + 3 + i, yt + 2 + i, "q0")
-            cv.px(x0 + 9 + i, yt + 2 + i, "q1")
-    elif style == "double":
-        cv.rect(x0, yt, x0 + 15, y1, "o3")
-        cv.rect(x0 + 1, yt + 1, x0 + 14, y1, "o2")
-        cv.rect(x0 + 2, yt + 2, x0 + 6, y1, "o1")
-        cv.rect(x0 + 9, yt + 2, x0 + 13, y1, "o1")
-        cv.vline(x0 + 7, yt + 1, y1, "o3")
-        cv.vline(x0 + 8, yt + 1, y1, "o3")
-        cv.rect(x0 + 3, yt + 4, x0 + 5, yt + 7, "o2")
-        cv.rect(x0 + 10, yt + 4, x0 + 12, yt + 7, "o2")
-        cv.px(x0 + 6, yt + 10, "y1"); cv.px(x0 + 9, yt + 10, "y1")
-    # step / threshold
-    cv.hline(x0 + 1, x0 + 14, y1, "r2")
-    cv.hline(x0 + 2, x0 + 13, y1, "r1")
-
-
-def window(cv, x0, y0, w, h, frame="o3", sill="o0", glass=("w1", "w2", "white")):
-    g_light, g_dark, shine = glass
-    cv.rect(x0, y0, x0 + w - 1, y0 + h - 1, frame)
-    cv.rect(x0 + 1, y0 + 1, x0 + w - 2, y0 + h - 2, g_dark)
-    # light upper-left half
-    for yy in range(y0 + 1, y0 + h - 1):
-        for xx in range(x0 + 1, x0 + w - 1):
-            if (xx - x0) + (yy - y0) < (w + h) // 2:
-                cv.px(xx, yy, g_light)
-    cv.px(x0 + 2, y0 + 2, shine); cv.px(x0 + 3, y0 + 2, shine); cv.px(x0 + 2, y0 + 3, shine)
-    midx = x0 + w // 2
-    cv.vline(midx, y0 + 1, y0 + h - 2, frame)
-    cv.hline(x0 + 1, x0 + w - 2, y0 + h // 2, frame)
-    cv.hline(x0 - 1, x0 + w, y0 + h, sill)
-
-
-def shingles(cv, x0, y0, x1, y1, pal, course=4, joint=6):
-    """Roof: courses of tiles with staggered joints; light upper rows of each course."""
-    p0, p1, p2, p3 = pal
-    cv.rect(x0, y0, x1, y1, p1)
-    for row, yy in enumerate(range(y0, y1 + 1, course)):
-        cv.hline(x0, x1, yy + course - 1, p2)
+def roof_tiles(cv, x0, y0, x1, y1, ramp, course=3, joint=4, shade_from=0.72):
+    """Clay/slate roof seen from the eaves side: staggered courses, lit
+    upper row per course, right end in shade, ridge cap and dark eaves."""
+    r0, r1, r2, r3 = ramp
+    W = max(1, x1 - x0)
+    for row, yy in enumerate(range(y0 + 1, y1, course)):
         off = (row % 2) * (joint // 2)
-        for xx in range(x0 + off, x1 + 1, joint):
-            cv.vline(xx, yy, min(y1, yy + course - 2), p2)
-        cv.hline(x0, x1, yy, p1)
+        for x in range(x0, x1 + 1):
+            t = (x - x0) / W
+            dark = t > shade_from
+            body, line = (r2, r3) if dark else (r1, r2)
+            for k in range(course):
+                y = yy + k
+                if y >= y1:
+                    break
+                col = body
+                if k == course - 1:
+                    col = line
+                elif (x - x0 - off) % joint == 0:
+                    col = line
+                elif k == 0 and not dark and ((x - x0 - off) % joint == 1):
+                    col = r0
+                cv.px(x, y, col)
+    cv.hline(x0, x1, y0, r3)                 # ridge edge
+    cv.hline(x0 + 1, x1 - 1, y0 + 1, r0)     # ridge cap catches the light
+    cv.hline(x0, x1, y1, r3)                 # eaves
+    cv.vline(x0, y0, y1, r3)
+    cv.vline(x1, y0, y1, r3)
 
 
-def bricks(cv, x0, y0, x1, y1, face="b1", mortar="b2", hi="b0", course=3, length=6):
+def roof_hip(cv, x0, y0, x1, y1, ramp, hip=10, course=3, joint=4, ridge=True):
+    """Hipped roof in 3/4 view: a front plane between two hip faces. The
+    west hip catches the light, the east hip falls into shade, every face
+    keeps the same staggered courses so the roof reads as one surface."""
+    r0, r1, r2, r3 = ramp
+    H = max(1, y1 - y0)
+    for y in range(y0, y1 + 1):
+        t = (y - y0) / H
+        xl = x0 + hip * (1 - t)
+        xr = x1 - hip * (1 - t)
+        row = (y - y0 - 1) // course
+        k = (y - y0 - 1) % course
+        off = (row % 2) * (joint // 2)
+        for x in range(x0, x1 + 1):
+            if x < xl:
+                body, line, top = r0, r1, r0
+            elif x > xr:
+                body, line, top = r2, r3, r2
+            else:
+                body, line, top = r1, r2, r0
+                if x > x0 + (x1 - x0) * 0.85:
+                    top = r1
+            col = body
+            if k == course - 1:
+                col = line
+            elif (x - x0 - off) % joint == 0:
+                col = line
+            elif k == 0 and (x - x0 - off) % joint == 1:
+                col = top
+            cv.px(x, y, col)
+        cv.px(int(round(xl)), y, r2)
+        cv.px(int(round(xr)), y, r3)
+    if ridge:
+        cv.hline(x0 + hip, x1 - hip, y0, r3)
+        cv.hline(x0 + hip + 1, x1 - hip - 1, y0 + 1, r0)
+    cv.hline(x0, x1, y1, r3)
+    cv.hline(x0, x1, y1 - 1, r2)
+
+
+def plaster(cv, x0, y0, x1, y1, ramp=("E0", "E1", "E2", "E3")):
+    l0, l1, l2, l3 = ramp
+    cv.rect(x0, y0, x1, y1, l0)
+    cv.vline(x1, y0, y1, l2)
+    cv.vline(x1 - 1, y0, y1, l1)
+    cv.vline(x0, y0, y1, l1)
+
+
+def eaves_shadow(cv, x0, x1, y, col="E2", col2=None, depth=2):
+    cv.hline(x0, x1, y, col)
+    if depth > 1:
+        cv.hline(x0, x1, y + 1, col2 or col)
+
+
+def bricks(cv, x0, y0, x1, y1, face="B1", mortar="B2", hi="B0", course=3, length=6):
     cv.rect(x0, y0, x1, y1, face)
     for row, yy in enumerate(range(y0, y1 + 1, course)):
-        cv.hline(x0, x1, yy + course - 1, mortar)
+        cv.hline(x0, x1, min(y1, yy + course - 1), mortar)
         off = (row % 2) * (length // 2)
         for xx in range(x0 + off, x1 + 1, length):
             cv.vline(xx, yy, min(y1, yy + course - 2), mortar)
-            if xx + 1 <= x1 and (row + xx) % 3 == 0:
+            if xx + 1 <= x1 and yy <= y1:
                 cv.px(xx + 1, yy, hi)
 
 
-def glass_panes(cv, x0, y0, x1, y1, pw=5, ph=6, frame="r0", plants=True, seed=1):
-    """Glazed wall: pale aqua panes with white glazing bars, a few plants inside."""
-    cv.rect(x0, y0, x1, y1, "q1")
-    rng = np.random.default_rng(seed)
-    # plants inside (dark green blobs in the lower half)
-    if plants:
-        for xx in range(x0 + 1, x1, 3):
-            top = y0 + (y1 - y0) // 2 + int(rng.integers(-3, 3))
-            for yy in range(top, y1 + 1):
-                cv.px(xx, yy, "q3" if (xx + yy) % 3 else "q2")
-                cv.px(xx + 1, yy, "q2")
-    for yy in range(y0, y1 + 1):
-        for xx in range(x0, x1 + 1):
-            if (xx - x0) % pw == 0 or (yy - y0) % ph == 0:
-                cv.px(xx, yy, frame)
-    # diagonal shines
-    for xx in range(x0 + 2, x1 - 2, pw * 2):
+def foundation(cv, x0, x1, y0, y1, ramp=("R0", "R1", "R2", "R3")):
+    cv.rect(x0, y0, x1, y1, ramp[1])
+    cv.hline(x0, x1, y0, ramp[0])
+    cv.hline(x0, x1, y1, ramp[3])
+    for xx in range(x0 + 3, x1, 6):
+        cv.vline(xx, y0 + 1, y1 - 1, ramp[2])
+
+
+def window(cv, x0, y0, w, h, frame="O3", sill="R1", glass=("W0", "W1", "W2"), curtain=None,
+           cross=True, warm=False):
+    """Lit pane: pale upper-left reflection, deeper lower-right, a frame in
+    the darkest wood and a stone sill that catches the light."""
+    g0, g1, g2 = glass
+    cv.rect(x0, y0, x0 + w - 1, y0 + h - 1, frame)
+    for yy in range(y0 + 1, y0 + h - 1):
+        for xx in range(x0 + 1, x0 + w - 1):
+            d = (xx - x0) + (yy - y0)
+            col = g1
+            if d > (w + h) * 0.62:
+                col = g2
+            cv.px(xx, yy, col)
+    # diagonal glint
+    for i in range(3):
+        cv.px(x0 + 2 + i, y0 + h - 3 - i - (h // 3), g0)
+    cv.px(x0 + 2, y0 + 2, g0)
+    if warm:
+        cv.rect(x0 + 1, y0 + h - 3, x0 + w - 2, y0 + h - 2, "Y1")
+    if curtain:
+        for yy in range(y0 + 1, y0 + h - 1):
+            cv.px(x0 + 1, yy, curtain)
+            cv.px(x0 + w - 2, yy, curtain)
+        cv.px(x0 + 2, y0 + 1, curtain)
+        cv.px(x0 + w - 3, y0 + 1, curtain)
+    if cross:
+        mx = x0 + w // 2
+        cv.vline(mx, y0 + 1, y0 + h - 2, frame)
+        cv.hline(x0 + 1, x0 + w - 2, y0 + h // 2, frame)
+    if sill:
+        cv.hline(x0 - 1, x0 + w, y0 + h, sill)
+        cv.hline(x0 - 1, x0 + w, y0 + h + 1, "R2") if sill == "R1" else None
+
+
+def door(cv, cx, cy, style="wood", top=None, ramp=("O0", "O1", "O2", "O3")):
+    """Door inside door tile (cx, cy), bottom-aligned, with a stone step."""
+    x0, y1 = cx * 16, cy * 16 + 15
+    yt = y1 - 15 if top is None else top
+    o0, o1, o2, o3 = ramp
+    if style in ("wood", "arch"):
+        cv.rect(x0 + 2, yt, x0 + 13, y1, o3)
+        cv.rect(x0 + 3, yt + 1, x0 + 12, y1 - 1, o1)
+        for xx in range(x0 + 5, x0 + 12, 3):
+            cv.vline(xx, yt + 2, y1 - 1, o2)
+        cv.vline(x0 + 3, yt + 1, y1 - 1, o0)
+        cv.vline(x0 + 12, yt + 1, y1 - 1, o2)
+        cv.hline(x0 + 3, x0 + 12, yt + 1, o2)
+        cv.px(x0 + 10, yt + (y1 - yt) // 2 + 1, "Y1")
+        if style == "arch":
+            cv.px(x0 + 2, yt, None); cv.px(x0 + 13, yt, None)
+            cv.px(x0 + 3, yt, None); cv.px(x0 + 12, yt, None)
+            cv.hline(x0 + 4, x0 + 11, yt, o3)
+            cv.px(x0 + 3, yt + 1, o3); cv.px(x0 + 12, yt + 1, o3)
+    elif style == "glass":
+        cv.rect(x0 + 2, yt, x0 + 13, y1, "R2")
+        cv.rect(x0 + 3, yt + 1, x0 + 12, y1 - 1, "Q1")
+        cv.rect(x0 + 8, yt + 1, x0 + 12, y1 - 1, "Q2")
+        cv.vline(x0 + 7, yt + 1, y1 - 1, "R0")
+        cv.vline(x0 + 8, yt + 1, y1 - 1, "R2")
         for i in range(3):
-            cv.px(xx + i, y0 + 3 - i + ph, "q0") if y0 + 3 - i + ph <= y1 else None
+            cv.px(x0 + 4 + i, yt + 5 - i, "Q0")
+            cv.px(x0 + 9 + i, yt + 7 - i, "Q1")
+        cv.px(x0 + 6, yt + (y1 - yt) // 2, "Y1"); cv.px(x0 + 9, yt + (y1 - yt) // 2, "Y1")
+    elif style == "double":
+        cv.rect(x0 + 1, yt, x0 + 14, y1, o3)
+        cv.rect(x0 + 2, yt + 1, x0 + 13, y1 - 1, o2)
+        cv.rect(x0 + 3, yt + 2, x0 + 6, y1 - 2, o1)
+        cv.rect(x0 + 9, yt + 2, x0 + 12, y1 - 2, o1)
+        cv.vline(x0 + 3, yt + 2, y1 - 2, o0)
+        cv.vline(x0 + 9, yt + 2, y1 - 2, o0)
+        cv.vline(x0 + 7, yt + 1, y1 - 1, o3)
+        cv.vline(x0 + 8, yt + 1, y1 - 1, o3)
+        cv.rect(x0 + 4, yt + 4, x0 + 5, yt + 6, "W1")
+        cv.rect(x0 + 10, yt + 4, x0 + 11, yt + 6, "W1")
+        cv.px(x0 + 6, yt + 9, "Y1"); cv.px(x0 + 9, yt + 9, "Y1")
+    # threshold step
+    cv.hline(x0 + 1, x0 + 14, y1, "R1")
+    cv.px(x0 + 1, y1, "R2"); cv.px(x0 + 14, y1, "R2")
+
+
+def plaque(cv, x0, y0, s, bg="E0", ink="O3", frame="O3", pad=2, shadow=None):
+    w = text_w(s) + pad * 2 + 2
+    cv.rect(x0, y0, x0 + w - 1, y0 + 8, frame)
+    cv.rect(x0 + 1, y0 + 1, x0 + w - 2, y0 + 7, bg)
+    cv.text(s, x0 + 1 + pad, y0 + 2, ink, shadow)
+    return w
+
+
+def flowerbox(cv, x0, x1, y, flower="N1"):
+    cv.rect(x0, y, x1, y + 2, "O2")
+    cv.hline(x0, x1, y, "O1")
+    cv.hline(x0, x1, y + 2, "O3")
+    for xx in range(x0, x1 + 1):
+        cv.px(xx, y - 1, "G2" if xx % 2 else "L2")
+    for xx in range(x0 + 1, x1, 3):
+        cv.px(xx, y - 2, flower)
+        cv.px(xx, y - 1, flower)
+
+
+def chimney(cv, x0, y0, h, ramp=("B0", "B1", "B2", "B3")):
+    cv.rect(x0, y0, x0 + 6, y0 + h, ramp[1])
+    cv.vline(x0, y0, y0 + h, ramp[0])
+    cv.vline(x0 + 5, y0, y0 + h, ramp[2])
+    cv.vline(x0 + 6, y0, y0 + h, ramp[3])
+    cv.hline(x0 - 1, x0 + 7, y0, "R2")
+    cv.hline(x0 - 1, x0 + 7, y0 - 1, "R1")
+    for yy in range(y0 + 2, y0 + h, 3):
+        cv.hline(x0 + 1, x0 + 4, yy, ramp[2])
+
+
+def glazing(cv, x0, y0, x1, y1, pw=5, ph=6, frame="R0", frame_dark="R1", plants=True, seed=1):
+    """Glass wall: aqua panes with white glazing bars, foliage pressed
+    against the glass in the lower half, a diagonal sheen per bay."""
+    rng = np.random.default_rng(seed)
+    cv.rect(x0, y0, x1, y1, "Q1")
+    for xx in range(x0, x1 + 1):
+        for yy in range(y0, y1 + 1):
+            if (xx - x0) + (yy - y0) * 0.5 > (x1 - x0) * 0.75:
+                cv.px(xx, yy, "Q2")
+    if plants:
+        tops = {}
+        for xx in range(x0 + 1, x1):
+            tops[xx] = y0 + (y1 - y0) * 4 // 10 + int(rng.integers(-2, 3))
+        for xx in range(x0 + 1, x1):
+            t = min(tops[xx], tops.get(xx - 1, 99) + 1, tops.get(xx + 1, 99) + 1)
+            for yy in range(t, y1 + 1):
+                cv.px(xx, yy, "L2" if (yy - t) > 1 or (xx + yy) % 3 == 0 else "G2")
+            cv.px(xx, t, "G1")
+    for xx in range(x0, x1 + 1):
+        for yy in range(y0, y1 + 1):
+            if (xx - x0) % pw == 0:
+                cv.px(xx, yy, frame)
+            elif (yy - y0) % ph == 0:
+                cv.px(xx, yy, frame)
+    for bx in range(x0 + 1, x1 - 2, pw):
+        for i in range(min(3, ph - 1)):
+            yy = y0 + 1 + i
+            if yy < y1:
+                cv.px(bx + 2 - i, yy + 1, "Q0")
+
+
+def shadow_under(cv, x0, x1, y, col="G2"):
+    """Contact shadow on the ground strip just inside the footprint."""
+    for xx in range(x0, x1 + 1):
+        if cv.get(xx, y) is None:
+            cv.px(xx, y, col)
 
 
 # ------------------------------------------------------------- buildings ----
+def dome(cv, cx, base, rx, ry, ribs=8, rings=(0.5,), panel=("Q0", "Q1", "Q2", "Q3"),
+         rib=("R0", "R1"), rim="R2", lit_rings=True):
+    """Ribbed dome in 3/4 view: true meridians (x = cx + r*cos(lat)*sin(lon))
+    and latitude rings; panels lit on the west, shaded east, rim darkened."""
+    p0, p1, p2, p3 = panel
+    for y in range(int(base - ry) - 1, base + 1):
+        dy = (base - y) / ry
+        if dy > 1:
+            continue
+        half = rx * math.sqrt(max(0.0, 1 - dy * dy))
+        for x in range(int(cx - half - 1), int(cx + half + 2)):
+            dx = (x + 0.5 - cx) / rx
+            if dx * dx + dy * dy > 1:
+                continue
+            u = dx / max(1e-6, math.sqrt(1 - dy * dy))
+            col = p1 if u < -0.15 else (p2 if u < 0.55 else p3)
+            if u < -0.55 and dy > 0.25:
+                col = p0 if (x + y) % 5 == 0 else p1
+            cv.px(x, y, col)
+        # meridians
+        for k in range(1, ribs):
+            lon = -math.pi / 2 + k * math.pi / ribs
+            xk = cx + half * math.sin(lon) - 0.5
+            xr = int(round(xk))
+            cv.px(xr, y, rib[0] if math.sin(lon) < 0.35 else rib[1])
+        for ring in rings:
+            if y == int(round(base - ry * ring)):
+                for x in range(int(cx - half), int(cx + half) + 1):
+                    if cv.get(x, y):
+                        cv.px(x, y, rib[0] if x < cx + half * 0.35 else rib[1])
+    # rim: outline the silhouette in a dark hue
+    for y in range(int(base - ry) - 1, base + 1):
+        dy = (base - y) / ry
+        if dy > 1:
+            continue
+        half = rx * math.sqrt(max(0.0, 1 - dy * dy))
+        xl, xr = int(round(cx - half)), int(round(cx + half - 1))
+        cv.px(xl, y, rim)
+        cv.px(xr, y, p3 if rim != p3 else rib[1])
+    top = int(round(base - ry))
+    for x in range(cx - 3, cx + 3):
+        if cv.get(x, top):
+            cv.px(x, top, rim)
+
+
 def house_small():
+    """Player's cottage: hipped terracotta roof, cream plaster with
+    timber corners, a porch hood over the door and a flower box."""
     cv = Canvas(64, 48)
-    roof = ("b0", "b1", "b2", "b3")
-    # chimney
-    cv.rect(44, 0, 51, 9, "r3"); cv.rect(45, 1, 50, 9, "r2"); cv.hline(45, 50, 1, "r1")
-    cv.hline(44, 51, 0, "k")
-    # roof
-    cv.rect(1, 3, 62, 23, "b3")
-    shingles(cv, 2, 4, 61, 21, roof)
-    cv.hline(2, 61, 4, "b0")
-    cv.hline(0, 63, 22, "b3"); cv.hline(0, 63, 23, "k")
-    cv.px(0, 21, "b3"); cv.px(63, 21, "b3")
-    # wall
-    cv.rect(1, 24, 62, 47, "s0")
-    cv.hline(1, 62, 24, "s2"); cv.hline(1, 62, 25, "s1")
-    cv.vline(0, 24, 47, "k"); cv.vline(63, 24, 47, "k")
-    cv.vline(1, 24, 47, "s1"); cv.vline(62, 24, 47, "s2")
-    cv.rect(1, 44, 62, 47, "r2"); cv.hline(1, 62, 44, "r1"); cv.hline(1, 62, 47, "r3")
-    for xx in range(4, 62, 7):
-        cv.vline(xx, 45, 46, "r3")
-    window(cv, 38, 29, 16, 11)
-    # flower box under the window
-    cv.rect(37, 41, 54, 43, "o2"); cv.hline(37, 54, 41, "o1")
-    for xx in range(38, 54, 3):
-        cv.px(xx, 40, "n1"); cv.px(xx + 1, 40, "g2")
-    door(cv, 1, 2, "wood", top=30)
-    return cv.image()
+    chimney(cv, 46, 1, 8, ("R0", "R1", "R2", "R3"))
+    roof_hip(cv, 0, 6, 63, 26, ("B0", "B1", "B2", "B3"), hip=11, course=4, joint=4)
+    plaster(cv, 1, 27, 62, 45)
+    eaves_shadow(cv, 1, 62, 27, "E2", "E1")
+    cv.vline(0, 27, 45, "O2"); cv.vline(63, 27, 45, "O3")
+    cv.vline(1, 29, 45, "O1"); cv.vline(62, 29, 45, "O2")
+    foundation(cv, 0, 63, 45, 47)
+    window(cv, 38, 30, 14, 10, curtain="N1")
+    flowerbox(cv, 37, 52, 41)
+    window(cv, 5, 30, 9, 9, cross=True)
+    # porch hood on brackets
+    cv.hline(16, 31, 28, "B3"); cv.hline(17, 30, 29, "B1"); cv.hline(17, 30, 30, "B2")
+    cv.px(17, 31, "O3"); cv.px(30, 31, "O3")
+    door(cv, 1, 2, "wood", top=32)
+    return cv
 
 
 def house_large():
+    """Two-storey family house: hipped blue slate, two dormers, timber
+    frame, a porch on posts and window boxes."""
     cv = Canvas(80, 64)
-    roof = ("u0", "u1", "u2", "u3")
-    cv.rect(8, 0, 15, 10, "r3"); cv.rect(9, 1, 14, 10, "r2"); cv.hline(9, 14, 1, "r1"); cv.hline(8, 15, 0, "k")
-    cv.rect(1, 3, 78, 33, "u3")
-    shingles(cv, 2, 4, 77, 31, roof, course=4, joint=8)
-    cv.hline(2, 77, 4, "u0")
-    # dormers
-    for dx in (16, 50):
-        cv.rect(dx - 1, 9, dx + 14, 24, "u3")
-        cv.rect(dx, 10, dx + 13, 24, "s0")
-        cv.hline(dx - 2, dx + 15, 9, "u3"); cv.hline(dx - 1, dx + 14, 8, "u2")
-        window(cv, dx + 2, 12, 10, 9, sill="s0")
-    cv.hline(0, 79, 32, "u3"); cv.hline(0, 79, 33, "k")
-    # wall: timber-framed plaster
-    cv.rect(1, 34, 78, 63, "s0")
-    cv.vline(0, 34, 63, "k"); cv.vline(79, 34, 63, "k")
-    cv.hline(1, 78, 34, "s2"); cv.hline(1, 78, 35, "s1")
-    for xx in (1, 27, 52, 78):
-        cv.vline(xx, 36, 59, "o2")
-    cv.rect(1, 60, 78, 63, "r2"); cv.hline(1, 78, 60, "r1"); cv.hline(1, 78, 63, "r3")
-    for xx in range(4, 78, 7):
-        cv.vline(xx, 61, 62, "r3")
-    window(cv, 7, 41, 15, 11)
-    window(cv, 58, 41, 15, 11)
-    for wx in (6, 57):
-        cv.rect(wx, 53, wx + 16, 55, "o2"); cv.hline(wx, wx + 16, 53, "o1")
-        for xx in range(wx + 1, wx + 16, 3):
-            cv.px(xx, 52, "y1"); cv.px(xx + 1, 52, "g2")
-    # porch roof over the door
-    cv.rect(29, 41, 50, 44, "u3"); cv.hline(30, 49, 42, "u1"); cv.hline(30, 49, 43, "u2")
-    door(cv, 2, 3, "wood", top=46)
-    return cv.image()
+    chimney(cv, 10, 1, 10, ("B0", "B1", "B2", "B3"))
+    chimney(cv, 63, 2, 9, ("B0", "B1", "B2", "B3"))
+    roof_hip(cv, 0, 8, 79, 33, ("U0", "U1", "U2", "U3"), hip=13, course=3, joint=5)
+    for dx in (15, 51):
+        cv.rect(dx, 17, dx + 13, 29, "E0")
+        cv.vline(dx, 17, 29, "E1"); cv.vline(dx + 13, 17, 29, "E2")
+        for i in range(8):
+            cv.hline(dx + 6 - i, dx + 7 + i, 10 + i, "U1" if i < 7 else "U3")
+            cv.px(dx + 6 - i, 10 + i, "U0"); cv.px(dx + 7 + i, 10 + i, "U3")
+        cv.hline(dx - 1, dx + 14, 17, "U3")
+        window(cv, dx + 3, 19, 8, 8, sill="U3")
+        cv.hline(dx, dx + 13, 29, "U3")
+    plaster(cv, 1, 34, 78, 59)
+    eaves_shadow(cv, 1, 78, 34, "E2", "E1")
+    cv.vline(0, 34, 59, "O2"); cv.vline(79, 34, 59, "O3")
+    for xx in (1, 25, 54, 78):
+        cv.vline(xx, 36, 59, "O2")
+    cv.hline(1, 78, 36, "O2")
+    foundation(cv, 0, 79, 60, 63)
+    window(cv, 6, 40, 14, 11, curtain="B1")
+    window(cv, 60, 40, 14, 11, curtain="B1")
+    flowerbox(cv, 5, 20, 53, "Y1")
+    flowerbox(cv, 59, 74, 53, "Y1")
+    # porch roof on posts
+    for i, col in enumerate(("U3", "U0", "U1", "U2", "U3")):
+        cv.hline(27 - i // 2, 52 + i // 2, 39 + i, col)
+    for px_ in (29, 50):
+        cv.vline(px_, 44, 59, "O1"); cv.vline(px_ + 1, 44, 59, "O3")
+    eaves_shadow(cv, 31, 49, 44, "E2", None, 1)
+    door(cv, 2, 3, "wood", top=46, ramp=("U0", "U1", "U2", "U3"))
+    return cv
 
 
 def herbarium():
+    """Stately brick institute: hipped slate roof with a white clock cupola,
+    a pedimented stone portico, pilasters, and a glasshouse wing east."""
     cv = Canvas(96, 64)
-    # ---- glasshouse wing (right, x 64..95)
-    cv.rect(64, 22, 95, 63, "k")
-    # gabled glass roof
-    for i in range(16):
-        y = 22 + (15 - i) // 2
+    SL = ("R0", "R1", "R2", "R3")
+    # ---- glasshouse wing x 64..95: ridge roof of glass
     for xx in range(64, 96):
-        top = 16 + abs(xx - 80) // 2
-        cv.vline(xx, top, 30, "q2")
-        cv.px(xx, top - 1, "k")
+        top = int(19 + abs(xx - 79.5) / 2.2)
+        for yy in range(top, 31):
+            cv.px(xx, yy, "Q1" if xx < 80 else "Q2")
+        cv.px(xx, top, "R0" if xx < 80 else "R1")
         if (xx - 64) % 4 == 0:
-            cv.vline(xx, top, 30, "r0")
-    for yy in range(18, 31, 4):
+            cv.vline(xx, top, 30, "R0" if xx < 80 else "R1")
+    cv.vline(79, 19, 30, "R0"); cv.vline(80, 19, 30, "R1")
+    for yy in (24, 27):
         for xx in range(64, 96):
-            if cv.a[yy, xx, 3] and tuple(cv.a[yy, xx]) != C["k"]:
-                cv.px(xx, yy, "r0")
-    cv.hline(65, 94, 30, "r1")
-    glass_panes(cv, 65, 31, 94, 54, pw=5, ph=6, seed=3)
-    cv.hline(64, 95, 31, "r0")
-    bricks(cv, 65, 55, 94, 62)
-    # ---- left annex (x 0..15)
-    cv.rect(0, 16, 17, 63, "k")
-    cv.rect(1, 17, 16, 30, "r3")
-    shingles(cv, 1, 18, 16, 29, ("r1", "r2", "r3", "k"), course=3, joint=5)
-    cv.hline(0, 17, 30, "k")
-    bricks(cv, 1, 31, 16, 62)
-    window(cv, 3, 37, 10, 12, frame="r0", sill="r1")
-    # ---- main block (x 16..63)
-    cv.rect(15, 2, 64, 63, "k")
-    # slate roof with a pediment
-    cv.rect(16, 3, 63, 25, "r3")
-    shingles(cv, 16, 4, 63, 24, ("r1", "r2", "r3", "k"), course=3, joint=6)
-    for xx in range(24, 57):
-        top = 4 + abs(xx - 40) // 2
-        cv.vline(xx, top, 24, "s0")
-        cv.px(xx, top, "r0")
-        cv.px(xx, top - 1, "k")
-    cv.hline(24, 56, 24, "s2")
-    # round window with a pressed-leaf emblem in the pediment
-    cv.paste([
-        "..####..",
-        ".#wwww#.",
-        "#wwgwww#",
-        "#wggGww#",
-        "#wwGgGw#",
-        "#wwwGww#",
-        ".#wwww#.",
-        "..####..",
-    ], {".": None, "#": "o3", "w": "q0", "g": "g1", "G": "f2"}, 36, 13)
-    cv.hline(15, 64, 25, "k")
-    # brick walls
-    bricks(cv, 16, 26, 63, 62)
-    # plaque
-    cv.rect(18, 27, 61, 34, "o3")
-    cv.rect(19, 28, 60, 33, "s1")
-    cv.text("HERBARIUM", 40 - text_w("HERBARIUM") // 2, 28, "o3")
-    # stone pilasters & windows
-    for xx in (16, 31, 48, 62):
-        cv.rect(xx, 35, xx + 1, 62, "r1"); cv.vline(xx + 1, 35, 62, "r2")
-    window(cv, 19, 38, 10, 14, frame="o3", sill="r0")
-    window(cv, 51, 38, 10, 14, frame="o3", sill="r0")
-    cv.rect(31, 36, 48, 47, "r1"); cv.hline(31, 48, 36, "r0")
-    door(cv, 2, 3, "double", top=47)
-    cv.hline(30, 49, 63, "r2")
-    cv.vline(0, 16, 63, "k")
-    return cv.image()
+            if cv.get(xx, yy) in ("Q1", "Q2"):
+                cv.px(xx, yy, "R0" if xx < 80 else "R1")
+    for i in range(3):
+        cv.px(68 + i, 27 - i, "Q0")
+    cv.hline(64, 95, 31, "R1")
+    glazing(cv, 64, 32, 95, 56, pw=5, ph=6, seed=3)
+    cv.recolor(64, 32, 95, 56, "L2", "G2")
+    cv.vline(64, 32, 56, "R0"); cv.vline(95, 32, 56, "R2")
+    bricks(cv, 64, 57, 95, 63)
+    cv.hline(64, 95, 57, "R1")
+    # ---- west annex x 0..15
+    roof_hip(cv, 0, 18, 16, 31, SL, hip=5, course=3, joint=4)
+    bricks(cv, 0, 32, 16, 63)
+    eaves_shadow(cv, 0, 16, 32, "B3", "B2")
+    window(cv, 3, 37, 10, 13, frame="O3", sill="R0")
+    cv.vline(0, 32, 63, "B2")
+    # ---- main block x 16..63
+    roof_hip(cv, 16, 7, 63, 27, SL, hip=9, course=3, joint=5)
+    # white lantern cupola with a verdigris cap and gilt finial
+    cv.put([
+        "     y     ",
+        "    qQq    ",
+        "   qQQQq   ",
+        "  qQQQQQq  ",
+        "  #######  ",
+        "  wwwwwwe  ",
+        "  w#ww#we  ",
+        "  w#ww#we  ",
+        "  wwwwwwe  ",
+        " #########",
+    ], {"y": "Y1", "q": "Q2", "Q": "Q3", "#": "R2", "w": "T0", "e": "E2"}, 35, -1)
+    cv.px(39, 1, "Q1"); cv.px(38, 2, "Q1")
+    bricks(cv, 16, 28, 63, 63)
+    eaves_shadow(cv, 16, 63, 28, "B3", "B2")
+    # stone sign band
+    cv.rect(18, 30, 61, 38, "R1"); cv.hline(18, 61, 30, "R0"); cv.hline(18, 61, 38, "R2")
+    cv.vline(18, 30, 38, "R0"); cv.vline(61, 30, 38, "R2")
+    cv.text("HERBARIUM", 40 - text_w("HERBARIUM") // 2, 32, "B3")
+    # pilasters
+    for xx in (17, 62):
+        cv.rect(xx, 39, xx + 1, 62, "R0"); cv.vline(xx + 1, 39, 62, "R1")
+    window(cv, 20, 42, 9, 13, frame="O3", sill="R0")
+    window(cv, 51, 42, 9, 13, frame="O3", sill="R0")
+    # portico: two columns and a little pediment over the double door
+    for i in range(6):
+        cv.hline(40 - 1 - i * 2, 40 + i * 2, 40 + i, "E0")
+        cv.px(40 - 1 - i * 2, 40 + i, "R1"); cv.px(40 + i * 2, 40 + i, "R2")
+    cv.hline(28, 51, 45, "R2"); cv.hline(29, 50, 46, "R1")
+    cv.put(["g"], {"g": "G2"}, 39, 43); cv.put(["g"], {"g": "G1"}, 40, 42)
+    for xx in (29, 49):
+        cv.rect(xx, 47, xx + 2, 62, "E0"); cv.vline(xx + 2, 47, 62, "E2"); cv.vline(xx, 47, 62, "T0")
+    door(cv, 2, 3, "double", top=48)
+    foundation(cv, 0, 95, 62, 63)
+    cv.rect(28, 62, 51, 63, "R1"); cv.hline(28, 51, 63, "R2")
+    return cv
 
 
 def greenhouse():
-    """Healing centre: a glass dome with a green copper cap and a green sign band."""
+    """Healing centre: an iconic verdigris copper dome with copper ribs and
+    lantern, on a white glazed drum with a green GREENHOUSE band."""
     cv = Canvas(64, 48)
-    cx, base = 40, 31
-    # left lean-to (x 0..17): sloped glass roof over potted plants
-    cv.rect(0, 16, 17, 47, "k")
-    for xx in range(1, 17):
-        top = 17 + (16 - xx) // 3
-        cv.vline(xx, top, 31, "q1" if xx < 9 else "q2")
-        if xx % 5 == 0:
-            cv.vline(xx, top, 31, "r0")
-    for yy in (24, 31):
-        cv.hline(1, 16, yy, "r0")
-    cv.rect(1, 32, 16, 46, "q1")
-    for xx in (1, 6, 11, 16):
-        cv.vline(xx, 32, 46, "r0")
-    cv.hline(1, 16, 39, "r0")
-    for px_ in (2, 7, 12):   # pots with leaves behind the glass
-        cv.paste([".g.g", "gGgG", ".bb.", ".bb."], {".": None, "g": "g2", "G": "f2", "b": "b1"}, px_, 35)
-    cv.rect(1, 44, 16, 46, "white"); cv.hline(1, 16, 46, "r1")
-    # dome x 16..63
-    rx, ry = 23.5, 25
-    for yy in range(0, base + 1):
-        for xx in range(16, 64):
-            dx, dy = (xx - cx + 0.5) / rx, (base - yy) / ry
-            d = dx * dx + dy * dy
-            if d <= 1.0:
-                ang = math.degrees(math.atan2(base - yy, xx - cx + 0.5))
-                shade = "q1" if xx < cx else "q2"
-                if xx > cx + 9 and d > 0.5:
-                    shade = "q3"
-                cv.px(xx, yy, shade)
-                if abs((ang % 22.5) - 11.25) > 9.6 or abs(math.sqrt(d) - 0.62) < 0.035:
-                    cv.px(xx, yy, "r0")
-                if dy > 0.70:   # green copper cap
-                    cv.px(xx, yy, "g1" if xx < cx else "g2")
-                    if abs(dy - 0.70) < 0.05:
-                        cv.px(xx, yy, "f3")
-            elif d <= 1.12:
-                cv.px(xx, yy, "k")
-    for i in range(6):
-        cv.px(25 + i // 2, 16 + i, "white")
-    # leaf-and-cross emblem on the cap
-    cv.paste([
-        "..###..",
-        ".#www#.",
-        "#wwgww#",
-        "#wgggw#",
-        "#wwgww#",
-        ".#www#.",
-        "..###..",
-    ], {".": None, "#": "f3", "w": "white", "g": "g2"}, 37, 1)
-    # front wall with the green sign band
-    cv.rect(16, 30, 63, 47, "k")
-    cv.rect(17, 31, 62, 46, "white")
-    cv.rect(17, 31, 62, 37, "g2"); cv.hline(17, 62, 31, "g1"); cv.hline(17, 62, 37, "f3")
-    cv.text("GREENHOUSE", 40 - text_w("GREENHOUSE") // 2, 32, "white")
-    cv.hline(17, 62, 46, "r1")
-    window(cv, 19, 39, 10, 6, frame="r2", sill="r1", glass=("q1", "q2", "white"))
-    window(cv, 51, 39, 10, 6, frame="r2", sill="r1", glass=("q1", "q2", "white"))
-    door(cv, 2, 2, "glass", top=38)
-    cv.vline(63, 30, 47, "k")
-    return cv.image()
+    dome(cv, 32, 27, 28.5, 24, ribs=8, rings=(0.42, 0.75),
+         panel=("Q0", "Q1", "Q2", "Q3"), rib=("C1", "C2"), rim="Q3")
+    # lantern + finial
+    cv.put([
+        "  #  ",
+        " #y# ",
+        "#ccc#",
+        "#qQq#",
+        "#####",
+    ], {"#": "C2", "y": "Y1", "c": "C1", "q": "Q0", "Q": "Q1"}, 30, 0)
+    # emblem: leaf on a white roundel
+    cv.put([
+        " #### ",
+        "#wwww#",
+        "#wgGw#",
+        "#wGgw#",
+        "#wwww#",
+        " #### ",
+    ], {"#": "C2", "w": "T0", "g": "G1", "G": "L2"}, 29, 12)
+    cv.rect(1, 26, 62, 28, "C2"); cv.hline(1, 62, 26, "C1"); cv.hline(1, 62, 28, "B3")
+    cv.rect(1, 29, 62, 36, "L2"); cv.hline(1, 62, 29, "G2"); cv.hline(1, 62, 36, "L3")
+    cv.text("GREENHOUSE", 32 - text_w("GREENHOUSE") // 2, 31, "T0", "L3")
+    cv.rect(1, 37, 62, 45, "R0")
+    cv.vline(62, 37, 45, "R2")
+    glazing(cv, 3, 38, 26, 45, pw=6, ph=8, plants=True, seed=7)
+    glazing(cv, 49, 38, 60, 45, pw=6, ph=8, plants=True, seed=8)
+    foundation(cv, 0, 63, 46, 47)
+    door(cv, 2, 2, "glass", top=37)
+    cv.rect(29, 37, 30, 46, "R0"); cv.rect(46, 37, 47, 46, "R1")
+    return cv
 
 
 def market():
+    """Bramblegate market: hipped shingle roof with a green sign, timber
+    shopfront under a striped awning, produce crates and a chalkboard."""
     cv = Canvas(64, 48)
-    # roof
-    cv.rect(0, 2, 63, 15, "k")
-    shingles(cv, 1, 3, 62, 14, ("o0", "o1", "o2", "o3"), course=3, joint=6)
-    # sign board
-    cv.rect(14, 4, 49, 12, "k"); cv.rect(15, 5, 48, 11, "g2"); cv.hline(15, 48, 5, "g1")
-    cv.text("MARKET", 32 - text_w("MARKET") // 2, 6, "white")
-    # walls
-    cv.rect(0, 16, 63, 47, "k")
-    cv.rect(1, 16, 62, 46, "o1")
-    for yy in range(18, 46, 4):
-        cv.hline(1, 62, yy, "o2")
-    # awning: striped, scalloped
+    roof_hip(cv, 0, 2, 63, 17, ("O0", "O1", "O2", "O3"), hip=8, course=3, joint=4)
+    cv.rect(12, 4, 51, 14, "L3")
+    cv.rect(13, 5, 50, 13, "G2"); cv.hline(13, 50, 5, "G1"); cv.hline(13, 50, 13, "L2")
+    cv.text("MARKET", 32 - text_w("MARKET") // 2, 7, "T0", "L3")
+    cv.rect(0, 18, 63, 45, "O1")
+    for xx in range(0, 64, 4):
+        cv.vline(xx, 18, 45, "O2")
+    cv.vline(0, 18, 45, "O3"); cv.vline(63, 18, 45, "O3")
     for xx in range(0, 64):
-        stripe = "white" if (xx // 4) % 2 == 0 else "g2"
-        cv.vline(xx, 16, 24, stripe)
-        if (xx % 4) in (1, 2):
-            cv.px(xx, 25, stripe)
-    cv.hline(0, 63, 16, "k")
-    for xx in range(0, 64):
-        if (xx % 4) in (0, 3):
-            cv.px(xx, 25, "k")
-        else:
-            cv.px(xx, 26, "k")
-    cv.vline(0, 16, 25, "k"); cv.vline(63, 16, 25, "k")
-    # shop window with produce
-    cv.rect(35, 29, 60, 40, "o3")
-    cv.rect(36, 30, 59, 39, "w1")
-    for xx in range(37, 59, 5):
-        cv.vline(xx + 3, 30, 33, "white")
-    cv.vline(47, 30, 39, "o3")
-    # crates of produce under the window
-    cv.rect(34, 41, 61, 46, "o3")
-    cols = ["b1", "y1", "g2", "m1", "x1"]
-    for i, xx in enumerate(range(35, 60, 5)):
-        cv.rect(xx, 42, xx + 3, 46, "o2"); cv.hline(xx, xx + 3, 42, "o0")
-        for j in range(4):
-            cv.px(xx + j, 41, cols[i % len(cols)])
-        cv.px(xx + 1, 40, cols[i % len(cols)]); cv.px(xx + 2, 40, cols[i % len(cols)])
-    door(cv, 1, 2, "wood", top=29)
-    cv.rect(3, 30, 13, 40, "o3"); cv.rect(4, 31, 12, 39, "s0")
-    cv.text("O", 5, 32, "g2")
-    cv.px(9, 33, "b1"); cv.px(10, 33, "b1"); cv.px(9, 34, "b1"); cv.px(10, 34, "b1")
-    cv.hline(5, 11, 38, "o2")
-    return cv.image()
+        stripe = "T0" if (xx // 4) % 2 == 0 else "G2"
+        shade = "R1" if stripe == "T0" else "L2"
+        for yy in range(18, 26):
+            cv.px(xx, yy, stripe if yy < 24 else shade)
+        if xx % 4 in (1, 2):
+            cv.px(xx, 26, shade)
+    cv.hline(0, 63, 18, "L3")
+    cv.hline(0, 63, 27, "O3")
+    cv.rect(34, 29, 61, 40, "O3")
+    cv.rect(35, 30, 60, 39, "W1")
+    cv.rect(48, 30, 60, 39, "W2")
+    for i in range(3):
+        cv.px(37 + i, 34 - i, "W0")
+    cv.vline(47, 30, 39, "O3")
+    cv.hline(35, 60, 36, "O2")
+    for xx in range(36, 60, 3):
+        cv.px(xx, 35, ("B1", "Y1", "G2", "M1")[xx % 4])
+    cols = [("B1", "B0"), ("Y1", "Y0"), ("G2", "G1"), ("M1", "M0"), ("X1", "X0")]
+    for i, xx in enumerate(range(34, 61, 6)):
+        a, b = cols[i % len(cols)]
+        cv.rect(xx, 41, xx + 5, 45, "O2"); cv.hline(xx, xx + 5, 41, "O0")
+        cv.vline(xx + 5, 41, 45, "O3")
+        for j in range(1, 5):
+            cv.px(xx + j, 40, a)
+        cv.px(xx + 2, 39, a); cv.px(xx + 3, 39, a); cv.px(xx + 2, 40, b)
+    cv.rect(3, 30, 13, 41, "O3"); cv.rect(4, 31, 12, 40, "L3")
+    cv.hline(5, 10, 33, "R1"); cv.hline(5, 11, 35, "R1"); cv.hline(5, 8, 37, "R1")
+    cv.px(10, 38, "B1"); cv.px(11, 38, "Y1")
+    door(cv, 1, 2, "wood", top=30)
+    foundation(cv, 0, 63, 46, 47)
+    return cv
 
 
 def conservatory():
+    """Bramblegate Conservatory, a glass palace: a tall ribbed central dome
+    with lantern and pennant, barrel-vaulted glass wings with end turrets,
+    white ironwork and a crest over the arched door."""
     cv = Canvas(96, 64)
-    # wings (lower glass halls)
-    for (x0, x1, seed) in ((0, 33, 11), (78, 95, 12)):
-        cv.rect(x0, 18, x1, 63, "k")
-        for xx in range(x0 + 1, x1):
-            # curved (barrel-vault) roof
+    for (x0, x1, seed) in ((0, 31, 11), (64, 95, 12)):
+        for xx in range(x0, x1 + 1):
             t = (xx - x0) / max(1, (x1 - x0))
-            top = 19 + int(6 * (1 - math.sin(t * math.pi)))
-            cv.vline(xx, top, 30, "q2" if t > 0.5 else "q1")
-            cv.px(xx, top - 1, "k")
+            top = 21 + int(round(8 * (1 - math.sin(t * math.pi))))
+            for yy in range(top, 34):
+                col = "Q1" if t < 0.4 else ("Q2" if t < 0.8 else "Q3")
+                cv.px(xx, yy, col)
+            cv.px(xx, top, "R0" if t < 0.6 else "R1")
             if (xx - x0) % 4 == 0:
-                cv.vline(xx, top, 30, "r0")
-        cv.hline(x0 + 1, x1 - 1, 26, "r0")
-        cv.hline(x0 + 1, x1 - 1, 30, "r0")
-        glass_panes(cv, x0 + 1, 31, x1 - 1, 55, pw=4, ph=6, seed=seed)
-        cv.rect(x0 + 1, 56, x1 - 1, 62, "r1"); cv.hline(x0 + 1, x1 - 1, 56, "r0"); cv.hline(x0 + 1, x1 - 1, 62, "r2")
-        for xx in range(x0 + 3, x1, 6):
-            cv.vline(xx, 57, 61, "r2")
-    # central pavilion x 33..79, dome centred on x=56
-    cx, base = 56, 32
-    rx, ry = 23.5, 26
-    for yy in range(0, base + 1):
-        for xx in range(32, 81):
-            dx, dy = (xx - cx + 0.5) / rx, (base - yy) / ry
-            d = dx * dx + dy * dy
-            if d <= 1.0:
-                ang = math.degrees(math.atan2(base - yy, xx - cx + 0.5))
-                shade = "q1" if xx < cx else "q2"
-                if xx > cx + 10 and d > 0.45:
-                    shade = "q3"
-                cv.px(xx, yy, shade)
-                if abs((ang % 15) - 7.5) > 6.4 or abs(math.sqrt(d) - 0.5) < 0.03 \
-                        or abs(math.sqrt(d) - 0.78) < 0.025:
-                    cv.px(xx, yy, "r0")
-            elif d <= 1.10:
-                cv.px(xx, yy, "k")
-    for i in range(7):
-        cv.px(42 + i // 2, 14 + i, "white")
-    # lantern + finial
-    cv.paste([
-        "...#...",
-        "..#y#..",
-        "...#...",
-        "..###..",
-        ".#gGg#.",
-        "#######",
-    ], {".": None, "#": "k", "y": "y1", "g": "g1", "G": "g2"}, 53, 0)
-    # facade
-    cv.rect(32, 32, 80, 63, "k")
-    glass_panes(cv, 33, 33, 79, 55, pw=6, ph=7, seed=5)
-    cv.rect(33, 33, 79, 36, "r0"); cv.hline(33, 79, 36, "r1")
-    # crest above the door: a pressed leaf
-    cv.paste([
-        ".#######.",
-        "#rrrrrrr#",
-        "#rrrgrrr#",
-        "#rrgGgrr#",
-        "#rgGGGgr#",
-        "#rrgGgrr#",
-        "#rrrGrrr#",
-        ".#rrrrr#.",
-        "..#####..",
-    ], {".": None, "#": "o3", "r": "s0", "g": "g1", "G": "f2"}, 52, 37)
-    cv.rect(33, 56, 79, 62, "r1"); cv.hline(33, 79, 56, "r0"); cv.hline(33, 79, 62, "r2")
-    for xx in range(35, 79, 6):
-        cv.vline(xx, 57, 61, "r2")
-    # arched glass door at x 48..63
-    cv.rect(48, 47, 63, 63, "k")
-    cv.rect(49, 48, 62, 63, "q2"); cv.rect(49, 48, 55, 63, "q1")
-    cv.vline(55, 48, 63, "r0"); cv.vline(56, 48, 63, "r2")
-    cv.px(48, 47, (0, 0, 0, 0)); cv.px(63, 47, (0, 0, 0, 0))
-    cv.hline(49, 62, 47, "k")
-    cv.hline(48, 63, 63, "r2")
-    for i in range(3):
-        cv.px(50 + i, 50 + i, "q0")
-    # pillars flanking the door
-    for xx in (45, 64):
-        cv.rect(xx, 44, xx + 2, 62, "r0"); cv.vline(xx + 2, 44, 62, "r1"); cv.hline(xx - 1, xx + 3, 43, "r1")
-    return cv.image()
+                cv.vline(xx, top, 33, "R0" if t < 0.6 else "R1")
+        cv.hline(x0, x1, 28, "R0")
+        for i in range(3):
+            cv.px(x0 + 6 + i, 27 - i, "Q0")
+        cv.hline(x0, x1, 34, "R0"); cv.hline(x0, x1, 35, "R1")
+        glazing(cv, x0, 36, x1, 56, pw=4, ph=7, seed=seed)
+        cv.recolor(x0, 36, x1, 56, "L2", "G2")
+        cv.vline(x0, 34, 56, "R0"); cv.vline(x1, 34, 56, "R2")
+        foundation(cv, x0, x1, 57, 63)
+        # end turrets with pennants
+        tx = x0 + 1 if x0 == 0 else x1 - 4
+        cv.rect(tx, 18, tx + 3, 34, "R0"); cv.vline(tx + 3, 18, 34, "R1")
+        cv.put(["  p ", "  pP", "  # ", " ## "], {"p": "B1", "P": "B2", "#": "R2"}, tx, 14)
+    dome(cv, 48, 34, 19.5, 33, ribs=10, rings=(0.38, 0.7),
+         panel=("Q0", "Q1", "Q2", "Q3"), rib=("R0", "R1"), rim="R2")
+    cv.put([
+        "  p   ",
+        "  pPP ",
+        "  #   ",
+        " #y#  ",
+        "#qQq# ",
+    ], {"#": "R2", "y": "Y1", "q": "Q0", "Q": "Q2", "p": "B1", "P": "B2"}, 46, -3)
+    cv.rect(30, 34, 66, 63, "R0")
+    glazing(cv, 31, 42, 65, 56, pw=6, ph=7, seed=5)
+    cv.recolor(31, 42, 65, 56, "L2", "G2")
+    cv.rect(21, 34, 75, 41, "L3")
+    cv.rect(22, 35, 74, 40, "G2"); cv.hline(22, 74, 35, "G1"); cv.hline(22, 74, 40, "L2")
+    cv.text("CONSERVATORY", 48 - text_w("CONSERVATORY") // 2, 36, "T0", "L3")
+    foundation(cv, 30, 66, 57, 63)
+    for xx in (44, 65):
+        cv.rect(xx, 44, xx + 1, 62, "R0"); cv.vline(xx + 1, 44, 62, "R1")
+    # arched glass door (cell 3,3 = x 48..63) with a crest above
+    door(cv, 3, 3, "glass", top=50)
+    cv.hline(51, 60, 49, "R0"); cv.px(50, 50, "R0"); cv.px(61, 50, "R0")
+    cv.put([
+        " ### ",
+        "#yGy#",
+        "#GGG#",
+        " #y# ",
+        "  #  ",
+    ], {"#": "Y2", "y": "Y1", "G": "L2"}, 53, 43)
+    return cv
 
 
 def lodge():
-    """Sugarbush sugar shack: log walls, tin roof, steam cupola, woodpile."""
+    """Sugarbush sugar shack: board-and-batten walls, a rusty tin roof, a
+    louvred cupola pouring steam, sap buckets and a SUGAR SHACK sign."""
     cv = Canvas(80, 48)
-    # roof (rust tin with seams)
-    cv.rect(0, 8, 79, 25, "k")
-    cv.rect(1, 9, 78, 23, "m2")
-    for xx in range(2, 78, 4):
-        cv.vline(xx, 10, 23, "m3")
-        cv.vline(xx + 1, 10, 23, "m1")
-    cv.hline(1, 78, 9, "m1")
-    cv.hline(0, 79, 24, "m3"); cv.hline(0, 79, 25, "k")
-    # cupola with vents and steam
-    cv.rect(32, 3, 47, 9, "k")
-    cv.rect(33, 4, 46, 8, "o2")
-    for xx in range(34, 46, 3):
-        cv.vline(xx, 5, 8, "o3")
-    cv.rect(30, 1, 49, 3, "k"); cv.hline(31, 48, 2, "m1")
-    # log walls
-    cv.rect(0, 26, 79, 47, "k")
-    for i, yy in enumerate(range(26, 46, 4)):
-        cv.rect(1, yy, 78, yy + 3, "o1")
-        cv.hline(1, 78, yy, "o0")
-        cv.hline(1, 78, yy + 3, "o3")
-        cv.hline(1, 78, yy + 2, "o2")
-        # log ends at the corners
-        for ex in (0, 76):
-            cv.rect(ex, yy, ex + 3, yy + 3, "o3")
-            cv.rect(ex + 1, yy + 1, ex + 2, yy + 2, "o0")
-    cv.rect(1, 46, 78, 47, "r2"); cv.hline(1, 78, 47, "r3")
-    # window
-    window(cv, 9, 30, 12, 9)
-    # sign: syrup drop
-    cv.paste([
-        "#########",
-        "#ooooooo#",
-        "#ooo#ooo#",
-        "#oo#m#oo#",
-        "#o#mmm#o#",
-        "#o#mMm#o#",
-        "#oo###oo#",
-        "#########",
-    ], {"#": "o3", "o": "o0", "m": "m1", "M": "m0"}, 51, 30)
-    door(cv, 2, 2, "wood", top=29)
-    # woodpile at the right
-    for j, yy in enumerate((44, 41, 38)):
-        for xx in range(62 + j * 2, 76 - j * 2, 4):
-            cv.rect(xx, yy - 3, xx + 3, yy, "o3")
-            cv.rect(xx + 1, yy - 2, xx + 2, yy - 1, "o0")
-    # steam puffs over the cupola (white with a soft outline)
-    cv.paste([
-        "..###.....",
-        ".#www#.##.",
-        "#wwwww#ww#",
-        "#wwwwwwww#",
-        ".########.",
-    ], {".": None, "#": "r1", "w": "white"}, 50, 0)
-    return cv.image()
+    for yy in range(10, 26):
+        for xx in range(0, 80):
+            col = "M2"
+            if xx % 4 == 0:
+                col = "M3"
+            elif xx % 4 == 1:
+                col = "M1" if xx < 58 else "M2"
+            cv.px(xx, yy, col)
+    cv.hline(0, 79, 10, "M3"); cv.hline(1, 78, 11, "M0")
+    cv.hline(0, 79, 25, "M3")
+    # cupola
+    cv.rect(31, 2, 48, 4, "M3"); cv.hline(32, 47, 3, "M1")
+    cv.rect(33, 5, 46, 10, "O2")
+    for xx in range(34, 46, 2):
+        cv.vline(xx, 6, 9, "O3")
+    cv.vline(33, 5, 10, "O1")
+    # steam plume drifting east
+    cv.put([
+        "         ..,,,,..   ",
+        "      ..,,,,,,,,,,. ",
+        "   ..,,,,,,..,,,,,,.",
+        " .,,,,,,,.    ..,,..",
+        ".,,,,,..          ",
+        " ..,,.            ",
+    ], {",": "T0", ".": "R1"}, 44, 0)
+    # walls
+    cv.rect(0, 26, 79, 44, "O1")
+    for xx in range(0, 80, 5):
+        cv.vline(xx, 26, 44, "O2")
+        cv.vline(xx + 1, 26, 44, "O0")
+    cv.vline(0, 26, 44, "O3"); cv.vline(79, 26, 44, "O3")
+    eaves_shadow(cv, 0, 79, 26, "O3", "O2")
+    window(cv, 6, 31, 13, 9, frame="O3", sill="O2", warm=True)
+    window(cv, 54, 31, 13, 9, frame="O3", sill="O2", warm=True)
+    # sign board across the gable
+    w = text_w("SUGAR SHACK") + 6
+    sx = 40 - w // 2
+    cv.rect(sx, 13, sx + w - 1, 21, "O3")
+    cv.rect(sx + 1, 14, sx + w - 2, 20, "O0")
+    cv.text("SUGAR SHACK", sx + 3, 15, "M3")
+    # sap buckets hung on taps along the wall, lids catching the light
+    for bx in (23, 49, 69):
+        cv.put([
+            " r  ",
+            "RRRR",
+            "#ss#",
+            "#sS#",
+            "####",
+        ], {"r": "R2", "R": "R0", "#": "R2", "s": "R1", "S": "R0"}, bx, 33)
+    door(cv, 2, 2, "wood", top=31)
+    foundation(cv, 0, 79, 45, 47)
+    # woodpile under the east window
+    for j, yy in enumerate((47, 44)):
+        for xx in range(56 + j * 2, 76 - j * 2, 4):
+            cv.rect(xx, yy - 3, xx + 3, yy, "O3")
+            cv.rect(xx + 1, yy - 2, xx + 2, yy - 1, "O0")
+    return cv
+
+
+def barn():
+    """Fallowfield barn: red board walls, white trim, grey gambrel roof, a
+    hay loft and painted-shut cross-braced doors (doorless scenery)."""
+    cv = Canvas(80, 64)
+    cx = 40
+    for yy in range(2, 40):
+        half = 12 + (yy - 2) * 2 if yy < 14 else 36 + (yy - 14) // 6
+        half = min(half, 40)
+        for xx in range(cx - half, cx + half):
+            lit = xx < cx
+            col = "R1" if lit else "R2"
+            if yy % 3 == 0:
+                col = "R0" if lit else "R1"
+            if xx % 5 == 0 and yy % 3 != 0:
+                col = "R2" if lit else "R3"
+            cv.px(xx, yy, col)
+        cv.px(cx - half, yy, "R2"); cv.px(cx + half - 1, yy, "R3")
+    cv.hline(cx - 12, cx + 11, 2, "R3")
+    for yy in range(7, 40):
+        half = 9 + (yy - 7) * 2 if yy < 18 else 30
+        half = min(half, 31)
+        for xx in range(cx - half, cx + half):
+            cv.px(xx, yy, "B1" if xx % 4 else "B2")
+        cv.px(cx - half, yy, "T0"); cv.px(cx + half - 1, yy, "R1")
+    cv.hline(cx - 9, cx + 8, 6, "T0")
+    # hay loft
+    cv.rect(33, 11, 46, 22, "T0")
+    cv.rect(34, 12, 45, 21, "B3")
+    cv.rect(35, 15, 44, 21, "Y1")
+    for xx in range(35, 45, 2):
+        cv.px(xx, 14, "Y1"); cv.px(xx + 1, 15, "Y2")
+    cv.hline(35, 44, 21, "Y2")
+    cv.vline(39, 7, 10, "O3"); cv.px(40, 8, "O3")
+    # weathervane
+    cv.put([" y  ", "yyyy", " y  ", " #  "], {"y": "R3", "#": "R3"}, 38, -2)
+    cv.rect(9, 40, 70, 61, "B1")
+    for xx in range(9, 71, 4):
+        cv.vline(xx, 40, 61, "B2")
+    eaves_shadow(cv, 9, 70, 40, "B3", "B2")
+    cv.vline(9, 40, 61, "T0"); cv.vline(70, 40, 61, "R1")
+    cv.rect(26, 42, 53, 61, "T0")
+    cv.rect(27, 43, 39, 61, "B2"); cv.rect(40, 43, 52, 61, "B2")
+    for i in range(13):
+        yy = 43 + i * 18 // 12
+        cv.px(27 + i, yy, "T0"); cv.px(39 - i, yy, "T0")
+        cv.px(40 + i, yy, "T0"); cv.px(52 - i, yy, "T0")
+    cv.vline(39, 43, 61, "T0"); cv.vline(40, 43, 61, "R1")
+    for wx in (13, 59):
+        cv.rect(wx, 46, wx + 7, 53, "T0")
+        cv.rect(wx + 1, 47, wx + 6, 52, "B3")
+        cv.vline(wx + 7, 46, 53, "R1")
+        cv.px(wx + 2, 48, "W1"); cv.px(wx + 3, 48, "W1"); cv.px(wx + 2, 49, "W1")
+    foundation(cv, 9, 70, 62, 63)
+    return cv
+
+
+def windmill():
+    """Fallowfield windmill: tapered whitewashed stone tower, red cap and
+    four canvas sails on a + (crisp at 1x), painted-shut door."""
+    cv = Canvas(48, 64)
+    for yy in range(22, 62):
+        t = (yy - 22) / 40
+        half = int(8 + t * 6)
+        for xx in range(24 - half, 24 + half):
+            u = (xx - (24 - half)) / (2 * half)
+            col = "E0" if u < 0.35 else ("E1" if u < 0.72 else "E2")
+            if yy % 6 == 0 or ((xx + (yy // 6) * 3) % 7 == 0 and yy % 6 != 0):
+                col = {"E0": "E1", "E1": "E2", "E2": "E3"}[col]
+            cv.px(xx, yy, col)
+        cv.px(24 - half, yy, "E1"); cv.px(24 + half - 1, yy, "E3")
+    cv.rect(20, 52, 27, 61, "O3"); cv.rect(21, 53, 26, 61, "O2"); cv.vline(21, 53, 61, "O1")
+    cv.vline(23, 53, 61, "O3")
+    window(cv, 21, 38, 6, 7, cross=False, sill="E2")
+    foundation(cv, 9, 38, 62, 63)
+    for yy in range(12, 23):
+        half = min(5 + (yy - 12), 12)
+        for xx in range(24 - half, 24 + half):
+            col = "B1" if xx < 24 else "B2"
+            if yy % 3 == 0:
+                col = "B0" if xx < 24 else "B1"
+            cv.px(xx, yy, col)
+        cv.px(24 - half, yy, "B2"); cv.px(24 + half - 1, yy, "B3")
+    cv.hline(12, 35, 22, "B3")
+    eaves_shadow(cv, 14, 33, 23, "E3", "E2")
+    cv.put(["##", "##"], {"#": "B3"}, 23, 10)
+    hx, hy = 24, 17
+    sail = {"#": "O3", "c": "T0", "s": "R1", "f": "O2"}
+    # up / down arms (stock + canvas on the west side, lattice lines)
+    for i in range(2, 17):
+        for (yy, flip) in ((hy - i, 1), (hy + i, -1)):
+            cv.px(hx, yy, "O3")
+            for k in range(1, 5):
+                xx = hx - k if flip > 0 else hx + k
+                col = "c" if (i % 3 and k < 4) else "f"
+                if i < 4:
+                    col = "f" if k == 4 else None
+                if col:
+                    cv.px(xx, yy, sail[col] if col != "c" or flip > 0 else "R1")
+    for i in range(2, 17):
+        for (xx, flip) in ((hx - i, 1), (hx + i, -1)):
+            cv.px(xx, hy, "O3")
+            for k in range(1, 5):
+                yy = hy + k if flip > 0 else hy - k
+                col = "c" if (i % 3 and k < 4) else "f"
+                if i < 4:
+                    col = "f" if k == 4 else None
+                if col:
+                    cv.px(xx, yy, sail[col] if col != "c" or flip < 0 else "R1")
+    cv.put([" ## ", "#yy#", "#yY#", " ## "], {"#": "O3", "y": "O1", "Y": "O2"}, hx - 2, hy - 2)
+    return cv
+
+
+def well():
+    """Village well: round stone curb, shingled hood on posts, bucket."""
+    cv = Canvas(32, 32)
+    # posts
+    for x in (5, 25):
+        cv.rect(x, 8, x + 1, 24, "O1"); cv.vline(x + 1, 8, 24, "O3")
+    # roof
+    for yy in range(1, 10):
+        half = 6 + yy * 1.2
+        for xx in range(int(16 - half), int(16 + half)):
+            col = "B1" if xx < 16 else "B2"
+            if yy % 3 == 1:
+                col = "B0" if xx < 16 else "B1"
+            cv.px(xx, yy, col)
+    cv.hline(5, 26, 10, "B3")
+    cv.hline(13, 18, 0, "B3")
+    # crank + rope + bucket
+    cv.hline(7, 24, 12, "O2"); cv.px(25, 13, "O3"); cv.px(26, 13, "O3")
+    cv.vline(15, 13, 16, "R2")
+    cv.put(["####", "#rr#", "#RR#", " ## "], {"#": "O3", "r": "O1", "R": "O2"}, 14, 16)
+    # stone curb (ellipse)
+    for yy in range(18, 32):
+        for xx in range(2, 30):
+            dx, dy = (xx - 15.5) / 13.5, (yy - 24) / 7.5
+            if dx * dx + dy * dy <= 1:
+                cv.px(xx, yy, "R1" if dx < 0.3 else "R2")
+    for yy in range(19, 25):
+        for xx in range(6, 26):
+            dx, dy = (xx - 15.5) / 9.5, (yy - 21.5) / 3.2
+            if dx * dx + dy * dy <= 1:
+                cv.px(xx, yy, "W3" if dy > -0.4 else "R3")
+    for xx in range(3, 29, 4):
+        cv.vline(xx, 25, 30, "R3") if 4 < xx < 28 else None
+    for xx in range(2, 30):
+        for yy in range(26, 32):
+            dx, dy = (xx - 15.5) / 13.5, (yy - 24) / 7.5
+            if dx * dx + dy * dy <= 1 and yy == 27:
+                cv.px(xx, yy, "R3")
+    cv.px(10, 20, "R0"); cv.px(11, 19, "R0"); cv.px(12, 19, "R0")
+    return cv
+
+
+def big_tree(w, h, pal, lobes, trunk, seed=0):
+    """Landmark tree: overlapping crown lobes (lit top-left, shaded rims),
+    a flared trunk with roots and a shadow pool."""
+    cv = Canvas(w, h)
+    hi, body, mid, dark = pal
+    tx0, tx1, ty = trunk
+    # ground shadow
+    for yy in range(h - 6, h):
+        for xx in range(0, w):
+            dx, dy = (xx - w / 2) / (w / 2 - 1), (yy - (h - 3)) / 3
+            if dx * dx + dy * dy <= 1:
+                cv.px(xx, yy, "G2")
+    # trunk + roots
+    for yy in range(ty, h - 1):
+        flare = max(0, yy - (h - 6))
+        for xx in range(tx0 - flare, tx1 + flare + 1):
+            col = "O2" if xx < (tx0 + tx1) // 2 else "O3"
+            if xx == tx0 - flare:
+                col = "O1"
+            cv.px(xx, yy, col)
+    for yy in range(ty, h - 4, 3):
+        cv.px((tx0 + tx1) // 2, yy, "O3")
+    own = -np.ones((h, w), int)
+    for k, (cx, cy, r) in enumerate(lobes):
+        for yy in range(h):
+            for xx in range(w):
+                if (xx - cx) ** 2 + (yy - cy) ** 2 <= r * r:
+                    own[yy, xx] = k
+    for yy in range(h):
+        for xx in range(w):
+            k = own[yy, xx]
+            if k < 0:
+                continue
+            cx, cy, r = lobes[k]
+            nx, ny = (xx - cx) / r, (yy - cy) / r
+            light = -(nx * 0.75 + ny)
+            col = body
+            if light > 0.55:
+                col = hi
+            elif light < -0.35:
+                col = mid
+            out_dn = yy + 1 >= h or own[yy + 1, xx] < 0
+            out_rt = xx + 1 >= w or own[yy, xx + 1] < 0
+            out_up = yy == 0 or own[yy - 1, xx] < 0
+            out_lf = xx == 0 or own[yy, xx - 1] < 0
+            in_dn = not out_dn and own[yy + 1, xx] != k
+            in_rt = not out_rt and own[yy, xx + 1] != k
+            if out_dn or out_rt:
+                col = dark
+            elif out_up or out_lf:
+                col = mid if (nx + ny) < -0.2 else dark
+            elif in_dn or (in_rt and nx > 0.3):
+                col = mid if col != mid else dark
+            cv.px(xx, yy, col)
+    # sparkle leaves
+    rng = np.random.default_rng(seed)
+    for _ in range(w // 3):
+        xx, yy = int(rng.integers(2, w - 2)), int(rng.integers(2, h - 10))
+        if cv.get(xx, yy) == body and cv.get(xx - 1, yy) == body:
+            cv.px(xx, yy, hi)
+    return cv
+
+
+def big_oak():
+    return big_tree(48, 48, ("G1", "G2", "L2", "L3"),
+                    [(14, 15, 11), (33, 13, 11.5), (24, 8, 9), (11, 26, 9), (37, 25, 9.5),
+                     (24, 24, 12)], (21, 26, 30), seed=4)
+
+
+def big_maple():
+    return big_tree(32, 32, ("M0", "M1", "M2", "M3"),
+                    [(10, 10, 8), (22, 9, 8), (16, 6, 6), (16, 15, 9)], (14, 17, 20), seed=6)
 
 
 BUILDERS = {
     "house_small": house_small, "house_large": house_large, "herbarium": herbarium,
     "greenhouse": greenhouse, "market": market, "conservatory": conservatory, "lodge": lodge,
+    "barn": barn, "windmill": windmill, "well": well, "big_oak": big_oak, "big_maple": big_maple,
 }
 
 
-def build():
+def build(save=True):
     cells = []
+    grass = tiles.to_img(tiles.OUT["grass"])
+    path = tiles.to_img(tiles.OUT["path@5"])
     for key, fn in BUILDERS.items():
-        w, h, (dx, dy) = STRUCTURES[key]
-        im = fn()
+        w, h, dr = STRUCTURES[key]
+        im = fn().image()
         assert im.size == (w * 16, h * 16), (key, im.size)
-        gbc.save(im, f"structures/{key}.png")
-        # review: on a grass field with the door tile marked
+        if save:
+            gbc.save(im, f"structures/{key}.png")
         bg = Image.new("RGBA", (im.width + 32, im.height + 32))
-        grass = Image.open(gbc.ASSETS / "tiles/grass.png")
-        path = Image.open(gbc.ASSETS / "tiles/path.png")
         for y in range(0, bg.height, 16):
             for x in range(0, bg.width, 16):
                 bg.paste(grass, (x, y))
-        for y in range(16 + (dy + 1) * 16, bg.height, 16):
-            bg.paste(path, (16 + dx * 16, y))
+        if dr:
+            for y in range(16 + (dr[1] + 1) * 16, bg.height, 16):
+                bg.paste(path, (16 + dr[0] * 16, y))
         bg.alpha_composite(im, (16, 16))
         cells.append((key, bg))
     gbc.grid_sheet(cells, 4, 3).save(gbc.REVIEW / "structures.png")
 
 
 if __name__ == "__main__":
-    build()
+    import sys
+    build(save="-n" not in sys.argv)

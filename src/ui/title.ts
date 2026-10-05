@@ -130,6 +130,7 @@ export function createTitleScene(ctx: GameContext): Scene {
   let menuIds: ("new" | "continue" | "options")[] = [];
   let meta: SaveMeta | null = null;
   let lastIndex = 0;
+  let menuAt = 0;
 
   const sfx = (id: "cursor" | "select" | "cancel") => ctx.audio.playSfx(id);
 
@@ -185,6 +186,7 @@ export function createTitleScene(ctx: GameContext): Scene {
           if (input.pressed("start") || input.pressed("a")) {
             sfx("select");
             buildMenu();
+            menuAt = frame;
             phase = "menu";
           }
           break;
@@ -220,7 +222,14 @@ export function createTitleScene(ctx: GameContext): Scene {
       if (phase === "press" || phase === "fadein") {
         if (Math.floor(frame / 32) % 2 === 0) drawTextOutlined(g, "PRESS START", 36, 120, UI.white, "#10261a");
       }
-      if ((phase === "menu" || phase === "busy" || phase === "continue") && menu) menu.draw(g, { cursor: phase !== "continue" });
+      if ((phase === "menu" || phase === "busy" || phase === "continue") && menu) {
+        // The menu rises into place over 8 frames when it opens.
+        const rise = Math.max(0, 8 - (frame - menuAt));
+        const y0 = menu.y;
+        menu.y = y0 + Math.round((rise * rise) / 2);
+        menu.draw(g, { cursor: phase !== "continue" });
+        menu.y = y0;
+      }
       if (phase === "continue" && meta) {
         drawSaveInfo(g, meta, 16, 4, 14);
       }

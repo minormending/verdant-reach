@@ -1,7 +1,11 @@
 import type { MapDef } from "../../contracts";
 import { LEGEND, ifFlags, ifNight, say, type Scripts } from "../build";
 
-// The player's cottage: bed, bookshelves, kitchen table, and JUNE the housemate.
+// The cottage <PLAYER> shares with JUNE. Bed and bookshelves by the west wall,
+// the hearth in the middle of the back wall with the rug in front of it, and
+// JUNE's kitchen corner: stove, worktop and the long table under the window.
+//
+//            0123456789
 export const player_home: MapDef = {
   id: "player_home",
   name: "HOME",
@@ -11,17 +15,18 @@ export const player_home: MapDef = {
   legend: LEGEND,
   tiles: [
     "WWOOWWWOOW", // 0
-    "WZwwwKKwpW", // 1
-    "WwwwwwwwwW", // 2
-    "WwwwDDwwwW", // 3
-    "WwwwDDwwwW", // 4
-    "WwwwwwwwwW", // 5
-    "WpwwrrwwpW", // 6
+    "WKKpwFwVCW", // 1
+    "WZwwwwwwwW", // 2
+    "WYwrrrwwDW", // 3
+    "WwwrrrwwDW", // 4
+    "WpwrrrwhDW", // 5
+    "WwwwwwwwpW", // 6
     "WWWWEWWWWW", // 7
   ],
   structures: [],
-  warps: [{ x: 4, y: 7, to: "fallowfield", toX: 4, toY: 6, facing: "down" }],
+  warps: [{ x: 4, y: 7, to: "fallowfield", toX: 3, toY: 7, facing: "down" }],
   npcs: [
+    // The morning scene walks JUNE up 2, left 4 to stand beside the bed (3,2).
     { id: "june", sprite: "villager_a", x: 7, y: 4, facing: "left", movement: "static", script: "home_june" },
   ],
   signs: [],
@@ -36,18 +41,22 @@ export const scripts: Scripts = {
   ],
   home_june: [
     ifFlags({ got_starter: true }, [
-      ifNight(
-        [say("Out late again? Your QUICKENED look thirsty.", "JUNE")],
-        [say("Back for a breather? Your QUICKENED look thirsty.", "JUNE")],
-      ),
+      ifFlags({ theft_seen: true, got_pods: false }, [
+        say("Someone stole from VALE? From VALE? Brave or daft. Usually both.", "JUNE"),
+      ], [
+        ifNight(
+          [say("Out this late? Your QUICKENED look parched.", "JUNE")],
+          [say("Back for a breather? Your QUICKENED look parched.", "JUNE")],
+        ),
+      ]),
       { op: "yesno", prompt: "Let JUNE water them?", yes: [
-        say("There. A drink and a sunny sill. Good as new.", "JUNE"),
+        say("Rainwater from the barrel. Softer than tap water, and plants can tell.", "JUNE"),
         { op: "heal" },
-        say("Off you go. Mind the brambles!", "JUNE"),
-      ], no: [say("Suit yourself. The watering can's here.", "JUNE")] },
+        say("There. Good as new. Mind the brambles out there!", "JUNE"),
+      ], no: [say("Suit yourself. The watering can's by the door.", "JUNE")] },
     ], [
-      say("DR. VALE said, and I quote: \"The greenhouse moved.\"", "JUNE"),
-      say("Then she hung up. Better go see what that means.", "JUNE"),
+      say("VALE said, and I quote: \"The greenhouse moved.\"", "JUNE"),
+      say("Then she hung up. You'd best go and see what that means.", "JUNE"),
     ]),
   ],
 };

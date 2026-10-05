@@ -19,8 +19,8 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
   const box = () => ctx.state.box;
   const source = () => (mode === "withdraw" ? box() : party());
 
-  const draw = (g: CanvasRenderingContext2D) => {
-    frame++;
+  const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
+    frame = f;
     clearScreen(g, "#d8e8e0");
     if (mode === "menu") {
       drawCabinetArt(g, 96, 8);
@@ -34,6 +34,8 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
       for (const [i, r] of list.visibleRows()) {
         const y = 14 + r * 16;
         const q = src[i];
+        g.fillStyle = i === list.index ? "#f8f0b8" : r % 2 ? "#e4efe8" : "#d8e8e0";
+        g.fillRect(0, y - 4, 160, 16);
         if (!q) {
           ctx.ui.drawText(g, "CANCEL", 24, y);
           continue;
@@ -42,7 +44,8 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
         ctx.ui.drawText(g, qName(ctx.data, q).slice(0, 12), 24, y);
         drawLevel(ctx, g, q.level, 124, y);
       }
-      drawCursor(ctx, g, 0, 14 + (list.index - list.scroll) * 16, ui.overlays.length > 0);
+      const sy = 14 + (list.index - list.scroll) * 16;
+      drawCursor(ctx, g, 0, sy, ui.overlays.length > 0, list.frame);
       if (list.canScrollDown()) drawMoreArrow(ctx, g, 148, 88, frame);
       if (list.canScrollUp()) drawMoreArrow(ctx, g, 148, 10, frame, "up");
     }
