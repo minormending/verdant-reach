@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "sunflower_seedling",
+  "palette": ["#181818", "#388028", "#b8d838", "#f8f8f8"],
+  "sport": ["#181818", "#406848", "#d8e0a0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 16], [2, 4], [3, 12], [2, 4], [0, 8], [4, 5], [0, 1]], "idle": [[0, 110], [4, 14]] },
+  "credits": "Original pixel art for Verdant Reach (Crystal-rule pilot), hand-pixelled in tools/art/pilot_crystal/sunflower.py. Drawn under the pilot's palette and animation rules; no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/pilot_crystal/sunflower.py" },
+  "notes": "Crystal-rule pilot. LUNGING, as the base. Index 1 leaf green, index 2 a lime-yellow (the line's yellow, still unripe); the seed hull is the shared black with two white stripes, which is what a real sunflower seed looks like, so the shared black and white ARE the species' signature here. Intro: the seed leaves start clasped round the hull, open, fling wide, settle (with one rebound); only the seed leaves move. Idle: the arms lift 1px. Sport: 'Italian White' (cream over blue-green)."
+}
