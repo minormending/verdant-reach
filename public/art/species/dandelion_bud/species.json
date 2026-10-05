@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "dandelion_bud",
-  "palette": ["#181818", "#286030", "#70b038", "#f8d830"],
-  "sport": ["#181818", "#305838", "#68a840", "#f0a0c0"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/dandelion.py. Reference photo dandelion/baby.jpg by Conall (conall..) (CC BY 2.0), https://www.flickr.com/photos/16176711@N02/53680710936: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_a/dandelion.py" },
-  "notes": "Sport: pink dandelion. Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips."
+  "palette": ["#181818", "#388030", "#f8d028", "#f8f8f8"],
+  "sport": ["#181818", "#387838", "#f0a0c0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 6], [2, 12], [3, 6], [4, 4], [3, 4], [4, 4], [0, 8]], "idle": [[0, 120], [4, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/dandelion.py. Reference photo dandelion/baby.jpg by Conall (conall..) (CC BY 2.0), https://www.flickr.com/photos/16176711@N02/53680710936: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/dandelion.py" },
+  "notes": "LUNGING. Intro: the bud swells, the yellow cowlick bursts open, then it shivers; the claws, stem and bracts hold. Two-hue case: the green is index 1 (shaded with black, lit with white rims) and the yellow index 2, breaking through the bracts' seams. Sport: pink dandelion. Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips (indexes 1-2 only)."
 }

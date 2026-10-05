@@ -224,13 +224,14 @@ const LIST: HerbariumEntry[] = [
   h("wild_rose", "Rosa canina", "Dog Rose", 2.0, 8.0,
     "Its hips glow red in autumn hedges. In wartime Britain, volunteers picked wild rose hips by the ton to make vitamin C syrup."),
 
-  // Fact: the purple pitcher plant has been the provincial flower of Newfoundland and Labrador since 1954.
-  // Source: https://www.gov.nl.ca/exec/cabinet/protocol/symbols/
-  h("pitcher_sprout", "Sarracenia purpurea", "Pitfall", 0.05, 0.1,
-    "It sits in the moss with its hood up, smelling sweet. The purple pitcher plant is the official flower of Newfoundland and Labrador."),
-  // Fact: rain-filled pitchers have stiff downward-pointing hairs; insects can't climb out and drown in the pool.
-  // Source: https://www.fs.usda.gov/wildflowers/plant-of-the-week/sarracenia_purpurae.shtml
-  h("pitcher_plant", "Sarracenia purpurea", "Pitfall", 0.3, 1.0,
+  // Fact: Sarracenia leucophylla (white-topped pitcher plant) is native only to the Gulf Coastal Plain of the
+  // southeastern US (FL, AL, GA, MS), in wet pine savannas and bogs. (Matches the white-hooded Crystal-rule art.)
+  // Source: https://en.wikipedia.org/wiki/Sarracenia_leucophylla
+  h("pitcher_sprout", "Sarracenia leucophylla", "Pitfall", 0.05, 0.1,
+    "It sits in the moss with its hood up, smelling sweet. The white-topped pitcher plant grows wild only near the Gulf Coast of the United States, in boggy pine savannas."),
+  // Fact: Sarracenia pitchers have stiff downward-pointing hairs; insects can't climb out and drown in the fluid below.
+  // Source: https://www.fs.usda.gov/wildflowers/plant-of-the-week/sarracenia_purpurae.shtml (genus-wide trait)
+  h("pitcher_plant", "Sarracenia leucophylla", "Pitfall", 0.3, 1.0,
     "Insects come for the nectar and never leave. Stiff downward-pointing hairs stop them climbing out, so they fall into the pool below and drown."),
 
   // Fact: Antirrhinum comes from Greek anti + rhis (nose), from the flower's resemblance to an animal's snout.

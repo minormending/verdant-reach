@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "pumpkin_blossom",
-  "palette": ["#181818", "#386028", "#f09820", "#f8e070"],
-  "sport": ["#181818", "#306058", "#f0c030", "#f8f8c0"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/pumpkin.py. Reference photo pumpkin/baby.jpg by Roberto Daniel Avila (robertodesu) (CC BY 4.0), https://www.inaturalist.org/observations/306575047: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_b/pumpkin.py" },
-  "notes": "Sport: 'Jarrahdale' blue pumpkin. Cucurbita maxima 'Jarrahdale' (Western Australia heirloom): slate blue-grey ribbed skin; blue-green vines."
+  "palette": ["#181818", "#386828", "#f89820", "#f8f8f8"],
+  "sport": ["#181818", "#306058", "#f0c030", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 14], [2, 18], [3, 6], [4, 8], [0, 1]], "idle": [[0, 120], [4, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/pumpkin.py. Reference photo pumpkin/baby.jpg by Roberto Daniel Avila (robertodesu) (CC BY 4.0), https://www.inaturalist.org/observations/306575047: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/pumpkin.py" },
+  "notes": "Crystal rule. BRACED. Gesture: the bell puckers, then BLARES open like a war horn tipped up at the foe, and settles. Vine green in the dark slot (leaves, sepals, the striped ovary), flower orange in the light slot, the glowing throat in white with an orange stigma (no dark centre, so no eye). Sport: 'Jarrahdale'."
 }

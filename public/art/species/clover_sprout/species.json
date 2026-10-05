@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "clover_sprout",
-  "palette": ["#181818", "#285830", "#68b040", "#f0f8e0"],
-  "sport": ["#181818", "#382838", "#985068", "#f0f0d8"],
-  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_c/clover.py.",
-  "source": { "kind": "generated", "tool": "tools/art/species_c/clover.py" },
-  "notes": "Sport: 'Purpurascens Quadrifolium'. Trifolium repens 'Purpurascens Quadrifolium': burgundy-purple four-leaf clover, white heads."
+  "palette": ["#181818", "#286838", "#70b840", "#f8f8f8"],
+  "sport": ["#181818", "#401830", "#985068", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 12], [2, 6], [3, 14], [0, 6], [3, 4], [0, 8]], "idle": [[0, 120], [2, 6], [0, 10], [2, 6]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/clover.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/clover.py" },
+  "notes": "Crystal rule. BOBBING. Gesture: the trefoil wakes (the head starts folded shut, as clover leaflets really fold at night, opens, pops wider than rest, held, and settles; the dew drop falls off the spade leaf). One hue: a blue-green shade and clover green; white is the chevrons, the lit rims and the dew. Sport: 'Purpurascens Quadrifolium' (burgundy leaves)."
 }

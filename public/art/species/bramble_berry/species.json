@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "bramble_berry",
-  "palette": ["#181818", "#682048", "#d83840", "#f8b880"],
-  "sport": ["#181818", "#985818", "#e8b030", "#f8f0b0"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/bramble.py. Reference photo bramble/teen.jpg by Juraj Ahel (xeniorn) (CC BY 4.0), https://www.inaturalist.org/observations/97085332: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_a/bramble.py" },
-  "notes": "Sport: 'Fall Gold' golden-fruited. Rubus 'Fall Gold' (University of New Hampshire, 1967): golden-amber fruit; its white flowers ride on yellow-green canes."
+  "palette": ["#181818", "#682048", "#d83840", "#f8f8f8"],
+  "sport": ["#181818", "#985818", "#e8b030", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 6], [2, 14], [3, 6], [4, 5], [3, 4], [0, 1]], "idle": [[0, 110], [1, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/bramble.py. Reference photo bramble/teen.jpg by Juraj Ahel (xeniorn) (CC BY 4.0), https://www.inaturalist.org/observations/97085332: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/bramble.py" },
+  "notes": "LUNGING. Intro: the scorpion tail cocks back and holds, strikes over the head at the foe, recoils; the berry and the body hold. Red drupelets are beads over the plum, the glints white. Sport: 'Fall Gold'. Rubus 'Fall Gold' (University of New Hampshire, 1967): golden-amber fruit on yellow-green canes (indexes 1-2 only)."
 }

@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "peppermint",
-  "palette": ["#181818", "#286078", "#50c890", "#d8f8d8"],
-  "sport": ["#181818", "#382030", "#806050", "#e0d8b0"],
-  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_d/mint.py.",
-  "source": { "kind": "generated", "tool": "tools/art/species_d/mint.py" },
-  "notes": "Sport: 'Chocolate' mint. Mentha x piperita f. citrata 'Chocolate': brown-purple stems and leaves, cocoa-dark veins."
+  "palette": ["#181818", "#287078", "#58c890", "#f8f8f8"],
+  "sport": ["#181818", "#482838", "#906850", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 14], [2, 4], [2, 18], [3, 8], [0, 8]], "idle": [[0, 140], [3, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/mint.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/mint.py" },
+  "notes": "Crystal rule. LOOMING: three tiers of crinkled pairs on a thick square stem, the lead leaf thrust over the foe, a frosted flower spike crowning the head. Gesture: the crown pair folds in over the spike, then flares wide as the spike rears inside a burst of frost sparkles, holds, settles. Sport: 'Chocolate' mint."
 }

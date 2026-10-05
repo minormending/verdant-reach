@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "foxglove_rosette",
-  "palette": ["#181818", "#484070", "#7898a0", "#f8d0e0"],
-  "sport": ["#181818", "#485848", "#88a890", "#f8f8f0"],
-  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_c/foxglove.py.",
-  "source": { "kind": "generated", "tool": "tools/art/species_c/foxglove.py" },
-  "notes": "Sport: 'Alba' white foxglove. Digitalis purpurea f. albiflora ('Alba'): white bells with dusky spots."
+  "palette": ["#181818", "#904088", "#98b8a8", "#f8f8f8"],
+  "sport": ["#181818", "#506048", "#b0c8a8", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 4], [1, 12], [2, 16], [3, 6], [0, 4], [3, 4], [0, 6]], "idle": [[0, 120], [3, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/foxglove.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/foxglove.py" },
+  "notes": "Crystal rule. COILED. Gesture: the crook nods (draws back, held, swings its two bells at the foe, held, rings back and settles); only the crook and its bells move. Two tones: foxglove magenta (the young bells, and every leaf's shadow) and woolly grey-sage; white is the pale lip of each bell, where the speckles sit, and the lit rims. No faces: the bells hang side-on, mouths down. Sport: 'Alba' (white foxglove: grey-green buds)."
 }

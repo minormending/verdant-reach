@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "stinging_nettle",
-  "palette": ["#181818", "#383060", "#78b840", "#d8f080"],
-  "sport": ["#181818", "#483858", "#a0b098", "#e8f0e8"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/nettle.py. Reference photo nettle/adult.jpg by David Sankey (iNaturalist user timerobot) (CC0 1.0), https://www.inaturalist.org/observations/371190512: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_b/nettle.py" },
-  "notes": "Sport: silver-leaved. silver-washed leaves on violet stems, after the dead-nettle Lamium maculatum 'Beacon Silver' (the nettle's look-alike)."
+  "palette": ["#181818", "#483068", "#78c040", "#f8f8f8"],
+  "sport": ["#181818", "#583870", "#b0c0b0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 4], [1, 14], [2, 4], [3, 16], [4, 8], [0, 6]], "idle": [[0, 130], [4, 6]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/nettle.py. Reference photo nettle/adult.jpg by David Sankey (iNaturalist user timerobot) (CC0 1.0), https://www.inaturalist.org/observations/371190512: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/nettle.py" },
+  "notes": "Crystal rule. LUNGING. Gesture: wind-up and JAB (the saw-blade lead leaf cocks back and up, held, thrusts past its rest pose in 4 ticks and its hairs bristle on the strike, then it recoils). Only the lead leaf and the hairs move. Same two tones as the sprout. Sport: 'Beacon Silver'."
 }

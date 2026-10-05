@@ -1,10 +1,18 @@
 {
   "format": "verdant.species/1",
   "id": "maple_samara",
-  "palette": ["#181818", "#a84018", "#f0a840", "#f8e8a8"],
-  "sport": ["#181818", "#481838", "#a84060", "#f0b0a8"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/maple.py. Reference photo maple/baby.jpg by Steve Hurst, USDA-NRCS PLANTS Database (Public Domain (US government work)), https://commons.wikimedia.org/wiki/File:Acer_saccharum_seeds.jpg: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_b/maple.py" },
-  "notes": "Sport: 'Crimson King'. Acer platanoides 'Crimson King' (Barbier, Orleans, 1937): maroon-purple leaves and red-purple keys all season."
+  "palette": ["#181818", "#a84018", "#f0a840", "#f8f8f8"],
+  "sport": ["#181818", "#481838", "#b04868", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png", "front__6.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": {
+    "intro": [[0, 6], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [0, 4], [1, 4], [2, 5], [3, 6], [4, 8], [5, 10], [0, 1]],
+    "idle": [[0, 130], [5, 8]]
+  },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/maple.py. Reference photo maple/baby.jpg by Steve Hurst, USDA-NRCS PLANTS Database (Public Domain (US government work)), https://commons.wikimedia.org/wiki/File:Acer_saccharum_seeds.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/maple.py" },
+  "notes": "Crystal rule. BOBBING. Gesture: the keys whirl a full turn about the stalk, a slower second turn that slows to rest (each frame redraws the pair with its x offsets scaled by cos(spin), so it mirrors past 90 degrees). The seeds carry no white dot (it read as an eye). Sport: 'Crimson King', maroon and rose-purple."
 }

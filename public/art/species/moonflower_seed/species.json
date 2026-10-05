@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "moonflower_seed",
-  "palette": ["#181818", "#383868", "#80b890", "#f0f8f0"],
-  "sport": ["#181818", "#402858", "#9098b8", "#e8c8f0"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/moonflower.py. Reference photo moonflower/baby.jpg by Forest and Kim Starr (CC BY 3.0 US), https://commons.wikimedia.org/wiki/File:Starr-161215-0658-Ipomoea_tuboides-cotyledon_leaves-Eagle_Tower-Kahoolawe_(32086181450).jpg: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_b/moonflower.py" },
-  "notes": "Sport: lilac moonflower. the lilac-flowered moonflower Ipomoea muricata (Ipomoea turbinata), the moonflower's purple cousin."
+  "palette": ["#181818", "#383870", "#80c098", "#f8f8f8"],
+  "sport": ["#181818", "#502860", "#b898d0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 4], [1, 6], [2, 6], [1, 6], [3, 14], [2, 6], [0, 6]], "idle": [[0, 110], [1, 6], [2, 6]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/moonflower.py. Reference photo moonflower/baby.jpg by Forest and Kim Starr (CC BY 3.0 US), https://commons.wikimedia.org/wiki/File:Starr-161215-0658-Ipomoea_tuboides-cotyledon_leaves-Eagle_Tower-Kahoolawe_(32086181450).jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/moonflower.py" },
+  "notes": "Crystal rule. BOBBING. Gesture: the butterfly cotyledons beat like a moth's wings (up, down, up, a big high beat held, fold to rest); the seed-coat helmet stays put. Two tones: midnight violet (the coat, every shadow) and sage (leaves); white is the lit rims and the coat's glint. Sport: the lilac moonflower Ipomoea muricata."
 }

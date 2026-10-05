@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "white_clover",
-  "palette": ["#181818", "#285830", "#68b040", "#f0f8e0"],
-  "sport": ["#181818", "#382838", "#985068", "#f0f0d8"],
-  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_c/clover.py.",
-  "source": { "kind": "generated", "tool": "tools/art/species_c/clover.py" },
-  "notes": "Sport: 'Purpurascens Quadrifolium'. Trifolium repens 'Purpurascens Quadrifolium': burgundy-purple four-leaf clover, white heads."
+  "palette": ["#181818", "#286838", "#70b840", "#f8f8f8"],
+  "sport": ["#181818", "#401830", "#985068", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 4], [1, 12], [2, 6], [3, 6], [2, 6], [3, 8], [0, 8]], "idle": [[0, 130], [3, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/clover.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/clover.py" },
+  "notes": "WHITE: the flower head is really white (a white part, up to 35%), lit as a ball of florets with green crescents and seams, blue-green past the terminator. Crystal rule. LUNGING. Gesture: duck and PUFF (the pom-pom ducks back, held, lunges out swelling, its florets shiver and a loose floret flies off and drifts). Only the head, its ruff and the loose floret move. Sport: 'Purpurascens Quadrifolium' (burgundy leaves, white heads)."
 }

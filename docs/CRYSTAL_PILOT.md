@@ -1,5 +1,12 @@
 # Crystal-rule pilot: 3 lines, as an art pack
 
+> **Done and rolled out.** The user approved the pilot; the rule is now the
+> default for every species (docs/ROLLOUT.md, docs/CREATURES.md § Crystal
+> rule). The oak and flytrap lines were promoted into the base art
+> (`tools/art/crystal/`), and the `crystal` pack and `tools/art/pilot_crystal/`
+> were deleted. The review sheets remain in `tools/art/review/crystal_*.png`.
+> The pre-Crystal art is the `classic` pack.
+
 **User direction.** The user shared a sheet of Pokémon Crystal battle sprites
 and asked what we can learn from them and how to make our creatures look
 similar. They then said: "run the pilot with agents".

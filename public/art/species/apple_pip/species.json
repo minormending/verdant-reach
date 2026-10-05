@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "apple_pip",
-  "palette": ["#181818", "#682028", "#b85830", "#d8e890"],
-  "sport": ["#181818", "#402040", "#985070", "#f0c0c8"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-built in tools/art/species_f/ (Round 4). Subject: Malus domestica (orchard apple); drawn from its botany, not traced from any photo.",
-  "source": { "kind": "generated", "tool": "tools/art/species_f/apple.py" },
-  "notes": "BOBBING: a glossy pip tipped at the foe on a forked radicle, its sprout flicked back like a plume. Accent: the wine of the apple skin (dark slot). Sport: Malus 'Royalty' (purple-leaved crabapple: bronze-purple leaves, crimson-pink blossom, dark fruit)."
+  "palette": ["#181818", "#782028", "#90c848", "#f8f8f8"],
+  "sport": ["#181818", "#402040", "#a86888", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 14], [2, 5], [3, 10], [2, 6], [3, 4], [0, 3]], "idle": [[0, 150], [3, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/apple.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/apple.py" },
+  "notes": "BOBBING: a glossy wine pip tipped at the foe on a forked white radicle, its sprout flicked back like a plume. Intro: the two seed leaves clap shut, flick open wide and wave back to rest. Crystal rule: the pip is the dark slot (the line's apple-skin accent) with a bold white gloss; the sprout is the green light slot, shaded wine. Sport: Malus 'Royalty' (purple-leaved crabapple: bronze-purple leaves, dark fruit)."
 }

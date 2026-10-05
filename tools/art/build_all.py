@@ -4,7 +4,7 @@ first re-run every generator.
   PY=/Users/kevinramdath/projects/research/creature-sprites/.venv/bin/python
   $PY tools/art/build_all.py                  validate + index (no pixels change)
   $PY tools/art/build_all.py --regen          run all BUILDERS, then validate + index
-  $PY tools/art/build_all.py --regen tiles species_a   only those builders
+  $PY tools/art/build_all.py --regen tiles crystal     only those builders
   $PY tools/art/build_all.py --list           list the builders
 
 Generators are authoring tools, not the source of truth: public/art/ is.
@@ -17,7 +17,8 @@ To add a generator, append one line to BUILDERS: a name plus either a module
 with build() in tools/art/, or a script path run with this Python from the
 repo root. Order matters only where noted.
 
-The old photo auto-trace (species.py) is a reference tool and is NOT run.
+The old photo auto-trace (species.py) and the pre-Crystal species generators
+(species_a/ to species_f/) are reference tools and are NOT run.
 """
 
 from __future__ import annotations
@@ -41,13 +42,10 @@ BUILDERS: list[tuple[str, str]] = [
     ("items", "items:build"),
     ("ui", "ui:build"),
     ("stills", "stills:build"),
-    ("species_a", "species_a/build.py"),
-    ("species_b", "species_b/build.py"),
-    ("species_c", "species_c/build.py"),
-    ("species_d", "species_d/build.py"),
-    # Round 4 generators: add yours here, e.g. ("species_e", "species_e/build.py")
-    ("species_e", "species_e/build.py"),  # orchid, monstera + lotus lines (Palm House)
-    ("species_f", "species_f/build.py"),  # apple + bird of paradise lines
+    # Every species, Crystal rule (docs/ROLLOUT.md): runs each tools/art/crystal/<line>.py
+    # that defines build(). The old species_a-f generators stay as reference only; they
+    # are NOT run, so a --regen never reverts the redraw (the old look is the `classic` pack).
+    ("crystal", "crystal/build.py"),
     ("env4", "env4/build.py"),            # Chapter 4 tilesets + structures
     ("cast4", "cast4/build.py"),          # Chapter 4 characters, portraits, items, UI, stills
 ]

@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "lily_seedpod",
-  "palette": ["#181818", "#582040", "#b04860", "#f8d8a8"],
-  "sport": ["#181818", "#604018", "#c09038", "#f8e8a8"],
-  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/lily.py. Reference photo water_lily/baby.jpg by Bilby (CC BY 3.0), https://commons.wikimedia.org/wiki/File:Victoria_amazonica_bud.jpg: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_a/lily.py" },
-  "notes": "Sport: 'Chromatella' yellow water lily. Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads."
+  "palette": ["#181818", "#602040", "#c05068", "#f8f8f8"],
+  "sport": ["#181818", "#604018", "#c09038", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 5], [2, 16], [1, 3], [3, 6], [4, 6], [3, 4], [0, 8]], "idle": [[0, 120], [4, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/lily.py. Reference photo water_lily/baby.jpg by Bilby (CC BY 3.0), https://commons.wikimedia.org/wiki/File:Victoria_amazonica_bud.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/lily.py" },
+  "notes": "REARING. Intro: the sepals peel open and fling up like arms, hold, then clap down past rest and flex; the spiny bud and the feet hold. White is the lead sepal's pale inside and the bud's specular crescent; the spines are black. Sport: 'Chromatella'. Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads (indexes 1-2 only)."
 }

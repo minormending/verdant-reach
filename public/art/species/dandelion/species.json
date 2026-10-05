@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "dandelion",
-  "palette": ["#181818", "#406020", "#f0b818", "#f8f0a0"],
-  "sport": ["#181818", "#405028", "#e888b0", "#f8d8e0"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/dandelion.py. Reference photo dandelion/teen.jpg by Agnieszka Kwiecień (Nova) (CC BY 2.5), https://commons.wikimedia.org/wiki/File:Taraxacum_officinale_100.jpg: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_a/dandelion.py" },
-  "notes": "Sport: pink dandelion. Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips."
+  "palette": ["#181818", "#406020", "#f0b818", "#f8f8f8"],
+  "sport": ["#181818", "#405028", "#e888b0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 6], [2, 6], [3, 6], [2, 5], [3, 5], [4, 8], [0, 10]], "idle": [[0, 120], [1, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/dandelion.py. Reference photo dandelion/teen.jpg by Agnieszka Kwiecień (Nova) (CC BY 2.5), https://commons.wikimedia.org/wiki/File:Taraxacum_officinale_100.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/dandelion.py" },
+  "notes": "LUNGING. Intro: the mane fluffs up and shakes left, right, left, then settles; only the head moves. The deep green shades the gold mane (a spiky terminator), the lit florets are white. Sport: pink dandelion. Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips (indexes 1-2 only)."
 }

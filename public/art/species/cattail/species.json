@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "cattail",
-  "palette": ["#181818", "#304858", "#a85828", "#c8e078"],
-  "sport": ["#181818", "#283828", "#985830", "#f8f0d0"],
-  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_c/cattail.py.",
-  "source": { "kind": "generated", "tool": "tools/art/species_c/cattail.py" },
-  "notes": "Sport: 'Variegata'. Typha latifolia 'Variegata': cream-striped blades, a rusty spike."
+  "palette": ["#181818", "#804820", "#a8c858", "#f8f8f8"],
+  "sport": ["#181818", "#985830", "#e0d898", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 4], [1, 12], [2, 16], [3, 10], [0, 4], [3, 4], [0, 6]], "idle": [[0, 140], [3, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/cattail.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/cattail.py" },
+  "notes": "Crystal rule. REARING. Gesture: the great spike rears back, BOBS forward and sheds a burst of white seed fluff (held), which drifts off as it rebounds. Only the spike, its horn, the top of the stem and the fluff move. The velvet brown is broken by a black shadow band, a white rim on the lit shoulder and black pocks. Sport: 'Variegata'."
 }

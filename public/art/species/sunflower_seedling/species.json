@@ -3,8 +3,13 @@
   "id": "sunflower_seedling",
   "palette": ["#181818", "#305030", "#78b840", "#e8e890"],
   "sport": ["#181818", "#384828", "#a0b850", "#f8f0d0"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/sunflower.py. Reference photo sunflower/baby.jpg by Hildabast (CC0), https://commons.wikimedia.org/wiki/File:Dwarf_sunflower_seedling.jpg: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_a/sunflower.py" },
-  "notes": "Sport: 'Italian White'. Helianthus annuus 'Italian White': cream-white rays round a near-black disc."
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 16], [2, 4], [3, 12], [2, 4], [0, 8], [4, 5], [0, 1]], "idle": [[0, 110], [4, 14]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/sunflower.py. Reference photo sunflower/baby.jpg by Hildabast (CC0), https://commons.wikimedia.org/wiki/File:Dwarf_sunflower_seedling.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/sunflower.py" },
+  "notes": "EXCEPTION to the Crystal rule (approved by the Director): index 3 is the line's own gold, not the shared white, because a sunflower's identity is three hues (green leaves, gold rays, the brown seed disc) and the two-tone pilot lost the disc. Everything else follows the rule: full black outline, flat crescent shading, gold only on the rays, hull stripes, lit rims and glints. LUNGING, the base art re-rendered. Intro: the seed leaves start clasped round the striped hull, open, fling wide, settle with one rebound; only the seed leaves move. Idle: the arms lift 1px. Sport: 'Italian White'. Helianthus annuus 'Italian White': cream-white rays round a near-black disc."
 }

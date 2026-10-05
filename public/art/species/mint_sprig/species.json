@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "mint_sprig",
-  "palette": ["#181818", "#286078", "#50c890", "#d8f8d8"],
-  "sport": ["#181818", "#382030", "#806050", "#e0d8b0"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_d/mint.py.",
-  "source": { "kind": "generated", "tool": "tools/art/species_d/mint.py" },
-  "notes": "Sport: 'Chocolate' mint. Mentha x piperita f. citrata 'Chocolate': brown-purple stems and leaves, cocoa-dark veins."
+  "palette": ["#181818", "#287078", "#58c890", "#f8f8f8"],
+  "sport": ["#181818", "#482838", "#906850", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 14], [2, 4], [2, 16], [3, 8], [0, 8]], "idle": [[0, 120], [3, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/mint.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/mint.py" },
+  "notes": "Crystal rule. BRACED: a stout square-stemmed sprig on two crinkled leaf feet, the lead leaf raised as a shield, a cupped tuft of young leaves for a head, a runner creeping off behind. Gesture: the tuft folds shut, then springs open like a fan with a puff of frost, holds, settles. One hue, so the dark slot is a cold hue-shifted teal (sunk veins, the stem's shade face); white is hoarfrost on the puckers and rims. Sport: 'Chocolate' mint."
 }

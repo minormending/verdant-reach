@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "green_chili",
-  "palette": ["#181818", "#205030", "#60b038", "#d8f080"],
-  "sport": ["#181818", "#402848", "#706080", "#c8b8e8"],
-  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/chili.py. Reference photo chili/teen.jpg by ALAMIN (CC BY 4.0), https://commons.wikimedia.org/wiki/File:Green_chili_pepper_on_plant_Bangladesh_1.jpg: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_a/chili.py" },
-  "notes": "Sport: 'Black Pearl'. Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers."
+  "palette": ["#181818", "#205030", "#60b838", "#f8f8f8"],
+  "sport": ["#181818", "#201838", "#605078", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 5], [2, 14], [3, 4], [4, 4], [3, 4], [4, 6], [0, 8]], "idle": [[0, 110], [1, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/chili.py. Reference photo chili/teen.jpg by ALAMIN (CC BY 4.0), https://commons.wikimedia.org/wiki/File:Green_chili_pepper_on_plant_Bangladesh_1.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/chili.py" },
+  "notes": "LUNGING. Intro: the tail tip curls tight (wind-up, held), then flicks out straight and quivers like a flame; the calyx, leaves and body hold. The line's calyx accent is the index-1 green, lit by a white rim; the pod's gloss is a long white specular. Sport: 'Black Pearl'. Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves, glossy black fruit, purple flowers (indexes 1-2 only)."
 }

@@ -32,9 +32,163 @@ It flags (`!`) colour count, missing outline colour, floating sprites, size
 class, fill, mirror symmetry, orphan pixels and idle-frame problems. A `!` is
 a prompt to look, not an automatic fail (deliberate dew dots count as orphans).
 
+## Crystal rule (the default since the Crystal-rule rollout)
+
+**Status.** After the pilot ([CRYSTAL_PILOT.md](CRYSTAL_PILOT.md)), the user
+made this the rule for every species ([ROLLOUT.md](ROLLOUT.md)). It
+**supersedes §1 (palette), the selout part of §2, and §5 (idle)**. The pose
+vocabulary (§4), size classes (§3), backs (§6) and icons (§7) still apply.
+The pre-Crystal art is kept as the `classic` pack (`?art=classic`).
+
+Generators live in `tools/art/crystal/<line>.py` and write through
+`tools/art/crystal/kit.py`, which also checks the rule
+(`$PY tools/art/crystal/kit.py <ids>`).
+
+### The palette
+
+| Index | Role | Colour |
+|---|---|---|
+| 0 | the **full** outline, the deepest crevices, seams, cast shadow | always `#181818` |
+| 1 | the species' dark tone: shading **and** a second hue | the species' choice |
+| 2 | the species' light tone: the body, usually most of the sprite | the species' choice |
+| 3 | highlights only | always `#f8f8f8`, the shared white |
+
+- **Full black outline, no selout.** Every edge against the background is
+  black, on fronts, backs and icons. Internal lines between different parts
+  are black too. A colour pixel touching transparency is an outline gap (the
+  checker warns).
+- **Flat, bold shading.** Light comes from the top-left. Use two tones per
+  form: a crisp index-1 crescent on the bottom-right, and black for the
+  deepest folds. No pillow shading, no dither, no orphan pixels.
+- **Highlight discipline.** White is for specular shine on glossy parts
+  (caps, lobes, seeds), dew, 1px light rims on the lit edges of leaves and
+  petals, and the paper white of a genuinely white part (clover, moonflower,
+  the dandelion clock). Fronts take **5–20%** white; backs and icons take at
+  least **3%**.
+- **Two hues from two tones.** When a plant has no dark green, put its
+  second hue in the dark slot and let it shade the body: the flytrap's trap
+  red, the oak's bark brown. That's how a two-tone plant keeps both hues.
+- **Big dark areas go flat and blobby.** Break them with 1px white rims on
+  the lit edges, black splits, and more of the light tone.
+- **The sport swaps only indexes 1–2.** It is the line's real cultivar from
+  [SPORTS.md](SPORTS.md), re-expressed in two tones.
+- **The box fits the biggest frame.** The 56x56 front must hold the
+  *largest* animation frame, so plan the pose for the biggest gesture.
+- **This is a redraw, not a recolour.** Keep the species id, size class,
+  pose, motif and accent, so it is clearly the same creature. Never copy,
+  trace or import a Nintendo/Game Freak sprite: the reference is for
+  principles only.
+
+### Faces are forbidden (decision Q3). Watch for accidental ones
+
+Check **every frame at 1x**.
+- **A black disc with a white glint reads as an eye.** The pilot sunflower's
+  black disc did this until it got a seed lattice. A dark round part needs
+  texture (a lattice, ribs, seeds) or an off-centre highlight that follows
+  its form, not a dot in the middle.
+- **A black rib or seam reads as a mouth,** especially under two glints.
+  Give leaf midribs the light or dark tone, not black, and break long
+  horizontal black seams.
+- Two round light spots side by side above a dark line make a face: move one
+  of them, or merge them into a rim.
+- If a frame of the intro makes a face (a gaping trap with two glints), fix
+  that frame. A 1-tick face still gets noticed.
+
+### Exceptions: a third hue
+
+Some plants' identity *needs* a third hue. An exception keeps a
+**species-specific light tone in index 3** in place of the shared white,
+and follows **everything else**: the full black outline, flat bold shading,
+highlight discipline (index 3 only on the identity part, rims and glints),
+and the animation. Its sport may also change index 3.
+
+- The artist asks main. The **Director approves** an exception only when the
+  identity truly needs it, and adds the id to `EXCEPTIONS` in
+  `tools/art/crystal/kit.py`.
+- The bundle's `notes` give the reason, starting with "EXCEPTION".
+- Expect only a few.
+
+| Species | Index 3 | Why |
+|---|---|---|
+| sunflower_seedling, sunflower_bud, sunflower | pale gold / gold | The sunflower is three hues: green leaves, gold rays and the brown seed disc. The two-tone pilot dropped the brown, and the black disc read as an eye. The line keeps the base palette (brown or blue-green dark, leaf green, gold). |
+
+### White parts: a higher white cap
+
+Separate from the exceptions: some plants' identity part **is** white (not a
+highlight). They keep the shared palette, but a front may carry up to **35%**
+white instead of 20%.
+- The white must be the plant's real colour, not highlight spam. The white
+  mass still needs index-1 and black shading inside it (florets, folds,
+  seams), so it reads as form, not a blank.
+- The bundle's `notes` say "WHITE: <reason>". The Director approves and adds
+  the id to `WHITE_PARTS` in `tools/art/crystal/kit.py`.
+
+| Species | Why |
+|---|---|
+| white_clover | the head is a ball of white florets |
+| moonflower | the trumpet is pure white |
+| dandelion_clock | the seed clock is a white pappus sphere |
+| chili_blossom | chili (Capsicum) flowers are white |
+| giant_water_lily | Victoria water lilies open white on the first night |
+
+### Animation (`anim`, docs/ART.md §3)
+
+Every species has an **entrance animation** (`anim.intro`), played once when
+it appears (sent out, met in battle, a Herbarium page opening), and
+optionally a subtle `anim.idle` loop.
+
+**Frames and timing**
+- **3–6 front frames** (`front` … `front__6`; the format allows 8), all
+  registered on the same canvas. Frame 0 is the rest pose.
+- **Only the signature part moves.** The rest of the body is pixel-identical
+  in every frame; declare the `moving` boxes so the checker can verify it.
+  Treat this as guidance, not law, for plants where the head is most of the
+  body (the young flytrap, the great oak's crown).
+- **The intro lasts 36–72 ticks (0.6–1.2 s) and ends on frame 0.** Each step
+  is `[frame, ticks]` at 60 fps.
+- **Timing gives character.** Use anticipation (a 10–16 tick wind-up in the
+  opposite direction), a fast action (4–6 ticks), a **hold** on the extreme
+  (12–20 ticks), then an overshoot or rebound and the settle (1 tick on
+  frame 0 at the end).
+- **The idle** (optional) holds frame 0 for 90–150 ticks, then shows a 1-frame
+  twitch for 6–14 ticks: a glint twinkle, a leaf lift, a trap snap. Keep it
+  subtle. The legacy ping-pong is gone.
+
+**Gesture vocabulary per plant type.** Start here; a better gesture for the
+species wins.
+
+| Plant type | Lines | Gestures that work |
+|---|---|---|
+| Trees and saplings | oak, apple, maple, holly | the crown heaves and the leaves shiver, then it settles; branches flex like arms bracing; a cap or fruit tips up for a peek, then snaps down; samaras spin |
+| Carnivores | flytrap, sundew, pitcher | the jaws gape, hold, then **SNAP**; a lunge with a wind-up; tentacles curl in, and the dew glints; a lid lifts and drops |
+| Big flowers | sunflower, rose, lotus, moth orchid, moonflower, bird of paradise | the head lifts and turns to face the foe, the petals flare and a glint gleams; a bud swells and cracks open; a crest fans out |
+| Spires and bells | foxglove, snapdragon, cattail, orchid spike | the bells or jaws snap open down the spike; the spike sways and rebounds; a pollen puff |
+| Fruit and veg | chili, pumpkin, bramble, apple | the fruit swells, squashes and pops back; the vine whips; the berries bounce |
+| Leaves and fronds | fern, monstera, mint, nettle, clover | a fiddlehead uncurls; a leaf unfurls and spreads like a cape; the stingers bristle; the leaflets fold and open |
+| Water plants | lily, lotus, cattail | the pad ripples and rises; a pod bobs; the seed head rattles |
+| Seeds and floaters | dandelion, maple samara, seeds and pips | the pappus puffs out, and one seed drifts and returns; a spin; a hop |
+| Sprouts and seedlings | every stage 1 | the seed leaves clasp, then fling wide and settle; the hull tips up |
+
+**Pitfalls**
+- **The box must fit the largest frame.** If the flared frame is clipped,
+  the pose is too big: shrink frame 0, not the gesture.
+- **Faces appear in motion.** A gaping maw with two white glints is a face;
+  check every intro frame at 1x (see above).
+- **Don't shift blocks of pixels.** Redraw from the same parts with moved
+  control points, so the outline never tears or doubles. Then lock the
+  frames to frame 0 outside the moving boxes.
+- **No flicker.** A part that changes on every 4-tick step reads as noise.
+  Hold the extremes.
+- **White share drops in the extreme frames** when a glossy part closes
+  (a shut trap). Frame 0 must be 5–20%; other frames may dip slightly.
+
 ---
 
 ## 1. Palette discipline
+
+> **Superseded by the Crystal rule** (above) for every species. The
+> greyscale test, hue-shifting and the accent-in-the-same-slot ideas still
+> help when you pick the two species tones.
 
 Every sprite (front, front__2, front__3, back, icon, icon__2 of one species)
 uses **the same 4 colours**:
@@ -75,6 +229,9 @@ uses **the same 4 colours**:
   creatures need their mid tone (slot 2) to carry the shape.
 
 ## 2. Outline and selout
+
+> **Selout is retired by the Crystal rule:** the outline is full black.
+> Pixel-perfect curves and the weighted contact line still apply.
 
 The renderer (`px.Sprite`) produces the outline; these are the rules it
 follows, and that hand edits must keep.
@@ -355,6 +512,10 @@ moonflower seed, clover sprout, lily seedpod).
 | nothing loose | one motion cue: a drifting seed or petal, a curling tendril, a windswept tip |
 
 ## 5. Idle animation (front__2, front__3)
+
+> **Superseded by the Crystal rule's Animation section** (`anim.intro` and
+> `anim.idle`). The legacy ping-pong below only applies to art with no
+> `anim` (the `classic` and `traced` packs).
 
 The battle scene ping-pongs `front → front__2 → front__3 → front__2 → front`
 (or `front ↔ front__2` with two frames).

@@ -1,10 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "sugar_maple",
-  "palette": ["#181818", "#b83018", "#f89830", "#f8e088"],
-  "sport": ["#181818", "#401838", "#983868", "#e890a0"],
-  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/maple.py. Reference photo maple/adult.jpg by Shelby L. Bell (Flickr user vwcampin) (CC BY 2.0), https://www.flickr.com/photos/125112383@N06/37586764740: used as a drawing reference, not traced.",
-  "source": { "kind": "generated", "tool": "tools/art/species_b/maple.py" },
-  "notes": "Sport: 'Crimson King'. Acer platanoides 'Crimson King' (Barbier, Orleans, 1937): maroon-purple leaves and red-purple keys all season."
+  "palette": ["#181818", "#b03018", "#f89830", "#f8f8f8"],
+  "sport": ["#181818", "#401838", "#a84070", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png", "front__6.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 8], [2, 16], [3, 6], [4, 8], [5, 8], [0, 1]], "idle": [[0, 140], [1, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/maple.py. Reference photo maple/adult.jpg by Shelby L. Bell (Flickr user vwcampin) (CC BY 2.0), https://www.flickr.com/photos/125112383@N06/37586764740: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/maple.py" },
+  "notes": "Crystal rule. LOOMING. Gesture: the crown heaves up and fans its leaves, holds, settles, and a key whirls down off the crown. Leaf clumps are split by black seams, rust shade and white top-left rims. Sport: 'Crimson King'."
 }

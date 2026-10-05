@@ -56,7 +56,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
   - **Your lead Quickened follows you** around the overworld (toggle in OPTIONS).
   - **Eight illustrated stills** at key story moments.
 - **An original chiptune soundtrack:** 24 tracks, jingles, sound effects, a cry per species, and ambient wind, bird and cricket beds, all synthesised live with WebAudio.
-- **Art:** all hand-built pixel art, stored as swappable bundles in `public/art/` (a folder of PNGs plus JSON per creature, tileset, structure and character; format in [docs/ART.md](docs/ART.md)). Art packs override any subset: try `?art=traced` for the original photo-traced sprites.
+- **Art:** all hand-built pixel art, stored as swappable bundles in `public/art/` (a folder of PNGs plus JSON per creature, tileset, structure and character; format in [docs/ART.md](docs/ART.md)). Every species follows the Crystal rule (shared black outline and white highlights, two species tones, a per-species entrance animation; [docs/CREATURES.md](docs/CREATURES.md)). Art packs override any subset: try `?art=classic` for the pre-Crystal sprites or `?art=traced` for the original photo-traced ones.
   - 65 species with idle animations, true back views and a real-cultivar shiny ("sport") palette each ([docs/SPORTS.md](docs/SPORTS.md)), to the creature design guide in `docs/CREATURES.md`.
   - Autotiled environments with ground variation.
   - Unique characters with weighted walk cycles, and trainer portraits.
