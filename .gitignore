@@ -5,3 +5,7 @@ dist
 
 # local tooling
 .claude/
+
+# python
+__pycache__/
+*.pyc
