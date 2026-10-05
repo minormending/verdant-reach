@@ -798,7 +798,7 @@ class BattleScene implements Scene {
       foe.metAt = { map: ctx.state.position.map, level: foe.level };
       foe.friendship = Math.max(foe.friendship, 70);
       if (first && hasHerbarium(ctx)) {
-        await this.say(`${name}'s data was added to the FIELD HERBARIUM.`, "wait");
+        await this.say(`${name}'s data was added to your HERBARIUM.`, "wait");
         await showHerbariumEntry(ctx, foe.species);
       }
       await askNickname(ctx, this.ui, foe);

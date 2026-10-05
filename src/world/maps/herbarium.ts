@@ -98,7 +98,7 @@ export const scripts: Scripts = {
   ],
   herb_archivist: [
     ifFlags({ got_starter: true }, [
-      say("Pressing a leaf for your FIELD HERBARIUM? Flat, dry, then labelled."),
+      say("Pressing a leaf for your HERBARIUM? Flat, dry, then labelled."),
       say("In that order. Labelling a wet leaf is how you lose a week."),
     ], [
       say("Every sheet in these drawers is a pressed plant, with where and when it was found."),
