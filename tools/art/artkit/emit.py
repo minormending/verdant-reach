@@ -47,7 +47,7 @@ def _locked(kind: str, id_: str, root) -> dict | None:
 
 def species(id_: str, frames: Mapping[str, Img], tool: str, credits: str | None = None,
             root=ART) -> bool:
-    """frames: 'front', 'front__2', 'front__3', 'back', 'icon', 'icon__2'."""
+    """frames: 'front', 'front__2' .. 'front__8', 'back', 'icon', 'icon__2'."""
     meta = _locked("species", id_, root)
     if meta is None:
         return False
@@ -66,6 +66,8 @@ def species(id_: str, frames: Mapping[str, Img], tool: str, credits: str | None 
            "source": {"kind": "generated", "tool": tool}}
     if meta.get("notes"):
         out["notes"] = meta["notes"]
+    if meta.get("anim"):
+        out["anim"] = meta["anim"]              # hand-kept, like notes
     B.write_species(id_, arrs, out, root)
     return True
 

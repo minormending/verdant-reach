@@ -10,7 +10,11 @@ export {
 } from "./registry";
 export { ArtCatalog, LAB_LAYER, type BundleView, type Layer, type Resolution } from "./catalog";
 export * from "./format";
-export { parseLogical, logicalPath, SPECIES_FRAME_KINDS, SET_DIRS, type LogicalRef } from "./paths";
+export { parseLogical, logicalPath, frontKind, FRONT_KINDS, SPECIES_FRAME_KINDS, SET_DIRS, type FrontFrameKind, type LogicalRef } from "./paths";
+export {
+  animMaxFrame, animState, checkSpeciesAnim, introRemaining, MAX_FRONT_FRAMES, parseSpeciesAnim, stepAt, stepsLength,
+  type AnimPhase, type AnimState,
+} from "./anim";
 export { requiredPaths, type RequiredPath } from "./required";
 export { validateArt, errorsOnly, type Problem, type ValidateResult } from "./validate";
 export { recolorRgba, makeRecolor, parseHex, toHex, isPalette, type Recolor } from "./palette";

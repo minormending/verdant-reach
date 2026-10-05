@@ -17,7 +17,7 @@ from . import bundles as B
 from .core import ART
 from .sheets import cell, parse_stem
 
-SPECIES_RE = re.compile(r"^assets/species/([a-z0-9_]+)/(front|front__2|front__3|back|icon|icon__2)\.png(\?sport)?$")
+SPECIES_RE = re.compile(r"^assets/species/([a-z0-9_]+)/(front|front__[2-8]|back|icon|icon__2)\.png(\?sport)?$")
 FLAT_RE = re.compile(r"^assets/(tiles|structures|characters|trainers|items|ui|stills)/([^/]+)\.png$")
 
 

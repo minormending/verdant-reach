@@ -42,7 +42,7 @@ describe("index builder", () => {
   it("lists bundles, their files, packs and legacy files", () => {
     expect(Object.keys(index.species)).toEqual(["fern"]);
     expect(index.species.fern).toEqual(["back.png", "front.png", "front__2.png", "icon.png"]);
-    expect(Object.keys(index.packs)).toEqual(["frames", "onetile", "recolor", "sheet"]);
+    expect(Object.keys(index.packs)).toEqual(["anim", "frames", "onetile", "recolor", "sheet"]);
     expect(index.packs.recolor.species.fern).toEqual([]);
     expect(index.packs.onetile.name).toBe("ONE TILE");
     expect(index.legacy).toEqual(["assets/species/fern/front__3.png", "assets/species/oak/front.png", "assets/tiles/rock.png"]);

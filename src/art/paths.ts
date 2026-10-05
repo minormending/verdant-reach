@@ -1,8 +1,13 @@
 // Logical asset paths (built by the helpers in src/contracts/constants.ts)
 // parsed into structured requests, and built back. Pure.
 
-export type SpeciesFrameKind = "front" | "front__2" | "front__3" | "back" | "icon" | "icon__2";
-export const SPECIES_FRAME_KINDS: readonly SpeciesFrameKind[] = ["front", "front__2", "front__3", "back", "icon", "icon__2"];
+import type { SpeciesSpriteKind } from "../contracts";
+
+export type SpeciesFrameKind = SpeciesSpriteKind;
+/** Front frame kinds in order: index i is `frames.front[i]`. */
+export const FRONT_KINDS = ["front", "front__2", "front__3", "front__4", "front__5", "front__6", "front__7", "front__8"] as const;
+export type FrontFrameKind = (typeof FRONT_KINDS)[number];
+export const SPECIES_FRAME_KINDS: readonly SpeciesFrameKind[] = [...FRONT_KINDS, "back", "icon", "icon__2"];
 
 /** Logical directories served by image sets (ART.md §7). */
 export const SET_DIRS = ["assets/trainers", "assets/items", "assets/ui", "assets/stills"] as const;
@@ -14,7 +19,7 @@ export type LogicalRef =
   | { type: "character"; key: string }
   | { type: "set"; dir: string; key: string };
 
-const SPECIES_RE = /^assets\/species\/([a-z0-9_]+)\/(front|front__2|front__3|back|icon|icon__2)\.png(\?sport)?$/;
+const SPECIES_RE = /^assets\/species\/([a-z0-9_]+)\/(front|front__[2-8]|back|icon|icon__2)\.png(\?sport)?$/;
 const TILE_RE = /^assets\/tiles\/([a-z0-9_]+?)(?:~([1-9])|@(\d{1,2}))?(__2)?\.png$/;
 const ONE_RE = /^assets\/(structures|characters)\/([a-z0-9_]+)\.png$/;
 const SET_RE = /^(assets\/(?:trainers|items|ui|stills))\/([A-Za-z0-9_]+)\.png$/;
@@ -65,13 +70,16 @@ export function logicalPath(ref: LogicalRef): string {
 /** The species frame list and index a frame kind reads from. */
 export function speciesFrameSlot(kind: SpeciesFrameKind): { list: "front" | "back" | "icon"; index: number } {
   switch (kind) {
-    case "front": return { list: "front", index: 0 };
-    case "front__2": return { list: "front", index: 1 };
-    case "front__3": return { list: "front", index: 2 };
     case "back": return { list: "back", index: 0 };
     case "icon": return { list: "icon", index: 0 };
     case "icon__2": return { list: "icon", index: 1 };
+    default: return { list: "front", index: FRONT_KINDS.indexOf(kind) };
   }
+}
+
+/** The front frame kind for a frame index (0 = "front"); out-of-range indexes clamp. */
+export function frontKind(index: number): FrontFrameKind {
+  return FRONT_KINDS[Math.max(0, Math.min(FRONT_KINDS.length - 1, Math.floor(index)))];
 }
 
 /** The legacy file a logical path used to be (query stripped). */

@@ -1,6 +1,8 @@
 // The art bundle format (docs/ART.md), as TypeScript types. Pure: no DOM, no
 // Node. Shared by the runtime registry, the Art Lab and the bundle test.
 
+import type { SpeciesAnim } from "../contracts";
+
 /** Bundle kinds, named after their folders under public/art/. */
 export const BUNDLE_KINDS = ["species", "tilesets", "structures", "characters", "sets"] as const;
 export type BundleKind = (typeof BUNDLE_KINDS)[number];
@@ -26,7 +28,10 @@ export interface SpeciesBundle {
   id: string;
   palette: string[];
   sport?: string[];
+  /** front: 1–8 files (front … front__8); back: 1; icon: 1–2. */
   frames: { front: string[]; back: string[]; icon: string[] };
+  /** Optional Crystal-style animation (front frame indexes, 60 fps ticks). */
+  anim?: SpeciesAnim;
   credits?: string;
   source?: SourceInfo;
   notes?: string;

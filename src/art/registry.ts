@@ -7,7 +7,8 @@
 // packs, patch bundle JSON in memory, replace any file in memory, read
 // pixels, and validate (see the Art Lab in src/art/lab/).
 
-import type { ArtImage, Assets } from "../contracts";
+import type { ArtImage, Assets, SpeciesAnim, SpeciesId } from "../contracts";
+import { parseSpeciesAnim } from "./anim";
 import { ArtCatalog, LAB_LAYER, type BundleView, type Resolution } from "./catalog";
 import {
   BUNDLE_KINDS, bundleJsonUrl, emptyIndex, INDEX_FORMAT, rawBundlesOf,
@@ -79,6 +80,8 @@ export class ArtRegistry implements Assets {
   private listeners = new Set<() => void>();
   private warned = new Set<string>();
   private pixelCache = new Map<string, { v: number; rgba: Rgba }>();
+  private anims = new Map<string, SpeciesAnim | undefined>();
+  private animsVersion = -1;
 
   constructor(opts: ArtRegistryOptions = {}) {
     this.artRoot = opts.artRoot ?? "art/";
@@ -174,6 +177,23 @@ export class ArtRegistry implements Assets {
     return !res || (!!this.files.get(res.url)?.failed && !this.fileOverrides.has(res.url));
   }
 
+  /** The species bundle's `anim` (packs and lab patches merged shallowly), or undefined. */
+  speciesAnim(id: SpeciesId | string): SpeciesAnim | undefined {
+    if (!this.isReady) return undefined;
+    if (this.animsVersion !== this.version) { this.anims.clear(); this.animsVersion = this.version; }
+    if (this.anims.has(id)) return this.anims.get(id);
+    const a = parseSpeciesAnim(this.catalog.bundle("species", id)?.merged.anim);
+    this.anims.set(id, a);
+    return a;
+  }
+
+  /** How many front frames the species bundle lists (0 when no bundle owns it). */
+  frontFrameCount(id: SpeciesId | string): number {
+    const f = this.catalog.bundle("species", id)?.merged.frames;
+    const list = f && typeof f === "object" ? (f as Record<string, unknown>).front : undefined;
+    return Array.isArray(list) ? list.length : 0;
+  }
+
   async loadAll(paths?: string[], onProgress?: (done: number, total: number) => void): Promise<void> {
     await this.ready();
     const list = paths ?? this.catalog.provides();
@@ -253,6 +273,24 @@ export class ArtRegistry implements Assets {
       try { localStorage.setItem(PACKS_STORAGE_KEY, JSON.stringify(this.active)); } catch { /* storage unavailable */ }
     }
     this.rebuild();
+  }
+
+  /**
+   * A ready, read-only view of the same art with other packs active and no
+   * lab edits (the Art Lab's compare view). It shares this registry's loaded
+   * files, so nothing is fetched twice. Call after `ready()`.
+   */
+  fork(packs: readonly string[]): ArtRegistry {
+    const r = new ArtRegistry({ artRoot: this.artRoot, packs });
+    r.index = this.index;
+    r.indexLoaded = this.indexLoaded;
+    r.raw = this.raw;
+    r.files = this.files;
+    r.active = packs.filter((p) => this.index.packs[p]);
+    r.initPromise = Promise.resolve();
+    r.isReady = true;
+    r.rebuild();
+    return r;
   }
 
   // ---- inspection --------------------------------------------------------------

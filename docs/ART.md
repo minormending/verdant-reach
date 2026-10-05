@@ -272,7 +272,13 @@ These are owned by the pipeline; see the tooling section it adds below.
     previews and a 4x4 autotile mask preview;
   - toggle packs;
   - drop a PNG onto a frame to preview a swap live (in memory only);
-  - a validation panel.
+  - a validation panel;
+  - per species, an Animation section: ▶ Intro, the looping idle and a
+    timeline of the `anim` steps;
+  - a **Compare** tab (`?dev=art#compare/<species>/<pack>`): base art vs a
+    pack side by side at 1x/2x/4x, normal and sport, with intros replayable
+    (click a sprite). With no species it lists every species the pack
+    touches. It ignores the pack toggles.
 
 ## 11. Tooling (pipeline)
 

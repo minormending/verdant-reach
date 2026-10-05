@@ -28,7 +28,7 @@ import {
 } from "./fx";
 import { animFor } from "./anims";
 import { playMoveFx } from "./movefx";
-import { idleKind, type FrontKind } from "../screens/kit/idle";
+import { frontPaths, SpritePlayback, type FrontKind } from "../screens/kit/idle";
 import { battleAnimsOn } from "../save";
 import { worldTime } from "../engine/time";
 import { effectivenessHint, FoeKnowledge, type EffHint } from "./hints";
@@ -102,6 +102,8 @@ class BattleScene implements Scene {
 
   private enemy = newSprite();
   private player = newSprite();
+  /** Front-sprite playback per side (Crystal-style intros; the player's side shows a back sprite). */
+  private playback: [SpritePlayback, SpritePlayback] = [new SpritePlayback(":battle0"), new SpritePlayback(":battle1")];
   private enemyTrainer: TrainerView = { key: "gardener", visible: false, dx: 0 };
   private playerTrainer: TrainerView = { key: "player_back", visible: false, dx: 0 };
   private enemyHud: HudView = newHud();
@@ -224,7 +226,25 @@ class BattleScene implements Scene {
     if (!v.species || silhouetted || v.scale !== 1 || v.drop !== 0) return "front";
     const status = this.hudOf(side).status;
     if (status === "dormant" || status === "frostbite") return "front";
-    return idleKind(v.species, this.frame, `:battle${side}`);
+    return this.playback[side].kind(v.species, this.frame);
+  }
+
+  /**
+   * The species on `side` has just appeared (with its cry): play its front
+   * intro once. BATTLE ANIM OFF skips it (straight to the idle). The player's
+   * side shows a back sprite, which has no animation.
+   */
+  private startIntro(side: Side) {
+    const v = this.viewOf(side);
+    const pb = this.playback[side];
+    if (side === 0 || !v.species || !battleAnimsOn(this.ctx.state?.options)) { pb.reset(); return; }
+    pb.appear(v.species, this.frame);
+  }
+
+  /** Wait out the rest of a side's intro (so the next beat doesn't cut it off). */
+  private introLeft(side: Side): number {
+    const v = this.viewOf(side);
+    return v.species ? this.playback[side].remaining(v.species, this.frame) : 0;
   }
 
   /** A diagonal white glint sweeping across a sprite (masked to its shape). */
@@ -317,7 +337,7 @@ class BattleScene implements Scene {
       paths.add(speciesPath(q.species, "icon"));
     }
     for (const q of this.s.sides[1].party) {
-      for (const k of ["front", "front__2", "front__3"] as const) paths.add(speciesPath(q.species, k));
+      for (const p of frontPaths(q.species)) paths.add(p);
     }
     paths.add(portraitPath("player_back"));
     for (const u of ["pod", "pod_open", "battle_ground"] as const) paths.add(uiPath(u));
@@ -433,6 +453,7 @@ class BattleScene implements Scene {
       this.enemy.sport = foe.sport;
       this.enemy.visible = true;
       this.enemy.dx = -152;
+      this.playback[1].hold(foe.species); // rest pose while it slides in; the intro plays with its cry
     }
     await f.animate(10, (_i, t) => { this.fade = 1 - t; });
     this.fade = 0;
@@ -467,6 +488,7 @@ class BattleScene implements Scene {
       });
       this.enemy.dy = 0;
       void ctx.audio.playCry(foe.species);
+      this.startIntro(1);
       if (foe.sport) await f.wait(this.fx.sparkle(ENEMY_CENTER));
       markSeen(ctx, foe.species);
       this.setHud(1);
@@ -524,10 +546,11 @@ class BattleScene implements Scene {
     await this.lobPod({ x: 168, y: 4 }, { x: ENEMY_CENTER.x - 6, y: ENEMY_CENTER.y + 4 }, 14, 10);
     await this.popOut(1, foe.sport);
     void this.ctx.audio.playCry(foe.species);
+    this.startIntro(1);
     this.setHud(1);
     await this.slideHud(1);
     await say;
-    await this.flow.wait(16);
+    await this.flow.wait(Math.max(16, this.introLeft(1)));
   }
 
   private async sendOutPlayerAnim() {
@@ -541,6 +564,7 @@ class BattleScene implements Scene {
     await this.lobPod({ x: -8, y: 76 }, { x: PLAYER_CENTER.x - 6, y: PLAYER_CENTER.y + 6 }, 14, 16);
     await this.popOut(0, me.sport);
     void this.ctx.audio.playCry(me.species);
+    this.startIntro(0); // back sprite: no front intro to play
     this.setHud(0);
     await this.slideHud(0);
     await say;

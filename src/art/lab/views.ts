@@ -8,12 +8,13 @@ import type { BundleView, Layer } from "../catalog";
 import { LAB_LAYER } from "../catalog";
 import { BUNDLE_JSON, refCells, type BundleKind } from "../format";
 import { colorStats, isPalette } from "../palette";
-import { logicalPath, SPECIES_FRAME_KINDS, type SpeciesFrameKind } from "../paths";
+import { logicalPath, SPECIES_FRAME_KINDS, speciesFrameSlot, type SpeciesFrameKind } from "../paths";
 import type { ArtRegistry } from "../registry";
 import { requiredPaths } from "../required";
 import type { Problem } from "../validate";
 import { clear, ctx2d, nn, downloadJson, downloadPng, dropTarget, h, pixelCanvas, toCanvas } from "./dom";
 import type { LabEnv, LabTab } from "./lab";
+import { animPlayer, compareView, speciesAnimSection } from "./anim";
 
 type View = (env: LabEnv, el: HTMLElement) => void;
 
@@ -133,15 +134,7 @@ const fileName = (url: string) => url.slice(url.lastIndexOf("/") + 1);
 // Species
 // ---------------------------------------------------------------------------
 
-const FRAME_SIZE: Record<SpeciesFrameKind, number> = { front: 56, front__2: 56, front__3: 56, back: 48, icon: 16, icon__2: 16 };
-
-function pingPong(n: number): number[] {
-  if (n <= 1) return [0];
-  const out: number[] = [];
-  for (let i = 0; i < n; i++) out.push(i);
-  for (let i = n - 2; i > 0; i--) out.push(i);
-  return out;
-}
+const FRAME_SIZE = (kind: SpeciesFrameKind): number => (kind.startsWith("front") ? 56 : kind === "back" ? 48 : 16);
 
 const speciesView: View = (env, el) => {
   const { reg, state } = env;
@@ -182,24 +175,20 @@ const speciesView: View = (env, el) => {
   const row = h("div", { class: "al-row" });
   for (const sport of [false, true]) {
     if (sport && !reg.resolve(sp("front", true))) continue;
-    const idle = pixelCanvas(56, 56, z);
-    const gi = ctx2d(idle);
+    const idle = animPlayer(env, { reg, id, sport, zooms: [z], intro: false });
     const back = pathCanvas(env, sp("back", sport), 48, 48);
     const icon = pixelCanvas(16, 16, z);
     const gc = ctx2d(icon);
     const iconKinds = kinds.filter((k) => k.startsWith("icon"));
-    const order = pingPong(fronts.length);
-    let lastIdle = -1, lastIcon = -1;
+    let lastIcon = -1;
     env.animate((f) => {
-      const pose = order[Math.floor(f / 24) % order.length];
-      if (pose !== lastIdle) { lastIdle = pose; gi.clearRect(0, 0, 56, 56); paint(reg, gi, sp(fronts[pose] ?? "front", sport)); }
       const ic = iconKinds.length > 1 ? Math.floor(f / 16) % 2 : 0;
       if (ic !== lastIcon) { lastIcon = ic; gc.clearRect(0, 0, 16, 16); paint(reg, gc, sp(iconKinds[ic] ?? "icon", sport)); }
     });
-    const card = (c: HTMLCanvasElement, cap: string) => h("div", { class: "al-card" }, h("div", { class: `al-stage ${env.bgClass()}` }, c), h("div", { class: "cap" }, h("b", null, cap)));
-    row.append(card(idle, `${sport ? "SPORT " : ""}idle · ${fronts.length} pose${fronts.length > 1 ? "s" : ""}`), card(back, `${sport ? "SPORT " : ""}back`), card(icon, `${sport ? "SPORT " : ""}icon`));
+    const card = (c: HTMLElement, cap: string) => h("div", { class: "al-card" }, c instanceof HTMLCanvasElement ? h("div", { class: `al-stage ${env.bgClass()}` }, c) : c, h("div", { class: "cap" }, h("b", null, cap)));
+    row.append(card(idle.el, `${sport ? "SPORT " : ""}idle · ${fronts.length} frame${fronts.length > 1 ? "s" : ""}`), card(back, `${sport ? "SPORT " : ""}back`), card(icon, `${sport ? "SPORT " : ""}icon`));
   }
-  el.append(row);
+  el.append(row, ...speciesAnimSection(env, id));
 
   // Frames (drop targets)
   el.append(h("h2", null, `Frames${state.sport ? " (sport)" : ""}`),
@@ -207,13 +196,13 @@ const speciesView: View = (env, el) => {
   const frames = h("div", { class: "al-row" });
   const lists = isObj(m.frames) ? m.frames : {};
   for (const kind of SPECIES_FRAME_KINDS) {
-    const size = FRAME_SIZE[kind];
+    const size = FRAME_SIZE(kind);
     const res = reg.resolve(sp(kind, false));
     const slot = kind.startsWith("front") ? "front" : kind.startsWith("icon") ? "icon" : "back";
     if (!res) {
       if (kind === "back") continue;
       const list = Array.isArray(lists[slot]) ? (lists[slot] as string[]) : [];
-      const want = kind === "front__2" || kind === "icon__2" ? 1 : 2;
+      const want = speciesFrameSlot(kind).index;
       if (list.length !== want) continue; // only the next free slot
       const ph = pixelCanvas(size, size, z);
       const card = h("div", { class: "al-card", title: `Add ${kind}.png` }, h("div", { class: `al-stage bg-checker`, style: "opacity: .5" }, ph),
@@ -732,4 +721,5 @@ export const VIEWS: Record<LabTab, View> = {
   sets: setView,
   packs: packsView,
   checks: checksView,
+  compare: compareView,
 };

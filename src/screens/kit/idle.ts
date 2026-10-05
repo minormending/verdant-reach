@@ -1,13 +1,26 @@
-// Species idle animation: front, front__2[, front__3] ping-ponged with a
-// slightly irregular hold (20–30 frames per pose) and a per-sprite phase, so
-// two creatures on screen never breathe in lockstep. Frames are optional:
-// they're only used when the art registry provides them.
+// Species front-sprite animation.
+//
+// Crystal-style (the bundle has `anim`, docs/ART.md §3): `intro` plays once
+// when the species appears (SpritePlayback.appear), then `idle` loops, or
+// frame 0 holds when there is no idle.
+//
+// Legacy (no `anim`): front, front__2[, front__3] ping-ponged with a slightly
+// irregular hold (20–30 frames per pose) and a per-sprite phase, so two
+// creatures on screen never breathe in lockstep. Frames are optional: they're
+// only used when the art registry provides them.
 
-import type { SpeciesId } from "../../contracts";
+import type { SpeciesAnim, SpeciesId } from "../../contracts";
 import { speciesPath } from "../../contracts";
-import { activeArt } from "../../art";
+import { activeArt, animMaxFrame, animState, frontKind, introRemaining, type FrontFrameKind } from "../../art";
 
-export type FrontKind = "front" | "front__2" | "front__3";
+export type FrontKind = FrontFrameKind;
+/** Looks up a species' `anim` (the active art registry by default). */
+export type AnimLookup = (id: SpeciesId) => SpeciesAnim | undefined;
+
+/** The species' `anim` from the active art registry (packs applied), if any. */
+export function speciesAnimOf(id: SpeciesId): SpeciesAnim | undefined {
+  return activeArt()?.speciesAnim(id);
+}
 
 const counts = new Map<string, number>();
 let countsVersion = -1;
@@ -80,9 +93,88 @@ export function idlePose(n: number, t: number, seed: number): number {
 
 const KINDS: FrontKind[] = ["front", "front__2", "front__3"];
 
-/** Which front sprite to draw for `id` at frame `t`. `salt` separates two views of the same species. */
-export function idleKind(id: SpeciesId, t: number, salt = ""): FrontKind {
+/** Idle phase offset for a sprite view, so two views of a species don't loop in lockstep. */
+const phaseOf = (id: SpeciesId, salt: string) => seedOf(`${id}${salt}`) % 3600;
+
+/**
+ * Which front sprite to draw for `id` at frame `t` when no intro is playing:
+ * the `anim` idle loop (or frame 0) for Crystal-style art, else the legacy
+ * ping-pong. `salt` separates two views of the same species.
+ */
+export function idleKind(id: SpeciesId, t: number, salt = "", anim: SpeciesAnim | undefined = speciesAnimOf(id)): FrontKind {
+  if (anim) return frontKind(animState(anim, t + phaseOf(id, salt)).frame);
   const n = idleFrameCount(id);
   if (n <= 1) return "front";
   return KINDS[idlePose(n, t, seedOf(`${id}${salt}`))];
+}
+
+/** True when the species' front sprite moves at all (an `anim`, or ≥2 legacy idle poses). */
+export function isAnimated(id: SpeciesId, anim: SpeciesAnim | undefined = speciesAnimOf(id)): boolean {
+  if (anim) return !!anim.intro || !!anim.idle;
+  return idleFrameCount(id) > 1;
+}
+
+/** Logical paths of every front frame the species may show (for preloading). */
+export function frontPaths(id: SpeciesId, anim: SpeciesAnim | undefined = speciesAnimOf(id)): string[] {
+  const n = anim ? animMaxFrame(anim) + 1 : 3;
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) out.push(speciesPath(id, frontKind(i)));
+  return out;
+}
+
+/**
+ * Playback for one on-screen view of a species (a battle side, a Herbarium
+ * page). Call `appear(now)` when the species shows up to play its intro once;
+ * `kind(id, now)` then gives the frame to draw. Without `appear` (or for art
+ * with no `anim`) it is the plain idle of `idleKind`.
+ */
+export class SpritePlayback {
+  /** Frame the intro started at (null: no intro pending or playing). */
+  private at: number | null = null;
+  private species: SpeciesId | null = null;
+  /** Holding frame 0 until `appear` (e.g. while the sprite slides in). */
+  private held = false;
+
+  constructor(private salt = "", private lookup: AnimLookup = speciesAnimOf) {}
+
+  /** The species appeared at frame `now`: play its intro (if its art has one). */
+  appear(id: SpeciesId, now: number) {
+    this.species = id;
+    this.at = now;
+    this.held = false;
+  }
+
+  /** Hold `id` on frame 0 (Crystal-style art only) until `appear` starts its intro. */
+  hold(id: SpeciesId) {
+    this.species = id;
+    this.at = null;
+    this.held = true;
+  }
+
+  /** Forget any intro or hold (the view was cleared or the species changed). */
+  reset() {
+    this.at = null;
+    this.species = null;
+    this.held = false;
+  }
+
+  /** The front frame to draw for `id` at frame `now`. */
+  kind(id: SpeciesId, now: number): FrontKind {
+    const anim = this.lookup(id);
+    if (anim && this.held && this.species === id) return "front";
+    // After the intro the idle loop runs on from its first step (no phase offset).
+    if (this.at !== null && this.species === id && anim?.intro) return frontKind(animState(anim, now - this.at, { intro: true }).frame);
+    return idleKind(id, now, this.salt, anim);
+  }
+
+  /** Ticks of the intro still to play at frame `now` (0 if none). */
+  remaining(id: SpeciesId, now: number): number {
+    if (this.at === null || this.species !== id) return 0;
+    return introRemaining(this.lookup(id), now - this.at);
+  }
+
+  /** True while an intro is on screen. */
+  playing(id: SpeciesId, now: number): boolean {
+    return this.remaining(id, now) > 0;
+  }
 }

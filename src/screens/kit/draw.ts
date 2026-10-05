@@ -2,7 +2,7 @@
 // HP/EXP bars, species sprites (with a neat placeholder while art lands),
 // sport recolouring, silhouettes, pods and small icons.
 
-import type { GameContext, SpeciesId, StatusId, TypeId } from "../../contracts";
+import type { GameContext, SpeciesId, SpeciesSpriteKind, StatusId, TypeId } from "../../contracts";
 import { speciesPath, UI } from "../../contracts";
 
 // ---------------------------------------------------------------------------
@@ -285,8 +285,9 @@ export function sportVersion(key: string, src: Src): HTMLCanvasElement {
 // Species sprites
 // ---------------------------------------------------------------------------
 
-export type SpriteKind = "front" | "front__2" | "front__3" | "back" | "icon" | "icon__2";
-const SIZES: Record<SpriteKind, number> = { front: 56, front__2: 56, front__3: 56, back: 48, icon: 16, icon__2: 16 };
+/** Any species sprite: front … front__8 (animation frames), back, icon, icon__2. */
+export type SpriteKind = SpeciesSpriteKind;
+const sizeOf = (kind: SpriteKind): number => (kind === "back" ? 48 : kind.startsWith("icon") ? 16 : 56);
 const warnedMissing = new Set<string>();
 
 function hash(s: string): number {
@@ -300,7 +301,7 @@ function hash(s: string): number {
  * a little plant (soil, stem, leaves, a bud) in the species' type colours.
  */
 function placeholderSprite(id: string, kind: SpriteKind, types: readonly TypeId[]): HTMLCanvasElement {
-  const size = SIZES[kind];
+  const size = sizeOf(kind);
   return cached(`ph:${id}:${kind}:${types.join(",")}`, size, size, (g) => {
     const h = hash(id);
     const c1 = TYPE_COLORS[types[0] ?? "wood"];
@@ -357,7 +358,7 @@ export function speciesImage(ctx: GameContext, id: SpeciesId, kind: SpriteKind, 
   const exact = sportPath !== null && ctx.assets.exists(sportPath);
   let img: Src | undefined = ctx.assets.image(exact ? sportPath : path);
   if (!img && kind === "icon__2") return speciesImage(ctx, id, "icon", opts);
-  if (!img && (kind === "front__2" || kind === "front__3")) return speciesImage(ctx, id, "front", opts);
+  if (!img && kind.startsWith("front__")) return speciesImage(ctx, id, "front", opts); // extra frames fall back to the rest pose
   if (!img) {
     if (!warnedMissing.has(path)) {
       warnedMissing.add(path);
@@ -386,7 +387,7 @@ export interface SpriteDrawOpts {
 export function drawSpecies(
   ctx: GameContext, g: CanvasRenderingContext2D, id: SpeciesId, kind: SpriteKind, x: number, y: number, opts: SpriteDrawOpts = {},
 ) {
-  const size = SIZES[kind];
+  const size = sizeOf(kind);
   let img: Src = speciesImage(ctx, id, kind, { sport: opts.sport });
   if (opts.silhouette) img = silhouette(`${id}:${kind}:${opts.sport ? "s" : ""}`, img, opts.silhouette);
   drawImageOpts(g, img, x, y, size, size, opts);

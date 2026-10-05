@@ -6,6 +6,7 @@
 // Unknown or optional JSON fields are ignored everywhere.
 
 import { CHARACTERS, STRUCTURES, TILES } from "../contracts";
+import { checkSpeciesAnim, MAX_FRONT_FRAMES } from "./anim";
 import { ArtCatalog, isRef, type BundleView } from "./catalog";
 import { BUNDLE_JSON, PACK_FORMAT, refCells, type RawBundle } from "./format";
 import { colorStats, isPalette } from "./palette";
@@ -143,7 +144,7 @@ function checkBundle(cat: ArtCatalog, v: BundleView, add: Add, img: Img, prefix:
       else if (!isPalette(m.sport, (m.palette as string[]).length)) add(where, "sport must be #rrggbb colours, the same count as palette");
       const frames = m.frames;
       if (!isObj(frames)) { add(where, "frames must be an object"); return; }
-      const spec = { front: [1, 3, 56], back: [1, 1, 48], icon: [1, 2, 16] } as const;
+      const spec = { front: [1, MAX_FRONT_FRAMES, 56], back: [1, 1, 48], icon: [1, 2, 16] } as const;
       for (const [list, [min, max, size]] of Object.entries(spec)) {
         const names = frames[list];
         if (!Array.isArray(names) || names.length < min || names.length > max || !names.every((n) => typeof n === "string")) {
@@ -165,6 +166,9 @@ function checkBundle(cat: ArtCatalog, v: BundleView, add: Add, img: Img, prefix:
           }
         }
       }
+      // Crystal-style animation (optional): frames exist, intro ends on 0, ticks are positive.
+      const front = Array.isArray(frames.front) ? frames.front.length : 0;
+      for (const msg of checkSpeciesAnim(m.anim, front)) add(where, msg);
       return;
     }
     case "tilesets": {

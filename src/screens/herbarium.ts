@@ -14,7 +14,7 @@ import {
 import { ListView, LINE_Y, TEXT_X } from "./kit/widgets";
 import { herbariumNumber } from "./summary";
 import { habitatLines, habitatOf } from "./habitat";
-import { idleFrameCount, idleKind } from "./kit/idle";
+import { frontPaths, isAnimated, SpritePlayback } from "./kit/idle";
 
 const ROWS = 6;
 const ROW_H = 16;
@@ -133,7 +133,10 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
   let page = 0;
   let frame = 0;
   const sp = getSpecies(ctx.data, id);
-  const animated = isCaught && idleFrameCount(id) > 1;
+  const animated = isCaught && isAnimated(id);
+  // The pressed specimen plays its intro once when the page opens (Crystal-style art), then idles.
+  const playback = new SpritePlayback(":herbarium");
+  playback.hold(id);
 
   const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
     frame = f;
@@ -143,7 +146,7 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
     const img = speciesImage(ctx, id, "front");
     const shadow = silhouette(`${id}:front:`, img, "#d8c8a0");
     g.drawImage(shadow, 0, 0, shadow.width, shadow.height, sx + 2, sy + 2, 56, 56);
-    const pose = animated ? idleKind(id, frame, ":herbarium") : "front";
+    const pose = animated ? playback.kind(id, frame) : "front";
     drawSpecies(ctx, g, id, pose, sx, sy, isCaught ? {} : { silhouette: "#6a6450" });
     const b = opaqueBounds(img);
     const k = 56 / Math.max(1, img.width);
@@ -213,8 +216,9 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
   };
 
   const main = async (flow: Flow) => {
-    await preload(ctx, [speciesPath(id, "front")]);
+    await preload(ctx, isCaught ? frontPaths(id) : [speciesPath(id, "front")]);
     void ctx.audio.playCry(id);
+    if (animated) playback.appear(id, frame);
     await flow.run({
       update(input: Input) {
         if (input.pressed("b")) { ctx.audio.playSfx("cancel"); return true; }

@@ -12,11 +12,13 @@ import type { ArtRegistry } from "../registry";
 import { clear, ctx2d, h, nn, pixelCanvas } from "./dom";
 import { LAB_CSS } from "./style";
 import { VIEWS, drawFit } from "./views";
+import { comparePack, packSpecies } from "./anim";
 
-export type LabTab = BundleKind | "packs" | "checks";
+export type LabTab = BundleKind | "packs" | "checks" | "compare";
 export const TABS: { id: LabTab; label: string }[] = [
   { id: "species", label: "Species" }, { id: "tilesets", label: "Tilesets" }, { id: "structures", label: "Structures" },
   { id: "characters", label: "Chars" }, { id: "sets", label: "Sets" }, { id: "packs", label: "Packs" }, { id: "checks", label: "Checks" },
+  { id: "compare", label: "Compare" },
 ];
 
 export type LabBg = "checker" | "light" | "white" | "dark" | "black";
@@ -216,6 +218,7 @@ export class Lab {
   private count(tab: LabTab): number {
     if (tab === "packs") return this.reg.packs().length;
     if (tab === "checks") return 0;
+    if (tab === "compare") return packSpecies(this.reg, comparePack(this.env())).length;
     return this.reg.bundles(tab).length;
   }
 
@@ -249,17 +252,20 @@ export class Lab {
         "Runs the docs/ART.md §9 checks against the bundles as served (index sync is checked by npm test)."));
       return;
     }
-    const views = this.reg.bundles(s.tab).filter((v) => !q || v.id.includes(q) || this.title(v).toLowerCase().includes(q));
+    const compare = s.tab === "compare";
+    const cmpPack = compare ? comparePack(this.env()) : null;
+    const inPack = new Set(packSpecies(this.reg, cmpPack));
+    const views = this.reg.bundles(compare ? "species" : (s.tab as BundleKind)).filter((v) => !q || v.id.includes(q) || this.title(v).toLowerCase().includes(q));
     for (const v of views) {
       const thumb = pixelCanvas(32, 32, 1);
       drawFit(this.reg, ctx2d(thumb), v, 32, 32);
-      const fromPack = v.layers.some((l) => l.pack && l.pack !== "@lab");
+      const fromPack = compare ? inPack.has(v.id) : v.layers.some((l) => l.pack && l.pack !== "@lab");
       const edited = v.layers.some((l) => l.pack === "@lab");
       this.list.append(h("div", {
         class: `al-item${s.id === v.id ? " on" : ""}`,
-        onclick: () => { this.env().go(s.tab, v.id); },
+        onclick: () => { this.env().go(s.tab, v.id, compare ? cmpPack : null); },
       }, h("div", { class: "thumb" }, thumb), h("div", { class: "name" }, v.id, h("div", { class: "sub" }, this.subtitle(v))),
-      fromPack ? h("span", { class: "al-chip pack" }, "pack") : null, edited ? h("span", { class: "al-chip lab" }, "edit") : null));
+      fromPack ? h("span", { class: "al-chip pack" }, compare ? cmpPack : "pack") : null, edited ? h("span", { class: "al-chip lab" }, "edit") : null));
     }
     if (!views.length) this.list.append(h("div", { class: "al-empty" }, q ? "Nothing matches." : "No bundles."));
     this.list.querySelector(".al-item.on")?.scrollIntoView({ block: "nearest" });

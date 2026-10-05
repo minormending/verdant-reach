@@ -18,12 +18,12 @@ from .core import ART, FORMATS, KINDS, LOCKED, load_json, load_rgba, save_json, 
 from .palette import remap
 
 SPECIES_FRAMES = {  # frame group -> (size, min, max, default file names)
-    "front": (56, 1, 3, ["front.png", "front__2.png", "front__3.png"]),
+    "front": (56, 1, 8, ["front.png"] + [f"front__{i}.png" for i in range(2, 9)]),
     "back": (48, 1, 1, ["back.png"]),
     "icon": (16, 1, 2, ["icon.png", "icon__2.png"]),
 }
 # legacy kind name ("front__2") -> (group, index)
-SPECIES_KINDS = {"front": ("front", 0), "front__2": ("front", 1), "front__3": ("front", 2),
+SPECIES_KINDS = {"front": ("front", 0), **{f"front__{i}": ("front", i - 1) for i in range(2, 9)},
                  "back": ("back", 0), "icon": ("icon", 0), "icon__2": ("icon", 1)}
 SETS = {  # set id -> logicalDir
     "portraits": "assets/trainers",
@@ -36,7 +36,7 @@ CHAR_ROWS = ["down", "up", "left", "right"]
 CHAR_COLUMNS = ["stand", "stepA", "stepB"]
 
 KEY_ORDER = {
-    "species": ["format", "id", "palette", "sport", "frames", "credits", "source", "notes"],
+    "species": ["format", "id", "palette", "sport", "frames", "anim", "credits", "source", "notes"],
     "tileset": ["format", "id", "name", "tileSize", "sheet", "columns", "tiles", "credits", "source", "notes"],
     "structure": ["format", "id", "image", "size", "credits", "source", "notes"],
     "character": ["format", "id", "sheet", "frame", "rows", "columns", "credits", "source", "notes"],

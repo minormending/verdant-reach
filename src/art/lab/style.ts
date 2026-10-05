@@ -105,7 +105,27 @@ export const LAB_CSS = `
   color: var(--ink); padding: 8px 14px; border-radius: 8px; z-index: 1001; box-shadow: 0 6px 24px rgba(0,0,0,.5); }
 .al-empty { color: var(--dim); padding: 30px 0; }
 .al-hint { color: var(--dim); font-size: 12px; }
+
+.al-tl { display: grid; gap: 8px; min-width: 0; }
+.al-tl-lane { display: flex; gap: 8px; align-items: center; }
+.al-tl-lbl { width: 70px; flex: none; color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.al-tl-lbl small { color: var(--dim); text-transform: none; letter-spacing: 0; }
+.al-tl-steps { display: flex; gap: 2px; flex-wrap: wrap; }
+.al-tl-step { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 2px; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+.al-tl-step canvas { image-rendering: pixelated; }
+.al-tl-step .t { font: 10px/1.15 ui-monospace, Menlo, monospace; color: var(--dim); text-align: center; }
+.al-tl-step.on { border-color: var(--accent2); background: #2c2a10; }
+.al-tl-step.on .t { color: var(--accent2); }
+.al-cmp { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; margin-top: 12px; }
+.al-cmp-col { min-width: 0; flex: 1 1 420px; }
+.al-cmp-h { font-weight: 700; letter-spacing: .1em; color: var(--accent); margin-bottom: 8px; text-transform: uppercase; }
+.al-cmp-grid { display: grid; grid-template-columns: minmax(110px, auto) auto auto; gap: 8px 16px; align-items: center; justify-content: start; margin-top: 14px; }
+.al-cmp-name { cursor: pointer; }
+.al-cmp-name:hover b { color: var(--accent); }
+.al-cmp-cell { cursor: pointer; }
 @media (max-width: 720px) {
+  .al-cmp-grid { grid-template-columns: auto auto; }
+  .al-cmp-grid > .al-cmp-name, .al-cmp-grid > .al-hint:first-child { grid-column: 1 / -1; }
   .al-root { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 40vh minmax(0, 1fr); }
   .al-side { border-right: 0; border-bottom: 1px solid var(--line); }
 }

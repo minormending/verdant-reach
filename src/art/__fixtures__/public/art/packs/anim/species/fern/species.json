@@ -1,0 +1,11 @@
+{
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png"]
+  },
+  "anim": {
+    "intro": [[0, 8], [1, 6], [2, 6], [3, 10], [1, 6], [0, 1]],
+    "idle": [[0, 40], [3, 20]]
+  }
+}
