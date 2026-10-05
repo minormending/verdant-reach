@@ -53,6 +53,9 @@ export const AUTOTILE: Partial<Record<TileKey, string>> = {
   // forests join into one canopy mass with edges on the open sides
   tree: "tree", maple_tree: "maple", tapped_maple: "maple",
 };
+/** Ground variation: `${key}~1.png`..`${key}~3.png` (if present) are picked by a
+ *  position hash so large fields never look stamped. Base tile = variant 0. */
+export const tileAltPath = (key: TileKey, alt: 1 | 2 | 3) => `assets/tiles/${key}~${alt}.png`;
 export const tileVariantPath = (key: TileKey, mask: number, frame: 1 | 2 = 1) =>
   frame === 1 ? `assets/tiles/${key}@${mask}.png` : `assets/tiles/${key}@${mask}__2.png`;
 
