@@ -15,6 +15,7 @@ export function isPod(data: GameData, item: ItemId): boolean {
 /** Would this item do anything to this Quickened? */
 export function itemHasEffect(data: GameData, item: ItemId, q: Quickened): boolean {
   const e = getItem(data, item).effect;
+  if (q.seed) return false;
   switch (e.kind) {
     case "heal":
     case "heal_full":
@@ -41,6 +42,7 @@ export interface ItemUseResult {
 export function applyItem(data: GameData, item: ItemId, q: Quickened): ItemUseResult {
   const hpFrom = q.hp;
   const name = qName(data, q);
+  if (q.seed) return { ok: false, text: "That can't be used on a SEED.", hpFrom, hpTo: q.hp };
   if (!itemHasEffect(data, item, q)) return { ok: false, text: "It won't have any effect.", hpFrom, hpTo: q.hp };
   const e = getItem(data, item).effect;
   let text = "";

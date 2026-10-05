@@ -151,6 +151,16 @@ export const MOVE_ANIMS: Record<string, AnimSpec> = {
   evergreen: S("harden", "evergreen"),
   dragon_nip: S("snap", "dragon_nip"),
   dragon_snap: S("snap", "dragon"),
+  // round 4: the Chapter 4 lines (orchard, Palm House)
+  windfall: S("heavy_drop", "apple"),
+  aerial_root: S("roots", "snare"),
+  fenestrate: S("harden", "bark"),
+  lotus_effect: S("shield"),
+  pod_shower: S("seed_arc", "seed"),
+  velamen: S("drain", "sap"),
+  false_nectar: S("lure", "nectar"),
+  long_bloom: S("light_rays", "heal"),
+  pollen_perch: S("slash", "leaf"),
   // fallback move used with no PP left
   struggle: S("slam", "struggle"),
 };

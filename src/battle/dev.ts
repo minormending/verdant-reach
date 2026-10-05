@@ -2,7 +2,7 @@
 //   &mode=wild|trainer|leader|rootstock   start straight into one battle (default: a hub menu)
 //   &species=<id>&level=<n>     wild foe
 //   &trainer=<id>               trainer from WORLD (fallback: a fixture trainer)
-//   &backdrop=grass|bog|water|indoor|night
+//   &backdrop=grass|bog|water|indoor|night|glasshouse
 //   &lv=<n>                     party level (default 12)
 // Uses the real DATA when it is populated, else the fixture data in ./fixtures.
 

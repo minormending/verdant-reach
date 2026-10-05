@@ -6,21 +6,21 @@
 
 import type { Assets, TileKey } from "../contracts";
 import { SCREEN_H, SCREEN_W, TILE, tilePath } from "../contracts";
-import { ASSET_PATHS } from "../assets/manifest";
 import { TileCatalog, autotileMask, type CellArt } from "./autotile";
 import { tileAt, type MapRuntime } from "./map";
-import { drawFallbackTile } from "./render";
+import { drawFallbackTile, drawStumpFallback } from "./render";
 
 const MARGIN = 7;
 
-let sharedCatalog: TileCatalog | null = null;
-/** Catalog over the generated asset manifest (the list of files on disk). */
-export function manifestCatalog(): TileCatalog {
-  if (!sharedCatalog) {
-    const set = new Set(ASSET_PATHS);
-    sharedCatalog = new TileCatalog({ has: (p) => set.has(p) });
+const catalogs = new WeakMap<Assets, TileCatalog>();
+/** Catalog over what the art registry provides (`assets.exists`), one per asset store. */
+export function assetCatalog(assets: Assets): TileCatalog {
+  let cat = catalogs.get(assets);
+  if (!cat) {
+    cat = new TileCatalog({ has: (p) => assets.exists(p) });
+    catalogs.set(assets, cat);
   }
-  return sharedCatalog;
+  return cat;
 }
 
 type Status = "ok" | "pending" | "missing";
@@ -46,6 +46,12 @@ export function drawCell(
     if (s === "ok") return !pending;
     if (s === "pending") pending = true;
   }
+  if (art.key === "bramble_stump") {
+    // A pruned bramble before its art lands: the grass it grew in, with cut canes on top.
+    const ok = drawCell(g, assets, { key: "grass", mask: -1, alt: 0, path: tilePath("grass"), path2: null }, x, y, false);
+    drawStumpFallback(g, x, y);
+    return ok && !pending;
+  }
   drawFallbackTile(g, art.key, x, y, second);
   return !pending;
 }
@@ -65,7 +71,7 @@ export class TileLayer {
   /** True when some tile on this map animates. */
   animated = false;
 
-  constructor(private assets: Assets, private cat: TileCatalog = manifestCatalog()) {}
+  constructor(private assets: Assets, private cat: TileCatalog = assetCatalog(assets)) {}
 
   resolve(m: MapRuntime, x: number, y: number): CellArt {
     return this.cat.resolve(tileAt(m, x, y), autotileMask(m, x, y), x, y);

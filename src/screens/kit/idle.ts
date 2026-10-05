@@ -1,31 +1,32 @@
 // Species idle animation: front, front__2[, front__3] ping-ponged with a
 // slightly irregular hold (20–30 frames per pose) and a per-sprite phase, so
 // two creatures on screen never breathe in lockstep. Frames are optional:
-// they're only used when the art manifest lists them.
+// they're only used when the art registry provides them.
 
 import type { SpeciesId } from "../../contracts";
 import { speciesPath } from "../../contracts";
-import { ASSET_PATHS } from "../../assets/manifest";
+import { activeArt } from "../../art";
 
 export type FrontKind = "front" | "front__2" | "front__3";
 
-let listed: Set<string> | null = null;
 const counts = new Map<string, number>();
+let countsVersion = -1;
 
-/** How many idle poses a species has (1 = static), from the asset manifest. */
-export function idleFrameCount(id: SpeciesId, has: (path: string) => boolean = manifestHas): number {
-  const key = id;
-  const known = counts.get(key);
-  if (known !== undefined && has === manifestHas) return known;
+/** How many idle poses a species has (1 = static), from the art registry (`assets.exists`). */
+export function idleFrameCount(id: SpeciesId, has: (path: string) => boolean = registryHas): number {
+  const art = activeArt();
+  const cacheable = has === registryHas && !!art?.loaded;
+  if (cacheable && countsVersion !== art!.version) { counts.clear(); countsVersion = art!.version; }
+  const known = counts.get(id);
+  if (known !== undefined && cacheable) return known;
   let n = 1;
   if (has(speciesPath(id, "front__2"))) n = has(speciesPath(id, "front__3")) ? 3 : 2;
-  if (has === manifestHas) counts.set(key, n);
+  if (cacheable) counts.set(id, n);
   return n;
 }
 
-function manifestHas(path: string): boolean {
-  listed ??= new Set(ASSET_PATHS);
-  return listed.has(path);
+function registryHas(path: string): boolean {
+  return activeArt()?.exists(path) ?? false;
 }
 
 /** Small deterministic hash -> 0..2^32. */

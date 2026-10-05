@@ -118,3 +118,54 @@ describe("save", () => {
     expect(normalizeState({ position: { map: "hedgerow", x: 1, y: 1 } }, fallback)!.harvested).toEqual({});
   });
 });
+
+describe("save migration (Round 4: nursery and seeds)", () => {
+  const q = (species: string, extra: object = {}) => ({
+    uid: species, species, level: 10, exp: 0, hp: 20, stats: {}, ivs: {}, evs: {}, moves: [], status: null, friendship: 70, sport: false, ...extra,
+  });
+
+  it("loads a pre-Round-4 save (no nursery, no seeds) unchanged", () => {
+    const storage = memoryStorage();
+    const old = { v: 1, savedAt: 1, gameId: "g", state: {
+      version: 1, playerName: "SAGE", rivalName: "BRAM", money: 500, party: [q("oak_acorn")], box: [], bag: {}, flags: { got_starter: true },
+      marks: [], herbarium: { seen: ["oak_acorn"], caught: ["oak_acorn"] }, position: { map: "route_2", x: 1, y: 2, facing: "up" },
+      heal: { map: "player_home", x: 3, y: 5 }, playTimeMs: 10, options: { textSpeed: "mid" },
+    } };
+    storage.setItem(SAVE_KEY, JSON.stringify(old));
+    const loaded = createSave(() => newGameState({ world }), storage, () => newGameState({ world })).read()!;
+    expect(loaded).not.toBeNull();
+    expect(loaded.nursery).toBeUndefined();
+    expect("nursery" in loaded).toBe(false);
+    expect(loaded.party[0].seed).toBeUndefined();
+    expect(loaded.party[0].species).toBe("oak_acorn");
+  });
+
+  it("round-trips boarders (with their boarding level), the step count, seedReady and party seeds", () => {
+    const storage = memoryStorage();
+    const state = newGameState({ world });
+    state.party = [q("oak_acorn"), q("maple_samara", { seed: { steps: 412 } })] as never;
+    state.nursery = { slots: [q("dandelion_bud", { boardedLevel: 8 })] as never, steps: 200, seedReady: false };
+    const save = createSave(() => state, storage, () => newGameState({ world }));
+    save.write();
+    const loaded = save.read()!;
+    expect(loaded.nursery).toEqual(state.nursery);
+    expect((loaded.nursery!.slots[0] as unknown as { boardedLevel: number }).boardedLevel).toBe(8);
+    expect(loaded.party[1].seed).toEqual({ steps: 412 });
+  });
+
+  it("repairs a damaged nursery and seed countdowns", () => {
+    const fallback = newGameState({ world });
+    const raw = {
+      ...fallback,
+      party: [q("oak_acorn", { seed: { steps: "lots" } }), q("lily_pad", { seed: { steps: 12.7 } })],
+      nursery: { slots: [q("a"), q("b"), q("c"), "junk"], steps: -5, seedReady: "yes" },
+    };
+    const st = normalizeState(raw, fallback)!;
+    expect(st.nursery!.slots).toHaveLength(2);
+    expect(st.nursery!.steps).toBe(0);
+    expect(st.nursery!.seedReady).toBe(false);
+    expect(st.party[0].seed).toEqual({ steps: 0 });
+    expect(st.party[1].seed).toEqual({ steps: 12 });
+    expect(normalizeState({ ...fallback, nursery: [] }, fallback)!.nursery).toBeUndefined();
+  });
+});

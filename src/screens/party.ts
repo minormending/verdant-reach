@@ -12,6 +12,7 @@ import { fmt } from "./kit/text";
 import { Menu, ScreenUi } from "./kit/widgets";
 import { runGrowth } from "./flows/growth";
 import { summaryScreen } from "./summary";
+import { drawSeedIcon } from "../ui/seedArt";
 
 export interface PartyOpts {
   mode: "view" | "pick";
@@ -159,6 +160,10 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
   /** Apply a medicine/growth item to party[i] with the HP animation. */
   const useItemOn = async (flow: Flow, i: number, item: ItemId): Promise<"used" | "stay"> => {
     const q = party()[i];
+    if (q.seed) {
+      await ui.say("That can't be used on a SEED.");
+      return "stay";
+    }
     const growTo = itemGrowthTarget(ctx.data, q, item);
     if (growTo) {
       consumeItem(ctx.state.bag, item);
@@ -191,6 +196,13 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
 function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i: number, selected: boolean, frame: number, hp: number, off = 0) {
   const y = i * ROW_H;
   const x = off;
+  if (q.seed) {
+    // A Nursery seed: its icon rocks gently; no level or HP until it sprouts (as Crystal's eggs).
+    const f = Math.floor(frame / (selected ? 12 : 28)) % 2 as 0 | 1;
+    drawSeedIcon(g, ctx.assets, 8 + x, y, f);
+    ctx.ui.drawText(g, "SEED", 24 + x, y);
+    return;
+  }
   // icons bob faster the healthier they are (and fastest when selected), as in Crystal
   const speed = hp <= 0 ? 0 : hp / q.stats.hp > 0.5 ? (selected ? 6 : 16) : hp / q.stats.hp > 0.2 ? (selected ? 10 : 24) : (selected ? 16 : 32);
   const f = speed === 0 ? 0 : Math.floor(frame / speed) % 2;

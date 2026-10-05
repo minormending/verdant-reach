@@ -86,7 +86,7 @@ export function drawPlayerHud(ctx: GameContext, g: CanvasRenderingContext2D, h: 
 export function drawPodRow(g: CanvasRenderingContext2D, party: Quickened[], side: 0 | 1, offset = 0, t = 1) {
   const states = Array.from({ length: 6 }, (_, i) => {
     const q = party[i];
-    if (!q) return "empty" as const;
+    if (!q || q.seed) return "empty" as const; // a Nursery seed isn't a fighter (as Crystal shows eggs)
     if (q.hp <= 0) return "wilted" as const;
     return q.status ? ("status" as const) : ("ok" as const);
   });
@@ -146,8 +146,12 @@ const BACKDROPS: Record<Backdrop, BackdropDef> = {
     sky: ["#9898c8", "#a8a8d4", "#b8b8dc", "#c4c4e4"], far: "#8890b8", farLight: "#9ca4c8", ground: "#c0c8d8", groundAlt: "#b0b8cc",
     ramp: ["#c8d4e4", "#98a8c4", "#687894", "#384058"],
   },
-  // ROUND4-STUB: the battle owner designs the real glasshouse backdrop
-  get glasshouse() { return BACKDROPS.grass; },
+  // Under the dome: pale green-gold glass overhead, palms and big leaves beyond,
+  // a mossy floor dappled with leaf shadows and slanting shafts of warm light.
+  glasshouse: {
+    sky: ["#d8ecc0", "#e4f2c8", "#eef6d4"], far: "#4f8a48", farLight: "#7cb458", ground: "#e2eeb8", groundAlt: "#cddf9c",
+    ramp: ["#e8f4a8", "#a8d068", "#5f9a3c", "#2a5422"],
+  },
 };
 
 export function backdropBg(kind: Backdrop): string {
@@ -210,7 +214,10 @@ export function drawBackdrop(ctx: GameContext, g: CanvasRenderingContext2D, kind
   }
 
   // distant scenery band
-  if (kind === "indoor") {
+  if (kind === "glasshouse") {
+    drawGlazing(g, horizon, frame);
+    drawPalmLine(g, p, horizon);
+  } else if (kind === "indoor") {
     // panelled wall with a rail, and a greenhouse window
     g.fillStyle = p.farLight;
     for (let x = 4; x < 160; x += 20) g.fillRect(x, 6, 1, horizon - 6);
@@ -267,6 +274,9 @@ export function drawBackdrop(ctx: GameContext, g: CanvasRenderingContext2D, kind
     const m = (frame >> 3) % 160;
     checker(g, (m % 160) - 40, horizon + 2, 60, 4, "#f4f4ec", 0);
     checker(g, ((m + 90) % 200) - 40, horizon + 22, 50, 3, "#f4f4ec", 1);
+  } else if (kind === "glasshouse") {
+    drawLeafShadows(g, p, horizon, frame);
+    drawLightShafts(g, horizon, frame);
   } else if (kind === "indoor") {
     g.fillStyle = p.groundAlt;
     for (let y = horizon + 6; y < 96; y += 8) g.fillRect(0, y, 160, 1);
@@ -285,6 +295,96 @@ export function drawBackdrop(ctx: GameContext, g: CanvasRenderingContext2D, kind
   drawPad(g, kind, FOE_PAD.x, FOE_PAD.y, FOE_PAD.rx, FOE_PAD.ry);
   drawPad(g, kind, 32, 92, 40, 7);
   void ctx;
+}
+
+// --- the glasshouse backdrop's layers ---------------------------------------
+
+/** The glass roof: curved iron ribs, glazing bars and a few lit panes (light from the top-left). */
+function drawGlazing(g: CanvasRenderingContext2D, horizon: number, frame: number) {
+  const bar = "#a4b88c";
+  const barDark = "#8ca078";
+  // two dome ribs sweeping down to the sides
+  for (const off of [2, 18]) {
+    for (let x = 0; x < 160; x++) {
+      const k = (x - 80) / 80;
+      const y = Math.round(off + k * k * 16);
+      g.fillStyle = bar;
+      g.fillRect(x, y, 1, 1);
+      g.fillStyle = barDark;
+      g.fillRect(x, y + 1, 1, 1);
+    }
+  }
+  // glazing bars between the ribs, fanning out from the crown
+  for (let i = -4; i <= 4; i++) {
+    const xTop = 80 + i * 17;
+    for (let y = 0; y < horizon - 10; y++) {
+      const x = Math.round(xTop + i * y * 0.35);
+      if (x < 0 || x >= 160) continue;
+      g.fillStyle = bar;
+      g.fillRect(x, y, 1, 1);
+    }
+  }
+  // glints on a few panes, drifting slowly as the sun moves
+  const drift = (frame >> 6) % 3;
+  g.fillStyle = "#fafcec";
+  for (const [x, y] of [[30, 8], [64, 6], [112, 10], [140, 22], [8, 26]]) {
+    g.fillRect(x + drift, y, 3, 1);
+    g.fillRect(x + drift, y + 1, 1, 1);
+  }
+}
+
+/** Palms and broad tropical leaves along the horizon. */
+function drawPalmLine(g: CanvasRenderingContext2D, p: BackdropDef, horizon: number) {
+  // the leafy mass: broad, rounded bumps
+  for (let x = 0; x < 160; x++) {
+    const bump = Math.round(5 + 4 * Math.abs(Math.sin(x / 11)) + 2 * Math.abs(Math.sin(x / 4.3)));
+    g.fillStyle = p.farLight;
+    g.fillRect(x, horizon - bump - 1, 1, 1);
+    g.fillStyle = p.far;
+    g.fillRect(x, horizon - bump, 1, bump);
+  }
+  // two palms rising above it: a leaning trunk and drooping fronds
+  for (const [tx, h, lean] of [[22, 26, 1], [153, 24, -1]] as const) {
+    const top = horizon - h;
+    g.fillStyle = "#7a6038";
+    for (let y = top; y < horizon - 6; y++) g.fillRect(tx + Math.round(((y - top) / h) * -lean * 3), y, 2, 1);
+    g.fillStyle = p.far;
+    for (const dir of [-1, 1]) {
+      for (const spread of [0.5, 1]) {
+        for (let i = 0; i < 12; i++) {
+          const x = tx + dir * Math.round(i * spread + i * 0.4);
+          const y = top + Math.round((i * i) / 14 * spread) - (spread < 1 ? 2 : 0);
+          g.fillRect(x, y, 2, 1);
+          if (i % 3 === 1) g.fillRect(x, y + 1, 1, 2); // leaflets hanging from the rib
+        }
+      }
+    }
+    g.fillStyle = p.farLight;
+    g.fillRect(tx - 1, top - 1, 3, 1);
+  }
+}
+
+/** Leaf shadows on the floor: soft-edged clusters that sway a pixel now and then. */
+function drawLeafShadows(g: CanvasRenderingContext2D, p: BackdropDef, horizon: number, frame: number) {
+  const blobs: [number, number, number][] = [[14, 52, 7], [46, 47, 5], [98, 50, 6], [8, 72, 6], [58, 66, 7], [30, 86, 5], [148, 62, 5]];
+  blobs.forEach(([x, y, r], i) => {
+    if (y < horizon + 3) return;
+    const sway = Math.round(Math.sin(frame / 90 + i * 1.7));
+    ellipse(g, x + sway, y, r, 2, p.groundAlt);
+    ellipse(g, x + sway + r - 1, y - 2, Math.max(2, r - 3), 1, p.groundAlt);
+    ellipse(g, x + sway - r + 2, y + 2, Math.max(2, r - 3), 1, p.groundAlt);
+  });
+}
+
+/** Slanting shafts of warm light (a deliberate 2-colour dither), falling from the top-left. */
+function drawLightShafts(g: CanvasRenderingContext2D, horizon: number, frame: number) {
+  const breathe = (frame >> 5) % 8 === 0 ? 1 : 0;
+  for (const [x0, w] of [[18, 6], [66, 9], [118, 5]] as const) {
+    for (let y = horizon - 30; y < 96; y += 1) {
+      const x = Math.round(x0 + (y - horizon) * 0.55);
+      checker(g, x, y, w + breathe, 1, "#f8f0c0", 0);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

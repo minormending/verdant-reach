@@ -6,7 +6,8 @@ import type { ArtImage,
   Ambient, BattleOutcome, BattleRequest, Dir, GameContext, MapDef, MapId, Quickened, Scene, ScriptCmd, ScriptId,
   SpeciesId, StillKey,
 } from "../contracts";
-import { SCREEN_H, SCREEN_W, STRUCTURES, TILE, speciesPath, stillPath, tilePath } from "../contracts";
+import { FIELD_MOVES, SCREEN_H, SCREEN_W, STRUCTURES, TILE, speciesPath, stillPath, tilePath } from "../contracts";
+import type { FieldMove } from "../contracts";
 import { followerOn } from "../save";
 import { createQuickened, healParty } from "../battle";
 import { playClock } from "../engine/context";
@@ -16,6 +17,7 @@ import { Fader, Shaker, Timers, drawImagePath } from "../engine/gfx";
 import { drawWindow } from "../ui/kit";
 import { nameEntry } from "../ui/nameEntry";
 import { saveDialog } from "../ui/widgets";
+import { drawSeedBig, seedIcon } from "../ui/seedArt";
 import { Actor, dirTo, type Emote } from "./actor";
 import { rollEncounter } from "./encounters";
 import {
@@ -31,7 +33,9 @@ import { autotileMask } from "./autotile";
 import { CameraRig, Flash, camForTile } from "./camera";
 import { Effects, drawHiddenSparkle, drawWaterGlint } from "./effects";
 import { Follower, followerLine } from "./follower";
-import { bushId, hiddenAt, hiddenFlag, pickedToday, unfoundHidden } from "./progress";
+import { bushId, hasItem, hiddenAt, hiddenFlag, pickedToday, unfoundHidden } from "./progress";
+import { FIELD_MOVE_FX, fieldMoveFlag, fieldMoveOf } from "./fieldmove";
+import { canBattle, nurseryStep, readySeed, seedHint, seedStep, sprout } from "./nursery";
 import { drawHalo, drawTint, lampInfo, makeScreenCanvas, nightGlass, windowGlow } from "./lights";
 import { TileLayer } from "./tilelayer";
 import {
@@ -61,6 +65,9 @@ const EMPTY_MAP: MapDef = {
 };
 
 const warnedStills = new Set<string>();
+
+/** Maps under glass: battles there use the `glasshouse` backdrop. */
+const GLASSHOUSE_MAPS: ReadonlySet<string> = new Set<MapId>(["palm_house", "glasshouse_city", "glasshouse_conservatory"]);
 
 const BOOKSHELF_TEXT = [
   "Pressed-plant folios, labelled in tiny careful handwriting.",
@@ -108,8 +115,12 @@ class Overworld implements Scene {
   runStreak = 0;
   /** The lead Quickened walking behind the player. */
   follower = new Follower();
-  /** Species the follower last showed (null = inactive), to pop it back in on changes. */
-  followerSpecies: SpeciesId | null = null;
+  /** What the follower last showed (a species id or "seed"; null = inactive), to pop it back in on changes. */
+  followerSpecies: string | null = null;
+  /** The sprouting scene's seed window: crack stage and wobble frames left. */
+  sprouting: { crack: number; shake: number } | null = null;
+  /** A field move's user hopping in front of the player when no follower is out. */
+  fieldHop: { species: SpeciesId; sport: boolean; x: number; y: number; t: number } | null = null;
   /** Full-screen story illustration over the map (still / stillClear). */
   still: { key: StillKey; img: ArtImage } | null = null;
   toasts: { kind: ToastKind; title: string; at: number }[] = [];
@@ -239,10 +250,17 @@ class Overworld implements Scene {
     return `picked_${this.mapId}_${npcId}`;
   }
 
+  /** Nursery yard boarders: NPC ids `boarder_1` / `boarder_2` show nursery slots 0 / 1. */
+  boarderOf(a: Actor): Quickened | undefined {
+    const m = /^boarder_([12])$/.exec(a.id);
+    return m ? this.ctx.state.nursery?.slots[Number(m[1]) - 1] : undefined;
+  }
+
   visible(a: Actor): boolean {
     if (a.away) return false;
     if (a.forceVisible !== null) return a.forceVisible;
     if (!a.def) return true;
+    if (/^boarder_[12]$/.test(a.id) && !this.boarderOf(a)) return false;
     if (a.sprite === "item_pickup" && this.ctx.state.flags[this.pickedFlag(a.id)]) return false;
     return checkCond(a.def.visibleWhen, this.ctx.state.flags);
   }
@@ -256,11 +274,11 @@ class Overworld implements Scene {
   occupiedForNpc = (x: number, y: number) =>
     this.player.occupies(x, y) || !!this.npcAt(x, y) || (this.followerVisible() && this.follower.occupies(x, y));
 
-  /** The Quickened that walks behind the player: the first healthy one, else the lead. */
+  /** The Quickened that walks behind the player: the first healthy one (a seed rolls along too), else the lead. */
   followerMon(): Quickened | null {
     const party = this.ctx.state.party;
     if (!party.length || !followerOn(this.ctx.state.options)) return null;
-    return party.find((q) => q.hp > 0) ?? party[0];
+    return party.find((q) => q.seed || q.hp > 0) ?? party[0];
   }
 
   followerVisible(): boolean {
@@ -270,7 +288,7 @@ class Overworld implements Scene {
   /** Keep the follower in step with the player; called each frame before the player ticks. */
   private updateFollower() {
     const mon = this.followerMon();
-    const species = mon?.species ?? null;
+    const species = mon ? (mon.seed ? "seed" : mon.species) : null;
     const p = this.player;
     if (species !== this.followerSpecies) {
       // Turned on, first Quickened, or a new lead: it pops out of the player's tile on the next step.
@@ -302,6 +320,8 @@ class Overworld implements Scene {
 
   backdrop(kind?: "grass" | "bog"): BattleRequest["backdrop"] {
     const def = this.map.def;
+    // Under glass: green-gold daylight; after dark, the dome lets the night in (outdoor maps tint too).
+    if (GLASSHOUSE_MAPS.has(this.mapId)) return def.outdoor && this.time() === "night" ? "night" : "glasshouse";
     if (!def.outdoor) return "indoor";
     if (kind === "bog" || tileAt(this.map, this.player.x, this.player.y) === "bog") return "bog";
     if (this.time() === "night") return "night";
@@ -343,7 +363,17 @@ class Overworld implements Scene {
       this.ctx.state.position = { map: this.mapId, x: this.player.x, y: this.player.y, facing: this.player.facing };
       this.onArrive();
     }
+    if (this.sprouting && this.sprouting.shake > 0) this.sprouting.shake--;
+    if (this.fieldHop) this.fieldHop.t++;
     if (this.busy > 0 || this.dead) return;
+
+    // A seed that has counted down sprouts as soon as the player has control (any map).
+    const seed = readySeed(this.ctx.state.party);
+    if (seed && !this.player.moving) {
+      this.walking = false;
+      void this.flow(() => this.sproutScene(seed));
+      return;
+    }
 
     this.updateNpcs();
     if (!this.player.moving) this.handleInput();
@@ -482,6 +512,9 @@ class Overworld implements Scene {
   private onArrive() {
     const p = this.player;
     const st = this.ctx.state;
+    // Every step: nursery boarders grow, and seeds in the party count down.
+    nurseryStep(st, this.ctx.data, this.ctx.rng);
+    seedStep(st.party);
     const w = warpAt(this.map, p.x, p.y);
     if (w && (!isMatWarp(this.map, p.x, p.y) || p.facing === "down")) {
       this.walking = false;
@@ -657,6 +690,21 @@ class Overworld implements Scene {
       void this.flow(() => this.ctx.ui.say(sign.text));
       return true;
     }
+    // A trigger on a solid, interactable tile (a sensor post) can't be stepped on: A runs it.
+    const props = tileProps(tile);
+    if (props.interact && !isWalkable(this.map, fx, fy)) {
+      const trig = triggerAt(this.map, fx, fy, this.ctx.state.flags);
+      if (trig) {
+        void this.flow(() => this.runScript(trig.script));
+        return true;
+      }
+    }
+    // Field moves (PRUNE): checked before hidden items so nothing is found through a bramble.
+    const move = fieldMoveOf(tile);
+    if (move) {
+      void this.flow(() => this.useFieldMove(move, fx, fy));
+      return true;
+    }
     const hidden = hiddenAt(this.map.def, this.ctx.state.flags, fx, fy) ?? hiddenAt(this.map.def, this.ctx.state.flags, p.x, p.y);
     if (hidden) {
       void this.flow(() => this.findHidden(hidden));
@@ -687,6 +735,11 @@ class Overworld implements Scene {
     this.player.bumpAnim = 0;
     if (def.trainer) {
       await this.trainerTalk(npc, def.trainer);
+      return;
+    }
+    const boarder = this.boarderOf(npc);
+    if (boarder && !def.script) {
+      await this.talkBoarder(npc, boarder);
       return;
     }
     if (!isStaticObject(this.ctx.assets, npc.sprite)) npc.facing = OPPOSITE[this.player.facing];
@@ -730,6 +783,12 @@ class Overworld implements Scene {
     if (p.x < f.x) f.flip = false;
     else if (p.x > f.x) f.flip = true;
     f.pop = 12;
+    if (mon.seed) {
+      this.followerEmote = { kind: "...", t: 0 };
+      await this.timers.frames(40);
+      await ctx.ui.say(`The SEED wobbles. ${seedHint(mon.seed.steps)}`);
+      return;
+    }
     const sp = ctx.data.species?.[mon.species];
     const line = followerLine({
       name: quickenedName(ctx, mon), friendship: mon.friendship, hpFrac: mon.stats.hp > 0 ? mon.hp / mon.stats.hp : 0,
@@ -741,6 +800,104 @@ class Overworld implements Scene {
     await ctx.ui.say(line.text);
   }
   followerEmote: { kind: Emote; t: number } | null = null;
+
+  /** A nursery boarder in the yard: it turns to you, chirps, and you hear how it's doing. */
+  private async talkBoarder(npc: Actor, q: Quickened) {
+    const ctx = this.ctx;
+    const name = quickenedName(ctx, q);
+    npc.facing = this.player.x < npc.x ? "left" : "right";
+    npc.bob = 8;
+    await ctx.audio.playCry(q.species);
+    const lines = [
+      `${name} is soaking up the sun.`,
+      `${name} rustles happily in the yard.`,
+      `${name} is stretching its roots.`,
+    ];
+    await ctx.ui.say(lines[Math.floor(ctx.rng() * lines.length)]);
+  }
+
+  /** Who performs a field move: the follower if it's out, else the first non-seed. */
+  private fieldMoveUser(): Quickened | undefined {
+    const party = this.ctx.state.party;
+    const f = this.followerVisible() ? this.followerMon() : null;
+    if (f && !f.seed) return f;
+    return party.find(canBattle) ?? party.find((q) => !q.seed);
+  }
+
+  /** Field move flow: tile property -> key item -> prompt -> hop + particles -> flag. */
+  async useFieldMove(move: FieldMove, x: number, y: number) {
+    const ctx = this.ctx;
+    const fx = FIELD_MOVE_FX[move];
+    if (!hasItem(ctx.state, FIELD_MOVES[move].item)) {
+      await ctx.ui.say(fx.locked);
+      return;
+    }
+    const user = this.fieldMoveUser();
+    if (!user || !(await ctx.ui.yesNo(fx.prompt))) return;
+    await ctx.ui.say(`${quickenedName(ctx, user)} used ${fx.name}!`);
+    // The user hops: the follower in place, or (follower off) a quick hop in front of the player.
+    const followerUser = this.followerVisible() && this.followerMon() === user;
+    if (followerUser) this.follower.pop = 12;
+    else {
+      const { dx, dy } = DIRS[this.player.facing];
+      this.fieldHop = { species: user.species, sport: user.sport, x: this.player.x * TILE + dx * 8, y: this.player.y * TILE + dy * 8, t: 0 };
+    }
+    await this.timers.frames(14);
+    ctx.audio.playSfx(fx.sfx);
+    this.effects.snip(x, y, this.frame);
+    this.shaker.start(4);
+    ctx.state.flags[fieldMoveFlag(move, this.mapId, x, y)] = true;
+    await this.timers.frames(22);
+    this.fieldHop = null;
+  }
+
+  /** The seed sprouts: it wobbles and cracks, a flash, the plant appears, jingle, nickname. */
+  async sproutScene(q: Quickened) {
+    const ctx = this.ctx;
+    try {
+      await ctx.ui.say("Oh? The SEED is moving!");
+      this.sprouting = { crack: 0, shake: 0 };
+      await this.timers.frames(20);
+      for (let c = 1; c <= 3; c++) {
+        this.sprouting.shake = 18;
+        await this.timers.frames(26);
+        this.sprouting.crack = c;
+        ctx.audio.playSfx("sprout");
+        await this.timers.frames(c === 3 ? 30 : 18);
+      }
+      const flash = this.flash.run("white", 36);
+      // The flash holds solid for its first frames: swap the seed for the plant under it.
+      this.sprouting = null;
+      sprout(ctx.state, q, this.mapId);
+      this.species = q.species;
+      this.speciesSport = q.sport;
+      await flash;
+      const name = quickenedName(ctx, q);
+      void ctx.audio.playCry(q.species);
+      const jingle = ctx.audio.playJingle("sprouted");
+      await Promise.all([ctx.ui.say(`${name} sprouted from the SEED!`), jingle]);
+      if (await ctx.ui.yesNo(`Give a nickname to ${name}?`)) {
+        const nick = await this.host.nameEntry({ kind: "nickname", species: q.species, defaultName: name, max: 10 });
+        if (nick && nick.toUpperCase() !== name) q.nickname = nick;
+      }
+    } finally {
+      // Never leave a seed stuck at zero (it would sprout again every frame).
+      if (q.seed) sprout(ctx.state, q, this.mapId);
+      this.sprouting = null;
+      this.species = null;
+      this.speciesSport = false;
+    }
+  }
+  /** Sport colouring for the species window (sprouted sports). */
+  speciesSport = false;
+
+  /** A species icon (sport palette when the art registry provides it), falling back to frame 1 and the plain palette. */
+  speciesImg(id: SpeciesId, kind: "icon" | "icon__2", sport: boolean): ArtImage | undefined {
+    const a = this.ctx.assets;
+    if (kind === "icon__2" && !a.has(speciesPath(id, kind))) kind = "icon";
+    return (sport ? a.image(speciesPath(id, kind, { sport: true })) : undefined)
+      ?? a.image(speciesPath(id, kind)) ?? (kind === "icon__2" ? this.speciesImg(id, "icon", sport) : undefined);
+  }
 
   private async trainerTalk(npc: Actor, trainerId: string) {
     const tr = this.ctx.world.trainers[trainerId];
@@ -1132,6 +1289,26 @@ class Overworld implements Scene {
       if (a.lastRow !== null && a.lastRow !== row) a.clunk = 8;
       a.lastRow = row;
       const clunk = a.clunk > 4 ? 1 : 0;
+      const boarder = this.boarderOf(a);
+      if (boarder) {
+        // Nursery boarders walk the yard as their party icons (2-frame bob, mirrored when facing right).
+        const moving = !!a.step;
+        const kind = (moving ? a.frameColumn() > 0 : Math.floor((this.frame + a.home.x * 7) / 24) % 2 === 1)
+          && assets.has(speciesPath(boarder.species, "icon__2")) ? "icon__2" : "icon";
+        items.push({
+          base: py + TILE, order: 1,
+          draw: () => {
+            const img = this.speciesImg(boarder.species, kind, boarder.sport);
+            if (!img) return;
+            const by = groundY - 3 - lift - (a.bob > 4 ? 1 : 0);
+            g.save();
+            if (a.facing === "right") { g.translate(sx + TILE, by); g.scale(-1, 1); g.drawImage(img, 0, 0); }
+            else g.drawImage(img, sx, by);
+            g.restore();
+          },
+        });
+        continue;
+      }
       items.push({
         base: py + TILE, order: 1,
         draw: () => {
@@ -1157,14 +1334,14 @@ class Overworld implements Scene {
       const groundY = py - camY;
       const sy = groundY - 3;
       if (sx > -16 && sx < SCREEN_W && sy - lift > -24 && sy - lift < SCREEN_H) {
-        const kind = f.iconFrame(this.frame) === 1 && assets.has(speciesPath(mon.species, "icon__2")) ? "icon__2" : "icon";
-        const path = speciesPath(mon.species, kind);
-        const wilted = mon.hp <= 0;
+        const frame2 = f.iconFrame(this.frame) === 1;
+        const kind = frame2 && assets.has(speciesPath(mon.species, "icon__2")) ? "icon__2" : "icon";
+        const wilted = mon.hp <= 0 && !mon.seed;
         items.push({
           base: py + TILE, order: 0.5,
           draw: () => {
             if (lift) drawShadow(g, sx, groundY, lift);
-            const img = assets.image(path);
+            const img = mon.seed ? seedIcon(assets, frame2 ? 1 : 0) : this.speciesImg(mon.species, kind, mon.sport);
             const dy = sy - lift + (wilted ? 1 : 0);
             if (img) {
               for (const layer of lg ? [g, lg] : [g]) {
@@ -1186,6 +1363,20 @@ class Overworld implements Scene {
           },
         });
       }
+    }
+    if (this.fieldHop) {
+      const h = this.fieldHop;
+      const img = this.speciesImg(h.species, Math.floor(h.t / 4) % 2 ? "icon__2" : "icon", h.sport);
+      const lift = Math.round(Math.abs(Math.sin((Math.min(h.t, 24) / 12) * Math.PI)) * 5);
+      const hx = h.x - camX;
+      const hy = h.y - camY - 3;
+      items.push({
+        base: h.y + TILE + 1, order: 2,
+        draw: () => {
+          drawShadow(g, hx, hy + 3, Math.max(1, lift));
+          if (img) g.drawImage(img, hx, hy - lift);
+        },
+      });
     }
     items.sort((a, b) => a.base - b.base || a.order - b.order);
     for (const it of items) it.draw();
@@ -1217,9 +1408,15 @@ class Overworld implements Scene {
     // UI layer.
     if (this.popup && this.popup.t > 0 && !this.transition.kind) drawMapName(g, this.popup.name, this.popup.t);
     this.drawToasts(g);
-    if (this.species) {
+    if (this.sprouting) {
       drawWindow(g, 48, 20, 64, 64, { shadow: true });
-      drawImagePath(g, assets, speciesPath(this.species, "front"), 0, 0, 56, 56, 52, 24);
+      const wob = this.sprouting.shake > 0 ? [0, 1, 1, 0, -1, -1][this.sprouting.shake % 6] : 0;
+      drawSeedBig(g, assets, 52 + wob, 24, this.sprouting.crack);
+    } else if (this.species) {
+      drawWindow(g, 48, 20, 64, 64, { shadow: true });
+      const sportImg = this.speciesSport ? assets.image(speciesPath(this.species, "front", { sport: true })) : undefined;
+      if (sportImg) g.drawImage(sportImg, 52, 24);
+      else drawImagePath(g, assets, speciesPath(this.species, "front"), 0, 0, 56, 56, 52, 24);
     }
     this.transition.draw(g);
     this.flash.draw(g, SCREEN_W, SCREEN_H);

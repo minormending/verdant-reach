@@ -78,6 +78,30 @@ function cleanHarvested(raw: unknown): Record<string, string> | undefined {
   return out;
 }
 
+/**
+ * Round 4: the Nursery Garden. Optional, so older saves load without it. Keeps up
+ * to 2 well-formed boarders; a bad step count or flag falls back to a fresh one.
+ */
+export function cleanNursery(raw: unknown): GameState["nursery"] | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const r = raw as Partial<NonNullable<GameState["nursery"]>>;
+  const slots = (Array.isArray(r.slots) ? r.slots : [])
+    .filter((q) => q && typeof q === "object" && typeof q.species === "string" && typeof q.level === "number")
+    .slice(0, 2);
+  const steps = typeof r.steps === "number" && isFinite(r.steps) ? Math.max(0, Math.floor(r.steps)) : 0;
+  return { slots, steps, seedReady: r.seedReady === true && slots.length > 0 };
+}
+
+/** Seeds carried in the party or box: a malformed countdown becomes a whole, non-negative number. */
+function cleanSeeds(list: GameState["party"]): GameState["party"] {
+  for (const q of list) {
+    if (!q || typeof q !== "object" || q.seed === undefined) continue;
+    const n = Number((q.seed as { steps?: unknown } | null)?.steps);
+    q.seed = { steps: isFinite(n) ? Math.max(0, Math.floor(n)) : 0 };
+  }
+  return list;
+}
+
 export function storeOptions(options: GameState["options"], storage: StorageLike | null = defaultStorage()) {
   try { storage?.setItem(OPTIONS_KEY, JSON.stringify(options)); } catch { /* ignore */ }
 }
@@ -122,8 +146,8 @@ export function normalizeState(raw: unknown, fallback: GameState): GameState | n
     playerName: typeof r.playerName === "string" && r.playerName ? r.playerName : DEFAULT_PLAYER_NAME,
     rivalName: typeof r.rivalName === "string" && r.rivalName ? r.rivalName : DEFAULT_RIVAL_NAME,
     money: typeof r.money === "number" && isFinite(r.money) ? Math.max(0, Math.floor(r.money)) : fallback.money,
-    party: arr(r.party, []).slice(0, 6),
-    box: arr(r.box, []),
+    party: cleanSeeds(arr(r.party, []).slice(0, 6)),
+    box: cleanSeeds(arr(r.box, [])),
     bag: obj(r.bag, {}),
     flags: obj(r.flags, {}),
     marks: arr(r.marks, []),
@@ -136,6 +160,7 @@ export function normalizeState(raw: unknown, fallback: GameState): GameState | n
     playTimeMs: typeof r.playTimeMs === "number" ? r.playTimeMs : 0,
     options: r.options ? cleanOptions(r.options, fallback.options) : fallback.options,
     harvested: cleanHarvested(r.harvested) ?? {},
+    ...(r.nursery !== undefined && cleanNursery(r.nursery) ? { nursery: cleanNursery(r.nursery) } : {}),
   };
 }
 

@@ -7,6 +7,7 @@ import { runFlowScene, type Flow } from "./kit/flow";
 import { clearScreen, drawCursor, drawIcon, drawLevel, drawMoreArrow, drawTiny, preload } from "./kit/draw";
 import { ListView, Menu, ScreenUi } from "./kit/widgets";
 import { summaryScreen } from "./summary";
+import { drawSeedIcon } from "../ui/seedArt";
 
 type Mode = "menu" | "deposit" | "withdraw";
 
@@ -40,9 +41,11 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
           ctx.ui.drawText(g, "CANCEL", 24, y);
           continue;
         }
-        drawIcon(ctx, g, q.species, 8, y - 4, i === list.index ? Math.floor(frame / 12) % 2 : 0, q.sport);
+        const f = i === list.index ? Math.floor(frame / 12) % 2 : 0;
+        if (q.seed) drawSeedIcon(g, ctx.assets, 8, y - 4, f as 0 | 1);
+        else drawIcon(ctx, g, q.species, 8, y - 4, f, q.sport);
         ctx.ui.drawText(g, qName(ctx.data, q).slice(0, 12), 24, y);
-        drawLevel(ctx, g, q.level, 124, y);
+        if (!q.seed) drawLevel(ctx, g, q.level, 124, y);
       }
       const sy = 14 + (list.index - list.scroll) * 16;
       drawCursor(ctx, g, 0, sy, ui.overlays.length > 0, list.frame);
@@ -89,7 +92,7 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
       await ui.say("That's your last QUICKENED! Keep it with you.");
       return;
     }
-    if (!rest.some((x) => x.hp > 0)) {
+    if (!rest.some((x) => x.hp > 0 && !x.seed)) {
       await ui.say("You'd have no healthy QUICKENED left with you!");
       return;
     }

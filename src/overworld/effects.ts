@@ -6,7 +6,7 @@ import { TILE } from "../contracts";
 import { posHash } from "./autotile";
 
 interface Fx {
-  kind: "dust" | "bit" | "leaf" | "berry" | "twinkle";
+  kind: "dust" | "bit" | "leaf" | "berry" | "twinkle" | "twig";
   x: number; y: number;   // world px
   vx: number; vy: number;
   t: number; dur: number;
@@ -17,6 +17,8 @@ const DUST = ["#e8e0c8", "#d0c8b0"];
 const BITS = ["#58a040", "#285828", "#98d060"];
 /** Leaf-burst colours: [light, dark] per leaf. */
 const LEAVES: [string, string][] = [["#98d060", "#285828"], ["#58a040", "#285828"], ["#e0f0a0", "#58a040"]];
+/** Snipped bramble canes: [cane, thorn]. */
+const TWIG: [string, string][] = [["#6a3a48", "#c8a0a8"], ["#4a2818", "#8a5030"]];
 const BERRY: Record<string, [string, string]> = { berry: ["#c03850", "#f8a0b0"], hip: ["#e05020", "#f8c080"] };
 
 export class Effects {
@@ -92,6 +94,32 @@ export class Effects {
     this.list.push({ kind: "twinkle", x: cx + 3, y: cy - 3, vx: 0, vy: 0, t: 0, dur: 16, c: 0 });
   }
 
+  /**
+   * PRUNE: the bramble on (tx, ty) is snipped. Leaves spray up and flutter
+   * down, a few cut canes tumble, and a glint marks the cut.
+   */
+  snip(tx: number, ty: number, seed: number) {
+    const cx = tx * TILE + 8;
+    const cy = ty * TILE + 8;
+    for (let i = 0; i < 10; i++) {
+      const h = posHash(tx, ty, seed + i * 11);
+      const side = i % 2 ? 1 : -1;
+      this.list.push({
+        kind: "leaf", x: cx + side * (h % 6), y: cy - 2 + ((h >>> 3) % 8),
+        vx: side * (0.35 + ((h >>> 6) % 5) * 0.16), vy: -1.4 - ((h >>> 10) % 4) * 0.3,
+        t: 0, dur: 22 + ((h >>> 13) % 6), c: (h >>> 17) % LEAVES.length,
+      });
+    }
+    for (let i = 0; i < 4; i++) {
+      const h = posHash(tx, ty, seed + 211 + i);
+      this.list.push({
+        kind: "twig", x: cx - 5 + (h % 11), y: cy + ((h >>> 4) % 4), vx: ((h >>> 8) % 3 - 1) * 0.4,
+        vy: -1.2 - ((h >>> 11) % 3) * 0.25, t: 0, dur: 20, c: i % TWIG.length,
+      });
+    }
+    this.list.push({ kind: "twinkle", x: cx + 2, y: cy - 4, vx: 0, vy: 0, t: 0, dur: 16, c: 0 });
+  }
+
   /** Horizontal sway (px) for the grass overlay on a tile. */
   grassSway(tx: number, ty: number): number {
     const t = this.rustles.get(`${tx},${ty}`);
@@ -104,7 +132,7 @@ export class Effects {
       f.t++;
       f.x += f.vx;
       f.y += f.vy;
-      if (f.kind === "bit" || f.kind === "berry") f.vy += 0.14;
+      if (f.kind === "bit" || f.kind === "berry" || f.kind === "twig") f.vy += 0.14;
       else if (f.kind === "leaf") {
         // rise, then flutter down side to side
         f.vy = Math.min(0.7, f.vy + 0.13);
@@ -156,6 +184,16 @@ export class Effects {
         g.fillRect(x, y, 2, 2);
         g.fillStyle = hi;
         g.fillRect(x, y, 1, 1);
+        continue;
+      }
+      if (f.kind === "twig") {
+        // a 3px cane with a thorn, flipping end over end as it falls
+        const [cane, thorn] = TWIG[f.c];
+        const flat = Math.floor(f.t / 3) % 2 === 0;
+        g.fillStyle = cane;
+        if (flat) g.fillRect(x, y, 3, 1); else g.fillRect(x + 1, y - 1, 1, 3);
+        g.fillStyle = thorn;
+        g.fillRect(flat ? x + 1 : x + 2, flat ? y - 1 : y, 1, 1);
         continue;
       }
       if (f.kind === "twinkle") {

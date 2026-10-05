@@ -69,7 +69,7 @@ export function playMoveFx(fx: Fx, spec: AnimSpec, type: TypeId, s: MoveStage): 
   switch (spec.family) {
     case "vine_whip": return vineWhip(fx, s, v === "thorn");
     case "seed_arc": return seedArc(fx, s, v === "burr");
-    case "heavy_drop": return heavyDrop(fx, s, (v as "acorn" | "gourd" | "log" | "fossil") ?? "acorn");
+    case "heavy_drop": return heavyDrop(fx, s, (v as "acorn" | "gourd" | "log" | "fossil" | "apple") ?? "acorn");
     case "spin_seed": return spinSeed(fx, s);
     case "wind_seeds": return windSeeds(fx, s, v === "fluff");
     case "slash": return slash(fx, s, v ?? "leaf");
@@ -173,9 +173,10 @@ function seedArc(fx: Fx, s: MoveStage, burr: boolean): number {
   return n * 5 + 16 + (burr ? 16 : 6);
 }
 
-function heavyDrop(fx: Fx, s: MoveStage, kind: "acorn" | "gourd" | "log" | "fossil"): number {
-  const art = kind === "gourd" ? SPR.gourd : kind === "log" ? SPR.log : kind === "fossil" ? SPR.fossil : SPR.acorn;
+function heavyDrop(fx: Fx, s: MoveStage, kind: "acorn" | "gourd" | "log" | "fossil" | "apple"): number {
+  const art = kind === "gourd" || kind === "apple" ? SPR.gourd : kind === "log" ? SPR.log : kind === "fossil" ? SPR.fossil : SPR.acorn;
   const pal: Record<string, string> = kind === "gourd" ? { a: "#e88830", b: "#804010", c: "#f8c870" }
+    : kind === "apple" ? { a: "#d83830", b: "#681818", c: "#f8a078" }
     : kind === "log" ? { a: "#a06838", b: "#4a2818", c: "#d8a870", w: "#f0d8b0" }
     : kind === "fossil" ? { a: "#c8c0b0", b: "#605850", c: "#f0e8d8" }
     : { a: "#c08848", b: "#5a3418", c: "#f0c888" };

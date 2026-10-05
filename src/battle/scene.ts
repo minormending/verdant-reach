@@ -9,7 +9,7 @@ import type {
 import { portraitPath, speciesPath, TEXTBOX, UI, uiPath } from "../contracts";
 import { chooseFoeAction, type AiKind } from "./logic/ai";
 import {
-  active, canContinue, createBattleState, doSwitch, firstHealthy, hasUsableMove, resolveTurn, sendOutFoe, targetsFoe,
+  active, canContinue, canFight, createBattleState, doSwitch, firstHealthy, hasUsableMove, resolveTurn, sendOutFoe, targetsFoe,
   type Action, type BattleEvent, type BattleState, type Side,
 } from "./logic/battle";
 import { attemptCapture, tryRun } from "./logic/capture";
@@ -647,7 +647,7 @@ class BattleScene implements Scene {
   /** Party pick for a switch. Returns an index or -1. */
   private async pickSwitch(cancelable: boolean): Promise<number> {
     for (;;) {
-      const start = Math.max(0, this.party.findIndex((q, i) => q.hp > 0 && i !== this.s.sides[0].active));
+      const start = Math.max(0, this.party.findIndex((q, i) => canFight(q) && i !== this.s.sides[0].active));
       const idx = await partyScreen(this.ctx, { mode: "pick", prompt: "Switch to which?", verb: "SWITCH", start });
       if (idx < 0) {
         if (cancelable) return -1;
@@ -657,6 +657,11 @@ class BattleScene implements Scene {
       if (!q) continue;
       if (idx === this.s.sides[0].active && q.hp > 0) {
         await this.say(`${qName(this.data, q)} is already out!`, "wait");
+        if (cancelable) return -1;
+        continue;
+      }
+      if (q.seed) {
+        await this.say("A SEED can't battle!", "wait");
         if (cancelable) return -1;
         continue;
       }
@@ -1050,7 +1055,7 @@ class BattleScene implements Scene {
     if (foeNext >= 0) {
       const next = this.s.sides[1].party[foeNext];
       // Shift: offer a switch before the trainer's next one comes out.
-      if (this.me().hp > 0 && this.party.filter((q) => q.hp > 0).length > 1) {
+      if (this.me().hp > 0 && this.party.filter(canFight).length > 1) {
         const change = await this.ui.yesNo(
           fmt(this.ctx, `${this.trainerName} is about to use ${qName(this.data, next)}. Will ${playerName(this.ctx)} change QUICKENED?`),
         );
@@ -1074,7 +1079,7 @@ class BattleScene implements Scene {
       for (;;) {
         const next = await this.ui.yesNo("Use next QUICKENED?");
         if (next) break;
-        const runner = this.party.find((q) => q.hp > 0)!;
+        const runner = this.party.find(canFight)!;
         const ok = tryRun(runner.stats.spe, this.foe().stats.spe, this.runAttempts, this.ctx.rng);
         this.runAttempts++;
         if (ok) {

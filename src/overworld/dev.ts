@@ -43,6 +43,22 @@ export default function devOverworld(ctx: GameContext): Scene {
   st.bag.field_herbarium = 1;
   st.bag.terrarium_pod = st.bag.terrarium_pod ?? 5;
 
+  if (q.get("fixture") === "nursery") {
+    // Nursery playground: the fixture nursery, pollination groups filled in where data has none yet,
+    // and &seed=<steps> to start with a seed in the party.
+    ctx.world = devWorld(WORLD);
+    for (const sp of Object.values(ctx.data.species)) if (!sp.pollination?.length) sp.pollination = ["woodland"];
+    if (st.party.length < 3) st.party.push(createQuickened(ctx.data, "maple_samara", 9, ctx.rng), createQuickened(ctx.data, "oak_acorn", 7, ctx.rng));
+    if (q.has("seed")) {
+      const s = createQuickened(ctx.data, "dandelion_bud", 5, ctx.rng);
+      s.seed = { steps: Number(q.get("seed")) || 5 };
+      st.party.push(s);
+    }
+    st.money = Math.max(st.money, 5000);
+    st.position = { map: "glasshouse_nursery", x: 4, y: 3, facing: "up" };
+    st.heal = { map: "player_home", x: 7, y: 4 };
+    return createOverworldScene(ctx, { mode: "none" });
+  }
   if (mapParam && MAP_IDS.includes(mapParam) && WORLD.maps[mapParam]) {
     const def = WORLD.maps[mapParam];
     const start = startFor(mapParam, def);

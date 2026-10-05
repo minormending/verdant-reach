@@ -15,6 +15,8 @@ import {
 } from "./kit/draw";
 import { playerName } from "./kit/text";
 import { idleFrameCount, idleKind } from "./kit/idle";
+import { drawSeedBig } from "../ui/seedArt";
+import { seedHint } from "../overworld/nursery";
 
 const PAGE_COLORS = ["#e070a8", "#58a040", "#3888e0"];
 const PAGE_DARK = ["#883060", "#285820", "#183888"];
@@ -48,6 +50,10 @@ export function summaryScreen(ctx: GameContext, list: Quickened[], start: number
     const q = list[idx];
     drawPaper(g, 0, 0, 160, 144, "white");
     if (!q) return;
+    if (q.seed) {
+      drawSeedPage(ctx, g, q, frame);
+      return;
+    }
     drawHeader(ctx, g, q, page, frame);
     g.save();
     g.translate(slide, 0);
@@ -59,7 +65,8 @@ export function summaryScreen(ctx: GameContext, list: Quickened[], start: number
 
   const main = async (flow: Flow): Promise<number> => {
     await preload(ctx, list.map((q) => speciesPath(q.species, "front")));
-    void ctx.audio.playCry(list[idx].species);
+    const cry = () => { if (!list[idx].seed) void ctx.audio.playCry(list[idx].species); };
+    cry();
     for (;;) {
       const t = {
         result: "" as "" | "exit",
@@ -87,14 +94,18 @@ export function summaryScreen(ctx: GameContext, list: Quickened[], start: number
             }
             return false;
           }
-          if (input.repeat("left") && page > 0) { page--; slideDir = -1; slideAt = frame; ctx.audio.playSfx("cursor"); }
+          if (q.seed) {
+            // A seed has a single page.
+          } else if (input.repeat("left") && page > 0) { page--; slideDir = -1; slideAt = frame; ctx.audio.playSfx("cursor"); }
           else if (input.repeat("right") && page < 2) { page++; slideDir = 1; slideAt = frame; ctx.audio.playSfx("cursor"); }
           else if (input.repeat("up") && list.length > 1) {
             idx = (idx + list.length - 1) % list.length;
-            void ctx.audio.playCry(list[idx].species);
+            if (list[idx].seed) page = 0;
+            cry();
           } else if (input.repeat("down") && list.length > 1) {
             idx = (idx + 1) % list.length;
-            void ctx.audio.playCry(list[idx].species);
+            if (list[idx].seed) page = 0;
+            cry();
           }
           if ((input.pressed("a") || input.pressed("select")) && page === 2 && q.moves.length > 0) {
             moveCursor = 0;
@@ -162,6 +173,28 @@ function drawHeader(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened,
   if (q.sport) ctx.ui.drawText(g, "♥", 150, 46, "#c08020");
   hline(g, 0, 62, 160, PAGE_DARK[page]);
   hline(g, 0, 63, 160, PAGE_COLORS[page]);
+}
+
+/** A seed's only page: the seed on its mount, and a hint at how close it is to sprouting. */
+function drawSeedPage(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, frame: number) {
+  g.fillStyle = "#c8a070";
+  g.fillRect(0, 0, 160, 2);
+  g.fillStyle = "#e8e4d4";
+  g.fillRect(2, 6, 58, 54);
+  g.fillStyle = "#d0c8b0";
+  g.fillRect(2, 59, 58, 1);
+  g.fillRect(59, 6, 1, 54);
+  // close to sprouting, it gives the odd wiggle
+  const steps = q.seed?.steps ?? 0;
+  const wob = steps <= 150 && frame % 90 < 12 ? [0, 1, 0, -1][Math.floor(frame / 3) % 4] : 0;
+  drawSeedBig(g, ctx.assets, 3 + wob, 4, 0);
+  ctx.ui.drawText(g, "SEED", 64, 16);
+  drawTiny(g, "FROM THE NURSERY GARDEN", 64, 28, "#506050");
+  hline(g, 0, 62, 160, "#8a5030");
+  hline(g, 0, 63, 160, "#c8a070");
+  ctx.ui.drawText(g, "STATE", 8, 72, "#8a5030");
+  ctx.ui.wrap(seedHint(steps), 18).slice(0, 3).forEach((l, i) => ctx.ui.drawText(g, l, 8, 86 + i * 10));
+  drawTiny(g, "KEEP WALKING TO WARM IT.", 8, 128, "#8a9a88");
 }
 
 function drawInfo(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened) {

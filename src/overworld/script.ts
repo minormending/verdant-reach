@@ -11,6 +11,7 @@ import { mapTime } from "../engine/time";
 import {
   caughtAny, caughtCount, countedName, hasItem, partyHas, pickBush, pocketName, questDoneFlag, questStartedFlag,
 } from "./progress";
+import { nurseryCounter } from "./nurseryFlow";
 
 export type ToastKind = "new_note" | "note_done";
 
@@ -80,6 +81,7 @@ export function speciesName(ctx: GameContext, id: SpeciesId): string {
 }
 
 export function quickenedName(ctx: GameContext, q: Quickened): string {
+  if (q.seed) return "SEED";
   return q.nickname || speciesName(ctx, q.species);
 }
 
@@ -408,6 +410,10 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       return;
     case "completeQuest":
       return completeQuest(host, cmd.quest);
+    case "nursery":
+      return nurseryCounter(host);
+    case "ifNurserySeed":
+      return exec(host, ctx.state.nursery?.seedReady ? cmd.then : cmd.else, st);
     case "endSlice":
       await host.endSlice();
       throw new ScriptAbort("endSlice");

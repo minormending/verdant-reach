@@ -47,6 +47,30 @@ const MILESTONES_R3: Record<string, Milestone> = {
   nell_r3: { trainer: () => "nell", starterLevel: 18, extras: [["cattail_shoot", 15], ["snapdragon_sprout", 14]] },
 };
 
+// Round 4 (Chapter 4). The player arrives in Glasshouse City around lv 18-20
+// and meets Flora at ~22. Two party shapes: older lines raised alongside the
+// starter, and the new Route 4 / Palm House catches. Neither is a hand-picked
+// counter to Bloom, so Flora must be beatable with "whatever you brought".
+const MILESTONES_R4: Record<string, Milestone> = {
+  rival_3: { trainer: (l) => `rival_3_${COUNTER[l]}`, starterLevel: 22, extras: [["dandelion", 19], ["stinging_nettle", 19], ["apple_sapling", 19]] },
+  rival_3_r4: { trainer: (l) => `rival_3_${COUNTER[l]}`, starterLevel: 22, extras: [["apple_sapling", 19], ["dandelion", 19], ["white_clover", 19]] },
+  flora: { trainer: () => "flora", starterLevel: 23, extras: [["dandelion", 21], ["stinging_nettle", 21], ["apple_sapling", 21]] },
+  flora_r4: { trainer: () => "flora", starterLevel: 23, extras: [["apple_sapling", 21], ["wild_rose", 21], ["dandelion", 21]] },
+  flora_r3: { trainer: () => "flora", starterLevel: 23, extras: [["foxglove", 21], ["cattail", 21], ["white_clover", 21]] },
+};
+
+// Route 4, the Palm House, Route 5 and the Conservatory 3 juniors: ordinary
+// fights. With a mid-chapter party they should be comfortable wins.
+const CH4_TRAINERS: Record<string, { ids: string[]; m: Omit<Milestone, "trainer"> }> = {
+  route_4: {
+    ids: ["orchardist_russet", "beekeeper_clem", "schoolkid_tam", "birdwatcher_kit", "hiker_ford"],
+    m: { starterLevel: 19, extras: [["dandelion", 17], ["apple_pip", 17], ["white_clover", 17]] },
+  },
+  palm_house: { ids: ["researcher_lin", "florist_amaryl"], m: { starterLevel: 20, extras: [["dandelion", 18], ["apple_sapling", 18], ["white_clover", 18]] } },
+  route_5: { ids: ["gardener_ivy", "hiker_dale"], m: { starterLevel: 22, extras: [["dandelion", 20], ["apple_sapling", 20], ["white_clover", 20]] } },
+  juniors: { ids: ["jr_posy", "jr_wexley"], m: { starterLevel: 22, extras: [["dandelion", 20], ["apple_sapling", 20], ["white_clover", 20]] } },
+};
+
 /** Human-like policy: the move with the best expected damage (power x STAB x
  *  type x stat ratio); a status move only if nothing deals damage. */
 function greedy(me: Quickened, foe: Quickened): { kind: "move"; slot: number } {
@@ -102,7 +126,7 @@ function winRate(line: Line, m: Milestone, n = 300): number {
 }
 
 describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance", () => {
-  for (const [name, m] of Object.entries({ ...MILESTONES, ...MILESTONES_R3 })) {
+  for (const [name, m] of Object.entries({ ...MILESTONES, ...MILESTONES_R3, ...MILESTONES_R4 })) {
     it(`${name}: beatable with every starter`, () => {
       const rates = (["oak", "chili", "lily"] as Line[]).map((l) => [l, winRate(l, m)] as const);
       console.log(`${name}: ${rates.map(([l, r]) => `${l} ${(r * 100).toFixed(0)}%`).join(", ")}`);
@@ -110,6 +134,28 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
       // pessimistic. Lopsided wins for a type-advantaged starter are fine (as
       // in Crystal); what matters is that no starter is walled.
       for (const [, r] of rates) expect(r).toBeGreaterThan(0.25);
+    });
+  }
+
+  // Flora is THE difficulty spike: hard, but no starter is walled, and no
+  // starter strolls through her either.
+  it("flora: a spike, but fair", () => {
+    const all = ["flora", "flora_r4", "flora_r3"].flatMap((k) =>
+      (["oak", "chili", "lily"] as Line[]).map((l) => winRate(l, MILESTONES_R4[k], 200)));
+    const mean = all.reduce((a, b) => a + b, 0) / all.length;
+    console.log(`flora mean: ${(mean * 100).toFixed(0)}%`);
+    expect(Math.min(...all)).toBeGreaterThan(0.25);
+    expect(mean).toBeLessThan(0.75); // Nell averages ~80%: Flora must be clearly harder
+  });
+
+  for (const [area, { ids, m }] of Object.entries(CH4_TRAINERS)) {
+    it(`${area} trainers: comfortable with every starter`, () => {
+      for (const id of ids) {
+        if (!WORLD.trainers[id]) throw new Error(`no trainer ${id}`);
+        const rates = (["oak", "chili", "lily"] as Line[]).map((l) => winRate(l, { ...m, trainer: () => id }, 120));
+        console.log(`${id}: ${rates.map((r) => `${(r * 100).toFixed(0)}%`).join(", ")}`);
+        for (const r of rates) expect(r, id).toBeGreaterThan(0.6);
+      }
     });
   }
 });

@@ -132,12 +132,17 @@ export function isAlive(q: Quickened | undefined): boolean {
   return !!q && q.hp > 0;
 }
 
+/** Able to battle: healthy and not an unsprouted Nursery seed. */
+export function canFight(q: Quickened | undefined): boolean {
+  return !!q && q.hp > 0 && !q.seed;
+}
+
 export function firstHealthy(party: Quickened[], except = -1): number {
-  return party.findIndex((q, i) => i !== except && q.hp > 0);
+  return party.findIndex((q, i) => i !== except && canFight(q));
 }
 
 export function canContinue(party: Quickened[]): boolean {
-  return party.some((q) => q.hp > 0);
+  return party.some(canFight);
 }
 
 /** Does this move aim at the foe (so accuracy and protect apply)? */

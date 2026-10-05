@@ -51,8 +51,9 @@ export interface GameState {
   /** harvestId -> ISO date (YYYY-MM-DD) last picked. */
   harvested?: Record<string, string>;
   /** Round 4: the Nursery Garden in Glasshouse City. Up to 2 plants board there;
-   *  they gain 1 exp per player step. `steps` counts toward the next seed check. */
-  nursery?: { slots: Quickened[]; steps: number; seedReady: boolean };
+   *  they gain 1 exp per player step. `steps` counts toward the next seed check.
+   *  `boardedLevel` remembers the level at boarding (the take-back fee is per level gained). */
+  nursery?: { slots: (Quickened & { boardedLevel?: number })[]; steps: number; seedReady: boolean };
 }
 
 export interface BattleRequest {

@@ -82,7 +82,7 @@ export function hasItem(state: Pick<GameState, "bag">, item: ItemId, qty = 1): b
 
 export function partyHas(state: Pick<GameState, "party">, species: SpeciesId | SpeciesId[]): boolean {
   const want = asList(species);
-  return state.party.some((q) => want.includes(q.species));
+  return state.party.some((q) => !q.seed && want.includes(q.species)); // an unsprouted seed isn't that plant yet
 }
 
 export function caughtAny(state: Pick<GameState, "herbarium">, species: SpeciesId | SpeciesId[]): boolean {

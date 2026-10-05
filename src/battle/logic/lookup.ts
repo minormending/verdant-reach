@@ -80,6 +80,7 @@ export function getItem(data: GameData, id: string): Item {
 
 /** Upper-case display name, Crystal-style ("OAK ACORN"). */
 export function qName(data: GameData, q: Quickened): string {
+  if (q.seed) return "SEED"; // a Nursery seed keeps its species a surprise until it sprouts
   return (q.nickname || getSpecies(data, q.species).name).toUpperCase();
 }
 

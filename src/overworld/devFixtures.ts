@@ -125,7 +125,57 @@ const route: MapDef = {
   },
 };
 
+/** The Nursery Garden (counter + yard with boarders) and a bramble patch, for ?dev=overworld&fixture=nursery. */
+const nursery: MapDef = {
+  id: "glasshouse_nursery",
+  name: "TEST NURSERY",
+  outdoor: false,
+  music: "greenhouse",
+  tiles: [
+    "WWwWWWWWwWWW",
+    "............",
+    "...CCC......",
+    "............",
+    "FFFFFF.FFFFF",
+    ",,,,,,....,,",
+    "..........KK",
+    "..........K.",
+    "....MM......",
+  ],
+  legend: {
+    W: "wall", w: "window", ".": "grass", C: "counter", F: "fence", ",": "flowers", K: "bramble_bush", M: "mat_exit",
+  },
+  border: "void",
+  structures: [],
+  warps: [
+    { x: 4, y: 8, to: "fallowfield", toX: 3, toY: 4, facing: "down" },
+    { x: 5, y: 8, to: "fallowfield", toX: 3, toY: 4, facing: "down" },
+  ],
+  npcs: [
+    { id: "keeper", sprite: "nursery_keeper", x: 4, y: 1, facing: "down", script: "dev_nursery" },
+    { id: "yard_keeper", sprite: "nursery_keeper_b", x: 8, y: 5, facing: "left", script: "dev_nursery_yard" },
+    { id: "boarder_1", sprite: "potted_plant", x: 2, y: 6, facing: "down", movement: "wander" },
+    { id: "boarder_2", sprite: "potted_plant", x: 6, y: 6, facing: "down", movement: "wander" },
+  ],
+  signs: [],
+  triggers: [],
+  hidden: [{ x: 11, y: 7, item: "compost", qty: 2 }],
+};
+
 const scripts: Record<string, ScriptCmd[]> = {
+  dev_nursery: [
+    { op: "say", text: "Welcome to the NURSERY GARDEN!" },
+    { op: "nursery" },
+    { op: "say", text: "Mind how you go!" },
+  ],
+  dev_nursery_yard: [
+    {
+      op: "ifNurserySeed",
+      then: [{ op: "say", text: "Oh! Something's turned up in the beds. Ask at the counter!" }],
+      else: [{ op: "say", text: "I water the boarders twice a day." }],
+    },
+    { op: "ifHasItem", item: "pruning_shears", then: [], else: [{ op: "giveItem", item: "pruning_shears" }] },
+  ],
   dev_elder: [
     { op: "say", text: "Hello, {PLAYER}! I test the script engine. Which test?" },
     {
@@ -204,6 +254,7 @@ export function devWorld(base: WorldData): WorldData {
   maps.fallowfield = town;
   maps.player_home = house;
   maps.route_1 = route;
+  maps.glasshouse_nursery = nursery;
   return {
     ...base,
     maps,

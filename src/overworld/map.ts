@@ -3,6 +3,7 @@
 
 import type { Cond, Dir, MapDef, TileKey, TileProps } from "../contracts";
 import { STRUCTURES, TILES } from "../contracts";
+import { FIELD_MOVE_FX, fieldMoveCells, fieldMoveFlag, fieldMoveOf } from "./fieldmove";
 
 export const DIRS: Record<Dir, { dx: number; dy: number }> = {
   up: { dx: 0, dy: -1 },
@@ -23,8 +24,13 @@ export interface MapRuntime {
   doors: Set<string>;
   /** Active `legendWhen` overrides; refreshed from flags by the overworld. */
   legendOverride?: Record<string, TileKey>;
-  /** Which `legendWhen` entries are active ("" = none); changes invalidate tile caches. */
+  /** Which `legendWhen` entries are active and which field-move cells are cleared
+   *  ("" = none); changes invalidate tile caches. */
   legendSig?: string;
+  /** Cells that may hold a field-move tile (brambles), found at build time. */
+  fieldCells?: { x: number; y: number }[];
+  /** "x,y" of field-move cells cleared by their flag (PRUNE): they read as the move's `cleared` tile. */
+  cleared?: Set<string>;
 }
 
 /** Recompute flag-dependent legend overrides (cheap; called every frame). */
@@ -32,7 +38,17 @@ export function refreshLegend(m: MapRuntime, flags: Record<string, boolean>): vo
   const list = m.def.legendWhen ?? [];
   let sig = "";
   for (let i = 0; i < list.length; i++) if (checkCond(list[i].when, flags)) sig += `${i},`;
+  // Cleared field-move cells (any move's flag) join the signature so tile caches rebuild.
+  let cleared: Set<string> | undefined;
+  for (const c of m.fieldCells ?? []) {
+    for (const move of Object.keys(FIELD_MOVE_FX) as (keyof typeof FIELD_MOVE_FX)[]) {
+      if (!flags[fieldMoveFlag(move, m.def.id, c.x, c.y)]) continue;
+      (cleared ??= new Set()).add(key(c.x, c.y));
+      sig += `|${c.x},${c.y}`;
+    }
+  }
   if (sig === m.legendSig) return;
+  m.cleared = cleared;
   let merged: Record<string, TileKey> | undefined;
   for (const o of list) {
     if (checkCond(o.when, flags)) merged = { ...o.legend, ...merged };
@@ -60,7 +76,7 @@ export function buildMap(def: MapDef): MapRuntime {
     }
   }
   const w = Math.max(0, ...def.tiles.map((r) => Array.from(r).length));
-  return { def, w, h: def.tiles.length, solid, doors };
+  return { def, w, h: def.tiles.length, solid, doors, fieldCells: fieldMoveCells(def) };
 }
 
 export function inBounds(m: MapRuntime, x: number, y: number) {
@@ -80,6 +96,10 @@ export function tileAt(m: MapRuntime, x: number, y: number): TileKey {
       console.warn(`[map] ${m.def.id}: no legend entry for "${ch}"`);
     }
     return m.def.border;
+  }
+  if (m.cleared?.has(key(x, y))) {
+    const move = fieldMoveOf(t);
+    if (move) return FIELD_MOVE_FX[move].cleared;
   }
   return t;
 }

@@ -25,7 +25,7 @@ export interface ExpShare {
 export function distributeExp(party: Quickened[], participants: Set<string>, base: number): ExpShare[] {
   const out: ExpShare[] = [];
   party.forEach((q, index) => {
-    if (q.hp <= 0 || q.level >= MAX_LEVEL) return;
+    if (q.hp <= 0 || q.seed || q.level >= MAX_LEVEL) return;
     const participant = participants.has(q.uid);
     const amount = participant ? base : Math.max(1, Math.floor(base / 2));
     out.push({ index, amount, participant });
@@ -126,6 +126,7 @@ export function replaceMove(data: GameData, q: Quickened, slot: number, move: Mo
  * never fire here.
  */
 export function growthTarget(data: GameData, q: Quickened, time: TimeOfDay): SpeciesId | null {
+  if (q.seed) return null;
   const g = getSpecies(data, q.species).growsInto;
   if (!g || !data.species[g.species]) return null;
   const t = g.trigger;
@@ -140,6 +141,7 @@ export function growthTarget(data: GameData, q: Quickened, time: TimeOfDay): Spe
 
 /** Growth from using an item on a Quickened. */
 export function itemGrowthTarget(data: GameData, q: Quickened, item: ItemId): SpeciesId | null {
+  if (q.seed) return null;
   const g = getSpecies(data, q.species).growsInto;
   if (!g || !data.species[g.species]) return null;
   return g.trigger.kind === "item" && g.trigger.item === item ? g.species : null;

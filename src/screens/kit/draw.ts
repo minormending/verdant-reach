@@ -351,7 +351,11 @@ export function speciesSpritePath(id: SpeciesId, kind: SpriteKind): string {
 /** The image (or a placeholder) for a species sprite. */
 export function speciesImage(ctx: GameContext, id: SpeciesId, kind: SpriteKind, opts: { sport?: boolean } = {}): Src {
   const path = speciesPath(id, kind);
-  let img: Src | undefined = ctx.assets.image(path);
+  // Sports use the bundle's exact `sport` palette (`?sport`); the old hue shift
+  // below is only a fallback for art without one.
+  const sportPath = opts.sport ? speciesPath(id, kind, { sport: true }) : null;
+  const exact = sportPath !== null && ctx.assets.exists(sportPath);
+  let img: Src | undefined = ctx.assets.image(exact ? sportPath : path);
   if (!img && kind === "icon__2") return speciesImage(ctx, id, "icon", opts);
   if (!img && (kind === "front__2" || kind === "front__3")) return speciesImage(ctx, id, "front", opts);
   if (!img) {
@@ -362,7 +366,7 @@ export function speciesImage(ctx: GameContext, id: SpeciesId, kind: SpriteKind, 
     const types = (ctx.data.species[id]?.types ?? ["wood"]) as readonly TypeId[];
     img = placeholderSprite(id, kind, types);
   }
-  if (opts.sport) img = sportVersion(path, img);
+  if (opts.sport && !exact) img = sportVersion(path, img);
   return img;
 }
 
@@ -571,15 +575,11 @@ export function vline(g: CanvasRenderingContext2D, x: number, y: number, h: numb
 }
 
 // ---------------------------------------------------------------------------
-// Preloading: only files the art manifest lists (the engine preloads those
-// at boot anyway); avoids 404 noise for optional files like icon__2.
+// Preloading: only paths the art registry provides (the engine preloads the
+// whole registry at boot anyway); avoids 404 noise for optional files like icon__2.
 // ---------------------------------------------------------------------------
 
-import { ASSET_PATHS } from "../../assets/manifest";
-let manifest: Set<string> | null = null;
-
 export function preload(ctx: GameContext, paths: string[]): Promise<void> {
-  if (!manifest) manifest = new Set(ASSET_PATHS);
-  const want = manifest.size > 0 ? paths.filter((p) => manifest!.has(p) && !ctx.assets.has(p)) : paths;
+  const want = paths.filter((p) => ctx.assets.exists(p) && !ctx.assets.has(p));
   return want.length ? ctx.assets.loadAll(want) : Promise.resolve();
 }

@@ -80,6 +80,25 @@ export function drawFallbackTile(g: CanvasRenderingContext2D, t: TileKey, x: num
   g.fillRect(x, y, 2, 2);
 }
 
+/**
+ * A pruned bramble (stand-in until the bramble_stump tile lands): a low cut crown
+ * of canes with pale cut ends, lit from the top-left, shadow to the bottom-right.
+ */
+export function drawStumpFallback(g: CanvasRenderingContext2D, x: number, y: number) {
+  const P = (dx: number, dy: number, w: number, h: number, c: string) => { g.fillStyle = c; g.fillRect(x + dx, y + dy, w, h); };
+  P(4, 11, 9, 2, "#58a040");          // shadow cast bottom-right on the grass
+  P(3, 10, 9, 2, "#3a3048");          // crown base
+  for (const [cx, h] of [[4, 4], [6, 6], [8, 5], [10, 3]] as const) {
+    P(cx, 10 - h, 1, h, "#5a4a68");    // cut canes
+    P(cx + 1, 10 - h + 1, 1, h - 1, "#3a3048");
+    P(cx, 10 - h, 1, 1, "#e0d0b8");    // pale cut end
+  }
+  P(12, 8, 1, 1, "#5a4a68");           // a stray thorn
+  P(2, 9, 1, 1, "#5a4a68");
+  P(5, 12, 2, 1, "#98d060");           // leaf litter
+  P(11, 12, 1, 1, "#98d060");
+}
+
 /** Lower half of a tall-grass cell, drawn over a character standing in it. */
 export function drawGrassOverlay(
   g: CanvasRenderingContext2D, assets: Assets, art: CellArt | null, x: number, y: number, second: boolean, sway = 0,
