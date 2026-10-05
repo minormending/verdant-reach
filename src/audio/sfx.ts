@@ -39,6 +39,12 @@ export const JINGLE_DEFS: Record<JingleId, SongDef> = {
     p2: "v8 @1 q6 o5 e8 a8 o6 c+8 e4 d8 c+4",
     wave: "v15 q6 o3 a4. e4 a4",
   }),
+  // A warm "task done" cadence in F (I-V-I), a touch gentler than ITEM_GET.
+  quest: j(140, {
+    p1: "v12 @2 q6 o5 f8 a8 o6 c8 f4 e8 f4.",
+    p2: "v8 @1 q6 o5 c8 f8 a8 o6 c4 c8 c4.",
+    wave: "v15 q6 o3 f4. c4. f4.",
+  }),
   level_up: j(160, {
     p1: "v13 @2 q6 o5 g16 b16 o6 d16 g8 r16 f+16 g8",
     p2: "v9 @1 q6 o5 d16 g16 b16 o6 d8 r16 d16 d8",

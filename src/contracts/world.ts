@@ -2,7 +2,7 @@
 // engine agent (src/overworld/).
 
 import type {
-  CharacterKey, Dir, ItemId, MapId, MarkId, MoveId, MusicId, ScriptId,
+  CharacterKey, Dir, ItemId, MapId, MarkId, MoveId, MusicId, ScriptId, StillKey,
   SfxId, JingleId, SpeciesId, StructureKey, TileKey, TrainerId, TrainerPortraitKey,
 } from "./ids";
 
@@ -43,6 +43,9 @@ export interface MapDef {
     grass?: { rate: number; slots: EncounterSlot[] }; // rate: % chance per step on tall_grass
     bog?: { rate: number; slots: EncounterSlot[] };
   };
+  /** Hidden items: press A facing the tile to find it (once; flag hidden_<map>_<x>_<y>).
+   *  The engine shows a faint sparkle every few seconds as a modern hint. */
+  hidden?: { x: number; y: number; item: ItemId; qty?: number }[];
   /** Ambient particles drawn over the map ("fireflies" only shows at night). */
   ambient?: Ambient;
   /** Runs each time the map is entered (after fade-in). */
@@ -106,6 +109,18 @@ export type ScriptCmd =
   | { op: "cameraReset"; frames?: number }                // pan back to the player
   | { op: "ambient"; kind: Ambient }                      // override the map's particles
   | { op: "flash"; color: "white" | "gold" }              // full-screen flash
+  // --- Round 3 ---------------------------------------------------------------
+  | { op: "still"; image: StillKey }                      // fade to a full-screen illustration (stays up)
+  | { op: "stillClear" }                                  // fade back to the map
+  | { op: "ifHasItem"; item: ItemId; qty?: number; then: ScriptCmd[]; else?: ScriptCmd[] }
+  | { op: "ifPartyHas"; species: SpeciesId | SpeciesId[]; then: ScriptCmd[]; else?: ScriptCmd[] } // any listed
+  | { op: "ifCaught"; species: SpeciesId | SpeciesId[]; then: ScriptCmd[]; else?: ScriptCmd[] }   // in herbarium.caught
+  | { op: "ifCaughtCount"; atLeast: number; then: ScriptCmd[]; else?: ScriptCmd[] }
+  /** Pick a bush: gives the item if it hasn't been picked today (real date), else says it's bare.
+   *  Bush NPCs use the id `bush:<harvestId>`; the engine shows the picked row until tomorrow. */
+  | { op: "harvest"; id: string; item: ItemId; qty?: number }
+  | { op: "startQuest"; quest: string }                   // sets quest_<id>_started, notes "NEW NOTE" toast
+  | { op: "completeQuest"; quest: string }                // sets quest_<id>_done + "quest" jingle
   | { op: "endSlice" }                                    // "to be continued" card -> title
   | { op: "end" };
 
@@ -125,10 +140,22 @@ export interface TrainerDef {
   mark?: MarkId;                // leaders award a mark
 }
 
+/** Side quests, listed in the START menu NOTES screen. */
+export interface QuestDef {
+  id: string;                   // flags: quest_<id>_started / quest_<id>_done
+  title: string;                // <= 16 chars, e.g. "THE SAP RUN"
+  giver: string;                // display, e.g. "SYRUP MAKER, SUGARBUSH"
+  area: MapId;
+  /** Ordered steps; a step shows as ticked when its condition holds. */
+  steps: { text: string; doneWhen: Cond }[];
+  reward: string;               // display text
+}
+
 export interface WorldData {
   maps: Record<MapId, MapDef>;
   scripts: Record<ScriptId, ScriptCmd[]>;
   trainers: Record<TrainerId, TrainerDef>;
+  quests?: Record<string, QuestDef>;
   /** New game: where the player starts (inside the Herbarium at night, prologue). */
   newGame: { map: MapId; x: number; y: number; facing: Dir; script: ScriptId };
 }

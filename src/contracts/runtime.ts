@@ -39,7 +39,13 @@ export interface GameState {
   position: { map: MapId; x: number; y: number; facing: Dir };
   heal: { map: MapId; x: number; y: number };  // last greenhouse
   playTimeMs: number;
-  options: { textSpeed: "slow" | "mid" | "fast" };
+  options: {
+    textSpeed: "slow" | "mid" | "fast";
+    follower?: boolean;         // lead Quickened walks behind the player (default true)
+    battleAnims?: boolean;      // move animations on/off (default true)
+  };
+  /** harvestId -> ISO date (YYYY-MM-DD) last picked. */
+  harvested?: Record<string, string>;
 }
 
 export interface BattleRequest {

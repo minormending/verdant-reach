@@ -24,6 +24,15 @@ export const SPECIES_IDS = [
   "maple_samara", "maple_sapling", "sugar_maple",             // wood
   "nettle_sprout", "stinging_nettle",                         // thorn
   "moonflower_seed", "moonflower_vine", "moonflower",         // ghost (night only)
+  // Round 3 additions (2-stage lines)
+  "clover_sprout", "white_clover",                            // bloom
+  "cattail_shoot", "cattail",                                 // water (bog)
+  "foxglove_rosette", "foxglove",                             // bloom/ghost (poisonous)
+  "holly_seedling", "holly",                                  // frost/wood
+  "mint_sprig", "peppermint",                                 // frost (menthol)
+  "rose_bud", "wild_rose",                                    // thorn/bloom
+  "pitcher_sprout", "pitcher_plant",                          // bug/water
+  "snapdragon_sprout", "snapdragon",                          // dragon/bloom (rare gift)
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 
@@ -163,6 +172,7 @@ export const CHARACTERS = [
   "hedge_gate",                  // closed gate; hide via visibleWhen to open
   "lever",                       // interactable switch (2 frames: off/on rows ok)
   "valve",                       // bog water valve (puzzle)
+  "harvest_bush",                // fruiting bush: DOWN row = ripe, UP row = picked
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -184,7 +194,7 @@ export const MUSIC = [
 export type MusicId = (typeof MUSIC)[number];
 
 /** Short non-looping cues that pause music while they play. */
-export const JINGLES = ["heal", "caught", "growth", "mark", "item_get", "level_up"] as const;
+export const JINGLES = ["heal", "caught", "growth", "mark", "item_get", "level_up", "quest"] as const;
 export type JingleId = (typeof JINGLES)[number];
 
 export const SFX = [
@@ -210,6 +220,8 @@ export const REQUIRED_ITEMS = [
   "compost",                                  // revive a wilted Quickened
   "neem_spray",                               // cures any status
   "field_herbarium", "centuryheart_seed", "fennimores_letter", // key items
+  "wild_berry", "rose_hip",                   // harvested from bushes: heal / cure
+  "syrup_jar",                                // key item for the SAP RUN quest
 ] as const;
 export type RequiredItemId = (typeof REQUIRED_ITEMS)[number];
 export type ItemId = RequiredItemId | (string & {});
@@ -220,6 +232,10 @@ export type ScriptId = string;
 /** Pressed Marks (badges) available in the slice. */
 export const MARKS = ["bramble_mark", "sundew_mark"] as const;
 export type MarkId = (typeof MARKS)[number];
+
+/** Full-screen 160x144 illustrations shown during key story beats. */
+export const STILLS = ["bloom", "greenhouse_morning", "theft", "grove_taps", "graft_collar", "vale_call"] as const;
+export type StillKey = (typeof STILLS)[number];
 
 export type Dir = "up" | "down" | "left" | "right";
 export type Button = "up" | "down" | "left" | "right" | "a" | "b" | "start" | "select";

@@ -79,8 +79,12 @@ export const portraitPath = (key: TrainerPortraitKey) => `assets/trainers/${key}
  *  icon.png 16x16 (party menu; optional icon__2.png second frame).
  * 4 colours + transparency, GBC style.
  */
-export const speciesPath = (id: SpeciesId, kind: "front" | "back" | "icon" | "icon__2") =>
+export const speciesPath = (id: SpeciesId, kind: "front" | "front__2" | "front__3" | "back" | "icon" | "icon__2") =>
   `assets/species/${id}/${kind}.png`;
+/** Battle idle animation: front, front__2[, front__3] cycle (optional frames; ping-pong). */
+
+/** Story illustrations: 160x144 PNG. */
+export const stillPath = (key: import("./ids").StillKey) => `assets/stills/${key}.png`;
 
 /** Optional 16x16 item icons. */
 export const itemIconPath = (id: string) => `assets/items/${id}.png`;
