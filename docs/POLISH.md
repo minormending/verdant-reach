@@ -4,7 +4,7 @@
 **production-ready, AAA-for-the-GBC-era** in art, maps, dialogue and
 gameplay feel. Read [STYLE.md](STYLE.md) first; it is the bar. Also read
 [ARCHITECTURE.md](ARCHITECTURE.md) and [SLICE.md](SLICE.md), and skim the story
-bible at `/Users/kevinramdath/projects/research/creature-sprites/story/`.
+bible at [docs/story/](story/).
 
 ## What changed in the contracts for this pass
 

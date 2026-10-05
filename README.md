@@ -7,7 +7,7 @@ QUICKENED. Then you find out who woke them, and why.
 
 This is a **vertical slice**: the Prologue and Act 1, ending at Conservatory 2,
 about 60–90 minutes of play. The story bible lives in
-`../creature-sprites/story/`.
+[docs/story/](docs/story/).
 
 ## Play
 

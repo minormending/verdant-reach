@@ -1,6 +1,6 @@
 # Vertical slice: Prologue + Act 1 (to Conservatory 2)
 
-Story source: `/Users/kevinramdath/projects/research/creature-sprites/story/`
+Story source: [docs/story/](story/)
 (premise, world, characters, plot chapters 1–3, key plants, mechanics,
 decisions). This file pins down what the slice must contain. Where it is
 silent, follow the story bible.

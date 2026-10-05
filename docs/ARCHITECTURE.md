@@ -3,7 +3,7 @@
 A Game Boy Color–style monster collector in which every creature is a real plant.
 - Browser game: Vite + TypeScript (strict) + Canvas 2D at 160x144, integer-scaled.
 - No runtime dependencies.
-- Story bible: `/Users/kevinramdath/projects/research/creature-sprites/story/` (read it).
+- Story bible: [docs/story/](story/) (read it).
 - Slice scope: [SLICE.md](SLICE.md).
 
 ## The quality bar
