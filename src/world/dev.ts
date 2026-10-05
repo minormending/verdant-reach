@@ -9,7 +9,7 @@ import { flood, grid, validateWorld, walkable } from "./validate";
 import { createOverworldScene } from "../overworld";
 import { createQuickened } from "../battle";
 
-const COLORS: Record<TileKey, string> = {
+const COLORS: Partial<Record<TileKey, string>> = {
   grass: "#78c850", tall_grass: "#3f9a3a", flowers: "#e8a0c8", path: "#d8c088", dirt: "#a07848",
   sand: "#e8d8a0", bog: "#5a6a3a", boardwalk: "#b08850", water: "#4878d0", ledge_down: "#507830",
   tree: "#1f5a2a", maple_tree: "#b04a28", tapped_maple: "#7a3a28", hedge: "#2e7a3a", bramble_bush: "#6a2a4a",
@@ -140,7 +140,7 @@ function render(ctx: GameContext, map: MapDef, canvas: HTMLCanvasElement, scale:
       g.fillStyle = "#806858";
       g.fillRect(s.x * T, s.y * T, def.w * T, def.h * T);
       g.fillStyle = "#3a2a20";
-      g.fillRect((s.x + def.door.x) * T + 3, (s.y + def.door.y) * T + 2, T - 6, T - 2);
+      if (def.door) g.fillRect((s.x + def.door.x) * T + 3, (s.y + def.door.y) * T + 2, T - 6, T - 2);
       g.fillStyle = "#fff";
       g.font = "8px monospace";
       g.fillText(s.key, s.x * T + 2, s.y * T + 9);

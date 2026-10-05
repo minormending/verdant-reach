@@ -37,6 +37,25 @@ export const TIME_OF_DAY = { morningStart: 4, dayStart: 10, nightStart: 18 } as 
 export const tilePath = (key: TileKey, frame: 1 | 2 = 1) =>
   frame === 1 ? `assets/tiles/${key}.png` : `assets/tiles/${key}__2.png`;
 
+/**
+ * AUTOTILING. Tiles in a group pick a variant from their 4 neighbours: mask
+ * bit N=1, E=2, S=4, W=8 is set when that neighbour is in the SAME group
+ * (out-of-bounds counts as same). The engine draws `${key}@${mask}.png` when
+ * it exists (and `${key}@${mask}__2.png` for the second animation frame),
+ * falling back to the plain tile. Art may supply any subset of the 16 masks.
+ */
+export const AUTOTILE: Partial<Record<TileKey, string>> = {
+  water: "water", pond_lily: "water", water_channel: "water",
+  path: "path", stone_path: "stone_path", dirt: "dirt", sand: "sand",
+  bog: "bog", boardwalk: "boardwalk", tall_grass: "tall_grass",
+  hedge: "hedge", fence: "fence", stone_wall: "stone_wall", cliff: "cliff",
+  glass_wall: "glass_wall", wall: "wall",
+  // forests join into one canopy mass with edges on the open sides
+  tree: "tree", maple_tree: "maple", tapped_maple: "maple",
+};
+export const tileVariantPath = (key: TileKey, mask: number, frame: 1 | 2 = 1) =>
+  frame === 1 ? `assets/tiles/${key}@${mask}.png` : `assets/tiles/${key}@${mask}__2.png`;
+
 /** PNG sized (w*16)x(h*16) per STRUCTURES. */
 export const structurePath = (key: StructureKey) => `assets/structures/${key}.png`;
 

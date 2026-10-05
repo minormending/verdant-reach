@@ -7,6 +7,7 @@ import type {
 } from "./ids";
 
 export type TimeOfDay = "morning" | "day" | "night";
+export type Ambient = "none" | "pollen" | "leaves" | "fireflies" | "rain" | "mist" | "spores";
 
 /** All conditions must hold. Flags default to false. */
 export type Cond = { flag: string; is: boolean }[];
@@ -42,6 +43,8 @@ export interface MapDef {
     grass?: { rate: number; slots: EncounterSlot[] }; // rate: % chance per step on tall_grass
     bog?: { rate: number; slots: EncounterSlot[] };
   };
+  /** Ambient particles drawn over the map ("fireflies" only shows at night). */
+  ambient?: Ambient;
   /** Runs each time the map is entered (after fade-in). */
   onEnter?: ScriptId;
   /** Where to send the player after wilting out, if this is a healing map. */
@@ -99,6 +102,10 @@ export type ScriptCmd =
   | { op: "openCabinet" }                                 // party/box storage
   | { op: "nameRival" }                                   // optional; default "BRAM"
   | { op: "call"; script: ScriptId }
+  | { op: "camera"; x: number; y: number; frames?: number } // pan camera to a tile (cutscenes)
+  | { op: "cameraReset"; frames?: number }                // pan back to the player
+  | { op: "ambient"; kind: Ambient }                      // override the map's particles
+  | { op: "flash"; color: "white" | "gold" }              // full-screen flash
   | { op: "endSlice" }                                    // "to be continued" card -> title
   | { op: "end" };
 

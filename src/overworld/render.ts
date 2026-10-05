@@ -122,7 +122,7 @@ export function drawStructure(g: CanvasRenderingContext2D, assets: Assets, key: 
   drawMissing(g, path, x, y, w, h);
   // Keep the door visible so placeholder towns stay navigable.
   g.fillStyle = "#402018";
-  g.fillRect(x + spec.door.x * TILE + 3, y + spec.door.y * TILE + 2, TILE - 6, TILE - 2);
+  if (spec.door) g.fillRect(x + spec.door.x * TILE + 3, y + spec.door.y * TILE + 2, TILE - 6, TILE - 2);
 }
 
 /** Draw one character frame. Sheets narrower than 48px are static objects. */

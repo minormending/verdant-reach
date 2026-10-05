@@ -47,7 +47,7 @@ export function buildMap(def: MapDef): MapRuntime {
     for (let yy = 0; yy < spec.h; yy++) {
       for (let xx = 0; xx < spec.w; xx++) {
         const k = key(s.x + xx, s.y + yy);
-        if (xx === spec.door.x && yy === spec.door.y) doors.add(k);
+        if (spec.door && xx === spec.door.x && yy === spec.door.y) doors.add(k);
         else solid.add(k);
       }
     }

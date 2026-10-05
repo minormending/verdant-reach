@@ -90,6 +90,34 @@ export const TILES = {
   stairs_down:  { walk: true },
   water_channel:{ walk: false },
   void:         { walk: false },                // black, outside interiors
+  // --- polish pass: decoration and set dressing ------------------------------
+  flowers_red:    { walk: true },
+  flowers_yellow: { walk: true },
+  stone_path:     { walk: true },
+  bridge:         { walk: true },                // wooden bridge over water
+  mushrooms:      { walk: true },
+  gate_open:      { walk: true },                // gap in a fence/stone wall
+  chair:          { walk: true },
+  stump:          { walk: false },
+  log:            { walk: false },
+  lamp_post:      { walk: false },
+  barrel:         { walk: false },
+  crate:          { walk: false },
+  bench:          { walk: false },
+  pond_lily:      { walk: false, water: true },  // water with lily pads
+  reeds:          { walk: false },
+  cliff:          { walk: false },
+  stone_wall:     { walk: false },
+  garden_plot:    { walk: false },
+  crops:          { walk: false },
+  scarecrow:      { walk: false },
+  haybale:        { walk: false },
+  fireplace:      { walk: false },
+  stove:          { walk: false },
+  potted_tree:    { walk: false },
+  glass_wall:     { walk: false },               // conservatory glazing
+  workbench:      { walk: false, interact: true },
+  microscope:     { walk: false, interact: true },
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -101,8 +129,9 @@ export interface TileProps {
   interact?: boolean;
 }
 
-/** Multi-tile buildings drawn from one image; footprint is solid except the door. */
-export const STRUCTURES = {
+/** Multi-tile buildings drawn from one image; footprint is solid except the
+ *  door. Structures without a door are scenery (barn doors are painted shut). */
+const STRUCTURE_SPECS = {
   house_small:  { w: 4, h: 3, door: { x: 1, y: 2 } },
   house_large:  { w: 5, h: 4, door: { x: 2, y: 3 } },
   herbarium:    { w: 6, h: 4, door: { x: 2, y: 3 } },
@@ -110,8 +139,15 @@ export const STRUCTURES = {
   market:       { w: 4, h: 3, door: { x: 1, y: 2 } },
   conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } },
   lodge:        { w: 5, h: 3, door: { x: 2, y: 2 } }, // sugarbush sugar shack
-} as const;
-export type StructureKey = keyof typeof STRUCTURES;
+  barn:         { w: 5, h: 4 },
+  windmill:     { w: 3, h: 4 },
+  well:         { w: 2, h: 2 },
+  big_oak:      { w: 3, h: 3 },                  // landmark tree
+  big_maple:    { w: 2, h: 2 },
+} as const satisfies Record<string, StructureSpec>;
+export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
+export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
+export type StructureKey = keyof typeof STRUCTURE_SPECS;
 
 /** Overworld character sheets (see ASSET CONVENTIONS in constants.ts). */
 export const CHARACTERS = [
@@ -122,6 +158,11 @@ export const CHARACTERS = [
   // objects that use the NPC system (single static frame is fine)
   "potted_plant",  // starter pots in the Herbarium greenhouse
   "item_pickup",   // an acorn-shaped pod lying on the ground (item ball)
+  // polish pass: ambient life and puzzle objects
+  "cat", "dog", "bird",          // ambient wanderers (talkable for flavour)
+  "hedge_gate",                  // closed gate; hide via visibleWhen to open
+  "lever",                       // interactable switch (2 frames: off/on rows ok)
+  "valve",                       // bog water valve (puzzle)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 

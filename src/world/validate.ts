@@ -25,11 +25,11 @@ export function grid(map: MapDef): Grid {
     const def = STRUCTURES[s.key];
     for (let dy = 0; dy < def.h; dy++) {
       for (let dx = 0; dx < def.w; dx++) {
-        if (dx === def.door.x && dy === def.door.y) continue;
+        if (def.door && dx === def.door.x && dy === def.door.y) continue;
         solid.add(`${s.x + dx},${s.y + dy}`);
       }
     }
-    doors.push({ x: s.x + def.door.x, y: s.y + def.door.y, key: s.key });
+    if (def.door) doors.push({ x: s.x + def.door.x, y: s.y + def.door.y, key: s.key });
   }
   return {
     w, h, doors,

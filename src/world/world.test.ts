@@ -24,6 +24,7 @@ describe("world data", () => {
     for (const m of Object.values(WORLD.maps)) {
       for (const s of m.structures) {
         const d = STRUCTURES[s.key].door;
+        if (!d) continue; // scenery
         const at = { x: s.x + d.x, y: s.y + d.y };
         const warp = m.warps.find((w) => w.x === at.x && w.y === at.y);
         const trig = m.triggers.find((t) => t.x === at.x && t.y === at.y);
