@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "city_house",
+  "image": "structure.png",
+  "size": [4, 4],
+  "credits": "Generated pixel art for Verdant Reach (Round 4, Chapter 4 environment).",
+  "source": { "kind": "generated", "tool": "tools/art/env4/buildings.py" }
+}

@@ -1,0 +1,10 @@
+{
+  "format": "verdant.character/1",
+  "id": "gentleman",
+  "sheet": "sheet.png",
+  "frame": [16, 16],
+  "rows": ["down", "up", "left", "right"],
+  "columns": ["stand", "stepA", "stepB"],
+  "credits": "Hand-authored pixel art for Verdant Reach (Round 4 cast generator).",
+  "source": { "kind": "generated", "tool": "tools/art/cast4/chars.py" }
+}

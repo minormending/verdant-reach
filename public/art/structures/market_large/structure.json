@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "market_large",
+  "image": "structure.png",
+  "size": [6, 4],
+  "credits": "Generated pixel art for Verdant Reach (Round 4, Chapter 4 environment).",
+  "source": { "kind": "generated", "tool": "tools/art/env4/buildings.py" }
+}

@@ -1,0 +1,11 @@
+{
+  "format": "verdant.tileset/1",
+  "id": "nursery",
+  "name": "Nursery Garden",
+  "tileSize": 16,
+  "sheet": "sheet.png",
+  "columns": 16,
+  "tiles": { "seed_tray": { "base": 0 }, "potting_bench": { "base": 1 } },
+  "credits": "Generated pixel art for Verdant Reach (Round 4, Chapter 4 environment).",
+  "source": { "kind": "generated", "tool": "tools/art/env4/tilesets.py" }
+}

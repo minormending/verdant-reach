@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "nursery_garden",
+  "image": "structure.png",
+  "size": [5, 3],
+  "credits": "Generated pixel art for Verdant Reach (Round 4, Chapter 4 environment).",
+  "source": { "kind": "generated", "tool": "tools/art/env4/buildings.py" }
+}

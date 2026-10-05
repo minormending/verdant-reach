@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "relay_mast",
+  "image": "structure.png",
+  "size": [1, 3],
+  "credits": "Generated pixel art for Verdant Reach (Round 4, Chapter 4 environment).",
+  "source": { "kind": "generated", "tool": "tools/art/env4/buildings.py" }
+}
