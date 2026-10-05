@@ -1,0 +1,6 @@
+# Python deps for tools/art (art generators, artkit, the Crystal kit).
+# Pinned: PNG bytes must stay identical across machines for `build_all.py --regen`.
+# Verified with Python 3.14.0.
+pillow==12.3.0
+numpy==2.5.3
+scipy==1.18.1
