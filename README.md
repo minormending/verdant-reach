@@ -39,15 +39,18 @@ night. Add `?time=morning|day|night` to the URL to override it.
   - The Night Meadow, and the Sugarbush Grove dungeon.
   - Two Conservatory puzzles: Hollis's lever-gated hedge maze and Nell's bog valves.
 - **24 trainers.** Leaders HOLLIS (Wood) and NELL PITCHER (Bug), rival BRAM ×2, and ROOTSTOCK grunts with their admin SHEARS. Staged cutscenes use camera pans, flashes and ambience.
-- **37 species, 71 moves and 9 types.** Every species is a real plant that grows through its real life stages, and every Herbarium entry contains a fact-checked true fact.
+- **53 species, 83 moves and 9 types.** Every species is a real plant that grows through its real life stages, poses as a creature in battle and has an idle animation. Every Herbarium entry contains a fact-checked true fact and shows where the species is FOUND.
 - **Systems:**
   - Crystal-style battles with a modern feel: the physical/special split, statuses, weather, critical captures, SUPER/WEAK hints, and 40 move-animation families.
   - Catching with nicknames, and growth (evolution) by level, by time of day and by friendship.
   - Party (with move reordering), bag, a pressed-specimen Field Herbarium, storage cabinet, shop and options.
   - Saving, whiteout, real-time day and night with lamp-lit nights, and ambient particles (pollen, leaves, fireflies, mist).
+  - **Side content:** six side quests tracked in a NOTES log, 10 hidden items, and berry and rose-hip bushes that regrow each real day.
+  - **Your lead Quickened follows you** around the overworld (toggle in OPTIONS).
+  - **Six illustrated stills** at key story moments.
 - **An original chiptune soundtrack:** 21 tracks, jingles, sound effects, a cry per species, and ambient wind, bird and cricket beds, all synthesised live with WebAudio.
 - **Art:** all hand-built pixel art, generated reproducibly by `tools/art/` (`build_all.py` regenerates every asset byte-for-byte).
-  - 37 species with true back views.
+  - 53 species with idle animations and true back views, to the creature design guide in `docs/CREATURES.md`.
   - Autotiled environments with ground variation.
   - Unique characters with weighted walk cycles, and trainer portraits.
   - Title art.
@@ -58,7 +61,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
 | | |
 |---|---|
 | `npm run typecheck` | strict TypeScript |
-| `npm test` | vitest: 255 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
+| `npm test` | vitest: 309 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
 | `?dev=<module>` | isolated dev scenes: `battle`, `screens`, `audio` (jukebox), `ui`, `overworld`, `world` |
 | `?dev=world&play=1&map=<id>&flags=a,b&species=<id>&level=<n>` | drop into any story state |
 | `e2e/` | automated full playthrough: `?timer&e2e=full`, served with `e2e/vite.config.ts` |
