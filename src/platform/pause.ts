@@ -50,7 +50,7 @@ export function createPause(opts: {
       drawWindow(g, x, y, w, h);
       drawText(g, "PAUSED", x + (w - 48) / 2, y + 10, UI.black);
       if (Math.floor(frame / 30) % 2 === 0) drawText(g, "▶", x + 10, y + 24, UI.dark);
-      drawText(g, "ANY KEY", x + 22, y + 24, UI.dark);
+      drawText(g, "PRESS A", x + 22, y + 24, UI.dark);
     },
   });
 

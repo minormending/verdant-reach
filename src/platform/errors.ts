@@ -121,7 +121,10 @@ export function installErrorScreen(opts: ErrorScreenOpts): ErrorScreen {
     const before = opts.ticks();
     const verify = () => {
       checkTimer = null;
-      if (document.hidden) {
+      // Hidden tabs stop requestAnimationFrame, so a still tick count proves
+      // nothing there, except under `?timer`, where the loop runs on timeouts.
+      const ticksWhileHidden = new URLSearchParams(location.search).has("timer");
+      if (document.hidden && !ticksWhileHidden) {
         // Frames don't run while hidden; decide when we're visible again.
         const onVis = () => {
           if (document.hidden) return;

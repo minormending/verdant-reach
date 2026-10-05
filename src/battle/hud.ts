@@ -3,7 +3,7 @@
 // stat window.
 
 import type { BattleRequest, GameContext, Quickened, StatusId, Stats, TrainerPortraitKey } from "../contracts";
-import { portraitPath, uiPath, UI } from "../contracts";
+import { portraitPath, UI } from "../contracts";
 import { getSpecies, qName, STATUS_ABBR } from "./logic/lookup";
 import {
   drawExpBar, drawHpBar, drawImageOpts, drawLeaf, drawLevel, drawPod, drawStatusBadge, drawTextRight, drawTiny, pad,
@@ -50,8 +50,6 @@ export function drawPlayerHud(ctx: GameContext, g: CanvasRenderingContext2D, h: 
   const ox = Math.round(h.dx);
   const name = qName(ctx.data, h.q);
   const nx = Math.max(56, Math.min(80, 152 - 8 * name.length)); // keep an 8px right margin for 12-char names
-  // a pale outline keeps the name readable where it crosses the foe's battle ground
-  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.ui.drawText(g, name, nx + ox + dx, 56 + dy, "#f8f8f0");
   ctx.ui.drawText(g, name, nx + ox, 56);
   if (h.status) drawStatusBadge(g, h.status, STATUS_ABBR[h.status], 88 + ox, 65, frame);
   const flashOn = h.flash > 0 && (h.flash >> 2) % 2 === 0;
@@ -154,59 +152,37 @@ export function backdropBg(kind: Backdrop): string {
   return BACKDROPS[kind].sky[BACKDROPS[kind].sky.length - 1];
 }
 
-const padCache = new Map<string, HTMLCanvasElement>();
-
-/** The battle-ground pad art recoloured to a backdrop's ramp (by luminance rank). */
-function padArt(ctx: GameContext, kind: Backdrop): HTMLCanvasElement | null {
-  const img = ctx.assets.image(uiPath("battle_ground"));
-  if (!img || !img.width) return null;
-  const key = `${kind}:${img.width}x${img.height}`;
-  const hit = padCache.get(key);
-  if (hit) return hit;
-  const c = document.createElement("canvas");
-  c.width = img.width; c.height = img.height;
-  const g = c.getContext("2d")!;
-  g.drawImage(img, 0, 0);
-  if (kind !== "grass") {
-    const data = g.getImageData(0, 0, c.width, c.height);
-    const d = data.data;
-    const lum = new Map<number, number>();
-    for (let i = 0; i < d.length; i += 4) {
-      if (d[i + 3] === 0) continue;
-      const k = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
-      if (!lum.has(k)) lum.set(k, d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11);
-    }
-    const sorted = [...lum.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k);
-    const ramp = BACKDROPS[kind].ramp.map((h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]);
-    const map = new Map<number, number[]>();
-    sorted.forEach((k, i) => map.set(k, ramp[Math.min(ramp.length - 1, Math.floor((i * ramp.length) / sorted.length))]));
-    for (let i = 0; i < d.length; i += 4) {
-      if (d[i + 3] === 0) continue;
-      const to = map.get((d[i] << 16) | (d[i + 1] << 8) | d[i + 2]);
-      if (to) { d[i] = to[0]; d[i + 1] = to[1]; d[i + 2] = to[2]; }
-    }
-    g.putImageData(data, 0, 0);
+/**
+ * A battle-ground pad centred on (cx, cy), rx x ry: dark rim, body, lit top
+ * (light from the top-left) and a little texture. It never extends below
+ * cy + ry, so the foe's pad stays clear of the player HUD (y >= 56).
+ */
+function drawPad(g: CanvasRenderingContext2D, kind: Backdrop, cx: number, cy: number, rx: number, ry: number) {
+  const p = BACKDROPS[kind];
+  ellipse(g, cx, cy, rx, ry, p.ramp[3]);
+  ellipse(g, cx, cy - 1, rx - 1, ry - 1, p.ramp[2]);
+  ellipse(g, cx - 1, cy - 2, rx - 3, ry - 2, p.ramp[1]);
+  ellipse(g, cx - Math.round(rx / 4), cy - ry + 2, Math.round(rx / 2), 1, p.ramp[0]);
+  checker(g, cx - Math.round(rx * 0.7), cy - 1, Math.round(rx * 1.2), 2, p.ramp[2], 0);
+  // a few tufts / grain marks on the surface
+  g.fillStyle = p.ramp[2];
+  for (const k of [-0.6, -0.25, 0.15, 0.5]) {
+    const x = Math.round(cx + k * rx);
+    g.fillRect(x, cy - ry + 3, 1, 2);
+    g.fillRect(x + 2, cy - ry + 4, 1, 1);
   }
-  padCache.set(key, c);
-  return c;
 }
 
-/** A battle-ground pad centred on (cx, cy): a shadowed under-layer, then the pad. */
-function drawPad(ctx: GameContext, g: CanvasRenderingContext2D, kind: Backdrop, cx: number, cy: number, w: number) {
-  const p = BACKDROPS[kind];
-  const art = padArt(ctx, kind);
-  const pw = art ? art.width : w;
-  const ph = art ? art.height : 12;
-  // under-layer: the pad's dark lip, then a soft checker shadow to the bottom-right
-  checker(g, cx - (pw >> 1) + 6, cy + 1, pw - 6, (ph >> 1) + 1, p.ramp[3], 0);
-  ellipse(g, cx, cy + 2, (pw >> 1) - 1, (ph >> 1) - 1, p.ramp[3]);
-  if (art) {
-    g.drawImage(art, Math.round(cx - pw / 2), Math.round(cy - ph / 2));
-  } else {
-    ellipse(g, cx, cy, (pw >> 1), (ph >> 1), p.ramp[2]);
-    ellipse(g, cx, cy - 1, (pw >> 1) - 2, (ph >> 1) - 1, p.ramp[1]);
-    ellipse(g, cx - 4, cy - 2, (pw >> 1) - 10, (ph >> 1) - 3, p.ramp[0]);
-  }
+/** Where the foe's pad sits: everything of the foe's stays above y = 56. */
+export const FOE_PAD = { x: 124, y: 49, rx: 36, ry: 6 } as const;
+/** The player HUD block; the backdrop is kept plain behind it, as in Crystal. */
+export const PLAYER_HUD_AREA = { x: 72, y: 56, w: 88, h: 40 } as const;
+
+/** Repaint the plain field behind the player HUD (after weather overlays). */
+export function drawHudBacking(g: CanvasRenderingContext2D, kind: Backdrop) {
+  const a = PLAYER_HUD_AREA;
+  g.fillStyle = BACKDROPS[kind].ground;
+  g.fillRect(a.x, a.y, a.w, a.h);
 }
 
 /** Background, distant scenery, field and the layered battle grounds. */
@@ -298,14 +274,15 @@ export function drawBackdrop(ctx: GameContext, g: CanvasRenderingContext2D, kind
     g.fillStyle = p.groundAlt;
     for (let y = horizon + 3; y < 96; y += 7) g.fillRect(0, y, 160, 1);
     g.fillStyle = kind === "night" ? "#9ca8c0" : "#b8dc90";
-    for (const [x, y] of [[20, 50], [64, 47], [86, 70], [150, 74], [140, 64], [8, 62], [70, 60]]) {
+    for (const [x, y] of [[20, 50], [64, 47], [8, 62], [62, 60], [76, 47]]) {
       g.fillRect(x, y - 2, 1, 2); g.fillRect(x + 2, y - 3, 1, 3); g.fillRect(x + 4, y - 2, 1, 2);
     }
   }
 
   // battle grounds: enemy (smaller, further) then player
-  drawPad(ctx, g, kind, 124, 52, 72);
-  drawPad(ctx, g, kind, 32, 92, 80);
+  drawPad(g, kind, FOE_PAD.x, FOE_PAD.y, FOE_PAD.rx, FOE_PAD.ry);
+  drawPad(g, kind, 32, 92, 40, 7);
+  void ctx;
 }
 
 // ---------------------------------------------------------------------------

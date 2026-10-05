@@ -17,8 +17,9 @@ export const DEFAULT_VOLUME = { music: 0.8, sfx: 0.9 } as const;
 //   cries   ~ music + 1 dB, spread under 3 dB    (+1.3 dB, per-duty trim in cry.ts)
 //   SFX     UI blips 3-6 dB under music, impacts within 2 dB of it (+1.9 dB)
 //   ambience 20-27 dB under the music it plays with (ambience.ts)
-// Measured after: music -15.9..-17.9 (mean -16.8, peak -2.2); cries -15.1..-18;
-// meadow bed -38.5, night -43.3, forest -39.4, town -43.
+// Measured after: music -15.9..-17.9 (mean -16.8, peak -2.2); jingles -13.6..-14.8
+// (level_up -17.4); cries -15.1..-18; UI blips -21.4..-24.4, impacts -14.8..-19.9;
+// beds: meadow -38.1, night -42.2, forest -39.4, town -42 (no change to music RMS).
 export const MIX = {
   master: 0.567,
   glueThresholdDb: -12,

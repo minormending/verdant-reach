@@ -186,7 +186,8 @@ function instrument() {
     const orig = console[level].bind(console);
     console[level] = (...args: unknown[]) => {
       const msg = args.map((a) => (a instanceof Error ? `${a.name}: ${a.message}` : typeof a === "string" ? a : safeJson(a))).join(" ");
-      if (!msg.startsWith("[e2e]")) issue(/\[assets\] missing/.test(msg) ? "missing-asset" : `console.${level}`, msg);
+      // "[vite]" noise comes from the no-websocket e2e server config.
+      if (!msg.startsWith("[e2e]") && !msg.startsWith("[vite]")) issue(/\[assets\] missing/.test(msg) ? "missing-asset" : `console.${level}`, msg);
       orig(...args);
     };
   }
@@ -600,7 +601,13 @@ export async function storyPlaythrough(opts: { boost: number; starter: "oak" | "
       const n = o.npcs.find((a) => a.id === g);
       if (n && o.visible(n) && n.def?.trainer && !flag(`beat_${n.def.trainer}`)) await talkTo(g);
     }
-    await talkTo("shears");
+    // The step-on trigger in front of SHEARS may already have run the whole scene.
+    if (!flag("grove_cleared") && !(await talkTo("shears", true)) && !flag("grove_cleared")) {
+      issue("soft-lock", "SHEARS unreachable after the grove grunts (a beaten trainer blocks the path?); re-entering the grove");
+      await nav("sugarbush");
+      await nav("sugarbush_grove");
+      await talkTo("shears");
+    }
     await expectFlag("SHEARS: grove cleared", "grove_cleared");
   }
   if (!flag("rival_2_done")) {
@@ -634,21 +641,27 @@ async function talkToUntilEnd(id: string) {
   await walkToQuiet(n.x, n.y + 1);
   await face("up");
   await press("a");
-  // Mash until the end card appears (overworld gone from the stack).
+  // Mash until the end card is up (it plays "slice_end" over the overworld),
+  // snapshot it, then press through to the title.
   let sawCard = false;
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 600; i++) {
     await sleep(140);
-    if (!ow()) {
-      if (!sawCard) { sawCard = true; await sleep(2500); beat("TO BE CONTINUED card", flag("slice_done")); }
-      await sleep(4500); // the card ignores input for 4s
+    if (!sawCard && ctx().audio.current() === "slice_end") {
+      sawCard = true;
+      await sleep(2200); // let it fade in from white
+      beat("TO BE CONTINUED card", flag("slice_done"));
+      await sleep(3000); // the card ignores input for its first 4 s
+    }
+    if (sawCard) {
+      if (!ow() && stack().length === 1) break; // title is up
       await press("a");
-      await sleep(3000);
-      if (stack().length === 1 && !ow()) break;
+      await sleep(1500);
       continue;
     }
-    if (flag("slice_done") && stack().length === 1 && ow()?.busy === 0) break;
+    hookScenes();
     await press(pendingNo ? "b" : "a");
   }
+  await sleep(2000);
   beat("NELL: sundew mark", flag("beat_nell"));
   beat("back at the title", !ow() && stack().length >= 1);
 }
@@ -755,6 +768,7 @@ export const CHECKS: Record<string, () => Promise<void>> = {
     if (st.party.length < 2) {
       st.party.push(createQuickened(ctx().data, "dandelion_bud" as SpeciesId, 6, Math.random));
     }
+    await nav((new URLSearchParams(location.search).get("cabinet") as MapId) || "bramblegate_greenhouse");
     const o = ow()!;
     const tiles = o.map.def.tiles;
     let spot: [number, number] | null = null;
@@ -819,14 +833,14 @@ export const CHECKS: Record<string, () => Promise<void>> = {
     instrument();
     await settle();
     const st = ctx().state;
-    const q = createQuickened(ctx().data, "dandelion_bud" as SpeciesId, 9, Math.random);
-    // Close to the next level (growth at 10 for the dandelion line, per SLICE.md).
+    const q = createQuickened(ctx().data, "dandelion_bud" as SpeciesId, 11, Math.random);
+    // One win from level 12, where the dandelion line grows.
     const data = ctx().data as unknown as { species: Record<string, { growth?: unknown; evolves?: unknown }> };
     void data;
     st.party.unshift(q);
     healParty(st.party, ctx().data);
     const o = ow()!;
-    void o.flow(async () => { await o.runScript([{ op: "wildBattle", species: "fern_fiddlehead" as SpeciesId, level: 9 }]); });
+    void o.flow(async () => { await o.runScript([{ op: "wildBattle", species: "fern_fiddlehead" as SpeciesId, level: 12 }]); });
     await advance(600);
     const grown = st.party.find((p) => p === q);
     beat("growth after a win", !!grown && grown.species !== "dandelion_bud", `now ${grown?.species}:${grown?.level}`);
@@ -886,7 +900,7 @@ export async function run(suite: string) {
         ctx().state.options.textSpeed = "fast";
         await settle();
       }
-      for (const name of suite.slice(6).split("+")) {
+      for (const name of suite.slice(6).split(/[+ ,]/).filter(Boolean)) {
         const c = CHECKS[name];
         if (!c) { beat(`check ${name}`, false, "unknown check"); continue; }
         await c();

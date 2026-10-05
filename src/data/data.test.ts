@@ -108,7 +108,8 @@ describe("items", () => {
     for (const id of REQUIRED_ITEMS) expect(DATA.items[id], id).toBeDefined();
     for (const [id, item] of Object.entries(DATA.items)) {
       expect(item.id).toBe(id);
-      expect(item.name.length, item.name).toBeLessThanOrEqual(12);
+      // 13 so "Terrarium Pod" matches the story's name; screens fit 13 columns.
+      expect(item.name.length, item.name).toBeLessThanOrEqual(13);
       expect(item.description.length, id).toBeLessThanOrEqual(36);
     }
     expect(DATA.items.terrarium_pod.effect).toEqual({ kind: "pod", catchMultiplier: 1 });

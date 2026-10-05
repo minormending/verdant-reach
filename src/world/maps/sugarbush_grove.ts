@@ -6,8 +6,8 @@ import { OUTDOOR, pickups, when, type Scripts } from "../build";
 // grassy dead end with a RAIN JAR, east up a narrow lane where a grunt waits
 // in a side gap, looking across it. The lane opens into ROOTSTOCK's camp
 // (crates, sap drums, a workbench), watched by a second grunt. GLASS PODS sit
-// behind the crates. A trail north-west climbs to a long avenue with a third
-// grunt at the far end, then a cleft opens onto the top clearing, ringed with
+// behind the crates. A trail north-west climbs to a long avenue where a third
+// grunt steps out of a gap, then a cleft opens onto the top clearing, ringed with
 // tapped maples and sap drums, where SHEARS waits.
 const hideWhenCleared = when({ grove_cleared: false });
 
@@ -30,8 +30,8 @@ export const sugarbush_grove: MapDef = {
     "MMMMMMMMX5.....35..XMMMMMMMM", // 4
     "MMMMMMMMMMMMX..XMMMMMMMMMMMM", // 5  the cleft (trigger)
     "MMMM..5.MMMMM..MMMMMMMMMMMMM", // 6  GLASS POD nook at 7,6
-    "MMMM.XMMMMMMM..MMMMMMMMMMMMM", // 7
-    "MMMM..,,.......XMMMMMMMMMMMM", // 8  the avenue; grunt 3 at its far end
+    "MMMM.XMMMMM.M..MMMMMMMMMMMMM", // 7  grunt 3 waits in a gap above the avenue
+    "MMMM..,,.......XMMMMMMMMMMMM", // 8  the avenue
     "MMMM..MMMMMMMMMMMMMMMMMMMMMM", // 9
     "MMMX..XMMMMMMMMMMMMMMMMMMMMM", // 10
     "MM,,.....78MM.,MMMMMMMMMMMMM", // 11 ROOTSTOCK camp; GLASS POD behind crates
@@ -60,7 +60,7 @@ export const sugarbush_grove: MapDef = {
   npcs: [
     { id: "grunt1", sprite: "grunt", x: 17, y: 21, facing: "right", trainer: "grunt_grove_1", sight: 4, visibleWhen: hideWhenCleared },
     { id: "grunt2", sprite: "grunt", x: 12, y: 15, facing: "right", trainer: "grunt_grove_2", sight: 4, visibleWhen: hideWhenCleared },
-    { id: "grunt3", sprite: "grunt", x: 14, y: 8, facing: "left", trainer: "grunt_grove_3", sight: 4, visibleWhen: hideWhenCleared },
+    { id: "grunt3", sprite: "grunt", x: 11, y: 7, facing: "down", trainer: "grunt_grove_3", sight: 1, visibleWhen: hideWhenCleared },
     { id: "shears", sprite: "shears", x: 13, y: 2, facing: "down", movement: "static", script: "shears", visibleWhen: hideWhenCleared },
     { id: "bird", sprite: "bird", x: 10, y: 24, facing: "left", movement: "wander", script: "grove_bird",
       visibleWhen: when({ grove_cleared: true }) },

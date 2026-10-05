@@ -37,3 +37,13 @@ describe("cleanNickname", () => {
     expect(cleanNickname("Oak Acorn", "OAK ACORN")).toBeUndefined();
   });
 });
+
+import { countOf } from "./kit/text";
+describe("countOf", () => {
+  it("pluralises item names without doubling an S", () => {
+    expect(countOf(1, "TERRARIUM POD")).toBe("1 TERRARIUM POD");
+    expect(countOf(5, "TERRARIUM POD")).toBe("5 TERRARIUM PODS");
+    expect(countOf(3, "COMPOST")).toBe("COMPOST ×3");
+    expect(countOf(3, "SUNFLOWER SEEDS")).toBe("3 SUNFLOWER SEEDS");
+  });
+});

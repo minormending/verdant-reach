@@ -20,7 +20,7 @@ import { applyItem, consumeItem, isMedicine } from "./logic/items";
 import { getItem, getMove, getSpecies, itemName, qName, speciesName, TYPE_NAMES } from "./logic/lookup";
 import { createQuickened, recalcStats, trainerIvs } from "./logic/stats";
 import {
-  drawBackdrop, drawEnemyHud, drawPlayerHud, drawPodRow, drawStatWindow, drawTrainer, drawVersusBanner, newHud,
+  drawBackdrop, drawEnemyHud, drawHudBacking, drawPlayerHud, drawPodRow, drawStatWindow, drawTrainer, drawVersusBanner, newHud,
   type BannerKind, type HudView,
 } from "./hud";
 import {
@@ -162,6 +162,7 @@ class BattleScene implements Scene {
     g.translate(this.shake.x + sh.x, this.shake.y + sh.y);
     drawBackdrop(this.ctx, g, this.backdrop, this.frame);
     drawWeather(g, this.weather, this.frame);
+    drawHudBacking(g, this.backdrop);
     this.fx.drawBack(g);
 
     // Enemy side

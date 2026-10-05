@@ -8,6 +8,7 @@ import { getItem, itemName } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
 import { drawCursor, drawItemIcon, drawMoreArrow, drawTextRight } from "./kit/draw";
 import { ListView, Menu, ScreenUi } from "./kit/widgets";
+import { countOf } from "./kit/text";
 
 const MAX_MONEY = 999999;
 
@@ -76,7 +77,7 @@ export function shopScreen(ctx: GameContext, stock: ItemId[]): Promise<void> {
       const n = await ui.qty(Math.min(99 - have, afford), { x: 56, y: TEXTBOX.y - 24, w: 104, extra: (k) => `  $${k * it.price}` });
       if (n <= 0) continue;
       const total = n * it.price;
-      const ok = await ui.yesNo(`${n} ${itemName(ctx.data, id)} will be $${total}. OK?`);
+      const ok = await ui.yesNo(`${countOf(n, itemName(ctx.data, id))} will be $${total}. OK?`);
       if (!ok) continue;
       if (ctx.state.money < total) { await ui.say("You don't have enough money."); continue; }
       ctx.state.money -= total;

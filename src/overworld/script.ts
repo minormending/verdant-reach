@@ -75,9 +75,13 @@ export function markName(mark: MarkId): string {
   return mark.replace(/_/g, " ").toUpperCase();
 }
 
+// Uncountable items read as "COMPOST ×3" rather than "3 COMPOSTS".
+const MASS_NOUNS = /^(COMPOST|SPRING WATER|PLANT FOOD|NEEM SPRAY)$/i;
+
 function plural(name: string, qty: number): string {
   if (qty === 1) return name;
-  return `${qty} ${/S$/.test(name) ? name : `${name}S`}`;
+  if (MASS_NOUNS.test(name)) return `${name} ×${qty}`;
+  return `${qty} ${/S$/i.test(name) ? name : `${name}S`}`;
 }
 
 const POCKET: Record<string, string> = { items: "ITEMS POCKET", pods: "POD POCKET", key: "KEY POCKET" };

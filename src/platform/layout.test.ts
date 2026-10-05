@@ -55,6 +55,11 @@ describe("computeLayout", () => {
     });
   }
 
+  it("gives the screen priority over control size in landscape", () => {
+    // iPad 1024x768 @2x: 4 CSS px per game pixel fits once the controls stop at size 4.
+    expect(computeLayout({ vw: 1024, vh: 768, dpr: 2, touch: true }).scale).toBe(8);
+  });
+
   it("respects safe-area insets", () => {
     const l = computeLayout({ vw: 812, vh: 375, dpr: 3, touch: true, safe: { top: 0, right: 44, bottom: 21, left: 44 } });
     expect(l.dpad!.x).toBeGreaterThanOrEqual(44);

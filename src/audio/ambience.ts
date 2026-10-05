@@ -46,17 +46,20 @@ interface BedSpec {
   crickets: { level: number; freq: number } | null;
 }
 
-// Linear gains into the ambience bus. Measured offline: each bed's loudest
-// 400 ms sits roughly 18–24 dB under the music it plays with.
+// Linear gains into the ambience bus. Measured offline (e2e/audiomix.ts): each
+// bed's loudest 400 ms sits 20–27 dB under the music it plays with and adds
+// nothing measurable to its RMS. Birds and crickets are tonal and sit in the
+// 3–5 kHz band, about 15 dB under the music's own content there: soft, but
+// above the masking threshold for a pure tone.
 const BEDS: Record<Exclude<AmbienceKind, "none">, BedSpec> = {
   meadow: {
     wind: { level: 0.079, freq: 520, q: 0.6, lowpass: 900 },
-    birds: { level: 0.028, every: [2.5, 7], pitch: [2900, 4600] },
+    birds: { level: 0.04, every: [2.5, 7], pitch: [2900, 4600] },
     crickets: null,
   },
   town: {
     wind: { level: 0.044, freq: 600, q: 0.7, lowpass: 900 },
-    birds: { level: 0.028, every: [4, 10], pitch: [3100, 5000] },
+    birds: { level: 0.036, every: [4, 10], pitch: [3100, 5000] },
     crickets: null,
   },
   forest: {
@@ -67,7 +70,7 @@ const BEDS: Record<Exclude<AmbienceKind, "none">, BedSpec> = {
   night: {
     wind: { level: 0.048, freq: 420, q: 0.7, lowpass: 700 },
     birds: null,
-    crickets: { level: 0.018, freq: 4700 },
+    crickets: { level: 0.028, freq: 4700 },
   },
 };
 

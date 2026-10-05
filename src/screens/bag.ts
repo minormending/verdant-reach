@@ -8,7 +8,7 @@ import { consumeItem, isMedicine } from "../battle/logic/items";
 import { getItem, itemName } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
 import { clearScreen, cursorBob, drawCursor, drawItemIcon, drawMoreArrow, drawTextRight } from "./kit/draw";
-import { fmt, playerName } from "./kit/text";
+import { countOf, fmt, playerName } from "./kit/text";
 import { ListView, Menu, ScreenUi } from "./kit/widgets";
 
 const POCKETS: { id: Item["pocket"]; name: string[] }[] = [
@@ -75,14 +75,15 @@ export function bagScreen(ctx: GameContext, opts: BagOpts): Promise<ItemId | nul
         const y = 8 + r * 16;
         const id = ents[i];
         if (id === "__cancel") {
-          ctx.ui.drawText(g, "CANCEL", 56, y);
+          ctx.ui.drawText(g, "CANCEL", 51, y);
         } else {
           const usable = !opts.select || opts.select(id);
-          ctx.ui.drawText(g, itemName(ctx.data, id), 56, y, usable ? UI.black : "#909090");
+          // 13-character names fit between the cursor and the right edge
+          ctx.ui.drawText(g, itemName(ctx.data, id), 51, y, usable ? UI.black : "#909090");
           if (getItem(ctx.data, id).pocket !== "key") drawTextRight(ctx, g, `×${pad2(ctx.state.bag[id] ?? 0)}`, 152, y + 8);
         }
       }
-      drawCursor(ctx, g, 48, 8 + (list.index - list.scroll) * 16, !!ui && ui.overlays.length > 0, list.frame);
+      drawCursor(ctx, g, 43, 8 + (list.index - list.scroll) * 16, !!ui && ui.overlays.length > 0, list.frame);
       if (list.canScrollDown()) drawMoreArrow(ctx, g, 144, 86, frame);
       if (list.canScrollUp()) drawMoreArrow(ctx, g, 144, 2, frame, "up");
     }
@@ -165,7 +166,7 @@ export function bagScreen(ctx: GameContext, opts: BagOpts): Promise<ItemId | nul
     ui.tb.show("Toss out how many?", "instant");
     const n = await ui.qty(have, { x: 104, y: TEXTBOX.y - 24 });
     if (n <= 0) return;
-    const ok = await ui.yesNo(`Throw away ${n} ${itemName(ctx.data, id)}?`);
+    const ok = await ui.yesNo(`Throw away ${countOf(n, itemName(ctx.data, id))}?`);
     if (!ok) return;
     consumeItem(ctx.state.bag, id, n);
     await ui.say(`Threw away ${itemName(ctx.data, id)}.`);

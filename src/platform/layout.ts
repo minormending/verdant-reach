@@ -140,19 +140,30 @@ export function computeLayout(inp: LayoutInput): Layout {
   }
 
   // Landscape: D-pad in the left column, A/B in the right, the screen between.
-  let unit = clamp(Math.floor(vh / 80), 3, 6);
-  let pillUnit = Math.max(2, unit - 2);
+  // Pick the control size that gives the biggest screen; among ties, the
+  // biggest controls (never below thumb size).
   const sideFor = (u: number) => Math.max(ART.dpad * u, ART.button * u * 2 + u * 2, ART.pill.w * Math.max(2, u - 2)) + 24;
-  // Give the screen at least half the width (but keep thumb-sized controls).
-  while (unit > 3 && sideFor(unit) * 2 > vw * 0.5) unit--;
-  pillUnit = Math.max(2, unit - 2);
-  const side = sideFor(unit);
-  const area: Rect = {
-    x: safe.left + side,
-    y: safe.top + 8,
-    w: Math.max(1, vw - safe.left - safe.right - side * 2),
-    h: Math.max(1, vh - safe.top - safe.bottom - 16),
+  const areaFor = (u: number): Rect => {
+    const side = sideFor(u);
+    return {
+      x: safe.left + side,
+      y: safe.top + 8,
+      w: Math.max(1, vw - safe.left - safe.right - side * 2),
+      h: Math.max(1, vh - safe.top - safe.bottom - 16),
+    };
   };
+  // Tablets (short side >= 600) keep the controls at least size 4.
+  const minUnit = Math.min(vw, vh) >= 600 ? 4 : 3;
+  let unit = minUnit;
+  let best = -1;
+  for (let u = clamp(Math.floor(vh / 80), minUnit, 6); u >= minUnit; u--) {
+    const a = areaFor(u);
+    const sc = integerScale(a.w, a.h, dpr);
+    if (sc > best) { best = sc; unit = u; }
+  }
+  const pillUnit = Math.max(2, unit - 2);
+  const side = sideFor(unit);
+  const area = areaFor(unit);
   const scale = integerScale(area.w, area.h, dpr);
   const screen = placeScreen(area, scale, dpr);
   const dpadS = ART.dpad * unit;

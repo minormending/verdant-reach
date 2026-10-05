@@ -46,7 +46,7 @@ interface Layer { delay: number; life: number; max: number; back: boolean; draw:
 export const ENEMY_CENTER: Pt = { x: 124, y: 30 };
 export const PLAYER_CENTER: Pt = { x: 32, y: 66 };
 /** Ground line under each side (where feet / roots meet the battle ground). */
-export const ENEMY_GROUND: Pt = { x: 124, y: 52 };
+export const ENEMY_GROUND: Pt = { x: 124, y: 50 };
 export const PLAYER_GROUND: Pt = { x: 32, y: 90 };
 
 export const R = (a: number, b: number) => a + Math.random() * (b - a);

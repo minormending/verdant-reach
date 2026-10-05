@@ -5,7 +5,7 @@ import type { Item } from "../contracts";
 
 const LIST: Item[] = [
   // Pods
-  { id: "terrarium_pod", name: "Terrarium", pocket: "pods", price: 200,
+  { id: "terrarium_pod", name: "Terrarium Pod", pocket: "pods", price: 200,
     description: "Glass acorn. Tired plants root in.",
     effect: { kind: "pod", catchMultiplier: 1 }, usableInBattle: true, usableInField: false },
   { id: "glass_pod", name: "Glass Pod", pocket: "pods", price: 600,

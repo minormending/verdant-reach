@@ -31,3 +31,17 @@ export function markCaught(ctx: GameContext, species: string): boolean {
 export function hasHerbarium(ctx: GameContext): boolean {
   return (ctx.state.bag["field_herbarium"] ?? 0) > 0;
 }
+
+/**
+ * "5 TERRARIUM PODs", "1 COMPOST", "3 SEEDS": a count and an upper-case item
+ * name with a lower-case plural s (Crystal style), never doubling an S.
+ */
+// Same rules as the overworld's "received" messages: upper-case plural S,
+// and uncountable items as "COMPOST ×3".
+const MASS_NOUNS = /^(COMPOST|SPRING WATER|PLANT FOOD|NEEM SPRAY)$/i;
+
+export function countOf(n: number, name: string): string {
+  if (n === 1) return `1 ${name}`;
+  if (MASS_NOUNS.test(name)) return `${name} ×${n}`;
+  return /S$/i.test(name) ? `${n} ${name}` : `${n} ${name}S`;
+}
