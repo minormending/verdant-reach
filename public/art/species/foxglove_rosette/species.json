@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "foxglove_rosette",
+  "palette": ["#181818", "#484070", "#7898a0", "#f8d0e0"],
+  "sport": ["#181818", "#485848", "#88a890", "#f8f8f0"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_c/foxglove.py.",
+  "source": { "kind": "generated", "tool": "tools/art/species_c/foxglove.py" },
+  "notes": "Sport: 'Alba' white foxglove. Digitalis purpurea f. albiflora ('Alba'): white bells with dusky spots."
+}

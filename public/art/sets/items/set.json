@@ -1,0 +1,27 @@
+{
+  "format": "verdant.imageset/1",
+  "id": "items",
+  "logicalDir": "assets/items",
+  "images": {
+    "aloe_gel": { "file": "aloe_gel.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
+    "centuryheart_seed": { "file": "centuryheart_seed.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "cloche": { "file": "cloche.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
+    "compost": { "file": "compost.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "fan_letter": { "file": "fan_letter.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
+    "fennimores_letter": { "file": "fennimores_letter.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "field_herbarium": { "file": "field_herbarium.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "glass_pod": { "file": "glass_pod.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "neem_spray": { "file": "neem_spray.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "plant_food": { "file": "plant_food.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "pruning_shears": { "file": "pruning_shears.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
+    "rain_jar": { "file": "rain_jar.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "rose_hip": { "file": "rose_hip.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "signed_photo": { "file": "signed_photo.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
+    "spring_water": { "file": "spring_water.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "syrup_jar": { "file": "syrup_jar.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "terrarium_pod": { "file": "terrarium_pod.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "water_flask": { "file": "water_flask.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "wild_berry": { "file": "wild_berry.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } }
+  },
+  "credits": "Original pixel art for Verdant Reach."
+}

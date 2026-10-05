@@ -13,7 +13,7 @@ aquifolium.
   /Users/kevinramdath/projects/research/creature-sprites/.venv/bin/python tools/art/species_c/build.py [ids|lines...]
   ... build.py --preview [lines...]     review sheets only, no assets written
 
-Writes public/assets/species/<id>/*.png and tools/art/species_c/review/
+Writes public/art/species/<id>/ bundles (artkit.emit.species) and tools/art/species_c/review/
 (<line>.png, all.png, roster.png = these fronts beside the whole roster,
 silhouettes.png, anim.png).
 """
@@ -29,8 +29,9 @@ from PIL import Image, ImageDraw
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.insert(1, str(HERE.parent))  # artkit
 ROOT = HERE.parents[2]
-OUT = ROOT / "public" / "assets" / "species"
+OUT = ROOT / "public" / "art" / "species"  # bundles, written via artkit.emit
 REVIEW = HERE / "review"
 
 LINES = ["clover", "cattail", "foxglove", "holly"]
@@ -146,13 +147,8 @@ def build(only=None, lines=LINES, write=True):
             check(id_, imgs)
             items.append((id_, imgs))
             if write and (only is None or id_ in only or name in only):
-                d = OUT / id_
-                d.mkdir(parents=True, exist_ok=True)
-                for kind, im in imgs.items():
-                    im.save(d / f"{kind}.png")
-                for stale in set(SIZES) - set(imgs):
-                    if (d / f"{stale}.png").exists():
-                        (d / f"{stale}.png").unlink()
+                from artkit import emit  # also drops frames the module no longer makes
+                emit.species(id_, imgs, tool=f"tools/art/species_c/{name}.py")
                 print("wrote", id_, sorted(imgs))
         line_sheet(items, REVIEW / f"{name}.png")
         allitems += items

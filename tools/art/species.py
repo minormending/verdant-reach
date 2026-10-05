@@ -1,4 +1,10 @@
-"""Species sprites -> public/assets/species/<id>/{front,back,icon,icon__2}.png
+"""REFERENCE ONLY (Round 1 photo auto-trace). Not run by build_all.py.
+
+It would replace the hand-pixelled species bundles, so it refuses to write
+unless given --overwrite-hand-art. The `traced` art pack
+(tools/art/import_traced.py) reuses its back-view tracer instead.
+
+Species sprites -> public/art/species/<id>/ (front, back, icon, icon__2)
 
 Sources: the photo -> GBC sprite pipeline in
   /Users/kevinramdath/projects/research/creature-sprites
@@ -193,10 +199,8 @@ def build(only: set[str] | None = None) -> list[tuple[str, dict]]:
             assert f.size == (56, 56)
             back = make_back(rgba, cfg, S.STAGES[stage], pal)
             i1, i2 = make_icon(rgba, cfg, pal)
-            gbc.save(f, f"species/{sid}/front.png")
-            gbc.save(back, f"species/{sid}/back.png")
-            gbc.save(i1, f"species/{sid}/icon.png")
-            gbc.save(i2, f"species/{sid}/icon__2.png")
+            from artkit import emit
+            emit.species(sid, {"front": f, "back": back, "icon": i1, "icon__2": i2}, tool="tools/art/species.py")
             made.append((sid, dict(front=f, back=back, icon=i1, icon2=i2)))
             print(f"{sid:20s} <- {line}/{stage}")
     return made
@@ -207,10 +211,10 @@ def review(made=None) -> None:
     rows = []
     for line, stages in LINES.items():
         for stage, sid in stages:
-            d = gbc.ASSETS / "species" / sid
-            if (d / "front.png").exists():
-                rows.append((sid, [Image.open(d / n).convert("RGBA") for n in
-                                   ("front.png", "back.png", "icon.png", "icon__2.png")]))
+            from artkit.resolve import Resolver
+            ims = [Resolver().image(f"assets/species/{sid}/{k}.png") for k in ("front", "back", "icon", "icon__2")]
+            if all(a is not None for a in ims):
+                rows.append((sid, [Image.fromarray(a, "RGBA") for a in ims]))
     z = 3
     cw = 56 * z + 48 * z + 16 * z * 2 + 40
     ch = 56 * z + 16
@@ -232,6 +236,9 @@ def review(made=None) -> None:
 
 
 if __name__ == "__main__":
-    only = set(sys.argv[1:]) or None
+    if "--overwrite-hand-art" not in sys.argv:
+        sys.exit("species.py is a reference tool: it would overwrite the hand-pixelled species. "
+                 "Pass --overwrite-hand-art if you really mean it.")
+    only = set(a for a in sys.argv[1:] if not a.startswith("--")) or None
     build(only)
     review()

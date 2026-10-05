@@ -1,0 +1,19 @@
+{
+  "format": "verdant.imageset/1",
+  "id": "ui",
+  "logicalDir": "assets/ui",
+  "images": {
+    "battle_ground": { "file": "battle_ground.png", "size": [80, 20], "source": { "kind": "generated", "tool": "tools/art/ui.py" } },
+    "mark_bramble": { "file": "mark_bramble.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/ui.py" } },
+    "mark_rose": { "file": "mark_rose.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/ui4.py" } },
+    "mark_sundew": { "file": "mark_sundew.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/ui.py" } },
+    "pod": { "file": "pod.png", "size": [12, 12], "source": { "kind": "generated", "tool": "tools/art/ui.py" } },
+    "pod_open": { "file": "pod_open.png", "size": [12, 12], "source": { "kind": "generated", "tool": "tools/art/ui.py" } },
+    "seed": { "file": "seed.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/ui4.py" } },
+    "seed__2": { "file": "seed__2.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/ui4.py" } },
+    "seed_big": { "file": "seed_big.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/ui4.py" } },
+    "title": { "file": "title.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/ui.py" } },
+    "title_logo": { "file": "title_logo.png", "size": [130, 39], "source": { "kind": "generated", "tool": "tools/art/ui.py" } }
+  },
+  "credits": "Original pixel art for Verdant Reach."
+}

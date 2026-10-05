@@ -1,4 +1,4 @@
-"""Multi-tile buildings and landmarks -> public/assets/structures/<key>.png.
+"""Multi-tile buildings and landmarks -> public/art/structures/<key>/ bundles.
 
 Each image is exactly (w*16)x(h*16) per STRUCTURES in src/contracts/ids.ts.
 Doors sit inside their door tile, touching its bottom edge; doorless

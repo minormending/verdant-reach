@@ -1,0 +1,8 @@
+{
+  "format": "verdant.species/1",
+  "id": "red_chili",
+  "palette": ["#181818", "#a00808", "#f03820", "#f8f8f8"],
+  "sport": ["#181818", "#30095a", "#71388a", "#f8f8f8"],
+  "credits": "Palette only: the colours the photo tracer chose for photos/game/chili/adult.jpg in Round 1. The pixels are the base bundle's.",
+  "source": { "kind": "imported", "from": "creature-sprites/out/game/manifest.json (palette)" }
+}

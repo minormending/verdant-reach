@@ -193,6 +193,14 @@ These are for flat images that don't need more structure:
   "credits": "…" }
 ```
 
+Each entry in `images` may also carry an optional `"source": { "kind", "tool" }`,
+with the same meaning as in a species bundle, so generators skip entries
+edited by hand.
+
+**Forward compatibility, for every format:** readers ignore fields they
+don't know. Writers may add optional fields; renaming or repurposing a field
+needs a new `format` version.
+
 ## 8. Art packs
 
 A pack is a folder under `public/art/packs/<pack_id>/`. Its `pack.json` is:
@@ -246,3 +254,91 @@ These are owned by the pipeline; see the tooling section it adds below.
   - toggle packs;
   - drop a PNG onto a frame to preview a swap live (in memory only);
   - a validation panel.
+
+## 11. Tooling (pipeline)
+
+All Python tools run with the sprite pipeline's venv (Pillow + numpy):
+`PY=/Users/kevinramdath/projects/research/creature-sprites/.venv/bin/python`.
+
+### `tools/art/art.py` (CLI)
+
+| Command | What it does |
+|---|---|
+| `$PY tools/art/art.py list [kind]` | Bundles (kind, id, `source.kind`, palette / tile count) and packs. |
+| `… validate [--strict] [-v]` | §9 checks plus `index.json` freshness. Required paths nobody provides yet are counted; `--strict` fails on them, `-v` lists them. |
+| `… show <bundle> [--pack P] [-o f.png]` | 4x preview: species palette, sport and every frame (normal and sport); tilesets' sheet and a 4x4 mask grid per autotiled key. `<bundle>` is `kind/id` or a unique bare id. Writes to `tools/art/review/` by default. |
+| `… explode <tileset> <dir>` | One PNG per tile image: `<key>.png`, `<key>__2.png`, `<key>~1.png`, `<key>@5.png`, `<key>@5__2.png`. |
+| `… pack <dir> <tileset> [--name N]` | The inverse: assemble a folder of those PNGs into a tileset (canonical layout, below). Unchanged pixels keep `source`; changed ones mark it `edited`. A new tileset id creates one (and re-indexes). |
+| `… swap species <id> --from <dir> [--quantize]` | Replace frames from `front.png`, `front__2.png`, …, `back.png`, `icon.png`, `icon__2.png` in `<dir>`. Sizes, binary alpha and ≤4 colours are enforced (`--quantize` snaps to the current palette instead). Frames not supplied are kept, recoloured into the new palette. Sets `source: {kind: "imported", from}`. |
+| `… palette <id> '#a' '#b' '#c' '#d'` | New base palette: pixels are remapped index by index, `source` becomes `edited`. |
+| `… palette <id> --sport '#a' …` | Set the sport palette only (no pixels change; `source` stays). |
+| `… new species <id> --like <id>` | Copy a bundle as a template (`source: edited`, credits marked TODO). |
+| `… contact <kind> [--pack P]` | Review sheet for `species`, `tileset`, `structure`, `character` or `set`; `contact pack --pack P` puts base and pack side by side. |
+| `… resolve <logical path> [--pack P] [-o f.png]` | Resolve `assets/...` (including `?sport`) exactly as the runtime does. |
+
+### `tools/art/artkit/` (library)
+
+- `core`: paths, deterministic `save_png` (RGBA, colour type 6, no metadata,
+  only rewritten when the bytes change) and `save_json` (stable, readable
+  formatting), and contract ids parsed from `src/contracts/ids.ts`.
+- `bundles`: `load(kind, id, packs=…)` gives a `Bundle` (merged JSON; files
+  resolve pack-first; species files from the base folder are recoloured into
+  a pack's palette), plus `write_species / write_tileset / write_structure /
+  write_character / write_set_images`, `list_ids`, `list_packs`.
+- `sheets`: tile stems, `assemble` (stems to sheet + key map) and `explode`.
+  Canonical layout, 16 columns: unmasked keys packed first (base frames, then
+  alts); then each autotiled key on fresh rows: `[base…, alts…]`, then a row
+  with mask *m* in column *m* (and a second row for frame 2).
+- `palette`: ordering (darkest to lightest by luma), `remap`, `quantize`,
+  and `legacy_sport` (the Round 1–3 hue shift, used only to seed sports).
+- `resolve.Resolver(packs=…)`: logical path to RGBA, or `None` if missing.
+- `validate.validate()`: the §9 rules, returned as `(level, where, message)`.
+- `emit`: **the generator API** (next section). `contact`: preview sheets.
+  `tilegroups`: which tileset owns each Round 1–3 tile key. `index`: runs
+  `tools/art/index.mjs`.
+
+### Generators and `build_all.py`
+
+Generators write bundles only through `artkit.emit` (or `gbc.save`, which
+routes characters, structures and set images to it):
+
+```python
+sys.path.insert(0, "<repo>/tools/art")
+from artkit import emit
+emit.species("orchid_keiki", {"front": im, "front__2": im, "back": im, "icon": im, "icon__2": im},
+             tool="tools/art/species_e/orchid.py")
+emit.tileset("city", {"paving": im, "paving~1": im, "paving@5": im, ...}, tool=..., name="City", order=[...])
+emit.structure("fountain", im, tool=...); emit.character("wren", im, tool=...)
+emit.set_images("items", {"pruning_shears": im}, tool=...)
+```
+
+`emit` rules:
+- It skips any bundle (or set entry) whose `source.kind` is `edited` or
+  `imported`.
+- It computes the palette, keeping the existing order when the colours are
+  unchanged.
+- It keeps hand-kept metadata: `sport` (when the length matches), `credits`,
+  `notes` and a tileset's `name`.
+- Default species credits come from `artkit/species_refs.json` (the
+  reference photos).
+
+`$PY tools/art/build_all.py` validates and rebuilds `index.json`. `--regen
+[names…]` first runs the `BUILDERS` list (add a line for a new generator).
+A regen reproduces every `generated` bundle byte-identically: it writes
+nothing when no art changed.
+
+### Migration and the `traced` pack
+
+- `tools/art/migrate_legacy.py` (archived) converted Round 1–3 `public/assets/`
+  into bundles; that tree was then deleted, so with no arguments it does
+  nothing. `--check --legacy <copy of the old tree>` re-runs the equivalence
+  proof: every legacy file is pixel-identical through the resolver, and every
+  seeded `?sport` frame equals the old hue shift.
+- `tools/art/import_traced.py` builds `packs/traced/`:
+  - the photo-traced fronts of the sunflower, oak, pumpkin, flytrap and fern
+    lines (from `creature-sprites/out/plants`);
+  - back views traced from the same cut-outs;
+  - icons that fall back to the base icons recoloured into the pack palette;
+  - palette-only overrides for `chili_blossom` and `red_chili`;
+  - credits in `packs/traced/CREDITS.md`.
+- Try it with `?art=traced`.

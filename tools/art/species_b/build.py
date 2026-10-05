@@ -8,7 +8,7 @@ The photos in creature-sprites/photos/game/<line>/ and the old auto-traces
 were the reference; every pixel here is authored (see pix.py).
 
   /Users/kevinramdath/projects/research/creature-sprites/.venv/bin/python tools/art/species_b/build.py [ids...]
-writes public/assets/species/<id>/{front,back,icon,icon__2}.png and the review
+writes public/art/species/<id>/ bundles (artkit.emit.species) and the review
 sheets tools/art/species_b/review/<line>.png + all.png.
 """
 
@@ -23,11 +23,12 @@ from PIL import Image, ImageDraw
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.insert(1, str(HERE.parent))  # artkit
 import icons  # noqa: E402
 import pix  # noqa: E402
 
 ROOT = HERE.parents[2]
-OUT = ROOT / "public" / "assets" / "species"
+OUT = ROOT / "public" / "art" / "species"  # bundles, written via artkit.emit
 REVIEW = HERE / "review"
 
 LINES = ["pumpkin", "fern", "flytrap", "sundew", "maple", "nettle", "moonflower"]
@@ -143,15 +144,10 @@ def main(only=None):
             items.append((sid, ims))
             if only and sid not in only and line not in only:
                 continue
-            d = OUT / sid
-            d.mkdir(parents=True, exist_ok=True)
-            ims["front"].save(d / "front.png")
-            ims["back"].save(d / "back.png")
-            ims["icon"].save(d / "icon.png")
-            ims["icon2"].save(d / "icon__2.png")
-            for j in (2, 3):
-                if f"front__{j}" in ims:
-                    ims[f"front__{j}"].save(d / f"front__{j}.png")
+            from artkit import emit
+            frames = {("icon__2" if k == "icon2" else k): v for k, v in ims.items()
+                      if k in ("front", "front__2", "front__3", "back", "icon", "icon2")}
+            emit.species(sid, frames, tool=f"tools/art/species_b/{line}.py")
             print("wrote", sid)
         allrows.append((line, items))
         sheet([(line, items)], REVIEW / f"{line}.png")

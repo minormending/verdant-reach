@@ -1,0 +1,60 @@
+{
+  "format": "verdant.tileset/1",
+  "id": "interior",
+  "name": "Interiors",
+  "tileSize": 16,
+  "sheet": "sheet.png",
+  "columns": 16,
+  "tiles": {
+    "floor_wood": { "base": 0, "alts": [1, 2, 3] },
+    "floor_tile": { "base": 4, "alts": [5, 6] },
+    "floor_greenhouse": { "base": 7, "alts": [8, 9, 10] },
+    "rug": { "base": 11 },
+    "mat_exit": { "base": 12 },
+    "void": { "base": 13 },
+    "window": { "base": 14 },
+    "counter": { "base": 15 },
+    "table": { "base": 16 },
+    "chair": { "base": 17 },
+    "bookshelf": { "base": 18, "alts": [19, 20] },
+    "plant_pot": { "base": 21 },
+    "planter_bed": { "base": 22 },
+    "potted_tree": { "base": 23 },
+    "bed": { "base": 24 },
+    "specimen_cabinet": { "base": 25 },
+    "stairs_up": { "base": 26 },
+    "stairs_down": { "base": 27 },
+    "fireplace": { "base": 28 },
+    "stove": { "base": 29 },
+    "workbench": { "base": 30 },
+    "microscope": { "base": 31 },
+    "wall": {
+      "base": 32,
+      "alts": [33, 34, 35],
+      "masks": { "0": 48, "2": 50, "4": 52, "5": 53, "6": 54, "7": 55, "8": 56, "10": 58, "12": 60, "13": 61, "14": 62, "15": 63 }
+    },
+    "glass_wall": {
+      "base": 64,
+      "masks": {
+        "0": 80,
+        "1": 81,
+        "2": 82,
+        "3": 83,
+        "4": 84,
+        "5": 85,
+        "6": 86,
+        "7": 87,
+        "8": 88,
+        "9": 89,
+        "10": 90,
+        "11": 91,
+        "12": 92,
+        "13": 93,
+        "14": 94,
+        "15": 95
+      }
+    }
+  },
+  "credits": "Original pixel art for Verdant Reach (tools/art/tiles.py).",
+  "source": { "kind": "generated", "tool": "tools/art/tiles.py" }
+}

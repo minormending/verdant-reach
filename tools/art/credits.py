@@ -1,4 +1,4 @@
-"""Write public/assets/CREDITS.md from the photo pipeline's sources.json files.
+"""Write public/art/CREDITS.md from the photo pipeline's sources.json files.
 
 Lists, per species, the photo each sprite was traced from (author, licence,
 source page), plus a note on the hand-made art. Run after species.py.
@@ -84,7 +84,7 @@ def main():
         "parametric templates). No third-party art is used for them.",
         "",
     ]
-    (gbc.ASSETS / "CREDITS.md").write_text("\n".join(lines))
+    (gbc.ART / "CREDITS.md").write_text("\n".join(lines))
     print("wrote CREDITS.md")
     for b in bad:
         print("CHECK LICENCE:", b)

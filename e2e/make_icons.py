@@ -66,8 +66,8 @@ for y, row in enumerate(LEAF):
 open(ROOT + "public/favicon.svg", "w").write(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">' + "".join(parts) + "</svg>\n")
 # OG image: the title art at 4x, centred on the page background.
-title = Image.open(ROOT + "public/assets/ui/title.png").convert("RGBA")
-logo = Image.open(ROOT + "public/assets/ui/title_logo.png").convert("RGBA")
+title = Image.open(ROOT + "public/art/sets/ui/title.png").convert("RGBA")
+logo = Image.open(ROOT + "public/art/sets/ui/title_logo.png").convert("RGBA")
 art = title.copy()
 art.alpha_composite(logo, ((160 - logo.width) // 2, 8))
 og = Image.new("RGBA", (1200, 630), BG)

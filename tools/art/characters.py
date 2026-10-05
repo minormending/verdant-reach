@@ -1,4 +1,4 @@
-"""Overworld characters -> public/assets/characters/<key>.png (48x64).
+"""Overworld characters -> public/art/characters/<key>/ bundles (48x64 sheets).
 
 Sheet: 4 rows (down, up, left, right) x 3 columns (stand, step A, step B),
 16x16 frames, transparent background. The engine shows step A / step B
@@ -1924,8 +1924,11 @@ BIRD = {
 def hedge_ramp() -> list:
     """The hedge tile's 4 colours, lightest first, so the gate always matches."""
     try:
-        im = Image.open(gbc.ASSETS / "tiles" / "hedge.png").convert("RGBA")
-        cols = {tuple(p[:3]) for p in np.asarray(im).reshape(-1, 4).tolist() if p[3] > 0}
+        from artkit.resolve import Resolver
+        a = Resolver().image("assets/tiles/hedge.png")
+        if a is None:
+            raise FileNotFoundError("assets/tiles/hedge.png")
+        cols = {tuple(p[:3]) for p in a.reshape(-1, 4).tolist() if p[3] > 0}
         cols = sorted(cols, key=lambda c: -(c[0] * 3 + c[1] * 6 + c[2]))
         if len(cols) >= 4:
             pick = [cols[0], cols[len(cols) // 3], cols[2 * len(cols) // 3], cols[-1]]

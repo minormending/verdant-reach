@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "well",
+  "image": "structure.png",
+  "size": [2, 2],
+  "credits": "Original pixel art for Verdant Reach (tools/art/structures.py).",
+  "source": { "kind": "generated", "tool": "tools/art/structures.py" }
+}

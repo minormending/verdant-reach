@@ -18,7 +18,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 ROOT = HERE.parents[2]
 DOCS = ROOT / "docs" / "creatures"
-SP = ROOT / "public" / "assets" / "species"
+SP = ROOT / "public" / "art" / "species"  # bundle default file names match the logical kinds
 
 from px import Canvas, Sprite, bezier, snap  # noqa: E402
 

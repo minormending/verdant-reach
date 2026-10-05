@@ -1,4 +1,4 @@
-"""Story stills -> public/assets/stills/<key>.png (160x144, STILLS).
+"""Story stills -> public/art/sets/stills/ (assets/stills/<key>.png) (160x144, STILLS).
 
 Full-screen GBC-era illustrations shown by the `still` script op. Each one
 is painted from primitives (bands, polygons, ellipses, ASCII stamps) with

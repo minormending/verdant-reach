@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "rose_bud",
+  "palette": ["#181818", "#306040", "#e86080", "#f8e8b8"],
+  "sport": ["#181818", "#305838", "#f8c838", "#f8f0c8"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_d/rose.py.",
+  "source": { "kind": "generated", "tool": "tools/art/species_d/rose.py" },
+  "notes": "Sport: 'Persian Yellow'. Rosa foetida 'Persiana' (brought to Europe 1837): deep yellow blooms and hips over dark leaves."
+}

@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "red_chili",
+  "palette": ["#181818", "#881830", "#e84020", "#d8f078"],
+  "sport": ["#181818", "#301838", "#584868", "#c8a8e0"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/chili.py. Reference photo chili/adult.jpg by James Bowe (CC BY 2.0), https://www.flickr.com/photos/29848680@N08/6018808766: used as a drawing reference, not traced.",
+  "source": { "kind": "generated", "tool": "tools/art/species_a/chili.py" },
+  "notes": "Sport: 'Black Pearl'. Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers."
+}

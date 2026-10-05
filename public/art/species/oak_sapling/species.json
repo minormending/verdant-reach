@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "oak_sapling",
+  "palette": ["#181818", "#583018", "#78b838", "#f0e8a0"],
+  "sport": ["#181818", "#584018", "#d0b828", "#f8f0a0"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/oak.py. Reference photo oak/teen.jpg by Lex Joy (iNaturalist user lexjoy) (CC BY 4.0), https://www.inaturalist.org/observations/7134597: used as a drawing reference, not traced.",
+  "source": { "kind": "generated", "tool": "tools/art/species_a/oak.py" },
+  "notes": "Sport: 'Concordia' golden oak. Quercus robur 'Concordia' (Van Geert, Ghent, 1843): butter-yellow leaves, gold-green acorns."
+}

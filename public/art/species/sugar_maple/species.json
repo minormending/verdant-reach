@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "sugar_maple",
+  "palette": ["#181818", "#b83018", "#f89830", "#f8e088"],
+  "sport": ["#181818", "#401838", "#983868", "#e890a0"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/maple.py. Reference photo maple/adult.jpg by Shelby L. Bell (Flickr user vwcampin) (CC BY 2.0), https://www.flickr.com/photos/125112383@N06/37586764740: used as a drawing reference, not traced.",
+  "source": { "kind": "generated", "tool": "tools/art/species_b/maple.py" },
+  "notes": "Sport: 'Crimson King'. Acer platanoides 'Crimson King' (Barbier, Orleans, 1937): maroon-purple leaves and red-purple keys all season."
+}

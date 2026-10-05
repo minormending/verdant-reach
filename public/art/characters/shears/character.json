@@ -1,0 +1,10 @@
+{
+  "format": "verdant.character/1",
+  "id": "shears",
+  "sheet": "sheet.png",
+  "frame": [16, 16],
+  "rows": ["down", "up", "left", "right"],
+  "columns": ["stand", "stepA", "stepB"],
+  "credits": "Original pixel art for Verdant Reach (tools/art/characters.py).",
+  "source": { "kind": "generated", "tool": "tools/art/characters.py" }
+}

@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "blackberry",
+  "palette": ["#181818", "#482048", "#509038", "#d8f0a0"],
+  "sport": ["#181818", "#805018", "#88a838", "#f8e8a0"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/bramble.py. Reference photo bramble/adult.jpg by Alan Rockefeller (alan_rockefeller) (CC BY 4.0), https://www.inaturalist.org/observations/379271552: used as a drawing reference, not traced.",
+  "source": { "kind": "generated", "tool": "tools/art/species_a/bramble.py" },
+  "notes": "Sport: 'Fall Gold' golden-fruited. Rubus 'Fall Gold' (University of New Hampshire, 1967): golden-amber fruit; its white flowers ride on yellow-green canes."
+}

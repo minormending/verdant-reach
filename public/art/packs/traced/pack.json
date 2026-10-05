@@ -1,0 +1,8 @@
+{
+  "format": "verdant.pack/1",
+  "id": "traced",
+  "name": "PHOTO TRACED",
+  "description": "The original photo-traced sprites for the sunflower, oak, pumpkin, flytrap and fern lines, plus the tracer's colours for two chili stages.",
+  "author": "creature-sprites photo -> GBC pipeline (Round 1), packed by tools/art/import_traced.py",
+  "credits": "See CREDITS.md in this folder: every traced sprite comes from a credited, reuse-licensed photograph."
+}

@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 HERE = Path(__file__).resolve().parent
-SP = HERE.parents[2] / "public" / "assets" / "species"
+SP = HERE.parents[2] / "public" / "art" / "species"  # bundle default file names match the logical kinds
 OURS = ["mint_sprig", "peppermint", "rose_bud", "wild_rose", "pitcher_sprout", "pitcher_plant",
         "snapdragon_sprout", "snapdragon"]
 FOES = ["venus_flytrap", "sunflower", "oak_acorn", "red_chili", "foxglove", "cattail", "holly", "sugar_maple"]

@@ -1,0 +1,9 @@
+{
+  "format": "verdant.species/1",
+  "id": "green_pumpkin",
+  "palette": ["#181818", "#287000", "#70e800", "#f8f8f8"],
+  "sport": ["#181818", "#745f16", "#f8c53e", "#f8f8f8"],
+  "frames": { "front": ["front.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Photo-traced by the creature-sprites pipeline (tool/spritify.py) from photos/plants/pumpkin/teen.jpg by tracydekalb (CC BY 2.0), https://www.flickr.com/photos/11540627@N03/3966532785. Back view traced from the same cut-out; party icons are the base icons recoloured.",
+  "source": { "kind": "imported", "from": "creature-sprites/out/plants/pumpkin/teen.png" }
+}

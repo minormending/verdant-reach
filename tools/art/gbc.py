@@ -16,7 +16,8 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
-ASSETS = ROOT / "public" / "assets"
+ASSETS = ROOT / "public" / "assets"   # legacy (pre-Round 4); nothing writes here now
+ART = ROOT / "public" / "art"
 REVIEW = Path(__file__).resolve().parent / "review"
 
 CLEAR = (0, 0, 0, 0)
@@ -140,12 +141,31 @@ def quad_colour_counts(im: Image.Image, cell=8) -> int:
     return worst
 
 
-def save(im: Image.Image, rel: str) -> Path:
-    """Save under public/assets/<rel>. RGBA PNG, no smoothing ever."""
-    p = ASSETS / rel
-    p.parent.mkdir(parents=True, exist_ok=True)
-    im.save(p)
-    return p
+SET_OF_DIR = {"trainers": "portraits", "items": "items", "ui": "ui", "stills": "stills"}
+
+
+def save(im: Image.Image, rel: str, tool: str | None = None) -> bool:
+    """Write one image into its art bundle (public/art, docs/ART.md) through
+    artkit. `rel` is the logical name under assets/ ("characters/vale.png",
+    "structures/barn.png", "trainers/bram.png", "items/x.png", "ui/x.png",
+    "stills/x.png"); the bundle records the calling script as its generator.
+    Bundles (or set entries) marked edited/imported are skipped.
+    Tiles and species need all their images at once: use artkit.emit."""
+    import inspect
+
+    from artkit import emit
+    if tool is None:
+        caller = Path(inspect.stack()[1].filename).resolve()
+        tool = caller.relative_to(ROOT).as_posix() if caller.is_relative_to(ROOT) else caller.name
+    folder, name = rel.split("/", 1)
+    key = name.removesuffix(".png")
+    if folder == "characters":
+        return emit.character(key, im, tool)
+    if folder == "structures":
+        return emit.structure(key, im, tool)
+    if folder in SET_OF_DIR:
+        return bool(emit.set_images(SET_OF_DIR[folder], {key: im}, tool))
+    raise ValueError(f"gbc.save can't write {rel!r}: use artkit.emit.tileset / emit.species")
 
 
 def zoom(im: Image.Image, k: int) -> Image.Image:

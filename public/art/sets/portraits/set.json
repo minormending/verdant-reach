@@ -1,0 +1,25 @@
+{
+  "format": "verdant.imageset/1",
+  "id": "portraits",
+  "logicalDir": "assets/trainers",
+  "images": {
+    "arranger": { "file": "arranger.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
+    "beekeeper": { "file": "beekeeper.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "birdwatcher": { "file": "birdwatcher.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "bram": { "file": "bram.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "flora_vance": { "file": "flora_vance.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
+    "florist": { "file": "florist.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "gardener": { "file": "gardener.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "gentleman": { "file": "gentleman.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
+    "grunt": { "file": "grunt.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "hiker": { "file": "hiker.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "hollis": { "file": "hollis.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "nell_pitcher": { "file": "nell_pitcher.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "orchardist": { "file": "orchardist.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
+    "player_back": { "file": "player_back.png", "size": [48, 48], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "researcher": { "file": "researcher.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
+    "schoolkid": { "file": "schoolkid.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "shears": { "file": "shears.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } }
+  },
+  "credits": "Original pixel art for Verdant Reach."
+}

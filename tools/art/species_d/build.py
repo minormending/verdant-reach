@@ -16,7 +16,7 @@ authored here (kit.py), then hand pixels.
   /Users/kevinramdath/projects/research/creature-sprites/.venv/bin/python tools/art/species_d/build.py [ids...]
   ... build.py --preview [ids...]   (review sheets only, no assets written)
 
-Writes public/assets/species/<id>/{front,front__2[,front__3],back,icon,icon__2}.png
+Writes public/art/species/<id>/ bundles (artkit.emit.species: front, front__2[, front__3], back, icon, icon__2)
 and the review sheets in tools/art/species_d/review/.
 """
 
@@ -31,10 +31,11 @@ from PIL import Image, ImageDraw
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.insert(1, str(HERE.parent))  # artkit
 import kit  # noqa: E402
 
 ROOT = HERE.parents[2]
-OUT = ROOT / "public" / "assets" / "species"
+OUT = ROOT / "public" / "art" / "species"  # bundles, written via artkit.emit
 REVIEW = HERE / "review"
 LINES = ["mint", "rose", "pitcher", "snapdragon"]
 
@@ -140,10 +141,8 @@ def build(only=None, write=True):
             items.append((sid, imgs))
             allitems[sid] = imgs
             if write and (only is None or sid in only):
-                dd = OUT / sid
-                dd.mkdir(parents=True, exist_ok=True)
-                for kind, im in imgs.items():
-                    im.save(dd / f"{kind}.png")
+                from artkit import emit
+                emit.species(sid, imgs, tool=f"tools/art/species_d/{line}.py")
         sheet(items, REVIEW / f"{line}.png")
     sheet(list(allitems.items()), REVIEW / "all.png")
     roster(allitems, REVIEW / "roster.png")

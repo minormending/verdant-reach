@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "sunflower_bud",
+  "palette": ["#181818", "#305030", "#70b040", "#f8c830"],
+  "sport": ["#181818", "#284838", "#68a848", "#f8f0c8"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/sunflower.py. Reference photo sunflower/teen_alt.jpg by Loïc Mathieu (frontyardscientist, iNaturalist) (CC BY 4.0), https://www.inaturalist.org/observations/333769628: used as a drawing reference, not traced.",
+  "source": { "kind": "generated", "tool": "tools/art/species_a/sunflower.py" },
+  "notes": "Sport: 'Italian White'. Helianthus annuus 'Italian White': cream-white rays round a near-black disc."
+}

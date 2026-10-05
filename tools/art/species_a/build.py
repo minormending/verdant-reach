@@ -10,7 +10,7 @@ light from the top-left.
 
   /Users/kevinramdath/projects/research/creature-sprites/.venv/bin/python tools/art/species_a/build.py [ids...]
 
-Writes public/assets/species/<id>/{front,back,icon,icon__2}.png and the
+Writes public/art/species/<id>/ bundles (artkit.emit.species) and the
 review sheet tools/art/species_a/review.png (1x and 4x, one line per row).
 """
 
@@ -24,8 +24,9 @@ from PIL import Image, ImageDraw
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.insert(1, str(HERE.parent))  # artkit
 ROOT = HERE.parents[2]
-OUT = ROOT / "public" / "assets" / "species"
+OUT = ROOT / "public" / "art" / "species"  # bundles, written via artkit.emit
 
 import importlib  # noqa: E402
 
@@ -50,10 +51,9 @@ def build(only=None, lines=LINE_NAMES, write=True, out="review.png"):
             imgs = mod.make(id_)
             for kind, im in imgs.items():
                 check(id_, kind, im)
-                if write and (only is None or id_ in only):
-                    d = OUT / id_
-                    d.mkdir(parents=True, exist_ok=True)
-                    im.save(d / f"{kind}.png")
+            if write and (only is None or id_ in only):
+                from artkit import emit
+                emit.species(id_, imgs, tool=f"tools/art/species_a/{name}.py")
             row.append((id_, imgs))
         rows.append(row)
     sheet(rows, out)

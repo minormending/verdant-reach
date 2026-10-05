@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "stinging_nettle",
+  "palette": ["#181818", "#383060", "#78b840", "#d8f080"],
+  "sport": ["#181818", "#483858", "#a0b098", "#e8f0e8"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/nettle.py. Reference photo nettle/adult.jpg by David Sankey (iNaturalist user timerobot) (CC0 1.0), https://www.inaturalist.org/observations/371190512: used as a drawing reference, not traced.",
+  "source": { "kind": "generated", "tool": "tools/art/species_b/nettle.py" },
+  "notes": "Sport: silver-leaved. silver-washed leaves on violet stems, after the dead-nettle Lamium maculatum 'Beacon Silver' (the nettle's look-alike)."
+}

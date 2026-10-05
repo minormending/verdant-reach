@@ -18,7 +18,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
-SP = ROOT / "public" / "assets" / "species"
+SP = ROOT / "public" / "art" / "species"  # bundle default file names match the logical kinds
 K = (24, 24, 24)
 
 # stage -> (min bbox height, max bbox height, min fill %, max fill %)

@@ -1,4 +1,4 @@
-"""16x16 item icons -> public/assets/items/<id>.png (REQUIRED_ITEMS).
+"""16x16 item icons -> public/art/sets/items/ (assets/items/<id>.png) (REQUIRED_ITEMS).
 
 Hand-authored ASCII, 1px black outline, a few colours each, transparent.
 """

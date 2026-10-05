@@ -1,4 +1,4 @@
-"""Trainer portraits -> public/assets/trainers/<key>.png.
+"""Trainer portraits -> public/art/sets/portraits/ (assets/trainers/<key>.png).
 
 56x56 busts in a 3/4 view facing left (toward the player's side of the
 battle), in the overworld sprites' colours; player_back is 48x48, seen

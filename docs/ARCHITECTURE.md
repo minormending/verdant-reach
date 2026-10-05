@@ -37,7 +37,7 @@ game**, not a prototype. Concretely:
 | **2. Battle** | `src/battle/`, `src/screens/` | `createBattleScene`, `createQuickened`, `healParty` (`src/battle/index.ts`); `createScreens` (`src/screens/index.ts`) |
 | **3. Data + Audio** | `src/data/`, `src/audio/` | `DATA: GameData` (`src/data/index.ts`); `createAudio(): AudioService` (`src/audio/index.ts`) |
 | **4. World** | `src/world/` | `WORLD: WorldData` (`src/world/index.ts`) |
-| **5. Art** | `public/assets/`, `src/assets/`, `tools/art/` | files at the paths in `src/contracts/constants.ts`; `ASSET_PATHS` (`src/assets/manifest.ts`) |
+| **5. Art** | `public/art/` (bundles, [ART.md](ART.md)), `src/art/` (registry), `tools/art/` (artkit, `art.py`, generators) | bundles that resolve the logical paths in `src/contracts/constants.ts`; `public/art/index.json` (`npm run art:index`) |
 
 `src/contracts/` belongs to **main** (the coordinator) and is frozen. If a
 contract really blocks you, message main with `SendMessage` (to: "main")

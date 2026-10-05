@@ -1,0 +1,8 @@
+{
+  "format": "verdant.species/1",
+  "id": "chili_blossom",
+  "palette": ["#181818", "#407818", "#d0d8b0", "#f8f8f8"],
+  "sport": ["#181818", "#826c28", "#ffe496", "#f8f8f8"],
+  "credits": "Palette only: the colours the photo tracer chose for photos/game/chili/baby.jpg in Round 1. The pixels are the base bundle's.",
+  "source": { "kind": "imported", "from": "creature-sprites/out/game/manifest.json (palette)" }
+}

@@ -1,0 +1,16 @@
+{
+  "format": "verdant.imageset/1",
+  "id": "stills",
+  "logicalDir": "assets/stills",
+  "images": {
+    "bloom": { "file": "bloom.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
+    "glasshouse_dome": { "file": "glasshouse_dome.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast4/stills4.py" } },
+    "graft_collar": { "file": "graft_collar.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
+    "greenhouse_morning": { "file": "greenhouse_morning.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
+    "grove_taps": { "file": "grove_taps.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
+    "relay_pulse": { "file": "relay_pulse.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast4/stills4.py" } },
+    "theft": { "file": "theft.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
+    "vale_call": { "file": "vale_call.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } }
+  },
+  "credits": "Original pixel art for Verdant Reach."
+}

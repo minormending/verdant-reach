@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "unfurling_fern",
+  "palette": ["#181818", "#205838", "#90c838", "#e0f090"],
+  "sport": ["#181818", "#602848", "#98a8a0", "#e0e8e8"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/fern.py. Reference photo fern/teen_alt.jpg by Ксения Волянская (iNaturalist) (CC BY 4.0), https://www.inaturalist.org/observations/119390921: used as a drawing reference, not traced.",
+  "source": { "kind": "generated", "tool": "tools/art/species_b/fern.py" },
+  "notes": "Sport: painted fern. silver fronds on burgundy stems, after the Japanese painted fern Athyrium niponicum var. pictum (Perennial Plant of the Year 2004)."
+}

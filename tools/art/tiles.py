@@ -1,4 +1,4 @@
-"""16x16 GBC environment tiles -> public/assets/tiles/.
+"""16x16 GBC environment tiles -> public/art/tilesets/{terrain,water,nature,town,interior}/.
 
 Outputs, per src/contracts/constants.ts:
   <key>.png            base tile (and <key>__2.png second animation frame)
@@ -2184,10 +2184,10 @@ def check():
 
 def build() -> None:
     bad = check()
-    for stem in STALE:
-        (gbc.ASSETS / "tiles" / f"{stem}.png").unlink(missing_ok=True)
-    for stem, a in OUT.items():
-        gbc.save(to_img(a), f"tiles/{stem}.png")
+    from artkit import emit
+    # one bundle per themed tileset (artkit/tilegroups.py); STALE stems simply
+    # aren't in OUT any more, so they drop out of the sheets
+    emit.legacy_tiles({stem: to_img(a) for stem, a in OUT.items()}, "tools/art/tiles.py")
     review()
     if bad:
         print("over 4 colours/quadrant:", bad)
@@ -2252,10 +2252,10 @@ def render_map(rows: list[str], frame=1, structures=()) -> Image.Image:
             else:
                 im.paste((255, 0, 255, 255), (x * 16, y * 16, x * 16 + 16, y * 16 + 16))
     for key, sx, sy in structures:
-        p = gbc.ASSETS / "structures" / f"{key}.png"
-        if p.exists():
-            s = Image.open(p).convert("RGBA")
-            im.alpha_composite(s, (sx * 16, sy * 16))
+        from artkit.resolve import Resolver
+        a = Resolver().image(f"assets/structures/{key}.png")
+        if a is not None:
+            im.alpha_composite(Image.fromarray(a, "RGBA"), (sx * 16, sy * 16))
     return im
 
 

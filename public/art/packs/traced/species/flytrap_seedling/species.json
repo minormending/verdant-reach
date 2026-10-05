@@ -1,0 +1,9 @@
+{
+  "format": "verdant.species/1",
+  "id": "flytrap_seedling",
+  "palette": ["#181818", "#406000", "#a0c828", "#f8f8f8"],
+  "sport": ["#181818", "#6b5223", "#e6b460", "#f8f8f8"],
+  "frames": { "front": ["front.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Photo-traced by the creature-sprites pipeline (tool/spritify.py) from photos/plants/venus_flytrap/baby.jpg by Roman (iNaturalist: efarilis) (CC BY 4.0), https://www.inaturalist.org/observations/60527877. Back view traced from the same cut-out; party icons are the base icons recoloured.",
+  "source": { "kind": "imported", "from": "creature-sprites/out/plants/venus_flytrap/baby.png" }
+}

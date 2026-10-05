@@ -1,4 +1,4 @@
-"""UI images -> public/assets/ui/*.png
+"""UI images -> public/art/sets/ui/ (assets/ui/*.png)
 
 title.png        160x144 dusk scene: the Centuryheart's flower spike on a slope,
                  gold pollen drifting, Fallowfield's lights in the valley below.

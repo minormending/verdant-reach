@@ -55,9 +55,11 @@ Shared-file rules:
 - **Gameplay numbers stay as they are.** Teams, levels, learnsets and stats
   are guarded by `src/battle/logic/balance.test.ts`. Only touch them if a
   test or the QA agent shows a real problem, and keep that test green.
-- **Asset manifest.** Any art agent that adds files runs
-  `/Users/kevinramdath/projects/research/creature-sprites/.venv/bin/python tools/art/build_manifest.py`.
-  It regenerates the whole manifest, so concurrent runs are safe.
+- **Art index.** Any art agent that adds, removes or renames bundle files runs
+  `npm run art:index` (it rebuilds `public/art/index.json`, so concurrent
+  runs are safe). Since Round 4, art lives in bundles under `public/art/`
+  (docs/ART.md); the `public/assets/...` paths in the table above are the
+  Round 3 locations, now the logical paths the bundles resolve.
 - **Contracts.** `src/contracts/` is frozen. Ask main via SendMessage
   (to: "main").
 - **No git commits.** Main integrates.
