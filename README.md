@@ -9,8 +9,8 @@ plant. You're a junior botanist. The night a once-a-century flower blooms,
 certain plants across the valley wake up, and your job is to catalogue the
 QUICKENED. Then you find out who woke them, and why.
 
-This is a **vertical slice**: the Prologue and Act 1, ending at Conservatory 2,
-about 60–90 minutes of play. The story bible lives in
+This is a **vertical slice**: the Prologue through Chapter 4 (Glasshouse City),
+ending at Conservatory 3, about 2–3 hours of play. The story bible lives in
 [docs/story/](docs/story/).
 
 ## Play
@@ -38,23 +38,26 @@ night. Add `?time=morning|day|night` to the URL to override it.
 
 ## What's in the slice
 
-- **17 hand-composed maps.**
+- **27 hand-composed maps.**
   - Fallowfield's farms and windmill, Hedgerow's lanes, brick-and-bramble Bramblegate, and autumnal Sugarbush.
   - The Night Meadow, and the Sugarbush Grove dungeon.
-  - Two Conservatory puzzles: Hollis's lever-gated hedge maze and Nell's bog valves.
-- **24 trainers.** Leaders HOLLIS (Wood) and NELL PITCHER (Bug), rival BRAM ×2, and ROOTSTOCK grunts with their admin SHEARS. Staged cutscenes use camera pans, flashes and ambience.
-- **53 species, 83 moves and 9 types.** Every species is a real plant that grows through its real life stages, poses as a creature in battle and has an idle animation. Every Herbarium entry contains a fact-checked true fact and shows where the species is FOUND.
+  - **Glasshouse City** under its vast glass dome: the Root Relay, the Nursery Garden, the tropical Palm House, the big market, and the Route 4 orchard on the way in.
+  - Three Conservatory puzzles: Hollis's lever-gated hedge maze, Nell's bog valves and Flora's rose-trellis maze.
+- **39 trainers.** Leaders HOLLIS (Wood), NELL PITCHER (Bug) and FLORA VANCE (Bloom, the difficulty spike), rival BRAM ×3, and ROOTSTOCK grunts with their admin SHEARS. Staged cutscenes use camera pans, flashes and ambience.
+- **65 species, 92 moves and 9 types.** Every species is a real plant that grows through its real life stages, poses as a creature in battle and has an idle animation. Every Herbarium entry contains a fact-checked true fact and shows where the species is FOUND.
 - **Systems:**
   - Crystal-style battles with a modern feel: the physical/special split, statuses, weather, critical captures, SUPER/WEAK hints, and 40 move-animation families.
   - Catching with nicknames, and growth (evolution) by level, by time of day and by friendship.
+  - **The Nursery Garden:** board two plants that share a pollination group and they set a SEED, which sprouts in your party as you walk.
+  - **Field moves:** PRUNE clears brambles, opening shortcuts and hidden stashes across the old routes.
   - Party (with move reordering), bag, a pressed-specimen Field Herbarium, storage cabinet, shop and options.
   - Saving, whiteout, real-time day and night with lamp-lit nights, and ambient particles (pollen, leaves, fireflies, mist).
-  - **Side content:** six side quests tracked in a NOTES log, 10 hidden items, and berry and rose-hip bushes that regrow each real day.
+  - **Side content:** nine side quests tracked in a NOTES log, 22 hidden items, and berry and rose-hip bushes that regrow each real day.
   - **Your lead Quickened follows you** around the overworld (toggle in OPTIONS).
-  - **Six illustrated stills** at key story moments.
-- **An original chiptune soundtrack:** 21 tracks, jingles, sound effects, a cry per species, and ambient wind, bird and cricket beds, all synthesised live with WebAudio.
+  - **Eight illustrated stills** at key story moments.
+- **An original chiptune soundtrack:** 24 tracks, jingles, sound effects, a cry per species, and ambient wind, bird and cricket beds, all synthesised live with WebAudio.
 - **Art:** all hand-built pixel art, stored as swappable bundles in `public/art/` (a folder of PNGs plus JSON per creature, tileset, structure and character; format in [docs/ART.md](docs/ART.md)). Art packs override any subset: try `?art=traced` for the original photo-traced sprites.
-  - 53 species with idle animations and true back views, to the creature design guide in `docs/CREATURES.md`.
+  - 65 species with idle animations, true back views and a real-cultivar shiny ("sport") palette each ([docs/SPORTS.md](docs/SPORTS.md)), to the creature design guide in `docs/CREATURES.md`.
   - Autotiled environments with ground variation.
   - Unique characters with weighted walk cycles, and trainer portraits.
   - Title art.
@@ -65,8 +68,8 @@ night. Add `?time=morning|day|night` to the URL to override it.
 | | |
 |---|---|
 | `npm run typecheck` | strict TypeScript |
-| `npm test` | vitest: 309 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
-| `?dev=<module>` | isolated dev scenes: `battle`, `screens`, `audio` (jukebox), `ui`, `overworld`, `world` |
+| `npm test` | vitest: 399 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
+| `?dev=<module>` | isolated dev scenes: `battle`, `screens`, `audio` (jukebox), `ui`, `overworld`, `world`, and `art` (the **Art Lab**: browse and live-swap every art bundle) |
 | `?dev=world&play=1&map=<id>&flags=a,b&species=<id>&level=<n>` | drop into any story state |
 | `e2e/` | automated full playthrough: `?timer&e2e=full`, served with `e2e/vite.config.ts` |
 
@@ -90,4 +93,5 @@ Contracts shared by all modules: `src/contracts/`.
 
 - **The audio was mixed by measurement only.** Levels were set with offline renders; a human listening pass is still worthwhile.
 - **Balance comes from simulation and automated play** (`src/battle/logic/balance.test.ts`, `e2e/`). Human play-testing should still tune feel.
-- **Scope:** Acts 2 and 3 of the story bible are not built yet.
+- **Scope:** Chapters 5–11 of the story bible (Conservatories 4–8, the Council) are not built yet.
+- **FAN MAIL** can only be finished after the Chapter 4 end card (save, then continue).
