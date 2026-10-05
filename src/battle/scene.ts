@@ -28,6 +28,9 @@ import {
 } from "./fx";
 import { animFor } from "./anims";
 import { playMoveFx } from "./movefx";
+import { idleKind, type FrontKind } from "../screens/kit/idle";
+import { battleAnimsOn } from "../save";
+import { worldTime } from "../engine/time";
 import { effectivenessHint, FoeKnowledge, type EffHint } from "./hints";
 import { Flow } from "../screens/kit/flow";
 import { drawPod, drawSpecies, drawTiny, pad, preload, silhouette, speciesImage, TYPE_COLORS } from "../screens/kit/draw";
@@ -122,7 +125,7 @@ class BattleScene implements Scene {
     this.flow = new Flow(ctx.input);
     this.ui = new ScreenUi(ctx, this.flow, { blip: false });
     this.ui.tb.autoFrames = 45;
-    this.backdrop = req.backdrop ?? (ctx.timeOfDay() === "night" ? "night" : "grass");
+    this.backdrop = req.backdrop ?? (worldTime(ctx) === "night" ? "night" : "grass");
     this.knowledge = new FoeKnowledge([...ctx.state.herbarium.seen]);
   }
 
@@ -211,14 +214,23 @@ class BattleScene implements Scene {
     const x = home.x + v.dx + m.dx;
     const y = home.y + v.dy + m.dy;
     const sil = v.silhouette ?? m.tint ?? undefined;
-    drawSpecies(this.ctx, g, v.species, kind, x, y, { sport: v.sport, scale: v.scale, drop: v.drop, clipBottom, silhouette: sil });
-    if (m.shine !== null && !sil && v.scale === 1) this.drawShine(g, v, kind, x, y + v.drop, m.shine, clipBottom);
+    const pose = kind === "front" ? this.idlePose(v, side, !!sil) : kind;
+    drawSpecies(this.ctx, g, v.species, pose, x, y, { sport: v.sport, scale: v.scale, drop: v.drop, clipBottom, silhouette: sil });
+    if (m.shine !== null && !sil && v.scale === 1) this.drawShine(g, v, pose, x, y + v.drop, m.shine, clipBottom);
+  }
+
+  /** Idle breathing for front sprites; still while dormant/frozen, wilting, flashing or scaling. */
+  private idlePose(v: SpriteView, side: Side, silhouetted: boolean): FrontKind {
+    if (!v.species || silhouetted || v.scale !== 1 || v.drop !== 0) return "front";
+    const status = this.hudOf(side).status;
+    if (status === "dormant" || status === "frostbite") return "front";
+    return idleKind(v.species, this.frame, `:battle${side}`);
   }
 
   /** A diagonal white glint sweeping across a sprite (masked to its shape). */
-  private drawShine(g: CanvasRenderingContext2D, v: SpriteView, kind: "front" | "back", x: number, y: number, t: number, clipBottom: number) {
+  private drawShine(g: CanvasRenderingContext2D, v: SpriteView, kind: FrontKind | "back", x: number, y: number, t: number, clipBottom: number) {
     if (!v.species) return;
-    const size = kind === "front" ? 56 : 48;
+    const size = kind === "back" ? 48 : 56;
     const img = speciesImage(this.ctx, v.species, kind, { sport: v.sport });
     const white = silhouette(`${v.species}:${kind}:${v.sport ? "s" : ""}`, img, "#f8f8f8");
     const c = Math.round(-8 + t * (size * 2 + 8));
@@ -304,7 +316,9 @@ class BattleScene implements Scene {
       paths.add(speciesPath(q.species, "front"));
       paths.add(speciesPath(q.species, "icon"));
     }
-    for (const q of this.s.sides[1].party) paths.add(speciesPath(q.species, "front"));
+    for (const q of this.s.sides[1].party) {
+      for (const k of ["front", "front__2", "front__3"] as const) paths.add(speciesPath(q.species, k));
+    }
     paths.add(portraitPath("player_back"));
     for (const u of ["pod", "pod_open", "battle_ground"] as const) paths.add(uiPath(u));
     if (this.trainer) paths.add(portraitPath(this.trainer.portrait));
@@ -349,7 +363,7 @@ class BattleScene implements Scene {
     }
     this.s = createBattleState({
       data: this.data, playerParty: this.party, playerActive: lead, foeParty, wild: req.kind === "wild",
-      time: ctx.timeOfDay(), foeTrainer: this.trainerName,
+      time: worldTime(ctx), foeTrainer: this.trainerName,
       foeItems: Object.fromEntries((this.trainer?.items ?? []).map((i) => [i.item, i.qty])),
     });
 
@@ -853,6 +867,11 @@ class BattleScene implements Scene {
   /** Play a move animation for `side` (also used by the dev gallery). */
   async playMoveAnim(side: Side, moveId: MoveId, repeat = false): Promise<void> {
     const mv = getMove(this.data, moveId);
+    if (!battleAnimsOn(this.ctx.state?.options)) {
+      // OPTIONS → BATTLE ANIM OFF: a beat, then straight to the hit reaction.
+      await this.flow.wait(repeat ? 4 : 10);
+      return;
+    }
     const spec = animFor(mv);
     const other: Side = side === 0 ? 1 : 0;
     const self = !targetsFoe(mv);
@@ -1166,7 +1185,7 @@ class BattleScene implements Scene {
   private async ending(outcome: BattleOutcome) {
     this.ui.tb.clear();
     if (outcome !== "lost") {
-      const time = this.ctx.timeOfDay();
+      const time = worldTime(this.ctx);
       for (const q of [...this.party]) {
         if (!this.leveled.has(q.uid) || q.hp <= 0) continue;
         const to = growthTarget(this.data, q, time);

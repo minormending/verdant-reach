@@ -19,6 +19,7 @@ import build_manifest
 import characters
 import items
 import portraits
+import stills
 import structures
 import tiles
 import ui
@@ -32,6 +33,7 @@ if __name__ == "__main__":
     portraits.build()
     items.build()
     ui.build()
-    for builder in ("species_a/build.py", "species_b/build.py"):
+    stills.build()
+    for builder in ("species_a/build.py", "species_b/build.py", "species_c/build.py", "species_d/build.py"):
         subprocess.run([sys.executable, str(HERE / builder)], check=True, cwd=HERE.parent.parent)
     sys.exit(build_manifest.main())

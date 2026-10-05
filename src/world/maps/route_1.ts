@@ -81,7 +81,13 @@ export const route_1: MapDef = {
       { item: "terrarium_pod", x: 18, y: 12 },
       { item: "water_flask", x: 20, y: 29 },
     ]),
+    // Wild berry bushes: one in the hedge corner of the north meadow, one in
+    // the river nook east of the footbridge.
+    { id: "bush:r1_berry_north", sprite: "harvest_bush", x: 8, y: 10, facing: "down", movement: "static", script: "bush_r1_berry_north" },
+    { id: "bush:r1_berry_river", sprite: "harvest_bush", x: 15, y: 21, facing: "down", movement: "static", script: "bush_r1_berry_river" },
   ],
+  // Under the old stump in the west hollow, ringed with mushrooms.
+  hidden: [{ x: 3, y: 28, item: "terrarium_pod", qty: 2 }],
   signs: [
     { x: 9, y: 38, text: "ROUTE 1. North: HEDGEROW. South: FALLOWFIELD." },
     { x: 14, y: 17, text: "Hedges laid by hand. Please don't trim in nesting season!" },
@@ -93,9 +99,14 @@ export const route_1: MapDef = {
     grass: {
       rate: 12,
       slots: [
-        { species: "dandelion_bud", minLevel: 2, maxLevel: 4, weight: 45 },
-        { species: "sunflower_seedling", minLevel: 2, maxLevel: 4, weight: 40, time: "day" },
-        { species: "nettle_sprout", minLevel: 3, maxLevel: 4, weight: 10 },
+        { species: "dandelion_bud", minLevel: 2, maxLevel: 4, weight: 35 },
+        { species: "sunflower_seedling", minLevel: 2, maxLevel: 4, weight: 25, time: "day" },
+        { species: "clover_sprout", minLevel: 2, maxLevel: 4, weight: 25, time: "day" },
+        { species: "mint_sprig", minLevel: 2, maxLevel: 4, weight: 15, time: "day" },
+        { species: "mint_sprig", minLevel: 2, maxLevel: 4, weight: 25, time: "night" },
+        { species: "nettle_sprout", minLevel: 3, maxLevel: 4, weight: 8, time: "day" },
+        { species: "nettle_sprout", minLevel: 3, maxLevel: 4, weight: 12, time: "night" },
+        { species: "foxglove_rosette", minLevel: 3, maxLevel: 4, weight: 20, time: "night" },
       ],
     },
   },
@@ -119,6 +130,14 @@ export const scripts: Scripts = {
       [say("Lily pads have their pores on top, not underneath. They breathe the sky.")],
     ),
     say("The ledges are a lovely shortcut home. Just don't try going back up them."),
+  ],
+  bush_r1_berry_north: [
+    say("Brambles have scrambled up the hedge here, heavy with fruit."),
+    { op: "harvest", id: "r1_berry_north", item: "wild_berry", qty: 2 },
+  ],
+  bush_r1_berry_river: [
+    say("A berry bush leans out over the stream, dark fruit nearly touching the water."),
+    { op: "harvest", id: "r1_berry_river", item: "wild_berry", qty: 2 },
   ],
   r1_robin: [
     say("A robin watches you dig through your bag. It's hoping for worms."),

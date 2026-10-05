@@ -15,6 +15,7 @@ export const herbarium_roof: MapDef = {
   id: "herbarium_roof",
   name: "OBSERVATION DECK",
   outdoor: true,
+  time: "night", // the prologue happens on the night of the bloom
   music: "prologue_bloom",
   border: "tree",
   legend: OUTDOOR,

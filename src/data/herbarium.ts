@@ -169,6 +169,78 @@ const LIST: HerbariumEntry[] = [
   // Source: https://en.wikipedia.org/wiki/Ipomoea_alba
   h("moonflower", "Ipomoea alba", "Night Bloom", 3.0, 4.0,
     "Its white flowers open at dusk, often fast enough to watch. Hawk moths visit in the dark to drink its nectar."),
+  // ============================================================== Round 3 lines (facts checked October 2026)
+  // Fact: "shamrock" is from Irish seamrog, a diminutive of seamair (clover): "young clover".
+  // Source: https://en.wikipedia.org/wiki/Shamrock
+  h("clover_sprout", "Trifolium repens", "Trefoil", 0.05, 0.02,
+    "It hides in lawns, three leaves at a time. Its old name is a small one: shamrock comes from an Irish word meaning young clover."),
+  // Fact: white clover fixes atmospheric nitrogen in root nodules, in symbiosis with Rhizobium bacteria.
+  // Source: https://pmc.ncbi.nlm.nih.gov/articles/PMC9534031/
+  h("white_clover", "Trifolium repens", "Trefoil", 0.2, 0.1,
+    "Where it creeps, the grass grows greener. Bacteria in its root nodules pull nitrogen from the air and turn it into plant food."),
+
+  // Fact: Typha latifolia is called bulrush in Britain and (broadleaf) cattail in North America.
+  // Source: https://en.wikipedia.org/wiki/Typha_latifolia
+  h("cattail_shoot", "Typha latifolia", "Reedmace", 0.5, 0.5,
+    "It stands ankle-deep and waits for summer. One plant, two names: the British call it bulrush, while North Americans say cattail."),
+  // Fact: broadleaf cattail spikes averaged over 222,000 seeds each; the seeds carry fluffy hairs that float and fly.
+  // Source: https://www.fs.usda.gov/database/feis/plants/graminoid/typlat/all.html
+  h("cattail", "Typha latifolia", "Reedmace", 2.0, 3.0,
+    "Never poke the brown spike. A single cattail head can burst into more than 200,000 fluffy seeds that ride the wind and water."),
+
+  // Fact: Digitalis purpurea is a biennial: a basal rosette only in year one, flowering spires in year two.
+  // Source: https://plantfinder.mobot.org/PlantFinderDetails.aspx?kempercode=c530
+  h("foxglove_rosette", "Digitalis purpurea", "Fairy Glove", 0.15, 0.3,
+    "It lies low and flat, biding its time. Foxgloves are biennials: a ring of leaves in the first year, flowers only in the second."),
+  // Fact: foxglove is the source of the heart drug digitalis, popularised by William Withering's 1785 account.
+  // Source: https://en.wikipedia.org/wiki/William_Withering
+  h("foxglove", "Digitalis purpurea", "Fairy Glove", 1.5, 1.2,
+    "Bumblebees adore it; everyone else, beware. Every part is poisonous, yet it gave doctors digitalis, a heart drug made famous by William Withering in 1785."),
+
+  // Fact: holly grows spinier leaves low down where deer and goats browse, smoother leaves higher up (Herrera & Bazaga 2013).
+  // Source: https://www.nationalgeographic.com/news/2012/12/121220-holly-leaves-prickly-plants-science/
+  h("holly_seedling", "Ilex aquifolium", "Evergreen", 0.2, 0.3,
+    "Every leaf is armed, just in case. Holly grows its spiniest leaves low down, where deer browse, and smoother ones high out of reach."),
+  // Fact: holly is dioecious; only female plants bear red berries.
+  // Source: https://naturescalendar.woodlandtrust.org.uk/what-we-record-and-why/species-we-record/shrubs/holly/
+  h("holly", "Ilex aquifolium", "Evergreen", 3.0, 60,
+    "It stays green through the hardest frost. Hollies are male or female, and only the female plants bear the bright red berries."),
+
+  // Fact: menthol activates the TRPM8 cold receptor, so it feels cold without a change in temperature (McKemy et al. 2002).
+  // Source: https://www.nature.com/articles/nature719
+  h("mint_sprig", "Mentha piperita", "Menthol", 0.1, 0.05,
+    "A cool breeze seems to follow it. Menthol in mint switches on TRPM8, the nerve sensor for cold, so it feels chilly without being cold."),
+  // Fact: peppermint is a sterile hybrid of water mint and spearmint, spread only by rhizomes and stolons.
+  // Source: https://en.wikipedia.org/wiki/Peppermint
+  h("peppermint", "Mentha piperita", "Menthol", 0.6, 0.6,
+    "It never sets seed, yet it turns up everywhere. Peppermint is a hybrid of water mint and spearmint, and it spreads by creeping runners."),
+
+  // Fact: rose "thorns" are prickles, outgrowths of the stem's epidermis, not true thorns (modified stems).
+  // Source: https://en.wikipedia.org/wiki/Rose
+  h("rose_bud", "Rosa canina", "Dog Rose", 0.3, 0.4,
+    "Pick it up carefully, or not at all. A rose's 'thorns' are really prickles, outgrowths of the stem's skin rather than true thorns."),
+  // Fact: in WWII Britain volunteers collected ~200 tons of wild rose hips for vitamin C syrup.
+  // Source: http://foragerplants.blogspot.com/2018/06/dog-rose-rosa-canina.html
+  h("wild_rose", "Rosa canina", "Dog Rose", 2.0, 8.0,
+    "Its hips glow red in autumn hedges. In wartime Britain, volunteers picked wild rose hips by the ton to make vitamin C syrup."),
+
+  // Fact: the purple pitcher plant has been the provincial flower of Newfoundland and Labrador since 1954.
+  // Source: https://www.gov.nl.ca/exec/cabinet/protocol/symbols/
+  h("pitcher_sprout", "Sarracenia purpurea", "Pitfall", 0.05, 0.1,
+    "It sits in the moss with its hood up, smelling sweet. The purple pitcher plant is the official flower of Newfoundland and Labrador."),
+  // Fact: rain-filled pitchers have stiff downward-pointing hairs; insects can't climb out and drown in the pool.
+  // Source: https://www.fs.usda.gov/wildflowers/plant-of-the-week/sarracenia_purpurae.shtml
+  h("pitcher_plant", "Sarracenia purpurea", "Pitfall", 0.3, 1.0,
+    "Insects come for the nectar and never leave. Stiff downward-pointing hairs stop them climbing out, so they fall into the pool below and drown."),
+
+  // Fact: Antirrhinum comes from Greek anti + rhis (nose), from the flower's resemblance to an animal's snout.
+  // Source: https://en.wikipedia.org/wiki/Antirrhinum
+  h("snapdragon_sprout", "Antirrhinum majus", "Dragon Bloom", 0.1, 0.2,
+    "It huffs at anything that comes too close. Its Latin name, Antirrhinum, comes from Greek words for a snout, after the flower's shape."),
+  // Fact: the flower's "mouth" opens when its sides are squeezed (hence snapdragon); bumblebees are strong enough to open it.
+  // Source: https://en.wikipedia.org/wiki/Antirrhinum_majus
+  h("snapdragon", "Antirrhinum majus", "Dragon Bloom", 1.0, 2.5,
+    "Squeeze a snapdragon flower at the sides and its jaws gape open, which is how it got its name. Bumblebees are strong enough to pry their way in."),
 ];
 
 export const HERBARIUM = Object.fromEntries(LIST.map((e) => [e.species, e])) as Record<SpeciesId, HerbariumEntry>;

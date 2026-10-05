@@ -138,6 +138,19 @@ export const MOVE_ANIMS: Record<string, AnimSpec> = {
   red_resin: S("glob", "resin"),
   primal_frond: S("slash", "frond"),
   old_growth: S("grow", "old"),
+  // round 3: the new lines' signature moves
+  cattail_fluff: S("wind_seeds", "fluff"),
+  pitfall_slurp: S("pitfall", "slurp"),
+  slick_rim: S("pitfall", "rim"),
+  lucky_leaf: S("slash", "clover"),
+  nitro_fix: S("light_rays", "heal"),
+  digitalis: S("toxin", "digitalis"),
+  holly_spines: S("slash", "holly"),
+  rose_thorn: S("volley", "rose"),
+  menthol_chill: S("frost", "menthol"),
+  evergreen: S("harden", "evergreen"),
+  dragon_nip: S("snap", "dragon_nip"),
+  dragon_snap: S("snap", "dragon"),
   // fallback move used with no PP left
   struggle: S("slam", "struggle"),
 };

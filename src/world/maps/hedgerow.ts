@@ -5,8 +5,8 @@ import { OUTDOOR, ifFlags, ifNight, lockedDoor, pickups, say, when, type Scripts
 // FENNIMORE's cottage in its walled kitchen garden, south to ROUTE 1, east to
 // the green with the old oak and the pond, and west, single-file between the
 // hedges, to ROUTE 2 (where the trimmer is re-laying the hedge). Three cottage
-// gardens. A footpath behind FENNIMORE's wall hides a pickup; you reach it the
-// long way round, past the east cottage.
+// gardens (the south-west one is the bakehouse). A footpath behind FENNIMORE's
+// wall hides a pickup; you reach it the long way round, past the east cottage.
 //
 //            0         1         2
 //            01234567890123456789012345
@@ -23,7 +23,7 @@ export const hedgerow: MapDef = {
     "TTTTTTTTTTTTTTTTTTTTTTTTTT", // 1
     "TTTTTTT..y...*.....*.TTTTT", // 2
     "TTTT..yLLLLLLLLLLLLL..TTTT", // 3
-    "TT.*f..LGGk@@@@@kGGL...TTT", // 4
+    "T..*f..LGGk@@@@@kGGL...TTT", // 4
     "T.@@@@.LGGk@@@@@kGGL..y..T", // 5
     "T*@@@@yL...@@@@@...L.....T", // 6
     "Tf@@@@*Lf*y@@@@@y*fL.f...T", // 7
@@ -69,7 +69,18 @@ export const hedgerow: MapDef = {
     { id: "dog", sprite: "dog", x: 22, y: 14, facing: "left", movement: "wander", script: "hh_dog" },
     { id: "wren", sprite: "bird", x: 9, y: 19, facing: "left", movement: "look_around", script: "hh_wren" },
     ...pickups([{ item: "spring_water", x: 8, y: 2 }]),
+    // MOSS IS MISSING: the cottager waits at the lavender cottage's garden gate.
+    { id: "cottager", sprite: "villager_b", x: 1, y: 10, facing: "right", movement: "look_around", script: "q_lost_cat" },
+    // ...and once MOSS is home, MOSS suns beside the doorstep.
+    { id: "moss_home", sprite: "cat", x: 2, y: 8, facing: "down", movement: "static", script: "hh_moss_home",
+      visibleWhen: when({ quest_lost_cat_done: true }) },
+    // THE SAP RUN ends here: the baker by the bakehouse door.
+    { id: "baker", sprite: "shopkeeper", x: 10, y: 17, facing: "down", movement: "look_around", script: "q_sap_run_baker" },
+    // The baker's own hedge, heavy with wild berries.
+    { id: "bush:hh_berry_bakehouse", sprite: "harvest_bush", x: 10, y: 15, facing: "down", movement: "static", script: "bush_hh_berry_bakehouse" },
   ],
+  // Tucked behind the old oak, on the side nobody walks.
+  hidden: [{ x: 17, y: 14, item: "neem_spray" }],
   signs: [
     { x: 4, y: 11, text: "HEDGEROW. West: ROUTE 2 to BRAMBLEGATE. South: ROUTE 1." },
     { x: 14, y: 10, text: "OLD FENNIMORE. No seeds by post, please." },
@@ -131,7 +142,14 @@ export const scripts: Scripts = {
   hh_wren: [
     say("A wren hops along the hedge bottom. Tiny bird, enormous song."),
   ],
-  hh_door_nw: lockedDoor("Locked. A bunch of dried lavender hangs on the door."),
+  hh_moss_home: [
+    say("MOSS is back on the doorstep, washing her white sock as if nothing happened."),
+  ],
+  bush_hh_berry_bakehouse: [
+    say("Wild berries on the bakehouse hedge. Take a handful; leave some for the wrens."),
+    { op: "harvest", id: "hh_berry_bakehouse", item: "wild_berry", qty: 2 },
+  ],
+  hh_door_nw: lockedDoor("Locked. Dried lavender hangs on the door, above a little cat flap."),
   hh_door_east: lockedDoor("Locked. Muffled snoring comes from inside."),
-  hh_door_sw: lockedDoor("Locked. A note: \"Gone to market. Do NOT feed the marrow.\""),
+  hh_door_sw: lockedDoor("The bakehouse. Locked, but it smells of warm bread.", "A note: \"Back soon. Do NOT feed the marrow.\""),
 };

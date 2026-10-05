@@ -47,6 +47,11 @@ const PAL = {
   thorn: { a: "#c09858", b: "#584018", c: "#f0e0b0" },
   ice: { a: "#c8f0f8", b: "#4888b8", c: "#ffffff" },
   wood: { a: "#c89050", b: "#6a4020", c: "#f0d0a0" },
+  clover: { a: "#68b848", b: "#286828", c: "#d0f0a0" },
+  holly: { a: "#2c7038", b: "#103818", c: "#88c890" },
+  rose: { a: "#b04838", b: "#501818", c: "#f8b0b8" },
+  mint: { a: "#98e8c8", b: "#287868", c: "#ffffff" },
+  digitalis: { a: "#b060c0", b: "#582868", c: "#f0c8f0" },
 } satisfies Record<string, Pal>;
 
 const dirOf = (s: MoveStage) => (s.to.x >= s.from.x ? 1 : -1);
@@ -66,13 +71,13 @@ export function playMoveFx(fx: Fx, spec: AnimSpec, type: TypeId, s: MoveStage): 
     case "seed_arc": return seedArc(fx, s, v === "burr");
     case "heavy_drop": return heavyDrop(fx, s, (v as "acorn" | "gourd" | "log" | "fossil") ?? "acorn");
     case "spin_seed": return spinSeed(fx, s);
-    case "wind_seeds": return windSeeds(fx, s);
+    case "wind_seeds": return windSeeds(fx, s, v === "fluff");
     case "slash": return slash(fx, s, v ?? "leaf");
     case "drain": return drain(fx, s, v === "acid");
     case "glob": return glob(fx, s, v ?? "sap");
     case "gale": return gale(fx, s, v === "petal");
     case "roots": return roots(fx, s, v === "tap");
-    case "toxin": return toxin(fx, s, v === "rot");
+    case "toxin": return toxin(fx, s, v === "rot" ? "rot" : v === "digitalis" ? "digitalis" : "toxin");
     case "harden": return harden(fx, s, v ?? "bark");
     case "bristle": return bristle(fx, s);
     case "shield": return shield(fx, s);
@@ -87,9 +92,11 @@ export function playMoveFx(fx: Fx, spec: AnimSpec, type: TypeId, s: MoveStage): 
     case "wave": return wave(fx, s, v === "flood");
     case "downpour": return downpour(fx, s);
     case "slam": return slam(fx, s, v === "struggle");
-    case "pitfall": return pitfall(fx, s);
+    case "pitfall": return pitfall(fx, s, v);
     case "mist": return mist(fx, s, v === "cold");
-    case "snap": return snap(fx, s, v === "quick");
+    case "snap":
+      if (v === "dragon") return dragonSnap(fx, s);
+      return snap(fx, s, v === "quick" || v === "dragon_nip", v === "dragon_nip" ? DRAGON_JAW : undefined);
     case "tendrils": return tendrils(fx, s, v === "dodder");
     case "lure": return lure(fx, s, v === "scent");
     case "spores": return spores(fx, s, v === "sleep");
@@ -97,7 +104,7 @@ export function playMoveFx(fx: Fx, spec: AnimSpec, type: TypeId, s: MoveStage): 
     case "ghost_touch": return ghostTouch(fx, s);
     case "wither": return wither(fx, s);
     case "volley": return volley(fx, s, v ?? "spines");
-    case "frost": return frost(fx, s, v === "bloom");
+    case "frost": return frost(fx, s, v === "bloom", v === "menthol");
     case "blizzard": return blizzard(fx, s);
     case "weather_sun": return weatherSun(fx, s);
     case "weather_rain": return weatherRain(fx, s);
@@ -231,13 +238,15 @@ function spinSeed(fx: Fx, s: MoveStage): number {
   return N + 4;
 }
 
-function windSeeds(fx: Fx, s: MoveStage): number {
+function windSeeds(fx: Fx, s: MoveStage, fluff = false): number {
   const d = dirOf(s);
   const N = 44;
   windLines(fx, N, d, 0, 96);
-  for (let i = 0; i < 7; i++) {
+  // Cattail fluff: a denser drift of buff-brown down instead of white parachutes.
+  for (let i = 0; i < (fluff ? 11 : 7); i++) {
     fx.add({
-      x: s.from.x, y: s.from.y, shape: "tuft", color: "#f8f8f8", color2: "#806848", color3: "#90a0b0", max: 26, delay: i * 3, sway: 2,
+      x: s.from.x, y: s.from.y, shape: "tuft", color: fluff ? (i % 2 ? "#f0e0c0" : "#f8f0e0") : "#f8f8f8",
+      color2: fluff ? "#8a6038" : "#806848", color3: fluff ? "#c8a070" : "#90a0b0", max: 26, delay: i * (fluff ? 2 : 3), sway: 2,
       to: { sx: s.from.x + d * 6 + R(-6, 6), sy: s.from.y - 8 + R(-8, 8), x: s.to.x + R(-14, 14), y: s.to.y + R(-12, 10), arc: R(6, 20) },
       onEnd: (q) => fx.add({ x: q.x, y: q.y, shape: "twinkle", color: "#ffffff", color2: "#c8e0f0", max: 8 }),
     });
@@ -257,8 +266,9 @@ function windLines(fx: Fx, frames: number, d: number, y0: number, y1: number, co
 
 function slash(fx: Fx, s: MoveStage, kind: string): number {
   if (kind === "frond") return frond(fx, s);
-  const hook = kind === "hook";
-  const p = hook ? PAL.thorn : PAL.leaf;
+  const hook = kind === "hook" || kind === "holly";
+  const p = kind === "holly" ? PAL.holly : kind === "clover" ? PAL.clover : hook ? PAL.thorn : PAL.leaf;
+  const leafPal = kind === "clover" ? PAL.clover : PAL.leaf;
   const cuts = hook ? [{ dx: 1, dy: 1 }, { dx: -1, dy: 1 }] : [{ dx: 1, dy: 1 }, { dx: -1, dy: 1 }, { dx: 1, dy: 1 }];
   cuts.forEach((c, i) => {
     const off = hook ? 0 : (i - 1) * 7;
@@ -280,10 +290,17 @@ function slash(fx: Fx, s: MoveStage, kind: string): number {
     fx.at(i * 7 + 3, () => {
       fx.impact({ x: s.to.x + off, y: s.to.y }, "#ffffff", p.c);
       fx.shake(4, hook ? 2 : 1);
-      if (!hook) for (let k = 0; k < 3; k++) fx.add({ x: s.to.x + off, y: s.to.y, vx: R(-1.2, 1.2), vy: R(-1.4, -0.4), ay: 0.08, shape: "leaf", color: PAL.leaf.a, color2: PAL.leaf.b, color3: PAL.leaf.c, max: 18, blink: true });
+      if (!hook) for (let k = 0; k < 3; k++) fx.add({ x: s.to.x + off, y: s.to.y, vx: R(-1.2, 1.2), vy: R(-1.4, -0.4), ay: 0.08, shape: "leaf", color: leafPal.a, color2: leafPal.b, color3: leafPal.c, max: 18, blink: true });
+      // a lucky glint on each clover cut
+      if (kind === "clover") fx.add({ x: s.to.x + off + R(-6, 6), y: s.to.y + R(-8, 4), shape: "twinkle", color: "#ffffff", color2: "#f8d850", max: 12 });
     });
   });
-  if (hook) fx.at(10, () => { for (let k = 0; k < 6; k++) fx.add({ x: s.to.x, y: s.to.y, vx: R(-1.6, 1.6), vy: R(-1.6, 0.4), ay: 0.1, shape: "hair", color: PAL.thorn.b, color2: PAL.thorn.a, max: 16, flip: k % 2 === 0, blink: true }); });
+  if (kind === "hook") fx.at(10, () => { for (let k = 0; k < 6; k++) fx.add({ x: s.to.x, y: s.to.y, vx: R(-1.6, 1.6), vy: R(-1.6, 0.4), ay: 0.1, shape: "hair", color: PAL.thorn.b, color2: PAL.thorn.a, max: 16, flip: k % 2 === 0, blink: true }); });
+  // holly: glossy spined leaves and a couple of red berries knocked loose
+  if (kind === "holly") fx.at(10, () => {
+    for (let k = 0; k < 5; k++) fx.add({ x: s.to.x, y: s.to.y, vx: R(-1.6, 1.6), vy: R(-1.8, -0.2), ay: 0.1, shape: "leaf", color: PAL.holly.a, color2: PAL.holly.b, color3: PAL.holly.c, max: 18, flip: k % 2 === 0, blink: true });
+    for (let k = 0; k < 2; k++) fx.add({ x: s.to.x + R(-4, 4), y: s.to.y, vx: R(-1, 1), vy: R(-1.6, -0.8), ay: 0.12, shape: "bubble", color: "#d02828", color2: "#f8a0a0", max: 18 });
+  });
   return cuts.length * 7 + 14;
 }
 
@@ -430,8 +447,13 @@ function roots(fx: Fx, s: MoveStage, tap: boolean): number {
   return start + 40;
 }
 
-function toxin(fx: Fx, s: MoveStage, rot: boolean): number {
-  const p = rot ? PAL.rot : PAL.toxin;
+function toxin(fx: Fx, s: MoveStage, kind: "toxin" | "rot" | "digitalis"): number {
+  const rot = kind === "rot";
+  const p = rot ? PAL.rot : kind === "digitalis" ? PAL.digitalis : PAL.toxin;
+  // Foxglove: a few speckled bells drop onto the foe before the poison wells up.
+  if (kind === "digitalis") {
+    for (let i = 0; i < 4; i++) fx.add({ x: s.to.x + R(-14, 14), y: s.to.y - 30, vy: 1.1, sway: 1, shape: "petal", color: p.a, color2: p.b, color3: p.c, max: 20, delay: i * 4, blink: true });
+  }
   const g0 = s.toGround;
   const N = 44;
   fx.tintScreen(rot ? "#b0b088" : "#c8a8d8", N);
@@ -467,8 +489,21 @@ function brackets(fx: Fx, at: Pt, frames: number, col: string, col2: string, del
 }
 
 function harden(fx: Fx, s: MoveStage, kind: string): number {
-  const p = kind === "sap" ? PAL.sap : kind === "night" ? PAL.ghost : PAL.bark;
+  const p = kind === "sap" ? PAL.sap : kind === "night" ? PAL.ghost : kind === "evergreen" ? PAL.holly : PAL.bark;
   const at = s.from;
+  if (kind === "evergreen") {
+    // waxy evergreen leaves close round the user, glinting with frost
+    brackets(fx, at, 20, p.b, p.c);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      fx.add({ x: at.x + Math.cos(a) * 26, y: at.y + Math.sin(a) * 20, shape: "leaf", color: p.a, color2: p.b, color3: p.c, max: 20, delay: i * 2, flip: i % 2 === 0,
+        to: { sx: at.x + Math.cos(a) * 26, sy: at.y + Math.sin(a) * 20, x: at.x + Math.cos(a) * 12, y: at.y + Math.sin(a) * 10, arc: 0 } });
+    }
+    for (let i = 0; i < 6; i++) fx.add({ x: at.x + R(-16, 16), y: at.y + R(-14, 12), shape: "twinkle", color: "#ffffff", color2: "#c8f0f8", max: 12, delay: 18 + i * 3 });
+    s.sprites.add(s.userSide, "shine", 14, { delay: 16 });
+    s.sprites.add(s.userSide, "tint", 8, { color: "#88c890", delay: 24 });
+    return 38;
+  }
   brackets(fx, at, 20, p.b, p.c);
   s.sprites.add(s.userSide, "shine", 14, { delay: 8 });
   s.sprites.add(s.userSide, "tint", 8, { color: p.a, delay: 20 });
@@ -760,9 +795,19 @@ function slam(fx: Fx, s: MoveStage, plain: boolean): number {
   return 26;
 }
 
-function pitfall(fx: Fx, s: MoveStage): number {
+function pitfall(fx: Fx, s: MoveStage, kind?: string): number {
   const g0 = s.toGround;
-  const N = 44;
+  const rim = kind === "rim";
+  const N = rim ? 34 : 44;
+  // PITFALL SLURP: once the walls close, nectar-green motes drain back to the user.
+  if (kind === "slurp") {
+    for (let i = 0; i < 8; i++) fx.add({
+      x: s.to.x, y: s.to.y, shape: "drop", color: "#a8d860", color2: "#f0f8c0", color3: "#486820", max: 16, delay: 24 + i * 2,
+      to: { sx: s.to.x + R(-10, 10), sy: s.to.y + R(-8, 8), x: s.from.x + R(-6, 6), y: s.from.y + R(-6, 6), arc: R(8, 18) },
+    });
+  }
+  // SLICK RIM: the foe skids on the waxy rim before it slips in.
+  if (rim) s.sprites.add(targetSide(s), "jitter", 10, { delay: 4 });
   fx.layer(N, (g, f) => {
     const rise = Math.min(1, f / 10) * (f > N - 8 ? (N - f) / 8 : 1);
     const close = clamp01((f - 12) / 6);
@@ -783,8 +828,8 @@ function pitfall(fx: Fx, s: MoveStage): number {
       }
     }
   });
-  fx.at(18, () => { fx.impact(s.to, "#ffffff", "#c8f0a0", true); fx.shake(10, 2); });
-  s.sprites.add(targetSide(s), "sink", 20, { delay: 16 });
+  fx.at(rim ? 14 : 18, () => { fx.impact(s.to, "#ffffff", "#c8f0a0", true); fx.shake(rim ? 6 : 10, 2); });
+  s.sprites.add(targetSide(s), "sink", rim ? 14 : 20, { delay: rim ? 12 : 16 });
   return N;
 }
 
@@ -818,9 +863,14 @@ function mist(fx: Fx, s: MoveStage, cold: boolean): number {
 // Bug
 // ---------------------------------------------------------------------------
 
-function snap(fx: Fx, s: MoveStage, quick: boolean): number {
+interface JawPal { body: string; back: string; lip: string; teeth: string; hi: string }
+const FLYTRAP_JAW: JawPal = { body: "#58a040", back: "#204818", lip: "#e04848", teeth: "#f8f0a0", hi: "#a8e070" };
+/** Snapdragon "jaws": the two-lipped flower, magenta with a gold throat. */
+const DRAGON_JAW: JawPal = { body: "#d04890", back: "#581838", lip: "#f8c040", teeth: "#ffffff", hi: "#f8a0d0" };
+
+function snap(fx: Fx, s: MoveStage, quick: boolean, jaw: JawPal = FLYTRAP_JAW, big = false): number {
   const at = s.to;
-  const W = quick ? 12 : 16;
+  const W = big ? 22 : quick ? 12 : 16;
   const open = quick ? 4 : 12;   // frames hovering open
   const shut = quick ? 3 : 4;    // frames to clamp
   const hold = 10;
@@ -829,34 +879,63 @@ function snap(fx: Fx, s: MoveStage, quick: boolean): number {
     const sy = up ? -1 : 1;
     for (let i = -W; i <= W; i++) {
       const t = i / W;
-      const curve = Math.round((1 - t * t) * 7);
+      const curve = Math.round((1 - t * t) * (big ? 10 : 7));
       const yEdge = at.y + sy * gap;           // the lip
       const yBack = yEdge + sy * (curve + 2);  // the outer back
       const top = Math.min(yEdge, yBack), h = Math.abs(yBack - yEdge) + 1;
-      rect(g, at.x + i, top, 1, h, "#58a040");
-      px(g, at.x + i, yBack, "#204818");
-      px(g, at.x + i, yEdge, "#e04848");
-      px(g, at.x + i, yEdge + sy, "#e04848");
-      if (i % 3 === 0) { px(g, at.x + i, yEdge - sy, "#f8f0a0"); px(g, at.x + i, yEdge - sy * 2, "#f8f0a0"); } // cilia
-      if (up && i % 5 === 0 && curve > 3) px(g, at.x + i, yBack + 2, "#a8e070");
+      rect(g, at.x + i, top, 1, h, jaw.body);
+      px(g, at.x + i, yBack, jaw.back);
+      px(g, at.x + i, yEdge, jaw.lip);
+      px(g, at.x + i, yEdge + sy, jaw.lip);
+      if (i % 3 === 0) { px(g, at.x + i, yEdge - sy, jaw.teeth); px(g, at.x + i, yEdge - sy * 2, jaw.teeth); } // cilia / teeth
+      if (up && i % 5 === 0 && curve > 3) px(g, at.x + i, yBack + 2, jaw.hi);
     }
   };
   fx.layer(N, (g, f) => {
     let gap: number;
-    if (f < open) gap = 16 + ((f >> 1) % 2);                     // hovering, jaws open
-    else if (f < open + shut) gap = Math.round(lerp(16, 0, (f - open + 1) / shut));
+    if (f < open) gap = (big ? 20 : 16) + ((f >> 1) % 2) * (big ? 2 : 1);                     // hovering, jaws open
+    else if (f < open + shut) gap = Math.round(lerp(big ? 20 : 16, 0, (f - open + 1) / shut));
     else gap = 0;
     if (f > N - 6 && f % 2) return;
     lobe(g, gap, true);
     lobe(g, gap, false);
   });
   fx.at(open + shut, () => {
-    fx.impact(at, "#ffffff", "#f8f0a0", !quick);
+    fx.impact(at, "#ffffff", jaw.teeth === "#ffffff" ? jaw.lip : "#f8f0a0", !quick);
     fx.shake(quick ? 6 : 12, quick ? 1 : 3, quick ? "x" : "xy");
     fx.flashScreen("#ffffff", 1);
     s.sprites.add(targetSide(s), "squash", 8);
   });
   return N + 2;
+}
+
+/**
+ * DRAGON SNAP, the snapdragon's signature: the screen darkens, a roar of
+ * rings rolls out from the user, huge two-lipped jaws tremble over the foe
+ * and slam shut in a gold flash, scattering petals and sparks.
+ */
+function dragonSnap(fx: Fx, s: MoveStage): number {
+  const lead = 22;
+  fx.tintScreen("#481830", lead + 30);
+  for (let k = 0; k < 3; k++) {
+    fx.layer(14, (g, f) => {
+      const r = 6 + f * 3;
+      ring(g, s.from.x, s.from.y, r, Math.round(r * 0.7), f % 2 ? "#f8c040" : "#d04890");
+    }, { delay: k * 6 });
+  }
+  s.sprites.add(s.userSide, "jitter", 12, { delay: 2 });
+  fx.at(lead, () => {
+    const n = snap(fx, s, false, DRAGON_JAW, true);
+    fx.at(n - 18, () => { // the clamp
+      fx.flashScreen("#f8e070", 2);
+      fx.shake(18, 3, "xy");
+      for (let k = 0; k < 10; k++) {
+        fx.add({ x: s.to.x, y: s.to.y, vx: R(-2.2, 2.2), vy: R(-2.4, -0.2), ay: 0.1, shape: k % 2 ? "petal" : "spark",
+          color: k % 2 ? "#d04890" : "#f8e070", color2: k % 2 ? "#581838" : "#ffffff", color3: "#f8a0d0", max: 22, blink: true });
+      }
+    });
+  });
+  return lead + 46;
 }
 
 function tendrils(fx: Fx, s: MoveStage, dodder: boolean): number {
@@ -1026,6 +1105,7 @@ function volley(fx: Fx, s: MoveStage, kind: string): number {
     hairs: { n: 12, gap: 1, shape: "hair" as const, pal: { a: "#a8b868", b: "#485020", c: "#f0f8d0" }, fly: 10, spread: 16 },
     splinter: { n: 4, gap: 4, shape: "splinter" as const, pal: PAL.wood, fly: 12, spread: 12 },
     ice: { n: 2, gap: 6, shape: "needle" as const, pal: PAL.ice, fly: 9, spread: 6 },
+    rose: { n: 2, gap: 5, shape: "thorn" as const, pal: PAL.rose, fly: 8, spread: 6 },
   }[kind] ?? { n: 3, gap: 4, shape: "thorn" as const, pal: PAL.thorn, fly: 9, spread: 10 };
   for (let i = 0; i < cfg.n; i++) {
     const tx = s.to.x + R(-cfg.spread, cfg.spread), ty = s.to.y + R(-cfg.spread, cfg.spread) * 0.7;
@@ -1035,6 +1115,7 @@ function volley(fx: Fx, s: MoveStage, kind: string): number {
       onEnd: (q) => {
         if (cfg.shape === "hair") { if (i % 3 === 0) fx.add({ x: q.x, y: q.y, shape: "spark", color: "#ffffff", color2: cfg.pal.a, max: 6 }); return; }
         fx.impact({ x: q.x, y: q.y }, "#ffffff", cfg.pal.c, kind === "jab");
+        if (kind === "rose") for (let k = 0; k < 3; k++) fx.add({ x: q.x, y: q.y, vx: R(-1, 1), vy: R(-1.2, -0.2), ay: 0.05, shape: "petal", color: "#f090a8", color2: "#a03850", color3: "#f8e0e8", max: 18, blink: true });
         if (kind === "ice") for (let k = 0; k < 4; k++) fx.add({ x: q.x, y: q.y, vx: R(-1.2, 1.2), vy: R(-1.2, 0.6), ay: 0.06, shape: "shard", color: "#ffffff", color2: PAL.ice.b, max: 12 });
       },
     });
@@ -1045,9 +1126,12 @@ function volley(fx: Fx, s: MoveStage, kind: string): number {
   return total + 12;
 }
 
-function frost(fx: Fx, s: MoveStage, bloom: boolean): number {
+function frost(fx: Fx, s: MoveStage, bloom: boolean, menthol = false): number {
   const N = 46;
-  fx.tintScreen("#c8e8f8", N);
+  // Menthol: the same crystals in cool mint, with a waft of minty air first.
+  const armCol = menthol ? "#98e8c8" : "#a8d8f0", core = menthol ? "#287868" : "#4888b8", shard2 = menthol ? "#68c8a8" : "#88c8e8";
+  fx.tintScreen(menthol ? "#c8f0e0" : "#c8e8f8", N);
+  if (menthol) windLines(fx, 20, dirOf(s), Math.max(0, s.to.y - 30), s.to.y + 20, "#98e8c8", "#c8f8e8");
   const seeds = Array.from({ length: bloom ? 6 : 4 }, (_, i) => ({
     x: s.to.x + R(-16, 16), y: s.to.y + R(-14, 12), len: RI(bloom ? 6 : 4, bloom ? 10 : 7), d: i * 3, rot: R(0, Math.PI / 3),
   }));
@@ -1059,21 +1143,21 @@ function frost(fx: Fx, s: MoveStage, bloom: boolean): number {
       for (let arm = 0; arm < 6; arm++) {
         const a = c.rot + (arm / 6) * Math.PI * 2;
         const ex = c.x + Math.cos(a) * L, ey = c.y + Math.sin(a) * L;
-        line(g, c.x, c.y, ex, ey, arm % 2 ? "#ffffff" : "#a8d8f0");
+        line(g, c.x, c.y, ex, ey, arm % 2 ? "#ffffff" : armCol);
         if (L > 3) {
           const mx = c.x + Math.cos(a) * L * 0.6, my = c.y + Math.sin(a) * L * 0.6;
           px(g, mx + Math.cos(a + 1) * 2, my + Math.sin(a + 1) * 2, "#ffffff");
           px(g, mx + Math.cos(a - 1) * 2, my + Math.sin(a - 1) * 2, "#ffffff");
         }
       }
-      px(g, c.x, c.y, "#4888b8");
+      px(g, c.x, c.y, core);
     }
   });
-  s.sprites.add(targetSide(s), "tint", 20, { color: "#c8f0f8", delay: 10 });
+  s.sprites.add(targetSide(s), "tint", 20, { color: menthol ? "#c8f8e0" : "#c8f0f8", delay: 10 });
   fx.at(28, () => {
     fx.flashScreen("#f0f8ff", 1);
     fx.shake(8, 2);
-    for (const c of seeds) for (let k = 0; k < 4; k++) fx.add({ x: c.x, y: c.y, vx: R(-1.6, 1.6), vy: R(-1.6, 0.8), ay: 0.08, shape: "shard", color: "#ffffff", color2: "#88c8e8", max: 14, blink: true });
+    for (const c of seeds) for (let k = 0; k < 4; k++) fx.add({ x: c.x, y: c.y, vx: R(-1.6, 1.6), vy: R(-1.6, 0.8), ay: 0.08, shape: "shard", color: "#ffffff", color2: shard2, max: 14, blink: true });
     if (bloom) for (let k = 0; k < 6; k++) fx.add({ x: s.to.x, y: s.to.y, shape: "twinkle", color: "#ffffff", color2: "#a8e0f8", max: 10, delay: k * 2, orbit: { cx: s.to.x, cy: s.to.y, r: 4, a: k, va: 0.2, vr: 2 } });
   });
   return N;

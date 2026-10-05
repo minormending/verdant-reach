@@ -15,6 +15,9 @@ const world: WorldData = {
   scripts: {
     sub: [{ op: "setFlag", flag: "called" }],
   },
+  quests: {
+    sap_run: { id: "sap_run", title: "THE SAP RUN", giver: "SYRUP MAKER", area: "sugarbush", steps: [], reward: "$1500" },
+  },
   trainers: {
     hollis: {
       id: "hollis", name: "HOLLIS", className: "WARDEN", portrait: "hollis", team: [], prize: 900,
@@ -29,6 +32,9 @@ const data = {
   items: {
     terrarium_pod: { name: "Terrarium Pod", pocket: "pods" },
     field_herbarium: { name: "Field Herbarium", pocket: "key" },
+    wild_berry: { name: "Wild Berry", pocket: "items" },
+    rose_hip: { name: "Rose Hip", pocket: "items" },
+    compost: { name: "Compost", pocket: "items" },
   },
   moves: { tackle: { pp: 35 } },
 } as unknown as GameData;
@@ -116,6 +122,13 @@ describe("script interpreter", () => {
     const { host, said } = setup({ choices: [-1] });
     await runScript(host, [{ op: "choice", options: ["A", "B"], branches: [[{ op: "say", text: "a" }], [{ op: "say", text: "b" }]] }]);
     expect(said).toEqual(["b"]);
+  });
+
+  it("ifTime honours a map's forced time over the clock", async () => {
+    const { host, said } = setup();
+    host.map = () => ({ ...world.maps.herbarium, time: "day" });
+    await runScript(host, [{ op: "ifTime", time: ["day"], then: [{ op: "say", text: "sun" }], else: [{ op: "say", text: "moon" }] }]);
+    expect(said).toEqual(["sun"]);
   });
 
   it("branches on time of day", async () => {
@@ -272,5 +285,123 @@ describe("script interpreter", () => {
       { op: "say", text: "after" },
     ]);
     expect(said).toEqual(["after"]);
+  });
+});
+
+describe("round-3 script ops", () => {
+  const branch = (text: string): ScriptCmd[] => [{ op: "say", text }];
+
+  it("branches on items in the bag (with a quantity)", async () => {
+    const { host, state, said } = setup();
+    state.bag.syrup_jar = 1;
+    await runScript(host, [
+      { op: "ifHasItem", item: "syrup_jar", then: branch("has"), else: branch("not") },
+      { op: "ifHasItem", item: "syrup_jar", qty: 2, then: branch("two"), else: branch("one") },
+      { op: "ifHasItem", item: "rain_jar", then: branch("rain") },
+    ]);
+    expect(said).toEqual(["has", "one"]);
+  });
+
+  it("branches on the party and on caught species (single id or a list)", async () => {
+    const { host, state, said } = setup();
+    state.party.push(makeQ("sunflower_bud", 12));
+    state.herbarium.caught.push("moonflower_seed", "oak_acorn");
+    await runScript(host, [
+      { op: "ifPartyHas", species: ["sunflower_seedling", "sunflower_bud", "sunflower"], then: branch("sunny"), else: branch("no sun") },
+      { op: "ifPartyHas", species: "oak_acorn", then: branch("oak"), else: branch("no oak") },
+      { op: "ifCaught", species: ["moonflower_seed", "moonflower_vine"], then: branch("moon"), else: branch("no moon") },
+      { op: "ifCaught", species: "pitcher_sprout", then: branch("pitcher"), else: branch("no pitcher") },
+      { op: "ifCaughtCount", atLeast: 2, then: branch(">=2"), else: branch("<2") },
+      { op: "ifCaughtCount", atLeast: 3, then: branch(">=3"), else: branch("<3") },
+    ]);
+    expect(said).toEqual(["sunny", "no oak", "moon", "no pitcher", ">=2", "<3"]);
+  });
+
+  it("counts each caught species once", async () => {
+    const { host, state, said } = setup();
+    state.herbarium.caught.push("oak_acorn", "oak_acorn");
+    await runScript(host, [{ op: "ifCaughtCount", atLeast: 2, then: branch("yes"), else: branch("no") }]);
+    expect(said).toEqual(["no"]);
+  });
+
+  it("harvests once per real-world day and regrows the next day", async () => {
+    const { host, state, said, jingles } = setup();
+    let now = new Date(2026, 9, 5, 23, 50);
+    host.now = () => now;
+    const fx: string[] = [];
+    host.harvestFx = async (id) => { fx.push(id); };
+    const pick: ScriptCmd[] = [{ op: "harvest", id: "hedgerow_1", item: "wild_berry", qty: 2 }];
+    await runScript(host, pick);
+    expect(state.bag.wild_berry).toBe(2);
+    expect(state.harvested).toEqual({ hedgerow_1: "2026-10-05" });
+    expect(said).toEqual(["ROWAN picked 2 WILD BERRIES!", "ROWAN put the WILD BERRIES in the ITEMS POCKET."]);
+    expect(jingles).toEqual(["item_get"]);
+    expect(fx).toEqual(["hedgerow_1"]);
+
+    said.length = 0;
+    await runScript(host, pick);
+    expect(state.bag.wild_berry).toBe(2);
+    expect(said[0]).toMatch(/tomorrow/);
+    expect(fx).toHaveLength(1);
+
+    // A different bush is independent; after midnight the first regrows.
+    await runScript(host, [{ op: "harvest", id: "rose_1", item: "rose_hip" }]);
+    expect(state.bag.rose_hip).toBe(1);
+    now = new Date(2026, 9, 6, 0, 5);
+    said.length = 0;
+    await runScript(host, pick);
+    expect(state.bag.wild_berry).toBe(4);
+    expect(said[0]).toBe("ROWAN picked 2 WILD BERRIES!");
+  });
+
+  it("starts and completes quests with flags, toasts and the quest jingle", async () => {
+    const { host, state, jingles, ctx } = setup();
+    const toasts: string[] = [];
+    host.toast = (kind, title) => toasts.push(`${kind}:${title}`);
+    await runScript(host, [{ op: "startQuest", quest: "sap_run" }, { op: "startQuest", quest: "sap_run" }]);
+    expect(state.flags.quest_sap_run_started).toBe(true);
+    expect(toasts).toEqual(["new_note:THE SAP RUN"]);
+    expect(ctx.audio.playSfx).toHaveBeenCalledWith("menu_open");
+    await runScript(host, [{ op: "completeQuest", quest: "sap_run" }, { op: "completeQuest", quest: "sap_run" }]);
+    expect(state.flags.quest_sap_run_done).toBe(true);
+    expect(jingles).toEqual(["quest"]);
+    expect(toasts).toEqual(["new_note:THE SAP RUN", "note_done:THE SAP RUN"]);
+    // Starting a finished quest does nothing; unknown quests still get a readable title.
+    await runScript(host, [{ op: "startQuest", quest: "sap_run" }, { op: "startQuest", quest: "lost_cat" }]);
+    expect(toasts[2]).toBe("new_note:LOST CAT");
+  });
+
+  it("completing a quest that was never started marks both flags", async () => {
+    const { host, state } = setup();
+    await runScript(host, [{ op: "completeQuest", quest: "moonwatch" }]);
+    expect(state.flags.quest_moonwatch_started).toBe(true);
+    expect(state.flags.quest_moonwatch_done).toBe(true);
+  });
+
+  it("passes stills to the host, and skips them on hosts without stills", async () => {
+    const { host, said } = setup();
+    await runScript(host, [{ op: "still", image: "bloom" }, { op: "stillClear" }, { op: "say", text: "ok" }]);
+    expect(said).toEqual(["ok"]);
+    const log: string[] = [];
+    host.still = async (k) => { log.push(`still ${k}`); };
+    host.stillClear = async () => { log.push("clear"); };
+    await runScript(host, [{ op: "still", image: "theft" }, { op: "say", text: "over it" }, { op: "stillClear" }]);
+    expect(log).toEqual(["still theft", "clear"]);
+  });
+
+  it("finds marks awarded inside the new branching ops", () => {
+    const s: Record<string, ScriptCmd[]> = {
+      a: [{ op: "ifCaughtCount", atLeast: 1, then: [], else: [{ op: "giveMark", mark: "sundew_mark" }] }],
+    };
+    expect(scriptsAwardMark(s, "sundew_mark")).toBe(true);
+    expect(scriptsAwardMark(s, "bramble_mark")).toBe(false);
+  });
+
+  it("gives items with natural plurals", async () => {
+    const { host, said } = setup();
+    await runScript(host, [{ op: "giveItem", item: "compost", qty: 3 }, { op: "giveItem", item: "wild_berry", qty: 5 }]);
+    expect(said[0]).toBe("ROWAN received COMPOST ×3!");
+    expect(said[1]).toBe("ROWAN put the COMPOST in the ITEMS POCKET.");
+    expect(said[2]).toBe("ROWAN received 5 WILD BERRIES!");
   });
 });

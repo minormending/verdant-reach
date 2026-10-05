@@ -1,336 +1,402 @@
 """Pumpkin line: pumpkin_blossom -> green_pumpkin -> pumpkin.
 
-Signature: the ribbed gourd (a bud-sized one under the blossom, a green one,
-the full orange one) and a vine tendril that grows from a flick into a big
-coiled crown. Palettes share the warm orange (blossom/pumpkin) and the line
-is tied by the gourd + curl shapes.
+Drawn with the field-lines kit (tools/art/species_a/px.py + fieldkit.py)
+so it matches the dandelion, bramble and sunflower lines; build.py in this
+folder still collects it (SPRITES below adapts the images to its API).
+
+Shape motif: the RIBBED GOURD (the blossom's ovary, the green gourd, the
+great orange one) under a stem that curls forward like a HORN, with a
+coiled tendril for a tail. Accent: the pale gold in slot 3 (the flower's
+throat, the green gourd's stripes, the pumpkin's glint). Lobed leaves are
+the arms; the pumpkin's have withered to rust in the autumn field.
+
+Poses and rubric scores (CREATURES.md §9):
+  pumpkin_blossom  BRACED  score 8 (8: fill at the low end of the baby class)
+  green_pumpkin    BRACED  score 9
+  pumpkin          BRACED  score 9
 """
 
 from __future__ import annotations
 
-import math
+import sys
+from pathlib import Path
 
-from pix import Sprite, bez, erode, rot
+import numpy as np
 
-PAL_BLOSSOM = ("#c85010", "#f8b828", "#f8f0a8")
-PAL_GREEN = ("#306830", "#98c840", "#e0f0a8")
-PAL_PUMPKIN = ("#b03810", "#f88820", "#f8e0a0")
+sys.path.append(str(Path(__file__).resolve().parents[1] / "species_a"))
+from px import Sprite, bezier, spline, star  # noqa: E402
+import fieldkit as fk  # noqa: E402
 
+IDS = ["pumpkin_blossom", "green_pumpkin", "pumpkin"]
 
-def gourd(s, cx, cy, w, h, lobes=5, base=2, k=2, rib=1, hl=True, deep=0, tilt=0.0):
-    """Ribbed gourd from overlapping lobes, back lobes first. Returns part ids."""
-    ids = []
-    # lobe centres across the width; outer lobes narrower and lower in z
-    n = lobes
-    order = sorted(range(n), key=lambda i: -abs(i - (n - 1) / 2))
-    for i in order:
-        f = (i - (n - 1) / 2) / ((n - 1) / 2)   # -1..1
-        lx = cx + f * (w / 2 - w / (2 * n) * 1.15)
-        rx = w / n * (0.80 if abs(f) > 0.9 else 0.72) * 1.05
-        ry = h / 2 * (1 - 0.16 * abs(f) ** 2)
-        ly = cy + abs(f) * h * 0.06 + f * tilt
-        m = s.ellipse(lx, ly, rx, ry)
-        hlm = None
-        if hl and i == (n - 1) // 2 - (1 if n > 3 else 0):
-            hlm = s.ellipse(lx - rx * 0.30, ly - ry * 0.42, max(1.0, rx * 0.22), ry * 0.26)
-        ids.append(s.part(m, base=base, k=k, hl=hlm, line=rib, deep=deep))
-    return ids
+# all channels multiples of 8 (the pix icon loader does not snap)
+BLOSSOM = ["#386028", "#f09820", "#f8e070"]        # leaf green (leaf, sepal, ovary, vein), orange, pale gold
+GREEN = ["#285030", "#70a838", "#d8e888"]          # blue-green, gourd green, pale gold stripe
+PUMPKIN = ["#883018", "#f08020", "#f8d070"]        # rust (rib, stem, withered leaf), orange, gold
 
 
-def gourd3d(s, cx, cy, R, sq=0.8, n=8, elev=0.5, spin=0.0, base=2, k=2, deep=0, rib=0,
-            hl=True, pinch=0.0, extra=3, stripe=None):
-    """A ribbed gourd as a real (oblate) sphere cut into n longitude lobes,
-    viewed from `elev` radians above, orthographic. Lobes paint far-to-near so
-    the near ones cover; each draws its rib line on the lobe behind it.
-    Lobes on the right (away from the light) get a wider shadow band.
-    Returns (ids, pole_xy)."""
-    ce, se = math.cos(elev), math.sin(elev)
-
-    def P(th, ph):
-        r = 1.0 - pinch * (1 - math.cos(ph)) * 0.0
-        x = math.cos(ph) * math.sin(th) * r
-        y = math.sin(ph) * sq
-        z = math.cos(ph) * math.cos(th) * r
-        y2 = y * ce - z * se
-        z2 = y * se + z * ce
-        return (cx + R * x, cy - R * y2), z2
-
-    bands = []
+def gourd(s, c, cx, cy, w, h, n=5, tilt=0.0, tones=(1, 2, 3), glint=True, ribline="black"):
+    """Ribbed gourd as one round mass (an oblate sphere seen 3/4) with
+    scalloped flanks; returns a `ribs` closure that paints the rib grooves
+    and the per-lobe light after render. `tilt` (deg) rolls it to the foe."""
+    rx, ry = w / 2, h / 2
+    m = c.ellipse(cx, cy, rx, ry, tilt)
+    # scallops: each lobe bulges a little past the silhouette
     for i in range(n):
-        t0 = spin + 2 * math.pi * i / n
-        t1 = spin + 2 * math.pi * (i + 1) / n
-        tm = (t0 + t1) / 2
-        phs = [(-math.pi / 2 + math.pi * j / 40) for j in range(41)]
-        e0 = [P(t0, ph)[0] for ph in phs]
-        e1 = [P(t1, ph)[0] for ph in phs]
-        depth = math.cos(tm)
-        xm = math.sin(tm)
-        bands.append((depth, e0 + e1[::-1], xm, i))
-    bands.sort()
-    ids = []
-    for depth, poly, xm, i in bands:
-        m = s.poly(poly)
-        if depth < -0.2:
-            ids.append(s.part(m, base=base - 1, k=0, line=rib))
-            continue
-        kk = k + max(0, round(extra * xm))
-        hm = None
-        if hl and -0.75 < xm < -0.2 and depth > 0:
-            (hx, hy), _ = P((-0.7), 0.45 if elev < 0.3 else 0.75)
-            hm = s.ellipse(hx, hy, 1.3, 3.6 if elev < 0.3 else 2.4, ang=0.15)
-            hl = False
-        pid = s.part(m, base=base, k=kk, deep=deep, hl=hm, line=rib, shadow=(1, 0.35))
-        ids.append(pid)
-        if stripe is not None and depth > 0.2:
-            tm = (spin + 2 * math.pi * (i + 0.5) / n)
-            pts = [P(tm, -math.pi / 2 * 0.7 + math.pi * 0.75 * j / 30)[0] for j in range(31)]
-            s.decal(s.line1(pts) & erode(m, 2), stripe, on=[pid])
-    pole, _ = P(0, math.pi / 2)
-    return ids, pole
+        th = -np.pi / 2 + np.pi * (i + 0.5) / n
+        x = cx + rx * np.sin(th) * 0.96
+        for yy in (-1, 1):
+            m |= c.ellipse(x, cy + yy * ry * 0.02, rx / n * 1.05, ry * (0.97 - 0.10 * abs(np.sin(th))), tilt)
+    # stem dimple
+    m &= ~c.ellipse(cx - rx * 0.12, cy - ry - 0.2, rx * 0.22, 1.4)
+    part = s.add(m, tones=tones, shade=(3, 2), close=2, band=(1, 2, (c.X < cx) & (c.Y < cy - ry * 0.25)),
+                 line=ribline)
+
+    def ribs(groove=1, lit=3, over=None):
+        ca, sa = np.cos(np.radians(tilt)), np.sin(np.radians(tilt))
+        for i in range(1, n):
+            th = -np.pi / 2 + np.pi * i / n
+            for yy in np.arange(-ry + 1.5, ry - 1.0, 0.25):
+                f = np.sqrt(max(0.0, 1 - (yy / ry) ** 2))
+                u = rx * np.sin(th) * f
+                x, y = fk.mi(s, cx + u * ca - yy * sa, cy + u * sa + yy * ca)
+                ov = over or ((1, 2, 3) if groove == 0 else (2, 3))
+                if 0 <= x < s.w and 0 <= y < s.h and s.t[y, x] in ov:
+                    s.px([(x, y)], groove)
+                    # the lobe to the right of a groove catches light on its left edge (left half only)
+                    if th < -0.15 and abs(yy) < ry * 0.55 and x + 1 < s.w and s.t[y, x + 1] in (1, 2) and groove != 0:
+                        s.px([(x + 1, y)], lit)
+    return ribs
 
 
-def tendril(s, pts, tone=0):
-    m = s.line1(bez(pts, 40))
-    s.ink(m, tone)
+def lobed(c, p0, ang, L, w, lobes=3, spread=46):
+    """Palmate pumpkin leaf: broad rounded lobes fanned from the petiole."""
+    m = c.empty()
+    k = (lobes - 1) / 2
+    for j in range(lobes):
+        da = (j - k) * spread
+        a = np.radians(ang + da)
+        l = L * (1 - 0.18 * abs(j - k))
+        p1 = (p0[0] + np.cos(a) * l, p0[1] + np.sin(a) * l)
+        m |= c.leaf(p0, p1, w * 0.68 * (1 - 0.1 * abs(j - k)), power=0.6, tip=1.6, base=0.8)
     return m
 
 
-def curl(cx, cy, r0, turns, a0=0.0, sq=1.0, n=120, r1=0.6, cw=True):
+def coil(cx, cy, r0, turns, a0=0.0, r1=0.8, cw=True, sq=1.0, n=60):
     out = []
     for i in range(n):
         t = i / (n - 1)
         r = r0 + (r1 - r0) * t
-        a = a0 + (1 if cw else -1) * turns * 2 * math.pi * t
-        out.append((cx + r * math.cos(a), cy + r * math.sin(a) * sq))
+        a = a0 + (1 if cw else -1) * turns * 2 * np.pi * t
+        out.append((cx + r * np.cos(a), cy + r * np.sin(a) * sq))
     return out
 
 
-# ---------------------------------------------------------------------------
-# pumpkin_blossom: a golden star flower riding a bud-sized gourd
-# ---------------------------------------------------------------------------
+def tendril(s, c, lead, cx, cy, r0, turns, a0, w=2.0, cw=True, tones=(1, 1, 1)):
+    path = list(lead) + coil(cx, cy, r0, turns, a0, cw=cw)
+    s.add(c.stroke(path, w, w * 0.8), tones=tones, flat=True, prune=False)
 
-def blossom_star(s, cx, cy, R, r, squash=0.82, ang=-0.25):
+
+def vein_line(s, pts, tone, over):
+    for x, y in bezier(pts, 40):
+        x, y = int(x), int(y)
+        if 0 <= x < s.w and 0 <= y < s.h and s.t[y, x] in over:
+            s.px([(x, y)], tone)
+
+
+# --------------------------------------------------------------------------- fronts
+
+def stub_feet(s, c, xs, y=55.6, w=5.0, tones=(1, 1, 1)):
+    m = c.empty()
+    for x0, x1 in xs:
+        m |= c.leaf((x0, y - 2.5), (x1, y), w, power=0.6)
+    s.add(m, tones=tones, flat=True)
+
+
+def rim_star(c, cx, cy, rx, ry, ang, n=5, tip=1.45, rot=0.0):
+    """A star of n points laid round a rotated ellipse (a flared corolla rim)."""
     pts = []
-    for i in range(10):
-        a = -math.pi / 2 + i * math.pi / 5
-        rr = R if i % 2 == 0 else r
-        # petal tips slightly flared (two points per tip)
-        if i % 2 == 0:
-            for da in (-0.07, 0.07):
-                pts.append((cx + rr * math.cos(a + da), cy + rr * math.sin(a + da) * squash))
-        else:
-            pts.append((cx + rr * math.cos(a), cy + rr * math.sin(a) * squash))
-    return rot(pts, ang, cx, cy)
+    ca, sa = np.cos(np.radians(ang)), np.sin(np.radians(ang))
+    for i in range(2 * n):
+        t = np.radians(rot) + np.pi * i / n
+        r = tip if i % 2 == 0 else 1.0
+        u, v = np.cos(t) * rx * r, np.sin(t) * ry * r
+        pts.append((cx + u * ca - v * sa, cy + u * sa + v * ca))
+    return c.poly(pts)
 
 
-def star_pts(cx, cy, R, r, squash, ang):
-    tips, vals = [], []
-    for i in range(5):
-        a = -math.pi / 2 + i * 2 * math.pi / 5
-        tips.append((cx + R * math.cos(a), cy + R * math.sin(a) * squash))
-        b = a + math.pi / 5
-        vals.append((cx + r * math.cos(b), cy + r * math.sin(b) * squash))
-    return rot(tips, ang, cx, cy), rot(vals, ang, cx, cy)
+def blossom_front(fr=0):
+    """BRACED. A golden bell of a flower flaring at the foe like a war-horn,
+    riding the tiny striped gourd it will become; a leaf raised in guard, a
+    tendril curling off behind."""
+    b = fr
+    s = Sprite(56, 56, BLOSSOM)
+    c = s.c
+    stub_feet(s, c, [(28, 20), (34, 43)])
+    fk.pose(s, 0.88, 4 + 2.0 * b, 31, 55)
+    b = 0
+    tendril(s, c, [(38, 45), (43, 41)], 46, 36, 4.0, 1.25, np.radians(110), w=2.0)
+    s.add(lobed(c, (37, 43), -55, 10, 8), tones=(1, 1, 1), flat=True)
+    ribs = gourd(s, c, 31, 48, 19, 13, n=5, tilt=-8, tones=(1, 1, 3))
+    s.add(star(c, 28, 41, 5, 1.6, 5.5, sx=1.2, sy=0.6, rot=-110), tones=(1, 1, 1), flat=True)
+    mx, my, ang = 15, 22, 22
+    tube = c.curve([(28, 41), (24, 35), (19, 28 + b)], 4.0, 10.0)
+    s.add(tube, tones=(2, 2, 3), flat=True, line="black")
+    s.add(rim_star(c, mx, my, 8.0, 12.5, ang, tip=1.55, rot=-90), tones=(2, 2, 3), flat=True, line="black")
+    s.add(rim_star(c, mx - 0.5, my, 4.4, 7.0, ang, tip=1.5, rot=-90), tones=(3, 3, 3), flat=True, line="dark")
+    s.add(lobed(c, (25, 47), 215, 10, 8), tones=(1, 1, 3), flat=True)
+    s.render()
+    # lit plane: gold along the tube's top-left; throat shade at the heart
+    for x, y in bezier([(19, 29), (22, 33), (25, 37)], 30):
+        s.paint(c.circle(x - 1.6, y - 1.6, 1.2) & (s.t == 2), 3)
+    s.paint(c.ellipse(mx + 1.5, my + 2.0, 1.3, 3.4, -40) & (s.t == 3), 2)
+    gx_, gy_ = fk.mi(s, mx - 5, my - 8)
+    s.px([(gx_, gy_), (gx_ + 1, gy_), (gx_, gy_ + 1)], 3)
+    ribs(groove=3, lit=3, over=(1,))
+    vein_line(s, [fk.m(s, *p) for p in ((24, 47), (18, 45), (15, 44))], 3, (1,))
+    fk.contact(s, 22, 40)
+    s.clean()
+    return fk.finish(s)
 
 
-def flower(s, cx, cy, R, r, squash, ang, hl_xy, throat=True):
-    poly = blossom_star(s, cx, cy, R, r, squash, ang)
-    star = s.poly(poly)
-    fid = s.part(star, base=2, k=2, hl=None, line=0)
-    tips, vals = star_pts(cx, cy, R, r, squash, ang)
-    # pleats: the clockwise half of each petal away from the light sits in shade
-    for i in range(5):
-        tx, ty = tips[i]
-        if (tx - cx) + (ty - cy) < -R * 0.5:
-            continue
-        tri = s.poly([(cx, cy), tips[i], vals[i]])
-        s.decal(tri & ~s.ellipse(cx, cy, r * 0.45, r * 0.45 * squash), 1, on=[fid])
-    # one highlight streak along the upper-left petal's lit half
-    hx, hy, hr = hl_xy
-    s.decal(s.ellipse(hx, hy, 1.2, hr, ang=-0.9), 3, on=[fid])
-    if throat:
-        s.decal(s.ellipse(cx + 0.3, cy + 0.3, r * 0.48, r * 0.42), 1, on=[fid])
-        st = s.ellipse(cx - 0.2, cy - 0.4, 2.0, 2.0)
-        s.part(st, base=2, k=1, hl=s.ellipse(cx - 0.9, cy - 1.1, 0.7, 0.7), line=0)
-    return fid
+def green_front(fr=0):
+    """BRACED. A striped green gourd hunkered on stub feet, rolled toward the
+    foe; its stem a hooked horn; a broad leaf raised off its near flank like a
+    shield; a tendril tail."""
+    b = fr
+    s = Sprite(56, 56, GREEN)
+    c = s.c
+    stub_feet(s, c, [(22, 14), (36, 45)], w=6)
+    tendril(s, c, [(43, 38), (46, 33)], 48, 27 - b, 4.0, 1.25, np.radians(120), w=2.2)
+    s.add(c.curve([(39, 30), (43, 24)], 3.0, 2.6), tones=(1, 1, 1), flat=True)
+    s.add(lobed(c, (43, 24), -60, 11, 9), tones=(1, 2, 2), shade=(2, 2), close=1)
+    gx, gy = 30, 41
+    ribs = gourd(s, c, gx, gy + b * 0.5, 34, 25 - b, n=5, tilt=-8, tones=(1, 2, 3))
+    stem = c.curve([(27, 30), (24, 23), (20, 18 + b), (15, 16 + b)], 5.5, 3.2)
+    s.add(stem, tones=(1, 1, 2), shade=(1, 1), line="black")
+    s.add(c.curve([(16, 39), (10, 34), (8, 28)], 3.2, 2.8), tones=(1, 1, 1), flat=True)
+    s.add(lobed(c, (8, 29), 255, 15, 12), tones=(1, 2, 3), shade=(2, 2), close=1, band=(1, 2))
+    s.render()
+    ribs(groove=1, lit=3)
+    vein_line(s, [(8, 29), (6, 22), (5, 16)], 1, (2, 3))
+    fk.contact(s, 16, 44)
+    s.clean()
+    return fk.finish(s)
 
 
-def front_blossom():
-    s = Sprite(64, 64, PAL_BLOSSOM, sc=0.84)
-    # tendril flick behind the bud
-    ids, (px, py) = gourd3d(s, 31, 51, 11, sq=0.8, n=6, elev=0.3, spin=math.pi / 6, base=1, k=0, rib=0, extra=0)
-    # tendril springing off the calyx, curling out to the left
-    c = curl(14, 43, 4.0, 0.95, a0=-0.3, r1=1.2, cw=False)
-    s.part(s.stroke(bez([(27, py), (20, py + 1), c[0]], 16) + c[1:], (2.2, 1.5)), base=1, k=0, line=0)
-    # calyx where flower meets bud
-    s.part(s.poly([(25, py + 1), (28, py - 4), (31, py - 1), (34, py - 4), (37, py + 1), (31, py + 3)]), base=1, k=0, line=0)
-    flower(s, 30, 27, 20, 9.5, 0.84, -0.25, (21, 20, 3.0))
-    return s
+def pumpkin_front(fr=0):
+    """BRACED (heavy). A great ribbed pumpkin squatting wide on stub feet,
+    rolled toward the foe; its thick stem a horn hooked at the foe; withered
+    vines as arms, the near one raised with a leaf-hand; a coiled tendril tail."""
+    b = fr
+    s = Sprite(56, 56, PUMPKIN)
+    c = s.c
+    stub_feet(s, c, [(20, 11), (40, 50)], w=7)
+    tendril(s, c, [(50, 36), (53, 31)], 51, 25 - b, 4.0, 1.25, np.radians(120), w=2.4)
+    s.add(c.curve([(44, 26), (49, 19)], 3.4, 3.0), tones=(1, 1, 1), flat=True)
+    s.add(lobed(c, (49, 19), -70, 11, 9), tones=(1, 1, 2), shade=(1, 1), close=1)
+    gx, gy = 31, 37
+    ribs = gourd(s, c, gx, gy + b * 0.5, 44, 32 - b, n=7, tilt=-7, tones=(1, 2, 3))
+    stem = c.curve([(27, 23), (25, 15), (20, 9 + b), (13, 7 + b)], 8.0, 4.0)
+    s.add(stem, tones=(1, 1, 2), shade=(2, 1), band=(1, 2), line="black")
+    s.add(c.curve([(13, 36), (7, 31), (5, 24)], 3.6, 3.0), tones=(1, 1, 1), flat=True)
+    s.add(lobed(c, (5, 25), 262, 14, 12), tones=(1, 1, 2), shade=(1, 1), close=1, band=(1, 2))
+    s.render()
+    ribs(groove=1, lit=3)
+    vein_line(s, [(5, 25), (4, 18), (4, 13)], 2, (1,))
+    fk.contact(s, 14, 46)
+    s.clean()
+    return fk.finish(s)
 
 
-def back_blossom():
-    s = Sprite(48, 72, PAL_BLOSSOM)
-    ids, (px, py) = gourd3d(s, 24, 62, 17, sq=0.8, n=8, elev=0.75, spin=math.pi / 8, base=1, k=0, rib=0, extra=0)
-    # the flower from behind: green-gold backs of the petals, calyx at the centre
-    cx, cy = 24, 36
-    poly = blossom_star(s, cx, cy, 23, 11, squash=0.6, ang=0.25)
-    fid = s.part(s.poly(poly), base=2, k=2, line=0)
-    tips, vals = star_pts(cx, cy, 23, 11, 0.6, 0.25)
-    for i in range(5):
-        tri = s.poly([(cx, cy), tips[i], vals[i]])
-        s.decal(tri, 1, on=[fid])
-    s.decal(s.ellipse(cx - 12, cy - 5, 1.2, 3.0, ang=-1.2), 3, on=[fid])
-    s.part(s.poly([(cx - 6, cy + 1), (cx - 3, cy - 3), (cx, cy), (cx + 3, cy - 3), (cx + 6, cy + 1), (cx, cy + 4)]), base=1, k=0, line=0)
-    return s
+# --------------------------------------------------------------------------- backs
+
+def blossom_back():
+    """From behind: the trumpet's ribbed back and green sepals, flaring to
+    the top right; the little gourd below, a leaf raised beside it."""
+    s = Sprite(48, 48, BLOSSOM, crop_bottom=True)
+    c = s.c
+    fk.zoom(s, 1.3, 26, 14)
+    s.add(lobed(c, (14, 38), 210, 14, 11), tones=(1, 1, 1), flat=True)
+    ribs = gourd(s, c, 22, 44, 26, 18, n=5, tilt=6, tones=(1, 1, 3))
+    tube = c.curve([(23, 36), (27, 28), (31, 21)], 6.0, 11.0)
+    s.add(tube, tones=(2, 2, 3), shade=(2, 2), band=(1, 2), line="black")
+    mouth = star(c, 33, 15, 5, 8.0, 15.0, sx=1.0, sy=0.8, rot=-60)
+    s.add(mouth, tones=(2, 2, 3), shade=(3, 3), close=1, band=(1, 3), line="black")
+    s.add(star(c, 23, 36, 5, 1.6, 6.0, sx=1.2, sy=0.6, rot=-80), tones=(1, 1, 1), flat=True)
+    s.add(lobed(c, (32, 38), -20, 14, 11), tones=(1, 1, 3), flat=True)
+    s.render()
+    ribs(groove=3, lit=3, over=(1,))
+    for k in range(5):
+        a = np.radians(-60 + 72 * k)
+        vein_line(s, [fk.m(s, 33, 15), fk.m(s, 33 + np.cos(a) * 12, 15 + np.sin(a) * 9.6)], 1, (3,))
+    s.clean()
+    return fk.finish(s)
 
 
-ICON_BLOSSOM = [
-    "                ",
-    "      k  k      ",
-    "  kkkk2kk2kkkk  ",
-    "  k3322k22222k  ",
-    "   k3221122kk   ",
-    "  kk2211112kk   ",
-    " k22221112222k  ",
-    " k2222k2k2221k  ",
-    "  kk22kkk21kk   ",
-    "    kk1k1kk     ",
-    "    k11111k  k  ",
-    "   k1211111k1k  ",
-    "   k12111111k   ",
-    "   k11111111k   ",
-    "    kk1111kk    ",
-    "      kkkk      ",
-]
+def green_back():
+    """The gourd from behind and above: its stem-end crown with the curled
+    horn toward the top right, stripes running to us, leaf up on the right."""
+    s = Sprite(48, 48, GREEN, crop_bottom=True)
+    c = s.c
+    fk.zoom(s, 1.05, 24, 34)
+    s.add(lobed(c, (12, 26), 215, 14, 11), tones=(1, 2, 2), shade=(2, 2), close=1)
+    ribs = gourd(s, c, 23, 34, 46, 34, n=5, tilt=6, tones=(1, 2, 3))
+    s.add(c.ellipse(24, 20, 5.5, 3.0), tones=(1, 1, 1), flat=True)
+    stem = c.curve([(25, 21), (29, 13), (35, 9), (38, 12)], 5.0, 3.0)
+    s.add(stem, tones=(1, 1, 2), shade=(1, 1))
+    s.add(lobed(c, (36, 26), -30, 14, 12), tones=(1, 2, 3), shade=(2, 2), close=1, band=(1, 2))
+    s.render()
+    ribs(groove=1, lit=3)
+    s.clean()
+    return fk.finish(s)
 
 
-# ---------------------------------------------------------------------------
-# green_pumpkin: a striped green gourd under a curling vine and leaf
-# ---------------------------------------------------------------------------
-
-def pumpkin_leaf(s, cx, cy, size, ang=0.0):
-    """Five-lobed, rounded pumpkin leaf (a soft maple shape)."""
-    pts = []
-    for i in range(60):
-        a = i / 60 * 2 * math.pi
-        lob = 0.78 + 0.22 * abs(math.cos(2.5 * (a + math.pi / 2)))
-        r = size * lob
-        if math.sin(a) > 0.75:   # notch at the stem
-            r *= 0.75
-        pts.append((cx + r * math.cos(a), cy + r * math.sin(a) * 0.8))
-    return s.poly(rot(pts, ang, cx, cy))
+def crown_ribs(s, cx, top, bottom, rx, n, groove=1, lit=3, bulge=1.12):
+    """Ribs seen from above: curves from the stem crown out over the
+    shoulder and down to the cropped bottom edge."""
+    for i in range(1, n):
+        th = -np.pi / 2 + np.pi * i / n
+        ex = cx + rx * np.sin(th)
+        ctrl = [(cx + 1.0 * np.sin(th) * 3, top), (cx + rx * np.sin(th) * bulge, (top + bottom) / 2 - 2), (ex, bottom)]
+        for x, y in bezier(ctrl, 60):
+            x, y = int(round(x)), int(round(y))
+            if 0 <= x < s.w and 0 <= y < s.h and s.t[y, x] in (2, 3):
+                s.px([(x, y)], groove)
+                if th < -0.2 and x + 1 < s.w and s.t[y, x + 1] == 2 and y > top + 3:
+                    s.px([(x + 1, y)], lit)
 
 
-def front_green():
-    s = Sprite(64, 64, PAL_GREEN, sc=0.86)
-    # leaf behind, top right, on its own stalk from the stem
-    s.part(s.curve([(32, 30), (37, 27), (41, 26)], (2.4, 2.0)), base=1, k=0, line=0)
-    leaf = pumpkin_leaf(s, 45, 21, 11, ang=0.35)
-    lid = s.part(leaf, base=2, k=2, hl=s.ellipse(40, 16, 2, 1.4, ang=-0.5), line=0)
-    for p1 in [(37, 16), (46, 12), (53, 20), (50, 29)]:
-        s.decal(s.line1(bez([(43, 25), p1], 20)), 1, on=[lid])
-    ids, (px, py) = gourd3d(s, 31, 44, 21, sq=0.8, n=10, elev=0.28, spin=math.pi / 10, k=2, rib=1, stripe=3)
-    # stem: thick, leaning left, cut top
-    stem = s.curve([(px, py + 2), (px - 1, py - 4), (px - 5, py - 9), (px - 10, py - 10)], (6, 4.2))
-    sid = s.part(stem, base=1, k=0, line=0, hl=s.ellipse(px - 2.5, py - 3, 0.8, 2.2, ang=0.4))
-    s.part(s.ellipse(px - 10.5, py - 10.5, 2.2, 2.6), base=2, k=1, line=0, merge=[sid])
-    # the vine curl, springing up off the stem
-    c = curl(px - 6, py - 17, 4.0, 0.9, a0=0.1, r1=1.4, cw=False)
-    vine = bez([(px - 3, py - 7), (px - 2, py - 11), c[0]], 16) + c[1:]
-    s.part(s.stroke(vine, (2.6, 1.6)), base=1, k=0, line=0)
-    return s
+def pumpkin_back():
+    """The great pumpkin from behind and above: its broad shoulders and the
+    ribs fanning out from the stem crown, the thick stem hooked toward the
+    foe (top right), a vine arm raised on each side."""
+    s = Sprite(48, 48, PUMPKIN, crop_bottom=True)
+    c = s.c
+    s.add(c.curve([(10, 30), (5, 22), (6, 15)], 3.4, 3.0), tones=(1, 1, 1), flat=True)
+    s.add(lobed(c, (6, 16), 250, 12, 11), tones=(1, 1, 2), shade=(1, 1), close=1, band=(1, 2))
+    s.add(c.curve([(38, 26), (43, 19), (44, 13)], 3.4, 3.0), tones=(1, 1, 1), flat=True)
+    s.add(lobed(c, (44, 14), -75, 11, 10), tones=(1, 1, 2), shade=(1, 1), close=1)
+    body = c.ellipse(24, 38, 23.5, 22) | c.ellipse(24, 46, 24.5, 18)
+    s.add(body, tones=(1, 2, 3), shade=(4, 3), close=2, band=(1, 3, (c.X < 22) & (c.Y < 32)), line="black")
+    s.add(c.ellipse(25, 20, 5.0, 2.6), tones=(1, 1, 1), flat=True)
+    stem = c.curve([(25, 21), (28, 13), (33, 8), (38, 6)], 7.5, 3.8)
+    s.add(stem, tones=(1, 1, 2), shade=(2, 1), band=(1, 2))
+    s.render()
+    crown_ribs(s, 25, 21, 48, 24, 7)
+    s.px([(12, 28), (13, 27), (12, 27)], 3)
+    s.clean()
+    return fk.finish(s)
 
 
-def back_green():
-    s = Sprite(48, 72, PAL_GREEN)
-    leaf = pumpkin_leaf(s, 36, 24, 10, ang=-0.3)
-    lid = s.part(leaf, base=2, k=2, line=0, hl=s.ellipse(32, 20, 2, 1.3))
-    for p1 in [(29, 19), (37, 15), (44, 23), (41, 30)]:
-        s.decal(s.line1(bez([(35, 28), p1], 20)), 1, on=[lid])
-    ids, (px, py) = gourd3d(s, 24, 50, 23.5, sq=0.85, n=10, elev=0.75, spin=math.pi / 10, k=2, rib=1, stripe=3)
-    # leaf stalk running from the stem over the shoulder
-    s.part(s.curve([(px + 1, py - 2), (px + 6, py - 6), (px + 10, py - 8)], (2.6, 2.2)), base=1, k=0, line=0)
-    stem = s.curve([(px, py + 1), (px - 1, py - 4), (px - 5, py - 7)], (6, 4.5))
-    sid = s.part(stem, base=1, k=0, line=0)
-    s.part(s.ellipse(px - 5.5, py - 7.5, 2.4, 2.4), base=2, k=1, line=0, merge=[sid])
-    vine = curl(px - 13, py - 9, 5.5, 0.8, a0=0.2, r1=2.2)
-    s.part(s.stroke(vine, (2.8, 1.8)), base=1, k=0, line=0)
-    return s
+# --------------------------------------------------------------------------- build glue
+
+def make(id_):
+    f, b, pal = {
+        "pumpkin_blossom": (blossom_front, blossom_back, BLOSSOM),
+        "green_pumpkin": (green_front, green_back, GREEN),
+        "pumpkin": (pumpkin_front, pumpkin_back, PUMPKIN),
+    }[id_]
+    fr = fk.register([f(0), f(1)])
+    i1, i2 = fk.hand_icon(_HAND[id_], pal)
+    return {"front": fr[0], "front__2": fr[1], "back": b(), "icon": i1, "icon__2": i2}
 
 
-ICON_GREEN = [
-    "   kk           ",
-    "  k11k   kkk    ",
-    "  k1k1k k222k   ",
-    "   kk1kk22122k  ",
-    "     k1k21222k  ",
-    "   kkk1kkkkkk   ",
-    "  k221k12kkk    ",
-    " k2312k12122k   ",
-    " k3212k12121k   ",
-    "k23212k121221k  ",
-    "k22212k121211k  ",
-    "k22212k121211k  ",
-    " k2211k12111k   ",
-    " k1211k11111k   ",
-    "  kk111111kk    ",
-    "    kkkkkk      ",
-]
+# hand-pixelled 16x16 icons, fill-only (fk.auto_rows adds the outline ring)
+_HAND = {
+    "pumpkin_blossom": [
+        "..3.............",
+        ".323..3.........",
+        "..3223232.......",
+        ".3222222........",
+        "3322112223......",
+        ".322112222......",
+        "..3222222.......",
+        "..32.2222.......",
+        ".3...2221...11..",
+        "......2211.111..",
+        ".....1121..11...",
+        "....2323232.....",
+        "...232323231....",
+        "...223232311....",
+        "....2222111.....",
+        "................"],
+    "green_pumpkin": [
+        "................",
+        "................",
+        ".22......1......",
+        "2222....11......",
+        "23222..11.......",
+        ".2222.11........",
+        "..21.11.........",
+        "...1222222......",
+        "..2322232221....",
+        ".232223222221...",
+        ".322232222211...",
+        ".322232222211...",
+        ".222232222111...",
+        "..22222221111...",
+        "...11....11.....",
+        "................"],
+    "pumpkin": [
+        "................",
+        "....111.........",
+        "...1..11........",
+        "...1...11.......",
+        ".......11.......",
+        "...2221112222...",
+        "..232212221222..",
+        ".23221222122221.",
+        ".32212221222211.",
+        ".32212221222211.",
+        ".32212221222211.",
+        ".22212221222111.",
+        "..2212221221111.",
+        "...22222111111..",
+        ".....11111111...",
+        "................"],
+}
+ICONS = {k: fk.auto_rows(v) for k, v in _HAND.items()}
+ICONS2 = {}
+SQUASH = {}
 
 
-# ---------------------------------------------------------------------------
-# pumpkin: the full ribbed gourd crowned by a big coiled vine
-# ---------------------------------------------------------------------------
+class _Img:
+    """Adapter: species_b/build.py calls fn().finish(**kw).image()."""
 
-def front_pumpkin():
-    s = Sprite(64, 64, PAL_PUMPKIN, sc=0.95)
-    ids, (px, py) = gourd3d(s, 32, 44, 27.5, sq=0.70, n=10, elev=0.28, spin=math.pi / 10, k=2, deep=1, rib=0)
-    # vine leaves the stem to the right and rolls up into one big coil
-    c = curl(px + 12, py - 12, 6.0, 1.0, a0=math.pi * 0.8, r1=1.8)
-    coil = bez([(px + 1, py - 2), (px + 6, py - 4), c[0]], 20) + c[1:]
-    s.part(s.stroke(coil, (3.6, 2.0)), base=1, k=0, line=0)
-    stem = s.curve([(px, py + 2), (px - 1, py - 5), (px - 4, py - 10), (px - 8, py - 12)], (7.5, 5.5))
-    sid = s.part(stem, base=1, k=1, sh_tone=0, line=0, hl=s.ellipse(px - 2.5, py - 5, 0.9, 2.4, ang=0.4))
-    s.part(s.ellipse(px - 8.5, py - 12.5, 2.6, 3.0), base=2, k=1, line=0, merge=[sid])
-    return s
+    def __init__(self, im):
+        self.im = im
+
+    def finish(self, **_):
+        return self
+
+    def image(self):
+        return self.im
 
 
-def back_pumpkin():
-    s = Sprite(48, 72, PAL_PUMPKIN)
-    cx, cy, R = 24, 48, 24.5
-    # where the pole lands (stem) for this view
-    ids, (px, py) = gourd3d(s, cx, cy, R, sq=0.78, n=10, elev=0.75, spin=math.pi / 10, k=2, deep=1, rib=0)
-    coil = curl(px + 8, py - 12, 5.5, 1.1, a0=math.pi, r1=1.5)
-    s.part(s.stroke(coil, (3.0, 1.8)), base=1, k=0, line=0)
-    stem = s.curve([(px, py + 1), (px, py - 5), (px + 3, py - 10)], (7, 5.5))
-    sid = s.part(stem, base=1, k=1, sh_tone=0, line=0)
-    s.part(s.ellipse(px + 3.5, py - 10.5, 2.8, 2.4), base=2, k=1, line=0, merge=[sid])
-    s.part(s.curve([(px + 1, py - 6), (px + 5, py - 8), (px + 7, py - 10)], (3, 2.8)), base=1, k=0, line=0)
-    return s
+_cache = {}
 
 
-ICON_PUMPKIN = [
-    "                ",
-    "       kk  kkk  ",
-    "      k11kk11k  ",
-    "      k1kk1kk1k ",
-    "      k11k1k1k  ",
-    "   kkkkk1kkkk   ",
-    "  k2221k1222k   ",
-    " k23221k12221k  ",
-    "k232211k122211k ",
-    "k222211k122211k ",
-    "k222211k122211k ",
-    "k222211k122211k ",
-    "k122211k122111k ",
-    " k11221k12111k  ",
-    "  kk11111111kk  ",
-    "    kkkkkkkk    ",
-]
+def _get(id_):
+    if id_ not in _cache:
+        _cache[id_] = make(id_)
+    return _cache[id_]
+
+
+def _spec(id_, pal):
+    return dict(
+        pal=tuple(pal),
+        front=lambda: _Img(_get(id_)["front"]),
+        idle=[lambda: _Img(_get(id_)["front__2"])],
+        back=lambda: _Img(_get(id_)["back"]),
+        icon=ICONS.get(id_),
+        icon2=ICONS2.get(id_, "squash"),
+        squash_row=SQUASH.get(id_),
+    )
 
 
 SPRITES = {
-    "pumpkin_blossom": dict(pal=PAL_BLOSSOM, front=front_blossom, back=back_blossom, icon=ICON_BLOSSOM),
-    "green_pumpkin": dict(pal=PAL_GREEN, front=front_green, back=back_green, icon=ICON_GREEN),
-    "pumpkin": dict(pal=PAL_PUMPKIN, front=front_pumpkin, back=back_pumpkin, icon=ICON_PUMPKIN),
+    "pumpkin_blossom": _spec("pumpkin_blossom", BLOSSOM),
+    "green_pumpkin": _spec("green_pumpkin", GREEN),
+    "pumpkin": _spec("pumpkin", PUMPKIN),
 }

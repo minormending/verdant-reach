@@ -5,7 +5,8 @@ import { OUTDOOR, emote, face, ifFlags, ifNight, lockedDoor, movePlayer, say, wh
 // the north-east; the hedged lane north to ROUTE 1 runs straight into the
 // square and its well. West: home, the kitchen garden, the windmill and barn,
 // and the fields (one plot lying fallow, as the name promises). South-east: the
-// duck pond. The south road to SALTMARSH HARBOUR is shut while the ford floods.
+// duck pond and the SEED LIBRARY in the big house. The south road to
+// SALTMARSH HARBOUR is shut while the ford floods.
 //
 //            0         1         2
 //            0123456789012345678901234567
@@ -34,7 +35,7 @@ export const fallowfield: MapDef = {
     "T@@@+@@@@@8111111.:::..f*..T", // 13
     "Tnn7++++++*111111*:...@@@@@T", // 14
     "T...++++++...::...:...@@@@@T", // 15
-    "T###N######..::...:...@@@@@T", // 16
+    "T###N######..::...:..S@@@@@T", // 16
     "T#kk+kk+++#..::.5.:...@@@@@T", // 17
     "T#+++j++++#..::...:::::::..T", // 18
     "T#kk+kk+++#..::...q~~~~~q..T", // 19
@@ -71,12 +72,17 @@ export const fallowfield: MapDef = {
     { id: "cat", sprite: "cat", x: 2, y: 7, facing: "down", movement: "static", script: "ff_cat" },
     { id: "dog", sprite: "dog", x: 11, y: 14, facing: "left", movement: "wander", script: "ff_dog" },
     { id: "crow", sprite: "bird", x: 6, y: 18, facing: "left", movement: "look_around", script: "ff_crow" },
+    // SEED LIBRARY: the librarian keeps the big house by the duck pond.
+    { id: "librarian", sprite: "florist", x: 20, y: 17, facing: "down", movement: "look_around", script: "q_seed_library" },
   ],
+  // In the mushrooms by the stump, in the pond's far corner.
+  hidden: [{ x: 26, y: 20, item: "water_flask" }],
   signs: [
     { x: 12, y: 7, text: "FALLOWFIELD. Fields at rest, ready to grow." },
     { x: 16, y: 4, text: "FALLOWFIELD HERBARIUM. DR. I. VALE, Director." },
     { x: 6, y: 6, text: "<PLAYER>'s house. Post for JUNE goes in too." },
     { x: 15, y: 20, text: "SOUTH: SALTMARSH HARBOUR. Road shut while the ford's in flood." },
+    { x: 21, y: 16, text: "FALLOWFIELD SEED LIBRARY. Borrow a seed, grow it, bring back two." },
   ],
   triggers: [
     { x: 13, y: 1, w: 2, script: "ff_gate", when: when({ got_starter: false }) },
@@ -163,5 +169,5 @@ export const scripts: Scripts = {
     say("A crow perches by the scarecrow. It does not look scared."),
   ],
   ff_door_pip: lockedDoor("Locked. A note on the door: \"Out looking at plants! -PIP\""),
-  ff_door_large: lockedDoor("Locked. Someone inside is singing to their ferns."),
+  ff_door_large: lockedDoor("The SEED LIBRARY. Shut for stocktaking.", "Someone inside is singing to the ferns."),
 };

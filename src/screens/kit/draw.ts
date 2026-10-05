@@ -285,8 +285,8 @@ export function sportVersion(key: string, src: Src): HTMLCanvasElement {
 // Species sprites
 // ---------------------------------------------------------------------------
 
-export type SpriteKind = "front" | "back" | "icon" | "icon__2";
-const SIZES: Record<SpriteKind, number> = { front: 56, back: 48, icon: 16, icon__2: 16 };
+export type SpriteKind = "front" | "front__2" | "front__3" | "back" | "icon" | "icon__2";
+const SIZES: Record<SpriteKind, number> = { front: 56, front__2: 56, front__3: 56, back: 48, icon: 16, icon__2: 16 };
 const warnedMissing = new Set<string>();
 
 function hash(s: string): number {
@@ -353,6 +353,7 @@ export function speciesImage(ctx: GameContext, id: SpeciesId, kind: SpriteKind, 
   const path = speciesPath(id, kind);
   let img: Src | undefined = ctx.assets.image(path);
   if (!img && kind === "icon__2") return speciesImage(ctx, id, "icon", opts);
+  if (!img && (kind === "front__2" || kind === "front__3")) return speciesImage(ctx, id, "front", opts);
   if (!img) {
     if (!warnedMissing.has(path)) {
       warnedMissing.add(path);

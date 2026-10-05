@@ -39,6 +39,7 @@ export function greenhouseMap(
   rows: string[],
   exit: { to: MapId; x: number; y: number },
   visitor: { script: string; sprite: CharacterKey; x: number; y: number },
+  signs: MapDef["signs"] = [],
 ): MapDef {
   return {
     id,
@@ -54,7 +55,7 @@ export function greenhouseMap(
       { id: "keeper", sprite: "greenhouse_keeper", x: 5, y: 2, facing: "down", movement: "static", script: "greenhouse_heal" },
       { id: "visitor", sprite: visitor.sprite, x: visitor.x, y: visitor.y, facing: "left", movement: "look_around", script: visitor.script },
     ],
-    signs: [],
+    signs,
     triggers: [],
     healPoint: { x: 5, y: 4 },
   };
@@ -63,6 +64,7 @@ export function greenhouseMap(
 export const bramblegate_greenhouse = greenhouseMap(
   "bramblegate_greenhouse", "GREENHOUSE", ROWS.bramblegate, { to: "bramblegate", x: 19, y: 6 },
   { script: "bg_gh_visitor", sprite: "hiker", x: 3, y: 5 },
+  [{ x: 9, y: 3, text: "The GREENHOUSE guest book. The latest entry just says: \"thank you, lamps.\"" }],
 );
 export const sugarbush_greenhouse = greenhouseMap(
   "sugarbush_greenhouse", "GREENHOUSE", ROWS.sugarbush, { to: "sugarbush", x: 24, y: 12 },

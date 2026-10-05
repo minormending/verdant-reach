@@ -3,11 +3,14 @@
 // interpreter. Entry point: createOverworldScene(ctx, opts).
 
 import type {
-  Ambient, BattleOutcome, BattleRequest, Dir, GameContext, MapDef, MapId, Scene, ScriptCmd, ScriptId, SpeciesId,
+  Ambient, BattleOutcome, BattleRequest, Dir, GameContext, MapDef, MapId, Quickened, Scene, ScriptCmd, ScriptId,
+  SpeciesId, StillKey,
 } from "../contracts";
-import { SCREEN_H, SCREEN_W, STRUCTURES, TILE, speciesPath, tilePath } from "../contracts";
+import { SCREEN_H, SCREEN_W, STRUCTURES, TILE, speciesPath, stillPath, tilePath } from "../contracts";
+import { followerOn } from "../save";
 import { createQuickened, healParty } from "../battle";
 import { playClock } from "../engine/context";
+import { mapTime } from "../engine/time";
 import { clearScenes } from "../engine/core";
 import { Fader, Shaker, Timers, drawImagePath } from "../engine/gfx";
 import { drawWindow } from "../ui/kit";
@@ -20,17 +23,19 @@ import {
   triggerAt, warpAt, type MapRuntime,
 } from "./map";
 import {
-  BattleTransition, drawCharacter, drawEmote, drawGrassOverlay, drawMapName, drawShadow, drawStructure,
-  eraseCharacter, isStaticObject, rowFor, structureImage,
+  BattleTransition, TOAST_MS, drawCharacter, drawEmote, drawGrassOverlay, drawMapName, drawShadow, drawStructure,
+  drawToast, eraseCharacter, isStaticObject, rowFor, structureImage,
 } from "./render";
 import { AmbientFx, effectiveAmbient } from "./ambient";
 import { autotileMask } from "./autotile";
 import { CameraRig, Flash, camForTile } from "./camera";
-import { Effects, drawWaterGlint } from "./effects";
+import { Effects, drawHiddenSparkle, drawWaterGlint } from "./effects";
+import { Follower, followerLine } from "./follower";
+import { bushId, hiddenAt, hiddenFlag, pickedToday, unfoundHidden } from "./progress";
 import { drawHalo, drawTint, lampInfo, makeScreenCanvas, nightGlass, windowGlow } from "./lights";
 import { TileLayer } from "./tilelayer";
 import {
-  ScriptAbort, giveItem, itemName, runScript, trainerBattle, type ScriptHost,
+  ScriptAbort, giveItem, harvest, itemName, quickenedName, runScript, trainerBattle, type ScriptHost, type ToastKind,
 } from "./script";
 import { runStartMenu } from "./startMenu";
 
@@ -54,6 +59,8 @@ const EMPTY_MAP: MapDef = {
   tiles: ["."], legend: { ".": "void" }, border: "void",
   structures: [], warps: [], npcs: [], signs: [], triggers: [],
 };
+
+const warnedStills = new Set<string>();
 
 const BOOKSHELF_TEXT = [
   "Pressed-plant folios, labelled in tiny careful handwriting.",
@@ -99,6 +106,13 @@ class Overworld implements Scene {
   tiles: TileLayer;
   lightCanvas: HTMLCanvasElement | null = null;
   runStreak = 0;
+  /** The lead Quickened walking behind the player. */
+  follower = new Follower();
+  /** Species the follower last showed (null = inactive), to pop it back in on changes. */
+  followerSpecies: SpeciesId | null = null;
+  /** Full-screen story illustration over the map (still / stillClear). */
+  still: { key: StillKey; img: HTMLImageElement } | null = null;
+  toasts: { kind: ToastKind; title: string; at: number }[] = [];
 
   constructor(private ctx: GameContext, private opts: OverworldOpts) {
     const pos = ctx.state.position;
@@ -150,6 +164,12 @@ class Overworld implements Scene {
   /** After a sequence: never leave the screen faded or a species window up. */
   private async settle() {
     this.species = null;
+    if (this.still) {
+      // A script that forgot `stillClear` never leaves the illustration stuck up.
+      this.busy++;
+      await this.host.stillClear?.();
+      this.busy--;
+    }
     if (!this.camera.following) {
       this.busy++;
       await this.camera.reset(20, this.followCam());
@@ -190,6 +210,7 @@ class Overworld implements Scene {
     const p = this.player;
     p.x = x; p.y = y; p.step = null; p.facing = facing; p.bumpAnim = 0;
     this.npcs = (def.npcs ?? []).map((n) => new Actor(n.id, n.sprite, n.x, n.y, n.facing, n));
+    this.follower.place(x, y, facing);
     this.camera.snap();
     this.effects.clear();
     this.ambientOverride = null;
@@ -201,7 +222,7 @@ class Overworld implements Scene {
   }
 
   musicFor(def: MapDef) {
-    if (def.outdoor && def.music === "route" && this.ctx.timeOfDay() === "night") return "route_night" as const;
+    if (def.outdoor && def.music === "route" && mapTime(def, this.ctx.timeOfDay) === "night") return "route_night" as const;
     return def.music;
   }
 
@@ -231,7 +252,40 @@ class Overworld implements Scene {
   }
 
   occupiedForPlayer = (x: number, y: number) => !!this.npcAt(x, y);
-  occupiedForNpc = (x: number, y: number) => this.player.occupies(x, y) || !!this.npcAt(x, y);
+  /** Wanderers step around the follower too (it never blocks the player or scripts). */
+  occupiedForNpc = (x: number, y: number) =>
+    this.player.occupies(x, y) || !!this.npcAt(x, y) || (this.followerVisible() && this.follower.occupies(x, y));
+
+  /** The Quickened that walks behind the player: the first healthy one, else the lead. */
+  followerMon(): Quickened | null {
+    const party = this.ctx.state.party;
+    if (!party.length || !followerOn(this.ctx.state.options)) return null;
+    return party.find((q) => q.hp > 0) ?? party[0];
+  }
+
+  followerVisible(): boolean {
+    return this.followerSpecies !== null && !this.follower.tucked;
+  }
+
+  /** Keep the follower in step with the player; called each frame before the player ticks. */
+  private updateFollower() {
+    const mon = this.followerMon();
+    const species = mon?.species ?? null;
+    const p = this.player;
+    if (species !== this.followerSpecies) {
+      // Turned on, first Quickened, or a new lead: it pops out of the player's tile on the next step.
+      const wasShown = this.followerSpecies !== null && !this.follower.tucked;
+      this.followerSpecies = species;
+      if (species && wasShown) this.follower.pop = 12; // a new lead takes over in place
+      else if (species) this.follower.place(p.x, p.y, p.facing);
+    }
+    const st = p.step;
+    if (species && st && st.t === 0) this.follower.follow(st.fx, st.fy, st.dur);
+    this.follower.tick();
+  }
+
+  /** Bush rows: picked today? */
+  private pickedToday = (harvestId: string) => pickedToday(this.ctx.state, harvestId);
 
   findNpc(id: string): Actor | undefined {
     return this.npcs.find((n) => n.id === id);
@@ -241,11 +295,16 @@ class Overworld implements Scene {
     return who === "player" ? this.player : this.findNpc(who);
   }
 
+  /** Time of day on the current map (a map's forced `time` beats the clock). */
+  time() {
+    return mapTime(this.map?.def, this.ctx.timeOfDay);
+  }
+
   backdrop(kind?: "grass" | "bog"): BattleRequest["backdrop"] {
     const def = this.map.def;
     if (!def.outdoor) return "indoor";
     if (kind === "bog" || tileAt(this.map, this.player.x, this.player.y) === "bog") return "bog";
-    if (this.ctx.timeOfDay() === "night") return "night";
+    if (this.time() === "night") return "night";
     return "grass";
   }
 
@@ -271,9 +330,11 @@ class Overworld implements Scene {
     if (this.bumpCooldown > 0) this.bumpCooldown--;
 
     for (const n of this.npcs) n.tick();
+    this.updateFollower();
+    if (this.followerEmote && ++this.followerEmote.t >= 40) this.followerEmote = null;
     const arrived = this.player.tick();
     this.camera.update(this.followCam());
-    this.ambient.set(effectiveAmbient(this.ambientOverride ?? this.map.def.ambient, this.ctx.timeOfDay()));
+    this.ambient.set(effectiveAmbient(this.ambientOverride ?? this.map.def.ambient, this.time()));
     this.ambient.update();
     this.effects.update();
     this.stepEffects();
@@ -307,7 +368,15 @@ class Overworld implements Scene {
       }
       n.lastRow = vis ? n.lastRow ?? "down" : "gone";
     }
+    const fs = this.follower.step;
+    if (fs && fs.t === 1 && this.followerVisible() && tileAt(m, fs.tx, fs.ty) === "tall_grass") {
+      this.effects.rustle(fs.tx, fs.ty, this.frame + 3);
+    }
+    if (this.follower.pop === 1 && this.followerVisible() && tileAt(m, this.follower.x, this.follower.y) !== "tall_grass") {
+      this.effects.land(this.follower.x, this.follower.y);
+    }
     for (const a of [this.player, ...this.npcs]) {
+      if (a.wobble > 0) a.wobble--;
       if (a.clunk > 0) a.clunk--;
       if (a.bob > 0) a.bob--;
       if (a.fly) {
@@ -427,7 +496,7 @@ class Overworld implements Scene {
     }
     if (this.checkTrainers()) return;
     if (this.grace > 0) { this.grace--; return; }
-    const enc = rollEncounter(this.map.def, tileAt(this.map, p.x, p.y), this.ctx.timeOfDay(), this.ctx.rng);
+    const enc = rollEncounter(this.map.def, tileAt(this.map, p.x, p.y), this.time(), this.ctx.rng);
     if (enc) {
       this.walking = false;
       void this.flow(() => this.wildEncounter(enc.species, enc.level, enc.kind));
@@ -571,6 +640,10 @@ class Overworld implements Scene {
       void this.flow(() => this.talk(npc));
       return true;
     }
+    if (!npc && this.followerVisible() && !this.follower.moving && this.follower.x === fx && this.follower.y === fy) {
+      void this.flow(() => this.talkFollower());
+      return true;
+    }
     const tile = tileAt(this.map, fx, fy);
     if (tile === "counter") {
       const across = this.npcAt(fx + dx, fy + dy);
@@ -582,6 +655,11 @@ class Overworld implements Scene {
     const sign = this.map.def.signs.find((s) => s.x === fx && s.y === fy);
     if (sign) {
       void this.flow(() => this.ctx.ui.say(sign.text));
+      return true;
+    }
+    const hidden = hiddenAt(this.map.def, this.ctx.state.flags, fx, fy) ?? hiddenAt(this.map.def, this.ctx.state.flags, p.x, p.y);
+    if (hidden) {
+      void this.flow(() => this.findHidden(hidden));
       return true;
     }
     if (tile === "bookshelf") {
@@ -612,8 +690,14 @@ class Overworld implements Scene {
       return;
     }
     if (!isStaticObject(this.ctx.assets, npc.sprite)) npc.facing = OPPOSITE[this.player.facing];
+    const bush = bushId(npc.id);
     if (def.script) await this.runScript(def.script);
     else if (npc.sprite === "item_pickup") await this.pickup(npc);
+    else if (bush) {
+      // A bush placed without its script still works: rose bushes give hips, the rest berries.
+      console.warn(`[overworld] bush "${npc.id}" on ${this.mapId} has no script; guessing its fruit`);
+      await harvest(this.host, bush, /rose|hip/i.test(bush) ? "rose_hip" : "wild_berry", 2);
+    }
     if (npc.sprite === "item_pickup") this.ctx.state.flags[this.pickedFlag(npc.id)] = true;
   }
 
@@ -629,6 +713,34 @@ class Overworld implements Scene {
     }
     await giveItem(this.host, item, 1, { found: true });
   }
+
+  /** A hidden item under A: flag first (so it can never be found twice), then the find. */
+  private async findHidden(h: NonNullable<MapDef["hidden"]>[number]) {
+    this.ctx.state.flags[hiddenFlag(this.mapId, h.x, h.y)] = true;
+    await giveItem(this.host, h.item, h.qty ?? 1, { found: true });
+  }
+
+  /** Talking to the follower: it turns to you, chirps its cry, and you get a line about how it's doing. */
+  private async talkFollower() {
+    const ctx = this.ctx;
+    const mon = this.followerMon();
+    if (!mon) return;
+    const f = this.follower;
+    const p = this.player;
+    if (p.x < f.x) f.flip = false;
+    else if (p.x > f.x) f.flip = true;
+    f.pop = 12;
+    const sp = ctx.data.species?.[mon.species];
+    const line = followerLine({
+      name: quickenedName(ctx, mon), friendship: mon.friendship, hpFrac: mon.stats.hp > 0 ? mon.hp / mon.stats.hp : 0,
+      status: mon.status, activity: sp?.activity ?? "any", time: this.time(), outdoor: this.map.def.outdoor,
+    }, ctx.rng());
+    const cry = mon.hp > 0 ? ctx.audio.playCry(mon.species) : Promise.resolve();
+    this.followerEmote = { kind: line.emote, t: 0 };
+    await Promise.all([this.timers.frames(40), cry]);
+    await ctx.ui.say(line.text);
+  }
+  followerEmote: { kind: Emote; t: number } | null = null;
 
   private async trainerTalk(npc: Actor, trainerId: string) {
     const tr = this.ctx.world.trainers[trainerId];
@@ -757,6 +869,60 @@ class Overworld implements Scene {
     ctx.scenes.push(createTitleScene(ctx));
   }
 
+  /** Fade to a story illustration. Missing art is skipped (logged once) so scripts still read. */
+  async showStill(key: StillKey) {
+    const assets = this.ctx.assets;
+    const path = stillPath(key);
+    let img = assets.image(path);
+    if (!img) {
+      await assets.loadAll([path]);
+      img = assets.image(path);
+    }
+    if (!img) {
+      if (!warnedStills.has(key)) { warnedStills.add(key); console.warn(`[overworld] still "${key}" has no art yet; skipping it`); }
+      return;
+    }
+    if (this.still?.key === key) return;
+    if (this.fader.level < 1) await this.fader.to("black", this.still ? 12 : 16);
+    this.still = { key, img };
+    this.popup = null;
+    await this.timers.frames(8);
+    await this.fader.to("clear", 20);
+  }
+
+  /** Back from the illustration to the map; if the script already faded to black, stay black. */
+  async clearStill() {
+    if (!this.still) return;
+    if (this.fader.level >= 1) { this.still = null; return; }
+    await this.fader.to("black", 16);
+    this.still = null;
+    await this.timers.frames(6);
+    await this.fader.to("clear", 16);
+  }
+
+  /** The bush shakes, flips to its picked row, and sheds a little burst of leaves and fruit. */
+  async harvestFx(harvestId: string) {
+    const n = this.findNpc(`bush:${harvestId}`);
+    const { dx, dy } = DIRS[this.player.facing];
+    const tx = n?.x ?? this.player.x + dx;
+    const ty = n?.y ?? this.player.y + dy;
+    if (n) n.wobble = 12;
+    this.effects.leafBurst(tx, ty, this.frame, /rose|hip/i.test(harvestId) ? "hip" : "berry");
+    // Let the burst land before the text box freezes the world.
+    await this.timers.frames(24);
+  }
+
+  /** One toast at a time, oldest first; timed in real milliseconds so text boxes above don't freeze them. */
+  private drawToasts(g: CanvasRenderingContext2D) {
+    const t = this.toasts[0];
+    if (!t || this.transition.kind) return;
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+    if (t.at < 0) t.at = now;
+    const ms = now - t.at;
+    if (ms > TOAST_MS.in + TOAST_MS.hold + TOAST_MS.out) { this.toasts.shift(); return; }
+    drawToast(g, t.kind, t.title, ms);
+  }
+
   makeHost(): ScriptHost {
     const self = this;
     const ctx = this.ctx;
@@ -844,6 +1010,13 @@ class Overworld implements Scene {
       cameraReset: (frames) => self.camera.reset(frames, self.followCam()),
       ambient(kind) { self.ambientOverride = kind; },
       flash: (color) => self.flash.run(color),
+      still: (key) => self.showStill(key),
+      stillClear: () => self.clearStill(),
+      harvestFx: (id) => self.harvestFx(id),
+      toast(kind, title) {
+        self.popup = null; // the map-name sign and a toast never share the top of the screen
+        self.toasts.push({ kind, title, at: -1 });
+      },
     };
   }
 
@@ -863,7 +1036,7 @@ class Overworld implements Scene {
     const camX = Math.round(base.x) + shake.x;
     const camY = Math.round(base.y) + shake.y;
     const second = Math.floor(this.frame / 32) % 2 === 1;
-    const tod = ctx.timeOfDay();
+    const tod = this.time();
     const night = m.def.outdoor && tod === "night";
 
     // Ground: cached tile layer, water glints, dust.
@@ -888,6 +1061,13 @@ class Overworld implements Scene {
       }
     }
     this.effects.drawGround(g, camX, camY);
+    // Hidden items: a faint twinkle every few seconds on unfound tiles in view.
+    for (const h of unfoundHidden(m.def, flags)) {
+      const sx = h.x * TILE - camX;
+      const sy = h.y * TILE - camY;
+      if (sx < -TILE || sy < -TILE || sx > SCREEN_W || sy > SCREEN_H) continue;
+      drawHiddenSparkle(g, h.x, h.y, sx, sy, this.frame);
+    }
 
     // Night emissive layer (window glass, lamp heads); characters erase it where they stand in front.
     let lg: CanvasRenderingContext2D | null = null;
@@ -947,7 +1127,8 @@ class Overworld implements Scene {
       const groundY = py - camY;
       const sy = groundY - 4;
       if (sx < -16 || sx > SCREEN_W || sy - lift < -24 || sy - lift > SCREEN_H) continue;
-      const row = rowFor(a.id, a.sprite, a.facing, flags);
+      const row = rowFor(a.id, a.sprite, a.facing, flags, this.pickedToday);
+      if (a.wobble > 0) sx += [0, 1, 1, 0, -1, -1][a.wobble % 6];
       if (a.lastRow !== null && a.lastRow !== row) a.clunk = 8;
       a.lastRow = row;
       const clunk = a.clunk > 4 ? 1 : 0;
@@ -968,12 +1149,56 @@ class Overworld implements Scene {
         },
       });
     }
+    const mon = this.followerVisible() ? this.followerMon() : null;
+    if (mon) {
+      const f = this.follower;
+      const { px, py, lift } = f.pixel();
+      const sx = px - camX;
+      const groundY = py - camY;
+      const sy = groundY - 3;
+      if (sx > -16 && sx < SCREEN_W && sy - lift > -24 && sy - lift < SCREEN_H) {
+        const kind = f.iconFrame(this.frame) === 1 && assets.has(speciesPath(mon.species, "icon__2")) ? "icon__2" : "icon";
+        const path = speciesPath(mon.species, kind);
+        const wilted = mon.hp <= 0;
+        items.push({
+          base: py + TILE, order: 0.5,
+          draw: () => {
+            if (lift) drawShadow(g, sx, groundY, lift);
+            const img = assets.image(path);
+            const dy = sy - lift + (wilted ? 1 : 0);
+            if (img) {
+              for (const layer of lg ? [g, lg] : [g]) {
+                layer.save();
+                if (layer === lg) layer.globalCompositeOperation = "destination-out";
+                if (f.flip) { layer.translate(sx + TILE, dy); layer.scale(-1, 1); layer.drawImage(img, 0, 0); }
+                else layer.drawImage(img, sx, dy);
+                layer.restore();
+              }
+            }
+            if (!lift) {
+              const cells = f.step ? [[f.step.fx, f.step.fy], [f.step.tx, f.step.ty]] : [[f.x, f.y]];
+              for (const [cx, cy] of cells) {
+                if (tileAt(m, cx, cy) !== "tall_grass") continue;
+                const art = this.tiles.resolve(m, cx, cy);
+                drawGrassOverlay(g, assets, art, cx * TILE - camX, cy * TILE - camY, second, this.effects.grassSway(cx, cy));
+              }
+            }
+          },
+        });
+      }
+    }
     items.sort((a, b) => a.base - b.base || a.order - b.order);
     for (const it of items) it.draw();
     for (const a of actors) {
       if (!a.emote) continue;
       const { px, py } = a.pixel();
       drawEmote(g, a.emote.kind, px - camX, py - camY - 4, a.emote.t);
+    }
+    if (this.followerEmote && mon) {
+      {
+        const { px, py } = this.follower.pixel();
+        drawEmote(g, this.followerEmote.kind, px - camX, py - camY - 2, this.followerEmote.t);
+      }
     }
     this.effects.drawOver(g, camX, camY);
 
@@ -986,8 +1211,12 @@ class Overworld implements Scene {
     }
     this.ambient.drawGlow(g, camX, camY);
 
+    // Story illustration (text boxes and the species window draw over it).
+    if (this.still) g.drawImage(this.still.img, 0, 0, SCREEN_W, SCREEN_H);
+
     // UI layer.
     if (this.popup && this.popup.t > 0 && !this.transition.kind) drawMapName(g, this.popup.name, this.popup.t);
+    this.drawToasts(g);
     if (this.species) {
       drawWindow(g, 48, 20, 64, 64, { shadow: true });
       drawImagePath(g, assets, speciesPath(this.species, "front"), 0, 0, 56, 56, 52, 24);

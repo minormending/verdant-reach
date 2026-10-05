@@ -32,6 +32,14 @@ const LIST: Item[] = [
     description: "Slow feed: 10 PP to every move.",
     effect: { kind: "restore_pp", amount: 10 }, usableInBattle: true, usableInField: true },
 
+  // Harvested from bushes (regrow daily); sellable, not stocked by default.
+  { id: "wild_berry", name: "Wild Berry", pocket: "items", price: 200,
+    description: "Sweet and juicy. Restores 30 HP.",
+    effect: { kind: "heal", amount: 30 }, usableInBattle: true, usableInField: true },
+  { id: "rose_hip", name: "Rose Hip", pocket: "items", price: 200,
+    description: "Full of vitamin C. Cures any status.",
+    effect: { kind: "cure_status" }, usableInBattle: true, usableInField: true },
+
   // Key items
   { id: "field_herbarium", name: "Herbarium", pocket: "key", price: 0,
     description: "Sketch the seen. Press the caught.",
@@ -41,6 +49,9 @@ const LIST: Item[] = [
     effect: { kind: "none" }, usableInBattle: false, usableInField: false },
   { id: "fennimores_letter", name: "Old Letter", pocket: "key", price: 0,
     description: "For DR. VALE. A green wax seal.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
+  { id: "syrup_jar", name: "Syrup Jar", pocket: "key", price: 0,
+    description: "Fresh maple syrup for the BAKER.",
     effect: { kind: "none" }, usableInBattle: false, usableInField: false },
 ];
 

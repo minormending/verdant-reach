@@ -42,6 +42,8 @@ export class Actor {
   clunk = 0;
   /** Steps left in a wander burst (dogs trot a few tiles). */
   burst = 0;
+  /** Side-to-side shake (frames left), e.g. a bush being picked. */
+  wobble = 0;
 
   constructor(public id: string, public sprite: CharacterKey, x: number, y: number, facing: Dir, public def?: NpcDef) {
     this.x = x;

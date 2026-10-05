@@ -37,7 +37,7 @@ export const bramblegate: MapDef = {
     "TB.@@@@S.9111@@1119..@@@@.BT", // 13
     "TB:::::::111111111111::::.BT", // 14 market street
     "TB87.887.6111111116.*f*...BT", // 15 stalls
-    "TB...........11.......TT..BT", // 16
+    "TB.....fy*...11.......TT..BT", // 16 MARIGOLD's flower buckets
     "TB.@@@@..@@@.11...@@@@@...BT", // 17 cottage, the old oak, HOLLIS's house
     "TB.@@@@..@@@.11...@@@@@~0~BT", // 18
     "TB.@@@@..@@@.11...@@@@@0~~BT", // 19
@@ -81,8 +81,14 @@ export const bramblegate: MapDef = {
     { id: "florist", sprite: "florist", x: 12, y: 18, facing: "left", movement: "look_around", script: "bg_florist" },
     { id: "cat", sprite: "cat", x: 23, y: 14, facing: "down", movement: "wander", script: "bg_cat" },
     { id: "dog", sprite: "dog", x: 19, y: 8, facing: "down", movement: "wander", script: "bg_dog" },
-    { id: "bird", sprite: "bird", x: 6, y: 16, facing: "left", movement: "wander", script: "bg_bird" },
+    { id: "bird", sprite: "bird", x: 4, y: 16, facing: "left", movement: "wander", script: "bg_bird" },
+    // A SUNNY ORDER: MARIGOLD's flower stall, at the end of the market row.
+    { id: "marigold", sprite: "florist", x: 8, y: 15, facing: "up", movement: "look_around", script: "q_florists_order" },
+    // A wild rose grows out of the bramble wall: rose hips.
+    { id: "bush:bg_rosehip_wall", sprite: "harvest_bush", x: 2, y: 16, facing: "down", movement: "static", script: "bush_bg_rosehip_wall" },
   ],
+  // Among the mushrooms under the old oak.
+  hidden: [{ x: 10, y: 20, item: "spring_water" }],
   signs: [
     { x: 15, y: 20, text: "BRAMBLEGATE. The gate is a hedge, and the hedge is a gate." },
     { x: 6, y: 10, text: "BRAMBLEGATE CONSERVATORY. WARDEN: HOLLIS, hedge-layer." },
@@ -188,6 +194,10 @@ export const scripts: Scripts = {
   ],
   bg_bird: [
     say("A wren! It ducks back into the bramble wall. Thorns make good bodyguards."),
+  ],
+  bush_bg_rosehip_wall: [
+    say("A wild rose has rooted in the bramble wall. Cousins, HOLLIS would say."),
+    { op: "harvest", id: "bg_rosehip_wall", item: "rose_hip", qty: 2 },
   ],
   bg_grunt: [say("...Move it, kid.")],
   bg_door_a: lockedDoor("It's locked. A wreath of dried brambles hangs on the door."),

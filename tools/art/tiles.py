@@ -1984,44 +1984,197 @@ stove = np.where(STOVE == c("T0"), FLOOR, STOVE)
 stove[15, 2:14] = np.where(stove[15, 2:14] == c("R3"), c("R3"), c("O2"))
 emit("stove", reduce_quads(stove, [("T3", "R3"), ("M0", "M2"), ("O0", "O1"), ("R1", "R2"), ("O2", "R3")]))
 
+# potting bench: a seedling in a pot, a seed packet, a trowel laid down
 emit("workbench", reduce_quads(A([
     "################",
-    "#,,,,,,,,,,,,,,#",
-    "#,.cCc..,....::#",
-    "#,cCCCc.rR...::#",
-    "#,.cCc..rR.##..#",
-    "#,..,.....##,..#",
-    "#,........#....#",
+    "#.....gG.......#",
+    "#....gGgG......#",
+    "#...gG.G..yyyy.#",
+    "#.cccccc..y#yy.#",
+    "#..cccc#..yyyy.#",
+    "#...cccc..y#yy.#",
+    "#...cccc..yyyy.#",
+    "#....cc........#",
+    "#.........rr##.#",
     "#::::::::::::::#",
     "################",
-    "#:#:::::::::::##",
-    "#:############:#",
-    "#:#ssssssssss#:#",
     "#:#ssssssssss#:#",
     "#:#ssssssssss#:#",
     "###ssssssssss###",
     "ssssssssssssssss",
-], {**FURN_K, "c": "B1", "C": "B2", "r": "Y1", "R": "Y2"}), [("Y2", "Y1"), ("O0", "O1"), ("B2", "O3"),
-                                                              ("E3", "O3"), ("O2", "O3")]))
+], {**FURN_K, "c": "B1", "g": "G1", "G": "G2", "y": "Y1", "r": "R1"}),
+    [("G1", "G2"), ("E3", "O3"), ("O2", "O3")]))
 
+# a black-and-chrome microscope with a petri dish beside it
 emit("microscope", reduce_quads(A([
-    "######kk########",
-    "#,,,,#wk#,,,,,,#",
-    "#,....#kk#.....#",
-    "#,.....#kk#....#",
-    "#,....#kkk#....#",
-    "#,....#k#kk#...#",
-    "#,...##k####...#",
-    "#,...#kkkkk:...#",
-    "#,...:#k#:::...#",
-    "#,..#kkkkkk#...#",
+    "#####kk#########",
+    "#...kwk........#",
+    "#...kwk.kk.....#",
+    "#...kwkkkk.....#",
+    "#...kwk..kk....#",
+    "#...kkk..kk.qqq#",
+    "#....k...kk.q.q#",
+    "#..wwwwwkkk.qqq#",
+    "#.....kkkk.....#",
+    "#....kkkkkkk...#",
     "#::::::::::::::#",
     "################",
     "#:#ssssssssss#:#",
     "#:#ssssssssss#:#",
     "###ssssssssss###",
     "ssssssssssssssss",
-], {**FURN_K, "k": "R3", "w": "R1"}), [("R1", "O0"), ("O2", "O3"), ("E3", "O3"), ("O0", "O1")]))
+], {**FURN_K, "k": "R3", "w": "R1", "q": "Q1"}), [("E3", "O3"), ("O2", "O3"), ("O0", "O1")]))
+
+
+# --- round 3: interior dressing -------------------------------------------
+# Plain papered wall faces now vary by position hash (tileAltPath): a framed
+# pressed specimen, a shelf of seed jars, bundles of drying herbs. The face
+# masks that drew exactly the base tile (room below, wall above: 1, 3, 9, 11)
+# are dropped so the engine falls back to base/alts there; every other mask
+# (caps, ends, corners) is unchanged. STALE lists the files build() removes.
+STALE = []
+for m in (1, 3, 9, 11):
+    assert (OUT[f"wall@{m}"] == OUT["wall"]).all(), m
+    del OUT[f"wall@{m}"]
+    STALE.append(f"wall@{m}")
+
+
+def wall_deco(rows, key, fold=(("E1", "E0"),)):
+    """A wall-mounted object over the papered face; the faint paper stripe
+    gives way in any quadrant the object needs for colour."""
+    return reduce_quads(on_paper(rows, key), list(fold))
+
+
+emit("wall~1", wall_deco([          # pressed specimen in a dark frame
+    "                ",
+    "   ##########   ",
+    "   #wwwwwwgw#   ",
+    "   #wwgwwggw#   ",
+    "   #wwwgggww#   ",
+    "   #wwggggww#   ",
+    "   #wgwggwww#   ",
+    "   ##########   ",
+    "    ::::::::::  ",
+], {"#": "O3", "w": "T0", "g": "G2", ":": "E1"}))
+
+emit("wall~2", wall_deco([          # a little shelf of seed jars
+    "                ",
+    "                ",
+    "   ##    #   ## ",
+    "  #qq#  #q#  #q#",
+    "  qwqq  qwq  qwq",
+    "  qggq  qyq  qyq",
+    "  gggq  qyq  yyq",
+    "  gggg  yyy  yyy",
+    " ,,,,,,,,,,,,,, ",
+    " :::::::::::::: ",
+    "  :          :  ",
+], {"#": "O3", "q": "Q1", "w": "E0", "g": "G2", "y": "Y1", ",": "O2", ":": "O3"}))
+
+emit("wall~3", wall_deco([          # lavender and sage hung up to dry
+    "                ",
+    "  vvvvvvvvvvvv  ",
+    "   vvv    vvv   ",
+    "   vvv    svs   ",
+    "  x v x  s v s  ",
+    "  x x x  s s s  ",
+    "  x x x  s s s  ",
+    "   x x    s s   ",
+], {"v": "V1", "x": "X1", "s": "V0"}, fold=()))
+
+# bookshelves: one with a shelf of specimen jars, one with a cutting in a pot
+emit("bookshelf~1", reduce_quads(A([
+    "################",
+    "#,,,,,,,,,,,,,,#",
+    "#bbrrbrrb#yygyy#",
+    "#bbrrbrrb#yygyy#",
+    "#bbrrbrrb#yygyy#",
+    "#bbrrbrrb#yygyy#",
+    "#bbrrbrrb#yygyy#",
+    "################",
+    "#,,,,,,,,,,,,,,#",
+    "#.##..##.##..##.",
+    "#qwq.qwq#qwq.qwq",
+    "#qgq.qgq#qyq.qyq",
+    "#ggq.ggg#yyq.yyy",
+    "#ggg.ggg#yyy.yyy",
+    "################",
+    "#ss##########ss#",
+], {**FURN_K, "r": "B1", "b": "U1", "g": "G2", "y": "Y1", "q": "Q1", "w": "Q0"}),
+    [("O0", "O3"), ("O1", "O3"), ("Q0", "Q1"), ("E3", "O3")]))
+emit("bookshelf~2", reduce_quads(A([
+    "################",
+    "#,,,,,,,,,,,,,,#",
+    "#rrb.b#.......G#",
+    "#rrbb.#....G.GG#",
+    "#rrbbr.#...GGG.#",
+    "#rrbbrb.#..rrrr#",
+    "#rrbbrb.#...rr.#",
+    "################",
+    "#,,,,,,,,,,,,,,#",
+    "#gg#yyggyrrbrrb#",
+    "#gg#yyggyrrbrrb#",
+    "#gg#yyggyrrbrrb#",
+    "#gg#yyggyrrbrrb#",
+    "#gg#yyggyrrbrrb#",
+    "################",
+    "#ss##########ss#",
+], {**FURN_K, "r": "B1", "b": "U1", "g": "G2", "y": "Y1", "G": "G2"}),
+    [("O0", "O3"), ("E3", "O3"), ("O1", "O3")]))
+
+# greenhouse floor: a dropped leaf, soil crumbs, two fallen petals
+GH = OUT["floor_greenhouse"]
+
+
+def gh_alt(rows, key):
+    a = GH.copy()
+    put(a, rows, key, 0, 0)
+    return reduce_quads(a, [("G2", "S2")])
+
+
+emit("floor_greenhouse~1", gh_alt([
+    "                ",
+    "                ",
+    "          gg    ",
+    "         gggg   ",
+    "        ggg     ",
+    "       g        ",
+], {"g": "G2"}))
+emit("floor_greenhouse~2", gh_alt([
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "    d  d        ",
+    "   dd    d      ",
+    "     d dd       ",
+], {"d": "D2"}))
+emit("floor_greenhouse~3", gh_alt([   # two petals dropped from a bloom
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "                ",
+    "          nn    ",
+    "         nnn    ",
+    "    nn          ",
+    "     n          ",
+], {"n": "N1"}))
+
+# floor tiles: one hairline crack, one chipped corner
+emit("floor_tile~1", reduce_quads(OUT["floor_tile"].copy(), []))
+put(OUT["floor_tile~1"], ["    :", "   : ", "  :  ", "  :: ", " :   "], {":": "R1"}, 1, 1)
+emit("floor_tile~2", OUT["floor_tile"].copy())
+put(OUT["floor_tile~2"], ["      ", "    ::", "     :"], {":": "R1"}, 9, 8)
 
 
 def check():
@@ -2031,6 +2184,8 @@ def check():
 
 def build() -> None:
     bad = check()
+    for stem in STALE:
+        (gbc.ASSETS / "tiles" / f"{stem}.png").unlink(missing_ok=True)
     for stem, a in OUT.items():
         gbc.save(to_img(a), f"tiles/{stem}.png")
     review()
@@ -2063,7 +2218,7 @@ LEGEND = {  # mirrors src/world/build.ts
     "n": "haybale", "N": "gate_open", "F": "fireplace", "V": "stove", "Y": "potted_tree",
     "I": "glass_wall", "J": "workbench", "Q": "microscope", "h": "chair",
 }
-ALTS = ("grass", "path", "dirt", "sand", "floor_wood", "bog")
+ALTS = ("grass", "path", "dirt", "sand", "floor_wood", "bog", "wall", "bookshelf", "floor_greenhouse", "floor_tile")
 
 
 def render_map(rows: list[str], frame=1, structures=()) -> Image.Image:
@@ -2162,7 +2317,7 @@ def review() -> None:
             continue
         g = Image.new("RGBA", (4 * 17, 4 * 17), (255, 0, 255, 255))
         for m in MASKS:
-            g.paste(to_img(OUT[f"{k}@{m}"]), ((m % 4) * 17, (m // 4) * 17))
+            g.paste(to_img(OUT.get(f"{k}@{m}", OUT[k])), ((m % 4) * 17, (m // 4) * 17))
         cells.append((k, g))
     gbc.grid_sheet(cells, 5, 3).save(gbc.REVIEW / "tiles_auto.png")
     for f in (1, 2):

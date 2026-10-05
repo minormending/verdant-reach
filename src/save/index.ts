@@ -46,13 +46,36 @@ function makeId() {
 export function beginNewGameSession() { currentGameId = makeId(); }
 export function currentSessionId() { return currentGameId; }
 
+/** Validate options from storage or a save; unknown fields are dropped, toggles default on. */
+export function cleanOptions(raw: unknown, fallback: GameState["options"] = { textSpeed: "mid" }): GameState["options"] {
+  const o = raw && typeof raw === "object" ? (raw as Partial<GameState["options"]>) : {};
+  const speed = o.textSpeed && ["slow", "mid", "fast"].includes(o.textSpeed) ? o.textSpeed : fallback.textSpeed;
+  const out: GameState["options"] = { textSpeed: speed };
+  const follower = typeof o.follower === "boolean" ? o.follower : fallback.follower;
+  const battleAnims = typeof o.battleAnims === "boolean" ? o.battleAnims : fallback.battleAnims;
+  if (follower !== undefined) out.follower = follower;
+  if (battleAnims !== undefined) out.battleAnims = battleAnims;
+  return out;
+}
+
 export function loadOptions(storage: StorageLike | null = defaultStorage()): GameState["options"] {
   try {
     const raw = storage?.getItem(OPTIONS_KEY);
-    const o = raw ? JSON.parse(raw) : null;
-    if (o && ["slow", "mid", "fast"].includes(o.textSpeed)) return { textSpeed: o.textSpeed };
+    if (raw) return cleanOptions(JSON.parse(raw));
   } catch { /* ignore */ }
   return { textSpeed: "mid" };
+}
+
+/** Option toggles that default to on when unset. */
+export const followerOn = (o: GameState["options"] | undefined) => o?.follower !== false;
+export const battleAnimsOn = (o: GameState["options"] | undefined) => o?.battleAnims !== false;
+
+/** Keep only well-formed `harvestId -> YYYY-MM-DD` entries. */
+function cleanHarvested(raw: unknown): Record<string, string> | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw)) if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) out[k] = v;
+  return out;
 }
 
 export function storeOptions(options: GameState["options"], storage: StorageLike | null = defaultStorage()) {
@@ -83,6 +106,7 @@ export function newGameState(ctx: Pick<GameContext, "world">): GameState {
     heal,
     playTimeMs: 0,
     options: loadOptions(),
+    harvested: {},
   };
 }
 
@@ -110,7 +134,8 @@ export function normalizeState(raw: unknown, fallback: GameState): GameState | n
     position: { ...r.position, facing: r.position.facing ?? "down" },
     heal: r.heal && MAP_IDS.includes(r.heal.map) ? r.heal : fallback.heal,
     playTimeMs: typeof r.playTimeMs === "number" ? r.playTimeMs : 0,
-    options: r.options && ["slow", "mid", "fast"].includes(r.options.textSpeed) ? r.options : fallback.options,
+    options: r.options ? cleanOptions(r.options, fallback.options) : fallback.options,
+    harvested: cleanHarvested(r.harvested) ?? {},
   };
 }
 

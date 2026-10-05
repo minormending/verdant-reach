@@ -2,10 +2,36 @@
 // Used by world.test.ts and by the ?dev=world overview.
 
 import {
-  JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STRUCTURES, TILES, TEXTBOX,
+  JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX,
 } from "../contracts";
-import type { Ambient, MapDef, MapId, ScriptCmd, TileKey, WorldData } from "../contracts";
+import type { Ambient, MapDef, MapId, NpcDef, ScriptCmd, TileKey, WorldData } from "../contracts";
 import { pickupItem } from "./build";
+
+/**
+ * Side-quest givers (docs/ROUND3.md §4). Narrative writes the `q_*` scripts in
+ * src/world/scripts/quests.ts; the maps place these NPCs with exactly these ids
+ * and script ids. Until a script exists the validator only warns.
+ */
+export const QUEST_GIVERS: { quest: string; map: MapId; npc: string; script: string }[] = [
+  { quest: "seed_library", map: "fallowfield", npc: "librarian", script: "q_seed_library" },
+  { quest: "lost_cat", map: "hedgerow", npc: "cottager", script: "q_lost_cat" },
+  { quest: "lost_cat", map: "route_2", npc: "moss", script: "q_lost_cat_moss" },
+  { quest: "florists_order", map: "bramblegate", npc: "marigold", script: "q_florists_order" },
+  { quest: "moonwatch", map: "route_3", npc: "stargazer", script: "q_moonwatch" },
+  { quest: "sap_run", map: "sugarbush", npc: "syrupmaker", script: "q_sap_run" },
+  { quest: "sap_run", map: "hedgerow", npc: "baker", script: "q_sap_run_baker" },
+  { quest: "herbarium_survey", map: "herbarium", npc: "archivist", script: "q_herbarium_survey" },
+];
+const QUEST_SCRIPTS = new Set(QUEST_GIVERS.map((q) => q.script));
+
+/** Harvest bushes are NPCs `bush:<harvestId>` with the harvest_bush sprite. */
+export const harvestId = (n: NpcDef): string | undefined =>
+  n.sprite === "harvest_bush" && n.id.startsWith("bush:") ? n.id.slice("bush:".length) : undefined;
+
+/** NPCs that are set dressing for a system, never gatekeepers: they must not
+ *  block any path (bushes, quest givers, and quest-only appearances). */
+export const mustNotBlock = (n: NpcDef): boolean =>
+  n.sprite === "harvest_bush" || QUEST_SCRIPTS.has(n.script ?? "") || !!n.visibleWhen?.some((c) => c.flag.startsWith("quest_"));
 
 /** Every `Ambient` value (src/contracts/world.ts). Kept exhaustive by the type. */
 const AMBIENT_VALUES: Record<Ambient, true> = { none: true, pollen: true, leaves: true, fireflies: true, rain: true, mist: true, spores: true };
@@ -91,6 +117,7 @@ export function eachCmd(cmds: ScriptCmd[], fn: (c: ScriptCmd) => void) {
       case "choice": c.branches.forEach((b) => eachCmd(b, fn)); break;
       case "yesno": eachCmd(c.yes, fn); eachCmd(c.no, fn); break;
       case "if": case "ifTime": case "ifLastBattle":
+      case "ifHasItem": case "ifPartyHas": case "ifCaught": case "ifCaughtCount":
         eachCmd(c.then, fn); if (c.else) eachCmd(c.else, fn); break;
     }
   }
@@ -113,8 +140,13 @@ export function wrapText(text: string, cols = TEXTBOX.cols): string[] {
 /** Names can be up to 7 characters; measure tokens at that width. */
 export const expandTokens = (t: string) => t.replace(/<PLAYER>/g, "WWWWWWW").replace(/<RIVAL>/g, "WWWWWWW");
 
-export function validateWorld(world: WorldData): string[] {
+/**
+ * Returns the problems in `world`. Soft problems (a quest script narrative
+ * hasn't written yet) go to `warnings` instead, when given.
+ */
+export function validateWorld(world: WorldData, warnings: string[] = []): string[] {
   const errs: string[] = [];
+  const stills = new Set<string>(STILLS);
   const species = new Set<string>(SPECIES_IDS);
   const items = new Set<string>(REQUIRED_ITEMS);
   const music = new Set<string>(MUSIC);
@@ -247,7 +279,9 @@ export function validateWorld(world: WorldData): string[] {
         if (n.sprite !== "item_pickup") errs.push(`${where} npc ${n.id} has nothing to say`);
         else if (!items.has(pickupItem(n.id))) errs.push(`${where} pickup ${n.id} gives unknown item ${pickupItem(n.id)}`);
       }
-      if (n.script && !world.scripts[n.script]) errs.push(`${where} npc ${n.id} script ${n.script} missing`);
+      if (n.script && !world.scripts[n.script]) {
+        (QUEST_SCRIPTS.has(n.script) ? warnings : errs).push(`${where} npc ${n.id} script ${n.script} missing`);
+      }
       if (n.trainer && !world.trainers[n.trainer]) errs.push(`${where} npc ${n.id} trainer ${n.trainer} missing`);
     }
     for (const t of map.triggers) {
@@ -321,6 +355,46 @@ export function validateWorld(world: WorldData): string[] {
       }
     }
 
+    // hidden items: on the map, a known item, not under anything else, and
+    // findable: some reachable, free neighbour to stand on and face it from.
+    const npcAt = new Set(map.npcs.map((n) => `${n.x},${n.y}`));
+    const hiddenAt = new Set<string>();
+    for (const hd of map.hidden ?? []) {
+      const at = `${where} hidden ${hd.item} at ${hd.x},${hd.y}`;
+      const k = `${hd.x},${hd.y}`;
+      if (!g.tile(hd.x, hd.y)) { errs.push(`${at} is off the map`); continue; }
+      if (hiddenAt.has(k)) errs.push(`${at} doubles up another hidden item`);
+      hiddenAt.add(k);
+      if (!items.has(hd.item)) errs.push(`${at}: unknown item`);
+      if (hd.qty !== undefined && (!Number.isInteger(hd.qty) || hd.qty < 1)) errs.push(`${at}: bad qty ${hd.qty}`);
+      if (npcAt.has(k)) errs.push(`${at} is under an NPC`);
+      if (warpAt.has(k) || g.doors.some((d) => d.x === hd.x && d.y === hd.y)) errs.push(`${at} is on a warp or door`);
+      if (signAt.has(k)) errs.push(`${at} is on a sign`);
+      if (g.structureSolid(hd.x, hd.y)) errs.push(`${at} is inside a structure`);
+      const from = DIRS.some(([dx, dy]) => has(hd.x + dx, hd.y + dy) && !npcAt.has(`${hd.x + dx},${hd.y + dy}`));
+      if (!from) errs.push(`${at} has no reachable free tile beside it`);
+    }
+
+    // Bushes and quest NPCs are scenery, not gates: with all of them standing
+    // (whatever their visibility), every tile reachable without them still is.
+    const props = map.npcs.filter(mustNotBlock);
+    if (props.length) {
+      const at = new Set(props.map((n) => `${n.x},${n.y}`));
+      const solidAt = (cells: Set<string>): Grid => ({ ...g, structureSolid: (x, y) => g.structureSolid(x, y) || cells.has(`${x},${y}`) });
+      for (const st of starts) {
+        if (at.has(`${st.x},${st.y}`)) { errs.push(`${where} npc stands on the entry ${st.x},${st.y}`); continue; }
+        const free = flood(g, [st]);
+        const all = flood(solidAt(at), [st]);
+        const lost = [...free].find((k) => !at.has(k) && !all.has(k));
+        if (!lost) continue;
+        const culprit = props.find((n) => {
+          const one = new Set([`${n.x},${n.y}`]);
+          return !flood(solidAt(one), [st]).has(lost);
+        });
+        errs.push(`${where} ${culprit ? `npc ${culprit.id}` : "bushes/quest npcs together"} block the way from ${st.x},${st.y} to ${lost}`);
+      }
+    }
+
     // soft-lock: from every reachable tile some warp must still be reachable
     if (map.warps.length) {
       for (const k of reach) {
@@ -360,6 +434,21 @@ export function validateWorld(world: WorldData): string[] {
       case "jingle": if (!jingles.has(c.id)) errs.push(`${at} unknown jingle ${c.id}`); break;
       case "call": if (!world.scripts[c.script]) errs.push(`${at} calls missing ${c.script}`); break;
       case "ambient": if (!AMBIENTS.has(c.kind)) errs.push(`${at} unknown ambient ${c.kind}`); break;
+      case "still": if (!stills.has(c.image)) errs.push(`${at} unknown still ${c.image}`); break;
+      case "ifHasItem": if (!items.has(c.item)) errs.push(`${at} unknown item ${c.item}`); break;
+      case "ifPartyHas": case "ifCaught":
+        for (const sp of Array.isArray(c.species) ? c.species : [c.species]) {
+          if (!species.has(sp)) errs.push(`${at} unknown species ${sp}`);
+        }
+        break;
+      case "harvest":
+        if (!items.has(c.item)) errs.push(`${at} unknown harvest item ${c.item}`);
+        if (!bushIds.has(c.id)) errs.push(`${at} harvests ${c.id}, but no NPC bush:${c.id} exists`);
+        break;
+      case "startQuest": case "completeQuest":
+        if (!world.quests) warnings.push(`${at} ${c.op} ${c.quest}: WORLD.quests is not wired yet`);
+        else if (!world.quests[c.quest]) errs.push(`${at} unknown quest ${c.quest}`);
+        break;
       case "warp": {
         const m = world.maps[c.to];
         if (!m) errs.push(`${at} warp to missing map ${c.to}`);
@@ -368,6 +457,32 @@ export function validateWorld(world: WorldData): string[] {
       }
     }
   });
+  // harvest bushes: unique ids, and each one's script really harvests it
+  const bushIds = new Set<string>();
+  for (const m of Object.values(world.maps)) for (const n of m.npcs) {
+    const at = `[${m.id}] npc ${n.id}`;
+    const hid = harvestId(n);
+    if (n.sprite === "harvest_bush" && !hid) errs.push(`${at}: a harvest_bush must be named bush:<harvestId>`);
+    if (n.id.startsWith("bush:") && n.sprite !== "harvest_bush") errs.push(`${at}: bush:<id> NPCs use the harvest_bush sprite`);
+    if (!hid) continue;
+    if (bushIds.has(hid)) errs.push(`${at}: harvest id ${hid} is used twice`);
+    bushIds.add(hid);
+    if (n.trainer || n.visibleWhen || (n.movement && n.movement !== "static")) errs.push(`${at}: a bush is a plain static object`);
+    const cmds = n.script ? world.scripts[n.script] : undefined;
+    let ok = false;
+    if (cmds) eachCmd(cmds, (c) => { if (c.op === "harvest" && c.id === hid) ok = true; });
+    if (!ok) errs.push(`${at}: its script must { op: "harvest", id: "${hid}" }`);
+  }
+
+  // quest givers stand where ROUND3 says, with the agreed script ids
+  for (const q of QUEST_GIVERS) {
+    const n = world.maps[q.map]?.npcs.find((x) => x.id === q.npc);
+    if (!n) { errs.push(`[quest ${q.quest}] giver ${q.npc} missing from ${q.map}`); continue; }
+    if (n.script !== q.script) errs.push(`[quest ${q.quest}] ${q.map} ${q.npc} uses script ${n.script}, expected ${q.script}`);
+    if (world.quests && !world.quests[q.quest]) warnings.push(`[quest ${q.quest}] no QuestDef in WORLD.quests`);
+  }
+  if (!world.quests) warnings.push("WORLD.quests is not wired yet");
+
   for (const [sid, cmds] of Object.entries(world.scripts)) checkCmds(sid, cmds);
   if (!world.scripts[world.newGame.script]) errs.push(`newGame script ${world.newGame.script} missing`);
 

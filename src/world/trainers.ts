@@ -58,12 +58,12 @@ const routeTrainers: TrainerDef[] = [
   trainer("florist_petra", "PETRA", "FLORIST", "florist", [T("bramble_blossom", 9), T("sunflower_bud", 12)], {
     intro: "Every bouquet needs a thorn or two. Care to test mine?",
     defeat: "My arrangement! Ruined!",
-    after: "Brambles are cousins of the rose. Thorns run in the family!",
+    after: "Brambles are cousins of the WILD ROSE. Thorns run in the family!",
   }),
   trainer("birdwatcher_owen", "OWEN", "BIRDWATCHER", "birdwatcher", [T("moonflower_seed", 10), T("moonflower_vine", 12)], {
     intro: "Owls, moths and me. The night shift! You in?",
     defeat: "Out-hooted!",
-    after: "Moonflowers open at dusk for hawk moths. I come for the moths.",
+    after: "MOONFLOWERS open at dusk for hawkmoths. I come for the moths.",
   }),
 ];
 

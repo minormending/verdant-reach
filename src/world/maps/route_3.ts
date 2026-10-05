@@ -25,7 +25,7 @@ export const route_3: MapDef = {
     "TTTTTTTTTT::TTTTTTTTTT", // 0  to SUGARBUSH
     "TTTTTTTTT.::.TTTTTTTTT", // 1
     "TTTTTT*...::..,,TTTTTT", // 2  compost tucked in the grass at 15,2
-    "TTTT..y..:::.,,,,.TTTT", // 3
+    "TTTT9.y..:::.,,,,.TTTT", // 3  the stargazer's bench (no lamp: it spoils the dark)
     "TTT..,,.::..,,,,,,.TTT", // 4
     "TT..,,,,:...,,,,,*..TT", // 5
     "TT.,,,,,:....,,,,...TT", // 6
@@ -33,9 +33,9 @@ export const route_3: MapDef = {
     "TT..,,.:...35....TTTTT", // 8  a stump ringed with mushrooms
     "TTy....:......,,,,.TTT", // 9
     "TT*....::::...,,,,.TTT", // 10 OWEN watches the bend
-    "TTT.,,,...:..*..,,.TTT", // 11
-    "TT..,,,,..:....*....TT", // 12
-    "TT.,,,,,..::::..y...TT", // 13
+    "TTT.,,,...:..*555,.TTT", // 11 a fairy ring of mushrooms
+    "TT..,,,,..:...5.5...TT", // 12 ...with something in the middle
+    "TT.,,,,,..::::555...TT", // 13
     "TT..,,,..S...:....,.TT", // 14 NIGHT MEADOW sign
     "TTT.**4......:...,,,TT", // 15
     "TTTT*.......::..TTTTTT", // 16
@@ -50,12 +50,12 @@ export const route_3: MapDef = {
     "TTTTTTq...:........TTT", // 25 plateau opens east
     "TTTTq0~q..:.T..*..,TTT", // 26 the lily pond
     "TTTq~~~0q.:.T.,,,..TTT", // 27
-    "TTq~0~~~..:.T,,,,..TTT", // 28
-    "TT~~~~0~..:.T..35..TTT", // 29
-    "TTq~0~~~..:.TvvvvvvTTT", // 30 PETRA by the shore; ledge into the pocket
-    "TTTq~~0q..:.T..y...TTT", // 31 SPRING WATER in the pocket
-    "TTTTqq....:.T......TTT", // 32
-    "TTTT......:.TvvvvvvTTT", // 33 ledge out of the pocket
+    "TTq~0~~~b.:.T,,,,..TTT", // 28 boggy margin: CATTAIL shoots
+    "TT~~~~0~b.:.T..35..TTT", // 29
+    "TTq~0~~~b.:.TvvvvvvTTT", // 30 PETRA by the shore; ledge into the pocket
+    "TTTq~~0qb.:.T..y...TTT", // 31 SPRING WATER in the pocket
+    "TTTTqqbbb.:.T......TTT", // 32
+    "TTTT.bbb..:.TvvvvvvTTT", // 33 ledge out of the pocket
     "TTT.*.....:........TTT", // 34
     "TT..,::::::.,,,,...TTT", // 35 the road bends west
     "TT.,,:HHHHHH.,,,,..TTT", // 36
@@ -89,11 +89,23 @@ export const route_3: MapDef = {
     { id: "stuck_hiker", sprite: "hiker", x: 8, y: 25, facing: "right", movement: "look_around", script: "r3_stuck_hiker" },
     { id: "pondwatcher", sprite: "kid", x: 9, y: 27, facing: "left", movement: "look_around", script: "r3_pondwatcher" },
     { id: "bird", sprite: "bird", x: 15, y: 42, facing: "left", movement: "wander", script: "r3_bird" },
+    { id: "owl", sprite: "bird", x: 12, y: 8, facing: "left", movement: "look_around", script: "r3_owl" },
+    // MOONWATCH: the stargazer keeps a bench on the meadow's dark north-west rise.
+    { id: "stargazer", sprite: "elder", x: 5, y: 3, facing: "up", movement: "look_around", script: "q_moonwatch" },
+    // Harvest: wild berries on the pond plateau, rose hips in the hedged lane.
+    { id: "bush:r3_berry_plateau", sprite: "harvest_bush", x: 13, y: 26, facing: "down", movement: "static", script: "bush_r3_berry_plateau" },
+    { id: "bush:r3_rosehip_lane", sprite: "harvest_bush", x: 10, y: 37, facing: "down", movement: "static", script: "bush_r3_rosehip_lane" },
     ...pickups([
       { item: "compost", x: 15, y: 2 },
       { item: "spring_water", x: 17, y: 31 },
       { item: "terrarium_pod", x: 3, y: 40 },
     ]),
+  ],
+  hidden: [
+    // The middle of the fairy ring.
+    { x: 15, y: 12, item: "rain_jar" },
+    // Tangled in the reeds on the lily pond's east shore.
+    { x: 7, y: 26, item: "water_flask", qty: 2 },
   ],
   signs: [
     { x: 9, y: 44, text: "ROUTE 3. North: SUGARBUSH. South: BRAMBLEGATE." },
@@ -107,11 +119,23 @@ export const route_3: MapDef = {
     grass: {
       rate: 12,
       slots: [
-        { species: "bramble_blossom", minLevel: 7, maxLevel: 11, weight: 30, time: "day" },
-        { species: "pumpkin_blossom", minLevel: 8, maxLevel: 11, weight: 15, time: "day" },
-        { species: "moonflower_seed", minLevel: 8, maxLevel: 11, weight: 40, time: "night" },
-        { species: "fern_fiddlehead", minLevel: 7, maxLevel: 11, weight: 30 },
+        // Per docs/ENCOUNTERS.md. SNAP SPROUT: very rare, sunny days only.
+        { species: "bramble_blossom", minLevel: 7, maxLevel: 11, weight: 25, time: "day" },
+        { species: "rose_bud", minLevel: 7, maxLevel: 10, weight: 22, time: "day" },
+        { species: "rose_bud", minLevel: 7, maxLevel: 10, weight: 6, time: "night" },
         { species: "nettle_sprout", minLevel: 7, maxLevel: 10, weight: 20 },
+        { species: "pumpkin_blossom", minLevel: 8, maxLevel: 11, weight: 14, time: "day" },
+        { species: "moonflower_seed", minLevel: 8, maxLevel: 11, weight: 45, time: "night" },
+        { species: "snapdragon_sprout", minLevel: 9, maxLevel: 10, weight: 1, time: "day" },
+      ],
+    },
+    // The boggy margin of the lily pond.
+    bog: {
+      rate: 12,
+      slots: [
+        { species: "cattail_shoot", minLevel: 7, maxLevel: 10, weight: 70 },
+        { species: "nettle_sprout", minLevel: 7, maxLevel: 9, weight: 15, time: "day" },
+        { species: "moonflower_seed", minLevel: 8, maxLevel: 10, weight: 15, time: "night" },
       ],
     },
   },
@@ -126,6 +150,8 @@ export const scripts: Scripts = {
       say("Pretty meadow by day. Come back after dark. It's another place."),
       say("The MOONFLOWERS sleep till evening, twisted shut like paper straws."),
     ]),
+    say("That mushroom ring grows outward a little every year. Older than me, that one."),
+    say("Folk used to leave gifts in the middle. Some still do."),
   ],
   r3_stuck_hiker: [
     ifFlags({ beat_grunt_r3: true }, [
@@ -142,6 +168,21 @@ export const scripts: Scripts = {
       say("See that SPRING WATER past the trees? I can't work out how to get it."),
       say("Maybe from up on the ledge? I'm not allowed near ledges."),
     ]),
+  ],
+  r3_owl: [
+    ifNight([
+      say("A tawny owl on the old stump. Its head turns right round to follow you."),
+    ], [
+      say("A tuft of grey feathers on the stump. Something sleeps up in the trees."),
+    ]),
+  ],
+  bush_r3_berry_plateau: [
+    say("Wild berries, warm from the sun on the plateau."),
+    { op: "harvest", id: "r3_berry_plateau", item: "wild_berry", qty: 2 },
+  ],
+  bush_r3_rosehip_lane: [
+    say("A wild rose has climbed the hedge. Its hips are glossy red."),
+    { op: "harvest", id: "r3_rosehip_lane", item: "rose_hip", qty: 2 },
   ],
   r3_bird: [
     say("A skylark. It hangs in the air, singing, then drops into the grass."),

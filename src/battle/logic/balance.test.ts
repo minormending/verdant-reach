@@ -37,6 +37,16 @@ const MILESTONES: Record<string, Milestone> = {
   nell: { trainer: () => "nell", starterLevel: 18, extras: [["nettle_sprout", 15], ["dandelion", 14]] },
 };
 
+// Round 3: the same milestones with parties built from the new species the
+// player can catch by then (docs/ENCOUNTERS.md), so they can't wall a starter
+// either. Snapdragon (the Survey gift) is in the last one.
+const MILESTONES_R3: Record<string, Milestone> = {
+  hollis_r3: { trainer: () => "hollis", starterLevel: 12, extras: [["clover_sprout", 9]] },
+  shears_r3: { trainer: () => "shears", starterLevel: 15, extras: [["mint_sprig", 12], ["holly_seedling", 12]] },
+  rival_2_r3: { trainer: (l) => `rival_2_${COUNTER[l]}`, starterLevel: 16, extras: [["foxglove_rosette", 13], ["rose_bud", 13]] },
+  nell_r3: { trainer: () => "nell", starterLevel: 18, extras: [["cattail_shoot", 15], ["snapdragon_sprout", 14]] },
+};
+
 /** Human-like policy: the move with the best expected damage (power x STAB x
  *  type x stat ratio); a status move only if nothing deals damage. */
 function greedy(me: Quickened, foe: Quickened): { kind: "move"; slot: number } {
@@ -92,7 +102,7 @@ function winRate(line: Line, m: Milestone, n = 300): number {
 }
 
 describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance", () => {
-  for (const [name, m] of Object.entries(MILESTONES)) {
+  for (const [name, m] of Object.entries({ ...MILESTONES, ...MILESTONES_R3 })) {
     it(`${name}: beatable with every starter`, () => {
       const rates = (["oak", "chili", "lily"] as Line[]).map((l) => [l, winRate(l, m)] as const);
       console.log(`${name}: ${rates.map(([l, r]) => `${l} ${(r * 100).toFixed(0)}%`).join(", ")}`);

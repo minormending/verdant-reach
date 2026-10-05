@@ -214,6 +214,67 @@ item("fennimores_letter", [
 ], {"w": "s0", "s": "s2", "r": "b1", "R": "b2"})
 
 
+# wild berry: a hand of bramble-hedge fruit, two red and one purple, a leaf
+item("wild_berry", [
+    "................",
+    "..........KKK...",
+    ".........KggGK..",
+    "......KK.KgGGK..",
+    ".....KsK..KKK...",
+    "....KKKsKKK.....",
+    "...KrwrKKpwpK...",
+    "..KrwrrRKpppPK..",
+    "..KrrrrRKppPPK..",
+    "..KRrrRRKPpPPK..",
+    "...KRRRKrwrKK...",
+    "....KKKrwrrRK...",
+    "......KrrrrRK...",
+    "......KRrrRRK...",
+    ".......KRRRK....",
+    "........KKK.....",
+], {"g": "g1", "G": "g2", "s": "o2", "r": "b1", "R": "b2", "w": "white", "p": "x1", "P": "x2"})
+
+# rose hip: the wild rose's glossy fruit, a crown of dry sepals on top
+item("rose_hip", [
+    "......K.K.K.....",
+    ".....KdKdKdK....",
+    "......KdddK.....",
+    ".....KKKKKKK....",
+    "....KwoorrrRK...",
+    "...KwoorrrrRRK..",
+    "...KoorrrrrRRK..",
+    "...KorrrrrrRRK..",
+    "...KrrrrrrRRRK..",
+    "...KrrrrrrRRRK..",
+    "...KrrrrrRRRRK..",
+    "....KrrrRRRRK...",
+    ".....KRRRRRK....",
+    "......KKgKK.....",
+    ".......KgK......",
+    "........K.......",
+], {"d": "o3", "o": "m1", "r": "b1", "R": "b2", "w": "white", "g": "g2"})
+
+# syrup jar: amber maple syrup in a glass jar, wooden lid, maple-leaf label
+item("syrup_jar", [
+    "................",
+    "....KKKKKKKK....",
+    "....KoOoOoOK....",
+    "...KKKKKKKKKK...",
+    "...KwqqqqqqQK...",
+    "...KwyyyyyyMK...",
+    "..KKKKKKKKKKKK..",
+    "..KllllrlllllK..",
+    "..KllrlrlrlllK..",
+    "..KlllrrrllllK..",
+    "..KllllrlllllK..",
+    "..KKKKKKKKKKKK..",
+    "...KwMMMMMmmK...",
+    "...KMMMMMmmmK...",
+    "....KKKKKKKK....",
+    "................",
+], {"o": "o1", "O": "o2", "w": "y0", "q": "q0", "Q": "q1", "y": "m0", "M": "m1", "m": "m2",
+    "l": "s1", "r": "m2"})
+
 def build():
     for k, im in ITEMS.items():
         gbc.save(im, f"items/{k}.png")

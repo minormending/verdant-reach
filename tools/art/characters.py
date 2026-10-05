@@ -2131,6 +2131,68 @@ def item_pickup() -> Image.Image:
     return static_sheet([[a, a, b]] * 4)
 
 
+# Harvest bush (`bush:<harvestId>`): a wild fruiting bush in the hedge/tree
+# tile ramp (environment style: dark green edge, no black outline). DOWN row
+# ripe and laden with generic red + purple berries, UP row picked bare (only
+# stalks left). LEFT = ripe and RIGHT = picked, matching the lever rule. The
+# third column nudges the crown 1px for a breath of wind.
+HB_KEY = {".": None, "K": "#183828", "D": "#307040", "M": "#58a040", "L": "#98d060", "H": "#e0f0a0",
+          "r": "#f04830", "R": "#a81828", "p": "#a868c8", "P": "#683888", "w": "#f8f8f8",
+          "s": "#8a5030", "S": "#58a040"}
+HB_KEY = {k: (gbc.hexc(v) if v else None) for k, v in HB_KEY.items()}
+
+HB_RIPE = [
+    "................",
+    ".....KKKKKK.....",
+    "...KKLLLLMMKK...",
+    "..KLLHHLLMMMDK..",
+    ".KLLHLLMMrrMDDK.",
+    ".KLLLMMMrwrRDDK.",
+    "KLLMppMMMrRMMDDK",
+    "KLMpwpPMMMLLLDDK",
+    "KMMppPDDMLLHLMDK",
+    "KMMMPDrrDMLLMrrK",
+    "KDMMDrwrRDMppwRK",
+    ".KDDDDrRDDpwpPK.",
+    ".KDDDDDDDDppPDK.",
+    "..KKDDDKKDDDKK..",
+    "...SKKKSSKKKS...",
+    "....SSSSSSSS....",
+]
+HB_PICKED = [
+    "................",
+    ".....KKKKKK.....",
+    "...KKLLLLMMKK...",
+    "..KLLHHLLMMMDK..",
+    ".KLLHLLMMMsMDDK.",
+    ".KLLLMMMMMMMDDK.",
+    "KLLMMMMsMDMMMDDK",
+    "KLMMsMDMMMLLLDDK",
+    "KMMMDDDDMLLHLMDK",
+    "KMMMDDDDDMLLMMsK",
+    "KDMMDDsDDDMMMDDK",
+    ".KDDDDDDDDDsDDK.",
+    ".KDDDDDDDDDDDDK.",
+    "..KKDDDKKDDDKK..",
+    "...SKKKSSKKKS...",
+    "....SSSSSSSS....",
+]
+
+
+def bush_frame(rows, sway=0) -> Image.Image:
+    rows = list(rows)
+    if sway:
+        rows[1] = rows[1][1:] + "."
+        rows[2] = rows[2][1:] + "."
+    return img_rows(rows, HB_KEY)
+
+
+def harvest_bush() -> Image.Image:
+    ripe = [bush_frame(HB_RIPE), bush_frame(HB_RIPE), bush_frame(HB_RIPE, 1)]
+    bare = [bush_frame(HB_PICKED), bush_frame(HB_PICKED), bush_frame(HB_PICKED, 1)]
+    return static_sheet([ripe, bare, ripe, bare])
+
+
 OBJECTS = {
     "cat": lambda: animal_sheet(CAT, {**DEFAULT_PAL, **CAT_PAL}),
     "dog": lambda: animal_sheet(DOG, {**DEFAULT_PAL, **DOG_PAL}),
@@ -2140,6 +2202,7 @@ OBJECTS = {
     "valve": valve,
     "potted_plant": potted_plant,
     "item_pickup": item_pickup,
+    "harvest_bush": harvest_bush,
 }
 
 

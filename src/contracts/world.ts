@@ -43,6 +43,9 @@ export interface MapDef {
     grass?: { rate: number; slots: EncounterSlot[] }; // rate: % chance per step on tall_grass
     bog?: { rate: number; slots: EncounterSlot[] };
   };
+  /** Force a time of day on this map regardless of the clock (e.g. the prologue
+   *  roof is always night). Affects tint, lights, ambience and encounters. */
+  time?: TimeOfDay;
   /** Hidden items: press A facing the tile to find it (once; flag hidden_<map>_<x>_<y>).
    *  The engine shows a faint sparkle every few seconds as a modern hint. */
   hidden?: { x: number; y: number; item: ItemId; qty?: number }[];

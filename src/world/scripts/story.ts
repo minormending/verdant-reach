@@ -4,7 +4,7 @@
 //
 // Voice: STYLE.md §5. One idea per box; text boxes are 18 columns x 2 lines.
 
-import type { ScriptCmd } from "../../contracts";
+import type { ScriptCmd, StillKey } from "../../contracts";
 import {
   emote, face, flag, give, ifFlags, moveNpc, say, steps, wait, type Scripts,
 } from "../build";
@@ -24,6 +24,9 @@ const byStarter = (make: (line: StarterLine) => ScriptCmd[]): ScriptCmd =>
 
 const camera = (x: number, y: number, frames = 60): ScriptCmd => ({ op: "camera", x, y, frames });
 const cameraReset = (frames = 45): ScriptCmd => ({ op: "cameraReset", frames });
+// Story stills: held over one to three boxes, then cleared. Keep them rare.
+const still = (image: StillKey): ScriptCmd => ({ op: "still", image });
+const stillClear: ScriptCmd = { op: "stillClear" };
 
 // Each pot has a temperament: the oak is patient, the chili is impatient,
 // the lily is friendly. Every one gets a true fact.
@@ -105,9 +108,12 @@ export const storyScripts: Scripts = {
     wait(50),
     { op: "flash", color: "gold" },
     { op: "ambient", kind: "pollen" },
+    still("bloom"),
     wait(40),
     say("The great spike glows, studded with thousands of pale flowers."),
     say("Gold pollen lifts on the night wind and drifts down the valley."),
+    wait(20),
+    stillClear,
     cameraReset(60),
     face("vale", "left"),
     say("Oh... Oh, would you look at that.", VALE),
@@ -161,9 +167,16 @@ export const storyScripts: Scripts = {
   ],
   vale_morning: [
     face("vale_gh", "toPlayer"),
-    say("Look at them. Overnight, all three turned to face the door.", VALE),
-    say("I reached for one and it flinched. It flinched, <PLAYER>!", VALE),
-    say("Plants don't flinch. Except, it seems, now they do.", VALE),
+    ifFlags({ saw_seedlings: false }, [
+      still("greenhouse_morning"),
+      wait(30),
+      say("Three pots on the bench. All three seedlings face the door."),
+      say("Overnight. Not to the light, <PLAYER>. To the DOOR.", VALE),
+      stillClear,
+      flag("saw_seedlings"),
+      say("I reached for one and it flinched. It flinched, <PLAYER>!", VALE),
+      say("Plants don't flinch. Except, it seems, now they do.", VALE),
+    ]),
     say("They're waiting for someone. Go on, say hello.", VALE),
   ],
   ...potScripts(),
@@ -259,7 +272,7 @@ export const storyScripts: Scripts = {
     { op: "sfx", id: "pod_click" },
     { op: "jingle", id: "caught" },
     emote("pip", "♪"),
-    say("Gotcha! A DANDELION BUD!", PIP),
+    say("Gotcha! A LION'S TOOTH! That's a baby DANDELION!", PIP),
     moveNpc("pip", "left", "left"),
     face("pip", "toPlayer"),
     say("Step one: tire it out in a battle. Not too much! Just sleepy.", PIP),
@@ -278,10 +291,14 @@ export const storyScripts: Scripts = {
     moveNpc("vale", ...steps("down", 6), "left"),
     face("vale", "down"),
     say("<PLAYER>! Oh, thank goodness.", VALE),
-    say("One of the seedlings is gone. Pot and all.", VALE),
+    say("One of the seedlings is gone.", VALE),
     byStarter((line) => [flag(`rival_has_${COUNTER[line]}`), { op: "hideNpc", npc: `pot_${COUNTER[line]}` }]),
-    say("My aide saw a boy bolt out with it. Dark coat. Quick hands.", VALE),
+    still("theft"),
+    wait(30),
+    say("Its pot sits empty on the bench. A trail of soil runs out the door."),
     say("It didn't want to go. It clung to the door frame.", VALE),
+    stillClear,
+    say("My aide saw a boy bolt out with it. Dark coat. Quick hands.", VALE),
     emote("player", "!"),
     say("He can't have gone far. Go!", VALE),
     flag("theft_seen"),

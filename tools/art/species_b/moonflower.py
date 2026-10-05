@@ -4,15 +4,28 @@ A night palette: moon-white, pale mint, midnight blue. Signature: the
 twist. The seed's sprout loops like a hook, the vine twines into a
 corkscrew carrying a furled, twisted bud, and the adult opens that twist
 into a great white trumpet with a five-pointed star.
+
+Round 3 poses + scores (CREATURES.md rubric). The vine twist is a smooth stem
+with a curling tendril now (the old zig-zag helix is gone).
+  moonflower_seed  BOBBING  the violet seed coat worn as a helmet, brim at the
+                            foe, cotyledon wings, hooked neck.              score: 8
+  moonflower_vine  REARING  the spiral-furled bud is the head, lance-like.  score: 8 (base leaves cluttered)
+  moonflower       REARING  the trumpet turned 3/4 at the foe, a bud fist
+                            raised behind, a moonlight glint.               score: 8
 """
 
 from __future__ import annotations
 
+import functools
 import math
 
-from pix import Sprite, arclen_param, bez, erode, qbez, rot, shift
+import numpy as np
 
-PAL = ("#405080", "#a8d8b8")
+from icons_wild import ICONS
+from rig import Spr as Sprite, fit_back
+from pix import arclen_param, bez, erode, qbez, rot, shift
+
+PAL = ("#383868", "#80b890", "#f0f8f0")   # night violet (accent), sage leaf / petal shade, moon-white
 
 
 def heart(s, cx, cy, size, ang=0.0, k=2, hl=False, vein=True, line=0, base=2):
@@ -56,66 +69,6 @@ def butterfly(s, cx, cy, size, ang=0.0, hl=True):
     return pid, m
 
 
-# ---------------------------------------------------------------------------
-# moonflower_seed
-# ---------------------------------------------------------------------------
-
-def front_seed():
-    s = Sprite(64, 64, PAL, sc=0.86)
-    # the sprout: a hooked stem rising out of the seed, carrying two cotyledons
-    st = s.curve([(31, 52), (30, 44), (31, 36), (33, 31)], (3.4, 2.8))
-    s.part(st, base=2, k=1, line=0)
-    butterfly(s, 44, 28, 12, ang=-0.35, hl=False)
-    butterfly(s, 22, 27, 13, ang=math.pi + 0.3, hl=True)
-    s.part(s.ellipse(33, 30, 2.2, 2.0), base=2, k=1, line=0)
-    # the seed: plump, midnight blue, a crescent-moon shine; split at the top
-    seed = s.ellipse(31, 55, 11, 8, ang=-0.15)
-    pid = s.part(seed, base=1, k=0, line=0)
-    crescent = s.ellipse(26, 52.5, 5.0, 4.0, ang=-0.3) & ~s.ellipse(28, 54, 5.0, 4.0, ang=-0.3)
-    s.decal(crescent & erode(seed, 1), 3, on=[pid])
-    # the split the sprout came out of
-    s.ink(s.line1(bez([(27, 48), (31, 50), (36, 48)], 10)), 0)
-    return s
-
-
-def back_seed():
-    s = Sprite(48, 72, PAL)
-    st = s.curve([(24, 64), (24, 54), (24, 44)], (4, 3.4))
-    s.part(st, base=2, k=1, line=0)
-    butterfly(s, 11, 40, 14, ang=math.pi - 0.15, hl=True)
-    butterfly(s, 37, 40, 14, ang=0.15, hl=False)
-    s.part(s.ellipse(24, 43, 2.6, 2.4), base=2, k=1, line=0)
-    seed = s.ellipse(24, 66, 14, 10)
-    pid = s.part(seed, base=1, k=0, line=0)
-    crescent = s.ellipse(18, 63, 6.0, 4.5, ang=-0.3) & ~s.ellipse(20, 64.5, 6.0, 4.5, ang=-0.3)
-    s.decal(crescent & erode(seed, 1), 3, on=[pid])
-    return s
-
-
-ICON_SEED = [
-    "                ",
-    "                ",
-    "                ",
-    "  kkkk    kkkk  ",
-    " k2322k  k2221k ",
-    "k22k222kk2221k  ",
-    " kk1221k22111k  ",
-    "   kkk1k21kkk   ",
-    "      k21k      ",
-    "     kk21kk     ",
-    "    k1kkkk1k    ",
-    "   k131111111k  ",
-    "   k311111111k  ",
-    "   k111111111k  ",
-    "    kk11111kk   ",
-    "      kkkkk     ",
-]
-
-
-# ---------------------------------------------------------------------------
-# moonflower_vine
-# ---------------------------------------------------------------------------
-
 def twisted_bud(s, x0, y0, x1, y1, w, turns=2.5):
     """A furled moonflower bud: a long spindle with spiral pleats."""
     path = qbez((x0, y0), ((x0 + x1) / 2 + 2, (y0 + y1) / 2), (x1, y1), 40)
@@ -138,84 +91,6 @@ def twisted_bud(s, x0, y0, x1, y1, w, turns=2.5):
         s.decal(s.line1(bez([p0, p1], 8)) & erode(m, 1), 2, on=[pid])
     return pid
 
-
-def helix(s, cx, y0, y1, amp, turns, w, phase=0.0):
-    """A twining stem as a corkscrew: back half-turns paint first, front
-    half-turns cross over them with a line, so the twist reads."""
-    n = 240
-    pts = []
-    for i in range(n):
-        t = i / (n - 1)
-        th = phase + turns * 2 * math.pi * t
-        pts.append((cx + amp * math.sin(th), y0 + (y1 - y0) * t, math.cos(th)))
-    segs, cur, front = [], [], None
-    for x, y, z in pts:
-        f = z >= 0
-        if front is None or f == front:
-            cur.append((x, y))
-        else:
-            segs.append((front, cur))
-            cur = [cur[-1], (x, y)]
-        front = f
-    segs.append((front, cur))
-    ids = []
-    for f, seg in sorted(segs, key=lambda q: q[0]):
-        if len(seg) < 2:
-            continue
-        m = s.stroke(seg, w)
-        ids.append(s.part(m, base=2, k=1 if f else 2, line=0 if f else None))
-    return ids
-
-
-def front_vine():
-    s = Sprite(64, 64, PAL, sc=0.76)
-    # leaf stalks from the twine out to the hearts
-    for a, b in (((35, 50), (44, 48)), ((29, 40), (21, 37)), ((34, 30), (41, 26))):
-        s.part(s.curve([a, b], (2.2, 1.8)), base=2, k=0, line=0)
-    heart(s, 51, 50, 11, ang=-1.0, k=2)
-    heart(s, 13, 39, 10.5, ang=1.0, k=2, hl=True)
-    heart(s, 47, 25, 8, ang=-0.8, k=2)
-    helix(s, 32, 63, 20, 5.5, 2.25, 3.6)
-    # the furled bud rising from the top, twisted like a closed umbrella
-    twisted_bud(s, 32, 21, 27, 1, 6.4, turns=2)
-    s.part(s.ellipse(32, 21, 3.0, 2.4), base=2, k=1, line=0)
-    return s
-
-
-def back_vine():
-    s = Sprite(48, 72, PAL)
-    heart(s, 9, 56, 13, ang=0.85, hl=True)
-    heart(s, 39, 46, 12, ang=-0.85)
-    heart(s, 11, 34, 9, ang=0.6)
-    helix(s, 24, 72, 28, 6.5, 2.0, 4.6, phase=math.pi)
-    twisted_bud(s, 24, 29, 29, 6, 7.5, turns=2)
-    s.part(s.ellipse(24, 29, 3.6, 2.8), base=2, k=1, line=0)
-    return s
-
-
-ICON_VINE = [
-    "                ",
-    "     kkkkk      ",
-    "    k22222k     ",
-    "   k3kkkk22k    ",
-    "  k33k  kk2k    ",
-    "  k32k kk22k    ",
-    "  k33kk2222k    ",
-    "   k32k1222k    ",
-    "   k33kkk2k     ",
-    "    kk  k22k    ",
-    " kkkk  k22kkkk  ",
-    "k3222kk22k2221k ",
-    " k22211k2k1111k ",
-    "  kk11k22kkkkk  ",
-    "    kk22k       ",
-    "     kkk        ",
-]
-
-
-# ---------------------------------------------------------------------------
-# moonflower
-# ---------------------------------------------------------------------------
 
 def trumpet(s, cx, cy, R, squash=0.68, ang=0.0, tube_to=None, star=True):
     """The open flower: a broad 5-angled disc seen at 3/4, a star of mint
@@ -261,69 +136,223 @@ def trumpet(s, cx, cy, R, squash=0.68, ang=0.0, tube_to=None, star=True):
     return did
 
 
-def front_moonflower():
-    s = Sprite(72, 72, PAL, sc=0.93)
-    # vine climbing up behind, leaves below and right
-    vine = bez([(40, 71), (44, 62), (40, 54), (45, 46), (50, 40)], 30)
-    s.part(s.stroke(vine, (3.6, 2.6)), base=2, k=1, line=0)
-    heart(s, 54, 60, 11, ang=-0.7, k=2)
-    heart(s, 27, 63, 10, ang=0.8, k=2, hl=True)
-    # a second, still-furled bud behind on the right
-    twisted_bud(s, 50, 40, 60, 24, 3.2, turns=2)
-    # the flower: big moon-white trumpet facing left, tube running back right
-    trumpet(s, 28, 36, 21, squash=0.66, ang=0.15, tube_to=(48, 44))
+
+def vine(s, ctrl, w0, w1, wraps=2.0, k=1):
+    """A twining stem: one smooth S of a stem with a thin strand wound round
+    it. Only the strand's front crossings are drawn, as smooth diagonal
+    bands, so the twist reads as a spiral (never a zig-zag)."""
+    path = bez(ctrl, 60)
+    m = s.stroke(path, (w0, w1))
+    pid = s.part(m, base=2, k=k, line=0)
+    s.decal(s.line1([(x + 0.9, y + 0.3) for x, y in path[4:-6]]) & erode(m, 1), 1, on=[pid])
+    return pid, path
+
+
+def leaf_on(s, at, cx, cy, size, ang, k=2, hl=False, vein=True):
+    """A heart leaf on a petiole from the vine point `at` to its notch."""
+    nx, ny = rot([(0, -0.21 * size)], ang)[0]
+    (ax, ay) = at
+    px_, py_ = cx + nx, cy + ny
+    s.part(s.stroke(qbez(at, ((ax + px_) / 2, min(ay, py_) - 1.5), (px_, py_), 20), (2.0, 1.6)), base=2, k=0, line=0)
+    return heart(s, cx, cy, size, ang=ang, k=k, hl=hl, vein=vein)
+
+
+def tendril(s, start, R, turns=1.2, sg=1, a0=0.0):
+    """A curling tendril (the motion cue): a 1px spiral."""
+    x0, y0 = start
+    cx, cy = x0 - R * math.cos(a0), y0 - R * math.sin(a0)
+    pts = [(cx + R * (1 - 0.7 * u) * math.cos(a0 + sg * u * turns * 2 * math.pi),
+            cy + R * (1 - 0.7 * u) * math.sin(a0 + sg * u * turns * 2 * math.pi)) for u in np.linspace(0, 1, 60)]
+    m = s.stroke(pts, (1.6, 1.1))
+    return s.part(m, base=2, k=0, line=0)
+
+
+def bud(s, base, tip, w, turns=2.2, bend=2.0, hl=True, bold=False):
+    """The spiral-furled moonflower bud: a white spindle, its pleats wound in
+    smooth sage spirals, a sage calyx cup at the base."""
+    (x0, y0), (x1, y1) = base, tip
+    L = math.dist(base, tip)
+    nx, ny = -(y1 - y0) / L, (x1 - x0) / L
+    path = qbez(base, ((x0 + x1) / 2 + nx * bend, (y0 + y1) / 2 + ny * bend), tip, 50)
+    wf = lambda t: max(1.0, w * math.sin(math.pi * min(1, 0.12 + t * 0.92)) ** 0.75)
+    m = s.stroke(path, wf, cap=True)
+    hm = None
+    if hl:
+        hx, hy = path[int(len(path) * 0.45)]
+        hm = s.ellipse(hx - nx * w * 0.25, hy - ny * w * 0.25, 1.0, 1.6, ang=math.atan2(y1 - y0, x1 - x0) + math.pi / 2)
+    pid = s.part(m, base=3, k=2, sh_tone=2, line=0)
+    # spiral pleats: diagonal bands in the bud's own frame (u along the
+    # axis, v across), so each furl wraps the spindle as one clean stripe
+    ax, ay = s.T([(x0, y0)])[0]
+    bx2, by2 = s.T([(x1, y1)])[0]
+    ux, uy = bx2 - ax, by2 - ay
+    ul = math.hypot(ux, uy) or 1
+    ux, uy = ux / ul, uy / ul
+    ys, xs = np.nonzero(erode(m, 1))
+    period = max(4.0, ul / (turns * 2.2))
+    band = np.zeros(m.shape, bool)
+    for x, y in zip(xs, ys):
+        u = (x + 0.5 - ax) * ux + (y + 0.5 - ay) * uy
+        v = -(x + 0.5 - ax) * uy + (y + 0.5 - ay) * ux
+        if u < ul * 0.12 or u > ul * 0.9:
+            continue
+        if (u + v * 1.1) % period < (1.6 if bold else 1.0):
+            band[y, x] = True
+    s.decal(band, 2, on=[pid])
+    # calyx
+    cm = s.ellipse(x0, y0, w * 0.42, w * 0.34, ang=math.atan2(y1 - y0, x1 - x0))
+    s.part(cm, base=2, k=1, line=0)
+    return pid
+
+
+def sparkle(s, x, y):
+    """A glint of moonlight off the petals: a tiny 4-point star in sage."""
+    pts = [(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+    m = np.zeros((s.h, s.w), bool)
+    for u, v in pts:
+        if 0 <= u < s.w and 0 <= v < s.h:
+            m[v, u] = True
+    c = np.zeros_like(m)
+    c[y, x] = True
+    s.post.append((m & ~c, 2))
+    s.post.append((c, 3))
+
+
+# ---------------------------------------------------------------------------
+# moonflower_seed: BOBBING. A fat night-violet seed, cracked; its hooked
+# sprout lifts two butterfly cotyledons like moth wings.
+# ---------------------------------------------------------------------------
+
+def front_seed(p=0):
+    s = Sprite(56, 56, PAL, sc=0.92)
+    s.sel = 0.15
+    b = p
+    s.set_tilt(14, 31, 55)
+    # root feet: two pale roots splayed on the ground
+    with s.untilted(): s.part(s.curve([(31, 50), (28, 53), (23, 55)], (2.4, 1.4)), base=2, k=0, line=0)
+    with s.untilted(): s.part(s.curve([(32, 50), (35, 53), (39, 55)], (2.2, 1.4)), base=2, k=0, line=0)
+    # the hypocotyl: a hooked neck crouched back then thrust forward
+    stem = s.curve([(32, 51), (36, 43), (34, 34), (27, 28)], (4.6, 3.4))
+    s.part(stem, base=2, k=2, line=0)
+    # rear wing: a cotyledon flung up behind (far, smaller, higher)
+    butterfly(s, 36, 19 - b, 9.0, ang=-0.55 - 0.08 * b, hl=False)
+    # lead wing: the near cotyledon spread forward under the helmet
+    butterfly(s, 15, 31 - b * 0.5, 10.5, ang=2.85 + 0.06 * b, hl=False)
+    # head: the violet seed coat still worn as a helmet, brim tipped at the foe
+    coat = s.ellipse(23, 22 - b * 0.5, 10.5, 7.0, ang=-0.42)
+    s.part(coat, base=1, k=2, sh_tone=0, line=0)
+    # the split seam and the one glint
+    s.ink(s.line1(bez([(14, 27 - b * 0.5), (22, 25 - b * 0.5), (31, 18 - b * 0.5)], 12)) & erode(coat, 1), 0, lock=False)
+    s.glint([(18, 18), (19, 17)])
+    sparkle(s, 46, 33 + b)
+    s.contact += [(22, 27), (36, 40)]
+    return s
+
+
+def back_seed():
+    s = Sprite(48, 56, PAL)
+    # from behind and above: the neck rising off the bottom, wings spread,
+    # the violet helmet tipped toward the foe (top-right)
+    s.part(s.curve([(18, 62), (16, 50), (20, 38), (26, 30)], (8, 6)), base=2, k=2, line=0)
+    butterfly(s, 9, 30, 12, ang=3.6, hl=False)
+    butterfly(s, 40, 30, 12, ang=-0.2, hl=False)
+    coat = s.ellipse(27, 21, 16, 11, ang=-0.35)
+    s.part(coat, base=1, k=3, sh_tone=0, line=0)
+    s.ink(s.line1(bez([(13, 27), (26, 25), (40, 13)], 12)) & erode(coat, 1), 0, lock=False)
+    s.glint([(19, 14), (20, 13), (21, 13)])
+    return s
+
+
+# ---------------------------------------------------------------------------
+# moonflower_vine: REARING. A twining vine rearing up out of its heart-leaf
+# base; the head is the long spiral-furled bud aimed at the foe.
+# ---------------------------------------------------------------------------
+
+def front_vine(p=0):
+    s = Sprite(60, 60, PAL)
+    s.sel = 0.15
+    b = p
+    s.set_tilt(12, 32, 57)
+    # rear arm: a heart leaf high behind
+    leaf_on(s, (36, 37), 46, 27 - b, 7.5, -2.3, k=2)
+    # base: heart leaves laid on the ground, the far one smaller and higher
+    # the vine rears back then forward, a tendril curling off its back
+    vid, path = vine(s, [(32, 57), (38, 47), (36, 36), (29, 27)], 4.4, 3.2)
+    tendril(s, (38, 44), 3.2, turns=1.1, sg=1, a0=3.6 + 0.3 * b)
+    with s.untilted(): leaf_on(s, (31, 56), 19, 54, 8, 1.9, k=2, vein=False)
+    # head: the furled bud, tilted at the foe
+    bud(s, (30, 30), (18 - b, 5 - b), 12.0, turns=1.6, bend=-2.0, bold=True)
+    # lead arm: a heart leaf thrust forward, low
+    leaf_on(s, (35, 44), 16, 46, 8, 1.25 + 0.08 * b, k=2)
+    s.contact += [(12, 22), (38, 47)]
+    return s
+
+
+def back_vine():
+    s = Sprite(48, 60, PAL)
+    heart(s, 6, 48, 11, ang=1.3, k=2)
+    vid, path = vine(s, [(20, 64), (19, 50), (24, 38), (30, 30)], 6.5, 4.5, wraps=2.5)
+    heart(s, 42, 44, 11, ang=-1.4, k=2, hl=True)
+    bud(s, (30, 31), (44, 6), 10, turns=2.0, bend=2.0)
+    return s
+
+
+# ---------------------------------------------------------------------------
+# moonflower: REARING. The great moon-white trumpet thrust out at the foe as
+# the head; the vine rears behind it; a furled bud raised as a second fist;
+# moonlight glints off it.
+# ---------------------------------------------------------------------------
+
+def front_moonflower(p=0):
+    s = Sprite(60, 60, PAL, sc=0.96)
+    s.sel = 0.1
+    b = p
+    s.set_tilt(8, 36, 57)
+    # rear fist: a furled bud raised high behind
+    s.part(s.curve([(42, 42), (46, 34), (48, 28)], (2.4, 2.0)), base=2, k=0, line=0)
+    bud(s, (48, 28), (53, 8 - b), 6.0, turns=2.0, bend=2.0, hl=False)
+    # feet: a heart leaf planted ahead, a small one behind
+    with s.untilted(): leaf_on(s, (37, 56), 48, 54, 6.5, -1.9, k=2, vein=False)
+    with s.untilted(): leaf_on(s, (35, 56), 23, 54, 8, 1.85, k=2, vein=False)
+    # the body: the vine rears back then arches forward into a neck
+    vid, path = vine(s, [(36, 57), (43, 47), (42, 36), (35, 29), (29, 27)], 5.0, 3.4)
+    tendril(s, (43, 50), 3.2, turns=1.1, sg=1, a0=0.2 + 0.3 * b)
+    # lead arm: a heart leaf thrust forward and up on its petiole
+    leaf_on(s, (41, 43), 18, 44 - b, 8.5, 1.15, k=2)
+    # head: the great trumpet on the neck, turned 3/4 at the foe
+    with s.rotated(26 + 2 * b, 17, 25):
+        trumpet(s, 17 - 0.5 * b, 25 - b, 19, squash=0.5, ang=0.0, tube_to=(31, 27))
+    sparkle(s, 4, 9 + b)
+    s.contact += [(17, 27), (44, 51)]
     return s
 
 
 def back_moonflower():
-    s = Sprite(48, 72, PAL)
-    heart(s, 6, 62, 12, ang=0.8, hl=True)
-    heart(s, 42, 64, 12, ang=-0.8)
-    s.part(s.stroke(bez([(24, 72), (22, 64), (24, 58)], 20), (4.5, 3.5)), base=2, k=1, line=0)
-    # from behind: the back of the disc, its star of mint bands, the tube
-    # and its calyx pointing at us
-    cx, cy, R = 24, 36, 22
-    pts = []
-    for i in range(5):
-        a0 = -math.pi / 2 + i * 2 * math.pi / 5 + 0.2
-        for j in range(8):
-            a = a0 + j / 8 * 2 * math.pi / 5
-            r = R * (1.0 - 0.07 * math.sin(math.pi * j / 8) ** 0.5)
-            pts.append((cx + r * math.cos(a), cy + r * math.sin(a) * 0.8))
-    did = s.part(s.poly(pts), base=3, k=3, sh_tone=2, line=0)
-    for i in range(5):
-        a = -math.pi / 2 + i * 2 * math.pi / 5 + 0.2
-        p1 = (cx + math.cos(a) * R * 0.95, cy + math.sin(a) * R * 0.95 * 0.8)
-        band = s.stroke(bez([(cx, cy), p1], 16), (3.6, 1.0), cap=False)
-        s.decal(band, 2, on=[did])
-    tube = s.stroke(bez([(cx, cy), (cx + 1, cy + 8), (cx, cy + 16)], 12), (8, 5))
+    s = Sprite(52, 60, PAL, sc=0.88)
+    s.set_tilt(-10, 18, 64)
+    # from behind: the neck rising off the bottom, the trumpet's green-ribbed
+    # outside and its sepals, the face turned away toward the foe (top-right)
+    vid, path = vine(s, [(16, 66), (12, 52), (16, 42), (24, 36)], 7.0, 5.0)
+    leaf_on(s, (13, 54), 3, 46, 10, 1.3, k=2)
+    tube = s.stroke(qbez((22, 38), (24, 33), (28, 29), 20), (5.0, 8.0))
     s.part(tube, base=3, k=2, sh_tone=2, line=0)
-    s.part(s.ellipse(cx, cy + 17, 4.0, 3.0), base=2, k=1, line=0)
+    with s.rotated(-30, 31, 21):
+        disc = s.ellipse(32, 21, 9, 15)
+        did = s.part(disc, base=3, k=3, sh_tone=2, line=0)
+        for i in range(5):
+            a = -math.pi / 2 + i * 2 * math.pi / 5
+            s.decal(s.stroke(bez([(27, 23), (32 + math.cos(a) * 8, 21 + math.sin(a) * 14)], 12), (2.2, 0.8), cap=False), 2, on=[did])
+    # sepals clasping the tube
+    s.part(s.ellipse(24, 35, 4.5, 3.5, ang=-0.6), base=2, k=1, line=0)
+    leaf_on(s, (18, 44), 39, 47, 9, -1.2, k=2, hl=True)
     return s
 
 
-ICON_MOON = [
-    "                ",
-    "     kkkkk      ",
-    "   kk33333kk    ",
-    "  k333323333k   ",
-    " k3332k2k2333k  ",
-    " k3323k1k3233kk ",
-    " k3333212333k2k ",
-    " k33232k3233k2k ",
-    "  k323k3k32kk2k ",
-    "   kk3333kkk2k  ",
-    "     kkkkk22k   ",
-    "  kkk   k22k kk ",
-    " k2221kk22kkk2k ",
-    "  kk11k22k111k  ",
-    "    kkk2kkkkk   ",
-    "      kk        ",
-]
-
-
 SPRITES = {
-    "moonflower_seed": dict(pal=PAL, front=front_seed, back=back_seed, icon=ICON_SEED),
-    "moonflower_vine": dict(pal=PAL, front=front_vine, back=back_vine, icon=ICON_VINE),
-    "moonflower": dict(pal=PAL, front=front_moonflower, back=back_moonflower, icon=ICON_MOON),
+    "moonflower_seed": dict(pal=PAL, front=front_seed, back=fit_back(back_seed), icon=ICONS["moonflower_seed"], icon2="bob",
+                            idle=[functools.partial(front_seed, 1)]),
+    "moonflower_vine": dict(pal=PAL, front=front_vine, back=fit_back(back_vine), icon=ICONS["moonflower_vine"], icon2="bob",
+                            idle=[functools.partial(front_vine, 1)]),
+    "moonflower": dict(pal=PAL, front=front_moonflower, back=fit_back(back_moonflower), icon=ICONS["moonflower"], icon2="bob",
+                       idle=[functools.partial(front_moonflower, 1)]),
 }

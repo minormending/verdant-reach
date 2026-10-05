@@ -26,3 +26,4 @@ export function createScreens(ctx: GameContext): Screens {
 }
 
 export { showHerbariumEntry };
+export { notesScreen } from "./notes";

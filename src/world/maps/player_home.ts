@@ -29,7 +29,11 @@ export const player_home: MapDef = {
     // The morning scene walks JUNE up 2, left 4 to stand beside the bed (3,2).
     { id: "june", sprite: "villager_a", x: 7, y: 4, facing: "left", movement: "static", script: "home_june" },
   ],
-  signs: [],
+  signs: [
+    { x: 2, y: 1, text: "Your old school botany books. A pressed daisy marks the chapter on roots." },
+    { x: 3, y: 1, text: "Seed catalogues, dog-eared at the tomatoes. JUNE has circled every one." },
+    { x: 8, y: 6, text: "JUNE's jam shelf. BRAMBLE, BRAMBLE, ROSE HIP, and one jar labelled \"???\"." },
+  ],
   triggers: [],
   onEnter: "home_enter",
   healPoint: { x: 6, y: 4 },

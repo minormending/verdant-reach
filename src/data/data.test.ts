@@ -86,6 +86,46 @@ describe("species", () => {
   });
 });
 
+describe("round 3 lines", () => {
+  const R3 = [
+    ["clover_sprout", "white_clover"], ["cattail_shoot", "cattail"], ["foxglove_rosette", "foxglove"],
+    ["holly_seedling", "holly"], ["mint_sprig", "peppermint"], ["rose_bud", "wild_rose"],
+    ["pitcher_sprout", "pitcher_plant"], ["snapdragon_sprout", "snapdragon"],
+  ] as const;
+  const total = (id: keyof typeof DATA.species) => Object.values(DATA.species[id].baseStats).reduce((a, b) => a + b, 0);
+
+  it("are two-stage lines in the Gen 2 bands with ~40-level learnsets", () => {
+    for (const [a, b] of R3) {
+      expect(DATA.species[a].growsInto?.species, a).toBe(b);
+      expect(DATA.species[b].growsInto, b).toBeUndefined();
+      expect(total(a), a).toBeGreaterThanOrEqual(250);
+      expect(total(a), a).toBeLessThanOrEqual(320);
+      expect(total(b), b).toBeGreaterThanOrEqual(400);
+      expect(total(b), b).toBeLessThanOrEqual(470);
+      for (const id of [a, b]) {
+        const ls = DATA.species[id].learnset;
+        expect(ls.length, id).toBeGreaterThanOrEqual(10);
+        expect(ls[ls.length - 1].level, id).toBeGreaterThanOrEqual(36);
+        expect(ls.some((l) => DATA.moves[l.move].category === "status"), id).toBe(true);
+      }
+    }
+  });
+
+  it("each line teaches its signature move", () => {
+    const sig: [keyof typeof DATA.species, string][] = [
+      ["peppermint", "menthol_chill"], ["foxglove", "digitalis"], ["holly", "holly_spines"], ["cattail", "cattail_fluff"],
+      ["pitcher_plant", "pitfall_slurp"], ["wild_rose", "rose_thorn"], ["snapdragon", "dragon_snap"],
+    ];
+    for (const [id, mv] of sig) expect(DATA.species[id].learnset.map((l) => l.move), id).toContain(mv);
+  });
+
+  it("snapdragon is the strongest new line but a rare gift", () => {
+    expect(total("snapdragon")).toBe(Math.max(...R3.map(([, b]) => total(b))));
+    expect(DATA.species.snapdragon_sprout.catchRate).toBeLessThanOrEqual(45);
+    expect(DATA.species.snapdragon.types).toContain("dragon");
+  });
+});
+
 describe("moves", () => {
   const moves = Object.values(DATA.moves);
   it("has ~60 well-formed moves across all types and categories", () => {
@@ -115,6 +155,10 @@ describe("items", () => {
     expect(DATA.items.terrarium_pod.effect).toEqual({ kind: "pod", catchMultiplier: 1 });
     expect(DATA.items.glass_pod.effect).toEqual({ kind: "pod", catchMultiplier: 1.5 });
     expect(DATA.items.centuryheart_seed.description).toBe("Warm to the touch. It hums.");
+    expect(DATA.items.wild_berry.effect).toEqual({ kind: "heal", amount: 30 });
+    expect(DATA.items.wild_berry.price).toBeGreaterThan(0); // sellable
+    expect(DATA.items.rose_hip.effect).toEqual({ kind: "cure_status" });
+    expect(DATA.items.syrup_jar.pocket).toBe("key");
   });
 });
 
@@ -148,6 +192,8 @@ describe("herbarium", () => {
       expect(e.heightM).toBeGreaterThan(0);
       expect(e.weightKg).toBeGreaterThan(0);
       expect(e.scientificName).toMatch(/^[A-Z][a-z]+ [a-z]+$/);
+      // plain ASCII only: the 8x8 font has no accented letters except e-acute
+      expect(e.entry, e.species).toMatch(/^[ -~]+$/);
     }
   });
 });

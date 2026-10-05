@@ -4,7 +4,7 @@
 //
 // Voice: STYLE.md §5. One idea per box; text boxes are 18 columns x 2 lines.
 
-import type { ScriptCmd } from "../../contracts";
+import type { ScriptCmd, StillKey } from "../../contracts";
 import { emote, face, flag, ifFlags, moveNpc, say, steps, wait, type Scripts } from "../build";
 import { COUNTER, type StarterLine } from "../trainers";
 
@@ -22,6 +22,9 @@ const byStarter = (make: (line: StarterLine) => ScriptCmd[]): ScriptCmd =>
 
 const camera = (x: number, y: number, frames = 60): ScriptCmd => ({ op: "camera", x, y, frames });
 const cameraReset = (frames = 45): ScriptCmd => ({ op: "cameraReset", frames });
+// Story stills: held over one to three boxes, then cleared. Keep them rare.
+const still = (image: StillKey): ScriptCmd => ({ op: "still", image });
+const stillClear: ScriptCmd = { op: "stillClear" };
 
 // The engine announces giveMark itself ("<PLAYER> received the ... MARK!" + jingle).
 const awardMark = (mark: "bramble_mark" | "sundew_mark"): ScriptCmd => ({ op: "giveMark", mark });
@@ -108,8 +111,11 @@ export const act1Scripts: Scripts = {
   shears: [
     { op: "music", id: "rootstock_appears" },
     camera(13, 2, 60),
+    still("grove_taps"),
+    wait(30),
     say("Tubing runs from every trunk into sealed steel drums."),
     say("The sap inside has a faint gold sheen, like pollen in lamplight."),
+    stillClear,
     cameraReset(40),
     emote("shears", "..."),
     face("shears", "toPlayer"),
@@ -160,9 +166,12 @@ export const act1Scripts: Scripts = {
     say("...Doesn't matter. Strong is strong.", BRAM),
     say("Look at mine. Grown weeks early.", BRAM),
     emote("player", "..."),
+    still("graft_collar"),
+    wait(30),
     say("A grey collar is clamped around its stem, tight as a tourniquet."),
     say("Its leaves are pale. It won't turn toward him."),
     say("A GRAFT COLLAR. It makes them listen. Makes them grow.", BRAM),
+    stillClear,
     say("Don't look at me like that.", BRAM),
     byStarter((line) => [{ op: "battle", trainer: `rival_2_${COUNTER[line]}` }]),
     { op: "ifLastBattle", result: "won", then: [
@@ -190,6 +199,7 @@ export const act1Scripts: Scripts = {
       say("Plants gossip, you know.", NELL),
       say("Bog soil's so poor, my darlings eat bugs!", NELL),
       say("Slowly. Over days. Isn't that lovely?", NELL),
+      say("My BOG PITCHERS have slippery rims. In slide the bugs!", NELL),
       say("Shall we see how hungry they are today?", NELL),
       { op: "battle", trainer: "nell" },
       { op: "ifLastBattle", result: "won", then: [
@@ -202,6 +212,7 @@ export const act1Scripts: Scripts = {
         { op: "shake", frames: 20 },
         say("It started the night of the bloom.", NELL),
         say("My flytraps snap at nothing now.", NELL),
+        say("And the CATTAILS sway when there's no wind.", NELL),
         say("Whatever it is, it's down in the roots. Ooh, it gives me shivers!", NELL),
         wait(30),
         { op: "sfx", id: "text_blip" },
@@ -220,12 +231,14 @@ export const act1Scripts: Scripts = {
     say("His grandfather kept a diary.", VALE),
     say("The last time the CENTURYHEART bloomed...", VALE),
     say("...plants woke up then, too. Just like now.", VALE),
-    say("And the diary says the ground hummed all night.", VALE),
+    still("vale_call"),
     wait(30),
+    say("And the diary says the ground hummed all night.", VALE),
     { op: "shake", frames: 40 },
-    emote("player", "!"),
     say("\"As if something underneath was afraid.\"", VALE),
-    wait(40),
+    wait(60),
+    stillClear,
+    emote("player", "!"),
     say("Keep that seed close, <PLAYER>. And come home soon.", VALE),
     say("Carefully.", VALE),
     flag("slice_done"),

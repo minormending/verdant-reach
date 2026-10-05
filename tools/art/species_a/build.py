@@ -30,7 +30,7 @@ OUT = ROOT / "public" / "assets" / "species"
 import importlib  # noqa: E402
 
 LINE_NAMES = ["oak", "chili", "lily", "dandelion", "bramble", "sunflower"]
-SIZES = {"front": 56, "back": 48, "icon": 16, "icon__2": 16}
+SIZES = {"front": 56, "front__2": 56, "front__3": 56, "back": 48, "icon": 16, "icon__2": 16}
 
 
 def check(id_, kind, im: Image.Image):

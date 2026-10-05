@@ -5,6 +5,7 @@ import type { Scripts } from "./build";
 import { TRAINERS } from "./trainers";
 import { storyScripts } from "./scripts/story";
 import { act1Scripts } from "./scripts/act1";
+import { QUESTS, questScripts } from "./scripts/quests";
 
 import * as player_home from "./maps/player_home";
 import * as herbarium from "./maps/herbarium";
@@ -63,8 +64,9 @@ function mergeScripts(...all: Scripts[]): Scripts {
 
 export const WORLD: WorldData = {
   maps,
-  scripts: mergeScripts(storyScripts, act1Scripts, ...mapScripts),
+  scripts: mergeScripts(storyScripts, act1Scripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
+  quests: QUESTS,
   // Prologue: the observation deck at night, beside DR. VALE.
   newGame: { map: "herbarium_roof", x: 5, y: 6, facing: "up", script: "prologue" },
 };

@@ -4,17 +4,21 @@
 import type { GameContext, Scene } from "../contracts";
 import { SCREEN_W } from "../contracts";
 import { storeOptions } from "../save";
+import { notesScreen } from "../screens";
+import { anyQuestStarted } from "./progress";
 import { Menu } from "../ui/kit";
 import { saveDialog, trainerCard } from "../ui/widgets";
 
-export type StartItem = "herbarium" | "quickened" | "bag" | "card" | "save" | "options" | "exit";
+export type StartItem = "herbarium" | "quickened" | "bag" | "notes" | "card" | "save" | "options" | "exit";
 
 /** Which entries are shown right now. */
 export function startMenuItems(ctx: GameContext): StartItem[] {
   const items: StartItem[] = [];
   if ((ctx.state.bag["field_herbarium"] ?? 0) > 0) items.push("herbarium");
   if (ctx.state.party.length > 0) items.push("quickened");
-  items.push("bag", "card", "save", "options", "exit");
+  items.push("bag");
+  if (anyQuestStarted(ctx.state.flags)) items.push("notes");
+  items.push("card", "save", "options", "exit");
   return items;
 }
 
@@ -23,6 +27,7 @@ function label(ctx: GameContext, id: StartItem): string {
     case "herbarium": return "HERBARIUM";
     case "quickened": return "QUICKENED";
     case "bag": return "BAG";
+    case "notes": return "NOTES";
     case "card": return ctx.state.playerName || "PLAYER";
     case "save": return "SAVE";
     case "options": return "OPTIONS";
@@ -65,6 +70,7 @@ export async function runStartMenu(ctx: GameContext): Promise<void> {
       case "herbarium": await ctx.screens.herbarium(); break;
       case "quickened": await ctx.screens.party({ mode: "view" }); break;
       case "bag": await ctx.screens.bag({ inBattle: false }); break;
+      case "notes": await notesScreen(ctx); break;
       case "card": await trainerCard(ctx); break;
       case "options":
         await ctx.screens.options();

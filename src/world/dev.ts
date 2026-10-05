@@ -53,7 +53,8 @@ export default function worldDev(ctx: GameContext): Scene {
   if (params.get("play")) return playtest(ctx, params);
   const current = (params.get("map") as MapId) || "fallowfield";
   const scale = Number(params.get("scale") || 2);
-  const errors = validateWorld(ctx.world);
+  const warnings: string[] = [];
+  const errors = validateWorld(ctx.world, warnings);
 
   const screen = document.getElementById("screen");
   if (screen) screen.style.display = "none";
@@ -98,9 +99,12 @@ export default function worldDev(ctx: GameContext): Scene {
     ...mine,
     "",
     `World: ${errors.length} problems total.`,
+    ...(warnings.length ? [`${warnings.length} warnings (waiting on other owners):`, ...warnings.map((w) => `  ${w}`)] : []),
     "",
     "NPCs:",
     ...map.npcs.map((n) => `  ${n.id} (${n.sprite}) @${n.x},${n.y} ${n.trainer ? "trainer " + n.trainer : n.script ?? "pickup"}${n.visibleWhen ? " when " + n.visibleWhen.map((c) => `${c.flag}=${c.is}`).join("&") : ""}`),
+    "Hidden items:",
+    ...(map.hidden ?? []).map((h) => `  @${h.x},${h.y} ${h.item}${h.qty && h.qty > 1 ? " x" + h.qty : ""}`),
     "Warps:",
     ...map.warps.map((w) => `  @${w.x},${w.y} -> ${w.to} ${w.toX},${w.toY}`),
     "Triggers:",
@@ -206,6 +210,16 @@ function render(ctx: GameContext, map: MapDef, canvas: HTMLCanvasElement, scale:
   // signs
   g.font = "8px monospace";
   for (const s of map.signs) { g.fillStyle = "#000"; g.fillText("S", s.x * T + 5, s.y * T + 11); }
+  // hidden items: a small gold diamond
+  for (const hd of map.hidden ?? []) {
+    const cx = hd.x * T + 8, cy = hd.y * T + 8;
+    g.fillStyle = "#ffe860";
+    g.strokeStyle = "#000";
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(cx, cy - 5); g.lineTo(cx + 4, cy); g.lineTo(cx, cy + 5); g.lineTo(cx - 4, cy); g.closePath();
+    g.fill(); g.stroke();
+  }
   // heal point
   if (map.healPoint) { g.fillStyle = "#ff60c0"; g.fillRect(map.healPoint.x * T + 5, map.healPoint.y * T + 5, 6, 6); }
   // npcs

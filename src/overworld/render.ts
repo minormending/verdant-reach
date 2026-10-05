@@ -6,6 +6,7 @@ import type { Assets, CharacterKey, Dir, StructureKey, TileKey } from "../contra
 import { CHAR_ROWS, SCREEN_H, SCREEN_W, STRUCTURES, TILE, UI, characterPath, structurePath, tilePath } from "../contracts";
 import { drawImagePath, drawMissing, imageMissing } from "../engine/gfx";
 import { drawText, drawWindow } from "../ui/kit";
+import { drawTiny } from "../screens/kit/draw";
 import type { CellArt } from "./autotile";
 
 /** Flat colours used only when a tile's art is missing (keeps dev maps readable). */
@@ -127,7 +128,7 @@ export function structureImage(assets: Assets, key: StructureKey, x: number, y: 
 
 /** Objects that never turn to face the player and use rows as states. */
 const OBJECT_SPRITES: ReadonlySet<CharacterKey> = new Set<CharacterKey>([
-  "item_pickup", "potted_plant", "lever", "valve", "hedge_gate",
+  "item_pickup", "potted_plant", "lever", "valve", "hedge_gate", "harvest_bush",
 ]);
 
 /**
@@ -135,11 +136,18 @@ const OBJECT_SPRITES: ReadonlySet<CharacterKey> = new Set<CharacterKey>([
  * an NPC id `lever:<flag>` or `valve:<flag>` shows the UP row while that flag
  * is true (the "on" frame) and the DOWN row otherwise.
  */
-export function rowFor(id: string, sprite: CharacterKey, facing: Dir, flags: Record<string, boolean>): Dir {
+export function rowFor(
+  id: string, sprite: CharacterKey, facing: Dir, flags: Record<string, boolean>,
+  pickedToday: (harvestId: string) => boolean = () => false,
+): Dir {
   if (sprite === "lever" || sprite === "valve") {
     const m = /^(?:lever|valve):(.+)$/.exec(id);
     if (m) return flags[m[1]] ? "up" : "down";
   }
+  // Harvest bushes `bush:<harvestId>`: DOWN row ripe, UP row picked (until tomorrow).
+  const b = /^bush:(.+)$/.exec(id);
+  if (b) return pickedToday(b[1]) ? "up" : "down";
+  if (sprite === "harvest_bush") return "down";
   return facing;
 }
 
@@ -242,6 +250,49 @@ export function drawMapName(g: CanvasRenderingContext2D, name: string, t: number
   drawWindow(g, 2, y, w, h, { shadow: true });
   drawLeaf(g, 9, y + 9);
   drawText(g, name, 20, y + 9);
+}
+
+// ---------------------------------------------------------------------------
+// Toasts ("NEW NOTE" / "NOTE COMPLETE")
+// ---------------------------------------------------------------------------
+
+export const TOAST_MS = { in: 220, hold: 2400, out: 200 };
+
+/** A 9x10 field notebook: kraft cover, green band, page edges; ticked when complete. */
+function drawNotebook(g: CanvasRenderingContext2D, x: number, y: number, done: boolean) {
+  g.fillStyle = "#4a2818";
+  g.fillRect(x, y, 9, 10);
+  g.fillStyle = "#c88850";
+  g.fillRect(x + 1, y + 1, 7, 8);
+  g.fillStyle = "#f0c890";
+  g.fillRect(x + 1, y + 1, 7, 1);
+  g.fillStyle = "#4a7a40";
+  g.fillRect(x + 1, y + 6, 7, 2);
+  g.fillStyle = "#f8f8f0";
+  g.fillRect(x + 8, y + 2, 1, 7); // page edges
+  if (done) {
+    g.fillStyle = "#f8f8f0";
+    g.fillRect(x + 2, y + 3, 1, 1); g.fillRect(x + 3, y + 4, 1, 1); g.fillRect(x + 4, y + 3, 1, 1); g.fillRect(x + 5, y + 2, 1, 1);
+  }
+}
+
+/** Notice that drops in from the top centre, holds, and lifts away (`ms` since it started). */
+export function drawToast(g: CanvasRenderingContext2D, kind: "new_note" | "note_done", title: string, ms: number) {
+  const { in: IN, hold: HOLD, out: OUT } = TOAST_MS;
+  if (ms > IN + HOLD + OUT || ms < 0) return;
+  const h = 26;
+  let off = 0;
+  if (ms < IN) { const k = 1 - ms / IN; off = Math.round(k * k * (h + 2)); }
+  else if (ms > IN + HOLD) { const k = (ms - IN - HOLD) / OUT; off = Math.round(k * k * (h + 2)); }
+  const label = kind === "new_note" ? "NEW NOTE" : "NOTE COMPLETE";
+  const text = Array.from(title).slice(0, 15).join("");
+  const w = Math.max(96, Math.max(Array.from(text).length * 8, label.length * 4 + 12) + 30);
+  const x = Math.round((SCREEN_W - w) / 2);
+  const y = 2 - off;
+  drawWindow(g, x, y, w, h, { shadow: true });
+  drawNotebook(g, x + 8, y + 8, kind === "note_done");
+  drawTiny(g, label, x + 21, y + 6, kind === "note_done" ? "#3870e8" : UI.dark);
+  drawText(g, text, x + 21, y + 13);
 }
 
 // ---------------------------------------------------------------------------

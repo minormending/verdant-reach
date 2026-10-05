@@ -3,6 +3,10 @@
 //  - wild three-stage lines total ~255–290 / 350–370 / 465–490 and grow at
 //    roughly 11–14 and 22–26 (SLICE.md);
 //  - two-stage lines (sundew, nettle) total ~300 / ~460 and grow once (16–18).
+//  - Round 3 two-stage lines total 275–315 / 420–470 and grow at 16–22:
+//    clover (tending 120), cattail 17, foxglove (night, 18), holly 20,
+//    mint 16, wild rose (day, 18), pitcher 18, snapdragon 22. Snapdragon is
+//    the rare dragon: the top of both bands, slow, and 4x weak to frost.
 // Stat personalities: oak = physical bulk, chili = fast special attacker,
 // lily = special wall; dandelion = fast and frail; pumpkin = slow tank;
 // flytrap = glass-cannon physical; moonflower = special night attacker.
@@ -77,6 +81,24 @@ const NETTLE: L = [[1, "thorn_jab"], [1, "bristle"], [5, "sting_hairs"], [9, "ro
   [16, "allelopathy"], [21, "burr_hitch"], [26, "thorn_lash"], [32, "pitfall"], [38, "hook_thorns"]];
 const MOONFLOWER: L = [[1, "pale_touch"], [1, "night_fold"], [5, "pollen_puff"], [8, "wither"], [12, "spore_cloud"],
   [16, "moonbeam"], [20, "dodder_coil"], [25, "perfume"], [30, "pale_bloom"], [35, "sunbeam"], [40, "petal_storm"]];
+
+// Round 3 lines (two stages; grow at 16-22, see the notes by each line).
+const CLOVER: L = [[1, "pollen_puff"], [1, "night_fold"], [5, "vine_lash"], [8, "sap_drain"], [11, "lucky_leaf"],
+  [15, "root_snare"], [18, "nitro_fix"], [22, "wind_scatter"], [26, "perfume"], [30, "unfurl"], [35, "sunbeam"], [40, "petal_storm"]];
+const CATTAIL: L = [[1, "dew_drop"], [1, "sap_seal"], [5, "pad_slap"], [9, "cattail_fluff"], [13, "undertow"],
+  [17, "root_tap"], [21, "rain_call"], [25, "leaf_edge"], [29, "bark_skin"], [34, "flood"], [40, "timber"]];
+const FOXGLOVE: L = [[1, "pollen_puff"], [1, "nectar_lure"], [5, "pale_touch"], [8, "allelopathy"], [11, "wind_scatter"],
+  [14, "wither"], [17, "moonbeam"], [20, "spore_cloud"], [24, "digitalis"], [28, "night_fold"], [32, "pale_bloom"], [36, "sunbeam"], [40, "petal_storm"]];
+const HOLLY: L = [[1, "thorn_jab"], [1, "bristle"], [5, "hoarfrost"], [8, "sap_seal"], [12, "spine_volley"],
+  [16, "frost_needle"], [24, "evergreen"], [26, "holly_spines"], [28, "thorn_lash"], [32, "cold_snap"], [36, "snowdrift"], [40, "hook_thorns"]];
+const MINT: L = [[1, "hoarfrost"], [1, "perfume"], [5, "vine_lash"], [8, "cold_mist"], [12, "sap_drain"],
+  [15, "root_snare"], [20, "menthol_chill"], [24, "unfurl"], [28, "frost_bloom"], [32, "cold_snap"], [36, "leaf_gale"], [40, "snowdrift"]];
+const ROSE: L = [[1, "thorn_jab"], [1, "perfume"], [5, "pollen_puff"], [8, "vine_lash"], [10, "bristle"],
+  [12, "spine_volley"], [22, "rose_thorn"], [25, "unfurl"], [28, "thorn_lash"], [32, "sunbeam"], [36, "petal_storm"], [40, "hook_thorns"]];
+const PITCHER: L = [[1, "slick_rim"], [1, "nectar_lure"], [5, "dew_drop"], [8, "sticky_dew"], [12, "digest"],
+  [15, "undertow"], [22, "pitfall_slurp"], [25, "pitfall"], [28, "rain_call"], [32, "mist_veil"], [36, "flood"], [40, "downpour"]];
+const SNAPDRAGON: L = [[1, "dragon_nip"], [1, "perfume"], [5, "pollen_puff"], [9, "vine_lash"], [13, "red_resin"],
+  [17, "dragon_snap"], [21, "unfurl"], [25, "old_growth"], [29, "sunbeam"], [33, "primal_frond"], [37, "leaf_gale"], [40, "petal_storm"]];
 
 const ALL: Species[] = [
   // ------------------------------------------------------------- starters
@@ -213,6 +235,75 @@ const ALL: Species[] = [
   sp({ id: "moonflower", name: "Moonflower", line: "moonflower", stage: 3, types: ["ghost", "bloom"],
     base: st(75, 60, 70, 110, 90, 80), rate: "medium", catchRate: 45, baseExp: 188, ev: { spa: 3 },
     activity: "night", learnset: learn(MOONFLOWER, [[22, "pale_bloom"]]) }),
+  // ============================================================== Round 3 lines
+  // ------------------------------------------------------------- clover (bloom; bulky support, grows by tending)
+  // Tending 120 from a fresh catch (friendship 70) takes ~13 level-ups, so a
+  // Route 1 Shamrock (lv 3) blooms into White Clover around lv 16.
+  sp({ id: "clover_sprout", name: "Shamrock", line: "clover", stage: 1, types: ["bloom"],
+    base: st(50, 35, 50, 45, 55, 40), rate: "fast", catchRate: 255, baseExp: 50, ev: { spd: 1 },
+    activity: "day", grows: ["white_clover", { kind: "tending", friendship: 120 }], learnset: learn(CLOVER) }),
+  sp({ id: "white_clover", name: "White Clover", line: "clover", stage: 2, types: ["bloom"],
+    base: st(85, 50, 75, 70, 90, 50), rate: "fast", catchRate: 90, baseExp: 140, ev: { spd: 2 },
+    activity: "day", learnset: learn(CLOVER, [[1, "nitro_fix"]]) }),
+
+  // ------------------------------------------------------------- cattail (water -> water/wood; sturdy mixed attacker)
+  sp({ id: "cattail_shoot", name: "Bulrush", line: "cattail", stage: 1, types: ["water"],
+    base: st(50, 50, 55, 45, 45, 40), rate: "medium", catchRate: 190, baseExp: 58, ev: { def: 1 },
+    grows: ["cattail", vigor(17)], learnset: learn(CATTAIL) }),
+  sp({ id: "cattail", name: "Cattail", line: "cattail", stage: 2, types: ["water", "wood"],
+    base: st(75, 80, 80, 65, 65, 55), rate: "medium", catchRate: 90, baseExp: 150, ev: { def: 1, atk: 1 },
+    learnset: learn(CATTAIL, [[17, "leaf_edge"]]) }),
+
+  // ------------------------------------------------------------- foxglove (bloom -> bloom/ghost; dusk/night special + blight)
+  // Biennial: grows into its flowering spire on a night-time level-up (18+).
+  sp({ id: "foxglove_rosette", name: "Fox Rosette", line: "foxglove", stage: 1, types: ["bloom"],
+    base: st(45, 30, 45, 60, 60, 40), rate: "medium", catchRate: 150, baseExp: 64, ev: { spa: 1 },
+    activity: "night", grows: ["foxglove", { kind: "vigor_night", level: 18 }], learnset: learn(FOXGLOVE) }),
+  sp({ id: "foxglove", name: "Foxglove", line: "foxglove", stage: 2, types: ["bloom", "ghost"],
+    base: st(65, 45, 65, 100, 90, 70), rate: "medium", catchRate: 75, baseExp: 155, ev: { spa: 2 },
+    activity: "night", learnset: learn(FOXGLOVE, [[18, "digitalis"]]) }),
+
+  // ------------------------------------------------------------- holly (thorn -> thorn/frost; slow physical wall)
+  sp({ id: "holly_seedling", name: "Holly Sprout", line: "holly", stage: 1, types: ["thorn"],
+    base: st(50, 55, 65, 35, 50, 30), rate: "slow", catchRate: 120, baseExp: 66, ev: { def: 1 },
+    grows: ["holly", vigor(20)], learnset: learn(HOLLY) }),
+  sp({ id: "holly", name: "Holly", line: "holly", stage: 2, types: ["thorn", "frost"],
+    base: st(75, 90, 100, 50, 80, 45), rate: "slow", catchRate: 60, baseExp: 160, ev: { def: 2 },
+    learnset: learn(HOLLY, [[20, "holly_spines"]]) }),
+
+  // ------------------------------------------------------------- mint (frost; fast special sweeper, grows fast)
+  sp({ id: "mint_sprig", name: "Mint Sprig", line: "mint", stage: 1, types: ["frost"],
+    base: st(45, 40, 40, 60, 45, 65), rate: "fast", catchRate: 190, baseExp: 60, ev: { spe: 1 },
+    grows: ["peppermint", vigor(16)], learnset: learn(MINT) }),
+  sp({ id: "peppermint", name: "Peppermint", line: "mint", stage: 2, types: ["frost"],
+    base: st(65, 55, 60, 95, 65, 100), rate: "fast", catchRate: 75, baseExp: 150, ev: { spa: 1, spe: 1 },
+    learnset: learn(MINT, [[16, "menthol_chill"]]) }),
+
+  // ------------------------------------------------------------- wild rose (thorn -> thorn/bloom; physical; opens by day)
+  sp({ id: "rose_bud", name: "Rose Bud", line: "rose", stage: 1, types: ["thorn"],
+    base: st(45, 60, 45, 45, 45, 55), rate: "medium", catchRate: 120, baseExp: 64, ev: { atk: 1 },
+    activity: "day", grows: ["wild_rose", { kind: "vigor_day", level: 18 }], learnset: learn(ROSE) }),
+  sp({ id: "wild_rose", name: "Wild Rose", line: "rose", stage: 2, types: ["thorn", "bloom"],
+    base: st(65, 95, 70, 70, 70, 85), rate: "medium", catchRate: 60, baseExp: 162, ev: { atk: 2 },
+    activity: "day", learnset: learn(ROSE, [[18, "rose_thorn"]]) }),
+
+  // ------------------------------------------------------------- pitcher plant (bug -> bug/water; bulky drainer)
+  sp({ id: "pitcher_sprout", name: "Tiny Pitcher", line: "pitcher", stage: 1, types: ["bug"],
+    base: st(50, 50, 50, 55, 55, 35), rate: "medium", catchRate: 150, baseExp: 68, ev: { spd: 1 },
+    grows: ["pitcher_plant", vigor(18)], learnset: learn(PITCHER) }),
+  sp({ id: "pitcher_plant", name: "Bog Pitcher", line: "pitcher", stage: 2, types: ["bug", "water"],
+    base: st(75, 75, 75, 85, 85, 50), rate: "medium", catchRate: 60, baseExp: 160, ev: { hp: 1, spd: 1 },
+    learnset: learn(PITCHER, [[18, "pitfall_slurp"]]) }),
+
+  // ------------------------------------------------------------- snapdragon (dragon -> dragon/bloom; rare, slow, strong)
+  // Gifted at lv 10 (THE SURVEY) or a very rare Route 3 day slot. Strong but
+  // capped at 470 and 4x weak to frost, slow-growing, and only grows at 22.
+  sp({ id: "snapdragon_sprout", name: "Snap Sprout", line: "snapdragon", stage: 1, types: ["dragon"],
+    base: st(50, 62, 50, 58, 50, 45), rate: "slow", catchRate: 45, baseExp: 72, ev: { atk: 1 },
+    activity: "day", grows: ["snapdragon", vigor(22)], learnset: learn(SNAPDRAGON) }),
+  sp({ id: "snapdragon", name: "Snapdragon", line: "snapdragon", stage: 2, types: ["dragon", "bloom"],
+    base: st(76, 96, 72, 86, 70, 70), rate: "slow", catchRate: 45, baseExp: 180, ev: { atk: 2, spa: 1 },
+    activity: "day", learnset: learn(SNAPDRAGON, [[22, "old_growth"]]) }),
 ];
 
 export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;

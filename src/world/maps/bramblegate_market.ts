@@ -28,7 +28,11 @@ export const bramblegate_market: MapDef = {
     { id: "clerk", sprite: "shopkeeper", x: 1, y: 3, facing: "right", movement: "static", script: "market_clerk" },
     { id: "shopper", sprite: "villager_b", x: 7, y: 3, facing: "left", movement: "look_around", script: "market_shopper" },
   ],
-  signs: [],
+  signs: [
+    { x: 3, y: 1, text: "TERRARIUM PODS, nested inside each other like teacups." },
+    { x: 6, y: 1, text: "A notice: \"No WILD BERRIES or ROSE HIPS sold here. Find a bush and pick your own!\"" },
+    { x: 8, y: 1, text: "NEEM SPRAY, in brown bottles. Even through the glass, it smells of garlic." },
+  ],
   triggers: [],
 };
 

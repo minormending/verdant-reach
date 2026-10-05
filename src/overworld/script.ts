@@ -4,9 +4,15 @@
 
 import type {
   Ambient, BattleOutcome, BattleRequest, Dir, GameContext, GameData, ItemId, MapDef, MapId,
-  MarkId, Quickened, ScriptCmd, ScriptId, SpeciesId, TimeOfDay,
+  MarkId, Quickened, ScriptCmd, ScriptId, SpeciesId, StillKey, TimeOfDay,
 } from "../contracts";
 import { checkCond } from "./map";
+import { mapTime } from "../engine/time";
+import {
+  caughtAny, caughtCount, countedName, hasItem, partyHas, pickBush, pocketName, questDoneFlag, questStartedFlag,
+} from "./progress";
+
+export type ToastKind = "new_note" | "note_done";
 
 export interface ScriptHost {
   ctx: GameContext;
@@ -42,6 +48,16 @@ export interface ScriptHost {
   ambient?(kind: Ambient): void;
   /** Full-screen flash; resolves when it has faded. */
   flash?(color: "white" | "gold"): Promise<void>;
+  /** Fade to a 160x144 story illustration (text boxes draw over it). */
+  still?(image: StillKey): Promise<void>;
+  /** Fade back from the illustration to the map. */
+  stillClear?(): Promise<void>;
+  /** Leaf burst + bush shake as a harvest bush is picked (resolves after a short beat). */
+  harvestFx?(harvestId: string): Promise<void>;
+  /** A small notice that slides in at the top ("NEW NOTE", "NOTE COMPLETE"). Non-blocking. */
+  toast?(kind: ToastKind, title: string): void;
+  /** Current date (tests inject one; defaults to the real clock). */
+  now?(): Date;
 }
 
 /** Thrown to stop the running script (whiteout, end of slice). */
@@ -75,15 +91,6 @@ export function markName(mark: MarkId): string {
   return mark.replace(/_/g, " ").toUpperCase();
 }
 
-// Uncountable items read as "COMPOST ×3" rather than "3 COMPOSTS".
-const MASS_NOUNS = /^(COMPOST|SPRING WATER|PLANT FOOD|NEEM SPRAY)$/i;
-
-function plural(name: string, qty: number): string {
-  if (qty === 1) return name;
-  if (MASS_NOUNS.test(name)) return `${name} ×${qty}`;
-  return `${qty} ${/S$/i.test(name) ? name : `${name}S`}`;
-}
-
 const POCKET: Record<string, string> = { items: "ITEMS POCKET", pods: "POD POCKET", key: "KEY POCKET" };
 
 export function timeMatches(times: TimeOfDay[], now: TimeOfDay): boolean {
@@ -101,10 +108,50 @@ export async function giveItem(host: ScriptHost, item: ItemId, qty = 1, opts: { 
   const name = itemName(ctx, item);
   const jingle = ctx.audio.playJingle("item_get");
   const verb = opts.found ? "found" : "received";
-  await Promise.all([ctx.ui.say(`{PLAYER} ${verb} ${plural(name, qty)}!`), jingle]);
-  const pocket = POCKET[ctx.data.items?.[item]?.pocket ?? "items"] ?? "ITEMS POCKET";
-  const what = qty === 1 || /S$/.test(name) ? name : `${name}S`;
-  await ctx.ui.say(`{PLAYER} put the ${what} in the ${pocket}.`);
+  await Promise.all([ctx.ui.say(`{PLAYER} ${verb} ${countedName(name, qty)}!`), jingle]);
+  await ctx.ui.say(`{PLAYER} put the ${pocketName(name, qty)} in the ${pocketOf(ctx, item)}.`);
+}
+
+function pocketOf(ctx: GameContext, item: ItemId): string {
+  return POCKET[ctx.data.items?.[item]?.pocket ?? "items"] ?? "ITEMS POCKET";
+}
+
+export function questTitle(ctx: GameContext, id: string): string {
+  return (ctx.world.quests?.[id]?.title ?? id.replace(/_/g, " ")).toUpperCase();
+}
+
+/** Pick a harvest bush: once per real-world day. */
+export async function harvest(host: ScriptHost, id: string, item: ItemId, qty = 1) {
+  const { ctx } = host;
+  const now = host.now?.() ?? new Date();
+  if (!pickBush(ctx.state, id, now)) {
+    await ctx.ui.say("Only leaves and bare twigs now. New fruit should ripen by tomorrow.");
+    return;
+  }
+  await host.harvestFx?.(id);
+  const bag = ctx.state.bag;
+  bag[item] = Math.min(999, (bag[item] ?? 0) + qty);
+  const name = itemName(ctx, item);
+  const jingle = ctx.audio.playJingle("item_get");
+  await Promise.all([ctx.ui.say(`{PLAYER} picked ${countedName(name, qty)}!`), jingle]);
+  await ctx.ui.say(`{PLAYER} put the ${pocketName(name, qty)} in the ${pocketOf(ctx, item)}.`);
+}
+
+export function startQuest(host: ScriptHost, id: string) {
+  const flags = host.ctx.state.flags;
+  if (flags[questStartedFlag(id)] || flags[questDoneFlag(id)]) return;
+  flags[questStartedFlag(id)] = true;
+  host.ctx.audio.playSfx("menu_open");
+  host.toast?.("new_note", questTitle(host.ctx, id));
+}
+
+export async function completeQuest(host: ScriptHost, id: string) {
+  const flags = host.ctx.state.flags;
+  if (flags[questDoneFlag(id)]) return;
+  flags[questStartedFlag(id)] = true;
+  flags[questDoneFlag(id)] = true;
+  host.toast?.("note_done", questTitle(host.ctx, id));
+  await host.ctx.audio.playJingle("quest");
 }
 
 export async function giveSpecies(host: ScriptHost, species: SpeciesId, level: number, moves?: string[]) {
@@ -154,10 +201,7 @@ export function scriptsAwardMark(scripts: Record<string, ScriptCmd[]>, mark: Mar
   const scan = (cmds: ScriptCmd[] | undefined): boolean =>
     !!cmds?.some((c) => {
       if (c.op === "giveMark") return c.mark === mark;
-      if (c.op === "choice") return c.branches.some(scan);
-      if (c.op === "yesno") return scan(c.yes) || scan(c.no);
-      if (c.op === "if" || c.op === "ifTime" || c.op === "ifLastBattle") return scan(c.then) || scan(c.else);
-      return false;
+      return childLists(c).some(scan);
     });
   return Object.values(scripts).some(scan);
 }
@@ -174,6 +218,14 @@ export async function trainerBattle(host: ScriptHost, trainer: string, canLose =
     }
   }
   return result;
+}
+
+/** Nested command lists of a branching op (for static scans of scripts). */
+export function childLists(c: ScriptCmd): (ScriptCmd[] | undefined)[] {
+  if (c.op === "choice") return c.branches;
+  if (c.op === "yesno") return [c.yes, c.no];
+  if ("then" in c) return [c.then, c.else];
+  return [];
 }
 
 // ---------------------------------------------------------------------------
@@ -222,7 +274,7 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
     case "if":
       return exec(host, checkCond(cmd.when, flags) ? cmd.then : cmd.else, st);
     case "ifTime":
-      return exec(host, timeMatches(cmd.time, ctx.timeOfDay()) ? cmd.then : cmd.else, st);
+      return exec(host, timeMatches(cmd.time, mapTime(host.map(), ctx.timeOfDay)) ? cmd.then : cmd.else, st);
     case "setFlag":
       flags[cmd.flag] = cmd.value ?? true;
       return;
@@ -337,6 +389,25 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       return;
     case "flash":
       return host.flash?.(cmd.color);
+    case "still":
+      return host.still?.(cmd.image);
+    case "stillClear":
+      return host.stillClear?.();
+    case "ifHasItem":
+      return exec(host, hasItem(ctx.state, cmd.item, cmd.qty ?? 1) ? cmd.then : cmd.else, st);
+    case "ifPartyHas":
+      return exec(host, partyHas(ctx.state, cmd.species) ? cmd.then : cmd.else, st);
+    case "ifCaught":
+      return exec(host, caughtAny(ctx.state, cmd.species) ? cmd.then : cmd.else, st);
+    case "ifCaughtCount":
+      return exec(host, caughtCount(ctx.state) >= cmd.atLeast ? cmd.then : cmd.else, st);
+    case "harvest":
+      return harvest(host, cmd.id, cmd.item, cmd.qty ?? 1);
+    case "startQuest":
+      startQuest(host, cmd.quest);
+      return;
+    case "completeQuest":
+      return completeQuest(host, cmd.quest);
     case "endSlice":
       await host.endSlice();
       throw new ScriptAbort("endSlice");

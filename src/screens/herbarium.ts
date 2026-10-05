@@ -13,6 +13,8 @@ import {
 } from "./kit/draw";
 import { ListView, LINE_Y, TEXT_X } from "./kit/widgets";
 import { herbariumNumber } from "./summary";
+import { habitatLines, habitatOf } from "./habitat";
+import { idleFrameCount, idleKind } from "./kit/idle";
 
 const ROWS = 6;
 const ROW_H = 16;
@@ -115,12 +117,23 @@ export function herbariumScreen(ctx: GameContext): Promise<void> {
 export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<void> {
   const entry = ctx.data.herbarium[id];
   const isCaught = ctx.state.herbarium.caught.includes(id);
-  const textLines = isCaught && entry ? ctx.ui.wrap(entry.entry, TEXTBOX.cols) : [];
-  const pages: string[][] = [];
-  for (let i = 0; i < textLines.length; i += 2) pages.push(textLines.slice(i, i + 2));
+  const isSeen = isCaught || ctx.state.herbarium.seen.includes(id);
+  // Two sections paged in the text box: the entry text and FOUND IN (◀▶ jumps between them).
+  const entryLines = isCaught && entry ? ctx.ui.wrap(entry.entry, TEXTBOX.cols) : ["Catch one to", "press a leaf."];
+  const habitat = habitatLines(habitatOf(ctx.world, ctx.data, id, isSeen), (s) => speciesName(ctx.data, s));
+  const sections: { label: string; lines: string[] }[] = [
+    { label: "ENTRY", lines: entryLines },
+    { label: "FOUND IN", lines: habitat },
+  ];
+  if (!isCaught) sections.reverse(); // not pressed yet: where to look matters most
+  const pages: { section: number; lines: string[] }[] = [];
+  sections.forEach((sec, si) => {
+    for (let i = 0; i < sec.lines.length; i += 2) pages.push({ section: si, lines: sec.lines.slice(i, i + 2) });
+  });
   let page = 0;
   let frame = 0;
   const sp = getSpecies(ctx.data, id);
+  const animated = isCaught && idleFrameCount(id) > 1;
 
   const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
     frame = f;
@@ -130,7 +143,8 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
     const img = speciesImage(ctx, id, "front");
     const shadow = silhouette(`${id}:front:`, img, "#d8c8a0");
     g.drawImage(shadow, 0, 0, shadow.width, shadow.height, sx + 2, sy + 2, 56, 56);
-    drawSpecies(ctx, g, id, "front", sx, sy, isCaught ? {} : { silhouette: "#6a6450" });
+    const pose = animated ? idleKind(id, frame, ":herbarium") : "front";
+    drawSpecies(ctx, g, id, pose, sx, sy, isCaught ? {} : { silhouette: "#6a6450" });
     const b = opaqueBounds(img);
     const k = 56 / Math.max(1, img.width);
     // tape across the stem / base, and a pin through the top of the plant
@@ -192,9 +206,10 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
     else lines.forEach((l, i) => ctx.ui.drawText(g, l, bx + 4, by + 4 + i * 9, "#2c4c30"));
 
     ctx.ui.drawWindow(g, TEXTBOX.x, TEXTBOX.y, TEXTBOX.w, TEXTBOX.h);
-    const text = pages[page] ?? (isCaught ? [] : ["Catch one to", "press a leaf."]);
-    text.forEach((l, i) => ctx.ui.drawText(g, l, TEXT_X, LINE_Y[i]));
+    const cur = pages[page];
+    cur?.lines.forEach((l, i) => ctx.ui.drawText(g, l, TEXT_X, LINE_Y[i]));
     if (page < pages.length - 1) drawMoreArrow(ctx, g, TEXTBOX.x + TEXTBOX.w - 16, LINE_Y[1] + 7, frame);
+    drawSectionTabs(g, sections.map((s) => s.label), cur?.section ?? 0);
   };
 
   const main = async (flow: Flow) => {
@@ -203,6 +218,13 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
     await flow.run({
       update(input: Input) {
         if (input.pressed("b")) { ctx.audio.playSfx("cancel"); return true; }
+        const d = input.pressed("right") ? 1 : input.pressed("left") ? -1 : 0;
+        if (d !== 0) {
+          const target = (pages[page]?.section ?? 0) + d;
+          const first = pages.findIndex((p) => p.section === target);
+          if (first >= 0) { page = first; ctx.audio.playSfx("cursor"); }
+          return false;
+        }
         if (input.pressed("a")) {
           if (page < pages.length - 1) { page++; ctx.audio.playSfx("select"); return false; }
           ctx.audio.playSfx("select");
@@ -214,6 +236,24 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
   };
 
   return runFlowScene<void>(ctx, { draw, main, fallback: undefined });
+}
+
+/**
+ * Section legends set into the text box's top border (like a fieldset
+ * legend): the current one in ink, the other faded; ◀▶ switches.
+ */
+function drawSectionTabs(g: CanvasRenderingContext2D, labels: string[], current: number) {
+  let x = TEXTBOX.x + TEXTBOX.w - 10;
+  const y = TEXTBOX.y;
+  for (let i = labels.length - 1; i >= 0; i--) {
+    const w = labels[i].length * 4 - 1;
+    x -= w;
+    g.fillStyle = UI.white;
+    g.fillRect(x - 2, y - 1, w + 4, 7);
+    drawTiny(g, labels[i], x, y, i === current ? INK : "#b0a890");
+    if (i === current) { g.fillStyle = "#c03838"; g.fillRect(x, y + 6, w, 1); }
+    x -= 8;
+  }
 }
 
 /** A strip of paper tape (2-colour checker so the sheet shows through). */

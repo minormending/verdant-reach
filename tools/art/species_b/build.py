@@ -35,14 +35,20 @@ STAGE_SIZE = {"baby": 40, "teen": 48, "adult": 56}
 
 
 def render(sid, spec):
-    f = spec["front"]()
-    f.finish(**spec.get("front_finish", {}))
-    fi = f.image()
-    bb = fi.getbbox()
+    # front + optional battle idle frames (spec["idle"] = [fn, ...] -> front__2,
+    # front__3), all placed with ONE shared offset so the registration holds
+    fims = []
+    for fn in [spec["front"]] + list(spec.get("idle", [])):
+        f = fn()
+        f.finish(**spec.get("front_finish", {}))
+        fims.append(f.image())
+    boxes = [im.getbbox() for im in fims]
+    bb = (min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes))
     print(f"  {sid:18s} front {bb[2]-bb[0]}x{bb[3]-bb[1]}")
     if bb[2] - bb[0] > 56 or bb[3] - bb[1] > 56:
         print("  !! front too big", sid)
-    front = pix.place(fi, 56)
+    frames = [place_fixed(im.crop(bb), 56, spec.get("front_dx", 0)) for im in fims]
+    front = frames[0]
     b = spec["back"]()
     b.finish(open_bottom=True, **spec.get("back_finish", {}))
     bim = b.image()
@@ -61,10 +67,21 @@ def render(sid, spec):
         i2 = pix.bob(i1)
     else:
         i2 = pix.icon_from_rows(i2s, spec["pal"])
-    for name, im in (("front", front), ("back", back), ("icon", i1), ("icon2", i2)):
+    out = dict(front=front, back=back, icon=i1, icon2=i2)
+    for j, im in enumerate(frames[1:], 2):
+        out[f"front__{j}"] = im
+    for name, im in out.items():
         cols = {tuple(p) for p in np.asarray(im).reshape(-1, 4) if p[3]}
         assert len(cols) <= 4, (sid, name, cols)
-    return dict(front=front, back=back, icon=i1, icon2=i2)
+    return out
+
+
+def place_fixed(c, size, dx=0):
+    """Bottom-centre an already-cropped frame (no re-crop: idle frames share it)."""
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    x = (size - c.width) // 2 + dx
+    out.paste(c, (x, size - c.height), c)
+    return out
 
 
 def zoom(im, k):
@@ -132,6 +149,9 @@ def main(only=None):
             ims["back"].save(d / "back.png")
             ims["icon"].save(d / "icon.png")
             ims["icon2"].save(d / "icon__2.png")
+            for j in (2, 3):
+                if f"front__{j}" in ims:
+                    ims[f"front__{j}"].save(d / f"front__{j}.png")
             print("wrote", sid)
         allrows.append((line, items))
         sheet([(line, items)], REVIEW / f"{line}.png")

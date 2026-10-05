@@ -53,7 +53,7 @@ export const herbarium: MapDef = {
     { id: "vale", sprite: "vale", x: 5, y: 4, facing: "down", movement: "static", script: "vale_talk",
       visibleWhen: when({ got_starter: true }) },
     { id: "aide", sprite: "villager_b", x: 16, y: 9, facing: "right", movement: "look_around", script: "herb_aide" },
-    { id: "archivist", sprite: "elder", x: 9, y: 8, facing: "up", movement: "look_around", script: "herb_archivist" },
+    { id: "archivist", sprite: "elder", x: 9, y: 8, facing: "up", movement: "look_around", script: "q_herbarium_survey" }, // THE SURVEY (falls back to herb_archivist)
   ],
   signs: [
     { x: 1, y: 4, text: "Under the lens: a leaf cell. The green specks are chloroplasts, turning light into sugar." },
@@ -61,6 +61,9 @@ export const herbarium: MapDef = {
     { x: 1, y: 5, text: "A press: two boards, blotting paper and a strap. Flat, dry, labelled." },
     { x: 8, y: 5, text: "VALE's own microscope. A sticky note: \"Pollen?? Gold. Hexagonal. ASK F.\"" },
     { x: 7, y: 5, text: "Petri dishes in a neat row. In one, the mould has spelled a perfect ring." },
+    { x: 4, y: 1, text: "Field journals by a dozen botanists. VALE's are the ones with tea rings." },
+    { x: 9, y: 1, text: "Seed-bank jars, labelled by year. Some of these seeds are older than the HERBARIUM." },
+    { x: 10, y: 10, text: "A drawer of pressed DANDELION clocks, every seed still in place. Steady hands." },
     { x: 9, y: 5, text: "VALE's notes: \"Seedlings turned 40 degrees overnight. Toward the DOOR.\"" },
   ],
   triggers: [

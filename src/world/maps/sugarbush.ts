@@ -70,7 +70,7 @@ export const sugarbush: MapDef = {
     // rival_2: BRAM takes the same spot; the player steps on 12,11, east of him.
     { id: "bram", sprite: "bram", x: 11, y: 11, facing: "right", movement: "static", script: "rival_2",
       visibleWhen: when({ grove_cleared: true, rival_2_done: false }) },
-    { id: "syrupmaker", sprite: "villager_b", x: 26, y: 7, facing: "down", movement: "look_around", script: "sb_syrupmaker" },
+    { id: "syrupmaker", sprite: "villager_b", x: 26, y: 7, facing: "down", movement: "look_around", script: "q_sap_run" }, // THE SAP RUN (falls back to sb_syrupmaker)
     { id: "tapper", sprite: "hiker", x: 16, y: 5, facing: "left", movement: "look_around", script: "sb_tapper" },
     { id: "pip", sprite: "pip", x: 19, y: 14, facing: "down", movement: "look_around", script: "sb_pip",
       visibleWhen: when({ pip_demo_done: true }) },
@@ -81,6 +81,8 @@ export const sugarbush: MapDef = {
     { id: "dog", sprite: "dog", x: 26, y: 15, facing: "left", movement: "wander", script: "sb_dog" },
     { id: "bird", sprite: "bird", x: 6, y: 22, facing: "right", movement: "wander", script: "sb_bird" },
   ],
+  // Behind the woodpile by the SUGAR SHACK.
+  hidden: [{ x: 26, y: 6, item: "compost" }],
   signs: [
     { x: 13, y: 23, text: "SUGARBUSH. Sweetest sap in the VERDANT REACH." },
     { x: 13, y: 7, text: "SUGARBUSH GROVE. Please don't disturb the trees." },
@@ -98,9 +100,11 @@ export const sugarbush: MapDef = {
     bog: {
       rate: 10,
       slots: [
-        { species: "sundew_rosette", minLevel: 12, maxLevel: 15, weight: 40 },
-        { species: "flytrap_seedling", minLevel: 12, maxLevel: 14, weight: 35 },
-        { species: "fern_fiddlehead", minLevel: 12, maxLevel: 14, weight: 25 },
+        { species: "sundew_rosette", minLevel: 12, maxLevel: 15, weight: 30 },
+        { species: "flytrap_seedling", minLevel: 12, maxLevel: 14, weight: 25 },
+        { species: "pitcher_sprout", minLevel: 12, maxLevel: 15, weight: 22 },
+        { species: "cattail_shoot", minLevel: 12, maxLevel: 14, weight: 18 },
+        { species: "fern_fiddlehead", minLevel: 12, maxLevel: 14, weight: 10 },
       ],
     },
   },

@@ -83,9 +83,11 @@ export const sugarbush_conservatory: MapDef = {
     bog: {
       rate: 10,
       slots: [
-        { species: "sundew_rosette", minLevel: 12, maxLevel: 15, weight: 40 },
-        { species: "flytrap_seedling", minLevel: 12, maxLevel: 14, weight: 35 },
-        { species: "fern_fiddlehead", minLevel: 12, maxLevel: 14, weight: 25 },
+        { species: "sundew_rosette", minLevel: 12, maxLevel: 15, weight: 30 },
+        { species: "flytrap_seedling", minLevel: 12, maxLevel: 14, weight: 25 },
+        { species: "pitcher_sprout", minLevel: 12, maxLevel: 15, weight: 22 },
+        { species: "cattail_shoot", minLevel: 12, maxLevel: 14, weight: 18 },
+        { species: "fern_fiddlehead", minLevel: 12, maxLevel: 14, weight: 10 },
       ],
     },
   },

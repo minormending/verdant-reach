@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { GameState, WorldData } from "../contracts";
 import {
-  OPTIONS_KEY, SAVE_KEY, beginNewGameSession, createSave, formatPlayTime, loadOptions, newGameState, normalizeState,
+  OPTIONS_KEY, SAVE_KEY, battleAnimsOn, beginNewGameSession, createSave, followerOn, formatPlayTime, loadOptions,
+  newGameState, normalizeState, storeOptions,
 } from "./index";
 
 const world = {
@@ -93,5 +94,27 @@ describe("save", () => {
     expect(partial.bag).toEqual({});
     expect(partial.playerName).toBe("ROWAN");
     expect(normalizeState({ position: { map: "nowhere", x: 0, y: 0 } }, fallback())).toBeNull();
+  });
+
+  it("keeps the follower / battle animation toggles (default on) and harvest dates", () => {
+    const storage = memoryStorage();
+    storeOptions({ textSpeed: "slow", follower: false, battleAnims: true }, storage);
+    expect(loadOptions(storage)).toEqual({ textSpeed: "slow", follower: false, battleAnims: true });
+    storage.setItem(OPTIONS_KEY, JSON.stringify({ textSpeed: "warp", follower: "yes" }));
+    expect(loadOptions(storage)).toEqual({ textSpeed: "mid" });
+    expect(followerOn({ textSpeed: "mid" })).toBe(true);
+    expect(followerOn({ textSpeed: "mid", follower: false })).toBe(false);
+    expect(battleAnimsOn(undefined)).toBe(true);
+
+    const fallback = newGameState({ world });
+    expect(fallback.harvested).toEqual({});
+    const s = normalizeState({
+      position: { map: "hedgerow", x: 1, y: 1, facing: "up" },
+      options: { textSpeed: "fast", battleAnims: false },
+      harvested: { hedgerow_1: "2026-10-05", junk: 5, bad: "yesterday" },
+    }, fallback)!;
+    expect(s.options).toEqual({ textSpeed: "fast", battleAnims: false });
+    expect(s.harvested).toEqual({ hedgerow_1: "2026-10-05" });
+    expect(normalizeState({ position: { map: "hedgerow", x: 1, y: 1 } }, fallback)!.harvested).toEqual({});
   });
 });

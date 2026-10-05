@@ -70,6 +70,8 @@ export const sugarbush_grove: MapDef = {
       { item: "rain_jar", x: 2, y: 23 },
     ]),
   ],
+  // Under the stump in SHEARS's clearing.
+  hidden: [{ x: 15, y: 4, item: "glass_pod" }],
   signs: [],
   triggers: [
     { x: 13, y: 5, w: 2, script: "shears", when: hideWhenCleared },
@@ -78,9 +80,12 @@ export const sugarbush_grove: MapDef = {
     grass: {
       rate: 14,
       slots: [
-        { species: "maple_samara", minLevel: 10, maxLevel: 13, weight: 50 },
-        { species: "fern_fiddlehead", minLevel: 10, maxLevel: 13, weight: 40 },
-        { species: "maple_sapling", minLevel: 13, maxLevel: 14, weight: 10 },
+        { species: "maple_samara", minLevel: 10, maxLevel: 13, weight: 45, time: "day" },
+        { species: "maple_samara", minLevel: 10, maxLevel: 13, weight: 40, time: "night" },
+        { species: "fern_fiddlehead", minLevel: 10, maxLevel: 13, weight: 28 },
+        { species: "holly_seedling", minLevel: 10, maxLevel: 13, weight: 20 },
+        { species: "maple_sapling", minLevel: 13, maxLevel: 14, weight: 8 },
+        { species: "foxglove_rosette", minLevel: 11, maxLevel: 13, weight: 14, time: "night" },
       ],
     },
   },

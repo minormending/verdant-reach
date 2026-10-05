@@ -14,6 +14,7 @@ import {
   drawTextRight, drawTiny, drawTypeTag, drawWiltBadge, hline, pad, TYPE_COLORS, preload,
 } from "./kit/draw";
 import { playerName } from "./kit/text";
+import { idleFrameCount, idleKind } from "./kit/idle";
 
 const PAGE_COLORS = ["#e070a8", "#58a040", "#3888e0"];
 const PAGE_DARK = ["#883060", "#285820", "#183888"];
@@ -144,8 +145,12 @@ function drawHeader(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened,
   g.fillStyle = "#d0c8b0";
   g.fillRect(2, 59, 58, 1);
   g.fillRect(59, 6, 1, 54);
-  const bob = q.hp > 0 ? cursorBob(frame + 10) : 0;
-  drawSpecies(ctx, g, q.species, "front", 2, 4 - bob, { sport: q.sport });
+  // Idle poses when the art has them (a 1px bob otherwise); wilted, dormant or frozen plants hold still.
+  const lively = q.hp > 0 && q.status !== "dormant" && q.status !== "frostbite";
+  const animated = idleFrameCount(q.species) > 1;
+  const bob = lively && !animated ? cursorBob(frame + 10) : 0;
+  const pose = lively && animated ? idleKind(q.species, frame, `:summary:${q.uid}`) : "front";
+  drawSpecies(ctx, g, q.species, pose, 2, 4 - bob, { sport: q.sport });
   drawTiny(g, "NO.", 64, 18);
   ctx.ui.drawText(g, String(herbariumNumber(q.species)).padStart(3, "0"), 76, 16);
   if (ctx.state.herbarium.caught.includes(q.species)) drawLeaf(g, 102, 17);
