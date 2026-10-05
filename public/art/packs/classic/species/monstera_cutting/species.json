@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "monstera_cutting",
+  "palette": ["#181818", "#204838", "#58a848", "#d0f080"],
+  "sport": ["#181818", "#485828", "#b8c040", "#f8f0a8"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Hand-built for Verdant Reach (tools/art/species_e). Botany reference: Monstera deliciosa leaves, nodes and aerial roots, Wikimedia Commons.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "BRACED. Sport: Monstera deliciosa 'Aurea' (yellow-variegated, lime-gold leaves).",
+  "anim": null
+}

@@ -30,8 +30,8 @@ export interface SpeciesBundle {
   sport?: string[];
   /** front: 1–8 files (front … front__8); back: 1; icon: 1–2. */
   frames: { front: string[]; back: string[]; icon: string[] };
-  /** Optional Crystal-style animation (front frame indexes, 60 fps ticks). */
-  anim?: SpeciesAnim;
+  /** Optional Crystal-style animation (front frame indexes, 60 fps ticks). null: none (a pack drops a lower layer's). */
+  anim?: SpeciesAnim | null;
   credits?: string;
   source?: SourceInfo;
   notes?: string;

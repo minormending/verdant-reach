@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "pumpkin_blossom",
+  "palette": ["#181818", "#386028", "#f09820", "#f8e070"],
+  "sport": ["#181818", "#306058", "#f0c030", "#f8f8c0"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/pumpkin.py. Reference photo pumpkin/baby.jpg by Roberto Daniel Avila (robertodesu) (CC BY 4.0), https://www.inaturalist.org/observations/306575047: used as a drawing reference, not traced.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: 'Jarrahdale' blue pumpkin. Cucurbita maxima 'Jarrahdale' (Western Australia heirloom): slate blue-grey ribbed skin; blue-green vines.",
+  "anim": null
+}

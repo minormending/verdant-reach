@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "maple_samara",
+  "palette": ["#181818", "#a84018", "#f0a840", "#f8e8a8"],
+  "sport": ["#181818", "#481838", "#a84060", "#f0b0a8"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/maple.py. Reference photo maple/baby.jpg by Steve Hurst, USDA-NRCS PLANTS Database (Public Domain (US government work)), https://commons.wikimedia.org/wiki/File:Acer_saccharum_seeds.jpg: used as a drawing reference, not traced.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: 'Crimson King'. Acer platanoides 'Crimson King' (Barbier, Orleans, 1937): maroon-purple leaves and red-purple keys all season.",
+  "anim": null
+}

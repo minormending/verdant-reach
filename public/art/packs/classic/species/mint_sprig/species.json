@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "mint_sprig",
+  "palette": ["#181818", "#286078", "#50c890", "#d8f8d8"],
+  "sport": ["#181818", "#382030", "#806050", "#e0d8b0"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_d/mint.py.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: 'Chocolate' mint. Mentha x piperita f. citrata 'Chocolate': brown-purple stems and leaves, cocoa-dark veins.",
+  "anim": null
+}

@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "white_clover",
+  "palette": ["#181818", "#285830", "#68b040", "#f0f8e0"],
+  "sport": ["#181818", "#382838", "#985068", "#f0f0d8"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_c/clover.py.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: 'Purpurascens Quadrifolium'. Trifolium repens 'Purpurascens Quadrifolium': burgundy-purple four-leaf clover, white heads.",
+  "anim": null
+}

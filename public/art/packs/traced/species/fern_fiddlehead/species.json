@@ -4,6 +4,7 @@
   "palette": ["#181818", "#406000", "#a8c028", "#f8f8f8"],
   "sport": ["#181818", "#6b5223", "#e0ad64", "#f8f8f8"],
   "frames": { "front": ["front.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "anim": null,
   "credits": "Photo-traced by the creature-sprites pipeline (tool/spritify.py) from photos/plants/fern/baby.jpg by U.S. Fish and Wildlife Service – Northeast Region (Public Domain (US government work)), https://commons.wikimedia.org/wiki/File:Fern_Fiddlehead_(6802974757).jpg. Back view traced from the same cut-out; party icons are the base icons recoloured.",
   "source": { "kind": "imported", "from": "creature-sprites/out/plants/fern/baby.png" }
 }

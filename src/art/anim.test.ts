@@ -18,6 +18,8 @@ const raw = loadRawFromDisk(FIX, index);
 describe("anim validation", () => {
   it("accepts a well-formed anim, and no anim at all", () => {
     expect(checkSpeciesAnim(undefined, 1)).toEqual([]);
+    expect(checkSpeciesAnim(null, 1)).toEqual([]);
+    expect(parseSpeciesAnim(null)).toBeUndefined();
     expect(checkSpeciesAnim({ intro: [[0, 8], [1, 6], [0, 1]], idle: [[0, 40], [1, 20]] }, 2)).toEqual([]);
     expect(checkSpeciesAnim({ idle: [[0, 40]] }, 1)).toEqual([]);
     expect(checkSpeciesAnim({ intro: [[0, 1]], future: true }, 1)).toEqual([]); // unknown fields are ignored

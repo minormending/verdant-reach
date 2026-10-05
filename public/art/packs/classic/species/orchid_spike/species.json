@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "orchid_spike",
+  "palette": ["#181818", "#502860", "#70b058", "#f8d8d0"],
+  "sport": ["#181818", "#401830", "#88a858", "#f8f0c8"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Hand-built for Verdant Reach (tools/art/species_e). Botany reference: Phalaenopsis hybrids and P. amabilis, Wikimedia Commons.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "COILED. Sport: the harlequin moth orchid, a mericlone sport of Phalaenopsis Golden Peoker 'Brother' (cream bloom splashed maroon-black: the plum slot turns maroon).",
+  "anim": null
+}

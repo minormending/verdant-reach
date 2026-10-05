@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "nettle_sprout",
+  "palette": ["#181818", "#383060", "#78b840", "#d8f080"],
+  "sport": ["#181818", "#483858", "#a0b098", "#e8f0e8"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/nettle.py. Reference photo nettle/baby.jpg by La.Catholique (Flickr) (CC BY 2.0), https://www.flickr.com/photos/38559542@N02/5118383182: used as a drawing reference, not traced.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: silver-leaved. silver-washed leaves on violet stems, after the dead-nettle Lamium maculatum 'Beacon Silver' (the nettle's look-alike).",
+  "anim": null
+}

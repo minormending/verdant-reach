@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "orchid_keiki",
+  "palette": ["#181818", "#483058", "#68a850", "#e0f0a8"],
+  "sport": ["#181818", "#584830", "#c0c060", "#f8f8d8"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Hand-built for Verdant Reach (tools/art/species_e). Botany reference: Phalaenopsis hybrids and P. amabilis, Wikimedia Commons.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "BOBBING. Sport: a variegated-leaf moth orchid, Phalaenopsis Sogo Vivien 'Variegata' (cream-edged, yellow-green leaves).",
+  "anim": null
+}

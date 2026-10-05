@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "snapdragon",
+  "palette": ["#181818", "#783078", "#f04880", "#f8d048"],
+  "sport": ["#181818", "#405828", "#e8c030", "#f8f8c8"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_d/snapdragon.py.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: 'Rocket Lemon'. Antirrhinum majus Rocket Series 'Rocket Lemon': lemon-yellow spikes, dark green foliage.",
+  "anim": null
+}

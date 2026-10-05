@@ -92,6 +92,8 @@ def traced_species() -> list[str]:
                 # icons are not in the pack folder: the base icons are recoloured
                 # into this palette (ART.md §8)
                 "frames": {"front": ["front.png"], "back": ["back.png"], "icon": base["frames"]["icon"]},
+                # one traced front: drop the base's Crystal-rule intro (packs merge shallowly)
+                "anim": None,
                 "credits": credit(e) + " Back view traced from the same cut-out; party icons are the base "
                            "icons recoloured.",
                 "source": {"kind": "imported", "from": f"creature-sprites/out/plants/{line}/{stage}.png"},

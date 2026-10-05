@@ -194,12 +194,12 @@ function forkOf(reg: ArtRegistry, packs: string[]): ArtRegistry {
   return r;
 }
 
-/** The pack the compare view shows: the route's, else `crystal`, else the first pack. */
+/** The pack the compare view shows: the route's, else `classic` (the pre-Crystal art), else the first pack. */
 export function comparePack(env: LabEnv): string | null {
   const ids = env.reg.packs().map((p) => p.id);
   const want = env.state.tab === "compare" ? env.state.sub : null;
   if (want && ids.includes(want)) return want;
-  return ids.includes("crystal") ? "crystal" : ids[0] ?? null;
+  return ids.includes("classic") ? "classic" : ids[0] ?? null;
 }
 
 /** Species ids a pack overrides (or adds), in dex order (so evolution lines read in order). */

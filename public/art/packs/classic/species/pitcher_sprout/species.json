@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "pitcher_sprout",
+  "palette": ["#181818", "#703068", "#b0c840", "#f8f0d0"],
+  "sport": ["#181818", "#386838", "#c8d850", "#f8f8d8"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_d/pitcher.py.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: green form (anthocyanin-free). the anthocyanin-free green form of the pitcher plant, as in Sarracenia purpurea f. heterophylla: all chartreuse, no red veins.",
+  "anim": null
+}

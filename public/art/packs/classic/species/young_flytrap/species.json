@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "young_flytrap",
+  "palette": ["#181818", "#882838", "#98d040", "#e8f0a0"],
+  "sport": ["#181818", "#581828", "#c03038", "#f8a0a0"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/flytrap.py. Reference photo venus_flytrap/teen_alt2.jpg by Austin Pursley (iNaturalist: autrpy) (CC0 1.0), https://www.inaturalist.org/observations/42729834: used as a drawing reference, not traced.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: 'Akai Ryu' (Red Dragon). Dionaea muscipula 'Akai Ryu' (registered 2002): the whole plant blood-red, traps and petioles.",
+  "anim": null
+}

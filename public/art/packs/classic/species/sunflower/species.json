@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "sunflower",
+  "palette": ["#181818", "#583018", "#609838", "#f8c020"],
+  "sport": ["#181818", "#402028", "#589840", "#f8f0c8"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/sunflower.py. Reference photo sunflower/adult_alt.jpg by Renee Grayson (CC BY 2.0), https://commons.wikimedia.org/wiki/File:Nuwu_Pahsats_garden_sunflower.jpg: used as a drawing reference, not traced.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: 'Italian White'. Helianthus annuus 'Italian White': cream-white rays round a near-black disc.",
+  "anim": null
+}

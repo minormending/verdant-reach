@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "lotus_seed",
+  "palette": ["#181818", "#306060", "#e07898", "#f8e8b0"],
+  "sport": ["#181818", "#406050", "#e8b0b8", "#f8f8f0"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Hand-built for Verdant Reach (tools/art/species_e). Botany reference: Nelumbo nucifera flower, receptacle and rhizome, Wikimedia Commons.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "REARING. Sport: Nelumbo nucifera 'Chawan Basu', the white lotus with blush-pink tips.",
+  "anim": null
+}

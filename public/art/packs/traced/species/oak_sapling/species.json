@@ -4,6 +4,7 @@
   "palette": ["#181818", "#505808", "#b8b820", "#f8f8f8"],
   "sport": ["#181818", "#684d2e", "#dda46c", "#f8f8f8"],
   "frames": { "front": ["front.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "anim": null,
   "credits": "Photo-traced by the creature-sprites pipeline (tool/spritify.py) from photos/plants/oak/teen.jpg by Lex Joy (iNaturalist user lexjoy) (CC BY 4.0), https://www.inaturalist.org/observations/7134597. Back view traced from the same cut-out; party icons are the base icons recoloured.",
   "source": { "kind": "imported", "from": "creature-sprites/out/plants/oak/teen.png" }
 }

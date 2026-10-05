@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "dandelion",
+  "palette": ["#181818", "#406020", "#f0b818", "#f8f0a0"],
+  "sport": ["#181818", "#405028", "#e888b0", "#f8d8e0"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/dandelion.py. Reference photo dandelion/teen.jpg by Agnieszka Kwiecień (Nova) (CC BY 2.5), https://commons.wikimedia.org/wiki/File:Taraxacum_officinale_100.jpg: used as a drawing reference, not traced.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: pink dandelion. Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips.",
+  "anim": null
+}

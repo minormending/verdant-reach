@@ -17,7 +17,8 @@ const isFrame = (v: unknown): v is number => typeof v === "number" && Number.isI
  * frames the bundle has. Empty when it is absent or valid.
  */
 export function checkSpeciesAnim(anim: unknown, frontCount: number): string[] {
-  if (anim === undefined) return [];
+  // null: no animation. A pack sets it to drop an `anim` a lower layer added (the legacy idle applies).
+  if (anim === undefined || anim === null) return [];
   if (!isObj(anim)) return ["anim must be an object with optional intro / idle step lists"];
   const out: string[] = [];
   for (const key of ["intro", "idle"] as const) {
@@ -51,7 +52,7 @@ function cleanSteps(v: unknown): AnimStep[] | undefined {
  * The runtime view of a bundle's `anim`: malformed steps are dropped (the
  * validator reports them), and an intro that doesn't end on frame 0 gets a
  * 1-tick frame 0 appended so playback always lands on the rest pose.
- * Undefined when the bundle has no `anim` object.
+ * Undefined when the bundle has no `anim` object (absent or null).
  */
 export function parseSpeciesAnim(raw: unknown): SpeciesAnim | undefined {
   if (!isObj(raw)) return undefined;

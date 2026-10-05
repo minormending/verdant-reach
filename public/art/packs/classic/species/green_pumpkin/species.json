@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "green_pumpkin",
+  "palette": ["#181818", "#285030", "#70a838", "#d8e888"],
+  "sport": ["#181818", "#284848", "#689888", "#d0e8d0"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_b/pumpkin.py. Reference photo pumpkin/teen.jpg by tracydekalb (CC BY 2.0), https://www.flickr.com/photos/11540627@N03/3966532785: used as a drawing reference, not traced.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: 'Jarrahdale' blue pumpkin. Cucurbita maxima 'Jarrahdale' (Western Australia heirloom): slate blue-grey ribbed skin; blue-green vines.",
+  "anim": null
+}

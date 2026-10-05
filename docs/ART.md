@@ -108,6 +108,9 @@ first `front` file) and how long it shows, in 60 fps ticks.
   frames ping-pong).
 - Every frame index must exist in `frames.front`. Packs can override `anim`
   like any other field.
+- `"anim": null` means no animation (the legacy ping-pong). Packs merge
+  shallowly, so a pack whose art predates the base's `anim` sets it to null
+  to drop it; the `classic` pack does this for every species.
 
 **Indexed colour.** This rule is what makes palette tools and art packs work.
 - `palette` has exactly 4 colours, ordered darkest to lightest. Index 0 is
@@ -331,7 +334,7 @@ routes characters, structures and set images to it):
 sys.path.insert(0, "<repo>/tools/art")
 from artkit import emit
 emit.species("orchid_keiki", {"front": im, "front__2": im, "back": im, "icon": im, "icon__2": im},
-             tool="tools/art/species_e/orchid.py")
+             tool="tools/art/<folder>/<generator>.py")   # species now use tools/art/crystal/kit.py
 emit.tileset("city", {"paving": im, "paving~1": im, "paving@5": im, ...}, tool=..., name="City", order=[...])
 emit.structure("fountain", im, tool=...); emit.character("wren", im, tool=...)
 emit.set_images("items", {"pruning_shears": im}, tool=...)
@@ -347,10 +350,30 @@ emit.set_images("items", {"pruning_shears": im}, tool=...)
 - Default species credits come from `artkit/species_refs.json` (the
   reference photos).
 
+**Species: the Crystal rule.** Every species is drawn by a line module
+`tools/art/crystal/<line>.py` that defines `build()` and writes base bundles
+through `tools/art/crystal/kit.py` (`write_species`, the rule checker
+`check`, and `review_sheet` / `intro_strip`). The rule is in
+docs/CREATURES.md § Crystal rule. `tools/art/crystal/build.py` (the
+`crystal` builder) discovers and runs every such module; underscore modules
+(`_*.py`) are shared helpers. The pre-Crystal generators in
+`tools/art/species_a/` to `species_f/` are kept as reference only and are no
+longer run; their art is the `classic` pack (below).
+
 `$PY tools/art/build_all.py` validates and rebuilds `index.json`. `--regen
 [names…]` first runs the `BUILDERS` list (add a line for a new generator).
 A regen reproduces every `generated` bundle byte-identically: it writes
 nothing when no art changed.
+
+### The `classic` pack
+
+`packs/classic/` is a snapshot of all 65 species as they were before the
+Crystal-rule rollout (frames, palette, sport and notes copied from the base
+bundles, `source: {kind: "imported", from: "base art before the Crystal-rule
+rollout"}`, and `"anim": null` so the base's intros don't leak into the old
+frames). Try it with `?art=classic`; the Art Lab's Compare tab uses it by
+default (`?dev=art#compare/<id>/classic`). Rolling a species back is a copy
+of its classic folder into `species/` with `source.kind` set to `edited`.
 
 ### Migration and the `traced` pack
 
@@ -365,5 +388,6 @@ nothing when no art changed.
   - back views traced from the same cut-outs;
   - icons that fall back to the base icons recoloured into the pack palette;
   - palette-only overrides for `chili_blossom` and `red_chili`;
+  - `"anim": null` on the traced species, which have a single front frame;
   - credits in `packs/traced/CREDITS.md`.
 - Try it with `?art=traced`.

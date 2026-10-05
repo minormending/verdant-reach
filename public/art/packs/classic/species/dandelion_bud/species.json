@@ -1,0 +1,11 @@
+{
+  "format": "verdant.species/1",
+  "id": "dandelion_bud",
+  "palette": ["#181818", "#286030", "#70b038", "#f8d830"],
+  "sport": ["#181818", "#305838", "#68a840", "#f0a0c0"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/species_a/dandelion.py. Reference photo dandelion/baby.jpg by Conall (conall..) (CC BY 2.0), https://www.flickr.com/photos/16176711@N02/53680710936: used as a drawing reference, not traced.",
+  "source": { "kind": "imported", "from": "base art before the Crystal-rule rollout" },
+  "notes": "Sport: pink dandelion. Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips.",
+  "anim": null
+}
