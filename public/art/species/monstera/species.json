@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "monstera",
+  "palette": ["#181818", "#204038", "#489840", "#c8e878"],
+  "sport": ["#181818", "#405848", "#a8c098", "#f0f0d8"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Hand-built for Verdant Reach (tools/art/species_e). Botany reference: Monstera deliciosa leaves, nodes and aerial roots, Wikimedia Commons.",
+  "source": { "kind": "generated", "tool": "tools/art/species_e/monstera.py" },
+  "notes": "LOOMING. Sport: Monstera deliciosa 'Thai Constellation' (cream-speckled, milky green leaves)."
+}

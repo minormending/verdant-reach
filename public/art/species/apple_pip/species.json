@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "apple_pip",
+  "palette": ["#181818", "#682028", "#b85830", "#d8e890"],
+  "sport": ["#181818", "#402040", "#985070", "#f0c0c8"],
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-built in tools/art/species_f/ (Round 4). Subject: Malus domestica (orchard apple); drawn from its botany, not traced from any photo.",
+  "source": { "kind": "generated", "tool": "tools/art/species_f/apple.py" },
+  "notes": "BOBBING: a glossy pip tipped at the foe on a forked radicle, its sprout flicked back like a plume. Accent: the wine of the apple skin (dark slot). Sport: Malus 'Royalty' (purple-leaved crabapple: bronze-purple leaves, crimson-pink blossom, dark fruit)."
+}

@@ -1,0 +1,10 @@
+{
+  "format": "verdant.species/1",
+  "id": "bird_of_paradise",
+  "palette": ["#181818", "#2840a0", "#409060", "#f8a838"],
+  "sport": ["#181818", "#4830a0", "#589850", "#f8d850"],
+  "frames": { "front": ["front.png", "front__2.png", "front__3.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "credits": "Original pixel art for Verdant Reach, hand-built in tools/art/species_f/ (Round 4). Subject: Strelitzia reginae (bird of paradise); drawn from its botany, not traced from any photo.",
+  "source": { "kind": "generated", "tool": "tools/art/species_f/paradise.py" },
+  "notes": "LUNGING: the open crest thrust at the foe, paddle leaves fanned back. Strelitzia reginae. Beak = spathe, crest = the orange sepals (light slot, the line's accent), the blue petal 'tongue' and every shadow share the dark slot. Sport: 'Mandela's Gold' (yellow sepals; Kirstenbosch, 1996)."
+}
