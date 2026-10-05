@@ -15,22 +15,38 @@ const harvestOf = (script: string) => {
   return op!;
 };
 
+/** Chapter 4's maps (docs/ROUND4.md §1.2); everything else is Chapters 1-3. */
+const CH4 = new Set<MapId>([
+  "route_4", "glasshouse_city", "palm_house", "glasshouse_greenhouse", "glasshouse_market", "glasshouse_nursery",
+  "glasshouse_relay", "glasshouse_conservatory", "glasshouse_house", "route_5",
+]);
+
 describe("hidden items", () => {
   const all = maps.flatMap((m) => (m.hidden ?? []).map((h) => ({ map: m.id, ...h })));
-  it("hides 6 to 10 items across the slice, spread over at least 6 maps", () => {
-    expect(all.length).toBeGreaterThanOrEqual(6);
-    expect(all.length).toBeLessThanOrEqual(10);
-    expect(new Set(all.map((h) => h.map)).size).toBeGreaterThanOrEqual(6);
+  const early = all.filter((h) => !CH4.has(h.map));
+  const ch4 = all.filter((h) => CH4.has(h.map));
+  it("hides 6 to 10 items across Chapters 1-3, spread over at least 6 maps (plus a few PRUNE stashes)", () => {
+    expect(early.length).toBeGreaterThanOrEqual(6);
+    expect(early.length).toBeLessThanOrEqual(14);
+    expect(new Set(early.map((h) => h.map)).size).toBeGreaterThanOrEqual(6);
   });
-  it("never hides glass pods outside the grove", () => {
-    for (const h of all) if (h.item === "glass_pod") expect(h.map).toBe("sugarbush_grove");
+  it("hides 6 to 10 items across Chapter 4, spread over at least 4 maps", () => {
+    expect(ch4.length).toBeGreaterThanOrEqual(6);
+    expect(ch4.length).toBeLessThanOrEqual(10);
+    expect(new Set(ch4.map((h) => h.map)).size).toBeGreaterThanOrEqual(4);
+  });
+  it("never hides glass pods before Chapter 4, outside the grove", () => {
+    for (const h of early) if (h.item === "glass_pod") expect(h.map).toBe("sugarbush_grove");
   });
 });
 
 describe("harvest bushes", () => {
-  it("plants 6 to 10 bushes, each with its own harvest id and a script that picks it", () => {
-    expect(bushes.length).toBeGreaterThanOrEqual(6);
-    expect(bushes.length).toBeLessThanOrEqual(10);
+  it("plants 6 to 10 bushes in Chapters 1-3 and a few more in Chapter 4, each with its own harvest id", () => {
+    const early = bushes.filter((b) => !CH4.has(b.map));
+    expect(early.length).toBeGreaterThanOrEqual(6);
+    expect(early.length).toBeLessThanOrEqual(10);
+    expect(bushes.length - early.length).toBeGreaterThanOrEqual(2);
+    expect(bushes.length - early.length).toBeLessThanOrEqual(5);
     for (const { npc } of bushes) {
       expect(npc.script, npc.id).toBeTruthy();
       expect(harvestOf(npc.script!).id).toBe(harvestId(npc));

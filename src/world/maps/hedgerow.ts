@@ -31,14 +31,14 @@ export const hedgerow: MapDef = {
     "T##N###LLLLLLNLLLLLL@@@@.T", // 9
     "T*.:.f.HHHHH::mH...y@@@@yT", // 10
     "HHH:SHHHHHHH::HS.f..@@@@.T", // 11
-    ":::::::::::::::::::::::..T", // 12
+    ":::::::::::::::::::::::..:", // 12 east: the old drove road (ROUTE 5)
     "HHH:::::::::::::::::::::.T", // 13
     "THHHHHHHHHHH::H.......*..T", // 14
     "T.GGk@@@@f.H::H.@@@..~~q.T", // 15
     "T.GGk@@@@y.H::H.@@@.~~0~.T", // 16
     "Tf.y*@@@@.*H::H9@@@.q~~~.T", // 17
-    "T*y...:::::::::......35..T", // 18
-    "T..f..*....H::H*y.f......T", // 19
+    "TBy...:::::::::......35..T", // 18
+    "T.Bf..*....H::H*y.f......T", // 19
     "TTTTTTTTTTTT::TTTTTTTTTTTT", // 20
   ],
   structures: [
@@ -53,6 +53,7 @@ export const hedgerow: MapDef = {
     { x: 12, y: 20, to: "route_1", toX: 9, toY: 1, facing: "down" },
     { x: 13, y: 20, to: "route_1", toX: 10, toY: 1, facing: "down" },
     { x: 13, y: 7, to: "fennimore_house", toX: 4, toY: 6, facing: "up" },
+    { x: 25, y: 12, to: "route_5", toX: 1, toY: 16, facing: "right" },
   ],
   npcs: [
     // The west lane is one tile wide at the trimmer, so he truly blocks it.
@@ -80,7 +81,11 @@ export const hedgerow: MapDef = {
     { id: "bush:hh_berry_bakehouse", sprite: "harvest_bush", x: 10, y: 15, facing: "down", movement: "static", script: "bush_hh_berry_bakehouse" },
   ],
   // Tucked behind the old oak, on the side nobody walks.
-  hidden: [{ x: 17, y: 14, item: "neem_spray" }],
+  hidden: [
+    { x: 17, y: 14, item: "neem_spray" },
+    // PRUNE payoff: brambles have swallowed the bakehouse garden's far corner.
+    { x: 1, y: 19, item: "plant_food" },
+  ],
   signs: [
     { x: 4, y: 11, text: "HEDGEROW. West: ROUTE 2 to BRAMBLEGATE. South: ROUTE 1." },
     { x: 14, y: 10, text: "OLD FENNIMORE. No seeds by post, please." },

@@ -22,8 +22,8 @@ export const route_1: MapDef = {
   tiles: [
     "TTTTTTTTT::TTTTTTTTTTT", // 0
     "TTTTTTTTH::HTTTTTTTTTT", // 1
-    "TTTTT.y*H::H.f.TTTTTTT", // 2
-    "TTT.,....::...y...TTTT", // 3
+    "TTTTT.B*H::H.f.TTTTTTT", // 2
+    "TTT.,B...::...y...TTTT", // 3
     "TT,,,,,..::.....,...TT", // 4
     "TT,,,,,..::..,,,,,,,.T", // 5
     "TT,,,,,..::..,,,,,,,.T", // 6
@@ -87,7 +87,11 @@ export const route_1: MapDef = {
     { id: "bush:r1_berry_river", sprite: "harvest_bush", x: 15, y: 21, facing: "down", movement: "static", script: "bush_r1_berry_river" },
   ],
   // Under the old stump in the west hollow, ringed with mushrooms.
-  hidden: [{ x: 3, y: 28, item: "terrarium_pod", qty: 2 }],
+  hidden: [
+    { x: 3, y: 28, item: "terrarium_pod", qty: 2 },
+    // PRUNE payoff: brambles have closed off the nook by the north gate since the bloom.
+    { x: 5, y: 2, item: "rain_jar" },
+  ],
   signs: [
     { x: 9, y: 38, text: "ROUTE 1. North: HEDGEROW. South: FALLOWFIELD." },
     { x: 14, y: 17, text: "Hedges laid by hand. Please don't trim in nesting season!" },

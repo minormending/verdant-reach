@@ -5,6 +5,7 @@ import type { Scripts } from "./build";
 import { TRAINERS } from "./trainers";
 import { storyScripts } from "./scripts/story";
 import { act1Scripts } from "./scripts/act1";
+import { ch4Scripts } from "./scripts/ch4";
 import { QUESTS, questScripts } from "./scripts/quests";
 
 import * as player_home from "./maps/player_home";
@@ -23,10 +24,17 @@ import * as route_3 from "./maps/route_3";
 import * as sugarbush from "./maps/sugarbush";
 import * as sugarbush_grove from "./maps/sugarbush_grove";
 import * as sugarbush_conservatory from "./maps/sugarbush_conservatory";
-import { ROUND4_STUBS } from "./maps/round4_stubs";
+import * as route_4 from "./maps/route_4";
+import * as glasshouse_city from "./maps/glasshouse_city";
+import * as palm_house from "./maps/palm_house";
+import * as glasshouse_market from "./maps/glasshouse_market";
+import * as glasshouse_nursery from "./maps/glasshouse_nursery";
+import * as glasshouse_relay from "./maps/glasshouse_relay";
+import * as glasshouse_conservatory from "./maps/glasshouse_conservatory";
+import * as glasshouse_house from "./maps/glasshouse_house";
+import * as route_5 from "./maps/route_5";
 
 const maps: Record<MapId, MapDef> = {
-  ...ROUND4_STUBS, // ROUND4-STUB: replaced by real maps
   player_home: player_home.player_home,
   herbarium: herbarium.herbarium,
   herbarium_roof: herbarium_roof.herbarium_roof,
@@ -44,6 +52,17 @@ const maps: Record<MapId, MapDef> = {
   sugarbush_greenhouse: greenhouse.sugarbush_greenhouse,
   sugarbush_grove: sugarbush_grove.sugarbush_grove,
   sugarbush_conservatory: sugarbush_conservatory.sugarbush_conservatory,
+  // Chapter 4
+  route_4: route_4.route_4,
+  glasshouse_city: glasshouse_city.glasshouse_city,
+  palm_house: palm_house.palm_house,
+  glasshouse_greenhouse: greenhouse.glasshouse_greenhouse,
+  glasshouse_market: glasshouse_market.glasshouse_market,
+  glasshouse_nursery: glasshouse_nursery.glasshouse_nursery,
+  glasshouse_relay: glasshouse_relay.glasshouse_relay,
+  glasshouse_conservatory: glasshouse_conservatory.glasshouse_conservatory,
+  glasshouse_house: glasshouse_house.glasshouse_house,
+  route_5: route_5.route_5,
 };
 
 const mapScripts: Scripts[] = [
@@ -51,6 +70,8 @@ const mapScripts: Scripts[] = [
   hedgerow.scripts, fennimore_house.scripts, route_2.scripts, bramblegate.scripts, greenhouse.scripts,
   bramblegate_market.scripts, bramblegate_conservatory.scripts, route_3.scripts, sugarbush.scripts,
   sugarbush_grove.scripts, sugarbush_conservatory.scripts,
+  route_4.scripts, glasshouse_city.scripts, palm_house.scripts, glasshouse_market.scripts, glasshouse_nursery.scripts,
+  glasshouse_relay.scripts, glasshouse_conservatory.scripts, glasshouse_house.scripts, route_5.scripts,
 ];
 
 function mergeScripts(...all: Scripts[]): Scripts {
@@ -66,7 +87,7 @@ function mergeScripts(...all: Scripts[]): Scripts {
 
 export const WORLD: WorldData = {
   maps,
-  scripts: mergeScripts(storyScripts, act1Scripts, questScripts, ...mapScripts),
+  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
   quests: QUESTS,
   // Prologue: the observation deck at night, beside DR. VALE.

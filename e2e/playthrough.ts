@@ -2,8 +2,13 @@
 // the dev server (it drives the dev-only `window.__t` driver).
 //
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
-//   open  http://localhost:5190/?timer&e2e=full           new game -> TO BE CONTINUED
+//   open  http://localhost:5190/?timer&e2e=full           new game -> Chapter 4's TO BE CONTINUED
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
+//
+// Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
+// grunt, rival 3 and the shears, the NURSERY (boarding two, a seed, sprouting),
+// WREN's posts, PRUNE on ROUTE 5, FLORA and the chapter end. `check:fanmail`
+// plays the post-chapter FAN MAIL quest from a jump-in.
 //
 // `?timer` keeps the loop running in a hidden tab. Add `&boost=<level>` to set
 // the level of the over-levelled helper (default 48; `boost=0` plays it
@@ -16,6 +21,8 @@
 import type { GameContext, MapId, Scene, SceneStack, SpeciesId, TimeOfDay } from "../src/contracts";
 import { createQuickened, healParty } from "../src/battle";
 import { rollEncounter } from "../src/overworld/encounters";
+import { inBounds, tileAt, triggerAt, tryMove, warpAt, type MapRuntime } from "../src/overworld/map";
+import { SEED_CHECK_STEPS } from "../src/overworld/nursery";
 
 // ---------------------------------------------------------------------------
 // Handles on the running game
@@ -151,6 +158,13 @@ function hookScenes() {
 }
 let pendingNo = false;
 let expectName = false;
+/** Menus driven by key presses: how many DOWNs before the next A (set by the hooks below). */
+let menuDown = 0;
+let menuDelay = 250;
+/** Which entry to pick in an engine menu (ui.choose), by its options and prompt. */
+let menuPlan: ((options: string[], prompt: string) => number | undefined) | null = null;
+/** Which party slot to pick when a party screen opens in "pick" mode. */
+let partyPick: (() => number) | null = null;
 let instrumented = false;
 
 function instrument() {
@@ -179,8 +193,24 @@ function instrument() {
   };
   const choose = ui.choose.bind(ui);
   ui.choose = (options: unknown, opts?: unknown) => {
-    report.texts.push({ t: now(), map: ow()?.mapId, text: `[menu] ${(options as string[]).join(" / ")}` });
+    const list = options as string[];
+    const prompt = (opts as { prompt?: string } | undefined)?.prompt ?? "";
+    report.texts.push({ t: now(), map: ow()?.mapId, text: `[menu] ${prompt ? prompt + " " : ""}${list.join(" / ")}` });
+    const want = menuPlan?.(list, prompt);
+    if (want !== undefined && want > 0) { menuDown = want; menuDelay = 250; }
     return choose(options, opts);
+  };
+  // Party screens in pick mode (the NURSERY counter): steer the cursor with real key presses.
+  const screens = ctx().screens as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>;
+  const partyScreen = screens.party.bind(screens);
+  screens.party = (opts?: unknown) => {
+    const o = opts as { mode?: string; prompt?: string } | undefined;
+    if (o?.mode === "pick" && partyPick) {
+      const i = partyPick();
+      report.texts.push({ t: now(), map: ow()?.mapId, text: `[party pick] ${o.prompt ?? ""} -> ${i}` });
+      if (i > 0) { menuDown = i; menuDelay = 900; }
+    }
+    return partyScreen(opts);
   };
   for (const level of ["error", "warn"] as const) {
     const orig = console[level].bind(console);
@@ -254,6 +284,12 @@ export async function advance(maxPresses = 400, done: () => boolean = idle): Pro
       continue;
     }
     hookScenes();
+    if (menuDown > 0) {
+      const n = menuDown;
+      menuDown = 0;
+      await sleep(menuDelay);
+      for (let k = 0; k < n; k++) { await press("down", 60); await sleep(140); }
+    }
     await press(pendingNo ? "b" : "a");
     // Soft-lock detector: same stack, map and position for a long time.
     const o = ow();
@@ -270,6 +306,51 @@ async function settle() {
   if (!idle()) await advance();
 }
 
+/**
+ * The driver's goto, but routed round live step-on triggers that aren't the
+ * destination (a closed door's trigger bounces you back, and the driver would
+ * walk into it forever). Falls back to the driver when triggers are the only way.
+ */
+async function goto(tx: number, ty: number): Promise<string> {
+  const o = ow();
+  if (!o) return "no overworld";
+  const m = o.map as unknown as MapRuntime;
+  const flags = ctx().state.flags;
+  const k = (x: number, y: number) => `${x},${y}`;
+  const prev = new Map<string, [number, number, Dir] | null>([[k(o.player.x, o.player.y), null]]);
+  const q: [number, number][] = [[o.player.x, o.player.y]];
+  while (q.length) {
+    const [x, y] = q.shift()!;
+    if (x === tx && y === ty) break;
+    for (const d of ["up", "down", "left", "right"] as Dir[]) {
+      const r = tryMove(m, x, y, d, (a, b) => !!o.npcAt(a, b));
+      if (r.kind === "blocked" || prev.has(k(r.x, r.y))) continue;
+      const dest = r.x === tx && r.y === ty;
+      if (!dest && (warpAt(m, r.x, r.y) || triggerAt(m, r.x, r.y, flags))) continue;
+      prev.set(k(r.x, r.y), [x, y, d]);
+      q.push([r.x, r.y]);
+    }
+  }
+  if (!prev.has(k(tx, ty))) return T().goto(tx, ty);
+  const dirs: Dir[] = [];
+  for (let c = k(tx, ty); prev.get(c);) { const [x, y, d] = prev.get(c)!; dirs.unshift(d); c = k(x, y); }
+  const map = o.mapId;
+  for (const d of dirs) {
+    const p = ow();
+    if (!p || p.mapId !== map) return "ok";
+    if (p.busy) return `interrupted at ${k(p.player.x, p.player.y)}`;
+    const [bx, by] = [p.player.x, p.player.y];
+    await T().step(d);
+    const a = ow();
+    if (a && a.mapId === map && !a.busy && a.player.x === bx && a.player.y === by) {
+      // Blocked (someone stepped in the way): let the caller retry.
+      await sleep(300);
+      return `interrupted at ${k(bx, by)}`;
+    }
+  }
+  return "ok";
+}
+
 /** Walk to a tile, fighting through anything that interrupts. */
 export async function walkTo(x: number, y: number, tries = 25): Promise<boolean> {
   for (let i = 0; i < tries; i++) {
@@ -278,7 +359,7 @@ export async function walkTo(x: number, y: number, tries = 25): Promise<boolean>
     if (!o) return false;
     if (o.player.x === x && o.player.y === y) return true;
     const mapBefore = o.mapId;
-    const r = await T().goto(x, y);
+    const r = await goto(x, y);
     if (ow()?.mapId !== mapBefore) return true; // a warp or script moved us on
     if (r === "ok") { await settle(); return true; }
     if (r === "no path") {
@@ -328,20 +409,21 @@ export async function talkTo(id: string, quiet = false): Promise<boolean> {
       const before = report.texts.length;
       await press("a");
       await sleep(250);
-      if (!idle() || report.texts.length > before) { await advance(); return true; }
+      // Leader talks run intro, a long battle (move-learning menus included) and the mark.
+      if (!idle() || report.texts.length > before) { await advance(1000); return true; }
     }
   }
   if (!quiet) issue("talk-failed", `could not talk to "${id}"`);
   return false;
 }
 
-async function walkToQuiet(x: number, y: number) {
+async function walkToQuiet(x: number, y: number, depth = 0): Promise<boolean> {
   const o = ow();
   if (!o) return false;
   if (o.player.x === x && o.player.y === y) return true;
-  const r = await T().goto(x, y);
+  const r = await goto(x, y);
   if (r === "ok") { await settle(); return true; }
-  if (r.startsWith("interrupted")) { await settle(); return walkToQuiet(x, y); }
+  if (r.startsWith("interrupted") && depth < 8) { await settle(); return walkToQuiet(x, y, depth + 1); }
   return false;
 }
 
@@ -380,6 +462,11 @@ export async function nav(target: MapId, avoid: MapId[] = []): Promise<boolean> 
     for (const w of ws) {
       await walkTo(w.x, w.y);
       if (ow()?.mapId !== here) { moved = true; break; }
+      // Brambles in the way: PRUNE through them once the shears are in the bag.
+      if (!onTile(w.x, w.y) && (ctx().state.bag["pruning_shears"] ?? 0) > 0) {
+        await pruneToward(w.x, w.y);
+        if (ow()?.mapId !== here) { moved = true; break; }
+      }
       const q = ow()!;
       if (q.player.x !== w.x || q.player.y !== w.y) {
         // Door tiles can read as blocked to the path search: stand beside the
@@ -428,6 +515,104 @@ export async function trigger(script: string): Promise<boolean> {
 }
 
 const flag = (f: string) => !!ctx().state.flags[f];
+const onTile = (x: number, y: number) => { const o = ow(); return !!o && o.player.x === x && o.player.y === y; };
+
+/**
+ * PRUNE a way through to (tx, ty): path-find treating brambles as open, then
+ * face the first bramble on the path, press A and answer YES. Repeats until
+ * the path is clear, then walks there. Returns how many brambles it cut.
+ */
+export async function pruneToward(tx: number, ty: number): Promise<number> {
+  let cut = 0;
+  for (let round = 0; round < 8; round++) {
+    await settle();
+    const o = ow();
+    if (!o) return cut;
+    const m = o.map as unknown as MapRuntime;
+    const k = (x: number, y: number) => `${x},${y}`;
+    const prev = new Map<string, [number, number, Dir] | null>([[k(o.player.x, o.player.y), null]]);
+    const q: [number, number][] = [[o.player.x, o.player.y]];
+    while (q.length) {
+      const [x, y] = q.shift()!;
+      if (x === tx && y === ty) break;
+      for (const d of ["up", "down", "left", "right"] as Dir[]) {
+        const [dx, dy] = DIRS[d];
+        let nx = x + dx, ny = y + dy;
+        if (!inBounds(m, nx, ny)) continue;
+        if (tileAt(m, nx, ny) !== "bramble_bush") {
+          const r = tryMove(m, x, y, d, (a, b) => !!o.npcAt(a, b));
+          if (r.kind === "blocked") continue;
+          nx = r.x; ny = r.y;
+        }
+        if (prev.has(k(nx, ny))) continue;
+        prev.set(k(nx, ny), [x, y, d]);
+        q.push([nx, ny]);
+      }
+    }
+    if (!prev.has(k(tx, ty))) { issue("prune", `no way to ${tx},${ty} on ${o.mapId}, even through brambles`); return cut; }
+    const path: [number, number, Dir, number, number][] = [];
+    for (let c = k(tx, ty); prev.get(c);) {
+      const [x, y, d] = prev.get(c)!;
+      const [cx, cy] = c.split(",").map(Number);
+      path.unshift([x, y, d, cx, cy]);
+      c = k(x, y);
+    }
+    const hit = path.find(([, , , cx, cy]) => tileAt(m, cx, cy) === "bramble_bush");
+    if (!hit) { await walkTo(tx, ty); return cut; }
+    const [bx, by, d, cx, cy] = hit;
+    if (!(await walkToQuiet(bx, by))) { issue("prune", `can't stand next to the bramble at ${cx},${cy}`); return cut; }
+    await face(d);
+    const before = report.texts.length;
+    await press("a");
+    await sleep(300);
+    await advance();
+    const said = report.texts.slice(before).map((t) => t.text).join(" | ");
+    if (tileAt(ow()!.map as unknown as MapRuntime, cx, cy) === "bramble_bush") {
+      issue("prune", `bramble at ${cx},${cy} on ${o.mapId} still there after A (${said})`);
+      return cut;
+    }
+    cut++;
+    beat(`PRUNE: bramble at ${cx},${cy}`, flag(`pruned_${o.mapId}_${cx}_${cy}`), said.slice(0, 120));
+  }
+  return cut;
+}
+
+/** Press A facing a solid interactable tile that carries a trigger (sensor posts). */
+async function useTile(script: string): Promise<boolean> {
+  const o = ow();
+  const tr = o?.map.def.triggers.find((t) => t.script === script);
+  if (!o || !tr) { issue("trigger", `no tile script "${script}" on ${o?.mapId}`); return false; }
+  for (const d of ["down", "left", "right", "up"] as Dir[]) {
+    const [dx, dy] = DIRS[d];
+    if (!(await walkToQuiet(tr.x + dx, tr.y + dy))) continue;
+    await face(OPP[d]);
+    const before = report.texts.length;
+    await press("a");
+    await sleep(300);
+    await advance();
+    if (report.texts.length > before) return true;
+  }
+  issue("trigger", `could not use "${script}" on ${o.mapId}`);
+  return false;
+}
+
+/** Walk on the spot (two tiles back and forth) for `n` steps. */
+async function pace(n: number) {
+  for (let i = 0; i < n; i++) {
+    await settle();
+    const o = ow();
+    if (!o) return;
+    const m = o.map as unknown as MapRuntime;
+    const dirs = (i % 2 ? ["left", "right", "up", "down"] : ["right", "left", "down", "up"]) as Dir[];
+    const d = dirs.find((dd) => {
+      const r = tryMove(m, o.player.x, o.player.y, dd, (a, b) => !!o.npcAt(a, b));
+      return r.kind === "walk" && !o.map.def.warps.some((w) => w.x === r.x && w.y === r.y);
+    });
+    if (!d) { issue("pace", `boxed in at ${where()}`); return; }
+    await T().step(d);
+  }
+  await settle();
+}
 
 async function waitFor(cond: () => boolean, ms = 30000) {
   const t0 = performance.now();
@@ -634,25 +819,184 @@ export async function storyPlaythrough(opts: { boost: number; starter: "oak" | "
     await expectFlag("rival battle 2", "rival_2_done");
   }
 
-  await nav("sugarbush_conservatory");
-  if (!(await solvePuzzle("nell"))) issue("puzzle", "could not reach NELL");
-  // NELL's talk runs the whole chain: battle, mark, VALE's call, save prompt, end card.
-  await talkToUntilEnd("nell");
+  if (!flag("beat_nell")) {
+    await nav("sugarbush_conservatory");
+    if (!(await solvePuzzle("nell"))) issue("puzzle", "could not reach NELL");
+    // NELL's talk runs the chain: battle, mark, then VALE's call, which now sends us east.
+    await talkTo("nell");
+    await expectFlag("NELL: sundew mark", "beat_nell");
+    await expectFlag("VALE's call: take the seed to the ROOT RELAY", "ch4_started");
+  }
+
+  await chapter4(opts);
+}
+
+// ---------------------------------------------------------------------------
+// Chapter 4: GLASSHOUSE CITY
+// ---------------------------------------------------------------------------
+
+async function chapter4(_opts: { boost: number; starter: "oak" | "chili" | "lily" }) {
+  const st = () => ctx().state;
+  const bag = (i: string) => st().bag[i] ?? 0;
+
+  if (!flag("gc_arrival_seen")) {
+    await nav("route_4");
+    beat("route 4: past the sap cart", ow()?.mapId === "route_4");
+    await nav("glasshouse_city");
+    await settle();
+    await expectFlag("GLASSHOUSE CITY: the dome", "gc_arrival_seen", `music=${ctx().audio.current()}`);
+  }
+
+  if (!flag("relay_listened")) {
+    // The ROSE CONSERVATORY is shut until the open day is over.
+    await nav("glasshouse_city");
+    const o = ow()!;
+    if (o.map.def.triggers.some((t) => t.script === "ch4_conservatory_closed")) {
+      const before = report.texts.length;
+      await trigger("ch4_conservatory_closed");
+      await settle();
+      const said = report.texts.slice(before).some((t) => /CLOSED/.test(t.text));
+      beat("ROSE CONSERVATORY closed", said && ow()?.mapId === "glasshouse_city");
+    } else beat("ROSE CONSERVATORY closed", false, "no ch4_conservatory_closed trigger");
+
+    await nav("glasshouse_relay");
+    await settle();
+    if (!flag("relay_listened")) await trigger("ch4_relay_listen");
+    await settle();
+    await expectFlag("ROOT RELAY: the seed, the pulse", "relay_listened",
+      `centuryheart_seed=${bag("centuryheart_seed")}`);
+  }
+
+  // WREN's LISTENING POSTS (post 3 is in the PALM HOUSE, post 2 in the square, post 1 on ROUTE 4).
+  if (!flag("quest_relay_sensors_started")) {
+    await nav("glasshouse_relay");
+    await talkTo("wren");
+    await expectFlag("WREN: listening posts quest", "quest_relay_sensors_started");
+  }
+
+  if (!flag("ch4_grunt_seen")) {
+    await nav("glasshouse_city");
+    await settle();
+    await expectFlag("a grunt watches the RELAY mast", "ch4_grunt_seen");
+  }
+
+  if (!flag("rival_3_done")) {
+    await nav("glasshouse_nursery");
+    await settle();
+    await expectFlag("rival battle 3 at the NURSERY", "rival_3_done");
+    beat("GARDEN SHEARS from the keepers", flag("got_shears") && bag("pruning_shears") > 0);
+  }
+
+  if (!flag("sprouted_any")) await nurseryBreeding();
+  if (!flag("quest_first_seed_done")) {
+    await nav("glasshouse_nursery");
+    await talkTo("nursery_keeper_b");
+    await expectFlag("LUPIN: the first seed", "quest_first_seed_done", `plant_food=${bag("plant_food")}`);
+  }
+
+  // The posts, in walking order.
+  for (const [n, map] of [[2, "glasshouse_city"], [3, "palm_house"], [1, "route_4"]] as [number, MapId][]) {
+    if (flag(`sensor_${n}_read`)) continue;
+    await nav(map);
+    await useTile(`q_relay_sensors_post_${n}`);
+    beat(`sensor post ${n} (${map})`, flag(`sensor_${n}_read`));
+  }
+  if (!flag("quest_relay_sensors_done")) {
+    await nav("glasshouse_relay");
+    await talkTo("wren");
+    await expectFlag("WREN: listening posts done", "quest_relay_sensors_done");
+  }
+
+  // ROUTE 5: PRUNE through the brambles at both ends, out to HEDGEROW and back.
+  if (!flag("e2e_route5_done")) {
+    await nav("glasshouse_city");
+    const prunedBefore = Object.keys(st().flags).filter((f) => f.startsWith("pruned_")).length;
+    await nav("route_5");
+    beat("ROUTE 5 (through the brambles)", ow()?.mapId === "route_5");
+    await nav("hedgerow");
+    beat("ROUTE 5 comes out in HEDGEROW", ow()?.mapId === "hedgerow");
+    const pruned = Object.keys(st().flags).filter((f) => f.startsWith("pruned_")).length - prunedBefore;
+    beat("PRUNE used on the way", pruned > 0, `${pruned} brambles cut`);
+    await nav("glasshouse_city");
+    st().flags["e2e_route5_done"] = true;
+  }
+
+  // Conservatory 3.
+  if (!flag("beat_flora")) {
+    await nav("glasshouse_conservatory");
+    if (!(await solvePuzzle("flora"))) issue("puzzle", "could not reach FLORA");
+    await talkTo("flora");
+    await expectFlag("FLORA VANCE: rose mark", "beat_flora", `marks=${JSON.stringify(st().marks ?? "")}`);
+  }
+
+  // Leaving the CONSERVATORY with the mark: VALE's call, the save offer, the end card.
+  await nav("glasshouse_conservatory");
+  const o = ow()!;
+  const exit = o.map.def.warps.find((w) => w.to === "glasshouse_city");
+  if (!exit) { beat("chapter end", false, "no conservatory exit"); return; }
+  await untilEndCard(async () => {
+    await walkToQuiet(exit.x, exit.y - 1);
+    await T().goto(exit.x, exit.y);
+    await T().hold(KEY.down, 250);
+  });
+  beat("chapter 4 done", flag("ch4_done"));
+}
+
+/** Board two plants of one line, walk until they set seed, collect it, and walk it to sprouting. */
+async function nurseryBreeding() {
+  const st = ctx().state;
+  await nav("glasshouse_nursery");
+  // Two of one line (the best odds), added for the test. Party: helper, starter, + these two.
+  const pair = "dandelion_bud" as SpeciesId;
+  const nursery = () => st.nursery ?? { slots: [], steps: 0, seedReady: false };
+  if (nursery().slots.length < 2 && !nursery().seedReady) {
+    for (let i = nursery().slots.length; i < 2; i++) st.party.push(createQuickened(ctx().data, pair, 8, Math.random));
+    let boards = 2 - nursery().slots.length;
+    menuPlan = (options, prompt) => {
+      if (!/help/i.test(prompt)) return undefined;
+      const i = boards > 0 ? options.indexOf("BOARD") : -1;
+      if (i >= 0) { boards--; return i; }
+      return options.indexOf("CANCEL");
+    };
+    partyPick = () => st.party.length - 1;
+    await talkTo("nursery_keeper");
+    menuPlan = null;
+    partyPick = null;
+    beat("NURSERY: two plants boarded", nursery().slots.length === 2,
+      `slots=${nursery().slots.map((q) => q.species).join(",")} party=${st.party.length}`);
+  }
+  // Walk the yard. Each check is a real roll; we only skip the 256-step wait.
+  for (let i = 0; i < 10 && !nursery().seedReady && nursery().slots.length === 2; i++) {
+    if (st.nursery) st.nursery.steps = SEED_CHECK_STEPS - 4;
+    await pace(6);
+  }
+  beat("NURSERY: a seed is set", nursery().seedReady || st.party.some((q) => q.seed));
+  if (!st.party.some((q) => q.seed)) {
+    const yard = report.texts.length;
+    await talkTo("nursery_keeper_b"); // the yard keeper's hint (and THE FIRST SEED)
+    beat("LUPIN hints at the seed", report.texts.slice(yard).some((t) => /SEED/.test(t.text)));
+    menuPlan = (options, prompt) => (/help/i.test(prompt) ? options.indexOf("CANCEL") : undefined);
+    await talkTo("nursery_keeper");
+    menuPlan = null;
+  }
+  const seed = st.party.find((q) => q.seed);
+  beat("NURSERY: collected the SEED", !!seed, seed ? `${seed.species} steps=${seed.seed!.steps}` : `party=${st.party.map((q) => q.species)}`);
+  if (!seed) return;
+  // Skip most of the countdown; the last steps and the sprouting scene are real.
+  seed.seed!.steps = 3;
+  await pace(5);
+  await settle();
+  await expectFlag("the SEED sprouted", "sprouted_any", `${seed.species} seed=${JSON.stringify(seed.seed ?? null)}`);
 }
 
 function counter(line: string) {
   return ({ oak: "chili", chili: "lily", lily: "oak" } as Record<string, string>)[line] ?? "chili";
 }
 
-/** NELL's chain ends with the TO BE CONTINUED card and the title screen. */
-async function talkToUntilEnd(id: string) {
-  // Walk next to NELL and start the talk.
-  const o = ow()!;
-  const n = o.npcs.find((a) => a.id === id);
-  if (!n) { beat("nell", false, "no nell"); return; }
-  await walkToQuiet(n.x, n.y + 1);
-  await face("up");
-  await press("a");
+/** Start the chapter-end chain, then mash through the save offer to the
+ *  TO BE CONTINUED card and the title screen. */
+async function untilEndCard(start: () => Promise<void>) {
+  await start();
   // Mash until the end card is up (it plays "slice_end" over the overworld),
   // snapshot it, then press through to the title.
   let sawCard = false;
@@ -674,7 +1018,6 @@ async function talkToUntilEnd(id: string) {
     await press(pendingNo ? "b" : "a");
   }
   await sleep(2000);
-  beat("NELL: sundew mark", flag("beat_nell"));
   beat("back at the title", !ow() && stack().length >= 1);
 }
 
@@ -880,6 +1223,25 @@ export const CHECKS: Record<string, () => Promise<void>> = {
     await advance(600);
     const grown = st.party.find((p) => p === q);
     beat("growth after a win", !!grown && grown.species !== "dandelion_bud", `now ${grown?.species}:${grown?.level}`);
+  },
+
+  /** FAN MAIL (after the chapter end, or a jump-in with beat_flora,relay_listened,ch4_done):
+   *  the fan's letter to FLORA, her signed photo, and the fan's thanks. */
+  async fanmail() {
+    instrument();
+    await settle();
+    const st = ctx().state;
+    await nav("glasshouse_city");
+    await talkTo("fan");
+    beat("FAN MAIL: took the letter", flag("quest_fan_mail_started") && (st.bag["fan_letter"] ?? 0) > 0);
+    await nav("glasshouse_conservatory");
+    if (!(await solvePuzzle("flora"))) issue("puzzle", "could not reach FLORA");
+    await talkTo("flora");
+    beat("FAN MAIL: FLORA reads it", flag("fan_letter_delivered") && (st.bag["signed_photo"] ?? 0) > 0 && !(st.bag["fan_letter"] ?? 0));
+    await nav("glasshouse_city");
+    const money = st.money;
+    await talkTo("fan");
+    beat("FAN MAIL: done", flag("quest_fan_mail_done") && st.money === money + 1000, `money ${money}->${st.money}`);
   },
 
   /** Buy a pod at the market. */

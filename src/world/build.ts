@@ -74,6 +74,27 @@ export const LEGEND: Record<string, TileKey> = {
   "J": "workbench",
   "Q": "microscope",
   "h": "chair",
+  // Round 4: Chapter 4 (Route 4 orchard, Glasshouse City, the Palm House, the Relay)
+  "}": "bramble_stump",
+  "-": "paving",
+  ";": "tropical_grass",
+  "R": "orchard_tree",
+  "a": "fallen_apples",
+  "e": "stepping_stones",
+  "l": "palm_tree",
+  "|": "iron_railing",
+  "$": "market_stall",
+  "^": "fountain_basin",
+  "x": "console",
+  "!": "sensor_post",
+  "[": "server_rack",
+  "/": "cable_floor",
+  "z": "seed_tray",
+  "d": "potting_bench",
+  "(": "rose_trellis",
+  ")": "rose_bed",
+  "i": "floor_marble",
+  "'": "stage_floor",
 };
 
 /** Outdoor maps: structure footprints sit on grass, so scenery with soft edges

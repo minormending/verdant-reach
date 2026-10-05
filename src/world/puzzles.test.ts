@@ -98,6 +98,7 @@ function explore(p: Puzzle) {
 const PUZZLES: Puzzle[] = [
   { map: "bramblegate_conservatory", flags: ["bgc_lever_1", "bgc_lever_2"], leader: "hollis" },
   { map: "sugarbush_conservatory", flags: ["sbc_valve_1", "sbc_valve_2"], leader: "nell" },
+  { map: "glasshouse_conservatory", flags: ["rgc_lever_1", "rgc_lever_2"], leader: "flora" },
 ];
 
 describe.each(PUZZLES)("conservatory puzzle: $map", (p) => {
@@ -162,5 +163,23 @@ describe("conservatory puzzle details", () => {
       const t = mapUnder(m, { sbc_valve_1: on }).legend;
       expect([t.d, t.i].filter((x) => x === "water_channel").length).toBe(1);
     }
+  });
+  it("GLASSHOUSE: pulling lever 1 first opens the west wing, but the stage gate stays shut", () => {
+    const m = WORLD.maps.glasshouse_conservatory;
+    const gate = (id: string) => m.npcs.find((n) => n.id === id)!;
+    const f = runFlags(WORLD.scripts.rgc_lever_1, {});
+    expect(holds(gate("gate_a").visibleWhen, f)).toBe(false); // west wing open
+    expect(holds(gate("gate_b").visibleWhen, f)).toBe(true);  // east wing shut
+    expect(holds(gate("gate_c").visibleWhen, f)).toBe(true);  // the stage still shut
+    expect(holds(gate("gate_d").visibleWhen, f)).toBe(false); // the alcove (and its item) open
+    // The solution: lever 2 (east wing), then lever 1: A and C open together.
+    const solved = runFlags(WORLD.scripts.rgc_lever_1, runFlags(WORLD.scripts.rgc_lever_2, {}));
+    expect(holds(gate("gate_a").visibleWhen, solved)).toBe(false);
+    expect(holds(gate("gate_c").visibleWhen, solved)).toBe(false);
+  });
+  it("GLASSHOUSE: FLORA can't be reached in fewer than two lever pulls", () => {
+    const e = explore(PUZZLES[2]);
+    const pulls = (s: { f: Flags }) => Object.values(s.f).filter(Boolean).length;
+    expect(e.reach.filter(e.byLeader).every((s) => pulls(s) >= 2)).toBe(true);
   });
 });

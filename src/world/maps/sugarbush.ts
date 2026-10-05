@@ -15,8 +15,12 @@ export const sugarbush: MapDef = {
   outdoor: true,
   music: "small_town",
   border: "maple_tree",
-  legend: OUTDOOR,
-  legendWhen: [{ when: [{ flag: "grove_cleared", is: true }], legend: { X: "maple_tree" } }],
+  // `]` is the east road, where the sap collector parks his cart until VALE sends you on.
+  legend: { ...OUTDOOR, "]": "path" },
+  legendWhen: [
+    { when: [{ flag: "grove_cleared", is: true }], legend: { X: "maple_tree" } },
+    { when: [{ flag: "ch4_started", is: false }], legend: { "]": "crate" } },
+  ],
   ambient: "leaves",
   tiles: [
     // x: 012345678901234567890123456789
@@ -40,9 +44,9 @@ export const sugarbush: MapDef = {
     "M..@@@@.#kk#..::......@@@@...M", // 17 pumpkin patch
     "M..@@@@.#GG#..::......@@@@.4.M", // 18
     "M..@@@@.####..::......@@@@...M", // 19
-    "M...:...3.....::.......:..M..M", // 20
-    "M...::::::::::::::::::::.....M", // 21
-    "M.y*....M.....::......MM...M.M", // 22
+    "M...:...3.....::.......:..M.MM", // 20
+    "M...::::::::::::::::::::::::]:", // 21 east road to ROUTE 4 (the sap cart at 28,21)
+    "M.y*....M.....::......MM...MMM", // 22
     "MM......MMM..S::...MM.....MMMM", // 23
     "MMMMMMMMMMMMM.::.MMMMMMMMMMMMM", // 24
     "MMMMMMMMMMMMMM::MMMMMMMMMMMMMM", // 25 to ROUTE 3
@@ -60,6 +64,7 @@ export const sugarbush: MapDef = {
     { x: 15, y: 0, to: "sugarbush_grove", toX: 14, toY: 26, facing: "up" },
     { x: 14, y: 25, to: "route_3", toX: 10, toY: 1, facing: "down" },
     { x: 15, y: 25, to: "route_3", toX: 11, toY: 1, facing: "down" },
+    { x: 29, y: 21, to: "route_4", toX: 1, toY: 12, facing: "right" },
     { x: 5, y: 6, to: "sugarbush_conservatory", toX: 9, toY: 16, facing: "up" },
     { x: 24, y: 11, to: "sugarbush_greenhouse", toX: 5, toY: 7, facing: "up" },
   ],
@@ -80,6 +85,11 @@ export const sugarbush: MapDef = {
     { id: "cat", sprite: "cat", x: 5, y: 20, facing: "down", movement: "wander", script: "sb_cat" },
     { id: "dog", sprite: "dog", x: 26, y: 15, facing: "left", movement: "wander", script: "sb_dog" },
     { id: "bird", sprite: "bird", x: 6, y: 22, facing: "right", movement: "wander", script: "sb_bird" },
+    // The east road: a sap collector's cart blocks it until VALE's call (ch4_started).
+    { id: "sap_cart", sprite: "villager_a", x: 27, y: 21, facing: "left", movement: "static", script: "sb_sap_cart",
+      visibleWhen: when({ ch4_started: false }) },
+    { id: "sap_collector", sprite: "villager_a", x: 27, y: 20, facing: "down", movement: "look_around", script: "sb_sap_collector",
+      visibleWhen: when({ ch4_started: true }) },
   ],
   // Behind the woodpile by the SUGAR SHACK.
   hidden: [{ x: 26, y: 6, item: "compost" }],
@@ -193,6 +203,19 @@ export const scripts: Scripts = {
       say("The SUGAR SHACK is full of steam and bubbling pans. No room inside today!"),
       { op: "movePlayer", path: ["down"] },
     ], lockedDoor("SUGAR SHACK. A sign: \"Closed. No sap, no syrup.\"")),
+  ],
+  sb_sap_cart: [
+    say("Whoa there. My cart threw a wheel, and the sap crates are all over the road."),
+    say("Forty buckets of sap. If one tips, that's a week of syrup gone."),
+    ifFlags({ grove_cleared: true }, [
+      say("Where are you off to, anyway? The REACH is that way, and home's south."),
+    ], [
+      say("Go and help with that grove business. I'll be here a while."),
+    ]),
+  ],
+  sb_sap_collector: [
+    say("Wheel's fixed! The road east runs to GLASSHOUSE CITY, past the orchards."),
+    say("Sap's for the city's sweet shops. They pay double under the glass."),
   ],
   sb_door_a: lockedDoor("It's locked. The windowsill is lined with tiny jars of syrup."),
   sb_door_b: lockedDoor("It's locked. Pumpkin seeds are drying on a tray by the step."),

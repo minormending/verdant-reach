@@ -31,6 +31,19 @@ const ROWS = {
     "WYpgrrrgpPW", // 7
     "WWWWWEWWWWW", // 8
   ],
+  // GLASSHOUSE CITY: marble underfoot, a potted palm, a bench and the
+  // newspaper rack (FLORA is on every front page).
+  glasshouse: [
+    "WWOOOOOOOWW", // 0
+    "WPPpgggpPPW", // 1
+    "WYgggggggYW", // 2
+    "WcCCCCCCCKW", // 3  the newspaper rack at 9,3
+    "WiiigggiiiW", // 4  a marble-floored waiting nook
+    "WhDhgggii9W", // 5  tea table; a bench by the rack
+    "WYggrrrggYW", // 6
+    "WPpgrrrgpPW", // 7
+    "WWWWWEWWWWW", // 8
+  ],
 };
 
 export function greenhouseMap(
@@ -71,6 +84,12 @@ export const sugarbush_greenhouse = greenhouseMap(
   { script: "sb_gh_visitor", sprite: "villager_b", x: 3, y: 5 },
 );
 
+export const glasshouse_greenhouse = greenhouseMap(
+  "glasshouse_greenhouse", "GREENHOUSE", ROWS.glasshouse, { to: "glasshouse_city", x: 6, y: 13 },
+  { script: "gc_gh_visitor", sprite: "villager_a", x: 7, y: 4 },
+  [{ x: 9, y: 3, text: "The GLASSHOUSE GAZETTE. \"FLORA VANCE: MY ROSES AND ME.\" Pages 1 to 9." }],
+);
+
 export const scripts: Scripts = {
   greenhouse_heal: [
     say("Welcome to the GREENHOUSE! Water, light and warm soil for weary QUICKENED."),
@@ -89,6 +108,15 @@ export const scripts: Scripts = {
     ], [
       say("That SPECIMEN CABINET stores the QUICKENED you can't carry."),
       say("Six travel with you. The rest wait in soil and soft light."),
+    ]),
+  ],
+  gc_gh_visitor: [
+    ifFlags({ relay_listened: true }, [
+      say("Did you feel the floor shake this morning? The ferns here all curled up."),
+      say("They uncurled a minute later. Ferns don't DO that."),
+    ], [
+      say("It never frosts under the dome. Bananas ripen in the PALM HOUSE in winter."),
+      say("Glass lets the sunlight in and keeps the warmth from leaving. That's the trick."),
     ]),
   ],
   sb_gh_visitor: [

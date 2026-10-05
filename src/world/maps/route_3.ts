@@ -37,8 +37,8 @@ export const route_3: MapDef = {
     "TT..,,,,..:...5.5...TT", // 12 ...with something in the middle
     "TT.,,,,,..::::555...TT", // 13
     "TT..,,,..S...:....,.TT", // 14 NIGHT MEADOW sign
-    "TTT.**4......:...,,,TT", // 15
-    "TTTT*.......::..TTTTTT", // 16
+    "TTT.**4......:...B,,TT", // 15
+    "TTTT*.......::..B.TTTT", // 16
     "TTTTTT....::..TTTTTTTT", // 17
     "TTTTTTTT..:.TTTTTTTTTT", // 18
     "TTTTTTTAA.:.AATTTTTTTT", // 19 the woodland pass
@@ -106,6 +106,8 @@ export const route_3: MapDef = {
     { x: 15, y: 12, item: "rain_jar" },
     // Tangled in the reeds on the lily pond's east shore.
     { x: 7, y: 26, item: "water_flask", qty: 2 },
+    // PRUNE payoff: a clearing in the meadow's east hedge, walled in by brambles.
+    { x: 17, y: 16, item: "spring_water", qty: 2 },
   ],
   signs: [
     { x: 9, y: 44, text: "ROUTE 3. North: SUGARBUSH. South: BRAMBLEGATE." },

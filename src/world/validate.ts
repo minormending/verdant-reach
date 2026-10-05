@@ -2,10 +2,11 @@
 // Used by world.test.ts and by the ?dev=world overview.
 
 import {
-  JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX,
+  FIELD_MOVES, JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX,
 } from "../contracts";
 import type { Ambient, MapDef, MapId, NpcDef, ScriptCmd, TileKey, WorldData } from "../contracts";
 import { pickupItem } from "./build";
+import { DATA } from "../data";
 
 /**
  * Side-quest givers (docs/ROUND3.md §4). Narrative writes the `q_*` scripts in
@@ -21,6 +22,10 @@ export const QUEST_GIVERS: { quest: string; map: MapId; npc: string; script: str
   { quest: "sap_run", map: "sugarbush", npc: "syrupmaker", script: "q_sap_run" },
   { quest: "sap_run", map: "hedgerow", npc: "baker", script: "q_sap_run_baker" },
   { quest: "herbarium_survey", map: "herbarium", npc: "archivist", script: "q_herbarium_survey" },
+  // Chapter 4 (docs/ROUND4.md §1.4)
+  { quest: "relay_sensors", map: "glasshouse_relay", npc: "wren", script: "q_relay_sensors" },
+  { quest: "first_seed", map: "glasshouse_nursery", npc: "nursery_keeper_b", script: "q_first_seed" },
+  { quest: "fan_mail", map: "glasshouse_city", npc: "fan", script: "q_fan_mail" },
 ];
 const QUEST_SCRIPTS = new Set(QUEST_GIVERS.map((q) => q.script));
 
@@ -31,7 +36,20 @@ export const harvestId = (n: NpcDef): string | undefined =>
 /** NPCs that are set dressing for a system, never gatekeepers: they must not
  *  block any path (bushes, quest givers, and quest-only appearances). */
 export const mustNotBlock = (n: NpcDef): boolean =>
-  n.sprite === "harvest_bush" || QUEST_SCRIPTS.has(n.script ?? "") || !!n.visibleWhen?.some((c) => c.flag.startsWith("quest_"));
+  n.sprite === "harvest_bush" || isBoarder(n) || QUEST_SCRIPTS.has(n.script ?? "") || !!n.visibleWhen?.some((c) => c.flag.startsWith("quest_"));
+
+/** Nursery boarders: the engine draws a boarder's icon on `boarder_<n>` and handles talking. */
+export const isBoarder = (n: NpcDef): boolean => /^boarder_\d+$/.test(n.id);
+
+/**
+ * PRUNE (docs/ROUND4.md §2.1). Bramble tiles block until the player holds the
+ * PRUNING SHEARS. Maps listed here are optional loops gated by brambles: their
+ * NPCs and items may sit beyond a bramble. Everywhere else, every warp,
+ * trigger, sign and NPC (bar item pickups and bushes) must be reachable
+ * without PRUNE, so the story never needs it.
+ */
+export const PRUNE_OPTIONAL_MAPS: MapId[] = ["route_5"];
+export const prunable = (t: TileKey | undefined): boolean => !!t && (TILES[t] as { fieldMove?: string }).fieldMove === "prune";
 
 /** Every `Ambient` value (src/contracts/world.ts). Kept exhaustive by the type. */
 const AMBIENT_VALUES: Record<Ambient, true> = { none: true, pollen: true, leaves: true, fireflies: true, rain: true, mist: true, spores: true };
@@ -46,7 +64,9 @@ export interface Grid {
   doors: { x: number; y: number; key: string }[];
 }
 
-export function grid(map: MapDef): Grid {
+/** The map's walk grid. With `pruned`, every prunable tile reads as a cut stump
+ *  (the world once the PRUNING SHEARS are in hand). */
+export function grid(map: MapDef, opts: { pruned?: boolean } = {}): Grid {
   const h = map.tiles.length;
   const w = map.tiles[0]?.length ?? 0;
   const solid = new Set<string>();
@@ -65,7 +85,8 @@ export function grid(map: MapDef): Grid {
     w, h, doors,
     tile(x, y) {
       if (x < 0 || y < 0 || x >= w || y >= h) return undefined;
-      return map.legend[map.tiles[y][x]];
+      const t = map.legend[map.tiles[y][x]];
+      return opts.pruned && prunable(t) ? "bramble_stump" : t;
     },
     structureSolid: (x, y) => solid.has(`${x},${y}`),
   };
@@ -109,6 +130,110 @@ export function flood(g: Grid, starts: { x: number; y: number }[]): Set<string> 
   return seen;
 }
 
+/** A trigger on a solid tile you talk to (a sensor post): it fires on A, never on a step. */
+export const isTalkTrigger = (g: Grid, t: MapDef["triggers"][number]): boolean => {
+  const tile = g.tile(t.x, t.y);
+  return (t.w ?? 1) === 1 && (t.h ?? 1) === 1 && !!tile && !walkable(g, t.x, t.y) && "interact" in TILES[tile];
+};
+
+/** Scripts a map can start: NPC talk, triggers and onEnter, following `call`s. */
+function mapScripts(world: WorldData, map: MapDef): Set<string> {
+  const out = new Set<string>();
+  const visit = (sid: string | undefined) => {
+    if (!sid || out.has(sid) || !world.scripts[sid]) return;
+    out.add(sid);
+    eachCmd(world.scripts[sid], (c) => { if (c.op === "call") visit(c.script); });
+  };
+  for (const n of map.npcs) visit(n.script);
+  for (const t of map.triggers) visit(t.script);
+  visit(map.onEnter);
+  return out;
+}
+
+/**
+ * Required progress never needs PRUNE. With every bramble solid, walk the
+ * world from the new game through warps whose tiles are reachable, then check:
+ *  - every map is reached, and the map that hands out the PRUNING SHEARS is;
+ *  - outside PRUNE_OPTIONAL_MAPS, every warp, trigger, sign and NPC (bar item
+ *    pickups and bushes) is reachable from the ways in, without cutting;
+ *  - no prunable tile stands on a warp, door or story trigger.
+ */
+export function checkProgressWithoutPrune(world: WorldData): string[] {
+  const errs: string[] = [];
+  const entries = new Map<MapId, { x: number; y: number }[]>();
+  const queue: MapId[] = [];
+  const add = (m: MapId, x: number, y: number) => {
+    const list = entries.get(m) ?? [];
+    if (list.some((e) => e.x === x && e.y === y)) return;
+    list.push({ x, y });
+    entries.set(m, list);
+    queue.push(m);
+  };
+  add(world.newGame.map, world.newGame.x, world.newGame.y);
+  // Scripted warps (cutscenes) are story entries.
+  for (const cmds of Object.values(world.scripts)) eachCmd(cmds, (c) => { if (c.op === "warp") add(c.to, c.x, c.y); });
+  while (queue.length) {
+    const id = queue.shift()!;
+    const map = world.maps[id];
+    if (!map) continue;
+    const reach = flood(grid(map), entries.get(id)!);
+    for (const wp of map.warps) if (reach.has(`${wp.x},${wp.y}`)) add(wp.to, wp.toX, wp.toY);
+  }
+
+  for (const id of MAP_IDS) {
+    const map = world.maps[id];
+    if (!map) continue;
+    const where = `[${id}] without PRUNE:`;
+    const starts = entries.get(id);
+    if (!starts) { errs.push(`${where} the map can't be reached`); continue; }
+    const g = grid(map);
+    for (const wp of map.warps) if (prunable(g.tile(wp.x, wp.y))) errs.push(`${where} a bramble sits on the warp at ${wp.x},${wp.y}`);
+    if (PRUNE_OPTIONAL_MAPS.includes(id)) continue;
+    // Only things reachable once brambles are cut are reported here (the rest
+    // are plain reachability errors in validateWorld).
+    const reach = flood(g, starts);
+    const reachP = flood(grid(map, { pruned: true }), starts);
+    const talk = (r: Set<string>) => (x: number, y: number) => DIRS.some(([dx, dy]) =>
+      r.has(`${x + dx},${y + dy}`) || (g.tile(x + dx, y + dy) === "counter" && r.has(`${x + 2 * dx},${y + 2 * dy}`)));
+    const behind = (now: boolean, later: boolean) => !now && later;
+    for (const wp of map.warps) {
+      if (behind(reach.has(`${wp.x},${wp.y}`), reachP.has(`${wp.x},${wp.y}`))) errs.push(`${where} warp at ${wp.x},${wp.y} is behind brambles`);
+    }
+    for (const t of map.triggers) {
+      if (isTalkTrigger(g, t)) {
+        if (behind(talk(reach)(t.x, t.y), talk(reachP)(t.x, t.y))) errs.push(`${where} trigger ${t.script} is behind brambles`);
+        continue;
+      }
+      const cells: string[] = [];
+      for (let dy = 0; dy < (t.h ?? 1); dy++) for (let dx = 0; dx < (t.w ?? 1); dx++) cells.push(`${t.x + dx},${t.y + dy}`);
+      if (behind(cells.some((k) => reach.has(k)), cells.some((k) => reachP.has(k)))) {
+        errs.push(`${where} trigger ${t.script} at ${t.x},${t.y} is behind brambles`);
+      }
+    }
+    for (const s of map.signs) {
+      if (behind(talk(reach)(s.x, s.y), talk(reachP)(s.x, s.y))) errs.push(`${where} sign at ${s.x},${s.y} is behind brambles`);
+    }
+    for (const n of map.npcs) {
+      if (n.sprite === "item_pickup" || n.sprite === "harvest_bush" || isBoarder(n)) continue;
+      if (behind(talk(reach)(n.x, n.y), talk(reachP)(n.x, n.y))) errs.push(`${where} npc ${n.id} is behind brambles`);
+    }
+  }
+
+  // The PRUNING SHEARS must come from a map you can reach without them.
+  const givers = MAP_IDS.filter((id) => {
+    const m = world.maps[id];
+    if (!m) return false;
+    let gives = false;
+    for (const sid of mapScripts(world, m)) eachCmd(world.scripts[sid], (c) => {
+      if (c.op === "giveItem" && c.item === FIELD_MOVES.prune.item) gives = true;
+    });
+    return gives;
+  });
+  if (!givers.length) errs.push(`no map hands out the ${FIELD_MOVES.prune.item}`);
+  for (const id of givers) if (!entries.has(id)) errs.push(`[${id}] gives the ${FIELD_MOVES.prune.item} but can't be reached without PRUNE`);
+  return errs;
+}
+
 /** Walk every command, including nested branches. */
 export function eachCmd(cmds: ScriptCmd[], fn: (c: ScriptCmd) => void) {
   for (const c of cmds) {
@@ -117,7 +242,7 @@ export function eachCmd(cmds: ScriptCmd[], fn: (c: ScriptCmd) => void) {
       case "choice": c.branches.forEach((b) => eachCmd(b, fn)); break;
       case "yesno": eachCmd(c.yes, fn); eachCmd(c.no, fn); break;
       case "if": case "ifTime": case "ifLastBattle":
-      case "ifHasItem": case "ifPartyHas": case "ifCaught": case "ifCaughtCount":
+      case "ifHasItem": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed":
         eachCmd(c.then, fn); if (c.else) eachCmd(c.else, fn); break;
     }
   }
@@ -148,7 +273,8 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
   const errs: string[] = [];
   const stills = new Set<string>(STILLS);
   const species = new Set<string>(SPECIES_IDS);
-  const items = new Set<string>(REQUIRED_ITEMS);
+  // Story items (the contract) plus everything the data owner defines (PLANT FOOD, ...).
+  const items = new Set<string>([...REQUIRED_ITEMS, ...Object.keys(DATA.items ?? {})]);
   const music = new Set<string>(MUSIC);
   const marks = new Set<string>(MARKS);
   const sfx = new Set<string>(SFX);
@@ -276,7 +402,8 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       if (warpAt.has(`${n.x},${n.y}`)) errs.push(`${where} npc ${n.id} stands on a warp`);
       if (g.doors.some((d) => d.x === n.x && d.y === n.y)) errs.push(`${where} npc ${n.id} stands on a door`);
       if (!n.script && !n.trainer) {
-        if (n.sprite !== "item_pickup") errs.push(`${where} npc ${n.id} has nothing to say`);
+        if (isBoarder(n)) { if (n.visibleWhen) errs.push(`${where} boarder ${n.id}: the engine shows it, no visibleWhen`); }
+        else if (n.sprite !== "item_pickup") errs.push(`${where} npc ${n.id} has nothing to say`);
         else if (!items.has(pickupItem(n.id))) errs.push(`${where} pickup ${n.id} gives unknown item ${pickupItem(n.id)}`);
       }
       if (n.script && !world.scripts[n.script]) {
@@ -316,7 +443,10 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     for (const s of starts) {
       if (!walkable(g, s.x, s.y)) errs.push(`${where} entry ${s.x},${s.y} is solid`);
     }
-    const reach = flood(g, starts);
+    // Everything is checked as eventually reachable (brambles cut); the
+    // required-progress pass after this loop checks the world without PRUNE.
+    const gp = grid(map, { pruned: true });
+    const reach = flood(gp, starts);
     const has = (x: number, y: number) => reach.has(`${x},${y}`);
     const canTalk = (x: number, y: number) => DIRS.some(([dx, dy]) => {
       if (has(x + dx, y + dy)) return true;
@@ -327,6 +457,11 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     for (const n of map.npcs) if (!canTalk(n.x, n.y)) errs.push(`${where} npc ${n.id} unreachable`);
     for (const s of map.signs) if (!canTalk(s.x, s.y)) errs.push(`${where} sign at ${s.x},${s.y} unreachable`);
     for (const t of map.triggers) {
+      // A trigger on a solid, interactable tile (a sensor post) fires on A, facing it.
+      if (isTalkTrigger(g, t)) {
+        if (!canTalk(t.x, t.y)) errs.push(`${where} trigger ${t.script} at ${t.x},${t.y} can't be faced`);
+        continue;
+      }
       let any = false;
       for (let dy = 0; dy < (t.h ?? 1); dy++) for (let dx = 0; dx < (t.w ?? 1); dx++) if (has(t.x + dx, t.y + dy)) any = true;
       if (!any) errs.push(`${where} trigger ${t.script} at ${t.x},${t.y} unreachable`);
@@ -380,10 +515,10 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const props = map.npcs.filter(mustNotBlock);
     if (props.length) {
       const at = new Set(props.map((n) => `${n.x},${n.y}`));
-      const solidAt = (cells: Set<string>): Grid => ({ ...g, structureSolid: (x, y) => g.structureSolid(x, y) || cells.has(`${x},${y}`) });
+      const solidAt = (cells: Set<string>): Grid => ({ ...gp, structureSolid: (x, y) => gp.structureSolid(x, y) || cells.has(`${x},${y}`) });
       for (const st of starts) {
         if (at.has(`${st.x},${st.y}`)) { errs.push(`${where} npc stands on the entry ${st.x},${st.y}`); continue; }
-        const free = flood(g, [st]);
+        const free = flood(gp, [st]);
         const all = flood(solidAt(at), [st]);
         const lost = [...free].find((k) => !at.has(k) && !all.has(k));
         if (!lost) continue;
@@ -395,18 +530,23 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       }
     }
 
-    // soft-lock: from every reachable tile some warp must still be reachable
+    // soft-lock: from every reachable tile some warp must still be reachable,
+    // both before the PRUNING SHEARS (brambles solid) and after (brambles cut).
     if (map.warps.length) {
-      for (const k of reach) {
-        const [x, y] = k.split(",").map(Number);
-        const out = flood(g, [{ x, y }]);
-        if (!map.warps.some((wp) => out.has(`${wp.x},${wp.y}`))) {
-          errs.push(`${where} soft-lock: no exit from ${x},${y}`);
-          break;
+      for (const [gg, from, when] of [[g, flood(g, starts), "before PRUNE"], [gp, reach, "with PRUNE"]] as const) {
+        for (const k of from) {
+          const [x, y] = k.split(",").map(Number);
+          const out = flood(gg, [{ x, y }]);
+          if (!map.warps.some((wp) => out.has(`${wp.x},${wp.y}`))) {
+            errs.push(`${where} soft-lock ${when}: no exit from ${x},${y}`);
+            break;
+          }
         }
       }
     } else errs.push(`${where} has no warps`);
   }
+
+  errs.push(...checkProgressWithoutPrune(world));
 
   // scripts
   const checkCmds = (sid: string, cmds: ScriptCmd[]) => eachCmd(cmds, (c) => {

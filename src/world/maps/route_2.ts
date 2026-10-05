@@ -29,7 +29,7 @@ export const route_2: MapDef = {
     "TTT.::,,...,,,,,....,,,,,..........,...f....TTTT", // 6
     "TTT.::,,.....,..y.5T..,4.......*....o....3..TTTT", // 7
     "TTT.::,.......35..............T..y.........ATTTT", // 8
-    "TTT3::.y.AvvvvvvvvvAAvvvvvvvvvAvvvvvvvvvAAAATTTT", // 9
+    "TTT3::.y.BvvvvvvvvvAAvvvvvvvvvAvvvvvvvvvAAAATTTT", // 9
     "TTT5::....,...........o.,,,......y.....TTTTTTTTT", // 10
     "TTT.::::::::::::::::...,,,,,..::::::::.TTTTTTTTT", // 11
     "TTT.::::::::::::::::....,,,...::::::::.TTTTTTTTT", // 12
@@ -66,6 +66,8 @@ export const route_2: MapDef = {
     { id: "moss", sprite: "cat", x: 25, y: 19, facing: "left", movement: "static", script: "q_lost_cat_moss",
       visibleWhen: when({ quest_lost_cat_started: true, moss_found: false }) },
   ],
+  // PRUNE payoff: a bramble has grown into the cliff's west end at 9,9. Cut it,
+  // and it's a way up onto the plateau from the lane (a shortcut, never needed).
   hidden: [
     // Under the stump in the plateau's far north-east corner.
     { x: 41, y: 7, item: "spring_water" },

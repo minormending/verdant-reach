@@ -1,6 +1,6 @@
 // Chapters 2-3: HOLLIS, the grunt sighting, ROUTE 3's surveyor, SUGARBUSH's
-// distress, the grove and SHEARS, rival battle 2, NELL PITCHER, DR. VALE's
-// call and the end card.
+// distress, the grove and SHEARS, rival battle 2, NELL PITCHER and DR. VALE's
+// call, which sends the player on to GLASSHOUSE CITY (Chapter 4: ch4.ts).
 //
 // Voice: STYLE.md §5. One idea per box; text boxes are 18 columns x 2 lines.
 
@@ -239,10 +239,17 @@ export const act1Scripts: Scripts = {
     wait(60),
     stillClear,
     emote("player", "!"),
-    say("Keep that seed close, <PLAYER>. And come home soon.", VALE),
-    say("Carefully.", VALE),
-    flag("slice_done"),
-    wait(60),
-    { op: "endSlice" },
+    say("FENNIMORE wrote one more thing in the margin.", VALE),
+    say("\"The seed hums at the same pitch the bog does at night.\"", VALE),
+    say("The same pitch, <PLAYER>. As if they're talking.", VALE),
+    wait(30),
+    say("I want someone to really LISTEN. Properly. With machines.", VALE),
+    say("GLASSHOUSE CITY is east of SUGARBUSH. It has the ROOT RELAY.", VALE),
+    say("They bury sensors in the ground and listen to the roots.", VALE),
+    say("Would you take the CENTURYHEART SEED there for me?", VALE),
+    say("Ask for DR. ODELL. I'll ring ahead. Mind the seed!", VALE),
+    flag("ch4_started"),
+    wait(20),
+    say("The line clicks. Out past the window, the bog hums softly."),
   ],
 };

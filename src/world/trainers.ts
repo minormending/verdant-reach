@@ -27,6 +27,7 @@ function trainer(
 
 const T = (species: SpeciesId, level: number, moves?: string[]) => (moves ? { species, level, moves } : { species, level });
 
+/** Placeholder text for new trainers; narrative (agent 10) writes the real lines. */
 // --- route trainers ---------------------------------------------------------
 
 const routeTrainers: TrainerDef[] = [
@@ -154,6 +155,12 @@ export const STARTER_SPECIES: Record<StarterLine, [SpeciesId, SpeciesId, Species
 /** The line strong against the given one. */
 export const COUNTER: Record<StarterLine, StarterLine> = { oak: "chili", chili: "lily", lily: "oak" };
 
+const RIVAL_3_MOVES: Record<StarterLine, string[]> = {
+  oak: ["acorn_drop", "splinter", "vine_lash", "bark_skin"],
+  chili: ["chili_burst", "smoulder", "seed_burst", "capsaicin"],
+  lily: ["undertow", "cold_mist", "pad_slap", "sap_drain"],
+};
+
 const rivals: TrainerDef[] = STARTER_LINES.flatMap((line) => [
   trainer(`rival_1_${line}`, "BRAM", "RIVAL", "bram", [T(STARTER_SPECIES[line][0], 5)], {
     intro: "Plants are tools. This one's mine now.",
@@ -166,8 +173,92 @@ const rivals: TrainerDef[] = STARTER_LINES.flatMap((line) => [
       defeat: "The collar should've... No. Forget it.",
       after: "Don't. Whatever you're about to say. Don't.",
     }, { ai: "smart", prize: 1500 }),
+  // Rival 3 (GLASSHOUSE NURSERY): the collared starter is forced past its growth level.
+  // Balance (data): 18/19/21 and an all-attack set (the collar leaves no room
+  // to rest) keep the counter-starter fight hard but winnable; see balance.test.ts.
+  trainer(`rival_3_${line}`, "BRAM", "RIVAL", "bram",
+    [T("bramble_berry", 18), T("dandelion", 19), T(STARTER_SPECIES[line][1], 21, RIVAL_3_MOVES[line])], {
+      intro: "Show them. Show them it's stronger.",
+      defeat: "No. It's stronger now. It HAS to be.",
+      after: "Leave me alone. Leave IT alone.",
+    },
+    { ai: "smart", prize: 2200 }),
 ]);
 
+// --- Chapter 4: ROUTE 4 (15-19), the PALM HOUSE, ROUTE 5 (the PRUNE loop) -------
+
+const ch4Trainers: TrainerDef[] = [
+  trainer("orchardist_russet", "RUSSET", "ORCHARDIST", "orchardist", [T("apple_pip", 16), T("white_clover", 17)], {
+    intro: "Mind the windfalls! This orchard's mine, and so's this battle.",
+    defeat: "Bruised like a windfall!",
+    after: "Plant an apple pip and you never get the same apple. So we graft them.",
+  }),
+  trainer("beekeeper_clem", "CLEM", "BEEKEEPER", "beekeeper", [T("dandelion", 16), T("sunflower_bud", 17)], {
+    intro: "Easy now. My bees are in a mood since the bloom. So am I.",
+    defeat: "Bzz. That stung a bit.",
+    after: "A honeybee makes a twelfth of a spoon of honey in her whole life.",
+  }),
+  trainer("schoolkid_tam", "TAM", "SCHOOLKID", "schoolkid", [T("mint_sprig", 15), T("rose_bud", 15), T("apple_pip", 16)], {
+    intro: "I picked these apples MYSELF! Bet they hit hard!",
+    defeat: "Not fair! I had an apple!",
+    after: "Mint makes your mouth feel cold. It isn't! It tricks your nerves.",
+  }),
+  trainer("birdwatcher_kit", "KIT", "BIRDWATCHER", "birdwatcher", [T("maple_sapling", 16), T("foxglove", 18)], {
+    intro: "Shh! A kingfisher, by the stones. Don't spook it... Too late.",
+    defeat: "Gone. Like the kingfisher.",
+    after: "Foxgloves are bumblebee flowers. Fat bees fit right inside the bells.",
+  }),
+  trainer("hiker_ford", "FORD", "HIKER", "hiker", [T("holly_seedling", 17), T("stinging_nettle", 18), T("cattail", 19)], {
+    intro: "Stepping stones, easy. Getting past me? Less easy!",
+    defeat: "Slipped right off the stones!",
+    after: "Only female hollies grow berries. They need a male tree nearby.",
+  }),
+  trainer("researcher_lin", "LIN", "RESEARCHER", "researcher", [T("orchid_keiki", 15), T("monstera_cutting", 17)], {
+    intro: "You're raising the humidity. I'm logging it. And battling you.",
+    defeat: "My readings! All fogged up!",
+    after: "KEIKI is Hawaiian for baby. Orchids grow them right on their stems.",
+  }),
+  trainer("florist_amaryl", "AMARYL", "FLORIST", "florist", [T("lotus_seed", 17), T("orchid_spike", 18)], {
+    intro: "The PALM HOUSE is my muse. You, darling, are a distraction.",
+    defeat: "Wilted in the steam!",
+    after: "Lotus leaves shed water. Mud just rolls off. They stay spotless.",
+  }),
+  trainer("gardener_ivy", "IVY", "GARDENER", "gardener", [T("peppermint", 19), T("white_clover", 19), T("wild_rose", 20)], {
+    intro: "This was a lane, once. Then the bloom happened. Now it's mine!",
+    defeat: "Cut right back!",
+    after: "Peppermint's a cross of water mint and spearmint. A happy accident!",
+  }),
+  trainer("hiker_dale", "DALE", "HIKER", "hiker", [T("unfurling_fern", 19), T("holly", 20), T("bramble_berry", 20)], {
+    intro: "Nobody's walked this lane in months. Who sent you?",
+    defeat: "Lost my footing!",
+    after: "Holly grows fewer prickles up high, where nothing can nibble it.",
+  }),
+  // Conservatory 3: the rose maze. Juniors, then FLORA VANCE (Bloom).
+  trainer("jr_posy", "POSY", "ARRANGER", "arranger", [T("wild_rose", 18), T("orchid_spike", 18)], {
+    intro: "Every arrangement needs a star. Today, the star is ME!",
+    defeat: "My arrangement! It's drooping!",
+    after: "FLORA's roses bloom twice a year. Wild roses only manage once.",
+  }),
+  trainer("jr_wexley", "WEXLEY", "GENTLEMAN", "gentleman", [T("sunflower_bud", 18), T("white_clover", 19)], {
+    intro: "Forty of FLORA's shows, I've seen. You shan't pass, young sprout!",
+    defeat: "Oh, bother. Not in front of FLORA.",
+    after: "She once signed my umbrella. I've never opened it since.",
+  }),
+  // Balance (data): the spike. Clover controls (root snare, crits), the rose
+  // hits hard, and the MOTH ORCHID sets up SUN TRACK with bloom, ghost (vs wood)
+  // and water-drain (vs fire) cover, plus one SPRING WATER. See balance.test.ts.
+  trainer("flora", "FLORA", "WARDEN", "flora_vance", [
+    T("white_clover", 19, ["lucky_leaf", "sap_drain", "root_snare", "vine_lash"]),
+    T("wild_rose", 20, ["rose_thorn", "pollen_puff", "perfume", "vine_lash"]),
+    T("moth_orchid", 22, ["wind_scatter", "moonbeam", "sun_track", "velamen"]),
+  ], {
+    intro: "Be a dear, and lose beautifully.",
+    defeat: "No! Not my ORCHID! Not in front of the PRESS!",
+    after: "I've redone my face. You'd never know. Would you? Don't answer.",
+  },
+    { ai: "smart", music: "battle_leader", mark: "rose_mark", prize: 2200, items: [{ item: "spring_water", qty: 1 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers].map((t) => [t.id, t]),
 );

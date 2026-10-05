@@ -1,7 +1,7 @@
 // ?dev=world&map=<id> : a full-map overview for eyeballing layouts.
 // Tiles are drawn from real art when present (else flat colours), structures as
 // images or labelled boxes, and NPCs / warps / triggers / signs are marked.
-// Unreachable walkable tiles are tinted red. Validation errors are listed.
+// Unreachable walkable tiles are tinted red (amber: reachable only with PRUNE). Validation errors are listed.
 
 import { AUTOTILE, MAP_IDS, STRUCTURES, characterPath, structurePath, tileAltPath, tilePath, tileVariantPath } from "../contracts";
 import type { GameContext, MapDef, MapId, Scene, TileKey } from "../contracts";
@@ -25,6 +25,12 @@ const COLORS: Partial<Record<TileKey, string>> = {
   reeds: "#6a8a40", cliff: "#806a50", stone_wall: "#909088", garden_plot: "#6a4a2a", crops: "#b0c040",
   scarecrow: "#d8b040", haybale: "#e8c860", fireplace: "#a04020", stove: "#505058", potted_tree: "#3a8a3a",
   glass_wall: "#b8e0e8", workbench: "#8a6a48", microscope: "#d0d0e0",
+  // Round 4 (flat stand-ins until the env4 art lands)
+  bramble_stump: "#8a6a4a", paving: "#c8c0b0", tropical_grass: "#2f8a4a", orchard_tree: "#3f8a2a",
+  fallen_apples: "#88c050", stepping_stones: "#a0a0a8", palm_tree: "#2a7a3a", iron_railing: "#303038",
+  market_stall: "#d06040", fountain_basin: "#6898d8", console: "#406070", sensor_post: "#c0a030",
+  server_rack: "#283038", cable_floor: "#9098a0", seed_tray: "#7a5a3a", potting_bench: "#9a7048",
+  rose_trellis: "#a83850", rose_bed: "#d84868", floor_marble: "#e8e4dc", stage_floor: "#b07048",
 };
 
 /**
@@ -181,10 +187,14 @@ function render(ctx: GameContext, map: MapDef, canvas: HTMLCanvasElement, scale:
   const starts: { x: number; y: number }[] = [];
   for (const m of Object.values(ctx.world.maps)) for (const wp of m.warps) if (wp.to === map.id) starts.push({ x: wp.toX, y: wp.toY });
   if (ctx.world.newGame.map === map.id) starts.push(ctx.world.newGame);
+  // Red: never reachable. Amber: only once PRUNE has cut the brambles.
   const reach = flood(gr, starts);
-  g.fillStyle = "rgba(255,0,0,0.35)";
+  const pruned = grid(map, { pruned: true });
+  const reachPruned = flood(pruned, starts);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    if (walkable(gr, x, y) && !reach.has(`${x},${y}`)) g.fillRect(x * T, y * T, T, T);
+    if (reach.has(`${x},${y}`) || !walkable(pruned, x, y)) continue;
+    g.fillStyle = reachPruned.has(`${x},${y}`) ? "rgba(255,176,0,0.25)" : "rgba(255,0,0,0.35)";
+    g.fillRect(x * T, y * T, T, T);
   }
 
   // &grid=1: the 10x9 screen grid, for judging each screen's composition
