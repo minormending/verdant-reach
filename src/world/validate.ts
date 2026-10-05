@@ -130,6 +130,24 @@ export function flood(g: Grid, starts: { x: number; y: number }[]): Set<string> 
   return seen;
 }
 
+/** Tiles from which some `target` is reachable: `flood` run backwards (ledge hops included),
+ *  so a soft-lock check is one pass instead of a flood from every tile. */
+export function canReach(g: Grid, targets: { x: number; y: number }[]): Set<string> {
+  const seen = new Set<string>();
+  const queue: [number, number][] = [];
+  const visit = (x: number, y: number) => {
+    const k = `${x},${y}`;
+    if (!seen.has(k) && walkable(g, x, y)) { seen.add(k); queue.push([x, y]); }
+  };
+  for (const t of targets) visit(t.x, t.y);
+  while (queue.length) {
+    const [x, y] = queue.shift()!;
+    for (const [dx, dy] of DIRS) visit(x - dx, y - dy);       // a plain step into (x, y)
+    if (g.tile(x, y - 1) === "ledge_down") visit(x, y - 2);  // a hop down over the ledge
+  }
+  return seen;
+}
+
 /** A trigger on a solid tile you talk to (a sensor post): it fires on A, never on a step. */
 export const isTalkTrigger = (g: Grid, t: MapDef["triggers"][number]): boolean => {
   const tile = g.tile(t.x, t.y);
@@ -534,11 +552,10 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     // both before the PRUNING SHEARS (brambles solid) and after (brambles cut).
     if (map.warps.length) {
       for (const [gg, from, when] of [[g, flood(g, starts), "before PRUNE"], [gp, reach, "with PRUNE"]] as const) {
+        const canExit = canReach(gg, map.warps);
         for (const k of from) {
-          const [x, y] = k.split(",").map(Number);
-          const out = flood(gg, [{ x, y }]);
-          if (!map.warps.some((wp) => out.has(`${wp.x},${wp.y}`))) {
-            errs.push(`${where} soft-lock ${when}: no exit from ${x},${y}`);
+          if (!canExit.has(k)) {
+            errs.push(`${where} soft-lock ${when}: no exit from ${k}`);
             break;
           }
         }
