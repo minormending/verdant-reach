@@ -13,7 +13,7 @@ it for fun, to practise engineering management and planning.
   **Zero runtime dependencies.**
 - **Live site:** https://minormending.github.io/verdant-reach/. It deploys
   automatically on every push to `main` (`.github/workflows/pages.yml` runs the
-  tests, then the build, then deploys).
+  tests, the build and the headless playthrough, and deploys only if all pass).
 - **Scope so far:** the Prologue through Chapter 4 (Glasshouse City,
   Conservatory 3). The story bible is in `docs/story/` (chapters 5–11 aren't
   built yet).

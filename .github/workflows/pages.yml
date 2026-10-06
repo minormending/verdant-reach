@@ -1,4 +1,5 @@
-# Typecheck, test, build and deploy the game to GitHub Pages on every push to main.
+# Typecheck, test, build, play the whole game headless (e2e), then deploy to GitHub Pages
+# on every push to main. The deploy waits for both the build and the playthrough.
 name: Deploy to GitHub Pages
 
 on:
@@ -35,8 +36,30 @@ jobs:
         with:
           path: dist
 
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install the e2e browser
+        run: npx playwright install --with-deps chromium
+      - name: Full playthrough (46 beats, headless)
+        run: npm run e2e
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-report
+          path: e2e/last-report.json
+          if-no-files-found: ignore
+
   deploy:
-    needs: build
+    needs: [build, e2e]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

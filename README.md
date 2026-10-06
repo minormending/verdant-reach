@@ -71,7 +71,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
 | `npm test` | vitest: 399 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
 | `?dev=<module>` | isolated dev scenes: `battle`, `screens`, `audio` (jukebox), `ui`, `overworld`, `world`, and `art` (the **Art Lab**: browse and live-swap every art bundle) |
 | `?dev=world&play=1&map=<id>&flags=a,b&species=<id>&level=<n>` | drop into any story state |
-| `e2e/` | automated full playthrough: `?timer&e2e=full`, served with `e2e/vite.config.ts` |
+| `npm run e2e` | headless full playthrough (46 beats, about 8 minutes; first use: `npx playwright install chromium`). CI runs it before every deploy. |
 
 The art lives in `public/art/` and the game reads it directly: edit a PNG,
 reload, and it's in the game. The Python tools in `tools/art/` (Pillow +
