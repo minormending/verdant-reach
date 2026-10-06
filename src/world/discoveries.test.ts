@@ -15,15 +15,20 @@ const harvestOf = (script: string) => {
   return op!;
 };
 
-/** Chapter 4's maps (docs/ROUND4.md §1.2); everything else is Chapters 1-3. */
+/** Keep the original Chapters 1–3 bounds scoped to those chapters. */
 const CH4 = new Set<MapId>([
   "route_4", "glasshouse_city", "palm_house", "glasshouse_greenhouse", "glasshouse_market", "glasshouse_nursery",
   "glasshouse_relay", "glasshouse_conservatory", "glasshouse_house", "route_5",
 ]);
 
+const CH5 = new Set<MapId>([
+  "route_6", "cedarhallow", "cedarhallow_greenhouse", "cedarhallow_market",
+  "cedarhallow_house", "cedar_hollow", "burnt_stand", "cedarhallow_conservatory",
+]);
+
 describe("hidden items", () => {
   const all = maps.flatMap((m) => (m.hidden ?? []).map((h) => ({ map: m.id, ...h })));
-  const early = all.filter((h) => !CH4.has(h.map));
+  const early = all.filter((h) => !CH4.has(h.map) && !CH5.has(h.map));
   const ch4 = all.filter((h) => CH4.has(h.map));
   it("hides 6 to 10 items across Chapters 1-3, spread over at least 6 maps (plus a few PRUNE stashes)", () => {
     expect(early.length).toBeGreaterThanOrEqual(6);
@@ -42,11 +47,11 @@ describe("hidden items", () => {
 
 describe("harvest bushes", () => {
   it("plants 6 to 10 bushes in Chapters 1-3 and a few more in Chapter 4, each with its own harvest id", () => {
-    const early = bushes.filter((b) => !CH4.has(b.map));
+    const early = bushes.filter((b) => !CH4.has(b.map) && !CH5.has(b.map));
     expect(early.length).toBeGreaterThanOrEqual(6);
     expect(early.length).toBeLessThanOrEqual(10);
-    expect(bushes.length - early.length).toBeGreaterThanOrEqual(2);
-    expect(bushes.length - early.length).toBeLessThanOrEqual(5);
+    expect(bushes.filter((b) => CH4.has(b.map)).length).toBeGreaterThanOrEqual(2);
+    expect(bushes.filter((b) => CH4.has(b.map)).length).toBeLessThanOrEqual(5);
     for (const { npc } of bushes) {
       expect(npc.script, npc.id).toBeTruthy();
       expect(harvestOf(npc.script!).id).toBe(harvestId(npc));

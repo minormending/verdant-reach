@@ -259,6 +259,36 @@ const ch4Trainers: TrainerDef[] = [
     { ai: "smart", music: "battle_leader", mark: "rose_mark", prize: 2200, items: [{ item: "spring_water", qty: 1 }] }),
 ];
 
+// Chapter 5 teams are fixed by CH5_IDS.md §C. Dialogue is deliberately stubbed.
+// Balance: retain every prescribed level, but use explicit early moves on
+// Rival 4 and physical Ghost attacks on MORROW. The natural late movesets
+// wall older mixed parties; balance.test.ts guards both older and Ch. 5 catches.
+const ch5Lines = (id: string) => ({
+  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
+});
+const ch5Trainers: TrainerDef[] = [
+  trainer("lumberjack_hale", "HALE", "HIKER", "hiker", [T("maple_sapling", 21), T("holly", 22)], ch5Lines("lumberjack_hale")),
+  trainer("lumberjack_birch", "BIRCH", "HIKER", "hiker", [T("pumpkin", 22)], ch5Lines("lumberjack_birch")),
+  trainer("forager_sage", "SAGE", "GARDENER", "gardener", [T("moonflower_vine", 20), T("skunk_cabbage_shoot", 21)], ch5Lines("forager_sage")),
+  trainer("forager_ash", "ASH", "BIRDWATCHER", "birdwatcher", [T("fireweed_fluff", 21), T("sundew", 22)], ch5Lines("forager_ash")),
+  trainer("grunt_bs_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 23), T("fireweed_shoot", 23)], ch5Lines("grunt_bs_1"), { music: "battle_rootstock" }),
+  trainer("grunt_bs_2", "GRUNT", "GRUNT", "grunt", [T("bramble_berry", 23), T("lodgepole_cone", 24)], ch5Lines("grunt_bs_2"), { music: "battle_rootstock" }),
+  trainer("grunt_bs_3", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 24), T("foxglove", 24)], ch5Lines("grunt_bs_3"), { music: "battle_rootstock" }),
+  ...STARTER_LINES.map((line) => trainer(`rival_4_${line}`, "BRAM", "RIVAL", "bram", [
+    T("blackberry", 25, ["thorn_jab", "bristle", "sap_seal"]),
+    T("dandelion", 25, ["pollen_puff", "quick_snap", "perfume"]),
+    T("sugar_maple", 26, ["samara_spin", "sugar_rush", "sap_seal"]),
+    { ...T(STARTER_SPECIES[line][2], 27, RIVAL_3_MOVES[line]), grafted: true },
+  ], ch5Lines(`rival_4_${line}`), { ai: "smart", prize: 2700 })),
+  trainer("jr_nightshade", "NIGHTSHADE", "JR.GARDENER", "gardener", [T("moonflower_vine", 23), T("ghostpipe_stalk", 23)], ch5Lines("jr_nightshade")),
+  trainer("jr_lantern", "LANTERN", "JR.GARDENER", "gardener", [T("foxglove", 24), T("ghostpipe_nodding", 24)], ch5Lines("jr_lantern")),
+  trainer("morrow", "MORROW", "WARDEN", "hollis", [
+    T("ghostpipe_nodding", 24, ["pale_touch", "night_fold"]),
+    T("moonflower", 26, ["pale_touch", "unfurl"]),
+    T("ghost_pipe", 29, ["moonbeam", "rot_touch", "night_fold"]),
+  ], ch5Lines("morrow"), { ai: "smart", music: "battle_leader", mark: "pipe_mark", prize: 2800, items: [{ item: "spring_water", qty: 1 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers].map((t) => [t.id, t]),
 );

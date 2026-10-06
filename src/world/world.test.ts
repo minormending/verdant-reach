@@ -6,8 +6,8 @@ import { checkProgressWithoutPrune, eachCmd, flood, grid, prunable, validateWorl
 
 describe("world data", () => {
   it("glides to the tile below each town's healing-building door", () => {
-    const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse"];
-    expect(WORLD.glide?.map((d) => d.map)).toEqual(["fallowfield", "bramblegate", "sugarbush", "glasshouse_city"]);
+    const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse", "cedarhallow_greenhouse"];
+    expect(WORLD.glide?.map((d) => d.map)).toEqual(["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow"]);
     for (const [i, landing] of WORLD.glide!.entries()) {
       const town = WORLD.maps[landing.map];
       const door = town.warps.find((w) => w.to === buildings[i])!;
@@ -19,7 +19,7 @@ describe("world data", () => {
     expect(validateWorld(WORLD)).toEqual([]);
   });
 
-  it("has all 27 maps with equal-length rows and valid legend tiles", () => {
+  it("has every contracted map with equal-length rows and valid legend tiles", () => {
     for (const id of MAP_IDS) {
       const m = WORLD.maps[id];
       expect(m, id).toBeDefined();

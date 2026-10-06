@@ -107,14 +107,14 @@ clearing, warping to route_6's south end. The NPC `grove_ranger` (sprite
 `visibleWhen: [{ flag: "ch4_done", is: false }]`: present until Chapter 4 is
 done. Keep every existing Grove test and puzzle green.
 
-**Wild encounters** (stage-1 levels stay below their growth level):
+**Wild encounters.** Every slot stays below its species' growth level; the lead corrected v1, which broke this rule in 9 slots.
 
 | Map | Slots (day / night) | Levels |
 |---|---|---|
-| route_6 grass | day: fireweed_fluff 25%, skunk_cabbage_shoot 20%, fern_fiddlehead 20%, holly_seedling 15%, maple_sapling 15%, cedar_seedling 5%. night: ghostpipe_stalk 35%, moonflower_seed 20%, fern_fiddlehead 20%, skunk_cabbage_shoot 20%, cedar_seedling 5% | 18–22 (stage-1 forms capped below growth) |
-| route_6 bog | skunk_cabbage_shoot 50%, cattail_shoot 30%, sundew_rosette 20% | 18–21 |
-| burnt_stand grass | fireweed_fluff 40%, lodgepole_cone 35%, fireweed_shoot 15% (20+), nettle_sprout 10% | 20–24 |
-| cedar_hollow grass | ghostpipe_stalk 45%, ghostpipe_nodding 20% (22+), moonflower_vine 20%, cedar_seedling 15% | 22–25 |
+| route_6 grass | day: fireweed_fluff 25% (18–19), skunk_cabbage_shoot 20%, unfurling_fern 20%, holly_seedling 15% (18–19), maple_sapling 15%, cedar_seedling 5%. night: ghostpipe_stalk 35% (18–21), moonflower_vine 20% (18–21), unfurling_fern 20%, skunk_cabbage_shoot 20%, cedar_seedling 5% | 18–22 |
+| route_6 bog | skunk_cabbage_shoot 50%, cattail 30%, sundew 20% | 18–21 |
+| burnt_stand grass | fireweed_fluff 25% (18–19), lodgepole_cone 35%, fireweed_shoot 30%, stinging_nettle 10% | 20–24 |
+| cedar_hollow grass | ghostpipe_stalk 30% (20–21), ghostpipe_nodding 35%, moonflower 20% (night), cedar_seedling 15% | 22–25 |
 
 ## C. Trainers (`src/world/trainers.ts`; text fields are `TODO(text)` placeholders that the lead writes)
 
@@ -127,7 +127,7 @@ done. Keep every existing Grove test and puzzle green.
 | `grunt_bs_1`, `grunt_bs_2`, `grunt_bs_3` | GRUNT / `grunt`, music `battle_rootstock` | burnt_stand | 1: stinging_nettle 23, fireweed_shoot 23 · 2: bramble_berry 23, lodgepole_cone 24 · 3: venus_flytrap 24, foxglove 24 |
 | `rival_4_oak`, `rival_4_chili`, `rival_4_lily` | RIVAL / `bram` | burnt_stand (script battle, `canLose: true`) | blackberry 25, dandelion 25, sugar_maple 26, + the countering starter's **stage 3 at 27, `grafted: true`** (§D). Same counter pattern as rival_2/3. |
 | `jr_nightshade`, `jr_lantern` | JR.GARDENER / `gardener` | conservatory | 1: moonflower_vine 23, ghostpipe_stalk 23 · 2: foxglove 24, ghostpipe_nodding 24 |
-| `morrow` | WARDEN / `hollis` (portrait stand-in) | conservatory | ghostpipe_nodding 24, moonflower 26, **ghost_pipe 28 (ace)**. Smart AI, 1 spring_water, `battle_leader`, mark `pipe_mark`. |
+| `morrow` | WARDEN / `hollis` (portrait stand-in) | conservatory | ghostpipe_nodding 24 (pale_touch, night_fold), moonflower 26 (pale_touch, unfurl), **ghost_pipe 29 (ace; moonbeam, rot_touch, night_fold)**. Smart AI, 1 spring_water, `battle_leader`, mark `pipe_mark`. *Lead's tuning: about 81% mean player win. Ghost hits wood hard (oak about 60%), so the gym rewards bringing a Chapter 5 fire type.* |
 
 **Balance:** extend `balance.test.ts`.
 - Morrow must be beatable with every starter, and **easier than Flora**: a

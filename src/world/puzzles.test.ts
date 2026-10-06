@@ -99,6 +99,7 @@ const PUZZLES: Puzzle[] = [
   { map: "bramblegate_conservatory", flags: ["bgc_lever_1", "bgc_lever_2"], leader: "hollis" },
   { map: "sugarbush_conservatory", flags: ["sbc_valve_1", "sbc_valve_2"], leader: "nell" },
   { map: "glasshouse_conservatory", flags: ["rgc_lever_1", "rgc_lever_2"], leader: "flora" },
+  { map: "cedarhallow_conservatory", flags: ["cons4_lever_a", "cons4_lever_b"], leader: "morrow" },
 ];
 
 describe.each(PUZZLES)("conservatory puzzle: $map", (p) => {
@@ -181,5 +182,39 @@ describe("conservatory puzzle details", () => {
     const e = explore(PUZZLES[2]);
     const pulls = (s: { f: Flags }) => Object.values(s.f).filter(Boolean).length;
     expect(e.reach.filter(e.byLeader).every((s) => pulls(s) >= 2)).toBe(true);
+  });
+});
+
+
+describe("CEDARHALLOW: the lantern path", () => {
+  const e = explore(PUZZLES[3]);
+  it("opens a full path in exactly one combination; every combination retains the exit", () => {
+    const solved: string[] = [];
+    for (const a of [false, true]) for (const b of [false, true]) {
+      const f = { cons4_lever_a: a, cons4_lever_b: b };
+      const pass = e.passable(f);
+      const seen = new Set<string>([`${e.init.x},${e.init.y}`]);
+      const q = [{ ...e.init, f }];
+      while (q.length) {
+        const s = q.shift()!;
+        for (const [dx, dy] of DIRS) {
+          const x = s.x + dx, y = s.y + dy, k = `${x},${y}`;
+          if (!seen.has(k) && pass(x, y)) { seen.add(k); q.push({ x, y, f }); }
+        }
+      }
+      const states = [...seen].map((k) => { const [x, y] = k.split(",").map(Number); return { x, y, f }; });
+      if (states.some(e.byLeader)) solved.push(`${Number(a)}${Number(b)}`);
+      expect(states.some(e.atExit), JSON.stringify(f)).toBe(true);
+      for (const sw of e.switches) expect(states.some((s) => Math.abs(s.x - sw.x) + Math.abs(s.y - sw.y) === 1)).toBe(true);
+    }
+    expect(solved).toEqual(["11"]);
+  });
+  it("uses solid pits and keeps both switches on permanent floor", () => {
+    expect(e.m.dark).toBe(true);
+    expect(e.m.legend._).toBe("void");
+    for (const a of [false, true]) for (const b of [false, true]) {
+      const m = mapUnder(e.m, { cons4_lever_a: a, cons4_lever_b: b });
+      for (const sw of e.switches) expect(grid(m).tile(sw.x, sw.y)).toBe("floor_greenhouse");
+    }
   });
 });

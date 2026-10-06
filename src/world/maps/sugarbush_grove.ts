@@ -23,7 +23,7 @@ export const sugarbush_grove: MapDef = {
   ambient: "leaves",
   tiles: [
     // x: 0123456789012345678901234567
-    "MMMMMMMMMMMMMMMMMMMMMMMMMMMM", // 0
+    "MMMMMMMMMMMMMM:MMMMMMMMMMMMM", // 0
     "MMMMMMMMMX7.J8..87XMMMMMMMMM", // 1  SHEARS's clearing: drums, crates, bench
     "MMMMMMMMX..+++++..7XMMMMMMMM", // 2
     "MMMMMMMM7...+++....7MMMMMMMM", // 3
@@ -54,10 +54,12 @@ export const sugarbush_grove: MapDef = {
   ],
   structures: [],
   warps: [
+    { x: 14, y: 0, to: "route_6", toX: 14, toY: 58, facing: "up" },
     { x: 13, y: 27, to: "sugarbush", toX: 14, toY: 1, facing: "down" },
     { x: 14, y: 27, to: "sugarbush", toX: 15, toY: 1, facing: "down" },
   ],
   npcs: [
+    { id: "grove_ranger", sprite: "hiker", x: 14, y: 1, facing: "down", movement: "static", script: "ch5_grove_ranger", visibleWhen: when({ ch4_done: false }) },
     { id: "grunt1", sprite: "grunt", x: 17, y: 21, facing: "right", trainer: "grunt_grove_1", sight: 4, visibleWhen: hideWhenCleared },
     { id: "grunt2", sprite: "grunt", x: 12, y: 15, facing: "right", trainer: "grunt_grove_2", sight: 4, visibleWhen: hideWhenCleared },
     { id: "grunt3", sprite: "grunt", x: 11, y: 7, facing: "down", trainer: "grunt_grove_3", sight: 1, visibleWhen: hideWhenCleared },

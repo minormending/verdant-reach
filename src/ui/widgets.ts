@@ -2,7 +2,7 @@
 // dialog, the trainer card, and the CONTINUE summary window.
 
 import type { GameContext, MarkId, Scene } from "../contracts";
-import { MARKS, SCREEN_H, SCREEN_W, UI, characterPath, uiPath } from "../contracts";
+import { MARKS, SCREEN_H, SCREEN_W, UI, characterPath } from "../contracts";
 import { drawImagePath, hasImage } from "../engine/gfx";
 import { currentSessionId, formatDate, formatPlayTime, type SaveEnvelope, type SaveMeta } from "../save";
 import { drawText, drawTextScaled, drawWindow } from "./kit";
@@ -91,7 +91,7 @@ export async function saveDialog(ctx: GameContext, prompt = "Would you like to s
 // Pressed Mark emblem (art if present, else a drawn pressed-leaf card)
 // ---------------------------------------------------------------------------
 
-const MARK_ART: Record<MarkId, "mark_bramble" | "mark_sundew" | "mark_rose"> = { bramble_mark: "mark_bramble", sundew_mark: "mark_sundew", rose_mark: "mark_rose" };
+const MARK_ART: Record<MarkId, "mark_bramble" | "mark_sundew" | "mark_rose" | "mark_pipe"> = { bramble_mark: "mark_bramble", sundew_mark: "mark_sundew", rose_mark: "mark_rose", pipe_mark: "mark_pipe" };
 
 /** One Pressed Mark slot (18x18): the mark's art when owned, else an empty card. */
 export function drawMarkSlot(g: CanvasRenderingContext2D, ctx: GameContext, mark: MarkId | null, x: number, y: number) {
@@ -102,7 +102,7 @@ export function drawMarkSlot(g: CanvasRenderingContext2D, ctx: GameContext, mark
   g.fillRect(x, y, 18, 1); g.fillRect(x, y + 17, 18, 1);
   g.fillRect(x, y, 1, 18); g.fillRect(x + 17, y, 1, 18);
   if (!owned || !mark) return;
-  if (!drawImagePath(g, ctx.assets, uiPath(MARK_ART[mark]), 0, 0, 16, 16, x + 1, y + 1)) {
+  if (!drawImagePath(g, ctx.assets, `assets/ui/${MARK_ART[mark]}.png`, 0, 0, 16, 16, x + 1, y + 1)) {
     // drawn fallback: a pressed sprig
     g.fillStyle = UI.dark;
     g.fillRect(x + 8, y + 4, 2, 11);

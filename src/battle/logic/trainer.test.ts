@@ -111,7 +111,9 @@ describe("trainer graft collars", () => {
     }
   });
 
-  it("leaves every existing world trainer ungrafted", () => {
-    expect(Object.values(WORLD.trainers).flatMap((t) => t.team).some((m) => m.grafted)).toBe(false);
+  it("grafts only rival 4's forced starter in the world (Chapter 5)", () => {
+    const grafted = Object.values(WORLD.trainers).filter((t) => t.team.some((m) => m.grafted)).map((t) => t.id).sort();
+    expect(grafted).toEqual(["rival_4_chili", "rival_4_lily", "rival_4_oak"]);
+    for (const id of grafted) expect(WORLD.trainers[id].team.filter((m) => m.grafted)).toHaveLength(1);
   });
 });

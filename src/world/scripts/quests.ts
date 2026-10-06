@@ -627,4 +627,21 @@ export const QUESTS: Record<string, QuestDef> = {
     ],
     reward: "SIGNED PHOTO + $1000",
   },
+  fire_followers: {
+    id: "fire_followers", title: "FIRE FOLLOWERS", giver: "RANGER, CEDARHALLOW", area: "cedarhallow_house",
+    steps: [
+      { text: "Catch a FIREWEED.", doneWhen: [{ flag: "fire_followers_fireweed", is: true }] },
+      { text: "Catch a LODGEPOLE.", doneWhen: [{ flag: "fire_followers_lodgepole", is: true }] },
+    ],
+    reward: "3 GLASS PODS + EMBER ASH",
+  },
+  shrine_offerings: {
+    id: "shrine_offerings", title: "SHRINE OFFERINGS", giver: "SHRINE KEEPER, THE HOLLOW", area: "cedar_hollow",
+    steps: [
+      { text: "Visit the first shrine.", doneWhen: [{ flag: "shrine_1_offered", is: true }] },
+      { text: "Visit the second shrine.", doneWhen: [{ flag: "shrine_2_offered", is: true }] },
+      { text: "Visit the third shrine.", doneWhen: [{ flag: "shrine_3_offered", is: true }] },
+    ],
+    reward: "2 RAIN JARS + $1500",
+  },
 };

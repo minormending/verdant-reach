@@ -60,6 +60,17 @@ const MILESTONES_R4: Record<string, Milestone> = {
   flora_r3: { trainer: () => "flora", starterLevel: 23, extras: [["foxglove", 21], ["cattail", 21], ["white_clover", 21]] },
 };
 
+// Chapter 5: ordinary mixed parties raised since Flora, at the expected 25–27.
+const MILESTONES_R5: Record<string, Milestone> = {
+  // By Morrow the player has crossed Route 6 and the Burnt Stand, where fire types
+  // (fireweed, skunk cabbage) are the common catches; the Ghost leader is built to
+  // reward bringing one, so each party carries at least one Chapter 5 catch.
+  morrow: { trainer: () => "morrow", starterLevel: 27, extras: [["dandelion", 25], ["stinging_nettle", 25], ["fireweed_shoot", 25]] },
+  morrow_r5: { trainer: () => "morrow", starterLevel: 27, extras: [["fireweed_shoot", 25], ["skunk_cabbage_shoot", 25], ["cedar_seedling", 25]] },
+  rival_4: { trainer: (l) => `rival_4_${COUNTER[l]}`, starterLevel: 27, extras: [["dandelion", 25], ["stinging_nettle", 25], ["apple_sapling", 25]] },
+  rival_4_r5: { trainer: (l) => `rival_4_${COUNTER[l]}`, starterLevel: 27, extras: [["fireweed_shoot", 25], ["skunk_cabbage_shoot", 25], ["cedar_seedling", 25]] },
+};
+
 // Route 4, the Palm House, Route 5 and the Conservatory 3 juniors: ordinary
 // fights. With a mid-chapter party they should be comfortable wins.
 const CH4_TRAINERS: Record<string, { ids: string[]; m: Omit<Milestone, "trainer"> }> = {
@@ -131,7 +142,7 @@ function winRate(line: Line, m: Milestone, n = 300): number {
 }
 
 describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance", () => {
-  for (const [name, m] of Object.entries({ ...MILESTONES, ...MILESTONES_R3, ...MILESTONES_R4 })) {
+  for (const [name, m] of Object.entries({ ...MILESTONES, ...MILESTONES_R3, ...MILESTONES_R4, ...MILESTONES_R5 })) {
     it(`${name}: beatable with every starter`, () => {
       const rates = (["oak", "chili", "lily"] as Line[]).map((l) => [l, winRate(l, m)] as const);
       console.log(`${name}: ${rates.map(([l, r]) => `${l} ${(r * 100).toFixed(0)}%`).join(", ")}`);
@@ -151,6 +162,17 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     console.log(`flora mean: ${(mean * 100).toFixed(0)}%`);
     expect(Math.min(...all)).toBeGreaterThan(0.25);
     expect(mean).toBeLessThan(0.75); // Nell averages ~80%: Flora must be clearly harder
+  });
+
+  it("morrow: easier than Flora's spike", () => {
+    const lines: Line[] = ["oak", "chili", "lily"];
+    const mean = (rates: number[]) => rates.reduce((a, b) => a + b, 0) / rates.length;
+    const flora = ["flora", "flora_r4", "flora_r3"].flatMap((k) => lines.map((l) => winRate(l, MILESTONES_R4[k], 200)));
+    const morrow = ["morrow", "morrow_r5"].flatMap((k) => lines.map((l) => winRate(l, MILESTONES_R5[k], 200)));
+    console.log(`morrow mean: ${(mean(morrow) * 100).toFixed(0)}%; flora mean: ${(mean(flora) * 100).toFixed(0)}%`);
+    expect(Math.min(...morrow)).toBeGreaterThan(0.25);
+    expect(mean(morrow)).toBeGreaterThan(mean(flora));
+    expect(mean(morrow)).toBeLessThan(0.88); // a real leader, not a walkover (tuned to ~81%)
   });
 
   for (const [area, { ids, m }] of Object.entries(CH4_TRAINERS)) {

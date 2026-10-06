@@ -23,6 +23,8 @@ export const QUEST_GIVERS: { quest: string; map: MapId; npc: string; script: str
   { quest: "sap_run", map: "sugarbush", npc: "syrupmaker", script: "q_sap_run" },
   { quest: "sap_run", map: "hedgerow", npc: "baker", script: "q_sap_run_baker" },
   { quest: "herbarium_survey", map: "herbarium", npc: "archivist", script: "q_herbarium_survey" },
+  { quest: "fire_followers", map: "cedarhallow_house", npc: "ranger", script: "q_fire_followers" },
+  { quest: "shrine_offerings", map: "cedar_hollow", npc: "shrine_keeper", script: "ch5_shrine_keeper" },
   // Chapter 4 (docs/ROUND4.md §1.4)
   { quest: "relay_sensors", map: "glasshouse_relay", npc: "wren", script: "q_relay_sensors" },
   { quest: "first_seed", map: "glasshouse_nursery", npc: "nursery_keeper_b", script: "q_first_seed" },
