@@ -161,6 +161,12 @@ export const MOVE_ANIMS: Record<string, AnimSpec> = {
   false_nectar: S("lure", "nectar"),
   long_bloom: S("light_rays", "heal"),
   pollen_perch: S("slash", "leaf"),
+  // Chapter 5: reuse the drain, drifting seeds, growth, heat and bark families
+  root_siphon: S("drain", "sap"),
+  seed_drift: S("wind_seeds", "fluff"),
+  serotiny: S("grow", "unfurl"),
+  snowmelt: S("ember", "seed"),
+  heartwood: S("harden", "bark"),
   // fallback move used with no PP left
   struggle: S("slam", "struggle"),
 };

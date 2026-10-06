@@ -75,6 +75,11 @@ const POLLINATION: Record<string, PollinationGroup[]> = {
   monstera: ["tropical"],
   lotus: ["wetland", "tropical"],
   paradise: ["tropical"],
+  ghostpipe: ["woodland"],
+  fireweed: ["meadow"],
+  lodgepole: ["woodland"],
+  skunk: ["wetland"],
+  cedar: ["woodland"],
 };
 
 function sp(d: Def): Species {
@@ -147,6 +152,19 @@ const LOTUS: L = [[1, "dew_drop"], [1, "perfume"], [5, "pollen_puff"], [9, "lotu
   [17, "pod_shower"], [21, "mist_veil"], [25, "photosynthesise"], [30, "rain_call"], [34, "flood"], [38, "petal_storm"], [42, "downpour"]];
 const PARADISE: L = [[1, "pollen_puff"], [1, "sun_track"], [5, "ember_seed"], [9, "perfume"], [13, "smoulder"],
   [17, "pollen_perch"], [21, "sun_flare"], [25, "sunbeam"], [30, "unfurl"], [34, "petal_storm"], [38, "wildfire"]];
+
+// Chapter 5 (Route 6 starts at 18-23). Stage-specific signatures are added
+// to the grown forms below; later stages keep the moves already learned.
+const GHOSTPIPE: L = [[1, "pale_touch"], [1, "night_fold"], [5, "sap_drain"], [9, "wither"], [13, "spore_cloud"],
+  [17, "moonbeam"], [21, "perfume"], [28, "dodder_coil"], [32, "pale_bloom"], [36, "rot_touch"], [40, "petal_storm"]];
+const FIREWEED: L = [[1, "ember_seed"], [1, "unfurl"], [5, "pollen_puff"], [9, "smoulder"], [12, "seed_drift"],
+  [17, "wind_scatter"], [21, "sun_flare"], [25, "sun_track"], [30, "sunbeam"], [34, "photosynthesise"], [40, "wildfire"]];
+const LODGEPOLE: L = [[1, "vine_lash"], [1, "curl_up"], [5, "sap_seal"], [9, "seed_burst"], [13, "acorn_drop"],
+  [17, "root_tap"], [21, "leaf_edge"], [25, "bark_skin"], [30, "sap_spout"], [36, "leaf_gale"], [40, "timber"]];
+const SKUNK: L = [[1, "ember_seed"], [1, "night_fold"], [5, "sap_drain"], [9, "smoulder"], [13, "root_snare"],
+  [18, "snowmelt"], [22, "sap_spout"], [26, "perfume"], [30, "sun_flare"], [34, "bark_skin"], [40, "wildfire"]];
+const CEDAR: L = [[1, "vine_lash"], [1, "sap_seal"], [5, "pale_touch"], [9, "sap_drain"], [13, "root_tap"],
+  [17, "leaf_edge"], [20, "heartwood"], [25, "moonbeam"], [29, "bark_skin"], [34, "pale_bloom"], [40, "timber"]];
 
 const ALL: Species[] = [
   // ------------------------------------------------------------- starters
@@ -404,6 +422,56 @@ const ALL: Species[] = [
   sp({ id: "bird_of_paradise", name: "Crane Flower", line: "paradise", stage: 2, types: ["bloom", "fire"],
     base: st(70, 95, 65, 95, 65, 80), rate: "slow", catchRate: 45, baseExp: 182, ev: { atk: 1, spa: 1 },
     activity: "day", learnset: learn(PARADISE, [[28, "chili_burst"]]) }),
+
+  // ============================================================== Chapter 5
+  // ------------------------------------------------------------- ghostpipe (fast special night attacker)
+  sp({ id: "ghostpipe_stalk", name: "Ghost Stalk", line: "ghostpipe", stage: 1, types: ["ghost"],
+    base: st(40, 30, 35, 65, 50, 65), rate: "medium", catchRate: 120, baseExp: 64, ev: { spa: 1 },
+    activity: "night", grows: ["ghostpipe_nodding", vigor(22)], learnset: learn(GHOSTPIPE) }),
+  sp({ id: "ghostpipe_nodding", name: "Nodding Pipe", line: "ghostpipe", stage: 2, types: ["ghost"],
+    base: st(55, 40, 50, 90, 75, 95), rate: "medium", catchRate: 60, baseExp: 138, ev: { spa: 1, spe: 1 },
+    activity: "night", grows: ["ghost_pipe", vigor(30)], learnset: learn(GHOSTPIPE, [[24, "root_siphon"]]) }),
+  sp({ id: "ghost_pipe", name: "Ghost Pipe", line: "ghostpipe", stage: 3, types: ["ghost"],
+    base: st(70, 50, 60, 110, 90, 110), rate: "medium", catchRate: 45, baseExp: 196, ev: { spa: 2, spe: 1 },
+    activity: "night", learnset: learn(GHOSTPIPE, [[24, "root_siphon"]]) }),
+
+  // ------------------------------------------------------------- fireweed (fast special fire/bloom line)
+  sp({ id: "fireweed_fluff", name: "Fire Fluff", line: "fireweed", stage: 1, types: ["fire", "bloom"],
+    base: st(40, 35, 35, 65, 40, 65), rate: "medium", catchRate: 190, baseExp: 60, ev: { spa: 1 },
+    activity: "day", grows: ["fireweed_shoot", vigor(20)], learnset: learn(FIREWEED) }),
+  sp({ id: "fireweed_shoot", name: "Fire Shoot", line: "fireweed", stage: 2, types: ["fire", "bloom"],
+    base: st(55, 45, 50, 90, 65, 95), rate: "medium", catchRate: 75, baseExp: 135, ev: { spa: 1, spe: 1 },
+    activity: "day", grows: ["fireweed", vigor(30)], learnset: learn(FIREWEED) }),
+  sp({ id: "fireweed", name: "Fireweed", line: "fireweed", stage: 3, types: ["fire", "bloom"],
+    base: st(70, 55, 65, 110, 75, 110), rate: "medium", catchRate: 45, baseExp: 192, ev: { spa: 2, spe: 1 },
+    activity: "day", learnset: learn(FIREWEED) }),
+
+  // ------------------------------------------------------------- lodgepole (defence, then attack; fire opens the cone)
+  sp({ id: "lodgepole_cone", name: "Sealed Cone", line: "lodgepole", stage: 1, types: ["wood"],
+    base: st(60, 65, 90, 30, 40, 15), rate: "slow", catchRate: 120, baseExp: 66, ev: { def: 1 },
+    grows: ["lodgepole_seedling", { kind: "item", item: "ember_ash" }], learnset: learn(LODGEPOLE) }),
+  sp({ id: "lodgepole_seedling", name: "Pine Sprout", line: "lodgepole", stage: 2, types: ["wood", "fire"],
+    base: st(75, 85, 110, 45, 60, 30), rate: "slow", catchRate: 60, baseExp: 140, ev: { def: 2 },
+    grows: ["lodgepole_pine", vigor(32)], learnset: learn(LODGEPOLE, [[1, "ember_seed"], [20, "sun_flare"], [26, "serotiny"]]) }),
+  sp({ id: "lodgepole_pine", name: "Lodgepole", line: "lodgepole", stage: 3, types: ["wood", "fire"],
+    base: st(90, 110, 130, 55, 70, 40), rate: "slow", catchRate: 45, baseExp: 198, ev: { def: 2, atk: 1 },
+    learnset: learn(LODGEPOLE, [[1, "ember_seed"], [20, "sun_flare"], [26, "serotiny"]]) }),
+
+  // ------------------------------------------------------------- skunk cabbage (HP and special defence)
+  sp({ id: "skunk_cabbage_shoot", name: "Skunk Shoot", line: "skunk", stage: 1, types: ["fire", "wood"],
+    base: st(65, 35, 45, 50, 75, 20), rate: "medium", catchRate: 150, baseExp: 66, ev: { spd: 1 },
+    grows: ["skunk_cabbage", vigor(26)], learnset: learn(SKUNK) }),
+  sp({ id: "skunk_cabbage", name: "Skunkcabbage", line: "skunk", stage: 2, types: ["fire", "wood"],
+    base: st(100, 55, 65, 85, 110, 30), rate: "medium", catchRate: 60, baseExp: 164, ev: { hp: 1, spd: 1 },
+    learnset: learn(SKUNK) }),
+
+  // ------------------------------------------------------------- cedar (rare, slow-growing mixed wall)
+  sp({ id: "cedar_seedling", name: "Cedar Sprout", line: "cedar", stage: 1, types: ["wood", "ghost"],
+    base: st(65, 45, 65, 35, 70, 30), rate: "slow", catchRate: 45, baseExp: 72, ev: { spd: 1 },
+    grows: ["red_cedar", vigor(34)], learnset: learn(CEDAR) }),
+  sp({ id: "red_cedar", name: "Red Cedar", line: "cedar", stage: 2, types: ["wood", "ghost"],
+    base: st(110, 80, 110, 55, 105, 40), rate: "slow", catchRate: 45, baseExp: 190, ev: { hp: 1, def: 1, spd: 1 },
+    learnset: learn(CEDAR) }),
 ];
 
 export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;

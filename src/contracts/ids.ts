@@ -39,6 +39,12 @@ export const SPECIES_IDS = [
   "monstera_cutting", "monstera",                             // wood (Palm House)
   "lotus_seed", "sacred_lotus",                               // water/bloom (Palm House pool)
   "paradise_shoot", "bird_of_paradise",                       // bloom/fire? (Palm House, rare)
+  // Chapter 5
+  "ghostpipe_stalk", "ghostpipe_nodding", "ghost_pipe",
+  "fireweed_fluff", "fireweed_shoot", "fireweed",
+  "lodgepole_cone", "lodgepole_seedling", "lodgepole_pine",
+  "skunk_cabbage_shoot", "skunk_cabbage",
+  "cedar_seedling", "red_cedar",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 

@@ -141,6 +141,13 @@ const LIST: Move[] = [
   // Round 3: snapdragon line
   m("dragon_nip", "Dragon Nip", "dragon", "physical", 40, 100, 30, "A sharp little petal snap."),
   m("dragon_snap", "Dragon Snap", "dragon", "physical", 80, 100, 10, "Petal jaws spring shut. May flinch.", [{ kind: "flinch", chance: 20 }]),
+
+  // ------------------------------------------------------------- Chapter 5
+  m("root_siphon", "Root Siphon", "ghost", "special", 60, 100, 15, "Sips through roots. Heals half.", [{ kind: "drain", fraction: 0.5 }]),
+  m("seed_drift", "Seed Drift", "bloom", "status", 0, 100, 20, "Drifting seeds cut ACCURACY.", [foe("accuracy", -1)]),
+  m("serotiny", "Serotiny", "fire", "status", 0, null, 15, "Cone opens. Ups ATK and SP.ATK.", [self("atk", 1), self("spa", 1)]),
+  m("snowmelt", "Snowmelt", "fire", "special", 65, 100, 15, "Flower heat. May scorch the foe.", [inflict("scorch", 10)]),
+  m("heartwood", "Heartwood", "wood", "status", 0, null, 10, "Hardens the core. DEF sharply up.", [self("def", 2)]),
 ];
 
 export const MOVES: Record<string, Move> = Object.fromEntries(LIST.map((mv) => [mv.id, mv]));

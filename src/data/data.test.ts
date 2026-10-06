@@ -205,7 +205,7 @@ describe("moves", () => {
 });
 
 describe("items", () => {
-  it("reserves found, field-only growth items without art or live species assignments", () => {
+  it("keeps found growth items field-only; Ember Ash now opens lodgepole cones", () => {
     for (const [id, name] of [["ember_ash", "Ember Ash"], ["cold_snap", "Cold Snap"]]) {
       expect(DATA.items[id]).toMatchObject({
         id, name, pocket: "items", price: 0, effect: { kind: "none" },
@@ -213,8 +213,12 @@ describe("items", () => {
       });
       expect(wrapText(DATA.items[id].description, 18).length).toBeLessThanOrEqual(2);
       expect(REQUIRED_ITEMS).not.toContain(id);
-      expect(species.some((s) => s.growsInto?.trigger.kind === "item" && s.growsInto.trigger.item === id)).toBe(false);
+      const users = species.filter((s) => s.growsInto?.trigger.kind === "item" && s.growsInto.trigger.item === id);
+      expect(users.map((s) => s.id)).toEqual(id === "ember_ash" ? ["lodgepole_cone"] : []);
     }
+    expect(DATA.species.lodgepole_cone.growsInto).toEqual({
+      species: "lodgepole_seedling", trigger: { kind: "item", item: "ember_ash" },
+    });
   });
 
   it("defines the future GLIDER SEED key item without requiring art yet", () => {
