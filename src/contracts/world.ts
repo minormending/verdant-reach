@@ -161,11 +161,21 @@ export interface QuestDef {
   reward: string;               // display text
 }
 
+export interface GlideDestination {
+  map: MapId;
+  x: number;
+  y: number;
+  facing: Dir;
+  name: string;                 // menu label, <= 18 columns
+}
+
 export interface WorldData {
   maps: Record<MapId, MapDef>;
   scripts: Record<ScriptId, ScriptCmd[]>;
   trainers: Record<TrainerId, TrainerDef>;
   quests?: Record<string, QuestDef>;
+  /** SEED GLIDE lands outside each town's healing building. */
+  glide?: GlideDestination[];
   /** New game: where the player starts (inside the Herbarium at night, prologue). */
   newGame: { map: MapId; x: number; y: number; facing: Dir; script: ScriptId };
 }

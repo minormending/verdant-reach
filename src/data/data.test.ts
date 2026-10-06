@@ -217,6 +217,11 @@ describe("items", () => {
     }
   });
 
+  it("defines the future GLIDER SEED key item without requiring art yet", () => {
+    expect(DATA.items.glider_seed).toMatchObject({ name: "Glider Seed", pocket: "key", price: 0, effect: { kind: "none" }, usableInBattle: false });
+    expect(wrapText(DATA.items.glider_seed.description, 18).length).toBeLessThanOrEqual(2);
+    expect(REQUIRED_ITEMS).not.toContain("glider_seed");
+  });
   it("every REQUIRED_ITEM exists and is well-formed", () => {
     for (const id of REQUIRED_ITEMS) expect(DATA.items[id], id).toBeDefined();
     for (const [id, item] of Object.entries(DATA.items)) {

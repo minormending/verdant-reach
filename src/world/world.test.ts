@@ -5,6 +5,16 @@ import type { Cond, MapDef, TileKey } from "../contracts";
 import { checkProgressWithoutPrune, eachCmd, flood, grid, prunable, validateWorld, walkable, wrapText, expandTokens } from "./validate";
 
 describe("world data", () => {
+  it("glides to the tile below each town's healing-building door", () => {
+    const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse"];
+    expect(WORLD.glide?.map((d) => d.map)).toEqual(["fallowfield", "bramblegate", "sugarbush", "glasshouse_city"]);
+    for (const [i, landing] of WORLD.glide!.entries()) {
+      const town = WORLD.maps[landing.map];
+      const door = town.warps.find((w) => w.to === buildings[i])!;
+      expect(landing).toMatchObject({ x: door.x, y: door.y + 1, facing: "down" });
+      expect(walkable(grid(town), landing.x, landing.y)).toBe(true);
+    }
+  });
   it("passes every structural check", () => {
     expect(validateWorld(WORLD)).toEqual([]);
   });
@@ -242,6 +252,28 @@ describe("Chapter 4", () => {
 
 describe("validator self-check", () => {
   const clone = () => structuredClone(WORLD);
+  it("rejects solid, off-map, missing-map and unreachable glide landings", () => {
+    for (const landing of [
+      { map: "fallowfield", x: 0, y: 0 },
+      { map: "fallowfield", x: -1, y: 7 },
+      { map: "fallowfield", x: 20.5, y: 7 },
+    ] as const) {
+      const w = clone();
+      Object.assign(w.glide![0], landing);
+      expect(validateWorld(w).join("\n")).toMatch(/\[glide fallowfield\].*not walkable/);
+    }
+    const missing = clone();
+    delete (missing.maps as Partial<typeof missing.maps>).fallowfield;
+    expect(validateWorld(missing).join("\n")).toMatch(/\[glide fallowfield\].*missing map/);
+    const w = clone();
+    const m = w.maps.fallowfield;
+    // An isolated floor tile is walkable, but has no ordinary route to it.
+    const set = (x: number, y: number, ch: string) => { m.tiles[y] = m.tiles[y].slice(0, x) + ch + m.tiles[y].slice(x + 1); };
+    set(1, 1, ".");
+    for (const [x, y] of [[0, 1], [2, 1], [1, 0], [1, 2]]) set(x, y, "T");
+    Object.assign(w.glide![0], { x: 1, y: 1 });
+    expect(validateWorld(w).join("\n")).toMatch(/\[glide fallowfield\].*unreachable/);
+  });
   it("catches ragged rows and unknown legend chars", () => {
     const w = clone();
     w.maps.route_1.tiles[3] = w.maps.route_1.tiles[3] + "&";

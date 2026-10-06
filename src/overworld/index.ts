@@ -42,6 +42,7 @@ import {
   ScriptAbort, giveItem, harvest, itemName, quickenedName, runScript, trainerBattle, type ScriptHost, type ToastKind,
 } from "./script";
 import { runStartMenu } from "./startMenu";
+import { visitedGlideMaps, visitedTownFlag } from "./glide";
 
 export interface OverworldOpts {
   /** "new": run WORLD.newGame.script; "continue": run the map's onEnter. */
@@ -227,6 +228,7 @@ class Overworld implements Scene {
     this.ambientOverride = null;
     this.runStreak = 0;
     this.ctx.state.position = { map: id, x, y, facing };
+    for (const town of visitedGlideMaps(this.ctx.state)) this.ctx.state.flags[visitedTownFlag(town)] = true;
     if (def.outdoor && id !== this.lastOutdoor && def.name) this.popup = { name: def.name, t: 0 };
     else if (!def.outdoor) this.popup = null;
     if (def.outdoor) this.lastOutdoor = id;
@@ -443,7 +445,19 @@ class Overworld implements Scene {
       this.walking = false;
       p.bumpAnim = 0;
       this.popup = null;
-      void this.flow(() => runStartMenu(this.ctx));
+      const scriptRunning = this.busy > 0;
+      void this.flow(() => runStartMenu(this.ctx, {
+        scriptRunning,
+        glide: async (destination) => {
+          await this.fader.to("black", 10);
+          this.ctx.audio.playSfx("run");
+          this.loadMap(destination.map, destination.x, destination.y, destination.facing);
+          this.playMapMusic();
+          await this.timers.frames(6);
+          await this.fader.to("clear", 14);
+          if (this.map.def.onEnter) await this.runScript(this.map.def.onEnter);
+        },
+      }));
       return;
     }
     if (input.pressed("a")) {

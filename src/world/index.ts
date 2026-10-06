@@ -90,6 +90,12 @@ export const WORLD: WorldData = {
   scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
   quests: QUESTS,
+  glide: [
+    { map: "fallowfield", x: 20, y: 7, facing: "down", name: "FALLOWFIELD" },
+    { map: "bramblegate", x: 19, y: 6, facing: "down", name: "BRAMBLEGATE" },
+    { map: "sugarbush", x: 24, y: 12, facing: "down", name: "SUGARBUSH" },
+    { map: "glasshouse_city", x: 6, y: 13, facing: "down", name: "GLASSHOUSE CITY" },
+  ],
   // Prologue: the observation deck at night, beside DR. VALE.
   newGame: { map: "herbarium_roof", x: 5, y: 6, facing: "up", script: "prologue" },
 };

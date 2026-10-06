@@ -310,6 +310,23 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     eachCmd(cmds, (c) => { if (c.op === "warp") addEntry(c.to, c.x, c.y); });
   }
 
+  // Check against ordinary entries: a glide landing must not make itself
+  // count as reachable merely by being a new entry point.
+  for (const landing of world.glide ?? []) {
+    const at = `[glide ${landing.map}] landing at ${landing.x},${landing.y}`;
+    const map = world.maps[landing.map];
+    if (!map) { errs.push(`${at}: missing map`); continue; }
+    const g = grid(map);
+    if (!Number.isInteger(landing.x) || !Number.isInteger(landing.y) || !walkable(g, landing.x, landing.y)) {
+      errs.push(`${at} is not walkable`);
+    } else if (!flood(g, entries.get(landing.map) ?? []).has(`${landing.x},${landing.y}`)) {
+      errs.push(`${at} is unreachable`);
+    }
+    if (!map.outdoor) errs.push(`${at} is indoors`);
+    if (landing.name.length > TEXTBOX.cols) errs.push(`${at}: name exceeds ${TEXTBOX.cols} columns`);
+    if (map.npcs.some((n) => n.x === landing.x && n.y === landing.y)) errs.push(`${at} is under an NPC`);
+  }
+
   for (const id of MAP_IDS) {
     const map = world.maps[id];
     if (!map) { errs.push(`missing map ${id}`); continue; }
