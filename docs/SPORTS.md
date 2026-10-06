@@ -110,3 +110,14 @@ Chapter 5 lodgepole, skunk cabbage and cedar lines (set in `tools/art/crystal/{l
 | skunk_cabbage | yellow-green spathe (natural variant; no named form) | No cultivar or named botanical form of Symplocarpus foetidus exists. Wild spathes vary from solid maroon through mottled to almost plain yellow-green, so the sport is that natural yellow-green spathe, kept close to the source. Crystal: an olive-gold spathe, a fresher leaf green. | `#686818 #b0d050 #f8f8f8` |
 | cedar_seedling | 'Zebrina' | Thuja plicata 'Zebrina': green sprays banded creamy yellow. Crystal: golden-lime sprays over the same red-brown bark family. | `#884830 #c0c840 #f8f8f8` |
 | red_cedar | 'Zebrina' | Thuja plicata 'Zebrina': green sprays banded creamy yellow. Crystal: golden-lime sprays over the same red-brown bark family. | `#884830 #c0c840 #f8f8f8` |
+
+Chapter 5 ghostpipe and fireweed lines (set in `tools/art/crystal/{ghostpipe,fireweed}.py`; palettes are dark, light, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| ghostpipe_stalk | pink form | the natural pink form of the ghost pipe, Monotropa uniflora (uncommon pink-flushed plants occur in the wild): pale rose wax, a dusky rose shade. | `#985068 #e8b0c8 #f8f8f8` |
+| ghostpipe_nodding | pink form | the natural pink form of the ghost pipe, Monotropa uniflora (uncommon pink-flushed plants occur in the wild): pale rose wax, a dusky rose shade. | `#985068 #e8b0c8 #f8f8f8` |
+| ghost_pipe | pink form | the natural pink form of the ghost pipe, Monotropa uniflora (uncommon pink-flushed plants occur in the wild): pale rose wax, a dusky rose shade. | `#985068 #e8b0c8 #f8f8f8` |
+| fireweed_fluff | f. albiflorum | Chamaenerion angustifolium f. albiflorum, the white-flowered form (it lacks the red pigment): white flowers on green stems and pods. | `#487838 #d0d0c0 #f8f8f8` |
+| fireweed_shoot | f. albiflorum | Chamaenerion angustifolium f. albiflorum, the white-flowered form (it lacks the red pigment): white flowers on green stems and pods. | `#487838 #d0d0c0 #f8f8f8` |
+| fireweed | f. albiflorum | Chamaenerion angustifolium f. albiflorum, the white-flowered form (it lacks the red pigment): white flowers on green stems and pods. | `#487838 #d0d0c0 #f8f8f8` |
