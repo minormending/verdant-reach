@@ -8,6 +8,7 @@ import { DATA } from "../../data";
 import { chooseFoeAction } from "./ai";
 import { active, canContinue, createBattleState, firstHealthy, sendOutFoe, doSwitch, resolveTurn, type BattleEvent, type Side } from "./battle";
 import { createQuickened } from "./stats";
+import { createTrainerQuickened } from "./trainer";
 import { seeded } from "./rng";
 import { getMove } from "./lookup";
 import { distributeExp, expYield, gainExp } from "./exp";
@@ -23,7 +24,10 @@ describe.skipIf(ids.length === 0)("simulated battles with DATA", () => {
       const mkParty = (n: number) =>
         Array.from({ length: n }, () => createQuickened(DATA, ids[Math.floor(rng() * ids.length)], lvl, rng));
       const p = mkParty(3);
-      const f = mkParty(2);
+      const f = b % 2 === 0 ? mkParty(2) : Array.from({ length: 2 }, (_, index) =>
+        createTrainerQuickened(DATA, {
+          species: ids[Math.floor(rng() * ids.length)], level: lvl, grafted: index === 1,
+        }, rng));
       const s = createBattleState({ data: DATA, playerParty: p, playerActive: 0, foeParty: f, wild: b % 2 === 0, time: b % 3 === 0 ? "night" : "day", foeTrainer: "TEST", foeItems: { water_flask: 1 } });
       let guard = 0;
       while (canContinue(p) && canContinue(f) && guard++ < 200) {

@@ -18,9 +18,10 @@ import {
 } from "./logic/exp";
 import { applyItem, consumeItem, isMedicine } from "./logic/items";
 import { getItem, getMove, getSpecies, itemName, qName, speciesName, TYPE_NAMES } from "./logic/lookup";
-import { createQuickened, recalcStats, trainerIvs } from "./logic/stats";
+import { createQuickened } from "./logic/stats";
+import { createTrainerQuickened, graftCollarText } from "./logic/trainer";
 import {
-  drawBackdrop, drawEnemyHud, drawHudBacking, drawPlayerHud, drawPodRow, drawStatWindow, drawTrainer, drawVersusBanner, newHud,
+  drawBackdrop, drawEnemyHud, drawGraftCollarPlaceholder, drawHudBacking, drawPlayerHud, drawPodRow, drawStatWindow, drawTrainer, drawVersusBanner, newHud,
   type BannerKind, type HudView,
 } from "./hud";
 import {
@@ -218,6 +219,9 @@ class BattleScene implements Scene {
     const sil = v.silhouette ?? m.tint ?? undefined;
     const pose = kind === "front" ? this.idlePose(v, side, !!sil) : kind;
     drawSpecies(this.ctx, g, v.species, pose, x, y, { sport: v.sport, scale: v.scale, drop: v.drop, clipBottom, silhouette: sil });
+    if (kind === "front" && side === 1 && this.trainer?.team[this.s.sides[1].active]?.grafted) {
+      drawGraftCollarPlaceholder(g, x, y, { scale: v.scale, drop: v.drop, clipBottom, silhouette: sil });
+    }
     if (m.shine !== null && !sil && v.scale === 1) this.drawShine(g, v, pose, x, y + v.drop, m.shine, clipBottom);
   }
 
@@ -368,7 +372,7 @@ class BattleScene implements Scene {
       this.trainerName = fmt(ctx, `${t.className} ${t.name}`).toUpperCase().trim();
       this.aiKind = t.ai;
       this.enemyTrainer.key = t.portrait;
-      foeParty = t.team.map((m) => this.makeTrainerQ(m.species, m.level, m.moves));
+      foeParty = t.team.map((m) => createTrainerQuickened(this.data, m, ctx.rng));
     } else {
       if (!req.wild) {
         console.error("[battle] wild battle without a species");
@@ -405,16 +409,6 @@ class BattleScene implements Scene {
     }
     await this.ending(outcome);
     return outcome;
-  }
-
-  private makeTrainerQ(species: SpeciesId, level: number, moves?: string[]): Quickened {
-    const q = createQuickened(this.data, species, level, this.ctx.rng);
-    q.ivs = trainerIvs();
-    q.sport = false;
-    recalcStats(this.data, q);
-    q.hp = q.stats.hp;
-    if (moves && moves.length) q.moves = moves.slice(0, 4).map((id) => ({ id, pp: getMove(this.data, id).pp }));
-    return q;
   }
 
   private bannerKind(): BannerKind | null {
@@ -551,6 +545,8 @@ class BattleScene implements Scene {
     await this.slideHud(1);
     await say;
     await this.flow.wait(Math.max(16, this.introLeft(1)));
+    const strain = graftCollarText(this.data, this.trainer, this.s.sides[1].active, foe);
+    if (strain) await this.say(strain, "wait");
   }
 
   private async sendOutPlayerAnim() {

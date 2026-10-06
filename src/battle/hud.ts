@@ -26,6 +26,29 @@ export interface HudView {
 
 export const newHud = (): HudView => ({ q: null, visible: false, hp: 0, level: 1, status: null, exp: 0, flash: 0, dx: 0 });
 
+/** Temporary collar art: a 2px ochre band with a 1px black outline at the
+ *  lower third of the 56px front. Shares the sprite's scale, drop and clipping. */
+export function drawGraftCollarPlaceholder(g: CanvasRenderingContext2D, x: number, y: number, opts: SpriteDrawOpts = {}) {
+  const scale = opts.scale ?? 1;
+  if (scale <= 0) return;
+  const size = Math.max(1, Math.round(56 * scale));
+  const dx = Math.round(x + (56 - size) / 2);
+  const dy = Math.round(y + 56 - size + (opts.drop ?? 0));
+  g.save();
+  if (opts.clipBottom !== undefined) {
+    g.beginPath();
+    g.rect(0, 0, 160, opts.clipBottom);
+    g.clip();
+  }
+  g.translate(dx, dy);
+  g.scale(size / 56, size / 56);
+  g.fillStyle = opts.silhouette ?? "#181818";
+  g.fillRect(0, 36, 56, 4);
+  g.fillStyle = opts.silhouette ?? "#a07840";
+  g.fillRect(1, 37, 54, 2);
+  g.restore();
+}
+
 /** Enemy box, top-left: name, (leaf if caught), status, level, HP bar, L-frame. */
 export function drawEnemyHud(ctx: GameContext, g: CanvasRenderingContext2D, h: HudView, caught: boolean, frame = 0) {
   if (!h.visible || !h.q) return;

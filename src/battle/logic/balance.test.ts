@@ -14,6 +14,7 @@ import { seeded } from "./rng";
 import { attackStats, typeEffectiveness } from "./damage";
 import type { Quickened } from "../../contracts";
 import { createQuickened } from "./stats";
+import { calcTrainerStats } from "./trainer";
 
 type Line = "oak" | "chili" | "lily";
 const STARTER: Record<Line, [SpeciesId, SpeciesId]> = {
@@ -104,6 +105,10 @@ function winRate(line: Line, m: Milestone, n = 300): number {
     ];
     const f = trainer.team.map((t) => {
       const q = createQuickened(DATA, t.species, t.level, rng);
+      // Keep the balance model's random DVs, applying the same collar stat
+      // calculation as runtime without changing existing opponents' balance.
+      q.stats = calcTrainerStats(DATA, t, q.ivs, q.evs);
+      q.hp = q.stats.hp;
       if (t.moves) q.moves = t.moves.map((id) => ({ id, pp: DATA.moves[id]?.pp ?? 10 }));
       return q;
     });

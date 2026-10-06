@@ -139,7 +139,8 @@ export interface TrainerDef {
   name: string;                 // e.g. "HOLLIS"
   className: string;            // e.g. "WARDEN", "GARDENER"
   portrait: TrainerPortraitKey;
-  team: { species: SpeciesId; level: number; moves?: MoveId[] }[];
+  /** Grafted members keep their level but use stats from five levels lower. */
+  team: { species: SpeciesId; level: number; moves?: MoveId[]; grafted?: boolean }[];
   prize: number;                // money on win
   intro: string;                // said before battle (overworld)
   defeat: string;               // said in battle when beaten
