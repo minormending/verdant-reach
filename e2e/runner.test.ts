@@ -21,7 +21,7 @@ afterEach(() => {
 async function runMocked(options: { failBeat?: boolean; issue?: boolean; beats?: number; startupError?: boolean; headed?: boolean; seed?: number } = {}) {
   const report = {
     suite: "full", finished: true,
-    beats: Array.from({ length: options.beats ?? 46 }, (_, i) => ({ name: `beat ${i}`, t: i, ok: !(options.failBeat && i === 0) })),
+    beats: Array.from({ length: options.beats ?? 73 }, (_, i) => ({ name: `beat ${i}`, t: i, ok: !(options.failBeat && i === 0) })),
     issues: options.issue ? [{ kind: "test", msg: "problem", t: 1 }] : [],
     texts: [],
   };
@@ -54,11 +54,11 @@ async function runMocked(options: { failBeat?: boolean; issue?: boolean; beats?:
   return { saved, launch };
 }
 
-it("saves the full report and succeeds only for all 46 passing beats", async () => {
+it("saves the full report and succeeds only for all 73 passing beats", async () => {
   const { saved, launch } = await runMocked();
   expect(process.exitCode).toBe(0);
   expect(saved.finished).toBe(true);
-  expect(saved.beats).toHaveLength(46);
+  expect(saved.beats).toHaveLength(73);
   expect(saved.runner.issues).toEqual([]);
   expect(saved.seed).toBe(1);
   expect(saved.runner.seed).toBe(1);
@@ -73,7 +73,7 @@ it.each([0, 42, 4294967295])("records override seed %i for replay", async (seed)
   expect(saved.runner.time).toBe("day");
 });
 
-it.each([{ failBeat: true }, { issue: true }, { beats: 45 }])("fails an unsuccessful or incomplete report: %j", async (options) => {
+it.each([{ failBeat: true }, { issue: true }, { beats: 46 }, { beats: 72 }, { beats: 74 }])("fails an unsuccessful or incomplete report: %j", async (options) => {
   await runMocked(options);
   expect(process.exitCode).toBe(1);
 });

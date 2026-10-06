@@ -3,13 +3,15 @@
 //
 //   npm run e2e                                        headless full playthrough
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
-//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 4's TO BE CONTINUED
+//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 5's TO BE CONTINUED
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
 //
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
 // grunt, rival 3 and the shears, the NURSERY (boarding two, a seed, sprouting),
 // WREN's posts, PRUNE on ROUTE 5, FLORA and the chapter end. `check:fanmail`
 // delivers FAN MAIL before the end card, or from a post-chapter jump-in.
+// Chapter 5 continues from that save, crosses ROUTE 6, visits the BURNT STAND
+// and THE HOLLOW, completes both quests and beats MORROW in the dark garden.
 //
 // `?timer` keeps the loop running in a hidden tab. Add `&boost=<level>` to set
 // the level of the over-levelled helper (default 48; `boost=0` plays it
@@ -72,6 +74,14 @@ function battleScene(): BattleView | null {
 }
 let battleMenu: { menu: Menu; target: number } | null = null;
 let medicine: { item: ItemId; active: number } | null = null;
+/** While walking the BURNT STAND grass, throw pods only at the requested line. */
+let captureLine: "fireweed" | "lodgepole" | null = null;
+function captureItem(): ItemId | null {
+  const battle = battleScene();
+  return captureLine && battle?.req.kind === "wild"
+    && ctx().data.species[active(battle.s, 1).species].line === captureLine
+    && (ctx().state.bag["terrarium_pod"] ?? 0) > 0 ? "terrarium_pod" : null;
+}
 let bagKey: keyof typeof KEY | null = null;
 let bagAtCancel = false;
 const requestedSpeed = new URLSearchParams(location.search).get("speed");
@@ -204,7 +214,7 @@ function hookScenes() {
           const item = report.suite === "full" || report.suite === "story"
             ? healingItem(ctx().data, ctx().state.bag, active(s, 0)) : null;
           medicine = item ? { item, active: s.sides[0].active } : null;
-          target = item ? 1 : 0;
+          target = item || captureItem() ? 1 : 0;
         } else if (menu.options[0] === ctx().data.moves[active(s, 0).moves[0]?.id]?.name.toUpperCase()) {
           target = strongestMove(s);
         }
@@ -291,8 +301,9 @@ export function instrument() {
   const screens = ctx().screens as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>;
   const bagScreen = screens.bag.bind(screens);
   screens.bag = (opts?: unknown) => {
-    if (!medicine || !(opts as { inBattle?: boolean })?.inBattle) return bagScreen(opts);
-    const selected = medicine;
+    const pod = captureItem();
+    const selected = medicine ?? (pod ? { item: pod } : null);
+    if (!selected || !(opts as { inBattle?: boolean })?.inBattle) return bagScreen(opts);
     const show = TextBox.prototype.show;
     // Bag scenes close over their cursor. Observe their descriptions, then
     // navigate the actual pockets/list/USE menu with the driver's key presses.
@@ -370,7 +381,10 @@ function checkText(text: string, speaker?: string) {
   // Unbreakable words longer than a text-box line overflow the box.
   const flat = text.replace(/<PLAYER>|\{PLAYER\}/g, "ROWAN").replace(/<RIVAL>|\{RIVAL\}/g, "BRAM");
   for (const w of flat.split(/\s+/)) if (w.length > COLS) issue("text-overflow", `"${w}" (${w.length} cols) in: ${text}`);
-  if (/\b(TODO|FIXME|lorem|placeholder|undefined|null)\b|\bNaN\b|\[object/.test(flat) || /\b(todo|fixme|lorem ipsum)\b/i.test(flat)) issue("text-placeholder", `${speaker ?? ""}: ${text}`);
+  // ?allowTodo (runner --allow-placeholders) tolerates only the lead's "TODO(text):" dialogue
+  // stand-ins on an unfinished chapter branch; every other placeholder still fails.
+  const todoAllowed = new URLSearchParams(location.search).has("allowTodo") && /^TODO\(text\):/.test(flat.trim());
+  if (!todoAllowed && (/\b(TODO|FIXME|lorem|placeholder|undefined|null)\b|\bNaN\b|\[object/.test(flat) || /\b(todo|fixme|lorem ipsum)\b/i.test(flat))) issue("text-placeholder", `${speaker ?? ""}: ${text}`);
   if (/<[A-Z]+>|\{[A-Z]+\}/.test(text.replace(/<PLAYER>|\{PLAYER\}|<RIVAL>|\{RIVAL\}/g, ""))) issue("text-token", text);
   if (speaker && speaker !== speaker.toUpperCase()) issue("text-style", `speaker not upper-case: ${speaker}`);
 }
@@ -1111,6 +1125,144 @@ async function chapter4(_opts: { boost: number; starter: "oak" | "chili" | "lily
   beat("chapter 4 done", flag("ch4_done"));
 }
 
+// ---------------------------------------------------------------------------
+// Chapter 5: CEDARHALLOW
+// ---------------------------------------------------------------------------
+
+async function chapter5() {
+  // The Chapter 4 end card saves before returning to the title. Restore that
+  // save through START, CONTINUE and its summary, just as check:continue does.
+  const saved = ctx().save.read();
+  if (!saved?.flags["ch4_done"]) {
+    beat("CONTINUE after Chapter 4", false, "no Chapter 4 save");
+    return;
+  }
+  await press("start");
+  await sleep(700);
+  await press("a");
+  await sleep(700);
+  await press("a");
+  const continued = await waitFor(() => !!ow(), 15000);
+  await sleep(1500);
+  if (!continued) { beat("CONTINUE after Chapter 4", false, "no overworld"); return; }
+  await settle();
+  beat("CONTINUE after Chapter 4", flag("ch4_done") && ow()?.mapId === saved.position.map);
+  ctx().state.options.textSpeed = "fast";
+  const st = () => ctx().state;
+  const bag = (item: ItemId) => st().bag[item] ?? 0;
+
+  await nav("sugarbush_grove");
+  await nav("route_6");
+  beat("SUGARBUSH GROVE: north exit to ROUTE 6", ow()?.mapId === "route_6" && flag("ch4_done"));
+  await nav("cedarhallow");
+  await expectFlag("CEDARHALLOW: arrival", "ch5_arrived");
+  if (!flag("visited_cedarhallow")) issue("story", "CEDARHALLOW was not recorded as visited");
+
+  let before = report.texts.length;
+  await trigger("ch5_conservatory_door");
+  beat("MORROW's CONSERVATORY is closed", ow()?.mapId === "cedarhallow" && onTile(18, 9)
+    && report.texts.length > before && !flag("burnt_vision_seen"));
+
+  await nav("cedarhallow_house");
+  await talkTo("ranger");
+  await expectFlag("FIRE FOLLOWERS: accepted", "quest_fire_followers_started");
+
+  await nav("burnt_stand");
+  if (!flag("ch5_grunts_seen")) await trigger("ch5_grunts");
+  await expectFlag("BURNT STAND: the cone sacks", "ch5_grunts_seen");
+  before = report.texts.length;
+  if (!flag("rival_4_done")) await trigger("rival_4");
+  await expectFlag("rival battle 4: the grafted starter", "rival_4_done");
+  if (!report.texts.slice(before).some((t) => /strains at its GRAFT COLLAR!/.test(t.text))) {
+    issue("battle", "rival 4's grafted starter did not announce its collar");
+  }
+  if (!flag("burnt_vision_seen")) await trigger("ch5_vision");
+  await expectFlag("BURNT STAND: the vision", "burnt_vision_seen");
+  await talkTo("morrow_bs");
+  await expectFlag("MORROW returns to the CONSERVATORY", "morrow_returned");
+
+  await nav("cedarhallow");
+  before = report.texts.length;
+  await trigger("ch5_conservatory_door");
+  beat("the dark CONSERVATORY needs a lantern", ow()?.mapId === "cedarhallow" && onTile(18, 9)
+    && report.texts.length > before && !flag("got_lantern"));
+  await nav("cedar_hollow");
+  await talkTo("shrine_keeper");
+  beat("THE HOLLOW: the keeper's lantern", flag("got_lantern") && bag("foxfire_lantern") === 1);
+  await expectFlag("SHRINE OFFERINGS: accepted", "quest_shrine_offerings_started");
+  for (const n of [1, 2, 3]) {
+    await useTile(`q_shrine_offerings_shrine_${n}`);
+    await expectFlag(`SHRINE OFFERINGS: shrine ${n}`, `shrine_${n}_offered`);
+  }
+  // Read reward deltas after walking back, so incidental encounters and hidden
+  // items cannot count as part of the keeper's reward.
+  await walkTo(10, 22);
+  const rain = bag("rain_jar"), money = st().money;
+  await talkTo("shrine_keeper");
+  beat("SHRINE OFFERINGS: rewarded", flag("quest_shrine_offerings_done")
+    && bag("rain_jar") === rain + 2 && st().money === money + 1500);
+
+  await nav("burnt_stand");
+  await catchFireFollower("fireweed");
+  await catchFireFollower("lodgepole");
+  await nav("cedarhallow_house");
+  await walkTo(3, 5);
+  const pods = bag("glass_pod"), ash = bag("ember_ash");
+  await talkTo("ranger");
+  beat("FIRE FOLLOWERS: rewarded", flag("quest_fire_followers_done")
+    && flag("fire_followers_fireweed") && flag("fire_followers_lodgepole")
+    && bag("glass_pod") === pods + 3 && bag("ember_ash") === ash + 1);
+
+  await nav("cedarhallow_conservatory");
+  beat("the dark CONSERVATORY opens", ow()?.mapId === "cedarhallow_conservatory"
+    && ctx().world.maps["cedarhallow_conservatory"].dark === true && bag("foxfire_lantern") > 0);
+  // Pull both entrance-hall levers with A. Walk the revealed middle path;
+  // both juniors see the player on it and battle before MORROW's platform.
+  await talkTo("lever:cons4_lever_a");
+  await expectFlag("CONSERVATORY 4: lever A", "cons4_lever_a");
+  await talkTo("lever:cons4_lever_b");
+  await expectFlag("CONSERVATORY 4: lever B", "cons4_lever_b");
+  const crossed = await walkTo(7, 3);
+  beat("CONSERVATORY 4: the path through the pits", crossed && onTile(7, 3)
+    && flag("beat_jr_lantern") && flag("beat_jr_nightshade"));
+  await talkTo("morrow");
+  beat("MORROW: pipe mark", flag("beat_morrow") && st().marks.includes("pipe_mark"));
+
+  const exit = ow()?.map.def.warps.find((w) => w.to === "cedarhallow");
+  if (!exit) { beat("chapter 5 done: GLIDER SEED", false, "no conservatory exit"); return; }
+  await untilEndCard(async () => {
+    await walkToQuiet(exit.x, exit.y - 1);
+    await goto(exit.x, exit.y, false);
+    await T().hold(KEY.down, 250);
+  }, "Chapter 5");
+  beat("chapter 5 done: GLIDER SEED", flag("ch5_done") && flag("slice_done") && bag("glider_seed") === 1);
+}
+
+/** Catch a quest plant from real grass encounters, driving BAG/PODS/USE.
+ * The 30-pod supply is the same fixture used by check:catching. Encounter
+ * rolls, levels, HP, catch odds and caught records all remain game-owned. */
+async function catchFireFollower(line: "fireweed" | "lodgepole") {
+  const st = ctx().state;
+  const caught = () => st.herbarium.caught.some((id) => ctx().data.species[id].line === line);
+  const total = () => st.party.length + st.box.length;
+  const before = total(), texts = report.texts.length;
+  st.bag["terrarium_pod"] = Math.max(st.bag["terrarium_pod"] ?? 0, 30);
+  const pods = st.bag["terrarium_pod"];
+  captureLine = line;
+  try {
+    // These neighbouring tiles are both grass in the southern clearing.
+    for (let steps = 0; steps < 500 && !caught() && (st.bag["terrarium_pod"] ?? 0) > 0; steps++) {
+      if (ow()?.mapId !== "burnt_stand" || !(await walkTo(onTile(6, 21) ? 7 : 6, 21))) break;
+      await settle();
+      refreshHelper();
+    }
+  } finally { captureLine = null; }
+  beat(`FIRE FOLLOWERS: caught ${line}`, caught() && total() > before
+    && (st.bag["terrarium_pod"] ?? 0) < pods
+    && report.texts.slice(texts).some((t) => /used TERRARIUM POD/i.test(t.text)),
+  `party+box ${before}->${total()}, pods ${pods}->${st.bag["terrarium_pod"] ?? 0}`);
+}
+
 /** Board two plants of one line, walk until they set seed, collect it, and walk it to sprouting. */
 async function nurseryBreeding() {
   const st = ctx().state;
@@ -1164,7 +1316,7 @@ function counter(line: string) {
 
 /** Start the chapter-end chain, then mash through the save offer to the
  *  TO BE CONTINUED card and the title screen. */
-async function untilEndCard(start: () => Promise<void>) {
+async function untilEndCard(start: () => Promise<void>, chapter?: string) {
   await start();
   // Mash until the end card is up (it plays "slice_end" over the overworld),
   // snapshot it, then press through to the title.
@@ -1174,7 +1326,7 @@ async function untilEndCard(start: () => Promise<void>) {
     if (!sawCard && ctx().audio.current() === "slice_end") {
       sawCard = true;
       await sleep(4000); // fade in from white, then the title types itself out
-      beat("TO BE CONTINUED card", flag("slice_done"));
+      beat(chapter ? `${chapter}: TO BE CONTINUED card` : "TO BE CONTINUED card", flag("slice_done"));
       await sleep(1500); // the card ignores input for its first 4 s
     }
     if (sawCard) {
@@ -1187,7 +1339,7 @@ async function untilEndCard(start: () => Promise<void>) {
     await press(pendingNo ? "b" : "a");
   }
   await sleep(2000);
-  beat("back at the title", !ow() && stack().length >= 1);
+  beat(chapter ? `${chapter}: back at the title` : "back at the title", !ow() && stack().length >= 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -1457,7 +1609,10 @@ export async function run(suite: string) {
   const starter = (p.get("starter") as "oak" | "chili" | "lily") || "oak";
   try {
     if (suite === "full") {
-      if (await newGameFromTitle()) await storyPlaythrough({ boost, starter });
+      if (await newGameFromTitle()) {
+        await storyPlaythrough({ boost, starter });
+        await chapter5();
+      }
     } else if (suite === "story") {
       // From a ?dev=world&play=new jump-in.
       await waitFor(() => !!ow(), 60000);

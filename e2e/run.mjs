@@ -8,12 +8,16 @@ const args = process.argv.slice(2);
 let speed = 8;
 let seed = 1;
 let headed = false;
+let allowTodo = false; // --allow-placeholders: tolerate TODO(text) dialogue (the ch5 branch only, until the writing pass)
+let timeoutMin = 0;
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--headed") headed = true;
+  else if (args[i] === "--allow-placeholders") allowTodo = true;
+  else if (args[i] === "--timeout-min" && /^\d+$/.test(args[i + 1] ?? "")) timeoutMin = Number(args[++i]);
   else if (args[i] === "--speed" && /^\d+$/.test(args[i + 1] ?? "")) speed = Number(args[++i]);
   else if (args[i] === "--seed" && /^\d+$/.test(args[i + 1] ?? "")) seed = Number(args[++i]);
   else {
-    console.error("Usage: npm run e2e -- [--speed N] [--seed N] [--headed] (speed: 1–16; seed: 0–4294967295)");
+    console.error("Usage: npm run e2e -- [--speed N] [--seed N] [--headed] [--allow-placeholders] [--timeout-min N] (speed: 1–16; seed: 0–4294967295)");
     process.exit(1);
   }
 }
@@ -27,7 +31,8 @@ if (!Number.isInteger(speed) || speed < 1 || speed > 16) {
 }
 
 const started = performance.now();
-const timeoutMs = Math.max(10 * 60_000, 45 * 60_000 / speed);
+// The full suite grows each chapter (73 beats through Chapter 5): about 11 min at speed 8.
+const timeoutMs = timeoutMin ? timeoutMin * 60_000 : Math.max(20 * 60_000, 90 * 60_000 / speed);
 const reportPath = new URL("./last-report.json", import.meta.url);
 const abort = new AbortController();
 let server;
@@ -69,7 +74,7 @@ try {
   abort.signal.throwIfAborted();
   const address = server.httpServer.address();
   if (!address || typeof address === "string") throw new Error("Vite did not bind a TCP port");
-  const url = `http://127.0.0.1:${address.port}/?e2e=full&timer&speed=${speed}&seed=${seed}&time=day`;
+  const url = `http://127.0.0.1:${address.port}/?e2e=full&timer&speed=${speed}&seed=${seed}&time=day${allowTodo ? "&allowTodo" : ""}`;
   console.log(`Game: ${url}`);
   browser = await chromium.launch({ headless: !headed });
   abort.signal.throwIfAborted();
@@ -86,7 +91,7 @@ try {
     await sleep(1000, undefined, { signal: abort.signal });
   }
   const failures = report.beats.filter((b) => !b.ok).length;
-  if (report.beats.length !== 46) runnerIssues.push(`Expected all 46 beats; received ${report.beats.length}`);
+  if (report.beats.length !== 73) runnerIssues.push(`Expected all 73 beats; received ${report.beats.length}`);
   process.exitCode = failures === 0 && report.issues.length === 0 && runnerIssues.length === 0 ? 0 : 1;
 } catch (error) {
   runnerIssues.push(error.stack ?? String(error));
