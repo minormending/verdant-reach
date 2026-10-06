@@ -3,6 +3,21 @@
 // speed: roughly the former 60 taps at speed 1 (120 ms + tap + 40 ms gap).
 export const NO_PROGRESS_MS = 12_000;
 
+/** Only a live battle gets extra presses. Dialogue/menus retain their caller's
+ * limit, and each battle has a hard cap as well as the wall-clock watchdog. */
+export class AdvanceBudget {
+  private ordinary = 0;
+  private battles = new Map<object, number>();
+  constructor(private maxOrdinary: number, private maxBattle = 3000) {}
+
+  spend(battle: object | null): boolean {
+    if (!battle) return this.ordinary++ < this.maxOrdinary;
+    const presses = this.battles.get(battle) ?? 0;
+    this.battles.set(battle, presses + 1);
+    return presses < this.maxBattle;
+  }
+}
+
 export class ProgressWatchdog {
   private signature: string | undefined;
   private changedAt = 0;

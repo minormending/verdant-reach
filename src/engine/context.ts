@@ -10,6 +10,7 @@ import { createBattleScene } from "../battle";
 import { createScreens } from "../screens";
 import { createUiKit } from "../ui/kit";
 import { createSave, newGameState } from "../save";
+import { devSeed, randomStream } from "./random";
 
 /** Play time only accrues while the overworld (or something above it) is running. */
 export const playClock = { running: false };
@@ -32,15 +33,26 @@ function timeOverride(): TimeOfDay | null {
 
 export function createGameContext(deps: { input: Input; scenes: SceneStack; assets: Assets }): GameContext {
   const override = timeOverride();
+  const seed = devSeed();
+  const battleStreams = new Map<string, () => number>();
   const ctx = {
     ...deps,
     state: undefined as unknown as GameState,
     data: DATA,
     world: WORLD,
     audio: createAudio(),
-    rng: Math.random,
+    rng: seed === null ? Math.random : randomStream(seed, "world"),
     timeOfDay: (): TimeOfDay => override ?? timeOfDayFor(new Date().getHours()),
-    battle: (req) => deps.scenes.run((done) => createBattleScene(ctx, req, done)),
+    battle: (req) => deps.scenes.run((done) => {
+      if (seed === null) return createBattleScene(ctx, req, done);
+      // Each opponent has a stream, independent of overworld idle time and
+      // incidental wild battles. Repeated fights continue that stream.
+      const key = req.kind === "trainer" ? `trainer:${req.trainer}`
+        : `wild:${req.wild?.species}:${req.wild?.level}`;
+      let rng = battleStreams.get(key);
+      if (!rng) { rng = randomStream(seed, `battle:${key}`); battleStreams.set(key, rng); }
+      return createBattleScene({ ...ctx, rng }, req, done);
+    }),
   } as GameContext;
   ctx.ui = createUiKit(ctx);
   ctx.screens = createScreens(ctx);

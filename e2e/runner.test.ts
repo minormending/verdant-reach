@@ -18,7 +18,7 @@ afterEach(() => {
   vi.doUnmock("node:fs/promises");
 });
 
-async function runMocked(options: { failBeat?: boolean; issue?: boolean; beats?: number; startupError?: boolean; headed?: boolean } = {}) {
+async function runMocked(options: { failBeat?: boolean; issue?: boolean; beats?: number; startupError?: boolean; headed?: boolean; seed?: number } = {}) {
   const report = {
     suite: "full", finished: true,
     beats: Array.from({ length: options.beats ?? 46 }, (_, i) => ({ name: `beat ${i}`, t: i, ok: !(options.failBeat && i === 0) })),
@@ -38,6 +38,7 @@ async function runMocked(options: { failBeat?: boolean; issue?: boolean; beats?:
   vi.doMock("vite", () => ({ createServer }));
   vi.doMock("playwright", () => ({ chromium: { launch } }));
   if (options.headed) process.argv.push("--headed", "--speed", "6");
+  if (options.seed !== undefined) process.argv.push("--seed", String(options.seed));
   const interruptsBefore = process.listenerCount("SIGINT");
   const runner = "./run.mjs";
   await import(runner);
@@ -48,7 +49,7 @@ async function runMocked(options: { failBeat?: boolean; issue?: boolean; beats?:
   if (!options.startupError) {
     expect(browser.close).toHaveBeenCalledOnce();
     expect(createServer.mock.calls[0][0].server.port).toBe(0);
-    expect(page.goto).toHaveBeenCalledWith(`http://127.0.0.1:43210/?e2e=full&timer&speed=${options.headed ? 6 : 8}`);
+    expect(page.goto).toHaveBeenCalledWith(`http://127.0.0.1:43210/?e2e=full&timer&speed=${options.headed ? 6 : 8}&seed=${options.seed ?? 1}&time=day`);
   }
   return { saved, launch };
 }
@@ -59,7 +60,17 @@ it("saves the full report and succeeds only for all 46 passing beats", async () 
   expect(saved.finished).toBe(true);
   expect(saved.beats).toHaveLength(46);
   expect(saved.runner.issues).toEqual([]);
+  expect(saved.seed).toBe(1);
+  expect(saved.runner.seed).toBe(1);
   expect(launch).toHaveBeenCalledWith({ headless: true });
+});
+
+it.each([0, 42, 4294967295])("records override seed %i for replay", async (seed) => {
+  const { saved } = await runMocked({ seed });
+  expect(process.exitCode).toBe(0);
+  expect(saved.seed).toBe(seed);
+  expect(saved.runner.seed).toBe(seed);
+  expect(saved.runner.time).toBe("day");
 });
 
 it.each([{ failBeat: true }, { issue: true }, { beats: 45 }])("fails an unsuccessful or incomplete report: %j", async (options) => {
@@ -80,4 +91,13 @@ it("saves a diagnostic report and closes its server on startup failure", async (
   expect(saved.finished).toBe(false);
   expect(saved.runner.issues[0]).toContain("listen EPERM");
   expect(launch).not.toHaveBeenCalled();
+});
+
+it.each(["-1", "1.5", "abc", "4294967296", "9007199254740993"])("rejects invalid seed %s before starting", async (seed) => {
+  process.argv.push("--seed", seed);
+  vi.spyOn(process, "exit").mockImplementation(() => { throw new Error("exit 1"); });
+  const runner = "./run.mjs";
+  await expect(import(runner)).rejects.toThrow("exit 1");
+  expect(process.exit).toHaveBeenCalledWith(1);
+  expect(console.error).toHaveBeenCalled();
 });

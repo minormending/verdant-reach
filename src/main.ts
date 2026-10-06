@@ -7,6 +7,7 @@ import type { GameContext, Scene } from "./contracts";
 import { uiPath } from "./contracts";
 import { createAssets, createCanvas, createInput, createSceneStack, runLoop } from "./engine/core";
 import { createGameContext, playClock } from "./engine/context";
+import { installDevRandom } from "./engine/random";
 import { setAudioSuspended } from "./audio";
 import {
   createLoadingScene, createPause, createShell, installErrorScreen, pauseOnFocusLoss, platformFlags,
@@ -15,6 +16,7 @@ import {
 const devModules = import.meta.glob<{ default: (ctx: GameContext) => Scene | Promise<Scene> }>("./*/dev.ts");
 
 async function boot() {
+  installDevRandom();
   const { canvas, g } = createCanvas();
   const flags = platformFlags();
   let ticks = 0;
