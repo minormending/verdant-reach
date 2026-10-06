@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "lodgepole_pine",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#885028", "#58a840", "#f8f8f8"],
+  "sport": ["#181818", "#805830", "#d8c030", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release.",
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  }
+  "anim": { "intro": [[0, 6], [1, 14], [2, 4], [3, 4], [2, 16], [3, 8], [0, 6]], "idle": [[0, 140], [3, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/lodgepole.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/lodgepole.py" },
+  "notes": "Crystal rule. LOOMING, but straight and narrow as the real tree: a self-pruned bare bole on two root feet, a short narrow crown of needle tufts reaching further on the foe side, the leader bent toward it, closed cones clinging to the trunk. Gesture: the crown leans back, then every tuft shivers and the cones crack open, settle. Sport: 'Chief Joseph' (golden winter needles)."
 }
