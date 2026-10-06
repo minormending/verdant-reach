@@ -300,6 +300,7 @@ export const REQUIRED_ITEMS = [
   "syrup_jar",                                // key item for the SAP RUN quest
   "pruning_shears",                           // key item: unlocks the PRUNE field move
   "foxfire_lantern",                          // key item: automatically lights dark maps
+  "lily_raft",                                // key item: ride water with RAFT
   "saxifrage",                                // key item: unlocks UPROOT boulder pushes
   "fan_letter", "signed_photo",               // key items for the FAN MAIL quest
 ] as const;

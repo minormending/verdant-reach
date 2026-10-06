@@ -156,6 +156,7 @@ export function normalizeState(raw: unknown, fallback: GameState): GameState | n
       caught: arr(r.herbarium?.caught, []),
     },
     position: { ...r.position, facing: r.position.facing ?? "down" },
+    ...(typeof r.rafting === "boolean" ? { rafting: r.rafting } : {}),
     heal: r.heal && MAP_IDS.includes(r.heal.map) ? r.heal : fallback.heal,
     playTimeMs: typeof r.playTimeMs === "number" ? r.playTimeMs : 0,
     options: r.options ? cleanOptions(r.options, fallback.options) : fallback.options,

@@ -23,6 +23,25 @@ function memoryStorage() {
 }
 
 describe("save", () => {
+  it("round-trips a player rafting on water and keeps older saves unmounted", () => {
+    const storage = memoryStorage();
+    const state = newGameState({ world });
+    state.playerName = "SAGE";
+    state.rafting = true;
+    state.position = { map: "route_1", x: 2, y: 3, facing: "right" };
+    state.bag.lily_raft = 1;
+    const save = createSave(() => state, storage, () => newGameState({ world }));
+    save.write();
+    expect(save.read()).toEqual(state);
+    state.rafting = false;
+    save.write();
+    expect(save.read()!.rafting).toBe(false);
+    delete state.rafting;
+    save.write();
+    expect(save.read()).not.toHaveProperty("rafting");
+    expect(normalizeState({ ...state, rafting: "yes" }, state)).not.toHaveProperty("rafting");
+  });
+
   it("builds a new game at the world's start with the home as heal point", () => {
     const s = newGameState({ world });
     expect(s.position).toEqual({ map: "herbarium_roof", x: 4, y: 6, facing: "up" });

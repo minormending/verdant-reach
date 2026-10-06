@@ -4,7 +4,7 @@
 import {
   FIELD_MOVES, JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX,
 } from "../contracts";
-import type { Ambient, Cond, MapDef, MapId, NpcDef, ScriptCmd, TileKey, WorldData } from "../contracts";
+import type { Ambient, Cond, MapDef, MapId, NpcDef, ScriptCmd, TileKey, TileProps, WorldData } from "../contracts";
 import { pickupItem } from "./build";
 import { DATA } from "../data";
 import { glowField, glowLamps } from "../overworld/glow";
@@ -67,11 +67,13 @@ export interface Grid {
   /** Solid because of a structure footprint (doors excluded). */
   structureSolid(x: number, y: number): boolean;
   doors: { x: number; y: number; key: string }[];
+  /** Water is traversable only after the LILY RAFT is obtainable. */
+  rafting?: boolean;
 }
 
 /** The map's walk grid. With `pruned`, every prunable tile reads as a cut stump
  *  (the world once the PRUNING SHEARS are in hand). */
-export function grid(map: MapDef, opts: { pruned?: boolean } = {}): Grid {
+export function grid(map: MapDef, opts: { pruned?: boolean; rafting?: boolean } = {}): Grid {
   const h = map.tiles.length;
   const w = map.tiles[0]?.length ?? 0;
   const solid = new Set<string>();
@@ -87,7 +89,7 @@ export function grid(map: MapDef, opts: { pruned?: boolean } = {}): Grid {
     if (def.door) doors.push({ x: s.x + def.door.x, y: s.y + def.door.y, key: s.key });
   }
   return {
-    w, h, doors,
+    w, h, doors, rafting: opts.rafting,
     tile(x, y) {
       if (x < 0 || y < 0 || x >= w || y >= h) return undefined;
       const t = map.legend[map.tiles[y][x]];
@@ -97,10 +99,12 @@ export function grid(map: MapDef, opts: { pruned?: boolean } = {}): Grid {
   };
 }
 
+const waterTile = (t: TileKey | undefined): boolean => !!t && !!(TILES[t] as TileProps).water;
+
 export function walkable(g: Grid, x: number, y: number): boolean {
   const t = g.tile(x, y);
   if (!t) return false;
-  return TILES[t].walk && !g.structureSolid(x, y);
+  return (TILES[t].walk || (!!g.rafting && waterTile(t))) && !g.structureSolid(x, y);
 }
 
 const DIRS = [
@@ -117,14 +121,15 @@ export function flood(g: Grid, starts: { x: number; y: number }[]): Set<string> 
       queue.push([s.x, s.y]);
     }
   }
-  while (queue.length) {
-    const [x, y] = queue.shift()!;
+  for (let head = 0; head < queue.length; head++) {
+    const [x, y] = queue[head];
     for (const [dx, dy] of DIRS) {
       let nx = x + dx;
       let ny = y + dy;
       const t = g.tile(nx, ny);
       if (t === "ledge_down") {
-        if (dy !== 1) continue;
+        const from = g.tile(x, y);
+        if (dy !== 1 || (g.rafting && waterTile(from))) continue;
         ny += 1; // hop over
       }
       if (!walkable(g, nx, ny)) continue;
@@ -145,10 +150,11 @@ export function canReach(g: Grid, targets: { x: number; y: number }[]): Set<stri
     if (!seen.has(k) && walkable(g, x, y)) { seen.add(k); queue.push([x, y]); }
   };
   for (const t of targets) visit(t.x, t.y);
-  while (queue.length) {
-    const [x, y] = queue.shift()!;
+  for (let head = 0; head < queue.length; head++) {
+    const [x, y] = queue[head];
     for (const [dx, dy] of DIRS) visit(x - dx, y - dy);       // a plain step into (x, y)
-    if (g.tile(x, y - 1) === "ledge_down") visit(x, y - 2);  // a hop down over the ledge
+    const from = g.tile(x, y - 2);
+    if (g.tile(x, y - 1) === "ledge_down" && !(g.rafting && waterTile(from))) visit(x, y - 2);  // a hop down over the ledge
   }
   return seen;
 }
@@ -173,178 +179,161 @@ function mapScripts(world: WorldData, map: MapDef): Set<string> {
   return out;
 }
 
-/**
- * Required progress never needs PRUNE. With every bramble solid, walk the
- * world from the new game through warps whose tiles are reachable, then check:
- *  - every map is reached, and the map that hands out the PRUNING SHEARS is;
- *  - outside PRUNE_OPTIONAL_MAPS, every warp, trigger, sign and NPC (bar item
- *    pickups and bushes) is reachable from the ways in, without cutting;
- *  - no prunable tile stands on a warp, door or story trigger.
- */
-export function checkProgressWithoutPrune(world: WorldData): string[] {
-  const errs: string[] = [];
-  const entries = new Map<MapId, { x: number; y: number }[]>();
-  const queue: MapId[] = [];
-  const add = (m: MapId, x: number, y: number) => {
-    const list = entries.get(m) ?? [];
-    if (list.some((e) => e.x === x && e.y === y)) return;
-    list.push({ x, y });
-    entries.set(m, list);
-    queue.push(m);
-  };
-  add(world.newGame.map, world.newGame.x, world.newGame.y);
-  // Scripted warps (cutscenes) are story entries.
-  for (const cmds of Object.values(world.scripts)) eachCmd(cmds, (c) => { if (c.op === "warp") add(c.to, c.x, c.y); });
-  while (queue.length) {
-    const id = queue.shift()!;
-    const map = world.maps[id];
-    if (!map) continue;
-    const reach = flood(grid(map), entries.get(id)!);
-    for (const wp of map.warps) if (reach.has(`${wp.x},${wp.y}`)) add(wp.to, wp.toX, wp.toY);
+/** Each gate declares its terrain and content policy; acquisition and script
+ *  dependency handling are shared. Adding a gate needs only another entry. */
+interface ProgressGate {
+  id: string;
+  name: string;
+  item: string;
+  flag?: string;
+  policy: "optional" | "required" | "content";
+  affects(map: MapDef): boolean;
+  terrain(map: MapDef, g: Grid, enabled: boolean): Grid;
+  reach?(map: MapDef, g: Grid, starts: Point[]): Set<string>;
+  path?: string;
+  rooms?: string;
+  optionalMaps?: readonly MapId[];
+  resetPaths?: boolean;
+}
+type Point = { x: number; y: number };
+
+/** Adapt the composed terrain for the runtime movement solver. In particular,
+ *  darkness and uncut brambles remain solid during a boulder-layout search. */
+function boulderReach(map: MapDef, g: Grid, starts: Point[]): Set<string> {
+  const chars = new Map<TileKey, string>();
+  const legend: MapDef["legend"] = {};
+  const tiles = Array.from({ length: g.h }, (_, y) => Array.from({ length: g.w }, (_, x) => {
+    const tile = g.tile(x, y) ?? "void";
+    let ch = chars.get(tile);
+    if (!ch) { ch = String.fromCharCode(65 + chars.size); chars.set(tile, ch); legend[ch] = tile; }
+    return ch;
+  }).join(""));
+  const runtime = buildMap({ ...map, tiles, legend });
+  const stones = map.npcs.filter((n) => n.pushable);
+  const reached = new Set<string>();
+  for (const start of starts) {
+    for (const tile of reachableBoulderTiles(runtime, stones, start, { rafting: g.rafting })) reached.add(tile);
   }
-
-  for (const id of MAP_IDS) {
-    const map = world.maps[id];
-    if (!map) continue;
-    const where = `[${id}] without PRUNE:`;
-    const starts = entries.get(id);
-    if (!starts) { errs.push(`${where} the map can't be reached`); continue; }
-    const g = grid(map);
-    for (const wp of map.warps) if (prunable(g.tile(wp.x, wp.y))) errs.push(`${where} a bramble sits on the warp at ${wp.x},${wp.y}`);
-    if (PRUNE_OPTIONAL_MAPS.includes(id)) continue;
-    // Only things reachable once brambles are cut are reported here (the rest
-    // are plain reachability errors in validateWorld).
-    const reach = flood(g, starts);
-    const reachP = flood(grid(map, { pruned: true }), starts);
-    const talk = (r: Set<string>) => (x: number, y: number) => DIRS.some(([dx, dy]) =>
-      r.has(`${x + dx},${y + dy}`) || (g.tile(x + dx, y + dy) === "counter" && r.has(`${x + 2 * dx},${y + 2 * dy}`)));
-    const behind = (now: boolean, later: boolean) => !now && later;
-    for (const wp of map.warps) {
-      if (behind(reach.has(`${wp.x},${wp.y}`), reachP.has(`${wp.x},${wp.y}`))) errs.push(`${where} warp at ${wp.x},${wp.y} is behind brambles`);
-    }
-    for (const t of map.triggers) {
-      if (isTalkTrigger(g, t)) {
-        if (behind(talk(reach)(t.x, t.y), talk(reachP)(t.x, t.y))) errs.push(`${where} trigger ${t.script} is behind brambles`);
-        continue;
-      }
-      const cells: string[] = [];
-      for (let dy = 0; dy < (t.h ?? 1); dy++) for (let dx = 0; dx < (t.w ?? 1); dx++) cells.push(`${t.x + dx},${t.y + dy}`);
-      if (behind(cells.some((k) => reach.has(k)), cells.some((k) => reachP.has(k)))) {
-        errs.push(`${where} trigger ${t.script} at ${t.x},${t.y} is behind brambles`);
-      }
-    }
-    for (const s of map.signs) {
-      if (behind(talk(reach)(s.x, s.y), talk(reachP)(s.x, s.y))) errs.push(`${where} sign at ${s.x},${s.y} is behind brambles`);
-    }
-    for (const n of map.npcs) {
-      if (n.sprite === "item_pickup" || n.sprite === "harvest_bush" || isBoarder(n)) continue;
-      if (behind(talk(reach)(n.x, n.y), talk(reachP)(n.x, n.y))) errs.push(`${where} npc ${n.id} is behind brambles`);
-    }
-  }
-
-  // The PRUNING SHEARS must come from a map you can reach without them.
-  const givers = MAP_IDS.filter((id) => {
-    const m = world.maps[id];
-    if (!m) return false;
-    let gives = false;
-    for (const sid of mapScripts(world, m)) eachCmd(world.scripts[sid], (c) => {
-      if (c.op === "giveItem" && c.item === FIELD_MOVES.prune.item) gives = true;
-    });
-    return gives;
-  });
-  if (!givers.length) errs.push(`no map hands out the ${FIELD_MOVES.prune.item}`);
-  for (const id of givers) if (!entries.has(id)) errs.push(`[${id}] gives the ${FIELD_MOVES.prune.item} but can't be reached without PRUNE`);
-  return errs;
+  return reached;
 }
 
-/** GLOW progression has two stages. Before the lantern, only stationary lamp
- *  light counts (the player's tiny moving light is not a safe story route).
- *  Only scripts at reachable interaction points can make the lantern
- *  obtainable; dark rooms become reachable afterwards. Positive story-flag
- *  prerequisites must themselves be obtainable on those routes. Explicit
- *  got_lantern:false interactions must still be possible in the lit hall. */
-export function checkProgressWithoutLantern(world: WorldData): string[] {
-  return checkItemProgress(world, "glow");
-}
-
-/** Required boulder paths open only after SAXIFRAGE is obtainable from an
- *  accessible script. Afterwards, BFS checks the actual starting layout;
- *  boulders are never simply deleted to prove a path. */
-export function checkProgressWithoutSaxifrage(world: WorldData): string[] {
-  return checkItemProgress(world, "uproot");
-}
-
-/** Shared two-stage acquisition check: follow reachable scripts and the least
- *  fixed point of their positive flag prerequisites before unlocking paths. */
-function checkItemProgress(world: WorldData, system: "glow" | "uproot"): string[] {
-  const flag = system === "glow" ? "got_lantern" : "got_saxifrage";
-  const item = system === "glow" ? "foxfire_lantern" : "saxifrage";
-  const affects = (m: MapDef) => system === "glow" ? !!m.dark : m.npcs.some((n) => n.pushable);
-  const path = system === "glow" ? "a lamp-lit path" : "a path without pushing boulders";
-  const maps = Object.values(world.maps);
-  if (!maps.some(affects)) return [];
-  const errs: string[] = [];
-  const available = (when: Cond | undefined, enabled: boolean) =>
-    !when?.some((c) => c.flag === flag && c.is !== enabled);
-  const beforeOnly = (when: Cond | undefined) => when?.some((c) => c.flag === flag && !c.is);
-
-  const grids = new Map(maps.map((m) => [m.id, grid(m)]));
-  const lockedGrids = new Map(maps.map((m) => {
-    const g = grids.get(m.id)!;
-    if (system === "uproot") {
+const PROGRESS_GATES: readonly ProgressGate[] = [
+  {
+    id: "prune", name: "PRUNE", item: FIELD_MOVES.prune.item, policy: "optional",
+    affects: (m) => m.tiles.some((row) => [...row].some((ch) => prunable(m.legend[ch]))),
+    terrain: (_m, g, enabled) => enabled ? { ...g, tile: (x, y) => prunable(g.tile(x, y)) ? "bramble_stump" : g.tile(x, y) } : g,
+    optionalMaps: PRUNE_OPTIONAL_MAPS,
+  },
+  {
+    id: "raft", name: "RAFT", item: "lily_raft", flag: "got_raft", policy: "content",
+    affects: (m) => m.tiles.some((row) => [...row].some((ch) => waterTile(m.legend[ch]))),
+    terrain: (_m, g, enabled) => ({ ...g, rafting: enabled }),
+    path: "a land path",
+  },
+  {
+    id: "glow", name: "GLOW", item: "foxfire_lantern", flag: "got_lantern", policy: "required",
+    affects: (m) => !!m.dark,
+    terrain: (m, g, enabled) => {
+      if (!m.dark || enabled) return g;
+      const bandAt = glowField(null, glowLamps(g.w, g.h, g.tile), false);
+      // Even an unlit ledge is solid; a lit landing cannot justify a dark hop.
+      return { ...g, tile: (x, y) => bandAt(x, y) === "dark" ? undefined : g.tile(x, y) };
+    },
+    path: "a lamp-lit path", rooms: "dark rooms",
+  },
+  {
+    id: "uproot", name: "UPROOT", item: "saxifrage", flag: "got_saxifrage", policy: "required",
+    affects: (m) => m.npcs.some((n) => n.pushable),
+    terrain: (m, g, enabled) => {
+      if (enabled) return g;
       const stones = new Set(m.npcs.filter((n) => n.pushable).map((n) => `${n.x},${n.y}`));
-      return [m.id, { ...g, structureSolid: (x: number, y: number) => g.structureSolid(x, y) || stones.has(`${x},${y}`) }] as const;
-    }
-    const bandAt = glowField(null, glowLamps(g.w, g.h, g.tile), false);
-    // Dark ledges also remain solid: hopping across an unlit tile is not a
-    // path through lit tiles, even when its landing happens to be lit.
-    const locked: Grid = { ...g, tile: (x, y) => bandAt(x, y) === "dark" ? undefined : g.tile(x, y) };
-    return [m.id, m.dark ? locked : g] as const;
-  }));
-  const canTalk = (g: Grid, reach: Set<string>, x: number, y: number) =>
-    !!g.tile(x, y) && DIRS.some(([dx, dy]) =>
-      reach.has(`${x + dx},${y + dy}`) || (g.tile(x + dx, y + dy) === "counter" && reach.has(`${x + 2 * dx},${y + 2 * dy}`)));
-  const triggerReached = (base: Grid, g: Grid, reach: Set<string>, t: MapDef["triggers"][number]) => {
-    // Use the ordinary grid to recognise a talk trigger; darkness must not
-    // turn a walkable trigger into an interactable wall.
-    if (isTalkTrigger(base, t)) return canTalk(g, reach, t.x, t.y);
-    for (let dy = 0; dy < (t.h ?? 1); dy++) for (let dx = 0; dx < (t.w ?? 1); dx++) {
-      if (reach.has(`${t.x + dx},${t.y + dy}`)) return true;
-    }
-    return false;
-  };
+      return { ...g, structureSolid: (x, y) => g.structureSolid(x, y) || stones.has(`${x},${y}`) };
+    },
+    reach: boulderReach,
+    path: "a path without pushing boulders", rooms: "boulder rooms", resetPaths: true,
+  },
+];
 
-  const reachFrom = (m: MapDef, g: Grid, starts: { x: number; y: number }[], enabled: boolean) => {
-    if (system !== "uproot" || !enabled || !affects(m)) return flood(g, starts);
-    const reach = new Set<string>();
-    const runtime = buildMap(m);
-    const stones = m.npcs.filter((n) => n.pushable);
-    for (const start of starts) for (const tile of reachableBoulderTiles(runtime, stones, start)) reach.add(tile);
+function canTalk(g: Grid, reach: Set<string>, x: number, y: number): boolean {
+  return !!g.tile(x, y) && DIRS.some(([dx, dy]) =>
+    reach.has(`${x + dx},${y + dy}`) || (g.tile(x + dx, y + dy) === "counter" && reach.has(`${x + 2 * dx},${y + 2 * dy}`)));
+}
+
+function triggerReached(base: Grid, g: Grid, reach: Set<string>, t: MapDef["triggers"][number]): boolean {
+  // Darkness must not turn a walkable trigger into an interactable wall.
+  if (isTalkTrigger(base, t)) return canTalk(g, reach, t.x, t.y);
+  for (let dy = 0; dy < (t.h ?? 1); dy++) for (let dx = 0; dx < (t.w ?? 1); dx++) {
+    if (reach.has(`${t.x + dx},${t.y + dy}`)) return true;
+  }
+  return false;
+}
+
+/** One least-fixed-point explorer for all items, flags and reachable scripts.
+ *  A blocked gate records grants without enabling its terrain: this proves
+ *  acquisition and explicit pre-item interactions while other gates advance.
+ *  Entries/effects persist across acquisition, including pre-item cutscenes. */
+function progress(world: WorldData) {
+  const maps = Object.values(world.maps);
+  const byFlag = new Map(PROGRESS_GATES.filter((g) => g.flag).map((g) => [g.flag!, g]));
+  const byItem = new Map(PROGRESS_GATES.map((g) => [g.item, g]));
+  const bases = new Map(maps.map((m) => [m.id, grid(m)]));
+  const affected = new Map(PROGRESS_GATES.map((gate) => [gate.id, new Set(maps.filter(gate.affects).map((m) => m.id))]));
+  const terrainCache = new Map<string, Grid>();
+  const reachCache = new Map<string, Set<string>>();
+  const signature = (enabled: ReadonlySet<string>) => PROGRESS_GATES.map((g) => enabled.has(g.id) ? "1" : "0").join("");
+  // Unrelated acquisitions cannot change this map's geometry. Reuse floods
+  // across both phases and all gate checks, including large outdoor maps.
+  const terrainSignature = (m: MapDef, enabled: ReadonlySet<string>) =>
+    PROGRESS_GATES.map((gate) => affected.get(gate.id)!.has(m.id) && enabled.has(gate.id) ? "1" : "0").join("");
+  const terrain = (m: MapDef, enabled: ReadonlySet<string>) => {
+    const key = `${m.id}:${terrainSignature(m, enabled)}`;
+    let g = terrainCache.get(key);
+    if (!g) {
+      g = bases.get(m.id)!;
+      for (const gate of PROGRESS_GATES) {
+        if (affected.get(gate.id)!.has(m.id)) g = gate.terrain(m, g, enabled.has(gate.id));
+      }
+      terrainCache.set(key, g);
+    }
+    return g;
+  };
+  const reachFrom = (m: MapDef, enabled: ReadonlySet<string>, starts: Point[]) => {
+    const key = `${m.id}:${terrainSignature(m, enabled)}:${starts.map((s) => `${s.x},${s.y}`).sort().join(";")}`;
+    let reach = reachCache.get(key);
+    if (!reach) {
+      const g = terrain(m, enabled);
+      const solver = PROGRESS_GATES.find((gate) => gate.reach && enabled.has(gate.id) && affected.get(gate.id)!.has(m.id));
+      reach = solver?.reach ? solver.reach(m, g, starts) : flood(g, starts);
+      reachCache.set(key, reach);
+    }
     return reach;
   };
 
-  function explore(enabled: boolean, initialFlags: ReadonlySet<string> = new Set(), initialEntries?: Map<MapId, { x: number; y: number }[]>) {
-    const entries = new Map<MapId, { x: number; y: number }[]>();
+  function explore(blocked?: ProgressGate) {
+    const enabled = new Set<string>();
+    const granted = new Set<string>();
+    const flags = new Set<string>();
+    const entries = new Map<MapId, Point[]>();
     const reaches = new Map<MapId, Set<string>>();
     const queue: MapId[] = [];
-    let obtainable = false;
-    const flags = new Set(initialFlags);
-    if (enabled) flags.add(flag);
-    type Effect = { needs: string[]; flag?: string; granted?: boolean; warp?: { to: MapId; x: number; y: number } };
-    const effects: Effect[] = [];
-    const needs = (when: Cond | undefined) => (when ?? []).filter((c) => c.is && c.flag !== flag).map((c) => c.flag);
+    const pending = new Set<MapId>();
+    const enqueue = (id: MapId) => { if (!pending.has(id)) { pending.add(id); queue.push(id); } };
     const add = (id: MapId, x: number, y: number) => {
       const list = entries.get(id) ?? [];
       if (list.some((s) => s.x === x && s.y === y)) return;
-      entries.set(id, [...list, { x, y }]);
-      queue.push(id);
+      entries.set(id, [...list, { x, y }]); enqueue(id);
     };
-    // Follow calls and nested branches, but never use an item-gated branch
-    // to prove the item itself obtainable. Calls may be recursive.
+    const available = (when: Cond | undefined) => !when?.some((c) => {
+      const gate = byFlag.get(c.flag);
+      return gate && c.is !== enabled.has(gate.id);
+    });
+    const needs = (when: Cond | undefined) => (when ?? []).filter((c) => c.is && !byFlag.has(c.flag)).map((c) => c.flag);
+    type Effect = { needs: string[]; flag?: string; grant?: string; warp?: { to: MapId; x: number; y: number } };
+    const effects: Effect[] = [];
     const scriptsSeen = new Set<string>();
     const script = (sid: string | undefined, deps: string[] = [], stack: string[] = []) => {
       if (!sid || stack.includes(sid)) return;
-      const key = `${sid}:${[...new Set(deps)].sort().join(",")}`;
+      const key = `${sid}:${signature(enabled)}:${[...new Set(deps)].sort().join(",")}`;
       if (scriptsSeen.has(key)) return;
       scriptsSeen.add(key);
       commands(world.scripts[sid] ?? [], deps, [...stack, sid]);
@@ -353,26 +342,34 @@ function checkItemProgress(world: WorldData, system: "glow" | "uproot"): string[
       const branch = (cmds: ScriptCmd[], extra: string[] = []) => commands(cmds, [...deps, ...extra], stack);
       for (const c of cmds) {
         switch (c.op) {
-          case "giveItem": if (c.item === item && (c.qty ?? 1) > 0) effects.push({ needs: deps, granted: true }); break;
-          case "setFlag": if (c.value !== false) effects.push({ needs: deps, flag: c.flag }); break;
+          case "giveItem": {
+            const gate = byItem.get(c.item);
+            if (gate && (c.qty ?? 1) > 0) effects.push({ needs: deps, grant: gate.id });
+            break;
+          }
+          // Acquisition flags alone never stand in for an item grant.
+          case "setFlag": if (c.value !== false && !byFlag.has(c.flag)) effects.push({ needs: deps, flag: c.flag }); break;
           case "battle": effects.push({ needs: deps, flag: `beat_${c.trainer}` }); break;
           case "warp": effects.push({ needs: deps, warp: c }); break;
           case "call": script(c.script, deps, stack); break;
           case "if": {
-            if (available(c.when, enabled)) branch(c.then, needs(c.when));
-            // A conjunction's else is possible when any one condition fails.
-            // Ordinary false flags may hold before their eventual setters.
+            if (available(c.when)) branch(c.then, needs(c.when));
+            // A conjunction's else can run when any one condition fails.
             for (const v of c.when) {
-              if (v.flag === flag ? v.is !== enabled : true) {
-                branch(c.else ?? [], v.flag !== flag && !v.is ? [v.flag] : []);
+              const gate = byFlag.get(v.flag);
+              if (gate ? v.is !== enabled.has(gate.id) : true) {
+                branch(c.else ?? [], !gate && !v.is ? [v.flag] : []);
               }
             }
             break;
           }
-          case "ifHasItem":
-            if (c.item === item) branch(enabled ? c.then : c.else ?? []);
+          case "ifHasItem": {
+            const gate = byItem.get(c.item);
+            if (gate) branch(enabled.has(gate.id) ? c.then : c.else ?? []);
             else { branch(c.then); branch(c.else ?? []); }
             break;
+          }
+          case "trade": branch(c.then ?? []); branch(c.else ?? []); break;
           case "choice": c.branches.forEach((b) => branch(b)); break;
           case "yesno": branch(c.yes); branch(c.no); break;
           case "ifTime": case "ifLastBattle": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed":
@@ -381,82 +378,140 @@ function checkItemProgress(world: WorldData, system: "glow" | "uproot"): string[
       }
     };
     const resolve = () => {
-      // A least fixed point rejects a grant requiring a flag whose only setter
-      // is behind the item gate, or a flag that requires itself.
       let changed = true;
       while (changed) {
         changed = false;
         for (const e of effects) {
           if (!e.needs.every((f) => flags.has(f))) continue;
           if (e.flag && !flags.has(e.flag)) { flags.add(e.flag); changed = true; }
-          if (e.granted) obtainable = true;
+          if (e.grant) {
+            granted.add(e.grant);
+            if (e.grant !== blocked?.id && !enabled.has(e.grant)) {
+              enabled.add(e.grant); changed = true;
+              for (const id of entries.keys()) enqueue(id);
+            }
+          }
           if (e.warp) add(e.warp.to, e.warp.x, e.warp.y);
         }
       }
     };
     add(world.newGame.map, world.newGame.x, world.newGame.y);
-    for (const [id, starts] of initialEntries ?? []) for (const s of starts) add(id, s.x, s.y);
-    script(world.newGame.script);
-    resolve();
-    while (queue.length) {
-      const id = queue.shift()!;
+    script(world.newGame.script); resolve();
+    for (let head = 0; head < queue.length; head++) {
+      const id = queue[head]; pending.delete(id);
       const m = world.maps[id];
       if (!m) continue;
-      const g = (enabled ? grids : lockedGrids).get(id)!;
-      const reach = reachFrom(m, g, entries.get(id)!, enabled);
+      const g = terrain(m, enabled);
+      const reach = reachFrom(m, enabled, entries.get(id)!);
       reaches.set(id, reach);
       if (!reach.size) continue;
+      script(world.newGame.script);
       script(m.onEnter);
       for (const n of m.npcs) {
-        if (!available(n.visibleWhen, enabled) || !canTalk(g, reach, n.x, n.y)) continue;
+        if (!available(n.visibleWhen) || !canTalk(g, reach, n.x, n.y)) continue;
         script(n.script, needs(n.visibleWhen));
         if (n.trainer) effects.push({ needs: needs(n.visibleWhen), flag: `beat_${n.trainer}` });
       }
       for (const t of m.triggers) {
-        if (available(t.when, enabled) && triggerReached(grids.get(id)!, g, reach, t)) script(t.script, needs(t.when));
+        if (available(t.when) && triggerReached(bases.get(id)!, g, reach, t)) script(t.script, needs(t.when));
       }
-      resolve();
+      // These exits were reached with this terrain, before resolving new grants.
       for (const wp of m.warps) if (reach.has(`${wp.x},${wp.y}`)) add(wp.to, wp.toX, wp.toY);
+      resolve();
     }
-    return { reaches, obtainable, flags, entries };
+    return { enabled, granted, entries, reaches };
   }
 
-  const before = explore(false);
-  const after = before.obtainable ? explore(true, before.flags, before.entries) : before;
-  for (const m of maps.filter(affects)) {
-    const where = `[${m.id}] without ${system === "glow" ? "GLOW" : "UPROOT"}:`;
-    const g = grids.get(m.id)!;
-    const locked = lockedGrids.get(m.id)!;
-    const early = before.reaches.get(m.id) ?? new Set<string>();
-    const late = after.reaches.get(m.id) ?? new Set<string>();
-    const need = (ok: boolean, what: string, earlyOnly = false) => {
-      if (ok) return;
-      errs.push(system === "uproot" && before.obtainable && !earlyOnly
-        ? `${where} ${what} has no reachable path from its reset layout with got_saxifrage`
-        : `${where} ${what} needs ${path} before ${flag} is obtainable`);
-    };
-    // Explicit post-item story points still require an obtainable item, even
-    // when an immovable starting layout adds no tiles to the BFS's reach.
-    const requiredAfter = (when: Cond | undefined) =>
-      system === "uproot" && when?.some((c) => c.flag === flag && c.is);
-    for (const n of m.npcs) {
-      if (n.pushable || n.sprite === "item_pickup" || n.sprite === "harvest_bush" || isBoarder(n)) continue;
-      if (beforeOnly(n.visibleWhen)) need(canTalk(locked, early, n.x, n.y), `npc ${n.id}`, true);
-      else if (available(n.visibleWhen, before.obtainable) || requiredAfter(n.visibleWhen)) need(canTalk(before.obtainable ? g : locked, late, n.x, n.y), `npc ${n.id}`);
+  const after = explore();
+  const beforeCache = new Map<string, ReturnType<typeof explore>>();
+  const check = (gate: ProgressGate): string[] => {
+    if (gate.policy !== "optional" && !affected.get(gate.id)!.size) return [];
+    const before = beforeCache.get(gate.id) ?? (after.granted.has(gate.id) ? explore(gate) : after);
+    beforeCache.set(gate.id, before);
+    const errs: string[] = [];
+    const obtainable = before.granted.has(gate.id);
+    const beforeOnly = (when: Cond | undefined) => !!when?.some((c) => c.flag === gate.flag && !c.is);
+    const available = (when: Cond | undefined) => !when?.some((c) => c.flag === gate.flag && c.is !== obtainable);
+    for (const m of maps) {
+      if (gate.policy === "required" && !affected.get(gate.id)!.has(m.id)) continue;
+      const where = `[${m.id}] without ${gate.name}:`;
+      const early = before.reaches.get(m.id) ?? new Set<string>();
+      const late = after.reaches.get(m.id) ?? new Set<string>();
+      const locked = terrain(m, before.enabled);
+      const g = terrain(m, after.enabled);
+      const potentialEnabled = new Set(before.enabled).add(gate.id);
+      const potentialGrid = terrain(m, potentialEnabled);
+      const potential = reachFrom(m, potentialEnabled, (gate.policy === "content" ? after : before).entries.get(m.id) ?? []);
+      if (gate.policy === "optional") {
+        if (!before.entries.has(m.id)) { errs.push(`${where} the map can't be reached`); continue; }
+        for (const wp of m.warps) if (prunable(locked.tile(wp.x, wp.y))) errs.push(`${where} a bramble sits on the warp at ${wp.x},${wp.y}`);
+        if (gate.optionalMaps?.includes(m.id)) continue;
+      }
+      const need = (earlyOk: boolean, lateOk: boolean, possible: boolean, when: Cond | undefined, what: string) => {
+        if (gate.policy === "optional") {
+          if (!earlyOk && possible) errs.push(`${where} ${what} is behind brambles`);
+          return;
+        }
+        if (gate.policy === "content" && !possible) return; // Decorative water requires no raft.
+        const earlyOnly = beforeOnly(when);
+        if (gate.policy === "required" && !earlyOnly && !available(when) && !gate.resetPaths) return;
+        if (earlyOnly ? earlyOk : lateOk) return;
+        errs.push(gate.resetPaths && obtainable && !earlyOnly
+          ? `${where} ${what} has no reachable path from its reset layout with ${gate.flag}`
+          : `${where} ${what} needs ${gate.path} before ${gate.flag} is obtainable`);
+      };
+      for (const n of m.npcs) {
+        if (n.pushable) continue;
+        if (gate.policy !== "content" && (n.sprite === "item_pickup" || n.sprite === "harvest_bush" || isBoarder(n))) continue;
+        need(canTalk(locked, early, n.x, n.y), canTalk(g, late, n.x, n.y), canTalk(potentialGrid, potential, n.x, n.y), n.visibleWhen, `npc ${n.id}`);
+      }
+      for (const t of m.triggers) {
+        const base = bases.get(m.id)!;
+        need(triggerReached(base, locked, early, t), triggerReached(base, g, late, t), triggerReached(base, potentialGrid, potential, t), t.when, `trigger ${t.script}${gate.policy === "optional" && !isTalkTrigger(base, t) ? ` at ${t.x},${t.y}` : ""}`);
+      }
+      for (const wp of m.warps) need(early.has(`${wp.x},${wp.y}`), late.has(`${wp.x},${wp.y}`), potential.has(`${wp.x},${wp.y}`), undefined, `warp at ${wp.x},${wp.y}`);
+      if (gate.policy !== "required") {
+        for (const sign of m.signs) need(canTalk(locked, early, sign.x, sign.y), canTalk(g, late, sign.x, sign.y), canTalk(potentialGrid, potential, sign.x, sign.y), undefined, `sign at ${sign.x},${sign.y}`);
+      }
+      if (gate.policy === "content") {
+        for (const h of m.hidden ?? []) need(canTalk(locked, early, h.x, h.y), canTalk(g, late, h.x, h.y), canTalk(potentialGrid, potential, h.x, h.y), undefined, `hidden ${h.item}`);
+      }
+      if (gate.rooms && !obtainable && [...potential].some((k) => !early.has(k))) errs.push(`${where} ${gate.rooms} require an obtainable ${gate.item}`);
     }
-    for (const t of m.triggers) {
-      if (beforeOnly(t.when)) need(triggerReached(g, locked, early, t), `trigger ${t.script}`, true);
-      else if (available(t.when, before.obtainable) || requiredAfter(t.when)) need(triggerReached(g, before.obtainable ? g : locked, late, t), `trigger ${t.script}`);
+    if (gate.policy === "optional") {
+      const givers = maps.filter((m) => [...mapScripts(world, m)].some((sid) => {
+        let gives = false;
+        eachCmd(world.scripts[sid], (c) => { if (c.op === "giveItem" && c.item === gate.item) gives = true; });
+        return gives;
+      }));
+      if (!givers.length) errs.push(`no map hands out the ${gate.item}`);
+      for (const m of givers) if (!before.entries.has(m.id)) errs.push(`[${m.id}] gives the ${gate.item} but can't be reached without ${gate.name}`);
     }
-    for (const wp of m.warps) need(late.has(`${wp.x},${wp.y}`), `warp at ${wp.x},${wp.y}`);
-    // Optional gated areas still need an obtainable key item, even when
-    // there are no story NPCs there to expose an acquisition cycle.
-    if (!before.obtainable) {
-      const starts = [...early].map((k) => { const [x, y] = k.split(",").map(Number); return { x, y }; });
-      if ([...reachFrom(m, g, starts, true)].some((k) => !early.has(k))) errs.push(`${where} ${system === "glow" ? "dark rooms" : "boulder rooms"} require an obtainable ${item}`);
-    }
-  }
-  return errs;
+    return errs;
+  };
+  return { after, check };
+}
+
+const gateById = (id: string) => PROGRESS_GATES.find((g) => g.id === id)!;
+
+/** PRUNE stays optional, even when other acquired items open required routes. */
+export function checkProgressWithoutPrune(world: WorldData): string[] {
+  return progress(world).check(gateById("prune"));
+}
+
+/** Only stationary lamp light is a safe story path before the lantern. */
+export function checkProgressWithoutLantern(world: WorldData): string[] {
+  return progress(world).check(gateById("glow"));
+}
+
+/** Water-only content needs a reachable raft grant; decorative pools do not. */
+export function checkProgressWithoutRaft(world: WorldData): string[] {
+  return progress(world).check(gateById("raft"));
+}
+
+/** Boulder routes are proved from the reset layout, using legal pushes. */
+export function checkProgressWithoutSaxifrage(world: WorldData): string[] {
+  return progress(world).check(gateById("uproot"));
 }
 
 /** Walk every command, including nested branches. */
@@ -498,6 +553,8 @@ export const expandTokens = (t: string) => t.replace(/<PLAYER>/g, "WWWWWWW").rep
  */
 export function validateWorld(world: WorldData, warnings: string[] = []): string[] {
   const errs: string[] = [];
+  const progression = progress(world);
+  const rafting = progression.after.enabled.has("raft");
   const stills = new Set<string>(STILLS);
   const species = new Set<string>(SPECIES_IDS);
   // Story items (the contract) plus everything the data owner defines (PLANT FOOD, ...).
@@ -528,7 +585,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const g = grid(map);
     if (!Number.isInteger(landing.x) || !Number.isInteger(landing.y) || !walkable(g, landing.x, landing.y)) {
       errs.push(`${at} is not walkable`);
-    } else if (!flood(g, entries.get(landing.map) ?? []).has(`${landing.x},${landing.y}`)) {
+    } else if (!flood(grid(map, { rafting }), entries.get(landing.map) ?? []).has(`${landing.x},${landing.y}`)) {
       errs.push(`${at} is unreachable`);
     }
     if (!map.outdoor) errs.push(`${at} is indoors`);
@@ -553,7 +610,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
         if (!t || !(t in TILES)) errs.push(`${where} row ${y}: char '${ch}' has no valid tile`);
       }
     });
-    const g = grid(map);
+    const g = grid(map, { rafting });
 
     // ambient particles
     if (map.ambient !== undefined && !AMBIENTS.has(map.ambient)) errs.push(`${where} bad ambient ${map.ambient}`);
@@ -659,10 +716,10 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       if (!world.scripts[t.script]) errs.push(`${where} trigger script ${t.script} missing`);
     }
     if (map.onEnter && !world.scripts[map.onEnter]) errs.push(`${where} onEnter ${map.onEnter} missing`);
-    if (map.healPoint && !walkable(g, map.healPoint.x, map.healPoint.y)) errs.push(`${where} healPoint is solid`);
+    if (map.healPoint && !walkable(grid(map), map.healPoint.x, map.healPoint.y)) errs.push(`${where} healPoint is solid`);
 
     // encounters
-    for (const kind of ["grass", "bog"] as const) {
+    for (const kind of ["grass", "bog", "water"] as const) {
       const enc = map.encounters?.[kind];
       if (!enc) continue;
       for (const s of enc.slots) {
@@ -685,11 +742,11 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const starts = entries.get(id) ?? [];
     if (!starts.length) { errs.push(`${where} has no way in`); continue; }
     for (const s of starts) {
-      if (!walkable(g, s.x, s.y)) errs.push(`${where} entry ${s.x},${s.y} is solid`);
+      if (!walkable(grid(map), s.x, s.y)) errs.push(`${where} entry ${s.x},${s.y} is solid`);
     }
     // Everything is checked as eventually reachable (brambles cut); the
     // required-progress pass after this loop checks the world without PRUNE.
-    const gp = grid(map, { pruned: true });
+    const gp = grid(map, { pruned: true, rafting });
     const reach = flood(gp, starts);
     const has = (x: number, y: number) => reach.has(`${x},${y}`);
     const canTalk = (x: number, y: number) => DIRS.some(([dx, dy]) => {
@@ -714,7 +771,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     // without them must stay reachable with them.
     const scenery = map.structures.filter((s) => STRUCTURES[s.key] && !STRUCTURES[s.key].door);
     if (scenery.length) {
-      const open = grid({ ...map, structures: map.structures.filter((s) => STRUCTURES[s.key]?.door) });
+      const open = grid({ ...map, structures: map.structures.filter((s) => STRUCTURES[s.key]?.door) }, { rafting });
       // Treat the scenery footprint itself as solid in the open grid, so we only
       // compare paths around it, not the cells it covers.
       const covers = new Set<string>();
@@ -789,9 +846,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     } else errs.push(`${where} has no warps`);
   }
 
-  errs.push(...checkProgressWithoutPrune(world));
-  errs.push(...checkProgressWithoutLantern(world));
-  errs.push(...checkProgressWithoutSaxifrage(world));
+  for (const gate of PROGRESS_GATES) errs.push(...progression.check(gate));
 
   // scripts
   const checkCmds = (sid: string, cmds: ScriptCmd[]) => eachCmd(cmds, (c) => {

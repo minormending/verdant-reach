@@ -33,10 +33,11 @@ export function rollLevel(slot: EncounterSlot, rng: () => number): number {
   return lo + Math.floor(rng() * (hi - lo + 1));
 }
 
-export type EncounterKind = "grass" | "bog";
+export type EncounterKind = "grass" | "bog" | "water";
 
-export function encounterKindFor(tile: TileKey): EncounterKind | null {
-  const props = TILES[tile] as { encounter?: EncounterKind };
+export function encounterKindFor(tile: TileKey, rafting = false): EncounterKind | null {
+  const props = TILES[tile] as { encounter?: EncounterKind; water?: boolean };
+  if (props.water) return rafting ? "water" : null;
   return props.encounter ?? null;
 }
 
@@ -46,8 +47,9 @@ export function encounterKindFor(tile: TileKey): EncounterKind | null {
  */
 export function rollEncounter(
   map: Pick<MapDef, "encounters">, tile: TileKey, tod: TimeOfDay, rng: () => number,
+  rafting = false,
 ): { species: SpeciesId; level: number; kind: EncounterKind } | null {
-  const kind = encounterKindFor(tile);
+  const kind = encounterKindFor(tile, rafting);
   if (!kind) return null;
   const table = map.encounters?.[kind];
   if (!table || table.rate <= 0) return null;

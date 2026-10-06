@@ -2,7 +2,8 @@
 // Boulder positions belong to map actors, never save flags or map definitions.
 
 import type { Dir } from "../contracts";
-import { DIRS, inBounds, isWalkable, key, tryMove, type MapRuntime } from "./map";
+import { DIRS, inBounds, isWalkable, key, tileAt, tileProps, tryMove, type MapRuntime } from "./map";
+import { tryRaftMove } from "./raft";
 
 export const UPROOT = {
   item: "saxifrage",
@@ -34,6 +35,8 @@ export function tryPushBoulder(
 }
 
 export interface BoulderPuzzleOptions {
+  /** Combine land pushes with RAFT travel; boulders still only move on land. */
+  rafting?: boolean;
   /** Default: non-pushable NPCs in the map definition. Override for visibility. */
   occupied?: (x: number, y: number) => boolean;
   /** Stop as soon as this tile is reachable; useful for goal-only tests. */
@@ -52,13 +55,17 @@ export function reachableBoulderTiles(
   const occupied = opts.occupied ?? ((x: number, y: number) => npcs.has(key(x, y)));
   const walkRegion = (start: BoulderPosition, blocked: (x: number, y: number) => boolean) => {
     const region = new Set<string>();
-    if (!isWalkable(map, start.x, start.y) || blocked(start.x, start.y)) return region;
+    const onWater = (x: number, y: number) => !!tileProps(tileAt(map, x, y)).water;
+    if ((!isWalkable(map, start.x, start.y) && !(opts.rafting && inBounds(map, start.x, start.y) &&
+      onWater(start.x, start.y) && !map.solid.has(key(start.x, start.y)))) || blocked(start.x, start.y)) return region;
     region.add(key(start.x, start.y));
     const walks = [start];
     for (let i = 0; i < walks.length; i++) {
       const p = walks[i];
       for (const dir of Object.keys(DIRS) as Dir[]) {
-        const move = tryMove(map, p.x, p.y, dir, blocked);
+        const move = opts.rafting
+          ? tryRaftMove(map, p.x, p.y, dir, onWater(p.x, p.y), true, blocked)
+          : tryMove(map, p.x, p.y, dir, blocked);
         if (move.kind === "blocked" || region.has(key(move.x, move.y))) continue;
         region.add(key(move.x, move.y));
         walks.push({ x: move.x, y: move.y });

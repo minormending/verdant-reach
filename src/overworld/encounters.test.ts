@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { EncounterSlot, MapDef } from "../contracts";
 import { filterSlots, pickWeighted, rollEncounter, rollLevel, slotActive } from "./encounters";
 
@@ -51,5 +51,19 @@ describe("encounter slots by time of day", () => {
     expect(hit).toEqual({ species: "moonflower_seed", level: 7, kind: "grass" });
     expect(rollEncounter(map, "bog", "day", seq(0.1, 0.3, 0.5))).toEqual({ species: "nettle_sprout", level: 2, kind: "bog" });
     expect(rollEncounter({}, "tall_grass", "day", () => 0)).toBeNull();
+  });
+
+  it("rolls water encounters only on raft steps on water:true tiles", () => {
+    const map: Pick<MapDef, "encounters"> = { encounters: { water: { rate: 20, slots } } };
+    const rng = vi.fn(() => 0);
+    for (const tile of ["water", "pond_lily", "fountain_basin"] as const) {
+      expect(rollEncounter(map, tile, "day", rng)).toBeNull();
+      expect(rng).not.toHaveBeenCalled();
+      expect(rollEncounter(map, tile, "night", seq(0.05, 0.7, 0), true)).toEqual({ species: "moonflower_seed", level: 7, kind: "water" });
+      expect(rollEncounter(map, tile, "day", seq(0.2), true)).toBeNull();
+    }
+    for (const tile of ["grass", "boardwalk", "bridge", "water_channel"] as const) expect(rollEncounter(map, tile, "day", rng, true)).toBeNull();
+    expect(rng).not.toHaveBeenCalled();
+    expect(rollEncounter({}, "water", "day", rng, true)).toBeNull();
   });
 });

@@ -9,6 +9,19 @@ import { drawText, drawWindow } from "../ui/kit";
 import { drawTiny } from "../screens/kit/draw";
 import type { CellArt } from "./autotile";
 
+/** RAFT placeholder, drawn under the player. Replace this one helper in the art pass. */
+export function drawLilyRaft(g: CanvasRenderingContext2D, x: number, y: number) {
+  g.save();
+  g.beginPath();
+  g.ellipse(x + TILE / 2, y + TILE - 3, 10, 4, 0, 0, Math.PI * 2);
+  g.fillStyle = "#58a040";
+  g.fill();
+  g.strokeStyle = "#285a28";
+  g.lineWidth = 1;
+  g.stroke();
+  g.restore();
+}
+
 /** Flat colours used only when a tile's art is missing (keeps dev maps readable). */
 const FALLBACK: Partial<Record<TileKey, [string, string]>> = {
   grass: ["#88c070", "#78b060"], tall_grass: ["#4a9a48", "#2e7a34"], flowers: ["#88c070", "#f8a8c0"],
