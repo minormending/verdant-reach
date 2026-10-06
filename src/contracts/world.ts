@@ -92,7 +92,7 @@ export type ScriptCmd =
   | { op: "hideSpecies" }
   | { op: "giveMark"; mark: MarkId }
   | { op: "battle"; trainer: TrainerId; canLose?: boolean } // sets flag `beat_<trainer>` on win
-  | { op: "wildBattle"; species: SpeciesId; level: number; canLose?: boolean }
+  | { op: "wildBattle"; species: SpeciesId; level: number; sport?: boolean; canLose?: boolean }
   | { op: "ifLastBattle"; result: "won" | "lost"; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "heal" }                                        // full party heal + jingle
   | { op: "warp"; to: MapId; x: number; y: number; facing?: Dir }

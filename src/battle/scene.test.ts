@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { BattleRequest, GameContext, Quickened, SpeciesId, TrainerDef } from "../contracts";
+import type { BattleOutcome, BattleRequest, GameContext, Quickened, SpeciesId, TrainerDef } from "../contracts";
 import { DATA } from "../data";
 import { drawSpecies } from "../screens/kit/draw";
 import { FIXTURE_TRAINERS } from "./fixtures";
@@ -20,13 +20,13 @@ vi.mock("../screens/kit/draw", async (original) => ({
 // flow, sprite drawing decisions and capture guard execute the real code.
 interface SceneHarness {
   s: BattleState;
-  main(): Promise<string>;
+  main(): Promise<BattleOutcome>;
   preload(): Promise<void>;
   intro(): Promise<void>;
   ending(): Promise<void>;
-  chooseAction(): Promise<{ kind: "fled" }>;
+  chooseAction(): Promise<{ kind: "fled" | "caught" | "pod_failed" }>;
   sendOutFoeAnim(text: string): Promise<void>;
-  throwPod(item: string): Promise<unknown>;
+  throwPod(item: string): Promise<{ kind: "caught" | "pod_failed" } | null>;
   say(text: string, mode: string): Promise<void>;
   lobPod(): Promise<void>;
   popOut(): Promise<void>;
@@ -34,7 +34,11 @@ interface SceneHarness {
   startIntro(): void;
   introLeft(): number;
   idlePose(): string;
-  flow: { wait(frames: number): Promise<void> };
+  flow: {
+    wait(frames: number): Promise<void>;
+    animate(frames: number, step: (i: number, t: number) => void): Promise<void>;
+  };
+  ui: { yesNo(prompt: string): Promise<boolean>; tb: { clear(): void } };
   drawSprite(g: CanvasRenderingContext2D, v: SpriteView, kind: "front" | "back", home: { x: number; y: number }, clipBottom: number, side: 0 | 1): void;
 }
 interface SpriteView {
@@ -50,22 +54,30 @@ const trainer: TrainerDef = {
   team: [{ species: "great_oak", level: 27, grafted: true }, { species: "oak_sapling", level: 25 }],
 };
 
-async function setup(req: BattleRequest) {
+async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: boolean; fullParty?: boolean } = {}) {
   vi.stubGlobal("window", {});
   const ctx = {
-    data: DATA, rng: seeded(1), input: {}, timeOfDay: () => "day",
+    data: DATA, rng: opts.rng ?? seeded(1), input: {}, timeOfDay: () => "day",
     world: { maps: {}, trainers: { [trainer.id]: trainer } },
     state: {
       party: [createQuickened(DATA, "great_oak", 27, seeded(10))],
+      box: [], position: { map: "route_1" }, playerName: "ROWAN",
       herbarium: { seen: [], caught: [] }, options: {}, bag: { terrarium_pod: 1 },
     },
-    audio: { playSfx() {}, playCry() {} },
+    audio: { playSfx() {}, playCry() {}, async playJingle() {} },
   } as unknown as GameContext;
+  if (opts.fullParty) {
+    for (let i = 0; i < 5; i++) ctx.state.party.push(createQuickened(DATA, "oak_acorn", 5, seeded(20 + i)));
+  }
   const scene = createBattleScene(ctx, req, () => {}) as unknown as SceneHarness;
   scene.preload = vi.fn(async () => {});
   scene.intro = vi.fn(async () => {});
   scene.ending = vi.fn(async () => {});
-  scene.chooseAction = vi.fn(async () => ({ kind: "fled" as const }));
+  scene.chooseAction = vi.fn(async () => {
+    if (!opts.capture) return { kind: "fled" as const };
+    ctx.rng = () => 0; // All capture wobble checks pass, independently of the sport roll.
+    return await scene.throwPod("terrarium_pod") ?? { kind: "fled" as const };
+  });
   scene.say = vi.fn(async () => {});
   scene.lobPod = vi.fn(async () => {});
   scene.popOut = vi.fn(async () => {});
@@ -74,11 +86,58 @@ async function setup(req: BattleRequest) {
   scene.introLeft = () => 0;
   scene.idlePose = () => "front";
   scene.flow.wait = vi.fn(async () => {});
-  await scene.main();
-  return { scene, ctx };
+  scene.flow.animate = vi.fn(async (_frames, step) => { step(0, 1); });
+  scene.ui.yesNo = vi.fn(async () => false);
+  const outcome = await scene.main();
+  return { scene, ctx, outcome };
 }
 
 afterEach(() => { vi.clearAllMocks(); vi.unstubAllGlobals(); });
+
+describe("static sport wild battles", () => {
+  it("creates a sport and uses its palette for the wild send-out", async () => {
+    const { scene } = await setup({
+      kind: "wild", wild: { species: "giant_water_lily", level: 40, sport: true }, canLose: true,
+    }, { rng: () => 0.5 });
+    const foe = scene.s.sides[1].party[0];
+    expect(foe.sport).toBe(true);
+    await scene.sendOutFoeAnim("Appeared!");
+    scene.drawSprite({} as CanvasRenderingContext2D, sprite(foe), "front", { x: 96, y: 0 }, 56, 1);
+    expect(drawSpecies).toHaveBeenCalledWith(
+      expect.anything(), expect.anything(), "giant_water_lily", "front", 96, 0,
+      expect.objectContaining({ sport: true }),
+    );
+  });
+
+  it.each([false, true])("keeps the sport and updates the Herbarium on capture (full party: %s)", async (fullParty) => {
+    const { scene, ctx, outcome } = await setup({
+      kind: "wild", wild: { species: "giant_water_lily", level: 40, sport: true }, canLose: true,
+    }, { rng: () => 0.5, capture: true, fullParty });
+    const caught = (fullParty ? ctx.state.box : ctx.state.party).at(-1)!;
+    expect(outcome).toBe("caught");
+    expect(caught).toBe(scene.s.sides[1].party[0]);
+    expect(caught).toMatchObject({ species: "giant_water_lily", level: 40, sport: true, metAt: { map: "route_1", level: 40 } });
+    expect(ctx.state.herbarium.seen).toContain("giant_water_lily");
+    expect(ctx.state.herbarium.caught).toContain("giant_water_lily");
+    expect(ctx.state.bag.terrarium_pod).toBeUndefined();
+  });
+
+  it.each([0.5, 0.001])("keeps the random sport roll when omitted (rng: %s)", async (roll) => {
+    const rng = vi.fn(() => roll);
+    const { scene } = await setup({ kind: "wild", wild: { species: "giant_water_lily", level: 40 } }, { rng });
+    const expectedRng = vi.fn(() => roll);
+    const expected = createQuickened(DATA, "giant_water_lily", 40, expectedRng);
+    expect(scene.s.sides[1].party[0].sport).toBe(expected.sport);
+    expect(rng).toHaveBeenCalledTimes(expectedRng.mock.calls.length);
+  });
+
+  it("honours an explicit false sport override", async () => {
+    const { scene } = await setup({
+      kind: "wild", wild: { species: "giant_water_lily", level: 40, sport: false },
+    }, { rng: () => 0.001 });
+    expect(scene.s.sides[1].party[0].sport).toBe(false);
+  });
+});
 
 describe("graft collar scene wiring", () => {
   it("announces grafted send-outs, clears it for the next slot and announces it again on return", async () => {

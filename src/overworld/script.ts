@@ -318,7 +318,7 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
     }
     case "wildBattle": {
       const r = await host.battle({
-        kind: "wild", wild: { species: cmd.species, level: cmd.level }, canLose: cmd.canLose, backdrop: host.backdrop?.(),
+        kind: "wild", wild: { species: cmd.species, level: cmd.level, sport: cmd.sport }, canLose: cmd.canLose, backdrop: host.backdrop?.(),
       });
       st.lastBattle = r;
       if (r === "lost" && !cmd.canLose) {

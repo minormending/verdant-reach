@@ -252,6 +252,14 @@ describe("Chapter 4", () => {
 
 describe("validator self-check", () => {
   const clone = () => structuredClone(WORLD);
+  it("accepts a static sport battle fixture", () => {
+    const w = clone();
+    w.scripts.static_sport_fixture = [
+      { op: "wildBattle", species: "giant_water_lily", level: 40, sport: true, canLose: true },
+      { op: "setFlag", flag: "static_sport_done" },
+    ];
+    expect(validateWorld(w)).toEqual([]);
+  });
   it("rejects solid, off-map, missing-map and unreachable glide landings", () => {
     for (const landing of [
       { map: "fallowfield", x: 0, y: 0 },

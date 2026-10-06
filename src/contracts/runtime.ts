@@ -61,7 +61,7 @@ export interface GameState {
 export interface BattleRequest {
   kind: "wild" | "trainer";
   trainer?: TrainerId;
-  wild?: { species: SpeciesId; level: number };
+  wild?: { species: SpeciesId; level: number; sport?: boolean }; // omitted: normal random sport roll
   canLose?: boolean;            // story battles (rival #1): no whiteout on loss
   backdrop?: "grass" | "bog" | "water" | "indoor" | "night" | "glasshouse";
 }

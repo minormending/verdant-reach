@@ -378,7 +378,9 @@ class BattleScene implements Scene {
         console.error("[battle] wild battle without a species");
         return "fled";
       }
-      foeParty = [createQuickened(this.data, req.wild.species, req.wild.level, ctx.rng)];
+      const foe = createQuickened(this.data, req.wild.species, req.wild.level, ctx.rng);
+      foe.sport = req.wild.sport ?? foe.sport;
+      foeParty = [foe];
     }
     const lead = firstHealthy(this.party);
     if (lead < 0) {
