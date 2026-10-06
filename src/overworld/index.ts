@@ -38,6 +38,7 @@ import { FIELD_MOVE_FX, fieldMoveFlag, fieldMoveOf } from "./fieldmove";
 import { canBattle, nurseryStep, readySeed, seedHint, seedStep, sprout } from "./nursery";
 import { drawHalo, drawTint, lampInfo, makeScreenCanvas, nightGlass, windowGlow } from "./lights";
 import { TileLayer } from "./tilelayer";
+import { drawGlow } from "./glowRender";
 import {
   ScriptAbort, giveItem, harvest, itemName, quickenedName, runScript, trainerBattle, type ScriptHost, type ToastKind,
 } from "./script";
@@ -1415,6 +1416,10 @@ class Overworld implements Scene {
       if (this.lightCanvas) g.drawImage(this.lightCanvas, 0, 0);
     }
     this.ambient.drawGlow(g, camX, camY);
+    if (m.def.dark) {
+      const { px, py } = this.player.pixel();
+      drawGlow(g, camX, camY, { x: px / TILE, y: py / TILE }, this.tiles.lamps, hasItem(ctx.state, "foxfire_lantern"));
+    }
 
     // Story illustration (text boxes and the species window draw over it).
     if (this.still) g.drawImage(this.still.img, 0, 0, SCREEN_W, SCREEN_H);

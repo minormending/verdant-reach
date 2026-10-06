@@ -4,9 +4,10 @@
 import {
   FIELD_MOVES, JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX,
 } from "../contracts";
-import type { Ambient, MapDef, MapId, NpcDef, ScriptCmd, TileKey, WorldData } from "../contracts";
+import type { Ambient, Cond, MapDef, MapId, NpcDef, ScriptCmd, TileKey, WorldData } from "../contracts";
 import { pickupItem } from "./build";
 import { DATA } from "../data";
+import { glowField, glowLamps } from "../overworld/glow";
 
 /**
  * Side-quest givers (docs/ROUND3.md §4). Narrative writes the `q_*` scripts in
@@ -249,6 +250,169 @@ export function checkProgressWithoutPrune(world: WorldData): string[] {
   });
   if (!givers.length) errs.push(`no map hands out the ${FIELD_MOVES.prune.item}`);
   for (const id of givers) if (!entries.has(id)) errs.push(`[${id}] gives the ${FIELD_MOVES.prune.item} but can't be reached without PRUNE`);
+  return errs;
+}
+
+/** GLOW progression has two stages. Before the lantern, only stationary lamp
+ *  light counts (the player's tiny moving light is not a safe story route).
+ *  Only scripts at reachable interaction points can make the lantern
+ *  obtainable; dark rooms become reachable afterwards. Positive story-flag
+ *  prerequisites must themselves be obtainable on those routes. Explicit
+ *  got_lantern:false interactions must still be possible in the lit hall. */
+export function checkProgressWithoutLantern(world: WorldData): string[] {
+  const maps = Object.values(world.maps);
+  if (!maps.some((m) => m.dark)) return [];
+  const errs: string[] = [];
+  const available = (when: Cond | undefined, lantern: boolean) =>
+    !when?.some((c) => c.flag === "got_lantern" && c.is !== lantern);
+  const beforeOnly = (when: Cond | undefined) => when?.some((c) => c.flag === "got_lantern" && !c.is);
+
+  const grids = new Map(maps.map((m) => [m.id, grid(m)]));
+  const litGrids = new Map(maps.map((m) => {
+    const g = grids.get(m.id)!;
+    const bandAt = glowField(null, glowLamps(g.w, g.h, g.tile), false);
+    // Dark ledges also remain solid: hopping across an unlit tile is not a
+    // path through lit tiles, even when its landing happens to be lit.
+    const lit: Grid = { ...g, tile: (x, y) => bandAt(x, y) === "dark" ? undefined : g.tile(x, y) };
+    return [m.id, m.dark ? lit : g] as const;
+  }));
+  const canTalk = (g: Grid, reach: Set<string>, x: number, y: number) =>
+    !!g.tile(x, y) && DIRS.some(([dx, dy]) =>
+      reach.has(`${x + dx},${y + dy}`) || (g.tile(x + dx, y + dy) === "counter" && reach.has(`${x + 2 * dx},${y + 2 * dy}`)));
+  const triggerReached = (base: Grid, g: Grid, reach: Set<string>, t: MapDef["triggers"][number]) => {
+    // Use the ordinary grid to recognise a talk trigger; darkness must not
+    // turn a walkable trigger into an interactable wall.
+    if (isTalkTrigger(base, t)) return canTalk(g, reach, t.x, t.y);
+    for (let dy = 0; dy < (t.h ?? 1); dy++) for (let dx = 0; dx < (t.w ?? 1); dx++) {
+      if (reach.has(`${t.x + dx},${t.y + dy}`)) return true;
+    }
+    return false;
+  };
+
+  function explore(lantern: boolean, initialFlags: ReadonlySet<string> = new Set(), initialEntries?: Map<MapId, { x: number; y: number }[]>) {
+    const entries = new Map<MapId, { x: number; y: number }[]>();
+    const reaches = new Map<MapId, Set<string>>();
+    const queue: MapId[] = [];
+    let obtainable = false;
+    const flags = new Set(initialFlags);
+    if (lantern) flags.add("got_lantern");
+    type Effect = { needs: string[]; flag?: string; lantern?: boolean; warp?: { to: MapId; x: number; y: number } };
+    const effects: Effect[] = [];
+    const needs = (when: Cond | undefined) => (when ?? []).filter((c) => c.is && c.flag !== "got_lantern").map((c) => c.flag);
+    const add = (id: MapId, x: number, y: number) => {
+      const list = entries.get(id) ?? [];
+      if (list.some((s) => s.x === x && s.y === y)) return;
+      entries.set(id, [...list, { x, y }]);
+      queue.push(id);
+    };
+    // Follow calls and nested branches, but never use a lantern-gated branch
+    // to prove the lantern itself obtainable. Calls may be recursive.
+    const scriptsSeen = new Set<string>();
+    const script = (sid: string | undefined, deps: string[] = [], stack: string[] = []) => {
+      if (!sid || stack.includes(sid)) return;
+      const key = `${sid}:${[...new Set(deps)].sort().join(",")}`;
+      if (scriptsSeen.has(key)) return;
+      scriptsSeen.add(key);
+      commands(world.scripts[sid] ?? [], deps, [...stack, sid]);
+    };
+    const commands = (cmds: ScriptCmd[], deps: string[], stack: string[]) => {
+      const branch = (cmds: ScriptCmd[], extra: string[] = []) => commands(cmds, [...deps, ...extra], stack);
+      for (const c of cmds) {
+        switch (c.op) {
+          case "giveItem": if (c.item === "foxfire_lantern" && (c.qty ?? 1) > 0) effects.push({ needs: deps, lantern: true }); break;
+          case "setFlag": if (c.value !== false) effects.push({ needs: deps, flag: c.flag }); break;
+          case "battle": effects.push({ needs: deps, flag: `beat_${c.trainer}` }); break;
+          case "warp": effects.push({ needs: deps, warp: c }); break;
+          case "call": script(c.script, deps, stack); break;
+          case "if": {
+            if (available(c.when, lantern)) branch(c.then, needs(c.when));
+            // A conjunction's else is possible when any one condition fails.
+            // Ordinary false flags may hold before their eventual setters.
+            for (const v of c.when) {
+              if (v.flag === "got_lantern" ? v.is !== lantern : true) {
+                branch(c.else ?? [], v.flag !== "got_lantern" && !v.is ? [v.flag] : []);
+              }
+            }
+            break;
+          }
+          case "ifHasItem":
+            if (c.item === "foxfire_lantern") branch(lantern ? c.then : c.else ?? []);
+            else { branch(c.then); branch(c.else ?? []); }
+            break;
+          case "choice": c.branches.forEach((b) => branch(b)); break;
+          case "yesno": branch(c.yes); branch(c.no); break;
+          case "ifTime": case "ifLastBattle": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed":
+            branch(c.then); branch(c.else ?? []); break;
+        }
+      }
+    };
+    const resolve = () => {
+      // A least fixed point rejects cycles such as a lantern grant requiring
+      // a flag whose only setter is inside the unlit rooms (or needs itself).
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const e of effects) {
+          if (!e.needs.every((f) => flags.has(f))) continue;
+          if (e.flag && !flags.has(e.flag)) { flags.add(e.flag); changed = true; }
+          if (e.lantern) obtainable = true;
+          if (e.warp) add(e.warp.to, e.warp.x, e.warp.y);
+        }
+      }
+    };
+    add(world.newGame.map, world.newGame.x, world.newGame.y);
+    for (const [id, starts] of initialEntries ?? []) for (const s of starts) add(id, s.x, s.y);
+    script(world.newGame.script);
+    resolve();
+    while (queue.length) {
+      const id = queue.shift()!;
+      const m = world.maps[id];
+      if (!m) continue;
+      const g = (lantern ? grids : litGrids).get(id)!;
+      const reach = flood(g, entries.get(id)!);
+      reaches.set(id, reach);
+      if (!reach.size) continue;
+      script(m.onEnter);
+      for (const n of m.npcs) {
+        if (!available(n.visibleWhen, lantern) || !canTalk(g, reach, n.x, n.y)) continue;
+        script(n.script, needs(n.visibleWhen));
+        if (n.trainer) effects.push({ needs: needs(n.visibleWhen), flag: `beat_${n.trainer}` });
+      }
+      for (const t of m.triggers) {
+        if (available(t.when, lantern) && triggerReached(grids.get(id)!, g, reach, t)) script(t.script, needs(t.when));
+      }
+      resolve();
+      for (const wp of m.warps) if (reach.has(`${wp.x},${wp.y}`)) add(wp.to, wp.toX, wp.toY);
+    }
+    return { reaches, obtainable, flags, entries };
+  }
+
+  const before = explore(false);
+  const after = before.obtainable ? explore(true, before.flags, before.entries) : before;
+  for (const m of maps.filter((m) => m.dark)) {
+    const where = `[${m.id}] without GLOW:`;
+    const g = grids.get(m.id)!;
+    const lit = litGrids.get(m.id)!;
+    const early = before.reaches.get(m.id) ?? new Set<string>();
+    const late = after.reaches.get(m.id) ?? new Set<string>();
+    const need = (ok: boolean, what: string) => { if (!ok) errs.push(`${where} ${what} needs a lamp-lit path before got_lantern is obtainable`); };
+    for (const n of m.npcs) {
+      if (n.sprite === "item_pickup" || n.sprite === "harvest_bush" || isBoarder(n)) continue;
+      if (beforeOnly(n.visibleWhen)) need(canTalk(lit, early, n.x, n.y), `npc ${n.id}`);
+      else if (available(n.visibleWhen, before.obtainable)) need(canTalk(before.obtainable ? g : lit, late, n.x, n.y), `npc ${n.id}`);
+    }
+    for (const t of m.triggers) {
+      if (beforeOnly(t.when)) need(triggerReached(g, lit, early, t), `trigger ${t.script}`);
+      else if (available(t.when, before.obtainable)) need(triggerReached(g, before.obtainable ? g : lit, late, t), `trigger ${t.script}`);
+    }
+    for (const wp of m.warps) need(late.has(`${wp.x},${wp.y}`), `warp at ${wp.x},${wp.y}`);
+    // Optional things in unlit rooms count as reachable only with the lantern,
+    // even when there are no story NPCs there to expose an acquisition cycle.
+    if (!before.obtainable) {
+      const starts = [...early].map((k) => { const [x, y] = k.split(",").map(Number); return { x, y }; });
+      if ([...flood(g, starts)].some((k) => !early.has(k))) errs.push(`${where} dark rooms require an obtainable foxfire_lantern`);
+    }
+  }
   return errs;
 }
 
@@ -581,6 +745,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
   }
 
   errs.push(...checkProgressWithoutPrune(world));
+  errs.push(...checkProgressWithoutLantern(world));
 
   // scripts
   const checkCmds = (sid: string, cmds: ScriptCmd[]) => eachCmd(cmds, (c) => {

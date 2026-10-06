@@ -58,6 +58,9 @@ const LIST: Item[] = [
     effect: { kind: "none" }, usableInBattle: false, usableInField: true },
 
   // Key items
+  { id: "foxfire_lantern", name: "Foxfire Jar", pocket: "key", price: 0,
+    description: "A jar of glowing fungus.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
   // Alsomitra macrocarpa, the Javan cucumber, disperses winged gliding seeds.
   { id: "glider_seed", name: "Glider Seed", pocket: "key", price: 0,
     description: "A winged seed that glides far.",

@@ -289,6 +289,7 @@ export const REQUIRED_ITEMS = [
   "wild_berry", "rose_hip",                   // harvested from bushes: heal / cure
   "syrup_jar",                                // key item for the SAP RUN quest
   "pruning_shears",                           // key item: unlocks the PRUNE field move
+  "foxfire_lantern",                          // key item: automatically lights dark maps
   "fan_letter", "signed_photo",               // key items for the FAN MAIL quest
 ] as const;
 export type RequiredItemId = (typeof REQUIRED_ITEMS)[number];

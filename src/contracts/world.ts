@@ -24,6 +24,8 @@ export interface MapDef {
   id: MapId;
   name: string;                 // shown on entry, e.g. "ROUTE 1"
   outdoor: boolean;             // outdoor maps get the night tint
+  /** Black outside player/lamppost light; the bag's FOXFIRE LANTERN expands player light. */
+  dark?: boolean;
   music: MusicId;
   /** Rows of single characters; `legend` maps each character to a tile. */
   tiles: string[];
