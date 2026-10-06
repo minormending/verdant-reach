@@ -17,6 +17,7 @@
     "pruning_shears": { "file": "pruning_shears.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
     "rain_jar": { "file": "rain_jar.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
     "rose_hip": { "file": "rose_hip.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "saxifrage": { "file": "saxifrage.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/placeholder.py" } },
     "signed_photo": { "file": "signed_photo.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
     "spring_water": { "file": "spring_water.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
     "syrup_jar": { "file": "syrup_jar.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },

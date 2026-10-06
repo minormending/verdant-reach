@@ -3,6 +3,7 @@
   python tools/art/placeholder.py species <id> [<id> ...]
   python tools/art/placeholder.py ui <name> [<name> ...]          (e.g. mark_pipe)
   python tools/art/placeholder.py items <id> [<id> ...]
+  python tools/art/placeholder.py characters <id> [<id> ...]
 
 Species placeholders are a plain grey blob with a "?" in the 4-colour Crystal
 palette, plus a 3-frame intro, a back and 2 icons. Their notes start with
@@ -52,10 +53,13 @@ def blob(size: int, scale: float, lift: int = 0) -> np.ndarray:
 
 
 def is_placeholder_or_missing(kind: str, id_: str) -> bool:
-    meta = ART / kind / id_ / ("species.json" if kind == "species" else f"{kind}.json")
+    filename = {"species": "species.json", "characters": "character.json"}.get(kind, f"{kind}.json")
+    meta = ART / kind / id_ / filename
     if not meta.exists():
-        return True
-    return str(json.loads(meta.read_text()).get("notes", "")).startswith("PLACEHOLDER")
+        # An unregistered PNG may be real art awaiting metadata.
+        return not (meta.parent.exists() and any(meta.parent.glob("*.png")))
+    data = json.loads(meta.read_text())
+    return (data.get("source") or {}).get("kind") not in ("edited", "imported") and str(data.get("notes", "")).startswith("PLACEHOLDER")
 
 
 def species(ids: list[str]) -> None:
@@ -75,11 +79,30 @@ def species(ids: list[str]) -> None:
         print(f"placeholder species {id_}")
 
 
+def characters(ids: list[str]) -> None:
+    """Four direction rows, three 16px columns; never overwrite real art."""
+    for id_ in ids:
+        if not is_placeholder_or_missing("characters", id_):
+            print(f"skip {id_}: real art exists")
+            continue
+        sheet = np.tile(blob(16, 0.85), (4, 3, 1))
+        if not emit.character(id_, sheet, TOOL, credits="Placeholder (no art yet)."):
+            continue
+        meta_path = ART / "characters" / id_ / "character.json"
+        meta = json.loads(meta_path.read_text())
+        meta["notes"] = "PLACEHOLDER: replace with real character art before release."
+        meta_path.write_text(json.dumps(meta, indent=2) + "\n")
+        print(f"placeholder character {id_}")
+
+
 def images(set_id: str, names: list[str], size: tuple[int, int]) -> None:
     """Only missing entries, or entries this tool made, get a placeholder: real art is never touched."""
     set_json = ART / "sets" / set_id / "set.json"
     existing = json.loads(set_json.read_text()).get("images", {}) if set_json.exists() else {}
-    todo = [n for n in names if n not in existing or (existing[n].get("source") or {}).get("tool") == TOOL]
+    todo = [n for n in names if n not in existing or (
+        (existing[n].get("source") or {}).get("tool") == TOOL
+        and (existing[n].get("source") or {}).get("kind") not in ("edited", "imported")
+    )]
     for n in sorted(set(names) - set(todo)):
         print(f"skip {set_id}/{n}: real art exists")
     if todo:
@@ -95,5 +118,7 @@ if __name__ == "__main__":
         images("ui", ids, (16, 16))
     elif kind == "items":
         images("items", ids, (16, 16))
+    elif kind == "characters":
+        characters(ids)
     else:
         sys.exit(__doc__)

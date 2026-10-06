@@ -8,6 +8,8 @@ import type { Ambient, Cond, MapDef, MapId, NpcDef, ScriptCmd, TileKey, WorldDat
 import { pickupItem } from "./build";
 import { DATA } from "../data";
 import { glowField, glowLamps } from "../overworld/glow";
+import { buildMap } from "../overworld/map";
+import { reachableBoulderTiles } from "../overworld/uproot";
 
 /**
  * Side-quest givers (docs/ROUND3.md §4). Narrative writes the `q_*` scripts in
@@ -262,21 +264,42 @@ export function checkProgressWithoutPrune(world: WorldData): string[] {
  *  prerequisites must themselves be obtainable on those routes. Explicit
  *  got_lantern:false interactions must still be possible in the lit hall. */
 export function checkProgressWithoutLantern(world: WorldData): string[] {
+  return checkItemProgress(world, "glow");
+}
+
+/** Required boulder paths open only after SAXIFRAGE is obtainable from an
+ *  accessible script. Afterwards, BFS checks the actual starting layout;
+ *  boulders are never simply deleted to prove a path. */
+export function checkProgressWithoutSaxifrage(world: WorldData): string[] {
+  return checkItemProgress(world, "uproot");
+}
+
+/** Shared two-stage acquisition check: follow reachable scripts and the least
+ *  fixed point of their positive flag prerequisites before unlocking paths. */
+function checkItemProgress(world: WorldData, system: "glow" | "uproot"): string[] {
+  const flag = system === "glow" ? "got_lantern" : "got_saxifrage";
+  const item = system === "glow" ? "foxfire_lantern" : "saxifrage";
+  const affects = (m: MapDef) => system === "glow" ? !!m.dark : m.npcs.some((n) => n.pushable);
+  const path = system === "glow" ? "a lamp-lit path" : "a path without pushing boulders";
   const maps = Object.values(world.maps);
-  if (!maps.some((m) => m.dark)) return [];
+  if (!maps.some(affects)) return [];
   const errs: string[] = [];
-  const available = (when: Cond | undefined, lantern: boolean) =>
-    !when?.some((c) => c.flag === "got_lantern" && c.is !== lantern);
-  const beforeOnly = (when: Cond | undefined) => when?.some((c) => c.flag === "got_lantern" && !c.is);
+  const available = (when: Cond | undefined, enabled: boolean) =>
+    !when?.some((c) => c.flag === flag && c.is !== enabled);
+  const beforeOnly = (when: Cond | undefined) => when?.some((c) => c.flag === flag && !c.is);
 
   const grids = new Map(maps.map((m) => [m.id, grid(m)]));
-  const litGrids = new Map(maps.map((m) => {
+  const lockedGrids = new Map(maps.map((m) => {
     const g = grids.get(m.id)!;
+    if (system === "uproot") {
+      const stones = new Set(m.npcs.filter((n) => n.pushable).map((n) => `${n.x},${n.y}`));
+      return [m.id, { ...g, structureSolid: (x: number, y: number) => g.structureSolid(x, y) || stones.has(`${x},${y}`) }] as const;
+    }
     const bandAt = glowField(null, glowLamps(g.w, g.h, g.tile), false);
     // Dark ledges also remain solid: hopping across an unlit tile is not a
     // path through lit tiles, even when its landing happens to be lit.
-    const lit: Grid = { ...g, tile: (x, y) => bandAt(x, y) === "dark" ? undefined : g.tile(x, y) };
-    return [m.id, m.dark ? lit : g] as const;
+    const locked: Grid = { ...g, tile: (x, y) => bandAt(x, y) === "dark" ? undefined : g.tile(x, y) };
+    return [m.id, m.dark ? locked : g] as const;
   }));
   const canTalk = (g: Grid, reach: Set<string>, x: number, y: number) =>
     !!g.tile(x, y) && DIRS.some(([dx, dy]) =>
@@ -291,24 +314,33 @@ export function checkProgressWithoutLantern(world: WorldData): string[] {
     return false;
   };
 
-  function explore(lantern: boolean, initialFlags: ReadonlySet<string> = new Set(), initialEntries?: Map<MapId, { x: number; y: number }[]>) {
+  const reachFrom = (m: MapDef, g: Grid, starts: { x: number; y: number }[], enabled: boolean) => {
+    if (system !== "uproot" || !enabled || !affects(m)) return flood(g, starts);
+    const reach = new Set<string>();
+    const runtime = buildMap(m);
+    const stones = m.npcs.filter((n) => n.pushable);
+    for (const start of starts) for (const tile of reachableBoulderTiles(runtime, stones, start)) reach.add(tile);
+    return reach;
+  };
+
+  function explore(enabled: boolean, initialFlags: ReadonlySet<string> = new Set(), initialEntries?: Map<MapId, { x: number; y: number }[]>) {
     const entries = new Map<MapId, { x: number; y: number }[]>();
     const reaches = new Map<MapId, Set<string>>();
     const queue: MapId[] = [];
     let obtainable = false;
     const flags = new Set(initialFlags);
-    if (lantern) flags.add("got_lantern");
-    type Effect = { needs: string[]; flag?: string; lantern?: boolean; warp?: { to: MapId; x: number; y: number } };
+    if (enabled) flags.add(flag);
+    type Effect = { needs: string[]; flag?: string; granted?: boolean; warp?: { to: MapId; x: number; y: number } };
     const effects: Effect[] = [];
-    const needs = (when: Cond | undefined) => (when ?? []).filter((c) => c.is && c.flag !== "got_lantern").map((c) => c.flag);
+    const needs = (when: Cond | undefined) => (when ?? []).filter((c) => c.is && c.flag !== flag).map((c) => c.flag);
     const add = (id: MapId, x: number, y: number) => {
       const list = entries.get(id) ?? [];
       if (list.some((s) => s.x === x && s.y === y)) return;
       entries.set(id, [...list, { x, y }]);
       queue.push(id);
     };
-    // Follow calls and nested branches, but never use a lantern-gated branch
-    // to prove the lantern itself obtainable. Calls may be recursive.
+    // Follow calls and nested branches, but never use an item-gated branch
+    // to prove the item itself obtainable. Calls may be recursive.
     const scriptsSeen = new Set<string>();
     const script = (sid: string | undefined, deps: string[] = [], stack: string[] = []) => {
       if (!sid || stack.includes(sid)) return;
@@ -321,24 +353,24 @@ export function checkProgressWithoutLantern(world: WorldData): string[] {
       const branch = (cmds: ScriptCmd[], extra: string[] = []) => commands(cmds, [...deps, ...extra], stack);
       for (const c of cmds) {
         switch (c.op) {
-          case "giveItem": if (c.item === "foxfire_lantern" && (c.qty ?? 1) > 0) effects.push({ needs: deps, lantern: true }); break;
+          case "giveItem": if (c.item === item && (c.qty ?? 1) > 0) effects.push({ needs: deps, granted: true }); break;
           case "setFlag": if (c.value !== false) effects.push({ needs: deps, flag: c.flag }); break;
           case "battle": effects.push({ needs: deps, flag: `beat_${c.trainer}` }); break;
           case "warp": effects.push({ needs: deps, warp: c }); break;
           case "call": script(c.script, deps, stack); break;
           case "if": {
-            if (available(c.when, lantern)) branch(c.then, needs(c.when));
+            if (available(c.when, enabled)) branch(c.then, needs(c.when));
             // A conjunction's else is possible when any one condition fails.
             // Ordinary false flags may hold before their eventual setters.
             for (const v of c.when) {
-              if (v.flag === "got_lantern" ? v.is !== lantern : true) {
-                branch(c.else ?? [], v.flag !== "got_lantern" && !v.is ? [v.flag] : []);
+              if (v.flag === flag ? v.is !== enabled : true) {
+                branch(c.else ?? [], v.flag !== flag && !v.is ? [v.flag] : []);
               }
             }
             break;
           }
           case "ifHasItem":
-            if (c.item === "foxfire_lantern") branch(lantern ? c.then : c.else ?? []);
+            if (c.item === item) branch(enabled ? c.then : c.else ?? []);
             else { branch(c.then); branch(c.else ?? []); }
             break;
           case "choice": c.branches.forEach((b) => branch(b)); break;
@@ -349,15 +381,15 @@ export function checkProgressWithoutLantern(world: WorldData): string[] {
       }
     };
     const resolve = () => {
-      // A least fixed point rejects cycles such as a lantern grant requiring
-      // a flag whose only setter is inside the unlit rooms (or needs itself).
+      // A least fixed point rejects a grant requiring a flag whose only setter
+      // is behind the item gate, or a flag that requires itself.
       let changed = true;
       while (changed) {
         changed = false;
         for (const e of effects) {
           if (!e.needs.every((f) => flags.has(f))) continue;
           if (e.flag && !flags.has(e.flag)) { flags.add(e.flag); changed = true; }
-          if (e.lantern) obtainable = true;
+          if (e.granted) obtainable = true;
           if (e.warp) add(e.warp.to, e.warp.x, e.warp.y);
         }
       }
@@ -370,18 +402,18 @@ export function checkProgressWithoutLantern(world: WorldData): string[] {
       const id = queue.shift()!;
       const m = world.maps[id];
       if (!m) continue;
-      const g = (lantern ? grids : litGrids).get(id)!;
-      const reach = flood(g, entries.get(id)!);
+      const g = (enabled ? grids : lockedGrids).get(id)!;
+      const reach = reachFrom(m, g, entries.get(id)!, enabled);
       reaches.set(id, reach);
       if (!reach.size) continue;
       script(m.onEnter);
       for (const n of m.npcs) {
-        if (!available(n.visibleWhen, lantern) || !canTalk(g, reach, n.x, n.y)) continue;
+        if (!available(n.visibleWhen, enabled) || !canTalk(g, reach, n.x, n.y)) continue;
         script(n.script, needs(n.visibleWhen));
         if (n.trainer) effects.push({ needs: needs(n.visibleWhen), flag: `beat_${n.trainer}` });
       }
       for (const t of m.triggers) {
-        if (available(t.when, lantern) && triggerReached(grids.get(id)!, g, reach, t)) script(t.script, needs(t.when));
+        if (available(t.when, enabled) && triggerReached(grids.get(id)!, g, reach, t)) script(t.script, needs(t.when));
       }
       resolve();
       for (const wp of m.warps) if (reach.has(`${wp.x},${wp.y}`)) add(wp.to, wp.toX, wp.toY);
@@ -391,28 +423,37 @@ export function checkProgressWithoutLantern(world: WorldData): string[] {
 
   const before = explore(false);
   const after = before.obtainable ? explore(true, before.flags, before.entries) : before;
-  for (const m of maps.filter((m) => m.dark)) {
-    const where = `[${m.id}] without GLOW:`;
+  for (const m of maps.filter(affects)) {
+    const where = `[${m.id}] without ${system === "glow" ? "GLOW" : "UPROOT"}:`;
     const g = grids.get(m.id)!;
-    const lit = litGrids.get(m.id)!;
+    const locked = lockedGrids.get(m.id)!;
     const early = before.reaches.get(m.id) ?? new Set<string>();
     const late = after.reaches.get(m.id) ?? new Set<string>();
-    const need = (ok: boolean, what: string) => { if (!ok) errs.push(`${where} ${what} needs a lamp-lit path before got_lantern is obtainable`); };
+    const need = (ok: boolean, what: string, earlyOnly = false) => {
+      if (ok) return;
+      errs.push(system === "uproot" && before.obtainable && !earlyOnly
+        ? `${where} ${what} has no reachable path from its reset layout with got_saxifrage`
+        : `${where} ${what} needs ${path} before ${flag} is obtainable`);
+    };
+    // Explicit post-item story points still require an obtainable item, even
+    // when an immovable starting layout adds no tiles to the BFS's reach.
+    const requiredAfter = (when: Cond | undefined) =>
+      system === "uproot" && when?.some((c) => c.flag === flag && c.is);
     for (const n of m.npcs) {
-      if (n.sprite === "item_pickup" || n.sprite === "harvest_bush" || isBoarder(n)) continue;
-      if (beforeOnly(n.visibleWhen)) need(canTalk(lit, early, n.x, n.y), `npc ${n.id}`);
-      else if (available(n.visibleWhen, before.obtainable)) need(canTalk(before.obtainable ? g : lit, late, n.x, n.y), `npc ${n.id}`);
+      if (n.pushable || n.sprite === "item_pickup" || n.sprite === "harvest_bush" || isBoarder(n)) continue;
+      if (beforeOnly(n.visibleWhen)) need(canTalk(locked, early, n.x, n.y), `npc ${n.id}`, true);
+      else if (available(n.visibleWhen, before.obtainable) || requiredAfter(n.visibleWhen)) need(canTalk(before.obtainable ? g : locked, late, n.x, n.y), `npc ${n.id}`);
     }
     for (const t of m.triggers) {
-      if (beforeOnly(t.when)) need(triggerReached(g, lit, early, t), `trigger ${t.script}`);
-      else if (available(t.when, before.obtainable)) need(triggerReached(g, before.obtainable ? g : lit, late, t), `trigger ${t.script}`);
+      if (beforeOnly(t.when)) need(triggerReached(g, locked, early, t), `trigger ${t.script}`, true);
+      else if (available(t.when, before.obtainable) || requiredAfter(t.when)) need(triggerReached(g, before.obtainable ? g : locked, late, t), `trigger ${t.script}`);
     }
     for (const wp of m.warps) need(late.has(`${wp.x},${wp.y}`), `warp at ${wp.x},${wp.y}`);
-    // Optional things in unlit rooms count as reachable only with the lantern,
-    // even when there are no story NPCs there to expose an acquisition cycle.
+    // Optional gated areas still need an obtainable key item, even when
+    // there are no story NPCs there to expose an acquisition cycle.
     if (!before.obtainable) {
       const starts = [...early].map((k) => { const [x, y] = k.split(",").map(Number); return { x, y }; });
-      if ([...flood(g, starts)].some((k) => !early.has(k))) errs.push(`${where} dark rooms require an obtainable foxfire_lantern`);
+      if ([...reachFrom(m, g, starts, true)].some((k) => !early.has(k))) errs.push(`${where} ${system === "glow" ? "dark rooms" : "boulder rooms"} require an obtainable ${item}`);
     }
   }
   return errs;
@@ -606,8 +647,8 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       if (g.doors.some((d) => d.x === n.x && d.y === n.y)) errs.push(`${where} npc ${n.id} stands on a door`);
       if (!n.script && !n.trainer) {
         if (isBoarder(n)) { if (n.visibleWhen) errs.push(`${where} boarder ${n.id}: the engine shows it, no visibleWhen`); }
-        else if (n.sprite !== "item_pickup") errs.push(`${where} npc ${n.id} has nothing to say`);
-        else if (!items.has(pickupItem(n.id))) errs.push(`${where} pickup ${n.id} gives unknown item ${pickupItem(n.id)}`);
+        else if (!n.pushable && n.sprite !== "item_pickup") errs.push(`${where} npc ${n.id} has nothing to say`);
+        else if (!n.pushable && !items.has(pickupItem(n.id))) errs.push(`${where} pickup ${n.id} gives unknown item ${pickupItem(n.id)}`);
       }
       if (n.script && !world.scripts[n.script]) {
         (QUEST_SCRIPTS.has(n.script) ? warnings : errs).push(`${where} npc ${n.id} script ${n.script} missing`);
@@ -750,6 +791,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
 
   errs.push(...checkProgressWithoutPrune(world));
   errs.push(...checkProgressWithoutLantern(world));
+  errs.push(...checkProgressWithoutSaxifrage(world));
 
   // scripts
   const checkCmds = (sid: string, cmds: ScriptCmd[]) => eachCmd(cmds, (c) => {

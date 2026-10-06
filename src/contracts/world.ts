@@ -66,6 +66,8 @@ export interface NpcDef {
   y: number;
   facing: Dir;
   movement?: "static" | "wander" | "look_around";
+  /** UPROOT boulder: pushed one tile at a time; position resets on map entry. */
+  pushable?: boolean;
   /** Talk script. Trainers use `trainer` instead (engine runs intro -> battle -> after). */
   script?: ScriptId;
   trainer?: TrainerId;

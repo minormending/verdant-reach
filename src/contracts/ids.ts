@@ -245,6 +245,7 @@ export const CHARACTERS = [
   "flora_vance", "wren", "nursery_keeper", "nursery_keeper_b",
   "researcher", "orchardist", "arranger", "reporter", "gentleman",
   "rose_gate",                   // Conservatory 3 trellis gate (hide via visibleWhen to open)
+  "boulder",                     // UPROOT puzzle object; resets on map entry
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -299,6 +300,7 @@ export const REQUIRED_ITEMS = [
   "syrup_jar",                                // key item for the SAP RUN quest
   "pruning_shears",                           // key item: unlocks the PRUNE field move
   "foxfire_lantern",                          // key item: automatically lights dark maps
+  "saxifrage",                                // key item: unlocks UPROOT boulder pushes
   "fan_letter", "signed_photo",               // key items for the FAN MAIL quest
 ] as const;
 export type RequiredItemId = (typeof REQUIRED_ITEMS)[number];

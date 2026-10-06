@@ -35,6 +35,7 @@ import { Effects, drawHiddenSparkle, drawWaterGlint } from "./effects";
 import { Follower, followerLine } from "./follower";
 import { bushId, hasItem, hiddenAt, hiddenFlag, pickedToday, unfoundHidden } from "./progress";
 import { FIELD_MOVE_FX, fieldMoveFlag, fieldMoveOf } from "./fieldmove";
+import { UPROOT, tryPushBoulder } from "./uproot";
 import { canBattle, nurseryStep, readySeed, seedHint, seedStep, sprout } from "./nursery";
 import { drawHalo, drawTint, lampInfo, makeScreenCanvas, nightGlass, windowGlow } from "./lights";
 import { TileLayer } from "./tilelayer";
@@ -222,6 +223,7 @@ class Overworld implements Scene {
     this.mapId = id;
     const p = this.player;
     p.x = x; p.y = y; p.step = null; p.facing = facing; p.bumpAnim = 0;
+    // Fresh actors on every entry reset UPROOT puzzles to their authored layout.
     this.npcs = (def.npcs ?? []).map((n) => new Actor(n.id, n.sprite, n.x, n.y, n.facing, n));
     this.follower.place(x, y, facing);
     this.camera.snap();
@@ -555,7 +557,7 @@ class Overworld implements Scene {
     const rng = this.ctx.rng;
     for (const n of this.npcs) {
       if (n.def && n.sprite === "bird" && (n.away || this.visible(n))) { this.birdAi(n); continue; }
-      if (!n.def || n.moving || !this.visible(n)) continue;
+      if (!n.def || n.def.pushable || n.moving || !this.visible(n)) continue;
       if (n.sprite === "cat" || n.sprite === "dog") { this.petAi(n); continue; }
       const mode = n.def.movement ?? "static";
       if (mode === "static") continue;
@@ -685,7 +687,7 @@ class Overworld implements Scene {
     const fy = p.y + dy;
     const npc = this.npcAt(fx, fy);
     if (npc && !npc.moving) {
-      void this.flow(() => this.talk(npc));
+      void this.flow(() => npc.def?.pushable ? this.uproot(npc) : this.talk(npc));
       return true;
     }
     if (!npc && this.followerVisible() && !this.follower.moving && this.follower.x === fx && this.follower.y === fy) {
@@ -837,6 +839,20 @@ class Overworld implements Scene {
     const f = this.followerVisible() ? this.followerMon() : null;
     if (f && !f.seed) return f;
     return party.find(canBattle) ?? party.find((q) => !q.seed);
+  }
+
+  /** NPC field move: confirmation, then one legal push of the current actor. */
+  async uproot(boulder: Actor) {
+    const ctx = this.ctx;
+    const hasSaxifrage = hasItem(ctx.state, UPROOT.item);
+    if (!hasSaxifrage) { await ctx.ui.say(UPROOT.locked); return; }
+    if (!(await ctx.ui.yesNo(UPROOT.prompt))) return;
+    const dir = this.player.facing;
+    const push = tryPushBoulder(this.map, boulder, dir, hasSaxifrage, (x, y) => !!this.npcAt(x, y));
+    if (push.kind !== "push") { await ctx.ui.say(push.text); return; }
+    ctx.audio.playSfx("prune");
+    this.shaker.start(4);
+    await boulder.begin(dir, NPC_SCRIPT_FRAMES);
   }
 
   /** Field move flow: tile property -> key item -> prompt -> hop + particles -> flag. */
