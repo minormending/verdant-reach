@@ -173,6 +173,12 @@ export const MOVE_ANIMS: Record<string, AnimSpec> = {
   glochid_spray: S("volley", "spines"),
   water_store: S("light_rays", "heal"),
   hand_pollen: S("grow", "unfurl"),
+  // Chapter 7: icy petals, insulating coats, needles and a snapping trap
+  thaw_bloom: S("frost", "bloom"),
+  cushion: S("harden", "evergreen"),
+  needle_drop: S("volley", "spines"),
+  woolly_coat: S("harden", "evergreen"),
+  vacuum_trap: S("snap", "quick"),
   // fallback move used with no PP left
   struggle: S("slam", "struggle"),
 };

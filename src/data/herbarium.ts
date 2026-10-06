@@ -412,6 +412,60 @@ const LIST: HerbariumEntry[] = [
   // Source: https://en.wikipedia.org/wiki/Edmond_Albius
   h("vanilla_orchid", "Vanilla planifolia", "Vanilla", 3, 2,
     "Outside Mexico, its flowers are pollinated by hand. Edmond Albius worked out the method on Reunion in 1841."),
+
+  // ---------------------------------------------------------------- Chapter 7
+  // Fact: Its bulb needs a cold winter before it will flower.
+  // Source: https://en.wikipedia.org/wiki/Galanthus_nivalis
+  h("snowdrop_bulb", "Galanthus nivalis", "Snow Bulb", 0.04, 0.02,
+    "It waits for a chilly invitation. Its bulb needs a cold winter before it will flower."),
+  // Fact: Its bulb needs a cold winter before it will flower.
+  // Source: https://en.wikipedia.org/wiki/Galanthus_nivalis
+  h("snowdrop_shoot", "Galanthus nivalis", "Snow Shoot", 0.1, 0.03,
+    "It seems ready to say hello. A winter of cold is needed by its bulb before flowering."),
+  // Fact: Its bulb needs a cold winter before it will flower.
+  // Source: https://en.wikipedia.org/wiki/Galanthus_nivalis
+  h("snowdrop", "Galanthus nivalis", "Snowdrop", 0.2, 0.05,
+    "It offers a quiet little greeting. Before it can bloom, its bulb must pass through a cold winter."),
+
+  // Fact: It grows as a dense cushion that keeps its centre several degrees warmer than the surrounding air.
+  // Source: https://en.wikipedia.org/wiki/Silene_acaulis
+  h("campion_cushion", "Silene acaulis", "Moss Cushion", 0.03, 0.1,
+    "It looks like a cosy place to rest. Its dense cushion keeps the centre several degrees warmer than the surrounding air."),
+  // Fact: It grows as a dense cushion that keeps its centre several degrees warmer than the surrounding air.
+  // Source: https://en.wikipedia.org/wiki/Silene_acaulis
+  h("campion_mound", "Silene acaulis", "Moss Mound", 0.06, 0.5,
+    "It settles in beside you. Growing in a dense cushion keeps its centre several degrees above the air around it."),
+  // Fact: It grows as a dense cushion that keeps its centre several degrees warmer than the surrounding air.
+  // Source: https://en.wikipedia.org/wiki/Silene_acaulis
+  h("moss_campion", "Silene acaulis", "Moss Campion", 0.1, 1.5,
+    "It makes the mountains feel homely. At the heart of its dense cushion, it is several degrees warmer than the nearby air."),
+
+  // Fact: Unlike most conifers, larches drop all their needles every autumn.
+  // Source: https://en.wikipedia.org/wiki/Larix_decidua
+  h("larch_seedling", "Larix decidua", "Larch Sprout", 0.4, 0.6,
+    "It seems eager for a fresh start. Unlike most conifers, larches drop all their needles every autumn."),
+  // Fact: Unlike most conifers, larches drop all their needles every autumn.
+  // Source: https://en.wikipedia.org/wiki/Larix_decidua
+  h("larch", "Larix decidua", "Larch", 10, 500,
+    "It takes change in its stride. Every autumn it sheds all its needles, unlike most other conifers."),
+
+  // Fact: Its woolly white hairs help protect it from cold and strong mountain sunlight.
+  // Source: https://en.wikipedia.org/wiki/Leontopodium_nivale
+  h("edelweiss_bud", "Leontopodium nivale", "Edel Bud", 0.05, 0.02,
+    "It seems snug in its little coat. Its woolly white hairs help protect it from cold and strong mountain sunlight."),
+  // Fact: Its woolly white hairs help protect it from cold and strong mountain sunlight.
+  // Source: https://en.wikipedia.org/wiki/Leontopodium_nivale
+  h("edelweiss", "Leontopodium nivale", "Edelweiss", 0.2, 0.08,
+    "It greets the summit like an old friend. Woolly white hairs give it protection from the cold and the mountains' strong sunlight."),
+
+  // Fact: Its tiny underwater bladders snap open and suck in prey in about a millisecond.
+  // Source: https://en.wikipedia.org/wiki/Utricularia
+  h("bladderwort_sprig", "Utricularia vulgaris", "Bladdersprig", 0.1, 0.02,
+    "It seems to be waiting for a surprise. Its tiny underwater bladders snap open and suck in prey in about a millisecond."),
+  // Fact: Its tiny underwater bladders snap open and suck in prey in about a millisecond.
+  // Source: https://en.wikipedia.org/wiki/Utricularia
+  h("bladderwort", "Utricularia vulgaris", "Bladderwort", 0.8, 0.2,
+    "It never misses its cue. In roughly a millisecond, its little underwater bladders open with a snap and draw prey inside."),
 ];
 
 export const HERBARIUM = Object.fromEntries(LIST.map((e) => [e.species, e])) as Record<SpeciesId, HerbariumEntry>;

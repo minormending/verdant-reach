@@ -205,7 +205,7 @@ describe("moves", () => {
 });
 
 describe("items", () => {
-  it("keeps found growth items field-only; Ember Ash now opens lodgepole cones", () => {
+  it("keeps found growth items field-only; ash opens lodgepole cones and cold opens snowdrop bulbs", () => {
     for (const [id, name] of [["ember_ash", "Ember Ash"], ["cold_snap", "Cold Snap"]]) {
       expect(DATA.items[id]).toMatchObject({
         id, name, pocket: "items", price: 0, effect: { kind: "none" },
@@ -214,10 +214,13 @@ describe("items", () => {
       expect(wrapText(DATA.items[id].description, 18).length).toBeLessThanOrEqual(2);
       expect(REQUIRED_ITEMS).not.toContain(id);
       const users = species.filter((s) => s.growsInto?.trigger.kind === "item" && s.growsInto.trigger.item === id);
-      expect(users.map((s) => s.id)).toEqual(id === "ember_ash" ? ["lodgepole_cone"] : []);
+      expect(users.map((s) => s.id)).toEqual(id === "ember_ash" ? ["lodgepole_cone"] : ["snowdrop_bulb"]);
     }
     expect(DATA.species.lodgepole_cone.growsInto).toEqual({
       species: "lodgepole_seedling", trigger: { kind: "item", item: "ember_ash" },
+    });
+    expect(DATA.species.snowdrop_bulb.growsInto).toEqual({
+      species: "snowdrop_shoot", trigger: { kind: "item", item: "cold_snap" },
     });
   });
 

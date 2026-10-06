@@ -74,7 +74,7 @@ cold_snap.
 | `larch` | Larch | larch 2 | wood / frost | 480 | — | any | woodland |
 | `edelweiss_bud` | Edel Bud | edelweiss 1 | frost / bloom | 300 | vigor 32 → edelweiss | day | meadow |
 | `edelweiss` | Edelweiss | edelweiss 2 | frost / bloom | 470 | — | day | meadow |
-| `bladderwort_sprig` | Bladder Sprig | bladderwort 1 | bug / water | 295 | vigor 33 → bladderwort | any | carnivore |
+| `bladderwort_sprig` | Bladdersprig | bladderwort 1 | bug / water | 295 | vigor 33 → bladderwort | any | carnivore |
 | `bladderwort` | Bladderwort | bladderwort 2 | bug / water | 465 | — | any | carnivore |
 
 **Stat shapes:**

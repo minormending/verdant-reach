@@ -155,6 +155,13 @@ const LIST: Move[] = [
   m("glochid_spray", "Glochids", "thorn", "physical", 20, 100, 20, "Barbed hairs hit 2-5 times.", [{ kind: "multi_hit", min: 2, max: 5 }]),
   m("water_store", "Water Store", "water", "status", 0, null, 10, "Stored water heals half max HP.", [{ kind: "heal", fraction: 0.5 }]),
   m("hand_pollen", "Hand Pollen", "bloom", "status", 0, null, 15, "Pollen: SP.ATK sharply up.", [self("spa", 2)]),
+
+  // ------------------------------------------------------------- Chapter 7
+  m("thaw_bloom", "Thaw Bloom", "frost", "special", 75, 100, 15, "Cold petals may frostbite the foe.", [inflict("frostbite", 10)]),
+  m("cushion", "Cushion", "frost", "status", 0, null, 10, "Dense cushion ups DEF and SP.DEF.", [self("def", 1), self("spd", 1)]),
+  m("needle_drop", "Needle Drop", "wood", "physical", 25, 100, 20, "Falling needles strike 2-5 times.", [{ kind: "multi_hit", min: 2, max: 5 }]),
+  m("woolly_coat", "Woolly Coat", "frost", "status", 0, null, 15, "Woolly hairs sharply up SP.DEF.", [self("spd", 2)]),
+  m("vacuum_trap", "Vacuum Trap", "bug", "physical", 60, 100, 15, "A sudden suction. Strikes first.", [], 1),
 ];
 
 export const MOVES: Record<string, Move> = Object.fromEntries(LIST.map((mv) => [mv.id, mv]));
