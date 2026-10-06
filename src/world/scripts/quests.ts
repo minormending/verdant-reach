@@ -470,8 +470,10 @@ const firstSeed: ScriptCmd[] = [
 ];
 
 // --- FAN MAIL: a gentleman fan, GLASSHOUSE CITY -> FLORA VANCE ------------------
-// Only after the player has beaten FLORA: "then she'll remember your face."
+// Take the letter after the RELAY, then talk to FLORA again after her battle.
+// She rewards the courier before leaving the CONSERVATORY triggers the end card.
 
+// Kept for saves where FLORA already read the letter before this flow changed.
 const fanMailReward: ScriptCmd[] = [
   say("She READ it? All of it? Oh my. Oh my word.", "FAN"),
   say("Front row. FRONT ROW. I shall need to sit down.", "FAN"),
@@ -484,14 +486,15 @@ const fanMailReward: ScriptCmd[] = [
 const fanMail: ScriptCmd[] = [
   byQuest("fan_mail", {
     fresh: [
-      ifFlags({ beat_flora: true }, [
-        say("You BEAT FLORA VANCE? Then she'll remember your face!", "FAN"),
+      ifFlags({ relay_listened: true }, [
+        say("You MET FLORA VANCE? Oh! She'll remember your face!", "FAN"),
         say("I've written her two hundred letters. I've never posted one.", "FAN"),
         say("What if she READ it? I'd simply wilt.", "FAN"),
         { op: "yesno", prompt: "Take his letter to FLORA?", yes: [
           give("fan_letter"),
           startQuest("fan_mail"),
           say("Letter two hundred and one. The best one. It rhymes in places.", "FAN"),
+          say("Give it to her after your battle! Oh, my heart!", "FAN"),
         ], no: [
           say("Quite right. Perhaps next year. Or the year after.", "FAN"),
         ] },
@@ -507,6 +510,8 @@ const fanMail: ScriptCmd[] = [
       ]),
     ],
     finished: [
+      say("She READ it? All of it? Oh my. Oh my word.", "FAN"),
+      say("Front row. FRONT ROW. I shall need to sit down.", "FAN"),
       say("I'm having my good hat cleaned. For the front row.", "FAN"),
     ],
   }),
@@ -523,6 +528,10 @@ const fanMailFlora: ScriptCmd[] = [
   say("And this is for the courier. Signed, naturally.", "FLORA"),
   give("signed_photo"),
   flag("fan_letter_delivered"),
+  say("And a courier's fee! Applause doesn't pay the bills, darling.", "FLORA"),
+  ...pay(1000),
+  completeQuest("fan_mail"),
+  say("Now go on. Give him my love. And a tissue.", "FLORA"),
 ];
 
 export const questScripts: Scripts = {
@@ -614,8 +623,7 @@ export const QUESTS: Record<string, QuestDef> = {
   fan_mail: {
     id: "fan_mail", title: "FAN MAIL", giver: "A FAN, GLASSHOUSE CITY", area: "glasshouse_city",
     steps: [
-      { text: "Give FLORA VANCE the letter.", doneWhen: [{ flag: "fan_letter_delivered", is: true }] },
-      { text: "Tell the fan what she said.", doneWhen: isDone("fan_mail") },
+      { text: "Give FLORA VANCE the letter.", doneWhen: isDone("fan_mail") },
     ],
     reward: "SIGNED PHOTO + $1000",
   },

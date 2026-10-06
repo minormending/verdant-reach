@@ -47,7 +47,7 @@ Coordinates are final (maps landed); see "Positions" at the end.
 | chapter end | — | `ch4_end` | N | Vale's call, set `ch4_done`, `endSlice` |
 | Rose Conservatory closed | trigger on the tile below the door | `ch4_conservatory_closed` | N | when `relay_listened: false`; **must end with `movePlayer down`** |
 | sensor post 2 (tile `sensor_post`, city square) | — | `q_relay_sensors_post_2` | N | |
-| `fan` | gentleman | `q_fan_mail` | N | quest giver |
+| `fan` | gentleman | `q_fan_mail` | N | offers FAN MAIL after `relay_listened`; FLORA gives the SIGNED PHOTO and $1000 and completes it when talked to after her battle, before leaving the Conservatory. Still available after `ch4_done`. |
 | `pip` | pip | `gc_pip` | W | a fact |
 | `reporter`, fans, residents, pets | various | `gc_*` | W | |
 

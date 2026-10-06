@@ -9,7 +9,7 @@
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
 // grunt, rival 3 and the shears, the NURSERY (boarding two, a seed, sprouting),
 // WREN's posts, PRUNE on ROUTE 5, FLORA and the chapter end. `check:fanmail`
-// plays the post-chapter FAN MAIL quest from a jump-in.
+// delivers FAN MAIL before the end card, or from a post-chapter jump-in.
 //
 // `?timer` keeps the loop running in a hidden tab. Add `&boost=<level>` to set
 // the level of the over-levelled helper (default 48; `boost=0` plays it
@@ -1322,23 +1322,25 @@ export const CHECKS: Record<string, () => Promise<void>> = {
     beat("growth after a win", !!grown && grown.species !== "dandelion_bud", `now ${grown?.species}:${grown?.level}`);
   },
 
-  /** FAN MAIL (after the chapter end, or a jump-in with beat_flora,relay_listened,ch4_done):
-   *  the fan's letter to FLORA, her signed photo, and the fan's thanks. */
+  /** FAN MAIL (after the RELAY, or a post-chapter jump-in): take the letter,
+   *  beat FLORA if needed, then talk again for both rewards before leaving. */
   async fanmail() {
     instrument();
     await settle();
     const st = ctx().state;
+    const beforeEnd = !flag("ch4_done");
     await nav("glasshouse_city");
     await talkTo("fan");
     beat("FAN MAIL: took the letter", flag("quest_fan_mail_started") && (st.bag["fan_letter"] ?? 0) > 0);
     await nav("glasshouse_conservatory");
     if (!(await solvePuzzle("flora"))) issue("puzzle", "could not reach FLORA");
+    if (!flag("beat_flora")) await talkTo("flora");
+    const money = st.money;
     await talkTo("flora");
     beat("FAN MAIL: FLORA reads it", flag("fan_letter_delivered") && (st.bag["signed_photo"] ?? 0) > 0 && !(st.bag["fan_letter"] ?? 0));
-    await nav("glasshouse_city");
-    const money = st.money;
-    await talkTo("fan");
-    beat("FAN MAIL: done", flag("quest_fan_mail_done") && st.money === money + 1000, `money ${money}->${st.money}`);
+    beat("FAN MAIL: done", flag("quest_fan_mail_done") && st.money === money + 1000 && (!beforeEnd || !flag("ch4_done")), `money ${money}->${st.money}`);
+    await talkTo("flora");
+    beat("FAN MAIL: reward only once", st.money === money + 1000 && st.bag["signed_photo"] === 1);
   },
 
   /** Buy a pod at the market. */

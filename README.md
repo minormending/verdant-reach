@@ -94,4 +94,3 @@ Contracts shared by all modules: `src/contracts/`.
 - **The audio was mixed by measurement only.** Levels were set with offline renders; a human listening pass is still worthwhile.
 - **Balance comes from simulation and automated play** (`src/battle/logic/balance.test.ts`, `e2e/`). Human play-testing should still tune feel.
 - **Scope:** Chapters 5–11 of the story bible (Conservatories 4–8, the Council) are not built yet.
-- **FAN MAIL** can only be finished after the Chapter 4 end card (save, then continue).
