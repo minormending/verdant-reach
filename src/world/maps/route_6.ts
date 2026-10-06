@@ -1,75 +1,80 @@
 import type { MapDef } from "../../contracts";
 import { OUTDOOR, say, type Scripts } from "../build";
 
-// The long canopy boardwalk is the only crossing between two broad clearings.
-// Tree masses on both banks keep the old-growth tall and close. A spur drops
-// into the skunk-cabbage bog; the main trail stays above the water.
+// The canopy walk is the only crossing between two broad clearings: weathered
+// boards high in the old growth, roped on both sides over a misty drop, with a
+// lookout spur. A winding trail threads each clearing past fern beds; a giant
+// cedar marks the north one, and a skunk-cabbage bog sits in the south.
 export const route_6: MapDef = {
   id: "route_6", name: "ROUTE 6", outdoor: true, music: "route",
-  border: "tree", legend: OUTDOOR, ambient: "mist",
+  border: "oldgrowth_tree", ambient: "mist",
+  legend: {
+    ...OUTDOOR, T: "oldgrowth_tree", ".": "moss", "@": "moss", ",": "fern_brush",
+    "=": "canopy_boardwalk", "~": "canopy_drop", "|": "rope_rail",
+  },
   tiles: [
     "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 0
     "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 1
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 2
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 3
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 4
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 5
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 6
-    "TTTTT..3..................TTTT", // 7
-    "TTTTT..................4..TTTT", // 8
-    "TTTTT.,,,,,,,.............TTTT", // 9
-    "TTTTT.,,,,,,,.............TTTT", // 10
-    "TTTTT.,,,,,,,.............TTTT", // 11
-    "TTTTT.,,,,,,,......,,,,,..TTTT", // 12
-    "TTTTT.,,,,,,,......,,,,,..TTTT", // 13
-    "TTTTT..............,,,,,..TTTT", // 14
-    "TTTTT..............,,,,,..TTTT", // 15
-    "TTTTT....5.........,,,,,..TTTT", // 16
-    "TTTTT.....................TTTT", // 17
-    "TTTTT.................3...TTTT", // 18
-    "TTTTTTTTTTTTTS::TTTTTTTTTTTTTT", // 19
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 20
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 21
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 22
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 23
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 24
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 25
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 26
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 27
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 28
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 29
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 30
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 31
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 32
-    "TTTTTTTTT~~~~~==~~~~~TTTTTTTTT", // 33
-    "TTTTTTTTT~~~~~==~~~~bbbbbbTTTT", // 34
-    "TTTTTTTTT~~~~~======bbbbbbTTTT", // 35
-    "TTTTTTTTT~~~~~======bbbbbbTTTT", // 36
-    "TTTTTTTTT~~~~~==~~~~bbbbbbTTTT", // 37
-    "TTTTTTTTT~~~~~==~~~~bbbbbbTTTT", // 38
-    "TTTTTTTTT~~~~~==~~~~bbbbbbTTTT", // 39
-    "TTTTTTTTTTTTTT::STTTTTTTTTTTTT", // 40
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 41
-    "TTTT......................TTTT", // 42
-    "TTTT.4....................TTTT", // 43
-    "TTTT.,,,,,,,............3.TTTT", // 44
-    "TTTT.,,,,,,,..............TTTT", // 45
-    "TTTT.,,,,,,,..............TTTT", // 46
-    "TTTT.,,,,,,,........,,,,,.TTTT", // 47
-    "TTTT.,,,,,,,........,,,,,.TTTT", // 48
-    "TTTT.,,,,,,,........,,,,,.TTTT", // 49
-    "TTTT................,,,,,.TTTT", // 50
-    "TTTT................,,,,,.TTTT", // 51
-    "TTTT....5.................TTTT", // 52
-    "TTTT................4.....TTTT", // 53
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 54
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 55
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 56
+    "TTTTTTTTTTTTT::TTTTTTTTTTTTTTT", // 2
+    "TTTTTTTTTTTT::TTTTTTTTTTTTTTTT", // 3
+    "TTTTTTTTTTTT::TTTTTTTTTTTTTTTT", // 4
+    "TTTTTTTTTTTTT::TTTTTTTTTTTTTTT", // 5
+    "TTTTTTTTTT....::.TTTTTTTTTTTTT", // 6
+    "TTTTTT.........::....TTTTTTTTT", // 7
+    "TTTTT...........::.......TTTTT", // 8
+    "TTTT..,,,,,......::...@@@..TTT", // 9
+    "TTTT.,,,,,,,......:...@@@...TT", // 10
+    "TTT..,,,,,,,,.....::..@@@...TT", // 11
+    "TTT...,,,,,,......:...@@@....T", // 12
+    "TTTT...,,,,......::.,,,......T", // 13
+    "TTTT............::.,,,,,,...TT", // 14
+    "TTTTT..........::.,,,,,,,..TTT", // 15
+    "TTTTTT........::...,,,,,..TTTT", // 16
+    "TTTTTTT......::.........TTTTTT", // 17
+    "TTTTTTTTT....::......TTTTTTTTT", // 18
+    "TTTTTTTTTTTTTS==TTTTTTTTTTTTTT", // 19
+    "TTTTTTTTTTTTTT==TTTTTTTTTTTTTT", // 20
+    "TTTTTTTTTTT~~|==|~~TTTTTTTTTTT", // 21
+    "TTTTTTTTT~~~~|==|~~~~~TTTTTTTT", // 22
+    "TTTTTTTT~~~~~|==|~~~~~~TTTTTTT", // 23
+    "TTTTTTT~~~~~~|==|~~~~~~~TTTTTT", // 24
+    "TTTTTTT~~~~~~|==|~~~~~~~TTTTTT", // 25
+    "TTTTTTTT~~~~~|==|~~~~~~TTTTTTT", // 26
+    "TTTTTTTTT~~~~|==|~~~~~~TTTTTTT", // 27
+    "TTTTTTTTTT~~~|==|~~~~~TTTTTTTT", // 28
+    "TTTTTTTTTT~~~|==|~~~~~TTTTTTTT", // 29
+    "TTTTTTTTT~~~~|==|~~~~~~TTTTTTT", // 30
+    "TTTTTTTT~~~~~|==|~~~~~~~TTTTTT", // 31
+    "TTTTTTTT~~~~~|==|~~~~~~~~TTTTT", // 32
+    "TTTTTTTTT~~~~|==|||||~~~~TTTTT", // 33
+    "TTTTTTTTT~~~~|=====|~~~~~TTTTT", // 34
+    "TTTTTTTTT~~~~|=====|~~~~TTTTTT", // 35
+    "TTTTTTTTTT~~~|==||||~~~~TTTTTT", // 36
+    "TTTTTTTTTT~~~|==|~~~~~~TTTTTTT", // 37
+    "TTTTTTTTTTT~~|==|~~~~~TTTTTTTT", // 38
+    "TTTTTTTTTTTT~|==|~~TTTTTTTTTTT", // 39
+    "TTTTTTTTTTTTTT==STTTTTTTTTTTTT", // 40
+    "TTTTTTTTTTTTTT==TTTTTTTTTTTTTT", // 41
+    "TTTTTTTT......::......TTTTTTTT", // 42
+    "TTTTT.........::..........TTTT", // 43
+    "TTTT.,,,,,,....::.........TTTT", // 44
+    "TTT.,,,,,,,,....::.....T...TTT", // 45
+    "TTT..,,,,,,,.....::........TTT", // 46
+    "TTTT..,,,,,,......::..bbbb...T", // 47
+    "TTTT...,,,,.......::.bbbbbb..T", // 48
+    "TTTTT.............::..bbbbb..T", // 49
+    "TTTTTT...........::....bbb...T", // 50
+    "TTTTTT..........::...........T", // 51
+    "TTTTTTT........::.....,,..,,TT", // 52
+    "TTTTTTTTTT....::......,,,,.TTT", // 53
+    "TTTTTTTTTTTTT::TTTTTTTTTTTTTTT", // 54
+    "TTTTTTTTTTTTT::TTTTTTTTTTTTTTT", // 55
+    "TTTTTTTTTTTTT::TTTTTTTTTTTTTTT", // 56
     "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 57
     "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 58
     "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT", // 59
   ],
-  structures: [],
+  structures: [{ key: "giant_cedar", x: 22, y: 9 }],
   warps: [
     { x: 14, y: 59, to: "sugarbush_grove", toX: 14, toY: 1, facing: "down" },
     { x: 15, y: 59, to: "sugarbush_grove", toX: 14, toY: 1, facing: "down" },
@@ -77,10 +82,10 @@ export const route_6: MapDef = {
     { x: 15, y: 0, to: "cedarhallow", toX: 18, toY: 28, facing: "up" },
   ],
   npcs: [
-    { id: "lumberjack_hale", sprite: "hiker", x: 12, y: 48, facing: "right", trainer: "lumberjack_hale", sight: 3 },
-    { id: "lumberjack_birch", sprite: "hiker", x: 17, y: 44, facing: "left", trainer: "lumberjack_birch", sight: 2 },
-    { id: "forager_sage", sprite: "gardener", x: 17, y: 16, facing: "left", trainer: "forager_sage", sight: 2 },
-    { id: "forager_ash", sprite: "birdwatcher", x: 12, y: 8, facing: "right", trainer: "forager_ash", sight: 3 },
+    { id: "lumberjack_hale", sprite: "lumberjack", x: 12, y: 48, facing: "right", trainer: "lumberjack_hale", sight: 3 },
+    { id: "lumberjack_birch", sprite: "lumberjack", x: 17, y: 44, facing: "left", trainer: "lumberjack_birch", sight: 2 },
+    { id: "forager_sage", sprite: "forager", x: 17, y: 16, facing: "left", trainer: "forager_sage", sight: 2 },
+    { id: "forager_ash", sprite: "forager", x: 12, y: 8, facing: "right", trainer: "forager_ash", sight: 3 },
     { id: "bush:r6_wild_berry", sprite: "harvest_bush", x: 24, y: 52, facing: "down", movement: "static", script: "bush_r6_wild_berry" },
   ],
   hidden: [{ x: 9, y: 16, item: "spring_water" }, { x: 20, y: 53, item: "compost" }],
@@ -111,5 +116,5 @@ export const route_6: MapDef = {
   },
 };
 export const scripts: Scripts = {
-  bush_r6_wild_berry: [say("TODO(text): bush_r6_wild_berry"), { op: "harvest", id: "r6_wild_berry", item: "wild_berry", qty: 2 }],
+  bush_r6_wild_berry: [say("A salmonberry cane arches over the trail, hung with orange fruit."), { op: "harvest", id: "r6_wild_berry", item: "wild_berry", qty: 2 }],
 };

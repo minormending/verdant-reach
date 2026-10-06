@@ -1,32 +1,38 @@
 import type { MapDef } from "../../contracts";
 import { LEGEND, when } from "../build";
 
-// Two lamps warm the entrance hall. Beyond the keeper, the trunk's central
-// aisle branches into three shrine rooms and beds of pale woodland plants.
+// Inside the living trunk: worn heartwood floors ringed like the tree itself.
+// Two clumps of glowing ghost pipes light the entrance hall. Beyond the
+// keeper, the central aisle branches to three carved shrine posts and two
+// mossy courts of sword fern, with pale ghost pipes in the corners.
 export const cedar_hollow: MapDef = {
   id: "cedar_hollow", name: "THE HOLLOW", outdoor: false, dark: true,
-  music: "hollow", border: "void", legend: LEGEND, ambient: "spores",
+  music: "hollow", border: "void", ambient: "spores",
+  legend: {
+    ...LEGEND, W: "hollow_wall", w: "shrine_floor", ".": "moss", ",": "fern_brush",
+    "!": "carved_post", "6": "glow_pipe", g: "ghostpipe_clump",
+  },
   tiles: [
     "WWWWWWWWWWWWWWWWWWWW", // 0
     "WWWWWWWWWWWWWWWWWWWW", // 1
-    "WWWWWWWwwwwwwWWWWWWW", // 2
-    "WWWWWWWw,,,,wWWWWWWW", // 3
-    "WWwwwwww,,,,wwwwwwWW", // 4
-    "WW!wwwww,,,,wwwww!WW", // 5
-    "WWw,,,,wwwwwwwwwwwWW", // 6
-    "WWw,,,,wwwwwwwwwwwWW", // 7
-    "WWw,,,,wwwwwwwwwwwWW", // 8
-    "WWw3wwwwwwwwwwwwwwWW", // 9
+    "WWWWWWW......WWWWWWW", // 2
+    "WWWWWWW.,,,,.WWWWWWW", // 3
+    "WWwwwww.,,,,.wwwwwWW", // 4
+    "WW!wwww.,,,,.wwww!WW", // 5
+    "WW.....w....wwwwwgWW", // 6
+    "WW.,,,,.wwwwwwwwwwWW", // 7
+    "WW.,,,,.wwwwwwwwwwWW", // 8
+    "WW.,,,,.wwwwwwwwwgWW", // 9
     "WWWWWWWwwwwwwWWWWWWW", // 10
     "WWWWWWWwwwwwwWWWWWWW", // 11
-    "WWwwwwwwwwwwwwwwwwWW", // 12
-    "WWwwwwwwwwww,,,,,wWW", // 13
-    "WW!wwwwwwwww,,,,,wWW", // 14
-    "WWwwwwwwwwww,,,,,wWW", // 15
-    "WWwwwwwwwwww,,,,,wWW", // 16
-    "WWwwwwwwwwwwwwww5wWW", // 17
+    "WWgwwwwwwwwww......W", // 12
+    "WWwwwwwwwwww.,,,,,.W", // 13
+    "WW!wwwwwwwww.,,,,,.W", // 14
+    "WWwwwwwwwwww.,,,,,.W", // 15
+    "WWwwwwwwwwww.,,,,,.W", // 16
+    "WWgwwwwwwwww.......W", // 17
     "WWWWWWWwwwwwwWWWWWWW", // 18
-    "WWWWWWwwwwwwwwWWWWWW", // 19
+    "WWWWWWgwwwwwwwgWWWWW", // 19
     "WWWWWWwwwwwwwwWWWWWW", // 20
     "WWWWWWwwwwww6wWWWWWW", // 21
     "WWWWWWww6wwwwwWWWWWW", // 22
@@ -35,7 +41,7 @@ export const cedar_hollow: MapDef = {
   structures: [],
   warps: [{ x: 9, y: 23, to: "cedarhallow", toX: 28, toY: 8, facing: "down" }],
   npcs: [
-    { id: "shrine_keeper", sprite: "elder", x: 10, y: 21, facing: "down", movement: "static", script: "ch5_shrine_keeper" },
+    { id: "shrine_keeper", sprite: "shrine_keeper", x: 10, y: 21, facing: "down", movement: "static", script: "ch5_shrine_keeper" },
   ],
   hidden: [{ x: 16, y: 17, item: "rain_jar" }, { x: 3, y: 9, item: "glass_pod" }],
   signs: [],
