@@ -29,6 +29,8 @@ jobs:
       - run: npm ci
       - name: Test
         run: npm test
+      - name: Release gate
+        run: npm run release-check
       - name: Build (typecheck + bundle)
         run: npm run build
       - uses: actions/configure-pages@v6

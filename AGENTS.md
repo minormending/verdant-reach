@@ -155,6 +155,7 @@ Full roster review: `tools/art/review/roster_crystal.png`.
 
 ## Conventions
 
+- `main` must pass `npm run release-check`; placeholders live only on feature branches.
 - **Commits:** small and logical, with an imperative summary line and a body
   explaining why. Push to `main` only when typecheck, tests and the build pass;
   a push deploys the site.

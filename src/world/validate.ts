@@ -425,6 +425,8 @@ export function eachCmd(cmds: ScriptCmd[], fn: (c: ScriptCmd) => void) {
     switch (c.op) {
       case "choice": c.branches.forEach((b) => eachCmd(b, fn)); break;
       case "yesno": eachCmd(c.yes, fn); eachCmd(c.no, fn); break;
+      case "trade":
+        if (c.then) eachCmd(c.then, fn); if (c.else) eachCmd(c.else, fn); break;
       case "if": case "ifTime": case "ifLastBattle":
       case "ifHasItem": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed":
         eachCmd(c.then, fn); if (c.else) eachCmd(c.else, fn); break;
@@ -768,6 +770,17 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
         for (const i of c.stock) if (!items.has(i)) errs.push(`${at} unknown shop item ${i}`); break;
       case "giveSpecies": case "showSpecies": case "wildBattle":
         if (!species.has(c.species)) errs.push(`${at} unknown species ${c.species}`); break;
+      case "trade":
+        for (const sp of [...c.wants, c.gives.species]) {
+          if (!species.has(sp)) errs.push(`${at} unknown trade species ${sp}`);
+        }
+        if (!Number.isInteger(c.gives.level) || c.gives.level < 1 || c.gives.level > 60) {
+          errs.push(`${at} trade level must be 1–60`);
+        }
+        if (c.gives.nickname !== undefined && Array.from(c.gives.nickname).length > 10) {
+          errs.push(`${at} trade nickname is longer than 10 characters`);
+        }
+        break;
       case "giveMark": if (!marks.has(c.mark)) errs.push(`${at} unknown mark ${c.mark}`); break;
       case "battle": if (!world.trainers[c.trainer]) errs.push(`${at} unknown trainer ${c.trainer}`); break;
       case "music": if (!music.has(c.id)) errs.push(`${at} unknown music ${c.id}`); break;
