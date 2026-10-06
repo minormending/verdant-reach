@@ -58,7 +58,7 @@ export const saltmarsh_harbour: MapDef = {
   // Interactable plaque: a static sign would consume A before its script.
   signs: [],
   triggers: [
-    { x: 12, y: 22, w: 2, script: "ch6_doctor", when: when({ ch6_arrived: true, ch6_doctor_met: false }) },
+    { x: 12, y: 20, w: 2, script: "ch6_doctor", when: when({ ch6_arrived: true, ch6_doctor_met: false }) },
     { x: 34, y: 11, script: "ch6_lantern_tree" },
     { x: 25, y: 9, script: "ch6_cons5_door", when: when({ lantern_healed: false }) },
   ],

@@ -203,7 +203,7 @@ and 6 catches):
 **Trade** (NPC `trader` in saltmarsh_market, script `q_hand_pollinator`):
 - `wants: ["vanilla_vine"]`, `gives: { species: "vanilla_vine", level: 30,
   nickname: "POLLY" }`. It arrives and grows into `vanilla_orchid` at once.
-- He offers only after the player has *seen* a vanilla_vine.
+- No *seen* gate (the lead dropped it: the engine has no such check, and the trade's party filter already needs a vine). He simply asks for one.
 - TODO(text) lines: hand-pollination lore.
 
 ## 6. Story flags and script ids (logic only; dialogue is `TODO(text)`)
@@ -212,7 +212,7 @@ and 6 catches):
 |---|---|---|
 | `ch6_ford_keeper` | fallowfield, NPC `ford_keeper` (sprite `villager_a`) at the south exit, `visibleWhen ch5_done=false` | "the ford's flooded" |
 | `ch6_arrival` | saltmarsh_harbour `onEnter` (first time) | sets `ch6_arrived` |
-| `ch6_doctor` | the docks trigger, when `ch6_arrived && !ch6_doctor_met` | NPC `doctor` (sprite `researcher`) approaches; `yesno` sell the seed? Either branch has TODO lines and keeps the seed. She walks off the pier (`moveNpc`, `hideNpc`). Sets `ch6_doctor_met`, then shows the 2 dock grunts. |
+| `ch6_doctor` | the docks trigger at (12,20), width 2, when `ch6_arrived && !ch6_doctor_met`; doctor starts at (12,23) | NPC `doctor` (sprite `researcher`) approaches; `yesno` sell the seed? Either branch has TODO lines and keeps the seed. She walks off the pier (`moveNpc`, `hideNpc`). Sets `ch6_doctor_met`, then shows the 2 dock grunts. |
 | `ch6_reyes_point` | NPC `reyes_point` (sprite `nell_pitcher` stand-in) on the point, `visibleWhen lantern_healed=false` | first talk: give `lily_raft`, set `got_raft`; later: a reminder |
 | `ch6_lantern_tree` | sign-like talk trigger on the tree | if `got_sap && !lantern_healed`: take `cactus_sap`, `flash` gold, `still` (stand-in `bloom`) → `stillClear`, set `lantern_healed`. Else: lore. |
 | `ch6_cons5_door` | saltmarsh_conservatory door trigger | `!lantern_healed` → TODO, then `movePlayer` down |

@@ -304,6 +304,7 @@ export const REQUIRED_ITEMS = [
   "foxfire_lantern",                          // key item: automatically lights dark maps
   "lily_raft",                                // key item: ride water with RAFT
   "saxifrage",                                // key item: unlocks UPROOT boulder pushes
+  "cactus_sap",                               // key item: Saguaro's remedy for the Lantern Tree
   "fan_letter", "signed_photo",               // key items for the FAN MAIL quest
 ] as const;
 export type RequiredItemId = (typeof REQUIRED_ITEMS)[number];

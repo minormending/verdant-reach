@@ -629,7 +629,79 @@ const shrineOffering = (n: number): ScriptCmd[] => [
   ]),
 ];
 
+// --- SEAGRASS SURVEY: Reyes's assistant, ROUTE 8 -------------------------------
+const seagrassSurveyCheck: ScriptCmd[] = [
+  caught(["seagrass_shoot", "eelgrass"], [flag("seagrass_survey_seagrass")]),
+  caught(["mangrove_propagule", "mangrove_sapling", "red_mangrove"], [flag("seagrass_survey_mangrove")]),
+  ifFlags({ seagrass_survey_seagrass: true, seagrass_survey_mangrove: true }, [
+    say("TODO(text): Both coastal plant lines are recorded.", "ASSISTANT"),
+    say("TODO(text): The assistant gives pods and a rain jar.", "ASSISTANT"),
+    give("glass_pod", 3),
+    give("rain_jar"),
+    completeQuest("seagrass_survey"),
+    say("TODO(text): The survey helps Reyes care for the coast.", "ASSISTANT"),
+  ], [
+    ifFlags({ seagrass_survey_seagrass: false }, [
+      say("TODO(text): Catch any stage of the seagrass line.", "ASSISTANT"),
+    ]),
+    ifFlags({ seagrass_survey_mangrove: false }, [
+      say("TODO(text): Catch any stage of the mangrove line.", "ASSISTANT"),
+    ]),
+  ]),
+];
+const seagrassSurvey: ScriptCmd[] = [
+  byQuest("seagrass_survey", {
+    fresh: [
+      say("TODO(text): Reyes's assistant surveys the sea's flowering plants.", "ASSISTANT"),
+      say("TODO(text): Seagrass pollen drifts through the water.", "ASSISTANT"),
+      say("TODO(text): Record a seagrass and a mangrove for the survey.", "ASSISTANT"),
+      say("TODO(text): Any stage counts; return here for a reward.", "ASSISTANT"),
+      startQuest("seagrass_survey"),
+      ...seagrassSurveyCheck,
+    ],
+    going: seagrassSurveyCheck,
+    finished: [
+      say("TODO(text): The assistant thanks the player for the coastal record.", "ASSISTANT"),
+      say("TODO(text): Both sea and shore hold flowering plants.", "ASSISTANT"),
+    ],
+  }),
+];
+
+// Lead's decision: no "seen a vanilla vine" gate (the engine has no such check, and the
+// trade's own party filter already requires a vine). The trader simply asks for one.
+export const handPollinatorOffer: ScriptCmd[] = [
+  byQuest("hand_pollinator", {
+    fresh: [
+      say("TODO(text): The trader asks whether the player has found a vanilla vine.", "TRADER"),
+      say("TODO(text): Vanilla flowers can need pollination by hand.", "TRADER"),
+      say("TODO(text): Edmond Albius worked out the method on Reunion.", "TRADER"),
+      say("TODO(text): Trade a vanilla vine for the trader's POLLY.", "TRADER"),
+      startQuest("hand_pollinator"),
+    ],
+    going: [
+      say("TODO(text): Bring a vanilla vine in the party to trade.", "TRADER"),
+    ],
+    finished: [
+      say("TODO(text): The trader hopes POLLY is thriving.", "TRADER"),
+      say("TODO(text): Careful pollination helps vanilla grow.", "TRADER"),
+    ],
+  }),
+  ifFlags({ quest_hand_pollinator_done: false }, [
+    { op: "trade", wants: ["vanilla_vine"], gives: { species: "vanilla_vine", level: 30, nickname: "POLLY" },
+      then: [
+        say("TODO(text): POLLY grows into a vanilla orchid at once.", "TRADER"),
+        completeQuest("hand_pollinator"),
+        say("TODO(text): The trader thanks the player for the exchange.", "TRADER"),
+      ],
+      else: [
+        say("TODO(text): The trader will wait until the player is ready.", "TRADER"),
+      ],
+    },
+  ]),
+];
+
 export const questScripts: Scripts = {
+  q_hand_pollinator: handPollinatorOffer,
   q_fire_followers: fireFollowers,
   q_shrine_offerings: shrineOfferings,
   q_shrine_offerings_shrine_1: shrineOffering(1),
@@ -650,12 +722,26 @@ export const questScripts: Scripts = {
   q_first_seed: firstSeed,
   q_fan_mail: fanMail,
   q_fan_mail_flora: fanMailFlora,
+  q_seagrass_survey: seagrassSurvey,
 };
 
 const isStarted = (q: string) => [{ flag: started(q), is: true }];
 const isDone = (q: string) => [{ flag: done(q), is: true }];
 
 export const QUESTS: Record<string, QuestDef> = {
+  seagrass_survey: {
+    id: "seagrass_survey", title: "SEAGRASS SURVEY", giver: "REYES'S ASSISTANT, ROUTE 8", area: "route_8",
+    steps: [
+      { text: "Catch a SEAGRASS.", doneWhen: [{ flag: "seagrass_survey_seagrass", is: true }] },
+      { text: "Catch a MANGROVE.", doneWhen: [{ flag: "seagrass_survey_mangrove", is: true }] },
+    ],
+    reward: "3 GLASS PODS + RAIN JAR",
+  },
+  hand_pollinator: {
+    id: "hand_pollinator", title: "HAND POLLINATOR", giver: "TRADER, SALTMARSH MARKET", area: "saltmarsh_market",
+    steps: [{ text: "Trade a VANILLA VINE.", doneWhen: isDone("hand_pollinator") }],
+    reward: "a VANILLA",
+  },
   seed_library: {
     id: "seed_library", title: "SEED LIBRARY", giver: "WILLA, FALLOWFIELD", area: "fallowfield",
     steps: [
