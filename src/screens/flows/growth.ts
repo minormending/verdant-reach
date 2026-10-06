@@ -32,8 +32,8 @@ export function growthPeriods(total: number): number[] {
   return out;
 }
 
-/** Run the growth scene. Resolves true if the Quickened grew. */
-export function runGrowth(ctx: GameContext, q: Quickened, to: SpeciesId): Promise<boolean> {
+/** Run the growth scene. Trade growth cannot be cancelled; other growth can. */
+export function runGrowth(ctx: GameContext, q: Quickened, to: SpeciesId, opts: { canCancel?: boolean } = {}): Promise<boolean> {
   let ui!: ScreenUi;
   const fx = new Fx();
   const view = { species: q.species as SpeciesId, silhouette: null as string | null, white: 0, rays: 0, spin: 0, glow: 0, dy: 0 };
@@ -91,7 +91,7 @@ export function runGrowth(ctx: GameContext, q: Quickened, to: SpeciesId): Promis
       // light gathers
       await flow.animate(30, (_i, t) => { view.glow = t * 0.5; view.rays = t * 0.2; });
 
-      // Flash between forms, accelerating; B cancels.
+      // Flash between forms, accelerating; B cancels unless this is trade growth.
       let cancelled = false;
       const total = 300;
       let f = 0;
@@ -101,7 +101,7 @@ export function runGrowth(ctx: GameContext, q: Quickened, to: SpeciesId): Promis
       let k = 0;
       await flow.run({
         update(input) {
-          if (input.pressed("b")) { cancelled = true; return true; }
+          if (opts.canCancel !== false && input.pressed("b")) { cancelled = true; return true; }
           f++;
           const t = f / total;
           if (f >= nextSwap) { showNew = !showNew; nextSwap = f + (periods[k++] ?? 2); }

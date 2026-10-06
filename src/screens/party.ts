@@ -19,6 +19,8 @@ import { drawSeedIcon } from "../ui/seedArt";
 export interface PartyOpts {
   mode: "view" | "pick";
   prompt?: string;
+  /** Pick mode: show only matching plants; return their original party index. */
+  filter?: (q: Quickened) => boolean;
   /** Field item use: apply this item to the picked Quickened (stays open on "no effect"). */
   useItem?: ItemId;
   /** Pick mode with a Crystal-style submenu: [verb, SUMMARY, CANCEL] (battle switching). */
@@ -38,10 +40,10 @@ export function preloadPartyArt(ctx: GameContext, party: Quickened[]) {
 }
 
 export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> {
-  const party = () => ctx.state.party;
+  const party = () => opts.mode === "pick" && opts.filter ? ctx.state.party.filter(opts.filter) : ctx.state.party;
   const growthItem = opts.mode === "pick" && opts.useItem && isGrowthItem(ctx.data, opts.useItem) ? opts.useItem : undefined;
   let ui!: ScreenUi;
-  let index = Math.max(0, Math.min(opts.start ?? 0, ctx.state.party.length - 1));
+  let index = Math.max(0, Math.min(opts.start ?? 0, party().length - 1));
   let swapFrom = -1;
   let frame = 0;
   const shownHp = new Map<string, number>();
@@ -109,19 +111,20 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
         continue;
       }
       if (opts.mode === "pick") {
+        const originalIndex = ctx.state.party.indexOf(party()[pick]);
         if (opts.verb) {
           const sub = new Menu(ctx, [opts.verb, "SUMMARY", "CANCEL"], { x: 88, y: TEXTBOX.y - 56, w: 72 });
           const c = await ui.choose(sub);
-          if (c === 0) return pick;
+          if (c === 0) return originalIndex;
           if (c === 1) index = await summaryScreen(ctx, party(), pick);
           continue;
         }
         if (opts.useItem) {
           const used = await useItemOn(flow, pick, opts.useItem);
           if (used === "stay") continue;
-          return pick;
+          return originalIndex;
         }
-        return pick;
+        return originalIndex;
       }
       // View mode submenu
       const q = party()[pick];

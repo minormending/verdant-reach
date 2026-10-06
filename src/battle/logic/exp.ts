@@ -139,6 +139,14 @@ export function growthTarget(data: GameData, q: Quickened, time: TimeOfDay): Spe
   }
 }
 
+/** Growth on receipt in a trade; never applies to the rest of the party. */
+export function crossPollinationTarget(data: GameData, q: Quickened): SpeciesId | null {
+  if (q.seed) return null;
+  const g = getSpecies(data, q.species).growsInto;
+  if (!g || !data.species[g.species]) return null;
+  return g.trigger.kind === "cross_pollination" ? g.species : null;
+}
+
 /** Growth from using an item on a Quickened. */
 export function itemGrowthTarget(data: GameData, q: Quickened, item: ItemId): SpeciesId | null {
   if (q.seed) return null;

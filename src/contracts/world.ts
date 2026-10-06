@@ -129,6 +129,8 @@ export type ScriptCmd =
    *  check on boarders, collect a ready seed (joins the party as a seed), take a
    *  plant back (with the boarding fee). The engine writes the menu text. */
   | { op: "nursery" }
+  /** Exchange a non-seed party member, then grow the received plant if trading triggers it. */
+  | { op: "trade"; wants: SpeciesId[]; gives: { species: SpeciesId; level: number; nickname?: string }; then?: ScriptCmd[]; else?: ScriptCmd[] }
   /** True while a seed is waiting at the Nursery (the yard keeper's hint). */
   | { op: "ifNurserySeed"; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "endSlice" }                                    // "to be continued" card -> title

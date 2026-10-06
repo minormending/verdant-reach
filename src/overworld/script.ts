@@ -12,6 +12,7 @@ import {
   caughtAny, caughtCount, countedName, hasItem, partyHas, pickBush, pocketName, questDoneFlag, questStartedFlag,
 } from "./progress";
 import { nurseryCounter } from "./nurseryFlow";
+import { tradeFlow } from "./tradeFlow";
 
 export type ToastKind = "new_note" | "note_done";
 
@@ -226,6 +227,7 @@ export async function trainerBattle(host: ScriptHost, trainer: string, canLose =
 export function childLists(c: ScriptCmd): (ScriptCmd[] | undefined)[] {
   if (c.op === "choice") return c.branches;
   if (c.op === "yesno") return [c.yes, c.no];
+  if (c.op === "trade") return [c.then, c.else];
   if ("then" in c) return [c.then, c.else];
   return [];
 }
@@ -412,6 +414,8 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       return completeQuest(host, cmd.quest);
     case "nursery":
       return nurseryCounter(host);
+    case "trade":
+      return exec(host, (await tradeFlow(host, cmd)) ? cmd.then : cmd.else, st);
     case "ifNurserySeed":
       return exec(host, ctx.state.nursery?.seedReady ? cmd.then : cmd.else, st);
     case "endSlice":
