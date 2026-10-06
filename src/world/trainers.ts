@@ -259,30 +259,86 @@ const ch4Trainers: TrainerDef[] = [
     { ai: "smart", music: "battle_leader", mark: "rose_mark", prize: 2200, items: [{ item: "spring_water", qty: 1 }] }),
 ];
 
-// Chapter 5 teams are fixed by CH5_IDS.md §C. Dialogue is deliberately stubbed.
+// Chapter 5 teams are fixed by CH5_IDS.md §C.
 // Balance: retain every prescribed level, but use explicit early moves on
 // Rival 4 and physical Ghost attacks on MORROW. The natural late movesets
 // wall older mixed parties; balance.test.ts guards both older and Ch. 5 catches.
-const ch5Lines = (id: string) => ({
-  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
-});
+// Lines: one set per trainer; the three rival_4 variants share BRAM's.
+const CH5_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  lumberjack_hale: {
+    intro: "Came up here to fell timber. Then the timber started arguing back.",
+    defeat: "TIMBER! ...That's me. I'm the timber.",
+    after: "We only clear windfall now. You can't take a saw to a tree that flinches.",
+  },
+  lumberjack_birch: {
+    intro: "BIRCH by name, lumberjack by trade. The pumpkin's a long story.",
+    defeat: "Split like kindling!",
+    after: "Red cedar splits clean along the grain. Shingle makers swear by it.",
+  },
+  forager_sage: {
+    intro: "Shh, I'm foraging. You're the first thing I've found all morning.",
+    defeat: "Not one basket's worth!",
+    after: "SKUNK CABBAGE smells foul on purpose. The stink draws in the flies that carry its pollen.",
+  },
+  forager_ash: {
+    intro: "Basket's full of mushrooms. Hands are free for battling!",
+    defeat: "Spilled my whole basket!",
+    after: "Mushrooms aren't QUICKENED. They're just the fruit. The fungus lives underground.",
+  },
+  grunt_bs_1: {
+    intro: "This stand is ROOTSTOCK business. Hop it, sprout!",
+    defeat: "Not the sacks! Mind the sacks!",
+    after: "Cones that open with no fire. The doctor's ever so interested.",
+  },
+  grunt_bs_2: {
+    intro: "Oi! You're trampling the samples!",
+    defeat: "Ugh. That's going in my report.",
+    after: "The doctor says any growth can be hurried. These cones hurried themselves.",
+  },
+  grunt_bs_3: {
+    intro: "Nobody gets near the camp. Doctor's orders!",
+    defeat: "Doctor's orders didn't cover THIS.",
+    after: "Which doctor? ...I never said doctor. You misheard.",
+  },
+  rival_4: {
+    intro: "Go on. Prove it. PROVE IT.",
+    defeat: "No. It's GROWN. It's bigger than yours. How?!",
+    after: "Don't. Just... don't.",
+  },
+  jr_nightshade: {
+    intro: "Mind the dark! It's darker than it looks. Which is very.",
+    defeat: "Oh! Lights out for me.",
+    after: "MOONFLOWERS open at dusk and shut by morning. We work the same shift.",
+  },
+  jr_lantern: {
+    intro: "MORROW says listen before you leap. I'm leaping!",
+    defeat: "Should have listened...",
+    after: "GHOST PIPES turn black if you pick them. So we never pick them.",
+  },
+  morrow: {
+    intro: "Listen first. Then we'll begin.",
+    defeat: "...There. Did you hear it? I did.",
+    after: "Keep listening. Someone should.",
+  },
+};
+const ch5Lines = (id: string) => CH5_LINES[id.startsWith("rival_4_") ? "rival_4" : id];
 const ch5Trainers: TrainerDef[] = [
-  trainer("lumberjack_hale", "HALE", "HIKER", "hiker", [T("maple_sapling", 21), T("holly", 22)], ch5Lines("lumberjack_hale")),
-  trainer("lumberjack_birch", "BIRCH", "HIKER", "hiker", [T("pumpkin", 22)], ch5Lines("lumberjack_birch")),
-  trainer("forager_sage", "SAGE", "GARDENER", "gardener", [T("moonflower_vine", 20), T("skunk_cabbage_shoot", 21)], ch5Lines("forager_sage")),
-  trainer("forager_ash", "ASH", "BIRDWATCHER", "birdwatcher", [T("fireweed_fluff", 21), T("sundew", 22)], ch5Lines("forager_ash")),
-  trainer("grunt_bs_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 23), T("fireweed_shoot", 23)], ch5Lines("grunt_bs_1"), { music: "battle_rootstock" }),
-  trainer("grunt_bs_2", "GRUNT", "GRUNT", "grunt", [T("bramble_berry", 23), T("lodgepole_cone", 24)], ch5Lines("grunt_bs_2"), { music: "battle_rootstock" }),
-  trainer("grunt_bs_3", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 24), T("foxglove", 24)], ch5Lines("grunt_bs_3"), { music: "battle_rootstock" }),
+  trainer("lumberjack_hale", "HALE", "LUMBERJACK", "lumberjack", [T("maple_sapling", 21), T("holly", 22)], ch5Lines("lumberjack_hale")),
+  trainer("lumberjack_birch", "BIRCH", "LUMBERJACK", "lumberjack", [T("pumpkin", 22)], ch5Lines("lumberjack_birch")),
+  trainer("forager_sage", "SAGE", "FORAGER", "forager", [T("moonflower_vine", 20), T("skunk_cabbage_shoot", 21)], ch5Lines("forager_sage")),
+  trainer("forager_ash", "ASH", "FORAGER", "forager", [T("fireweed_fluff", 21), T("sundew", 22)], ch5Lines("forager_ash")),
+  trainer("grunt_bs_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 23), T("fireweed_shoot", 23)], ch5Lines("grunt_bs_1"), { music: "battle_rootstock" }),
+  trainer("grunt_bs_2", "GRUNT", "ROOTSTOCK", "grunt", [T("bramble_berry", 23), T("lodgepole_cone", 24)], ch5Lines("grunt_bs_2"), { music: "battle_rootstock" }),
+  trainer("grunt_bs_3", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 24), T("foxglove", 24)], ch5Lines("grunt_bs_3"), { music: "battle_rootstock" }),
   ...STARTER_LINES.map((line) => trainer(`rival_4_${line}`, "BRAM", "RIVAL", "bram", [
     T("blackberry", 25, ["thorn_jab", "bristle", "sap_seal"]),
     T("dandelion", 25, ["pollen_puff", "quick_snap", "perfume"]),
     T("sugar_maple", 26, ["samara_spin", "sugar_rush", "sap_seal"]),
     { ...T(STARTER_SPECIES[line][2], 27, RIVAL_3_MOVES[line]), grafted: true },
   ], ch5Lines(`rival_4_${line}`), { ai: "smart", prize: 2700 })),
-  trainer("jr_nightshade", "NIGHTSHADE", "JR.GARDENER", "gardener", [T("moonflower_vine", 23), T("ghostpipe_stalk", 23)], ch5Lines("jr_nightshade")),
-  trainer("jr_lantern", "LANTERN", "JR.GARDENER", "gardener", [T("foxglove", 24), T("ghostpipe_nodding", 24)], ch5Lines("jr_lantern")),
-  trainer("morrow", "MORROW", "WARDEN", "hollis", [
+  trainer("jr_nightshade", "VESPER", "NIGHT GARDENER", "night_gardener", [T("moonflower_vine", 23), T("ghostpipe_stalk", 23)], ch5Lines("jr_nightshade")),
+  trainer("jr_lantern", "LUMEN", "NIGHT GARDENER", "night_gardener", [T("foxglove", 24), T("ghostpipe_nodding", 24)], ch5Lines("jr_lantern")),
+  trainer("morrow", "MORROW", "WARDEN", "morrow", [
     T("ghostpipe_nodding", 24, ["pale_touch", "night_fold"]),
     T("moonflower", 26, ["pale_touch", "unfurl"]),
     T("ghost_pipe", 29, ["moonbeam", "rot_touch", "night_fold"]),
