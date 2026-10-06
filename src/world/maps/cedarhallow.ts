@@ -5,7 +5,7 @@ import { OUTDOOR, ifFlags, say, type Scripts } from "../build";
 // MORROW and the shrine trunk; the southern path serves travellers and
 // branches east toward the fire-scarred stand.
 export const cedarhallow: MapDef = {
-  id: "cedarhallow", name: "CEDARHALLOW", outdoor: true, music: "small_town",
+  id: "cedarhallow", name: "CEDARHALLOW", outdoor: true, music: "cedarhallow",
   border: "tree", legend: OUTDOOR, ambient: "leaves",
   tiles: [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", // 0

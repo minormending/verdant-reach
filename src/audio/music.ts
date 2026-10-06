@@ -13,7 +13,7 @@ const LEAD = "v11 @2 q7";      // bright 50% lead
 const SOFT = "v10 @1 q7 ~12";  // 25% lead with a little vibrato
 const THIN = "v10 @0 q6";      // 12.5% reedy lead
 
-export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
+const ARRANGED: Record<Exclude<MusicId, Ch5Stub>, Arrangement> = {
   // ------------------------------------------------------------------ title
   // Hopeful and wondrous: a rising sixth that keeps reaching upward.
   title: {
@@ -327,6 +327,15 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
       f2 a4 o6d4 | d2 c4 o5b-4 | a2. f4 | g2. r4 |
       f4 g4 a4 b-4 | o6d-2 o5b-4 f4 | a4 g4 f2 | f1 |`,
   },
+};
+
+// Chapter 5 stubs: temporary aliases until the composer writes these tracks.
+type Ch5Stub = "cedarhallow" | "burnt_stand" | "hollow";
+export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
+  ...ARRANGED,
+  cedarhallow: ARRANGED.small_town,
+  burnt_stand: ARRANGED.sugarbush_grove,
+  hollow: ARRANGED.root_relay,
 };
 
 export const MUSIC_DEFS: Record<MusicId, SongDef> = Object.fromEntries(

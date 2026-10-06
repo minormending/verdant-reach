@@ -5,7 +5,7 @@ import { LEGEND, when } from "../build";
 // aisle branches into three shrine rooms and beds of pale woodland plants.
 export const cedar_hollow: MapDef = {
   id: "cedar_hollow", name: "THE HOLLOW", outdoor: false, dark: true,
-  music: "sugarbush_grove", border: "void", legend: LEGEND, ambient: "spores",
+  music: "hollow", border: "void", legend: LEGEND, ambient: "spores",
   tiles: [
     "WWWWWWWWWWWWWWWWWWWW", // 0
     "WWWWWWWWWWWWWWWWWWWW", // 1

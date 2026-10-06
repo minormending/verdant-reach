@@ -5,7 +5,7 @@ import { OUTDOOR, pickups, when } from "../build";
 // ROOTSTOCK stacks cone sacks in the southern camp. BRAM waits before the
 // final turn into the burnt heart, a quiet eastern clearing.
 export const burnt_stand: MapDef = {
-  id: "burnt_stand", name: "BURNT STAND", outdoor: true, music: "sugarbush_grove",
+  id: "burnt_stand", name: "BURNT STAND", outdoor: true, music: "burnt_stand",
   border: "tree", legend: OUTDOOR, ambient: "spores",
   tiles: [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", // 0

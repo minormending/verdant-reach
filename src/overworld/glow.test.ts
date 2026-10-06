@@ -6,6 +6,12 @@ import type { MapDef } from "../contracts";
 import { SCREEN_H, SCREEN_W, TILE } from "../contracts";
 
 describe("GLOW geometry", () => {
+  it("treats glowing ghost pipes as light sources, like lamp posts", () => {
+    const rows = ["L.G", "..."];
+    const lit = glowLamps(3, 2, (x, y) => ({ L: "lamp_post", G: "glow_pipe", ".": "night_floor" })[rows[y][x]]);
+    expect(lit).toEqual([{ x: 0, y: 0 }, { x: 2, y: 0 }]);
+  });
+
   it("has the specified radii, with a core and two discrete falloff bands", () => {
     expect(GLOW_RADIUS).toEqual({ player: 1, lantern: 3, lamp: 2 });
     const light = glowField({ x: 4, y: 4 }, [], true);
