@@ -13,7 +13,15 @@ const LEAD = "v11 @2 q7";      // bright 50% lead
 const SOFT = "v10 @1 q7 ~12";  // 25% lead with a little vibrato
 const THIN = "v10 @0 q6";      // 12.5% reedy lead
 
-const ARRANGED: Record<Exclude<MusicId, Ch5Stub>, Arrangement> = {
+// Hand-written part voices (Chapter 5).
+const PAD = "v4 @1 q8 %0";     // a soft held 25% pad note
+const BELL = "v7 @2 q8 %5";    // a square ping that decays like a small bell
+const DRIP = "v8 @2 q3 %1 p7"; // a short high plink that bends up: a water drop
+const ECHO = "v4 @2 q3 %2 p7"; // the same drop, fainter, off the cave wall
+const LUB = "v4";              // heartbeat (kick): the first, stronger beat...
+const DUB = "v2";              // ...and the softer second one
+
+export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
   // ------------------------------------------------------------------ title
   // Hopeful and wondrous: a rising sixth that keeps reaching upward.
   title: {
@@ -327,15 +335,83 @@ const ARRANGED: Record<Exclude<MusicId, Ch5Stub>, Arrangement> = {
       f2 a4 o6d4 | d2 c4 o5b-4 | a2. f4 | g2. r4 |
       f4 g4 a4 b-4 | o6d-2 o5b-4 f4 | a4 g4 f2 | f1 |`,
   },
-};
 
-// Chapter 5 stubs: temporary aliases until the composer writes these tracks.
-type Ch5Stub = "cedarhallow" | "burnt_stand" | "hollow";
-export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
-  ...ARRANGED,
-  cedarhallow: ARRANGED.small_town,
-  burnt_stand: ARRANGED.sugarbush_grove,
-  hollow: ARRANGED.root_relay,
+  // ------------------------------------------------------------------ cedarhallow
+  // Hushed and reverent: a slow D dorian hymn among giant cedars. A soft lead
+  // that keeps reaching up a fourth (into the canopy) and leaning on the
+  // dorian B natural, a held one-note pad, a quiet drone, no drums. Where the
+  // tune breathes, the pad gives way to a few small bells. The last bar (G,
+  // the dorian IV) settles back into D minor at the loop.
+  cedarhallow: {
+    bpm: 72, harmony: "pad", bass: "drone", bassTone: "v11 q8", drums: "none",
+    chords: "Dm | C | G | Dm | Dm | F | C | Am | G | Em | F | C | Dm | C | G | Am | F | C | Am | G",
+    melody: `v9 @1 q8 ~10
+      r4 o4a4 o5d4 e4 | g2 e4 c4 | d4. e8 d4 o4b4 | a2. r4 |
+      r4 a4 o5d4 f4 | a2 g4 f4 | e4. d8 c4 d4 | e2 r2 |
+      d4 g4 b2 | a4. g8 e2 | f4 a4 o6c2 | c4. o5b8 g2 |
+      a2 o6d2 | c4 o5g4 e4 g4 | d4. e8 d4 o4b4 | a2. r4 |
+      o5c4 f4 a4 g4 | e2 g4 e4 | c2 o4b4 a4 | b2. r4 |`,
+    harmonyLine: `
+      ${PAD} o4f1 | e1 | d1 | f2 ${BELL} o6d8 o5a8 o6e4 |
+      ${PAD} o4f1 | a1 | g1 | e2 ${BELL} o5a8 o6c8 e4 |
+      ${PAD} o4b1 | g1 | a1 | g1 |
+      f1 | g1 | g1 | e2 ${BELL} o6e8 c8 o5a4 |
+      ${PAD} o4a1 | g1 | e1 | d2 ${BELL} o5b8 o6d8 g4 |`,
+  },
+
+  // ------------------------------------------------------------------ burnt stand
+  // Ashen and eerie: E phrygian (the F major 7 a half step above keeps
+  // pulling at the tonic). A thin reed lead whose phrases keep stopping short
+  // (some sag a semitone as they die), a faint 12.5% pad, a slow two-beat
+  // heartbeat low in the mix with the odd ember crackle. It quickens in the
+  // last two bars and never cadences: Bsus4 hangs and the loop starts over.
+  burnt_stand: {
+    bpm: 72, harmony: "pad", harmonyTone: "v4 @0 q8 ~4", bass: "drone", bassTone: "v10 q8", drums: "none",
+    chords: "Em | Fmaj7 | Em | Fmaj7 | Am | Cmaj7 | Bsus4 | Bsus4 | Em | Fmaj7 | Dm | Am | Cmaj7 | Fmaj7 | Dsus2 | Bsus4",
+    melody: `v9 @0 q7 ~8
+      o4b4 o5e4 g4 r4 | f4. e8 r2 | o4b4 o5e4 g4 a4 | c4 o4b8 r8 r2 |
+      o5e4. f8 e4 c4 | p-1 o4b2 p0 r2 | b4 o5e4 f+4 r4 | r1 |
+      g4. f8 e4 r4 | a4. g8 f4 r4 | d4 f4 a4 o6c4 | o5b4 r4 r2 |
+      e2 g4 b4 | o6c4 o5a4 r2 | a4 e4 r2 | p-1 f+2 p0 r2 |`,
+    drumLine: `
+      [${LUB} k16 r8 ${DUB} k16 r4 ${LUB} k16 r8 ${DUB} k16 r4 |]2
+      ${LUB} k16 r8 ${DUB} k16 r4 ${LUB} k16 r8 ${DUB} k16 r16 v2 h16 r8 |
+      ${LUB} k16 r8 ${DUB} k16 r4 ${LUB} k16 r8 ${DUB} k16 r4 |
+      [${LUB} k16 r8 ${DUB} k16 r4 ${LUB} k16 r8 ${DUB} k16 r4 |]2
+      ${LUB} k16 r8 ${DUB} k16 r8 v2 h16 r16 ${LUB} k16 r8 ${DUB} k16 r4 |
+      ${LUB} k16 r8 ${DUB} k16 r4 ${LUB} k16 r8 ${DUB} k16 r4 |
+      [${LUB} k16 r8 ${DUB} k16 r4 ${LUB} k16 r8 ${DUB} k16 r4 |]2
+      ${LUB} k16 r8 ${DUB} k16 r4 ${LUB} k16 r8 ${DUB} k16 r16 v2 h16 r8 |
+      ${LUB} k16 r8 ${DUB} k16 r4 ${LUB} k16 r8 ${DUB} k16 r4 |
+      ${LUB} k16 r8 ${DUB} k16 r8 v2 h16 r16 ${LUB} k16 r8 ${DUB} k16 r4 |
+      ${LUB} k16 r8 ${DUB} k16 r4 ${LUB} k16 r8 ${DUB} k16 r4 |
+      [${LUB} k16 r16 ${DUB} k16 r16]4 |
+      [${LUB} k16 r16 ${DUB} k16 r16]4 |`,
+  },
+
+  // ------------------------------------------------------------------ the hollow
+  // Inside the oldest cedar: dark and still. A low A drone (tied, so it never
+  // re-strikes) that sinks to B-flat and F, one slow inner voice of sighing
+  // half steps, and water dripping from somewhere above: sparse high plinks
+  // on an irregular pattern, a few with a fainter echo off the walls. No
+  // drums, no tune to hum: the room is the music.
+  hollow: {
+    bpm: 66, harmony: "none", bass: "drone", drums: "none",
+    chords: "Am | Am | Am | Am | Bb | Bb | Am | Am | F | F | Dm | E | Am | Am | Bb | E",
+    melody: `v8 @2 q8 ~5
+      o4e1 | f2 e2 | d1 | c2 o3b2 |
+      o4d1 | f2 e2 | c1 | o3b2 g+2 |
+      a2 o4c2 | a2 g2 | f1 | o3g+1 |
+      o4c1 | d2 e2 | f2 d2 | o3b2 g+2 |`,
+    harmonyLine: `
+      r4. ${DRIP} o6a16 r2 r16 | r8. ${DRIP} o6e16 r8 ${ECHO} o6e16 r2 r16 | r2 r16 ${DRIP} o6g16 r4. | r8 ${DRIP} o7c16 r2. r16 |
+      r2. r16 ${DRIP} o6d16 r8 | ${ECHO} o6d16 r2. r16 ${DRIP} o6a16 r16 | r4 ${DRIP} o6e16 r2 r8. | r1 |
+      r8. ${DRIP} o6c16 r2. | r4. ${DRIP} o6g16 r8 ${ECHO} o6g16 r4. | r8 ${DRIP} o6a16 r2. r16 | r2 r8 ${DRIP} o6e16 r4 r16 |
+      r2 r16 ${DRIP} o7d16 r4. | r16 ${DRIP} o6g16 r8 ${ECHO} o6g16 r2 r8. | r2. r16 ${DRIP} o6c16 r8 | r1 |`,
+    bassLine: `v12 q8
+      o2a1 | ^1 | ^1 | ^1 | b-1 | ^1 | a1 | ^1 |
+      f1 | ^1 | o3d1 | e1 | o2a1 | ^1 | b-1 | o3e1 |`,
+  },
 };
 
 export const MUSIC_DEFS: Record<MusicId, SongDef> = Object.fromEntries(
