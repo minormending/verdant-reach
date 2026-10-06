@@ -1,5 +1,5 @@
 import type { MapDef } from "../../contracts";
-import { OUTDOOR, ifFlags, say, type Scripts } from "../build";
+import { OUTDOOR, when, ifFlags, say, type Scripts } from "../build";
 
 // Living cedars enclose the town. The northern avenue connects the ranger,
 // MORROW and the shrine trunk; the southern path serves travellers and
@@ -8,8 +8,8 @@ export const cedarhallow: MapDef = {
   id: "cedarhallow", name: "CEDARHALLOW", outdoor: true, music: "small_town",
   border: "tree", legend: OUTDOOR, ambient: "leaves",
   tiles: [
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", // 0
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", // 1
+    "TTTTTTTTTTTTTTTTT:TTTTTTTTTTTTTTTTTT", // 0
+    "TTTTTTTTTTTTTTTTT:TTTTTTTTTTTTTTTTTT", // 1
     "TT................................TT", // 2
     "TT................................TT", // 3
     "TT.............@@@@@@.....@@@@@...TT", // 4
@@ -49,6 +49,7 @@ export const cedarhallow: MapDef = {
     { key: "big_oak", x: 28, y: 23 },
   ],
   warps: [
+    { x: 17, y: 0, to: "route_9", toX: 14, toY: 54, facing: "up" },
     { x: 17, y: 29, to: "route_6", toX: 14, toY: 1, facing: "down" },
     { x: 18, y: 29, to: "route_6", toX: 15, toY: 1, facing: "down" },
     { x: 35, y: 17, to: "burnt_stand", toX: 1, toY: 15, facing: "right" },
@@ -60,6 +61,7 @@ export const cedarhallow: MapDef = {
     { x: 28, y: 7, to: "cedar_hollow", toX: 9, toY: 22, facing: "up" },
   ],
   npcs: [
+    { id: "pass_ranger", sprite: "hiker", x: 17, y: 1, facing: "down", script: "ch7_pass_ranger", visibleWhen: when({ ch6_done: false }) },
     { id: "pip", sprite: "pip", x: 12, y: 11, facing: "down", movement: "look_around", script: "ch5_pip" },
     { id: "resident", sprite: "villager_a", x: 21, y: 17, facing: "left", movement: "look_around", script: "ch5_resident" },
     { id: "elder", sprite: "elder", x: 30, y: 9, facing: "left", movement: "static", script: "ch5_elder" },

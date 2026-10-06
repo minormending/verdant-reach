@@ -27,7 +27,7 @@ function effects(id: string, initial: Record<string, boolean>) {
 
 describe("Chapter 6 world", () => {
   it("appends all ten maps in order, at the specified dimensions", () => {
-    expect(MAP_IDS.slice(-10)).toEqual(CH6);
+    expect(MAP_IDS.slice(MAP_IDS.indexOf("route_7"), MAP_IDS.indexOf("route_7") + 10)).toEqual(CH6);
     for (const [id, w, h] of [
       ["route_7", 30, 50], ["saltmarsh_harbour", 40, 30], ["saltmarsh_conservatory", 16, 18],
       ["route_8", 40, 40], ["driftseed_isle", 34, 30], ["driftseed_conservatory", 16, 18], ["driftseed_vents", 24, 24],

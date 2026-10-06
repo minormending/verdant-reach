@@ -5,6 +5,7 @@ import type { Scripts } from "./build";
 import { TRAINERS } from "./trainers";
 import { storyScripts } from "./scripts/story";
 import { act1Scripts } from "./scripts/act1";
+import { ch7Scripts } from "./scripts/ch7";
 import { ch6Scripts } from "./scripts/ch6";
 import { ch5Scripts } from "./scripts/ch5";
 import { ch4Scripts } from "./scripts/ch4";
@@ -56,6 +57,16 @@ import * as driftseed_greenhouse from "./maps/driftseed_greenhouse";
 import * as driftseed_conservatory from "./maps/driftseed_conservatory";
 import * as driftseed_vents from "./maps/driftseed_vents";
 
+import * as route_9 from "./maps/route_9";
+import * as larchmere from "./maps/larchmere";
+import * as larchmere_greenhouse from "./maps/larchmere_greenhouse";
+import * as larchmere_market from "./maps/larchmere_market";
+import * as bloom_lake from "./maps/bloom_lake";
+import * as larchmere_lodge from "./maps/larchmere_lodge";
+import * as rootstock_hideout_1 from "./maps/rootstock_hideout_1";
+import * as rootstock_hideout_2 from "./maps/rootstock_hideout_2";
+import * as larchmere_conservatory from "./maps/larchmere_conservatory";
+
 const maps: Record<MapId, MapDef> = {
   player_home: player_home.player_home,
   herbarium: herbarium.herbarium,
@@ -92,6 +103,15 @@ const maps: Record<MapId, MapDef> = {
   driftseed_greenhouse: driftseed_greenhouse.driftseed_greenhouse,
   driftseed_conservatory: driftseed_conservatory.driftseed_conservatory,
   driftseed_vents: driftseed_vents.driftseed_vents,
+  route_9: route_9.route_9,
+  larchmere: larchmere.larchmere,
+  larchmere_greenhouse: larchmere_greenhouse.larchmere_greenhouse,
+  larchmere_market: larchmere_market.larchmere_market,
+  bloom_lake: bloom_lake.bloom_lake,
+  larchmere_lodge: larchmere_lodge.larchmere_lodge,
+  rootstock_hideout_1: rootstock_hideout_1.rootstock_hideout_1,
+  rootstock_hideout_2: rootstock_hideout_2.rootstock_hideout_2,
+  larchmere_conservatory: larchmere_conservatory.larchmere_conservatory,
   // Chapter 4
   route_4: route_4.route_4,
   glasshouse_city: glasshouse_city.glasshouse_city,
@@ -128,7 +148,7 @@ function mergeScripts(...all: Scripts[]): Scripts {
 
 export const WORLD: WorldData = {
   maps,
-  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, questScripts, ...mapScripts),
+  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
   quests: QUESTS,
   glide: [
@@ -139,6 +159,7 @@ export const WORLD: WorldData = {
     { map: "cedarhallow", x: 6, y: 17, facing: "down", name: "CEDARHALLOW" },
     { map: "saltmarsh_harbour", x: 6, y: 12, facing: "down", name: "SALTMARSH HARBOUR" },
     { map: "driftseed_isle", x: 14, y: 13, facing: "down", name: "DRIFTSEED ISLE" },
+    { map: "larchmere", x: 6, y: 12, facing: "down", name: "LARCHMERE" },
   ],
   // Prologue: the observation deck at night, beside DR. VALE.
   newGame: { map: "herbarium_roof", x: 5, y: 6, facing: "up", script: "prologue" },

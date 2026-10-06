@@ -94,6 +94,8 @@ export const MAP_IDS = [
   "cedarhallow_house", "cedar_hollow", "burnt_stand", "cedarhallow_conservatory",
   // Chapter 6 (CH6.md §4 order)
   "route_7", "saltmarsh_harbour", "saltmarsh_greenhouse", "saltmarsh_market", "saltmarsh_conservatory", "route_8", "driftseed_isle", "driftseed_greenhouse", "driftseed_conservatory", "driftseed_vents",
+  // Chapter 7 (CH7.md §4 order)
+  "route_9", "larchmere", "larchmere_greenhouse", "larchmere_market", "bloom_lake", "larchmere_lodge", "rootstock_hideout_1", "rootstock_hideout_2", "larchmere_conservatory",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -313,6 +315,7 @@ export const REQUIRED_ITEMS = [
   "foxfire_lantern",                          // key item: automatically lights dark maps
   "lily_raft",                                // key item: ride water with RAFT
   "saxifrage",                                // key item: unlocks UPROOT boulder pushes
+  "climber_pack",                             // key item: the LOST CLIMBER pack
   "cactus_sap",                               // key item: Saguaro's remedy for the Lantern Tree
   "fan_letter", "signed_photo",               // key items for the FAN MAIL quest
 ] as const;
@@ -323,7 +326,7 @@ export type TrainerId = string;
 export type ScriptId = string;
 
 /** Pressed Marks (badges) available so far. */
-export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark", "cactus_mark", "mangrove_mark"] as const;
+export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark", "cactus_mark", "mangrove_mark", "snowdrop_mark"] as const;
 export type MarkId = (typeof MARKS)[number];
 
 /** Full-screen 160x144 illustrations shown during key story beats. */

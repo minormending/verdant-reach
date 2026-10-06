@@ -319,6 +319,39 @@ const ch6Trainers: TrainerDef[] = [
     { ai: "smart", music: "battle_leader", mark: "mangrove_mark", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
+// Chapter 7 (CH7.md §5): preserve team identities and ±2 boss-level bounds.
+const ch7Trainers: TrainerDef[] = [
+  trainer("climber_ridge", "RIDGE", "HIKER", "hiker", [T("larch_seedling", 33), T("holly", 34)], ch5Lines("climber_ridge")),
+  trainer("climber_scree", "SCREE", "HIKER", "hiker", [T("campion_mound", 34)], ch5Lines("climber_scree")),
+  trainer("skier_frost", "FROST", "BIRDWATCHER", "birdwatcher", [T("peppermint", 34), T("edelweiss_bud", 33)], ch5Lines("skier_frost")),
+  trainer("skier_drift", "DRIFT", "BIRDWATCHER", "birdwatcher", [T("snowdrop_shoot", 34), T("larch", 35)], ch5Lines("skier_drift")),
+  trainer("grunt_lodge", "LODGE", "GRUNT", "grunt", [T("stinging_nettle", 35), T("venus_flytrap", 35)], ch5Lines("grunt_lodge"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_1", "SIGNAL 1", "GRUNT", "grunt", [T("fireweed", 36), T("sugar_maple", 36)], ch5Lines("grunt_b1_1"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_2", "SIGNAL 2", "GRUNT", "grunt", [T("red_mangrove", 36), T("bladderwort", 36)], ch5Lines("grunt_b1_2"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_3", "SIGNAL 3", "GRUNT", "grunt", [T("prickly_pear", 37), T("foxglove", 36)], ch5Lines("grunt_b1_3"), { music: "battle_rootstock" }),
+  trainer("jr_flurry", "FLURRY", "JR.GARDENER", "gardener", [T("edelweiss", 38), T("snowdrop_shoot", 38)], ch5Lines("jr_flurry")),
+  trainer("jr_hoarfrost", "HOARFROST", "JR.GARDENER", "gardener", [T("campion_mound", 39), T("holly", 39)], ch5Lines("jr_hoarfrost")),
+  // Tuning: ghost_pipe 38→40 (+2), lodgepole_pine 39→40 (+1), red_mangrove 41→42 (+1).
+  // Explicit moves below retain a special Ghost attack and a real fire attack on
+  // the pine; the mangrove carries the coverage used by Reyes. Mean win: 75.1%.
+  trainer("calloway", "CALLOWAY", "ADMIN", "shears", [
+    T("ghost_pipe", 40, ["pale_bloom", "root_siphon", "spore_cloud", "petal_storm"]),
+    T("lodgepole_pine", 40, ["leaf_edge", "ember_seed", "serotiny"]),
+    { ...T("red_mangrove", 42, ["flood", "sap_spout", "cold_mist", "stilt_roots"]), grafted: true },
+  ], ch5Lines("calloway"),
+    { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 1 }] }),
+  // Tuning: every member is -1 from §5 (40/41/41/43 → 39/40/40/42).
+  // Explicit moves soften repeated healing and Bloom coverage while preserving
+  // signature Frost play. Mean win: 62.8%; every party/starter exceeds 25%.
+  trainer("signe", "SIGNE", "WARDEN", "nell_pitcher", [
+    T("edelweiss", 39, ["frost_bloom", "sunbeam", "woolly_coat"]),
+    T("moss_campion", 40, ["cold_mist", "sap_drain", "cushion"]),
+    T("larch", 40, ["needle_drop", "frost_needle", "evergreen"]),
+    T("snowdrop", 42, ["thaw_bloom", "sap_drain", "sun_track"]),
+  ], ch5Lines("signe"),
+    { ai: "smart", music: "battle_leader", mark: "snowdrop_mark", items: [{ item: "spring_water", qty: 2 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers].map((t) => [t.id, t]),
 );
