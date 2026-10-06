@@ -3,7 +3,7 @@
 //
 //   npm run e2e                                        headless full playthrough
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
-//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 5's TO BE CONTINUED
+//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 6's TO BE CONTINUED
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
 //
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
@@ -12,6 +12,8 @@
 // delivers FAN MAIL before the end card, or from a post-chapter jump-in.
 // Chapter 5 continues from that save, crosses ROUTE 6, visits the BURNT STAND
 // and THE HOLLOW, completes both quests and beats MORROW in the dark garden.
+// Chapter 6 crosses the ford and sea, pushes SAGUARO's boulders, restores the
+// Lantern Tree, completes both coastal quests and beats REYES in the pools.
 //
 // `?timer` keeps the loop running in a hidden tab. Add `&boost=<level>` to set
 // the level of the over-levelled helper (default 48; `boost=0` plays it
@@ -28,6 +30,7 @@ import { devSeed, randomStream } from "../src/engine/random";
 import { Menu, TextBox } from "../src/screens/kit/widgets";
 import { rollEncounter } from "../src/overworld/encounters";
 import { inBounds, tileAt, triggerAt, tryMove, warpAt, type MapRuntime } from "../src/overworld/map";
+import { tryRaftMove } from "../src/overworld/raft";
 import { SEED_CHECK_STEPS } from "../src/overworld/nursery";
 import { AdvanceBudget, dialogueProgress, GameplayTasks, NO_PROGRESS_MS, ProgressWatchdog } from "./detectors";
 import { healingItem, strongestMove } from "./battle-driver";
@@ -37,12 +40,14 @@ import { healingItem, strongestMove } from "./battle-driver";
 // ---------------------------------------------------------------------------
 
 type Dir = "up" | "down" | "left" | "right";
-interface Actor { id: string; x: number; y: number; facing: Dir; sprite: string; def?: { script?: string; trainer?: string; sprite?: string } }
+interface Actor { id: string; x: number; y: number; facing: Dir; sprite: string; moving?: boolean; def?: { script?: string; trainer?: string; sprite?: string } }
 interface Ow {
   mapId: MapId;
   busy: number;
   player: Actor & { step: unknown };
   npcs: Actor[];
+  follower: { x: number; y: number };
+  followerVisible(): boolean;
   map: { def: { warps: { x: number; y: number; to: MapId; toX: number; toY: number }[]; triggers: { x: number; y: number; w?: number; h?: number; script: string; when?: { flag: string; is: boolean }[] }[]; npcs: unknown[]; tiles: string[]; healPoint?: unknown } };
   npcAt(x: number, y: number): Actor | undefined;
   visible(a: Actor): boolean;
@@ -74,8 +79,8 @@ function battleScene(): BattleView | null {
 }
 let battleMenu: { menu: Menu; target: number } | null = null;
 let medicine: { item: ItemId; active: number } | null = null;
-/** While walking the BURNT STAND grass, throw pods only at the requested line. */
-let captureLine: "fireweed" | "lodgepole" | null = null;
+/** Throw pods only at the requested line in real grass or water encounters. */
+let captureLine: string | null = null;
 function captureItem(): ItemId | null {
   const battle = battleScene();
   return captureLine && battle?.req.kind === "wild"
@@ -505,16 +510,19 @@ async function goto(tx: number, ty: number, avoidTriggers = true): Promise<strin
   const flags = ctx().state.flags;
   const k = (x: number, y: number) => `${x},${y}`;
   const prev = new Map<string, [number, number, Dir] | null>([[k(o.player.x, o.player.y), null]]);
+  const rafting = new Map<string, boolean>([[k(o.player.x, o.player.y), !!ctx().state.rafting]]);
+  const hasRaft = (ctx().state.bag["lily_raft"] ?? 0) > 0;
   const q: [number, number][] = [[o.player.x, o.player.y]];
   while (q.length) {
     const [x, y] = q.shift()!;
     if (x === tx && y === ty) break;
     for (const d of ["up", "down", "left", "right"] as Dir[]) {
-      const r = tryMove(m, x, y, d, (a, b) => !!o.npcAt(a, b));
+      const r = tryRaftMove(m, x, y, d, rafting.get(k(x, y)) ?? false, hasRaft, (a, b) => !!o.npcAt(a, b));
       if (r.kind === "blocked" || prev.has(k(r.x, r.y))) continue;
       const dest = r.x === tx && r.y === ty;
       if (!dest && (warpAt(m, r.x, r.y) || (avoidTriggers && triggerAt(m, r.x, r.y, flags)))) continue;
       prev.set(k(r.x, r.y), [x, y, d]);
+      rafting.set(k(r.x, r.y), r.rafting);
       q.push([r.x, r.y]);
     }
   }
@@ -527,12 +535,23 @@ async function goto(tx: number, ty: number, avoidTriggers = true): Promise<strin
     if (!p || p.mapId !== map) return "ok";
     if (p.busy) return `interrupted at ${k(p.player.x, p.player.y)}`;
     const [bx, by] = [p.player.x, p.player.y];
-    await T().step(d);
+    const move = tryRaftMove(p.map as unknown as MapRuntime, bx, by, d,
+      !!ctx().state.rafting, hasRaft, (a, b) => !!p.npcAt(a, b));
+    if (move.kind === "mount") {
+      // Facing water and pressing A asks the real field-move prompt. Never
+      // mutate rafting or move the player directly from the driver.
+      await face(d);
+      await press("a");
+      await sleep(250);
+      await settle();
+    } else await T().step(d);
     const a = ow();
-    if (a && a.mapId === map && !a.busy && a.player.x === bx && a.player.y === by) {
-      // Blocked (someone stepped in the way): let the caller retry.
+    if (a && a.mapId === map && !a.busy && (move.kind === "blocked"
+      || a.player.x !== move.x || a.player.y !== move.y)) {
+      // A declined mount, moving NPC or script can invalidate the remaining
+      // route. Replan from the actual tile and raft state before more input.
       await sleep(300);
-      return `interrupted at ${k(bx, by)}`;
+      return `interrupted at ${k(a.player.x, a.player.y)}`;
     }
   }
   return "ok";
@@ -548,7 +567,10 @@ export async function walkTo(x: number, y: number, tries = 25): Promise<boolean>
     const mapBefore = o.mapId;
     const r = await goto(x, y);
     if (ow()?.mapId !== mapBefore) return true; // a warp or script moved us on
-    if (r === "ok") { await settle(); return true; }
+    if (r === "ok") {
+      await settle();
+      if (ow()?.mapId !== mapBefore || onTile(x, y)) return true;
+    }
     if (r === "no path") {
       await sleep(400); // a wandering NPC may be in the way
       if (i > 3) return false;
@@ -566,6 +588,21 @@ async function face(d: Dir) {
   await sleep(120);
 }
 
+/** Match the real A interaction: an adjacent NPC, or one across a counter.
+ * The follower is passable for walking, but must never receive our talk tap. */
+function talkDirection(o: Ow, id: string): Dir | null {
+  for (const d of Object.keys(DIRS) as Dir[]) {
+    const [dx, dy] = DIRS[d];
+    const [x, y] = [o.player.x + dx, o.player.y + dy];
+    if (o.followerVisible() && o.follower.x === x && o.follower.y === y) continue;
+    const front = o.npcAt(x, y);
+    const target = front ?? (tileAt(o.map as unknown as MapRuntime, x, y) === "counter"
+      ? o.npcAt(x + dx, y + dy) : undefined);
+    if (target?.id === id && !target.moving) return d;
+  }
+  return null;
+}
+
 /** Talk to an NPC by id (walks next to it, or across a counter). */
 export async function talkTo(id: string, quiet = false): Promise<boolean> {
   for (let attempt = 0; attempt < 4; attempt++) {
@@ -575,24 +612,28 @@ export async function talkTo(id: string, quiet = false): Promise<boolean> {
     const here = o.mapId;
     const n = o.npcs.find((a) => a.id === id);
     if (!n || !o.visible(n)) { if (!quiet) issue("missing-npc", `no visible npc "${id}" on ${here}`); return false; }
-    const spots: [number, number, Dir][] = [];
+    const spots: [number, number][] = [];
     for (const d of ["down", "left", "right", "up"] as Dir[]) {
       const [dx, dy] = DIRS[d];
-      spots.push([n.x + dx, n.y + dy, OPP[d]]);
-      spots.push([n.x + dx * 2, n.y + dy * 2, OPP[d]]); // across a counter
+      spots.push([n.x + dx, n.y + dy]);
+      if (tileAt(o.map as unknown as MapRuntime, n.x + dx, n.y + dy) === "counter") {
+        spots.push([n.x + dx * 2, n.y + dy * 2]);
+      }
     }
     const p = o.player;
     spots.sort((s, t) => Math.abs(s[0] - p.x) + Math.abs(s[1] - p.y) - (Math.abs(t[0] - p.x) + Math.abs(t[1] - p.y)));
-    for (const [x, y, d] of spots) {
+    for (const [x, y] of spots) {
       const r = await walkToQuiet(x, y);
       if (!r) continue;
-      const q = ow()!;
-      if (q.mapId !== here) return false;
-      const m = q.npcs.find((a) => a.id === id)!;
-      // Only adjacent, or two away with a counter between.
-      const dist = Math.abs(m.x - q.player.x) + Math.abs(m.y - q.player.y);
-      if (dist > 2) break; // it moved: retry
+      const q = ow();
+      if (!q || q.mapId !== here) return false;
+      const d = talkDirection(q, id);
+      if (!d) break; // it moved or vanished: replan from its live position
       await face(d);
+      const ready = ow();
+      // Turning yields frames: a wandering NPC may have moved in that time.
+      if (!ready || ready.mapId !== here) return false;
+      if (!idle() || ready.player.step || ready.player.facing !== d || talkDirection(ready, id) !== d) break;
       const before = report.texts.length;
       await press("a");
       await sleep(250);
@@ -607,9 +648,13 @@ export async function talkTo(id: string, quiet = false): Promise<boolean> {
 async function walkToQuiet(x: number, y: number, depth = 0): Promise<boolean> {
   const o = ow();
   if (!o) return false;
+  const here = o.mapId;
   if (o.player.x === x && o.player.y === y) return true;
   const r = await goto(x, y);
-  if (r === "ok") { await settle(); return true; }
+  if (r === "ok") {
+    await settle();
+    return ow()?.mapId === here && onTile(x, y);
+  }
   if (r.startsWith("interrupted") && depth < 8) { await settle(); return walkToQuiet(x, y, depth + 1); }
   return false;
 }
@@ -1238,6 +1283,163 @@ async function chapter5() {
   beat("chapter 5 done: GLIDER SEED", flag("ch5_done") && flag("slice_done") && bag("glider_seed") === 1);
 }
 
+// ---------------------------------------------------------------------------
+// Chapter 6: SALTMARSH HARBOUR and DRIFTSEED ISLE
+// ---------------------------------------------------------------------------
+
+async function chapter6() {
+  const saved = ctx().save.read();
+  if (!saved?.flags["ch5_done"]) {
+    beat("CONTINUE after Chapter 5", false, "no Chapter 5 save");
+    return;
+  }
+  await press("start");
+  await sleep(700);
+  await press("a");
+  await sleep(700);
+  await press("a");
+  const continued = await waitFor(() => !!ow(), 15000);
+  await sleep(1500);
+  if (!continued) { beat("CONTINUE after Chapter 5", false, "no overworld"); return; }
+  await settle();
+  beat("CONTINUE after Chapter 5", flag("ch5_done") && ow()?.mapId === saved.position.map);
+  ctx().state.options.textSpeed = "fast";
+  const st = () => ctx().state;
+  const bag = (item: ItemId) => st().bag[item] ?? 0;
+
+  await nav("fallowfield");
+  const keeper = ow()?.npcs.find((n) => n.id === "ford_keeper");
+  const fordOpen = !!keeper && !ow()!.visible(keeper);
+  await nav("route_7");
+  beat("the ford opens onto ROUTE 7", fordOpen && ow()?.mapId === "route_7");
+  await nav("saltmarsh_harbour");
+  beat("SALTMARSH HARBOUR: arrival", ow()?.mapId === "saltmarsh_harbour"
+    && flag("ch6_arrived") && flag("visited_saltmarsh_harbour"));
+
+  const seedBefore = bag("centuryheart_seed");
+  if (!flag("ch6_doctor_met")) await trigger("ch6_doctor");
+  const doctor = ow()?.npcs.find((n) => n.id === "doctor");
+  beat("the doctor leaves on the grey boat", flag("ch6_doctor_met")
+    && !!doctor && !ow()!.visible(doctor) && seedBefore > 0 && bag("centuryheart_seed") === seedBefore);
+  for (const grunt of ["grunt_dock_1", "grunt_dock_2"]) {
+    if (!flag(`beat_${grunt}`)) await talkTo(grunt);
+    await expectFlag(`the docks: ${grunt}`, `beat_${grunt}`);
+  }
+  await talkTo("reyes_point");
+  beat("REYES: the LILY RAFT", flag("got_raft") && bag("lily_raft") === 1);
+
+  // The harbour pier ends on water. goto mounts with A/YES and then drives
+  // each raft step with arrow input; water arrivals keep the player rafting.
+  const boarding = report.texts.length;
+  await nav("route_8");
+  const crossed = await walkTo(27, 16);
+  beat("RAFT: across ROUTE 8", ow()?.mapId === "route_8" && crossed && onTile(27, 16)
+    && !!st().rafting && report.texts.slice(boarding).some((t) => /Ride the LILY RAFT/.test(t.text)));
+  await talkTo("survey_assistant");
+  await expectFlag("SEAGRASS SURVEY: accepted", "quest_seagrass_survey_started");
+  await nav("driftseed_isle");
+  await walkTo(16, 5); // step off the landing boardwalk onto the island
+  beat("DRIFTSEED ISLE: shore landing", ow()?.mapId === "driftseed_isle"
+    && flag("visited_driftseed_isle") && !st().rafting);
+  await talkTo("isle_elder");
+  beat("the elder's SAXIFRAGE", flag("got_saxifrage") && bag("saxifrage") === 1);
+
+  // Catch the vine before the two survey catches fill the party. The trade
+  // needs a party member; surplus sea catches may go to the cabinet normally.
+  await catchCoastalPlant("vanilla", "driftseed_isle", [[5, 20], [6, 20]], "HAND POLLINATOR: caught VANILLA VINE");
+  if (!st().party.some((q) => q.species === "vanilla_vine")) {
+    issue("trade", "the caught VANILLA VINE is not in the party");
+  }
+
+  await nav("driftseed_conservatory");
+  let pushed = 0;
+  const pushes = report.texts.length;
+  // Approach each stone from the left, push into its right-hand pocket, then
+  // climb the cleared corridor. Re-entering would reset all three actors.
+  for (const [id, y] of [["boulder_1", 12], ["boulder_2", 8], ["boulder_3", 4]] as const) {
+    if (!(await walkTo(6, y))) break;
+    await face("right");
+    await press("a");
+    await sleep(250);
+    await settle();
+    const boulder = ow()?.npcs.find((n) => n.id === id);
+    if (boulder?.x !== 8 || boulder.y !== y) break;
+    pushed++;
+  }
+  const summit = await walkTo(7, 3);
+  beat("CONSERVATORY 6: UPROOT the three boulders", pushed === 3 && summit && onTile(7, 3)
+    && report.texts.slice(pushes).filter((t) => t.text === "[?] UPROOT it?").length === 3);
+  await talkTo("saguaro");
+  beat("SAGUARO: cactus mark", flag("beat_saguaro") && st().marks.includes("cactus_mark"));
+  beat("SAGUARO: the CACTUS SAP", flag("got_sap") && bag("cactus_sap") === 1);
+
+  // Finish the survey on the voyage home, through real water encounters.
+  await nav("route_8");
+  await catchCoastalPlant("seagrass", "route_8", [[18, 35], [19, 35]], "SEAGRASS SURVEY: caught seagrass");
+  await catchCoastalPlant("mangrove", "route_8", [[18, 35], [19, 35]], "SEAGRASS SURVEY: caught mangrove");
+  await walkTo(30, 21);
+  const pods = bag("glass_pod"), rain = bag("rain_jar");
+  await talkTo("survey_assistant");
+  beat("SEAGRASS SURVEY: rewarded", flag("quest_seagrass_survey_done")
+    && flag("seagrass_survey_seagrass") && flag("seagrass_survey_mangrove")
+    && bag("glass_pod") === pods + 3 && bag("rain_jar") === rain + 1);
+
+  await nav("saltmarsh_harbour");
+  const healing = report.texts.length;
+  await trigger("ch6_lantern_tree");
+  beat("the Lantern Tree: fireflies return", flag("lantern_healed") && bag("cactus_sap") === 0
+    && report.texts.slice(healing).some((t) => /fireflies return/i.test(t.text)));
+  // Complete the market trade before REYES: the next harbour entry after her
+  // battle immediately runs Vale's call and the Chapter 6 end card.
+  await nav("saltmarsh_market");
+  await talkTo("trader");
+  beat("HAND POLLINATOR: POLLY grows into VANILLA", flag("quest_hand_pollinator_done")
+    && st().party.some((q) => q.species === "vanilla_orchid" && q.nickname === "POLLY")
+    && st().herbarium.caught.includes("vanilla_orchid"));
+
+  await nav("saltmarsh_conservatory");
+  const pools = report.texts.length;
+  await talkTo("lever:cons5_gate");
+  beat("CONSERVATORY 5: raft to the sluice lever", ow()?.mapId === "saltmarsh_conservatory"
+    && flag("cons5_gate") && report.texts.slice(pools).some((t) => /Ride the LILY RAFT/.test(t.text)));
+  const reached = await walkTo(7, 3);
+  beat("CONSERVATORY 5: raft through the open gate", reached && onTile(7, 3) && !st().rafting);
+  await talkTo("reyes");
+  beat("REYES: mangrove mark", flag("beat_reyes") && st().marks.includes("mangrove_mark"));
+
+  const exit = ow()?.map.def.warps.find((w) => w.to === "saltmarsh_harbour");
+  if (!exit) { beat("chapter 6 done", false, "no conservatory exit"); return; }
+  await untilEndCard(async () => {
+    await walkToQuiet(exit.x, exit.y - 1);
+    await goto(exit.x, exit.y, false);
+    await T().hold(KEY.down, 250);
+  }, "Chapter 6");
+  beat("chapter 6 done", flag("ch6_done") && flag("slice_done"));
+}
+
+/** Same pod fixture as FIRE FOLLOWERS, with actual grass/raft encounter rolls.
+ * No species, caught record, quest flag or encounter RNG is injected. */
+async function catchCoastalPlant(line: string, map: MapId, tiles: [[number, number], [number, number]], name: string) {
+  const st = ctx().state;
+  const total = () => st.party.length + st.box.length;
+  const before = total(), texts = report.texts.length;
+  const caught = () => [...st.party, ...st.box].some((q) => ctx().data.species[q.species].line === line);
+  st.bag["terrarium_pod"] = Math.max(st.bag["terrarium_pod"] ?? 0, 30);
+  const pods = st.bag["terrarium_pod"];
+  captureLine = line;
+  try {
+    for (let steps = 0; steps < 1000 && !caught() && (st.bag["terrarium_pod"] ?? 0) > 0; steps++) {
+      const [x, y] = onTile(...tiles[0]) ? tiles[1] : tiles[0];
+      if (ow()?.mapId !== map || !(await walkTo(x, y))) break;
+      await settle();
+      refreshHelper();
+    }
+  } finally { captureLine = null; }
+  beat(name, caught() && total() > before && (st.bag["terrarium_pod"] ?? 0) < pods
+    && report.texts.slice(texts).some((t) => /used TERRARIUM POD/i.test(t.text)),
+    `party+box ${before}->${total()}, pods ${pods}->${st.bag["terrarium_pod"] ?? 0}`);
+}
+
 /** Catch a quest plant from real grass encounters, driving BAG/PODS/USE.
  * The 30-pod supply is the same fixture used by check:catching. Encounter
  * rolls, levels, HP, catch odds and caught records all remain game-owned. */
@@ -1612,6 +1814,7 @@ export async function run(suite: string) {
       if (await newGameFromTitle()) {
         await storyPlaythrough({ boost, starter });
         await chapter5();
+        await chapter6();
       }
     } else if (suite === "story") {
       // From a ?dev=world&play=new jump-in.

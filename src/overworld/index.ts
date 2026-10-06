@@ -1015,7 +1015,14 @@ class Overworld implements Scene {
     this.ctx.audio.playSfx("door");
     // GBC-style stepped fade: quick out, a beat of black, a gentler fade in.
     await this.fader.to("black", 10);
-    this.loadMap(w.to, w.toX, w.toY, facing);
+    let preserveRaft = false;
+    const destination = this.ctx.world.maps[w.to];
+    if (this.ctx.state.rafting && destination) {
+      const arrival = buildMap(destination);
+      refreshLegend(arrival, this.ctx.state.flags);
+      preserveRaft = !!tileProps(tileAt(arrival, w.toX, w.toY)).water;
+    }
+    this.loadMap(w.to, w.toX, w.toY, facing, preserveRaft);
     this.playMapMusic();
     await this.timers.frames(6);
     await this.fader.to("clear", 14);

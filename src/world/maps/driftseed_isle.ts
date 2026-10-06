@@ -6,7 +6,7 @@ export const driftseed_isle: MapDef = {
   border: "tree", legend: OUTDOOR,
   tiles: [
     "AAAAAAAAAAAAAAAA~~AAAAAAAAAAAAAAAA",
-    "AAAAAAAAAAAAAAAA==AAAAAAAAAAAAAAAA",
+    "AAAAAAAAAAAAAAAA~~AAAAAAAAAAAAAAAA",
     "AAAAAAAAAAAAAAAA~~AAAAAAAAAAAAAAAA",
     "AAsssssssssssss====sssssssssssssAA",
     "AAsssssssssssss====sssssssssssssAA",

@@ -57,8 +57,13 @@ describe("Chapter 6 world", () => {
       const sea = WORLD.maps.route_8;
       expect(flood(grid(sea, { rafting }), [{ x: 18, y: 1 }]).has("18,39")).toBe(rafting);
     }
-    // Runtime warps end raft mode; an arrival must be land to allow remounting.
-    for (const id of CH6) for (const w of WORLD.maps[id].warps) expect(walkable(grid(WORLD.maps[w.to]), w.toX, w.toY)).toBe(true);
+    // Lead decision: sea crossings (water warp -> water arrival) keep the raft, so they
+    // land on open water, never an isolated pier; every other arrival is walkable land.
+    const isWater = (id: MapId, x: number, y: number) => !!(TILES as Record<string, { water?: boolean }>)[grid(WORLD.maps[id]).tile(x, y) ?? ""]?.water;
+    for (const id of CH6) for (const w of WORLD.maps[id].warps) {
+      if (isWater(id, w.x, w.y)) expect(isWater(w.to, w.toX, w.toY), `${id} -> ${w.to}`).toBe(true);
+      else expect(walkable(grid(WORLD.maps[w.to]), w.toX, w.toY), `${id} -> ${w.to}`).toBe(true);
+    }
     expect(checkProgressWithoutRaft(WORLD)).toEqual([]);
     const without = structuredClone(WORLD);
     without.scripts.ch6_reyes_point = [];

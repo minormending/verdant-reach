@@ -116,13 +116,16 @@ other claims:
 
 ## 3. Systems
 
+**Sea crossings:** route-to-route sea warps land on open water, so the player stays on the raft; never on an isolated pier. (The lead's decision after the e2e found the stranding.)
+
 **RAFT** (key item `lily_raft`, "Lily Raft", in `REQUIRED_ITEMS` with a placeholder icon):
 - Facing a `water: true` tile from land with the raft in the bag: "Ride the
   LILY RAFT?" On yes, the player steps onto the water in **raft mode**.
 - In raft mode the player moves on `water: true` tiles only. Stepping onto any
   walkable land tile dismounts.
 - Raft mode persists across save and load: `GameState.rafting?: boolean`.
-  Warps or a whiteout end it.
+  A warp keeps raft mode when the player is rafting and the destination tile
+  is water. Every other warp, and a whiteout, ends it.
 - **Encounters:** maps may define `encounters.water` (`{ rate, slots }`), and
   each raft step rolls it, as Surf does.
 - **Visual placeholder:** the player sprite drawn on a procedural green

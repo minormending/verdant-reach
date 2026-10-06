@@ -100,6 +100,9 @@ export function grid(map: MapDef, opts: { pruned?: boolean; rafting?: boolean } 
 }
 
 const waterTile = (t: TileKey | undefined): boolean => !!t && !!(TILES[t] as TileProps).water;
+/** A water step keeps the raft; walking onto a structure door dismounts. */
+const raftTile = (g: Grid, x: number, y: number): boolean =>
+  waterTile(g.tile(x, y)) && !g.doors.some((d) => d.x === x && d.y === y);
 
 export function walkable(g: Grid, x: number, y: number): boolean {
   const t = g.tile(x, y);
@@ -318,7 +321,11 @@ function progress(world: WorldData) {
     const queue: MapId[] = [];
     const pending = new Set<MapId>();
     const enqueue = (id: MapId) => { if (!pending.has(id)) { pending.add(id); queue.push(id); } };
-    const add = (id: MapId, x: number, y: number) => {
+    const add = (id: MapId, x: number, y: number, arrivingRaft = false) => {
+      // Owning the raft cannot mount it at an arrival. Only a water exit
+      // preserves rafting; script warps and the new-game position are on foot.
+      const destination = world.maps[id];
+      if (destination && waterTile(terrain(destination, enabled).tile(x, y)) && !arrivingRaft) return;
       const list = entries.get(id) ?? [];
       if (list.some((s) => s.x === x && s.y === y)) return;
       entries.set(id, [...list, { x, y }]); enqueue(id);
@@ -416,7 +423,9 @@ function progress(world: WorldData) {
         if (available(t.when) && triggerReached(bases.get(id)!, g, reach, t)) script(t.script, needs(t.when));
       }
       // These exits were reached with this terrain, before resolving new grants.
-      for (const wp of m.warps) if (reach.has(`${wp.x},${wp.y}`)) add(wp.to, wp.toX, wp.toY);
+      for (const wp of m.warps) if (reach.has(`${wp.x},${wp.y}`)) {
+        add(wp.to, wp.toX, wp.toY, enabled.has("raft") && raftTile(g, wp.x, wp.y));
+      }
       resolve();
     }
     return { enabled, granted, entries, reaches };
@@ -565,13 +574,16 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
   const jingles = new Set<string>(JINGLES);
 
   // Entry points per map: warp arrivals from elsewhere, scripted warps, new game.
-  const entries = new Map<MapId, { x: number; y: number }[]>();
-  const addEntry = (m: MapId, x: number, y: number) => {
+  const entries = new Map<MapId, (Point & { rafting: boolean })[]>();
+  const addEntry = (m: MapId, x: number, y: number, rafting = false) => {
     if (!entries.has(m)) entries.set(m, []);
-    entries.get(m)!.push({ x, y });
+    entries.get(m)!.push({ x, y, rafting });
   };
   addEntry(world.newGame.map, world.newGame.x, world.newGame.y);
-  for (const m of Object.values(world.maps)) for (const w of m.warps) addEntry(w.to, w.toX, w.toY);
+  for (const m of Object.values(world.maps)) {
+    const g = grid(m);
+    for (const w of m.warps) addEntry(w.to, w.toX, w.toY, raftTile(g, w.x, w.y));
+  }
   for (const cmds of Object.values(world.scripts)) {
     eachCmd(cmds, (c) => { if (c.op === "warp") addEntry(c.to, c.x, c.y); });
   }
@@ -648,7 +660,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       if (!walkable(g, wp.x, wp.y)) errs.push(`${where} warp at ${wp.x},${wp.y} is not walkable`);
       const target = world.maps[wp.to];
       if (!target) { errs.push(`${where} warp to missing map ${wp.to}`); continue; }
-      const tg = grid(target);
+      const tg = grid(target, { rafting: rafting && raftTile(g, wp.x, wp.y) });
       if (!walkable(tg, wp.toX, wp.toY)) errs.push(`${where} warp lands on solid ${wp.to} ${wp.toX},${wp.toY}`);
       if (target.warps.some((o) => o.x === wp.toX && o.y === wp.toY) && tg.tile(wp.toX, wp.toY) !== "mat_exit") {
         errs.push(`${where} warp lands on another warp in ${wp.to} ${wp.toX},${wp.toY}`);
@@ -742,7 +754,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const starts = entries.get(id) ?? [];
     if (!starts.length) { errs.push(`${where} has no way in`); continue; }
     for (const s of starts) {
-      if (!walkable(grid(map), s.x, s.y)) errs.push(`${where} entry ${s.x},${s.y} is solid`);
+      if (!walkable(grid(map, { rafting: rafting && s.rafting }), s.x, s.y)) errs.push(`${where} entry ${s.x},${s.y} is solid`);
     }
     // Everything is checked as eventually reachable (brambles cut); the
     // required-progress pass after this loop checks the world without PRUNE.

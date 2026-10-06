@@ -25,6 +25,15 @@ function fixture(): WorldData {
   };
 }
 
+/** An open-water arrival has no shore from which to mount again. */
+function seaWarpFixture(): WorldData {
+  const w = fixture();
+  w.maps.route_1.warps[0].x = 4;
+  w.maps.herbarium.tiles = ["###", "#~#", "#~#", "###"];
+  w.maps.herbarium.triggers = [{ x: 1, y: 2, script: "story", when: [{ flag: "got_raft", is: true }] }];
+  return w;
+}
+
 describe("RAFT progress validation", () => {
   it("permits water-only regions after a reachable raft grant", () => {
     const w = fixture();
@@ -50,6 +59,31 @@ describe("RAFT progress validation", () => {
     const w = fixture();
     const errors = validateWorld(w).filter((e) => e.startsWith("[route_1]") || e.startsWith("[herbarium]"));
     expect(errors).toEqual([]);
+  });
+
+  it("accepts water-to-water arrivals only after the raft can be acquired", () => {
+    const w = seaWarpFixture();
+    expect(checkProgressWithoutRaft(w)).toEqual([]);
+    expect(validateWorld(w).filter((e) => /^\[(route_1|herbarium)\]/.test(e))).toEqual([]);
+    w.scripts.raft = [];
+    expect(validateWorld(w).join("\n")).toMatch(/warp lands on solid herbarium/);
+    expect(checkProgressWithoutRaft(w).join("\n")).toMatch(/without RAFT/);
+  });
+
+  it("rejects land-to-water arrivals even when a reachable giver supplies the raft", () => {
+    const w = seaWarpFixture();
+    w.maps.route_1.warps[0].x = 7;
+    const errors = validateWorld(w).join("\n");
+    expect(errors).toMatch(/warp lands on solid herbarium 1,2/);
+    expect(errors).toMatch(/\[herbarium\] entry 1,2 is solid/);
+  });
+
+  it("keeps ROUTE 8 behind the raft and accepts its sea arrivals", () => {
+    expect(validateWorld(WORLD).filter((e) => /\[(route_8|saltmarsh_harbour|driftseed_isle)\]/.test(e))).toEqual([]);
+    const w = structuredClone(WORLD);
+    w.scripts.ch6_reyes_point = [];
+    expect(checkProgressWithoutRaft(w).join("\n")).toMatch(/\[saltmarsh_harbour\] without RAFT: warp at 18,29/);
+    expect(validateWorld(w).join("\n")).toMatch(/\[route_8\] warp at 18,0 unreachable/);
   });
 
   it("rejects flag-only grants, missing grants and self-gated acquisition", () => {

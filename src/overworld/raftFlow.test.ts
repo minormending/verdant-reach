@@ -112,7 +112,7 @@ describe("RAFT overworld flow", () => {
     expect(scene.followerVisible()).toBe(true);
   });
 
-  it.each(["tile", "script"])("ends rafting on a %s warp", async (kind) => {
+  it.each(["tile", "script"])("ends rafting on a %s warp to land", async (kind) => {
     const { ctx, scene } = setup(true);
     vi.spyOn(Fader.prototype, "to").mockResolvedValue(undefined);
     vi.spyOn(Timers.prototype, "frames").mockResolvedValue(undefined);
@@ -120,6 +120,50 @@ describe("RAFT overworld flow", () => {
     else await scene.host.warp("route_1", 1, 2, "down");
     expect(ctx.state.rafting).toBeUndefined();
     expect(ctx.state.position).toMatchObject({ map: "route_1", x: 1, y: 2 });
+  });
+
+  it("keeps rafting across a water-to-water warp and can take the next water step", async () => {
+    const { ctx, scene } = setup(true);
+    ctx.world.maps.herbarium = { ...structuredClone(shore), id: "herbarium" };
+    vi.spyOn(Fader.prototype, "to").mockResolvedValue(undefined);
+    vi.spyOn(Timers.prototype, "frames").mockResolvedValue(undefined);
+    await scene.useWarp({ x: 2, y: 1, to: "herbarium", toX: 2, toY: 1 });
+    expect(ctx.state.rafting).toBe(true);
+    expect(ctx.state.position).toMatchObject({ map: "herbarium", x: 2, y: 1 });
+    scene.attemptMove("right");
+    finishStep(scene);
+    expect(ctx.state.position).toMatchObject({ map: "herbarium", x: 3, y: 1 });
+    expect(ctx.state.rafting).toBe(true);
+  });
+
+  it("does not mount the raft when a warp starts on land, even with the item", async () => {
+    const { ctx, scene } = setup();
+    vi.spyOn(Fader.prototype, "to").mockResolvedValue(undefined);
+    vi.spyOn(Timers.prototype, "frames").mockResolvedValue(undefined);
+    await scene.useWarp({ x: 1, y: 1, to: "route_1", toX: 2, toY: 1 });
+    expect(ctx.state.rafting).toBeUndefined();
+    scene.attemptMove("right");
+    finishStep(scene);
+    expect(ctx.state.position).toMatchObject({ x: 2, y: 1 });
+    expect(ctx.ui.yesNo).not.toHaveBeenCalled();
+  });
+
+  it("uses the flag-resolved destination tile to decide whether to keep rafting", async () => {
+    const { ctx, scene } = setup(true);
+    ctx.world.maps.route_1.legendWhen = [{ when: [{ flag: "drained", is: true }], legend: { "~": "path" } }];
+    ctx.state.flags.drained = true;
+    vi.spyOn(Fader.prototype, "to").mockResolvedValue(undefined);
+    vi.spyOn(Timers.prototype, "frames").mockResolvedValue(undefined);
+    await scene.useWarp({ x: 2, y: 1, to: "route_1", toX: 3, toY: 1 });
+    expect(ctx.state.rafting).toBeUndefined();
+  });
+
+  it("ends rafting on a script warp even when its destination is water", async () => {
+    const { ctx, scene } = setup(true);
+    vi.spyOn(Fader.prototype, "to").mockResolvedValue(undefined);
+    vi.spyOn(Timers.prototype, "frames").mockResolvedValue(undefined);
+    await scene.host.warp("route_1", 3, 1, "right");
+    expect(ctx.state.rafting).toBeUndefined();
   });
 
   it("ends rafting on whiteout and returns to the heal point", async () => {
