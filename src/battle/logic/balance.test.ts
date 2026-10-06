@@ -71,6 +71,16 @@ const MILESTONES_R5: Record<string, Milestone> = {
   rival_4_r5: { trainer: (l) => `rival_4_${COUNTER[l]}`, starterLevel: 27, extras: [["fireweed_shoot", 25], ["skunk_cabbage_shoot", 25], ["cedar_seedling", 25]] },
 };
 
+// Chapter 6: two mixed parties, each carrying catches from Chapters 5 and 6.
+// Starters have reached their third stage; catches retain their actual stages.
+const MILESTONES_R6: Record<string, Milestone> = {
+  saguaro: { trainer: () => "saguaro", starterLevel: 32, extras: [["fireweed_shoot", 29], ["mangrove_sapling", 29], ["eelgrass", 29]] },
+  saguaro_r6: { trainer: () => "saguaro", starterLevel: 32, extras: [["skunk_cabbage", 29], ["cedar_seedling", 29], ["eelgrass", 29]] },
+  reyes: { trainer: () => "reyes", starterLevel: 34, extras: [["fireweed", 31], ["mangrove_sapling", 31], ["padded_cactus", 31]] },
+  reyes_r6: { trainer: () => "reyes", starterLevel: 34, extras: [["skunk_cabbage", 31], ["cedar_seedling", 31], ["vanilla_vine", 31]] },
+};
+const THIRD_STARTER: Record<Line, SpeciesId> = { oak: "great_oak", chili: "red_chili", lily: "giant_water_lily" };
+
 // Route 4, the Palm House, Route 5 and the Conservatory 3 juniors: ordinary
 // fights. With a mid-chapter party they should be comfortable wins.
 const CH4_TRAINERS: Record<string, { ids: string[]; m: Omit<Milestone, "trainer"> }> = {
@@ -111,7 +121,7 @@ function winRate(line: Line, m: Milestone, n = 300): number {
   for (let i = 0; i < n; i++) {
     const [s1, s2] = STARTER[line];
     const p = [
-      createQuickened(DATA, m.starterLevel >= 16 ? s2 : s1, m.starterLevel, rng),
+      createQuickened(DATA, m.starterLevel >= 30 ? THIRD_STARTER[line] : m.starterLevel >= 16 ? s2 : s1, m.starterLevel, rng),
       ...m.extras.map(([sp, lv]) => createQuickened(DATA, sp, lv, rng)),
     ];
     const f = trainer.team.map((t) => {
@@ -173,6 +183,25 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     expect(Math.min(...morrow)).toBeGreaterThan(0.25);
     expect(mean(morrow)).toBeGreaterThan(mean(flora));
     expect(mean(morrow)).toBeLessThan(0.88); // a real leader, not a walkover (tuned to ~81%)
+  });
+
+  it("Chapter 6: Saguaro and Reyes occupy their prescribed bands", () => {
+    const rates = (id: string) => [id, `${id}_r6`].flatMap((k) =>
+      (["oak", "chili", "lily"] as Line[]).map((l) => winRate(l, MILESTONES_R6[k], 300)));
+    const saguaro = rates("saguaro"), reyes = rates("reyes");
+    const mean = (r: number[]) => r.reduce((a, b) => a + b, 0) / r.length;
+    console.log(`saguaro mean: ${(mean(saguaro) * 100).toFixed(1)}%; reyes mean: ${(mean(reyes) * 100).toFixed(1)}%`);
+    for (const r of [saguaro, reyes]) {
+      console.log("Chapter 6 party rates (oak/chili/lily):", r.map((x) => (x * 100).toFixed(1)));
+      for (const rate of r) expect(rate).toBeGreaterThan(0.25);
+    }
+    expect(mean(saguaro)).toBeGreaterThanOrEqual(0.72);
+    // Lead: Thorn is weak to the fire types every party carries by now, so Saguaro is the
+    // gentler Chapter 6 leader (the patient hermit); Reyes stays the harder one.
+    expect(mean(saguaro)).toBeLessThanOrEqual(0.9);
+    expect(mean(reyes)).toBeGreaterThanOrEqual(0.65);
+    expect(mean(reyes)).toBeLessThanOrEqual(0.75);
+    expect(mean(reyes)).toBeLessThan(mean(saguaro));
   });
 
   for (const [area, { ids, m }] of Object.entries(CH4_TRAINERS)) {

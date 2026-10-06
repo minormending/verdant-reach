@@ -188,9 +188,9 @@ minus 1; never use a stage above what's listed.
 | `grunt_dock_1`, `grunt_dock_2` | GRUNT / `grunt`, `battle_rootstock` | the harbour docks (after the doctor scene) | 1: stinging_nettle 27, fireweed 27 · 2: venus_flytrap 27, sugar_maple 28 |
 | `sailor_kelp`, `sailor_brine`, `diver_coral`, `diver_shoal` | HIKER / `hiker`; GARDENER / `gardener` | route_8 islets | kelp: seagrass_shoot 27, lily_pad 28 · brine: eelgrass 29 · coral: mangrove_sapling 28, cattail 28 · shoal: seagrass_shoot 28, giant_water_lily 29 |
 | `jr_spine`, `jr_needle` | JR.GARDENER / `gardener` | driftseed_conservatory | spine: pear_pad 28, padded_cactus 29 · needle: stinging_nettle 29, padded_cactus 29 |
-| `saguaro` | WARDEN / `hollis` | driftseed_conservatory | padded_cactus 30, prickly_pear 31, **saguaro_column 33 (ace)**. Smart AI, 1 spring_water, `battle_leader`, mark `cactus_mark`. |
+| `saguaro` | WARDEN / `hollis` | driftseed_conservatory | padded_cactus 34, prickly_pear 35, **saguaro_column 37 (ace)**. Smart AI, 1 spring_water, `battle_leader`, mark `cactus_mark`. *Lead's tuning: about 87% mean player win. Thorn is weak to the fire types every party has by now, so he's the gentler Chapter 6 leader, with the band widened to 72–90%; levels below 34 made him a walkover.* |
 | `jr_tide`, `jr_current` | JR.GARDENER / `gardener` | saltmarsh_conservatory | tide: seagrass_shoot 30, lily_pad 30 · current: mangrove_sapling 31, eelgrass 31 |
-| `reyes` | WARDEN / `nell_pitcher` | saltmarsh_conservatory | eelgrass 32, mangrove_sapling 32, giant_water_lily 33, **red_mangrove 34 (ace)**. Smart AI, 2 spring_water, `battle_leader`, mark `mangrove_mark`. |
+| `reyes` | WARDEN / `nell_pitcher` | saltmarsh_conservatory | eelgrass 32, mangrove_sapling 32, giant_water_lily 33, **red_mangrove 35 (ace)**. *Tuned to about 70%: harder than Saguaro through 4 members and matchups, not levels.* Smart AI, 2 spring_water, `battle_leader`, mark `mangrove_mark`. |
 
 **Balance** (extend `balance.test.ts`, with sim parties that carry Chapter 5
 and 6 catches):

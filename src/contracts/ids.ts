@@ -86,6 +86,8 @@ export const MAP_IDS = [
   // Chapter 5 (CH5_IDS.md §B order)
   "route_6", "cedarhallow", "cedarhallow_greenhouse", "cedarhallow_market",
   "cedarhallow_house", "cedar_hollow", "burnt_stand", "cedarhallow_conservatory",
+  // Chapter 6 (CH6.md §4 order)
+  "route_7", "saltmarsh_harbour", "saltmarsh_greenhouse", "saltmarsh_market", "saltmarsh_conservatory", "route_8", "driftseed_isle", "driftseed_greenhouse", "driftseed_conservatory", "driftseed_vents",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -311,7 +313,7 @@ export type TrainerId = string;
 export type ScriptId = string;
 
 /** Pressed Marks (badges) available so far. */
-export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark"] as const;
+export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark", "cactus_mark", "mangrove_mark"] as const;
 export type MarkId = (typeof MARKS)[number];
 
 /** Full-screen 160x144 illustrations shown during key story beats. */

@@ -1,0 +1,47 @@
+import type { MapDef } from "../../contracts";
+import { LEGEND } from "../build";
+
+export const driftseed_vents: MapDef = {
+  id: "driftseed_vents", name: "THE VENTS", outdoor: false, music: "sugarbush_grove", ambient: "spores",
+  border: "void", legend: LEGEND,
+  tiles: [
+    "WWWWWWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWWWWWW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WWWWWWWWWWW+WWWWWWWWWWWW",
+    "WWWWWWWWWW+++WWWWWWWWWWW",
+    "WWWWWWWWWW+vWWWWWWWWWWWW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WW,,,,,,,,,,,,,,,,,,,,WW",
+    "WWWWWWWWWWWEWWWWWWWWWWWW",
+  ],
+  structures: [],
+  warps: [{ x: 11, y: 23, to: "driftseed_isle", toX: 25, toY: 17, facing: "down" }],
+  npcs: [
+    { id: "vent_boulder", sprite: "boulder", x: 11, y: 10, facing: "down", pushable: true },
+    { id: "spring_water", sprite: "item_pickup", x: 5, y: 4, facing: "down" },
+    { id: "glass_pod", sprite: "item_pickup", x: 18, y: 5, facing: "down" },
+  ],
+  signs: [], triggers: [],
+  encounters: { grass: { rate: 10, slots: [
+    { species: "padded_cactus", minLevel: 28, maxLevel: 31, weight: 35 },
+    { species: "saguaro_pup", minLevel: 28, maxLevel: 29, weight: 30 },
+    { species: "fireweed_shoot", minLevel: 28, maxLevel: 29, weight: 20 },
+    { species: "vanilla_vine", minLevel: 28, maxLevel: 31, weight: 15 },
+  ] } },
+};

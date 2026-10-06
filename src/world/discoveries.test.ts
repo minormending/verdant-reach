@@ -21,6 +21,11 @@ const CH4 = new Set<MapId>([
   "glasshouse_relay", "glasshouse_conservatory", "glasshouse_house", "route_5",
 ]);
 
+const CH6 = new Set<MapId>([
+  "route_7", "saltmarsh_harbour", "saltmarsh_greenhouse", "saltmarsh_market", "saltmarsh_conservatory",
+  "route_8", "driftseed_isle", "driftseed_greenhouse", "driftseed_conservatory", "driftseed_vents",
+]);
+
 const CH5 = new Set<MapId>([
   "route_6", "cedarhallow", "cedarhallow_greenhouse", "cedarhallow_market",
   "cedarhallow_house", "cedar_hollow", "burnt_stand", "cedarhallow_conservatory",
@@ -28,7 +33,7 @@ const CH5 = new Set<MapId>([
 
 describe("hidden items", () => {
   const all = maps.flatMap((m) => (m.hidden ?? []).map((h) => ({ map: m.id, ...h })));
-  const early = all.filter((h) => !CH4.has(h.map) && !CH5.has(h.map));
+  const early = all.filter((h) => !CH4.has(h.map) && !CH5.has(h.map) && !CH6.has(h.map));
   const ch4 = all.filter((h) => CH4.has(h.map));
   it("hides 6 to 10 items across Chapters 1-3, spread over at least 6 maps (plus a few PRUNE stashes)", () => {
     expect(early.length).toBeGreaterThanOrEqual(6);
@@ -47,7 +52,7 @@ describe("hidden items", () => {
 
 describe("harvest bushes", () => {
   it("plants 6 to 10 bushes in Chapters 1-3 and a few more in Chapter 4, each with its own harvest id", () => {
-    const early = bushes.filter((b) => !CH4.has(b.map) && !CH5.has(b.map));
+    const early = bushes.filter((b) => !CH4.has(b.map) && !CH5.has(b.map) && !CH6.has(b.map));
     expect(early.length).toBeGreaterThanOrEqual(6);
     expect(early.length).toBeLessThanOrEqual(10);
     expect(bushes.filter((b) => CH4.has(b.map)).length).toBeGreaterThanOrEqual(2);

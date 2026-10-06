@@ -38,7 +38,7 @@ function occupiedGrid(m: MapDef, flags: Record<string, boolean>) {
 
 describe("Chapter 5 world", () => {
   it("appends the eight maps in the binding order and uses the specified dimensions", () => {
-    expect(MAP_IDS.slice(-8)).toEqual(CH5);
+    expect(MAP_IDS.slice(MAP_IDS.indexOf("route_6"), MAP_IDS.indexOf("route_6") + 8)).toEqual(CH5);
     for (const [id, w, h] of [
       ["route_6", 30, 60], ["cedarhallow", 36, 30], ["cedar_hollow", 20, 24],
       ["burnt_stand", 40, 30], ["cedarhallow_conservatory", 16, 18],
