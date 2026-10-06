@@ -4,7 +4,7 @@
 import type { GameContext, ItemId, Quickened } from "../contracts";
 import { speciesPath, TEXTBOX, UI } from "../contracts";
 import { applyItem, consumeItem, isMedicine } from "../battle/logic/items";
-import { itemGrowthTarget } from "../battle/logic/exp";
+import { canGrowWith, isGrowthItem, itemGrowthTarget } from "../battle/logic/exp";
 import { qName, STATUS_ABBR } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
 import { drawCursor, drawHpBar, drawIcon, drawLevel, drawStatusBadge, drawTextRight, drawWiltBadge, pad, preload } from "./kit/draw";
@@ -37,6 +37,7 @@ export function preloadPartyArt(ctx: GameContext, party: Quickened[]) {
 
 export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> {
   const party = () => ctx.state.party;
+  const growthItem = opts.mode === "pick" && opts.useItem && isGrowthItem(ctx.data, opts.useItem) ? opts.useItem : undefined;
   let ui!: ScreenUi;
   let index = Math.max(0, Math.min(opts.start ?? 0, ctx.state.party.length - 1));
   let swapFrom = -1;
@@ -70,7 +71,7 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
       // rows slide in from the right as the menu opens
       const k = Math.max(0, Math.min(1, (frame - i * 2) / 8));
       const off = Math.round((1 - k) * (1 - k) * 80);
-      drawRow(ctx, g, q, i, i === index && !hideCursor, frame, shownHp.get(q.uid) ?? q.hp, off);
+      drawRow(ctx, g, q, i, i === index && !hideCursor, frame, shownHp.get(q.uid) ?? q.hp, off, growthItem);
     });
     if (!hideCursor) {
       if (swapFrom >= 0) drawCursor(ctx, g, 0, swapFrom * ROW_H + 4, true);
@@ -166,10 +167,15 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
     }
     const growTo = itemGrowthTarget(ctx.data, q, item);
     if (growTo) {
-      consumeItem(ctx.state.bag, item);
       hideCursor = true;
-      await runGrowth(ctx, q, growTo);
-      hideCursor = false;
+      let grew: boolean;
+      try {
+        grew = await runGrowth(ctx, q, growTo);
+      } finally {
+        hideCursor = false;
+      }
+      if (!grew) return "stay";
+      consumeItem(ctx.state.bag, item);
       return "used";
     }
     const res = applyItem(ctx.data, item, q);
@@ -193,14 +199,16 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
   return runFlowScene<number>(ctx, { draw, main, fallback: -1 });
 }
 
-function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i: number, selected: boolean, frame: number, hp: number, off = 0) {
+function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i: number, selected: boolean, frame: number, hp: number, off = 0, growthItem?: ItemId) {
   const y = i * ROW_H;
   const x = off;
+  const ability = growthItem ? (canGrowWith(ctx.data, q, growthItem) ? "ABLE" : "NOT ABLE") : null;
   if (q.seed) {
     // A Nursery seed: its icon rocks gently; no level or HP until it sprouts (as Crystal's eggs).
     const f = Math.floor(frame / (selected ? 12 : 28)) % 2 as 0 | 1;
     drawSeedIcon(g, ctx.assets, 8 + x, y, f);
     ctx.ui.drawText(g, "SEED", 24 + x, y);
+    if (ability) drawTextRight(ctx, g, ability, 157 + x, y + 8);
     return;
   }
   // icons bob faster the healthier they are (and fastest when selected), as in Crystal
@@ -212,6 +220,11 @@ function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i:
   ctx.ui.drawText(g, name.slice(0, 12), 24 + x, y, hp <= 0 ? "#707070" : undefined);
   drawLevel(ctx, g, q.level, 124 + x, y);
   drawHpBar(g, 24 + x, y + 9, Math.max(0, hp), q.stats.hp, 48);
+  // The label replaces HP numbers/status; its left edge is 93, past the bar at 82.
+  if (ability) {
+    drawTextRight(ctx, g, ability, 157 + x, y + 8);
+    return;
+  }
   if (q.hp <= 0) drawWiltBadge(g, 83 + x, y + 9);
   else if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 83 + x, y + 9, frame);
   drawTextRight(ctx, g, `${pad(Math.max(0, Math.round(hp)), 3)}/${pad(q.stats.hp, 3)}`, 157 + x, y + 8);

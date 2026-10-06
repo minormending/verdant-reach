@@ -3,7 +3,7 @@
 
 import type { GameContext, Item, ItemId } from "../contracts";
 import { TEXTBOX, UI } from "../contracts";
-import { itemGrowthTarget } from "../battle/logic/exp";
+import { isGrowthItem } from "../battle/logic/exp";
 import { consumeItem, isMedicine } from "../battle/logic/items";
 import { getItem, itemName } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
@@ -180,12 +180,10 @@ export function bagScreen(ctx: GameContext, opts: BagOpts): Promise<ItemId | nul
       await herbariumScreen(ctx);
       return "stay";
     }
-    const grows = ctx.state.party.some((q) => itemGrowthTarget(ctx.data, q, id));
-    if (isMedicine(ctx.data, id) || grows) {
-      if (!it.usableInField && !grows) { await notNow(); return "stay"; }
+    if (it.usableInField && (isMedicine(ctx.data, id) || isGrowthItem(ctx.data, id))) {
       const { partyScreen } = await import("./party");
-      await partyScreen(ctx, { mode: "pick", prompt: "Use on which?", useItem: id });
-      return "used";
+      const picked = await partyScreen(ctx, { mode: "pick", prompt: "Use on which?", useItem: id });
+      return picked < 0 ? "stay" : "used";
     }
     await notNow();
     return "stay";

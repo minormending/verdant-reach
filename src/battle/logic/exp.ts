@@ -147,6 +147,17 @@ export function itemGrowthTarget(data: GameData, q: Quickened, item: ItemId): Sp
   return g.trigger.kind === "item" && g.trigger.item === item ? g.species : null;
 }
 
+/** Crystal-style ABLE rule, shared with the item party picker. */
+export function canGrowWith(data: GameData, q: Quickened, item: ItemId): boolean {
+  return itemGrowthTarget(data, q, item) !== null;
+}
+
+/** Recognize growth items even when no current party member can use them. */
+export function isGrowthItem(data: GameData, item: ItemId): boolean {
+  return Object.values(data.species).some(({ growsInto: g }) =>
+    g?.trigger.kind === "item" && g.trigger.item === item && !!data.species[g.species]);
+}
+
 /** Apply growth: change species, recalc stats; returns moves learned at this level by the new form. */
 export function applyGrowth(data: GameData, q: Quickened, to: SpeciesId): MoveId[] {
   q.species = to;

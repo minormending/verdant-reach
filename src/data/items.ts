@@ -1,4 +1,4 @@
-// Items. Names <= 12 chars. Prices follow SLICE.md (pod 200, flask 300,
+// Items. Names <= 13 chars. Prices follow SLICE.md (pod 200, flask 300,
 // neem 250). Price 0 = cannot be bought or sold.
 
 import type { Item } from "../contracts";
@@ -46,6 +46,16 @@ const LIST: Item[] = [
   { id: "rose_hip", name: "Rose Hip", pocket: "items", price: 200,
     description: "Full of vitamin C. Cures any status.",
     effect: { kind: "cure_status" }, usableInBattle: true, usableInField: true },
+
+  // Found growth triggers; species opt in through growsInto, not an item effect.
+  // Serotiny: https://www.nps.gov/places/000/fires-and-forest-ecology.htm
+  { id: "ember_ash", name: "Ember Ash", pocket: "items", price: 0,
+    description: "Fire opens some sealed pine cones.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: true },
+  // Cold treatment: https://extension.umn.edu/garden-and-home/yard-and-garden/gardening-in-minnesota/planting-bulbs-tubers-and-rhizomes
+  { id: "cold_snap", name: "Cold Snap", pocket: "items", price: 0,
+    description: "Many bulbs need cold to flower.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: true },
 
   // Key items
   { id: "field_herbarium", name: "Herbarium", pocket: "key", price: 0,

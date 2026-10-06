@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { Quickened, SpeciesId } from "../../contracts";
+import type { GameData, Quickened, SpeciesId } from "../../contracts";
 import { FIXTURE_DATA } from "../fixtures";
 import {
   addFriendship, applyGrowth, distributeExp, expProgress, expYield, gainEvs, gainExp, growthTarget,
-  itemGrowthTarget, replaceMove, tryLearn,
+  canGrowWith, isGrowthItem, itemGrowthTarget, replaceMove, tryLearn,
 } from "./exp";
 import { createQuickened } from "./stats";
 import { seeded } from "./rng";
@@ -107,6 +107,50 @@ describe("growth triggers", () => {
     expect(q.species).toBe("oak_sapling");
     expect(q.stats.hp).toBeGreaterThan(hp);
     expect(moves).toEqual(["sprout_up"]);
+  });
+});
+
+describe("item growth eligibility", () => {
+  // Override a fixture locally: no real species receives an item trigger.
+  const itemData: GameData = {
+    ...data,
+    species: {
+      ...data.species,
+      oak_acorn: {
+        ...data.species.oak_acorn,
+        growsInto: { species: "oak_sapling", trigger: { kind: "item", item: "ember_ash" } },
+      },
+    },
+  };
+
+  it("accepts the matching item and never fires on a level-up", () => {
+    const q = createQuickened(itemData, "oak_acorn", 16, seeded(1));
+    expect(itemGrowthTarget(itemData, q, "ember_ash")).toBe("oak_sapling");
+    expect(canGrowWith(itemData, q, "ember_ash")).toBe(true);
+    expect(growthTarget(itemData, q, "day")).toBeNull();
+    expect(isGrowthItem(itemData, "ember_ash")).toBe(true);
+    expect(isGrowthItem(itemData, "cold_snap")).toBe(false);
+  });
+
+  it("rejects a wrong item, seeds, and a species without growth", () => {
+    const q = createQuickened(itemData, "oak_acorn", 16, seeded(1));
+    expect(itemGrowthTarget(itemData, q, "cold_snap")).toBeNull();
+    expect(canGrowWith(itemData, q, "cold_snap")).toBe(false);
+    q.seed = { steps: 10 };
+    expect(itemGrowthTarget(itemData, q, "ember_ash")).toBeNull();
+    expect(canGrowWith(itemData, q, "ember_ash")).toBe(false);
+    const adult = createQuickened(itemData, "great_oak", 32, seeded(2));
+    expect(itemGrowthTarget(itemData, adult, "ember_ash")).toBeNull();
+    expect(canGrowWith(itemData, adult, "ember_ash")).toBe(false);
+  });
+
+  it("rejects an item trigger whose target is missing", () => {
+    const broken: GameData = { ...itemData, species: { ...itemData.species } };
+    delete (broken.species as Partial<GameData["species"]>).oak_sapling;
+    const q = createQuickened(broken, "oak_acorn", 16, seeded(1));
+    expect(itemGrowthTarget(broken, q, "ember_ash")).toBeNull();
+    expect(canGrowWith(broken, q, "ember_ash")).toBe(false);
+    expect(isGrowthItem(broken, "ember_ash")).toBe(false);
   });
 });
 

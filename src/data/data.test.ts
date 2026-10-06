@@ -205,6 +205,18 @@ describe("moves", () => {
 });
 
 describe("items", () => {
+  it("reserves found, field-only growth items without art or live species assignments", () => {
+    for (const [id, name] of [["ember_ash", "Ember Ash"], ["cold_snap", "Cold Snap"]]) {
+      expect(DATA.items[id]).toMatchObject({
+        id, name, pocket: "items", price: 0, effect: { kind: "none" },
+        usableInBattle: false, usableInField: true,
+      });
+      expect(wrapText(DATA.items[id].description, 18).length).toBeLessThanOrEqual(2);
+      expect(REQUIRED_ITEMS).not.toContain(id);
+      expect(species.some((s) => s.growsInto?.trigger.kind === "item" && s.growsInto.trigger.item === id)).toBe(false);
+    }
+  });
+
   it("every REQUIRED_ITEM exists and is well-formed", () => {
     for (const id of REQUIRED_ITEMS) expect(DATA.items[id], id).toBeDefined();
     for (const [id, item] of Object.entries(DATA.items)) {
