@@ -78,4 +78,15 @@ describe("SEED GLIDE", () => {
     state.bag.pruning_shears = 1;
     expect(visitedGlideMaps(state)).toHaveLength(4);
   });
+
+  // Bug hunt finding: carrying the shears used to cap visits at Glasshouse City.
+  it("keeps Cedarhallow with the shears in the bag, on Route 6, after the Pipe Mark", () => {
+    const state = fresh();
+    state.bag.pruning_shears = 1;
+    state.marks = ["pipe_mark"];
+    state.flags.visited_cedarhallow = true;
+    state.position.map = "route_6";
+    expect(visitedGlideMaps(state)).toContain("cedarhallow");
+    expect(visitedGlideMaps(state)).toHaveLength(5);
+  });
 });

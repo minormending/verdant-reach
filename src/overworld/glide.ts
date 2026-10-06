@@ -34,7 +34,7 @@ export function visitedGlideMaps(state: TravelState): MapId[] {
   for (const [i, mark] of ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark"].entries()) {
     if (state.marks.some((m) => m === mark)) furthest = Math.max(furthest, i + 1);
   }
-  if ((state.bag.pruning_shears ?? 0) > 0) furthest = 3;
+  if ((state.bag.pruning_shears ?? 0) > 0) furthest = Math.max(furthest, 3); // shears prove Glasshouse, never cap later towns
   return TOWNS.slice(0, furthest + 1);
 }
 

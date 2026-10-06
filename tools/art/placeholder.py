@@ -76,8 +76,15 @@ def species(ids: list[str]) -> None:
 
 
 def images(set_id: str, names: list[str], size: tuple[int, int]) -> None:
-    emit.set_images(set_id, {n: blob(size[0], 0.85) for n in names}, TOOL)
-    print(f"placeholder {set_id}: {', '.join(names)}")
+    """Only missing entries, or entries this tool made, get a placeholder: real art is never touched."""
+    set_json = ART / "sets" / set_id / "set.json"
+    existing = json.loads(set_json.read_text()).get("images", {}) if set_json.exists() else {}
+    todo = [n for n in names if n not in existing or (existing[n].get("source") or {}).get("tool") == TOOL]
+    for n in sorted(set(names) - set(todo)):
+        print(f"skip {set_id}/{n}: real art exists")
+    if todo:
+        emit.set_images(set_id, {n: blob(size[0], 0.85) for n in todo}, TOOL)
+        print(f"placeholder {set_id}: {', '.join(todo)}")
 
 
 if __name__ == "__main__":
