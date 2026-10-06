@@ -114,18 +114,32 @@ export function runLoop(
   // `?timer` drives the loop with setTimeout (for embedded/hidden test panes
   // where requestAnimationFrame is throttled).
   const useTimer = typeof location !== "undefined" && new URLSearchParams(location.search).has("timer");
+  const requestedSpeed = import.meta.env.DEV && typeof location !== "undefined"
+    ? new URLSearchParams(location.search).get("speed") : null;
+  const speed = requestedSpeed && /^\d+$/.test(requestedSpeed)
+    && Number(requestedSpeed) >= 1 && Number(requestedSpeed) <= 16 ? Number(requestedSpeed) : 1;
   const schedule = (f: (now: number) => void) =>
     useTimer ? setTimeout(() => f(performance.now()), 1000 / FPS) : requestAnimationFrame(f);
   let acc = 0;
   let last = performance.now();
+  const update = () => {
+    scenes.top()?.update(step);
+    input.endFrame();
+    onTick(step);
+  };
   const frame = (now: number) => {
     acc += Math.min(250, now - last);
     last = now;
-    while (acc >= step) {
-      scenes.top()?.update(step);
-      input.endFrame();
-      onTick(step);
-      acc -= step;
+    // Preserve the normal accumulator exactly at speed 1. Accelerated dev
+    // frames run a fixed batch, with input edges consumed after each step.
+    if (speed > 1) {
+      for (let i = 0; i < speed; i++) update();
+      acc = 0;
+    } else {
+      while (acc >= step) {
+        update();
+        acc -= step;
+      }
     }
     const all = scenes.all();
     let from = all.length - 1;

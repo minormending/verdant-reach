@@ -8,11 +8,13 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "art:index": "node tools/art/index.mjs"
+    "art:index": "node tools/art/index.mjs",
+    "e2e": "node e2e/run.mjs"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
     "vite": "^8.3.2",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "playwright": "1.63.0"
   }
 }

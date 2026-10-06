@@ -26,6 +26,8 @@ npm run dev                 # http://localhost:5173
 npm run typecheck           # strict tsc
 npm test                    # vitest, about 420 tests: data, world validation, puzzles, balance, art bundles
 npm run build               # typecheck + production bundle (relative base, for GitHub Pages)
+npx playwright install chromium # first use: install the e2e browser
+npm run e2e                 # headless full playthrough, 46 beats, speed 8
 npm run art:index           # REQUIRED after adding, removing or renaming any file under public/art/
 
 python3 -m venv .venv && .venv/bin/pip install -r tools/art/requirements.txt
@@ -56,7 +58,7 @@ leave `git status` clean (the generators are deterministic).
 | Art runtime (resolves logical asset paths to bundles), the Art Lab | `src/art/` |
 | **All art, as swappable bundles** | `public/art/` (format: **docs/ART.md**) |
 | Art generators and tools (Python) | `tools/art/` |
-| Automated full playthrough | `e2e/` (run `npx vite --config e2e/vite.config.ts`, open `/?e2e=full&timer`; about 35 min, 46 beats; results in `window.__e2e.report`) |
+| Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 46 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --headed` to watch) |
 
 ## The art system (read docs/ART.md)
 

@@ -1,8 +1,9 @@
 // Automated end-to-end playthrough of the slice, run in the browser against
 // the dev server (it drives the dev-only `window.__t` driver).
 //
+//   npm run e2e                                        headless full playthrough
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
-//   open  http://localhost:5190/?timer&e2e=full           new game -> Chapter 4's TO BE CONTINUED
+//   open  http://localhost:5190/?timer&e2e=full&speed=8   new game -> Chapter 4's TO BE CONTINUED
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
 //
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
@@ -23,6 +24,7 @@ import { createQuickened, healParty } from "../src/battle";
 import { rollEncounter } from "../src/overworld/encounters";
 import { inBounds, tileAt, triggerAt, tryMove, warpAt, type MapRuntime } from "../src/overworld/map";
 import { SEED_CHECK_STEPS } from "../src/overworld/nursery";
+import { dialogueProgress, GameplayTasks, NO_PROGRESS_MS, ProgressWatchdog } from "./detectors";
 
 // ---------------------------------------------------------------------------
 // Handles on the running game
@@ -56,10 +58,39 @@ const T = () => W.__t!;
 const VR = () => W.__vr!;
 const ctx = () => VR().ctx;
 const stack = () => VR().scenes.all();
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const requestedSpeed = new URLSearchParams(location.search).get("speed");
+const speed = requestedSpeed && /^\d+$/.test(requestedSpeed)
+  && Number(requestedSpeed) >= 1 && Number(requestedSpeed) <= 16 ? Number(requestedSpeed) : 1;
+const realSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+// Yield at least one scheduled frame even when a short game-time wait scales
+// below it. State-wait deadlines remain wall-clock limits for slow machines.
+const sleep = (ms: number) => realSleep(Math.max(20, ms / speed));
 const isOw = (s: unknown): s is Ow => !!s && typeof s === "object" && "mapId" in s && "player" in s;
 const ow = (): Ow | null => { const s = stack()[0]; return isOw(s) ? s : null; };
 const idle = () => { const o = ow(); return !!o && o.busy === 0 && stack().length === 1; };
+
+let progressRevision = 0;
+const observedFlows = new WeakSet<object>();
+const sceneIds = new WeakMap<object, number>();
+let nextSceneId = 0;
+
+/** Count finite operation boundaries, never just ticking frames. An unresolved
+ * dialogue, battle task or audio promise must still trip the watchdog. */
+function trackProgress<T>(promise: Promise<T>): Promise<T> {
+  progressRevision++;
+  return promise.finally(() => { progressRevision++; });
+}
+
+function progressSignature(): string {
+  const o = ow();
+  const scenes = stack().map((scene) => {
+    if (!sceneIds.has(scene)) sceneIds.set(scene, ++nextSceneId);
+    const s = scene as unknown as { ui?: { tb?: unknown } };
+    return [sceneIds.get(scene), dialogueProgress(s.ui?.tb)];
+  });
+  return JSON.stringify([scenes, o?.mapId, o?.player.x, o?.player.y, o?.busy,
+    report.texts.length, progressRevision, ctx().state.flags]);
+}
 
 // ---------------------------------------------------------------------------
 // Report
@@ -134,6 +165,12 @@ const answers: [RegExp, boolean][] = [
 /** Battle (and other screen) scenes carry their own `ui` with say/yesNo: log and answer those too. */
 function hookScenes() {
   for (const sc of stack()) {
+    const flow = (sc as unknown as { flow?: { run: (task: unknown) => Promise<void> } }).flow;
+    if (flow && typeof flow.run === "function" && !observedFlows.has(flow)) {
+      observedFlows.add(flow);
+      const run = flow.run.bind(flow);
+      flow.run = (task) => trackProgress(run(task));
+    }
     const ui = (sc as unknown as { ui?: Record<string, unknown> & { __e2e?: boolean } }).ui;
     if (!ui || ui.__e2e || typeof ui.say !== "function") continue;
     ui.__e2e = true;
@@ -142,7 +179,7 @@ function hookScenes() {
       const t = String(text);
       report.texts.push({ t: now(), map: ow()?.mapId, text: `[battle] ${t}` });
       checkText(t);
-      return say(text, ...rest);
+      return trackProgress(say(text, ...rest));
     };
     if (typeof ui.yesNo === "function") {
       const yn = (ui.yesNo as (...a: unknown[]) => Promise<unknown>).bind(ui);
@@ -151,7 +188,7 @@ function hookScenes() {
         report.texts.push({ t: now(), map: ow()?.mapId, text: `[battle?] ${p}` });
         const rule = answers.find(([re]) => re.test(p));
         pendingNo = rule ? !rule[1] : false;
-        return yn(prompt, ...rest).then((r) => { pendingNo = false; return r; });
+        return trackProgress(yn(prompt, ...rest)).then((r) => { pendingNo = false; return r; });
       };
     }
   }
@@ -170,6 +207,17 @@ let instrumented = false;
 function instrument() {
   if (instrumented) return;
   instrumented = true;
+  const gameplayTasks = new GameplayTasks();
+  const assets = ctx().assets;
+  const loadAll = assets.loadAll.bind(assets);
+  assets.loadAll = (...args) => {
+    const finish = gameplayTasks.loading(performance.now());
+    return loadAll(...args).finally(() => finish(performance.now()));
+  };
+  for (const method of ["playCry", "playJingle"] as const) {
+    const original = ctx().audio[method].bind(ctx().audio) as (id: never) => Promise<void>;
+    ctx().audio[method] = (id: never) => trackProgress(original(id));
+  }
   const ui = ctx().ui as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>;
   const say = ui.say.bind(ui);
   ui.say = (text: unknown, opts?: unknown) => {
@@ -177,7 +225,7 @@ function instrument() {
     const speaker = (opts as { speaker?: string } | undefined)?.speaker;
     report.texts.push({ t: now(), map: ow()?.mapId, text: t, speaker });
     checkText(t, speaker);
-    return say(text, opts).then((r) => {
+    return trackProgress(say(text, opts)).then((r) => {
       if (/what was your name|your name\?|name again/i.test(t)) expectName = true;
       return r;
     });
@@ -189,7 +237,7 @@ function instrument() {
     checkText(p);
     const rule = answers.find(([re]) => re.test(p));
     pendingNo = rule ? !rule[1] : false;
-    return yesNo(prompt).then((r) => { pendingNo = false; return r; });
+    return trackProgress(yesNo(prompt)).then((r) => { pendingNo = false; return r; });
   };
   const choose = ui.choose.bind(ui);
   ui.choose = (options: unknown, opts?: unknown) => {
@@ -198,7 +246,7 @@ function instrument() {
     report.texts.push({ t: now(), map: ow()?.mapId, text: `[menu] ${prompt ? prompt + " " : ""}${list.join(" / ")}` });
     const want = menuPlan?.(list, prompt);
     if (want !== undefined && want > 0) { menuDown = want; menuDelay = 250; }
-    return choose(options, opts);
+    return trackProgress(choose(options, opts));
   };
   // Party screens in pick mode (the NURSERY counter): steer the cursor with real key presses.
   const screens = ctx().screens as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>;
@@ -236,14 +284,21 @@ function instrument() {
         report.frame.total += cost;
         report.frame.worst = Math.max(report.frame.worst, cost);
         if (cost > 8) report.frame.over8++;
+        // The first overworld draw ends boot/title/new-game initialization.
+        if (ow()) gameplayTasks.ready(performance.now());
       });
     }
     fill(x, y, w, h);
   };
-  // Long tasks (>50 ms) are visible hitches whatever the cause.
+  // Sample gameplay hitches, excluding boot and explicit asset loads. Use
+  // entry timestamps because observer callbacks are delivered asynchronously.
   try {
     new PerformanceObserver((list) => {
-      for (const e of list.getEntries()) { report.frame.longTasks++; if (e.duration > 120) issue("long-task", `${Math.round(e.duration)}ms`); }
+      for (const e of list.getEntries()) {
+        if (!gameplayTasks.includes(e.startTime, e.duration)) continue;
+        report.frame.longTasks++;
+        if (e.duration > 120) issue("long-task", `${Math.round(e.duration)}ms`);
+      }
     }).observe({ type: "longtask", buffered: false });
   } catch { /* unsupported */ }
 }
@@ -267,10 +322,54 @@ function checkText(text: string, speaker?: string) {
 const KEY = { a: "KeyZ", b: "KeyX", start: "Enter", select: "ShiftLeft", up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight" } as const;
 export const press = (k: keyof typeof KEY, ms = 90) => T().hold(KEY[k], ms);
 
+/** Release keys inside the update batch, rather than waiting for a timer to
+ * observe it afterwards. This prevents repeats and extra tiles at high speed. */
+export function installSpeedDriver() {
+  const input = ctx().input;
+  let pending: { code: string; stop: () => boolean; released: boolean; movement: boolean } | null = null;
+  const release = () => {
+    if (!pending || pending.released) return;
+    pending.released = true;
+    dispatchEvent(new KeyboardEvent("keyup", { code: pending.code }));
+  };
+  for (const method of ["pressed", "held", "repeat"] as const) {
+    const original = input[method].bind(input);
+    input[method] = (button) => {
+      if (pending && pending.stop()) release();
+      const value = original(button);
+      // Non-movement taps last until an update consumes their input edge.
+      if (value && method !== "held" && pending?.code === KEY[button] && !pending.movement) release();
+      return value;
+    };
+  }
+  const hold = async (code: string, ms = 90) => {
+    const o = ow();
+    const dir = (Object.keys(DIRS) as Dir[]).find((d) => KEY[d] === code);
+    const movement = !!dir && !!o && idle();
+    const [x, y, map] = [o?.player.x, o?.player.y, o?.mapId];
+    const turnOnly = movement && ms === 40;
+    const deadline = performance.now() + Math.max(100, 1500 / speed);
+    const firstFrame = report.frame.samples;
+    pending = { code, movement, released: false, stop: () => movement
+      ? ow()?.mapId !== map || ow()?.player.x !== x || ow()?.player.y !== y || !idle() || (turnOnly && ow()?.player.facing === dir)
+      : false };
+    dispatchEvent(new KeyboardEvent("keydown", { code }));
+    try {
+      // Scenes can ignore input during fades. Two draws guarantee the tap
+      // spans an update even at speed 1, without waiting out an entire fade.
+      while (!pending.released && performance.now() < deadline
+        && (movement || report.frame.samples - firstFrame < 2)) await realSleep(4);
+    } finally { release(); pending = null; }
+    while (ow()?.player.step && idle()) await realSleep(4);
+    await sleep(40);
+  };
+  T().hold = hold;
+  T().step = (d) => hold(KEY[d], 200);
+}
+
 /** Mash through text, menus and battles until the overworld is idle again. */
 export async function advance(maxPresses = 400, done: () => boolean = idle): Promise<boolean> {
-  let stuck = 0;
-  let lastSig = "";
+  const watchdog = new ProgressWatchdog();
   for (let i = 0; i < maxPresses; i++) {
     await sleep(120);
     if (done()) { await sleep(150); if (done()) return true; }
@@ -291,12 +390,10 @@ export async function advance(maxPresses = 400, done: () => boolean = idle): Pro
       for (let k = 0; k < n; k++) { await press("down", 60); await sleep(140); }
     }
     await press(pendingNo ? "b" : "a");
-    // Soft-lock detector: same stack, map and position for a long time.
-    const o = ow();
-    const sig = `${stack().length}|${o?.mapId}|${o?.player.x},${o?.player.y}|${o?.busy}|${report.texts.length}`;
-    stuck = sig === lastSig ? stuck + 1 : 0;
-    lastSig = sig;
-    if (stuck === 60) issue("soft-lock?", `no progress for 60 presses (${sig})`);
+    const sig = progressSignature();
+    if (watchdog.sample(sig, performance.now())) {
+      issue("soft-lock?", `no state progress for ${NO_PROGRESS_MS / 1000}s (${sig})`);
+    }
   }
   issue("advance-timeout", `still busy after ${maxPresses} presses`);
   return false;
@@ -309,9 +406,9 @@ async function settle() {
 /**
  * The driver's goto, but routed round live step-on triggers that aren't the
  * destination (a closed door's trigger bounces you back, and the driver would
- * walk into it forever). Falls back to the driver when triggers are the only way.
+ * walk into it forever). Allows triggers when they are the only way through.
  */
-async function goto(tx: number, ty: number): Promise<string> {
+async function goto(tx: number, ty: number, avoidTriggers = true): Promise<string> {
   const o = ow();
   if (!o) return "no overworld";
   const m = o.map as unknown as MapRuntime;
@@ -326,12 +423,12 @@ async function goto(tx: number, ty: number): Promise<string> {
       const r = tryMove(m, x, y, d, (a, b) => !!o.npcAt(a, b));
       if (r.kind === "blocked" || prev.has(k(r.x, r.y))) continue;
       const dest = r.x === tx && r.y === ty;
-      if (!dest && (warpAt(m, r.x, r.y) || triggerAt(m, r.x, r.y, flags))) continue;
+      if (!dest && (warpAt(m, r.x, r.y) || (avoidTriggers && triggerAt(m, r.x, r.y, flags)))) continue;
       prev.set(k(r.x, r.y), [x, y, d]);
       q.push([r.x, r.y]);
     }
   }
-  if (!prev.has(k(tx, ty))) return T().goto(tx, ty);
+  if (!prev.has(k(tx, ty))) return avoidTriggers ? goto(tx, ty, false) : "no path";
   const dirs: Dir[] = [];
   for (let c = k(tx, ty); prev.get(c);) { const [x, y, d] = prev.get(c)!; dirs.unshift(d); c = k(x, y); }
   const map = o.mapId;
@@ -671,7 +768,7 @@ async function canReachNextTo(n: Actor): Promise<boolean> {
   for (const d of ["down", "left", "right", "up"] as Dir[]) {
     const [dx, dy] = DIRS[d];
     for (const k of [1, 2]) {
-      const r = await T().goto(n.x + dx * k, n.y + dy * k);
+      const r = await goto(n.x + dx * k, n.y + dy * k);
       if (r === "ok") return true;
       if (r.startsWith("interrupted")) { await settle(); return canReachNextTo(n); }
     }
@@ -936,7 +1033,7 @@ async function chapter4(_opts: { boost: number; starter: "oak" | "chili" | "lily
   if (!exit) { beat("chapter end", false, "no conservatory exit"); return; }
   await untilEndCard(async () => {
     await walkToQuiet(exit.x, exit.y - 1);
-    await T().goto(exit.x, exit.y);
+    await goto(exit.x, exit.y, false);
     await T().hold(KEY.down, 250);
   });
   beat("chapter 4 done", flag("ch4_done"));
@@ -1279,6 +1376,7 @@ export async function run(suite: string) {
   report.started = performance.now();
   report.finished = false;
   await waitForGame();
+  installSpeedDriver();
   instrument();
   const p = new URLSearchParams(location.search);
   const boost = Number(p.get("boost") ?? 48);
