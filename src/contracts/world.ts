@@ -46,6 +46,8 @@ export interface MapDef {
     bog?: { rate: number; slots: EncounterSlot[] };
     water?: { rate: number; slots: EncounterSlot[] }; // per raft step on water:true
   };
+  /** Conditional encounter tables. First match wins; otherwise use `encounters`. */
+  encountersWhen?: { when: Cond; encounters: MapDef["encounters"] }[];
   /** Force a time of day on this map regardless of the clock (e.g. the prologue
    *  roof is always night). Affects tint, lights, ambience and encounters. */
   time?: TimeOfDay;

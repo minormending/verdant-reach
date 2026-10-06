@@ -4,6 +4,7 @@
   python tools/art/placeholder.py ui <name> [<name> ...]          (e.g. mark_pipe)
   python tools/art/placeholder.py items <id> [<id> ...]
   python tools/art/placeholder.py characters <id> [<id> ...]
+  python tools/art/placeholder.py tiles <key> [<key> ...]
 
 Species placeholders are a plain grey blob with a "?" in the 4-colour Crystal
 palette, plus a 3-frame intro, a back and 2 icons. Their notes start with
@@ -53,7 +54,7 @@ def blob(size: int, scale: float, lift: int = 0) -> np.ndarray:
 
 
 def is_placeholder_or_missing(kind: str, id_: str) -> bool:
-    filename = {"species": "species.json", "characters": "character.json"}.get(kind, f"{kind}.json")
+    filename = {"species": "species.json", "characters": "character.json", "tilesets": "tileset.json"}.get(kind, f"{kind}.json")
     meta = ART / kind / id_ / filename
     if not meta.exists():
         # An unregistered PNG may be real art awaiting metadata.
@@ -110,6 +111,33 @@ def images(set_id: str, names: list[str], size: tuple[int, int]) -> None:
         print(f"placeholder {set_id}: {', '.join(todo)}")
 
 
+def tiles(keys: list[str]) -> None:
+    """Extend one placeholder sheet; never take ownership from another tileset."""
+    id_ = "placeholder_tiles"
+    if not is_placeholder_or_missing("tilesets", id_):
+        print(f"skip {id_}: real art exists")
+        return
+    meta_path = ART / "tilesets" / id_ / "tileset.json"
+    existing = json.loads(meta_path.read_text()).get("tiles", {}) if meta_path.exists() else {}
+    owned = set()
+    for path in (ART / "tilesets").glob("*/tileset.json"):
+        if path != meta_path:
+            owned.update(json.loads(path.read_text()).get("tiles", {}))
+    for key in sorted(set(keys) & owned):
+        print(f"skip {key}: real art exists")
+    todo = sorted((set(keys) | set(existing)) - owned)
+    if not todo:
+        return
+    cell = blob(16, 0.9)
+    if not emit.tileset(id_, {key: cell for key in todo}, TOOL, name="Placeholder tiles",
+                        order=todo, credits="Placeholder (no art yet).", root=ART):
+        return
+    meta = json.loads(meta_path.read_text())
+    meta["notes"] = "PLACEHOLDER: replace with real tile art before release."
+    meta_path.write_text(json.dumps(meta, indent=2) + "\n")
+    print(f"placeholder tiles: {', '.join(todo)}")
+
+
 if __name__ == "__main__":
     kind, *ids = sys.argv[1:]
     if kind == "species":
@@ -120,5 +148,7 @@ if __name__ == "__main__":
         images("items", ids, (16, 16))
     elif kind == "characters":
         characters(ids)
+    elif kind == "tiles":
+        tiles(ids)
     else:
         sys.exit(__doc__)

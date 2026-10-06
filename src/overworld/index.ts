@@ -21,6 +21,7 @@ import { drawSeedBig, seedIcon } from "../ui/seedArt";
 import { Actor, dirTo, type Emote } from "./actor";
 import { rollEncounter, type EncounterKind } from "./encounters";
 import { tryRaftMove } from "./raft";
+import { slidePath } from "./ice";
 import {
   DIRS, OPPOSITE, buildMap, checkCond, refreshLegend, inSight, isMatWarp, isWalkable, tileAt, tileProps, tryMove,
   triggerAt, warpAt, type MapRuntime,
@@ -540,6 +541,15 @@ class Overworld implements Scene {
     // Every step: nursery boarders grow, and seeds in the party count down.
     nurseryStep(st, this.ctx.data, this.ctx.rng);
     seedStep(st.party);
+    if (tileProps(tileAt(this.map, p.x, p.y)).slide) {
+      const next = slidePath(this.map, p.x, p.y, p.facing, this.occupiedForPlayer)[0];
+      if (next) {
+        this.inputStep = true;
+        this.walking = true;
+        void p.begin(p.facing, next.kind === "ledge" ? HOP_FRAMES : WALK_FRAMES, { hop: next.kind === "ledge" });
+        return;
+      }
+    }
     const w = warpAt(this.map, p.x, p.y);
     if (w && (!isMatWarp(this.map, p.x, p.y) || p.facing === "down")) {
       this.walking = false;
@@ -554,7 +564,7 @@ class Overworld implements Scene {
     }
     if (this.checkTrainers()) return;
     if (this.grace > 0) { this.grace--; return; }
-    const enc = rollEncounter(this.map.def, tileAt(this.map, p.x, p.y), this.time(), this.ctx.rng, !!st.rafting);
+    const enc = rollEncounter(this.map.def, tileAt(this.map, p.x, p.y), this.time(), this.ctx.rng, !!st.rafting, st.flags);
     if (enc) {
       this.walking = false;
       void this.flow(() => this.wildEncounter(enc.species, enc.level, enc.kind));
@@ -1180,6 +1190,11 @@ class Overworld implements Scene {
             else delete ctx.state.rafting;
           }
           await self.player.begin(dir, res.kind === "ledge" ? HOP_FRAMES : WALK_FRAMES, { hop: res.kind === "ledge" });
+          while (tileProps(tileAt(self.map, self.player.x, self.player.y)).slide) {
+            const next = slidePath(self.map, self.player.x, self.player.y, dir, self.occupiedForPlayer)[0];
+            if (!next) break;
+            await self.player.begin(dir, next.kind === "ledge" ? HOP_FRAMES : WALK_FRAMES, { hop: next.kind === "ledge" });
+          }
         }
         const p = self.player;
         ctx.state.position = { map: self.mapId, x: p.x, y: p.y, facing: p.facing };

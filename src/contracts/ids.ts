@@ -100,6 +100,8 @@ export const TILES = {
   path:         { walk: true },
   dirt:         { walk: true },
   sand:         { walk: true },
+  ice:          { walk: true, slide: true },
+  snow:         { walk: true, encounter: "grass" },
   bog:          { walk: true, encounter: "bog" },
   boardwalk:    { walk: true },
   water:        { walk: false, water: true },
@@ -187,6 +189,7 @@ export type TileKey = keyof typeof TILES;
 
 export interface TileProps {
   walk: boolean;
+  slide?: boolean;
   encounter?: "grass" | "bog";
   water?: boolean;
   ledge?: "down";

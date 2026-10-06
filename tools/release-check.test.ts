@@ -39,6 +39,7 @@ describe("release-check CLI", () => {
 
   it.each([
     ["public/art/species/fern/species.json", { notes: "PLACEHOLDER fern" }],
+    ["public/art/tilesets/placeholder_tiles/tileset.json", { notes: "PLACEHOLDER tiles" }],
     ["public/art/sets/items/set.json", { notes: "PLACEHOLDER items" }],
     ["public/art/sets/items/set.json", { entries: { seed: { notes: "PLACEHOLDER seed" } } }],
     ["public/art/packs/test/sets/items/set.json", { entries: [{ notes: "PLACEHOLDER seed" }] }],

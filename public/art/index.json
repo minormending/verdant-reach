@@ -100,6 +100,7 @@
     "nursery": ["sheet.png"],
     "orchard": ["sheet.png"],
     "palm_house": ["sheet.png"],
+    "placeholder_tiles": ["sheet.png"],
     "relay": ["sheet.png"],
     "rose": ["sheet.png"],
     "terrain": ["sheet.png"],

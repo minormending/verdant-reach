@@ -13,6 +13,29 @@ const slots: EncounterSlot[] = [
 const seq = (...v: number[]) => { let i = 0; return () => v[i++ % v.length]; };
 
 describe("encounter slots by time of day", () => {
+  it("snow rolls grass encounters and ice never consumes an encounter draw", () => {
+    const map = { encounters: { grass: { rate: 100, slots: [slots[0]] } } };
+    const rng = vi.fn(() => 0);
+    expect(rollEncounter(map, "ice", "day", rng)).toBeNull();
+    expect(rng).not.toHaveBeenCalled();
+    expect(rollEncounter(map, "snow", "day", rng)).toEqual({ species: "dandelion_bud", level: 2, kind: "grass" });
+  });
+
+  it("uses the first matching conditional table, including its rate, then falls back", () => {
+    const map: Pick<MapDef, "encounters" | "encountersWhen"> = {
+      encounters: { water: { rate: 100, slots: [slots[0]] } },
+      encountersWhen: [
+        { when: [{ flag: "calmed", is: true }], encounters: { water: { rate: 8, slots: [slots[1]] } } },
+        { when: [{ flag: "red", is: true }], encounters: { water: { rate: 20, slots: [slots[3]] } } },
+      ],
+    };
+    expect(rollEncounter(map, "water", "day", () => 0, true, { calmed: true, red: true })).toMatchObject({ species: "sunflower_seedling", level: 3 });
+    expect(rollEncounter(map, "water", "day", () => 0.1, true, { calmed: true, red: true })).toBeNull();
+    expect(rollEncounter(map, "water", "day", () => 0.1, true, { red: true })).toMatchObject({ species: "nettle_sprout" });
+    expect(rollEncounter(map, "water", "day", () => 0, true)).toMatchObject({ species: "dandelion_bud" });
+    map.encountersWhen![0].encounters = undefined;
+    expect(rollEncounter(map, "water", "day", () => 0, true, { calmed: true })).toBeNull();
+  });
   it("'day' covers morning and day, 'night' only night", () => {
     expect(slotActive(slots[1], "morning")).toBe(true);
     expect(slotActive(slots[1], "day")).toBe(true);

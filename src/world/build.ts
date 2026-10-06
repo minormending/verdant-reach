@@ -95,6 +95,8 @@ export const LEGEND: Record<string, TileKey> = {
   ")": "rose_bed",
   "i": "floor_marble",
   "'": "stage_floor",
+  "{": "ice",
+  "?": "snow",
 };
 
 /** Outdoor maps: structure footprints sit on grass, so scenery with soft edges
