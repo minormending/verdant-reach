@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "release-check": "node tools/release-check.mjs",
     "art:index": "node tools/art/index.mjs",
     "e2e": "node e2e/run.mjs"
   },
