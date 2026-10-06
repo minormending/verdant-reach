@@ -24,7 +24,8 @@ const LINES = [
 
 describe("Chapter 5 species", () => {
   it("appends all thirteen ids in the approved order", () => {
-    expect(SPECIES_IDS.slice(-13)).toEqual(LINES.flatMap((line) => [...line.ids]));
+    const start = SPECIES_IDS.indexOf("ghostpipe_stalk");
+    expect(SPECIES_IDS.slice(start, start + 13)).toEqual(LINES.flatMap((line) => [...line.ids]));
   });
 
   for (const line of LINES) {

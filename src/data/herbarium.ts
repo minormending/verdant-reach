@@ -354,6 +354,64 @@ const LIST: HerbariumEntry[] = [
   // Source: https://www.fs.usda.gov/database/feis/plants/tree/thupli/all.html
   h("red_cedar", "Thuja plicata", "Ancient Cedar", 12.0, 900,
     "It listens as though it has all the time in the world. Western red cedars can live for more than a thousand years."),
+
+  // ---------------------------------------------------------------- Chapter 6
+  // Fact: Its seeds sprout while still on the parent tree, then drop as long propagules that can float at sea for months.
+  // Source: https://en.wikipedia.org/wiki/Rhizophora_mangle
+  h("mangrove_propagule", "Rhizophora mangle", "Propagule", 0.3, 0.1,
+    "Its seeds sprout while still on the parent tree. They drop as long propagules that can float at sea for months."),
+  // Fact: Its seeds sprout while still on the parent tree, then drop as long propagules that can float at sea for months.
+  // Source: https://en.wikipedia.org/wiki/Rhizophora_mangle
+  h("mangrove_sapling", "Rhizophora mangle", "Stilt Sprout", 1.2, 8,
+    "Its seeds sprout while still on the parent tree. They drop as long propagules that can float at sea for months."),
+  // Fact: Its seeds sprout while still on the parent tree, then drop as long propagules that can float at sea for months.
+  // Source: https://en.wikipedia.org/wiki/Rhizophora_mangle
+  h("red_mangrove", "Rhizophora mangle", "Mangrove", 6, 350,
+    "Its seeds sprout while still on the parent tree. They drop as long propagules that can float at sea for months."),
+
+  // Fact: It is a true flowering plant that is pollinated underwater: its pollen drifts through the sea.
+  // Source: https://en.wikipedia.org/wiki/Zostera_marina
+  h("seagrass_shoot", "Zostera marina", "Seagrass Tip", 0.15, 0.02,
+    "It is a true flowering plant pollinated underwater. Its pollen drifts through the sea."),
+  // Fact: It is a true flowering plant that is pollinated underwater: its pollen drifts through the sea.
+  // Source: https://en.wikipedia.org/wiki/Zostera_marina
+  h("eelgrass", "Zostera marina", "Seagrass", 1, 0.2,
+    "It is a true flowering plant pollinated underwater. Its pollen drifts through the sea."),
+
+  // Fact: Its pads carry glochids: tiny barbed bristles that detach at a touch.
+  // Source: https://en.wikipedia.org/wiki/Opuntia
+  h("pear_pad", "Opuntia", "Pear Pad", 0.2, 0.5,
+    "Its pads carry glochids, tiny barbed bristles. They detach at a touch."),
+  // Fact: Its pads carry glochids: tiny barbed bristles that detach at a touch.
+  // Source: https://en.wikipedia.org/wiki/Opuntia
+  h("padded_cactus", "Opuntia", "Pad Cactus", 0.6, 5,
+    "Its pads carry glochids, tiny barbed bristles. They detach at a touch."),
+  // Fact: Its pads carry glochids: tiny barbed bristles that detach at a touch.
+  // Source: https://en.wikipedia.org/wiki/Opuntia
+  h("prickly_pear", "Opuntia", "Prickly Pear", 1.5, 20,
+    "Its pads carry glochids, tiny barbed bristles. They detach at a touch."),
+
+  // Fact: A saguaro may grow for 50 to 70 years before it sprouts its first arm.
+  // Source: https://www.nps.gov/sagu/learn/nature/saguaro-cactus.htm
+  h("saguaro_pup", "Carnegiea gigantea", "Saguaro Pup", 0.15, 0.4,
+    "It may grow for decades before sprouting its first arm. For a saguaro, that can take 50 to 70 years."),
+  // Fact: A saguaro may grow for 50 to 70 years before it sprouts its first arm.
+  // Source: https://www.nps.gov/sagu/learn/nature/saguaro-cactus.htm
+  h("saguaro_column", "Carnegiea gigantea", "Tall Saguaro", 3, 150,
+    "It may grow for decades before sprouting its first arm. For a saguaro, that can take 50 to 70 years."),
+  // Fact: A saguaro may grow for 50 to 70 years before it sprouts its first arm.
+  // Source: https://www.nps.gov/sagu/learn/nature/saguaro-cactus.htm
+  h("saguaro", "Carnegiea gigantea", "Old Saguaro", 10, 2000,
+    "It may grow for decades before sprouting its first arm. For a saguaro, that can take 50 to 70 years."),
+
+  // Fact: Outside Mexico its flowers are pollinated by hand, a method worked out by Edmond Albius on Réunion in 1841.
+  // Source: https://en.wikipedia.org/wiki/Edmond_Albius
+  h("vanilla_vine", "Vanilla planifolia", "Vanilla Vine", 0.5, 0.3,
+    "Outside Mexico, its flowers are pollinated by hand. Edmond Albius worked out the method on Reunion in 1841."),
+  // Fact: Outside Mexico its flowers are pollinated by hand, a method worked out by Edmond Albius on Réunion in 1841.
+  // Source: https://en.wikipedia.org/wiki/Edmond_Albius
+  h("vanilla_orchid", "Vanilla planifolia", "Vanilla", 3, 2,
+    "Outside Mexico, its flowers are pollinated by hand. Edmond Albius worked out the method on Reunion in 1841."),
 ];
 
 export const HERBARIUM = Object.fromEntries(LIST.map((e) => [e.species, e])) as Record<SpeciesId, HerbariumEntry>;

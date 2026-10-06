@@ -148,6 +148,13 @@ const LIST: Move[] = [
   m("serotiny", "Serotiny", "fire", "status", 0, null, 15, "Cone opens. Ups ATK and SP.ATK.", [self("atk", 1), self("spa", 1)]),
   m("snowmelt", "Snowmelt", "fire", "special", 65, 100, 15, "Flower heat. May scorch the foe.", [inflict("scorch", 10)]),
   m("heartwood", "Heartwood", "wood", "status", 0, null, 10, "Hardens the core. DEF sharply up.", [self("def", 2)]),
+
+  // ------------------------------------------------------------- Chapter 6
+  m("stilt_roots", "Stilt Roots", "water", "status", 0, null, 15, "Stilt roots up DEF and SP.DEF.", [self("def", 1), self("spd", 1)]),
+  m("tidal_sway", "Tidal Sway", "water", "special", 70, 100, 15, "Sways with tides. May cut SPEED.", [foe("spe", -1, 20)]),
+  m("glochid_spray", "Glochids", "thorn", "physical", 20, 100, 20, "Barbed hairs hit 2-5 times.", [{ kind: "multi_hit", min: 2, max: 5 }]),
+  m("water_store", "Water Store", "water", "status", 0, null, 10, "Stored water heals half max HP.", [{ kind: "heal", fraction: 0.5 }]),
+  m("hand_pollen", "Hand Pollen", "bloom", "status", 0, null, 15, "Pollen: SP.ATK sharply up.", [self("spa", 2)]),
 ];
 
 export const MOVES: Record<string, Move> = Object.fromEntries(LIST.map((mv) => [mv.id, mv]));

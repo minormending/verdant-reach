@@ -45,6 +45,12 @@ export const SPECIES_IDS = [
   "lodgepole_cone", "lodgepole_seedling", "lodgepole_pine",
   "skunk_cabbage_shoot", "skunk_cabbage",
   "cedar_seedling", "red_cedar",
+  // Chapter 6
+  "mangrove_propagule", "mangrove_sapling", "red_mangrove",
+  "seagrass_shoot", "eelgrass",
+  "pear_pad", "padded_cactus", "prickly_pear",
+  "saguaro_pup", "saguaro_column", "saguaro",
+  "vanilla_vine", "vanilla_orchid",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 

@@ -14,6 +14,18 @@ const data: GameData = {
 };
 
 describe("cross-pollination growth on receipt", () => {
+  it("grows the real vanilla line on receipt at any level, but never on level-up or item use", () => {
+    for (const level of [1, 30, 100]) {
+      const q = createQuickened(DATA, "vanilla_vine", level, seeded(1));
+      expect(crossPollinationTarget(DATA, q)).toBe("vanilla_orchid");
+      for (const time of ["morning", "day", "night"] as const) expect(growthTarget(DATA, q, time)).toBeNull();
+      expect(itemGrowthTarget(DATA, q, "ember_ash")).toBeNull();
+      q.seed = { steps: 10 };
+      expect(crossPollinationTarget(DATA, q)).toBeNull();
+    }
+    expect(crossPollinationTarget(DATA, createQuickened(DATA, "vanilla_orchid", 30, seeded(1)))).toBeNull();
+  });
+
   it("targets trade growth at any level, without firing on level-up or item use", () => {
     for (const level of [1, 16, 60]) {
       const q = createQuickened(data, "oak_acorn", level, seeded(1));
