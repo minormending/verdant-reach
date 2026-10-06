@@ -104,6 +104,20 @@ describe("Chapter 6 world", () => {
     }
   });
 
+  it("reaches a walkable Lantern Tree talk approach from the sea arrivals", () => {
+    const harbour = WORLD.maps.saltmarsh_harbour;
+    const tree = harbour.triggers.find((t) => t.script === "ch6_lantern_tree")!;
+    const land = grid(harbour), raft = grid(harbour, { rafting: true });
+    expect(isTalkTrigger(land, tree)).toBe(true);
+    const approaches = Object.values(DIRS).map(({ dx, dy }) => ({ x: tree.x + dx, y: tree.y + dy }))
+      .filter(({ x, y }) => walkable(land, x, y) && !harbour.npcs.some((n) => n.x === x && n.y === y));
+    expect(approaches.length).toBeGreaterThan(0);
+    for (const arrival of WORLD.maps.route_8.warps.filter((w) => w.to === harbour.id)) {
+      const reach = flood(raft, [{ x: arrival.toX, y: arrival.toY }]);
+      expect(approaches.some(({ x, y }) => reach.has(key(x, y)))).toBe(true);
+    }
+  });
+
   it("uses the exact encounter species/weights and caps every numeric growth trigger", () => {
     const expected = {
       route_7: [["mangrove_propagule", 30, 23, 23], ["cattail", 20, 24, 27], ["sundew", 15, 24, 27], ["pear_pad", 15, 21, 21], ["seagrass_shoot", 10, 24, 27], ["mint_sprig", 10, 15, 15]],

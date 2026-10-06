@@ -14,7 +14,7 @@ afterEach(() => {
 
 /** Run the real overworld and modal screens against the e2e keyboard driver.
  * No browser is needed: only drawing and asset/audio loading are omitted. */
-async function setup(map: MapId, x: number, y: number) {
+async function setup(map: MapId, x: number, y: number, rafting = false) {
   vi.stubGlobal("location", { search: "?speed=8&seed=1&time=day&allowTodo" });
   const listeners = new Map<string, (event: KeyboardEvent) => void>();
   vi.stubGlobal("addEventListener", (name: string, fn: (event: KeyboardEvent) => void) => listeners.set(name, fn));
@@ -35,6 +35,7 @@ async function setup(map: MapId, x: number, y: number) {
     loadAll: async () => {}, exists: () => false, image: () => null,
   } });
   ctx.state.position = { map, x, y, facing: "up" };
+  if (rafting) ctx.state.rafting = true;
   ctx.state.options.textSpeed = "fast";
   ctx.state.bag.lily_raft = 1;
   ctx.state.bag.saxifrage = 1;
@@ -188,6 +189,52 @@ it("boards by A/YES, reaches the sluice lever, then rafts through its gate", asy
     expect(ctx.state.rafting).toBeUndefined();
     expect(e2e.report.texts.filter((t) => /Ride the LILY RAFT/.test(t.text)).length).toBeGreaterThanOrEqual(2);
     expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it.each([
+  { start: "land", x: 19, y: 20, rafting: false },
+  { start: "sea arrival", x: 19, y: 28, rafting: true },
+])("heals the Lantern Tree with A from $start and opens the Conservatory", async ({ x, y, rafting }) => {
+  const fixture = await setup("saltmarsh_harbour", x, y, rafting);
+  const { ctx, e2e, drive, stop } = fixture;
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  Object.assign(ctx.state.flags, { lantern_healed: false, got_sap: true, ch6_doctor_met: true,
+    beat_grunt_dock_1: true, beat_grunt_dock_2: true });
+  ctx.state.bag.cactus_sap = 1;
+  // Drawing is omitted in this harness; supply the cutscene image so its real
+  // fade/still/clear flow runs without a missing-art warning.
+  vi.spyOn(ctx.assets, "image").mockReturnValue({} as HTMLImageElement);
+  try {
+    const taps = fieldTaps(fixture);
+    expect(await drive(() => e2e.trigger("ch6_lantern_tree"))).toBe(true);
+    expect(taps).toEqual([{ x: 34, y: 12, facing: "up", facingFollower: false }]);
+    expect(ctx.state.rafting).toBeUndefined();
+    expect(ctx.state.flags.lantern_healed).toBe(true);
+    expect(ctx.state.bag.cactus_sap ?? 0).toBe(0);
+    expect(e2e.report.texts.some((t) => /Fireflies return/.test(t.text))).toBe(true);
+    expect(await drive(() => e2e.nav("saltmarsh_conservatory"))).toBe(true);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it.each(["step", "talk"] as const)("reports an issue when a %s trigger is unreachable", async (kind) => {
+  const { e2e, drive, field, stop } = await setup("saltmarsh_harbour", 19, 20);
+  const { map } = field as typeof field & { map: import("../src/overworld/map").MapRuntime };
+  // Keep the fixture isolated from WORLD and block every approach to the plaque.
+  map.def = structuredClone(map.def);
+  const tree = map.def.triggers.find((t) => t.script === "ch6_lantern_tree")!;
+  if (kind === "step") { tree.x = 0; tree.y = 0; }
+  else for (const [dx, dy] of [[0, 1], [-1, 0], [1, 0], [0, -1]]) {
+    const x = tree.x + dx, y = tree.y + dy;
+    map.def.tiles[y] = map.def.tiles[y].slice(0, x) + "T" + map.def.tiles[y].slice(x + 1);
+  }
+  try {
+    expect(await drive(() => e2e.trigger("ch6_lantern_tree"))).toBe(false);
+    expect(e2e.report.issues).toEqual([expect.objectContaining({ kind: "trigger",
+      msg: `could not ${kind === "talk" ? "use" : "reach"} "ch6_lantern_tree" on saltmarsh_harbour` })]);
+    expect(e2e.report.texts).toEqual([]);
   } finally { stop(); }
 });
 

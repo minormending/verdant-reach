@@ -24,12 +24,13 @@
 // `window.__e2e.sheet()` shows the snapshots as a contact sheet.
 
 import type { GameContext, ItemId, MapId, Scene, SceneStack, SpeciesId, TimeOfDay } from "../src/contracts";
+import { TILES } from "../src/contracts";
 import { createQuickened, healParty } from "../src/battle";
 import { active, type BattleState } from "../src/battle/logic/battle";
 import { devSeed, randomStream } from "../src/engine/random";
 import { Menu, TextBox } from "../src/screens/kit/widgets";
 import { rollEncounter } from "../src/overworld/encounters";
-import { inBounds, tileAt, triggerAt, tryMove, warpAt, type MapRuntime } from "../src/overworld/map";
+import { inBounds, isWalkable, tileAt, triggerAt, tryMove, warpAt, type MapRuntime } from "../src/overworld/map";
 import { tryRaftMove } from "../src/overworld/raft";
 import { SEED_CHECK_STEPS } from "../src/overworld/nursery";
 import { AdvanceBudget, dialogueProgress, GameplayTasks, NO_PROGRESS_MS, ProgressWatchdog } from "./detectors";
@@ -731,18 +732,28 @@ export async function nav(target: MapId, avoid: MapId[] = []): Promise<boolean> 
   return ow()?.mapId === target;
 }
 
-/** Step on a trigger tile (by script id) on the current map. */
+/** Activate a trigger through movement or A on a solid talk tile. */
 export async function trigger(script: string): Promise<boolean> {
   const o = ow();
   const tr = o?.map.def.triggers.find((t) => t.script === script);
   if (!o || !tr) { issue("trigger", `no trigger "${script}" on ${o?.mapId}`); return false; }
+  const m = o.map as unknown as MapRuntime;
+  // Match isTalkTrigger's single-cell rule and the overworld's A interaction,
+  // using live terrain. goto handles rafting to shore and dismounting by input.
+  if ((tr.w ?? 1) === 1 && (tr.h ?? 1) === 1 && !isWalkable(m, tr.x, tr.y)
+    && "interact" in TILES[tileAt(m, tr.x, tr.y)]) return useTile(script);
   const cells: [number, number][] = [];
   for (let dy = 0; dy < (tr.h ?? 1); dy++) for (let dx = 0; dx < (tr.w ?? 1); dx++) cells.push([tr.x + dx, tr.y + dy]);
+  const said = report.texts.length;
   for (const [x, y] of cells) {
-    // Step off and back on if we're standing on it.
+    // Already standing here is not a fresh step onto the trigger.
     if (o.player.x === x && o.player.y === y) continue;
     if (await walkTo(x, y)) { await settle(); return true; }
+    // A gate trigger (e.g. a closed conservatory door) runs its script and pushes
+    // the player back off the tile, so the walk "fails" although it fired.
+    if (report.texts.length > said) { await settle(); return true; }
   }
+  issue("trigger", `could not reach "${script}" on ${o.mapId}`);
   return false;
 }
 
