@@ -66,20 +66,25 @@ export const ch6Scripts: Scripts = {
   ],
   ch6_reyes_point: [
     face("reyes_point", "toPlayer"),
-    ifFlags({ got_raft: false }, [
-      say("TODO(text): Reyes tends the Lantern Tree's sick roots.", "NARRATOR"),
-      say("TODO(text): Its fireflies once guided boats home.", "REYES"),
-      say("TODO(text): She will not battle while the tree is sick.", "REYES"),
-      say("TODO(text): Brother Saguaro keeps healing cactus sap.", "REYES"),
-      say("TODO(text): Find him on Driftseed Isle across the sea.", "REYES"),
-      say("TODO(text): Reyes lends the player a giant lily pad.", "REYES"),
-      give("lily_raft"),
-      flag("got_raft"),
-      say("TODO(text): RAFT crosses the water to the island.", "REYES"),
-      say("TODO(text): Bring the cactus sap back to the tree.", "REYES"),
+    ifFlags({ ch6_doctor_met: true, beat_grunt_dock_1: true, beat_grunt_dock_2: true }, [
+      ifFlags({ got_raft: false }, [
+        say("TODO(text): Reyes tends the Lantern Tree's sick roots.", "NARRATOR"),
+        say("TODO(text): Its fireflies once guided boats home.", "REYES"),
+        say("TODO(text): She will not battle while the tree is sick.", "REYES"),
+        say("TODO(text): Brother Saguaro keeps healing cactus sap.", "REYES"),
+        say("TODO(text): Find him on Driftseed Isle across the sea.", "REYES"),
+        say("TODO(text): Reyes lends the player a giant lily pad.", "REYES"),
+        give("lily_raft"),
+        flag("got_raft"),
+        say("TODO(text): RAFT crosses the water to the island.", "REYES"),
+        say("TODO(text): Bring the cactus sap back to the tree.", "REYES"),
+      ], [
+        say("TODO(text): Brother Saguaro's cactus sap can heal the tree.", "REYES"),
+        say("TODO(text): Ride the raft south to Driftseed Isle.", "REYES"),
+      ]),
     ], [
-      say("TODO(text): Brother Saguaro's cactus sap can heal the tree.", "REYES"),
-      say("TODO(text): Ride the raft south to Driftseed Isle.", "REYES"),
+      say("TODO(text): Something is wrong at the docks.", "REYES"),
+      say("TODO(text): Check the docks before sailing to Driftseed Isle.", "REYES"),
     ]),
   ],
   ch6_lantern_tree: [

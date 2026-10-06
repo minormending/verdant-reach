@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { MapDef, ScriptCmd, WorldData } from "../contracts";
 import { checkProgressWithoutSaxifrage, validateWorld } from "./validate";
+import { continuePosition } from "../overworld/continue";
+import { buildMap, key } from "../overworld/map";
+import { reachableBoulderTiles } from "../overworld/uproot";
+import { WORLD } from "./index";
 
 const grant: ScriptCmd[] = [
   { op: "if", when: [{ flag: "got_saxifrage", is: false }], then: [
@@ -34,6 +38,17 @@ function fixture(): WorldData {
 }
 
 describe("UPROOT progression validation", () => {
+  it("lets every boulder map's Continue entrance reach every exit in its starting layout", () => {
+    const rooms = Object.values(WORLD.maps).filter((m) => m.npcs.some((n) => n.pushable));
+    expect(rooms.length).toBeGreaterThan(0);
+    for (const room of rooms) {
+      const entrance = continuePosition(WORLD, { map: room.id, x: -1, y: -1, facing: "up" });
+      const blocked = new Set(room.npcs.map((n) => key(n.x, n.y)));
+      const reached = reachableBoulderTiles(buildMap(room), [], entrance, { occupied: (x, y) => blocked.has(key(x, y)) });
+      for (const exit of room.warps) expect(reached.has(key(exit.x, exit.y)), `${room.id} exit ${exit.x},${exit.y}`).toBe(true);
+    }
+  });
+
   it("allows a reachable SAXIFRAGE giver and a solvable starting puzzle", () => {
     expect(checkProgressWithoutSaxifrage(fixture())).toEqual([]);
   });

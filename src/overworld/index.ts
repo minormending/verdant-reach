@@ -46,6 +46,7 @@ import {
 } from "./script";
 import { runStartMenu } from "./startMenu";
 import { visitedGlideMaps, visitedTownFlag } from "./glide";
+import { continuePosition } from "./continue";
 
 export interface OverworldOpts {
   /** "new": run WORLD.newGame.script; "continue": run the map's onEnter. */
@@ -130,7 +131,7 @@ class Overworld implements Scene {
   toasts: { kind: ToastKind; title: string; at: number }[] = [];
 
   constructor(private ctx: GameContext, private opts: OverworldOpts) {
-    const pos = ctx.state.position;
+    const pos = opts.mode === "continue" ? continuePosition(ctx.world, ctx.state.position) : ctx.state.position;
     this.player = new Actor("player", "player", pos.x, pos.y, pos.facing);
     this.host = this.makeHost();
     this.tiles = new TileLayer(ctx.assets);

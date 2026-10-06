@@ -110,7 +110,25 @@ describe("Chapter 6 scripts", () => {
     expect(host.ctx.ui.yesNo).toHaveBeenCalledOnce();
   });
 
-  it("enforces raft → island → saxifrage → Saguaro → sap → tree → Reyes → end", async () => {
+  it.each(Array.from({ length: 8 }, (_, flags) => ({
+    doctor: !!(flags & 1), first: !!(flags & 2), second: !!(flags & 4),
+  })))("gates the sole raft grant on docks completion: $doctor/$first/$second", async ({ doctor, first, second }) => {
+    const grants = Object.entries(WORLD.scripts).filter(([, cmds]) => ops(cmds).some((c) => c.op === "giveItem" && c.item === "lily_raft"));
+    expect(grants.map(([id]) => id)).toEqual(["ch6_reyes_point"]);
+    const { run, state, host } = setup();
+    Object.assign(state.flags, { ch6_arrived: true, ch6_doctor_met: doctor, beat_grunt_dock_1: first, beat_grunt_dock_2: second });
+    await run("ch6_reyes_point");
+    await run("ch6_reyes_point");
+    const complete = doctor && first && second;
+    expect(state.flags.got_raft ?? false).toBe(complete);
+    expect(state.bag.lily_raft ?? 0).toBe(complete ? 1 : 0);
+    if (!complete) {
+      expect(host.ctx.ui.say).toHaveBeenCalledWith("TODO(text): Something is wrong at the docks.", { speaker: "REYES" });
+      expect(host.ctx.ui.say).toHaveBeenCalledWith("TODO(text): Check the docks before sailing to Driftseed Isle.", { speaker: "REYES" });
+    }
+  });
+
+  it("enforces docks → raft → island → saxifrage → Saguaro → sap → tree → Reyes → end", async () => {
     const { run, state, host, events } = setup();
     await run("ch6_elder");
     await run("saguaro");
@@ -124,6 +142,11 @@ describe("Chapter 6 scripts", () => {
     expect(state.bag.cactus_sap).toBeUndefined();
     expect(state.flags.lantern_healed).not.toBe(true);
 
+    await run("ch6_arrival");
+    await run("ch6_doctor");
+    await runScript(host, [{ op: "battle", trainer: "grunt_dock_1" }, { op: "battle", trainer: "grunt_dock_2" }]);
+    expect(state.flags).toMatchObject({ ch6_doctor_met: true, beat_grunt_dock_1: true, beat_grunt_dock_2: true });
+    vi.mocked(host.battle).mockClear();
     await run("ch6_reyes_point");
     await run("ch6_reyes_point");
     expect(state.flags.got_raft).toBe(true);

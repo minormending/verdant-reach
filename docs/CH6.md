@@ -143,6 +143,9 @@ other claims:
   says it won't budge.
 - **Boulder positions reset when the map is re-entered**, so every puzzle must
   be solvable from its starting layout.
+- **Continue in any boulder map places the player at its entrance**, alongside
+  the reset stones: use the first warp into the room from the map named by its
+  first exit. Normal map entry and Continue elsewhere keep their arrival tiles.
 - **Test helper:** a reusable BFS solver over boulder layouts (small boards)
   for puzzle tests.
 - **Validator:** required paths through boulder rooms count as reachable only
@@ -216,7 +219,7 @@ and 6 catches):
 | `ch6_ford_keeper` | fallowfield, NPC `ford_keeper` (sprite `villager_a`) at the south exit, `visibleWhen ch5_done=false` | "the ford's flooded" |
 | `ch6_arrival` | saltmarsh_harbour `onEnter` (first time) | sets `ch6_arrived` |
 | `ch6_doctor` | the docks trigger at (12,20), width 2, when `ch6_arrived && !ch6_doctor_met`; doctor starts at (12,23) | NPC `doctor` (sprite `researcher`) approaches; `yesno` sell the seed? Either branch has TODO lines and keeps the seed. She walks off the pier (`moveNpc`, `hideNpc`). Sets `ch6_doctor_met`, then shows the 2 dock grunts. |
-| `ch6_reyes_point` | NPC `reyes_point` (sprite `nell_pitcher` stand-in) on the point, `visibleWhen lantern_healed=false` | first talk: give `lily_raft`, set `got_raft`; later: a reminder |
+| `ch6_reyes_point` | NPC `reyes_point` (sprite `nell_pitcher` stand-in) on the point, `visibleWhen lantern_healed=false` | requires `ch6_doctor_met && beat_grunt_dock_1 && beat_grunt_dock_2`; otherwise sends the player to the docks (TODO text). First eligible talk: give `lily_raft`, set `got_raft`; later: a reminder |
 | `ch6_lantern_tree` | sign-like talk trigger on the tree | if `got_sap && !lantern_healed`: take `cactus_sap`, `flash` gold, `still` (stand-in `bloom`) → `stillClear`, set `lantern_healed`. Else: lore. |
 | `ch6_cons5_door` | saltmarsh_conservatory door trigger | `!lantern_healed` → TODO, then `movePlayer` down |
 | `ch6_elder` | NPC `isle_elder` (sprite `elder`) in the elder's hut | first: give `saxifrage`, set `got_saxifrage` |

@@ -157,6 +157,7 @@ it("rechecks the target after turning instead of talking toward its old tile", a
   const fixture = await setup("saltmarsh_harbour", 31, 12);
   const { ctx, e2e, drive, field, stop } = fixture;
   ctx.state.flags.lantern_healed = false;
+  Object.assign(ctx.state.flags, { ch6_doctor_met: true, beat_grunt_dock_1: true, beat_grunt_dock_2: true });
   const reyes = field.npcs.find((n) => n.id === "reyes_point")!;
   const driver = (window as unknown as { __t: { hold(code: string, ms?: number): Promise<void> } }).__t;
   const hold = driver.hold;
