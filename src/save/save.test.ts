@@ -32,18 +32,29 @@ describe("save", () => {
     expect(s.version).toBe(1);
   });
 
-  it("round-trips state, play time and date through storage", () => {
+  it.each([
+    { follower: false, battleAnims: true },
+    { follower: true, battleAnims: false },
+  ])("round-trips state, play time and date through storage with toggles %j", (toggles) => {
     const storage = memoryStorage();
     let state: GameState = newGameState({ world });
     state.playerName = "SAGE";
     state.money = 1234;
-    state.flags = { got_starter: true };
+    state.flags = {
+      got_starter: true,
+      visited_fallowfield: true,
+      visited_bramblegate: true,
+      visited_glasshouse_city: false,
+      pruned_route_1_2_0: true,
+      pruned_route_2_5_3: false,
+    };
+    state.harvested = { hedgerow_1: "2026-10-05", hedgerow_2: "2026-10-06" };
     state.bag = { terrarium_pod: 5 };
     state.marks = ["bramble_mark"];
     state.herbarium = { seen: ["oak_acorn", "dandelion_bud"], caught: ["oak_acorn"] };
     state.playTimeMs = 3_725_000;
     state.position = { map: "route_2", x: 9, y: 4, facing: "left" };
-    state.options = { textSpeed: "fast" };
+    state.options = { textSpeed: "fast", ...toggles };
     const save = createSave(() => state, storage, () => newGameState({ world }));
     expect(save.exists()).toBe(false);
     const before = Date.now();
@@ -59,8 +70,8 @@ describe("save", () => {
     expect(save.meta()).toMatchObject({ playerName: "SAGE", marks: 1, herbarium: 1, playTimeMs: 3_725_000 });
     expect(formatPlayTime(loaded.playTimeMs)).toBe("1:02");
     // options are remembered separately for the title screen
-    expect(JSON.parse(storage.raw.get(OPTIONS_KEY)!)).toEqual({ textSpeed: "fast" });
-    expect(loadOptions(storage)).toEqual({ textSpeed: "fast" });
+    expect(JSON.parse(storage.raw.get(OPTIONS_KEY)!)).toEqual(state.options);
+    expect(loadOptions(storage)).toEqual(state.options);
 
     save.clear();
     expect(save.exists()).toBe(false);
@@ -138,18 +149,32 @@ describe("save migration (Round 4: nursery and seeds)", () => {
     expect("nursery" in loaded).toBe(false);
     expect(loaded.party[0].seed).toBeUndefined();
     expect(loaded.party[0].species).toBe("oak_acorn");
+    expect(loaded.harvested).toEqual({});
+    expect(loaded.flags).toEqual({ got_starter: true });
+    expect(loaded.flags.visited_bramblegate).toBeUndefined();
+    expect(loaded.flags.pruned_route_1_2_0).toBeUndefined();
+    expect(loaded.options).toEqual({ textSpeed: "mid" });
+    expect(followerOn(loaded.options)).toBe(true);
+    expect(battleAnimsOn(loaded.options)).toBe(true);
   });
 
-  it("round-trips boarders (with their boarding level), the step count, seedReady and party seeds", () => {
+  it.each([false, true])("round-trips two boarders, boarding level, steps and party seeds with seedReady=%s", (seedReady) => {
     const storage = memoryStorage();
     const state = newGameState({ world });
     state.party = [q("oak_acorn"), q("maple_samara", { seed: { steps: 412 } })] as never;
-    state.nursery = { slots: [q("dandelion_bud", { boardedLevel: 8 })] as never, steps: 200, seedReady: false };
+    state.nursery = {
+      slots: [q("dandelion_bud", { boardedLevel: 8 }), q("maple_samara")] as never,
+      steps: 200,
+      seedReady,
+    };
     const save = createSave(() => state, storage, () => newGameState({ world }));
     save.write();
     const loaded = save.read()!;
     expect(loaded.nursery).toEqual(state.nursery);
-    expect((loaded.nursery!.slots[0] as unknown as { boardedLevel: number }).boardedLevel).toBe(8);
+    expect(loaded.nursery!.slots).toHaveLength(2);
+    expect(loaded.nursery!.slots[0].boardedLevel).toBe(8);
+    expect(loaded.nursery!.slots[1].boardedLevel).toBeUndefined();
+    expect(loaded.party).toEqual(state.party);
     expect(loaded.party[1].seed).toEqual({ steps: 412 });
   });
 

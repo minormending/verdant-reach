@@ -12,6 +12,8 @@ import { fmt } from "./kit/text";
 import { Menu, ScreenUi } from "./kit/widgets";
 import { runGrowth } from "./flows/growth";
 import { summaryScreen } from "./summary";
+// Bag and party call each other only after initialization, so the static cycle is safe.
+import { bagScreen } from "./bag";
 import { drawSeedIcon } from "../ui/seedArt";
 
 export interface PartyOpts {
@@ -131,7 +133,6 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
       } else if (c === 1) {
         if (party().length > 1) swapFrom = pick;
       } else if (c === 2) {
-        const { bagScreen } = await import("./bag");
         const item = await bagScreen(ctx, { inBattle: false, select: (id) => isMedicine(ctx.data, id) || !!itemGrowthTarget(ctx.data, q, id) });
         if (item) {
           await useItemOn(flow, pick, item);

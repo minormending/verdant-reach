@@ -10,6 +10,8 @@ import { runFlowScene, type Flow } from "./kit/flow";
 import { clearScreen, cursorBob, drawCursor, drawItemIcon, drawMoreArrow, drawTextRight } from "./kit/draw";
 import { countOf, fmt, playerName } from "./kit/text";
 import { ListView, Menu, ScreenUi } from "./kit/widgets";
+import { herbariumScreen } from "./herbarium";
+import { partyScreen } from "./party";
 
 const POCKETS: { id: Item["pocket"]; name: string[] }[] = [
   { id: "items", name: ["ITEMS"] },
@@ -176,12 +178,10 @@ export function bagScreen(ctx: GameContext, opts: BagOpts): Promise<ItemId | nul
   const useInField = async (id: ItemId): Promise<"used" | "stay" | "close"> => {
     const it = getItem(ctx.data, id);
     if (id === "field_herbarium") {
-      const { herbariumScreen } = await import("./herbarium");
       await herbariumScreen(ctx);
       return "stay";
     }
     if (it.usableInField && (isMedicine(ctx.data, id) || isGrowthItem(ctx.data, id))) {
-      const { partyScreen } = await import("./party");
       const picked = await partyScreen(ctx, { mode: "pick", prompt: "Use on which?", useItem: id });
       return picked < 0 ? "stay" : "used";
     }

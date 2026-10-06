@@ -63,7 +63,7 @@ function harness(data = itemData()) {
   const until = async (done: () => boolean, press?: Button) => {
     for (let i = 0; i < 2000 && !done(); i++) {
       await tick(press);
-      // Allow the bag's dynamic party import to settle too.
+      // Yield between batches of simulated frames.
       if (i % 20 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
     }
     expect(done(), `scene flow timed out; last text: ${texts.at(-1)}`).toBe(true);
