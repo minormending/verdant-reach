@@ -57,9 +57,9 @@ export const burnt_stand: MapDef = {
     { id: "morrow_bs", sprite: "morrow", x: 34, y: 11, facing: "down", movement: "static", script: "ch5_morrow_burnt", visibleWhen: when({ burnt_vision_seen: true, morrow_returned: false }) },
     ...pickups([{ item: "ember_ash", x: 6, y: 11 }, { item: "ember_ash", x: 27, y: 25, n: 2 }]),
     // The cone sacks round the camp tent (ch5_grunts pans the camera to 11,19).
-    { id: "cone_sack_1", sprite: "cone_sack", x: 9, y: 20, facing: "down", movement: "static", script: "ch5_grunts" },
-    { id: "cone_sack_2", sprite: "cone_sack", x: 10, y: 20, facing: "down", movement: "static", script: "ch5_grunts" },
-    { id: "cone_sack_3", sprite: "cone_sack", x: 13, y: 19, facing: "down", movement: "static", script: "ch5_grunts" },
+    { id: "cone_sack_1", sprite: "cone_sack", x: 9, y: 20, facing: "down", movement: "static", script: "ch5_cone_sack" },
+    { id: "cone_sack_2", sprite: "cone_sack", x: 10, y: 20, facing: "down", movement: "static", script: "ch5_cone_sack" },
+    { id: "cone_sack_3", sprite: "cone_sack", x: 13, y: 19, facing: "down", movement: "static", script: "ch5_cone_sack" },
   ],
   signs: [],
   triggers: [

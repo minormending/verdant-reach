@@ -44,7 +44,7 @@ export const ch5Scripts: Scripts = {
   ],
   ch5_grunts: [
     ifFlags({ ch5_grunts_seen: false }, [
-      // Cone sacks: crates/barrels at (10..12,19) and (10,20).
+      // The camp: cone_sack NPCs at (9,20), (10,20) and (13,19).
       camera(11, 19, 60),
       wait(20),
       face("grunt_bs_1", "down"),
@@ -57,6 +57,9 @@ export const ch5Scripts: Scripts = {
       flag("ch5_grunts_seen"),
       cameraReset(),
     ]),
+  ],
+  ch5_cone_sack: [
+    say("A sack of opened pine cones. A tag on the cord reads FOR THE DOCTOR."),
   ],
   rival_4: [
     ifFlags({ rival_4_done: false }, [
