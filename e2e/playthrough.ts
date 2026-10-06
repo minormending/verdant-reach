@@ -3,7 +3,7 @@
 //
 //   npm run e2e                                        headless full playthrough
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
-//   open  http://localhost:5190/?timer&e2e=full&speed=8   new game -> Chapter 4's TO BE CONTINUED
+//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 4's TO BE CONTINUED
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
 //
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
@@ -19,12 +19,16 @@
 // beat records the new flags, the map and a 160x144 snapshot.
 // `window.__e2e.sheet()` shows the snapshots as a contact sheet.
 
-import type { GameContext, MapId, Scene, SceneStack, SpeciesId, TimeOfDay } from "../src/contracts";
+import type { GameContext, ItemId, MapId, Scene, SceneStack, SpeciesId, TimeOfDay } from "../src/contracts";
 import { createQuickened, healParty } from "../src/battle";
+import { active, type BattleState } from "../src/battle/logic/battle";
+import { devSeed, randomStream } from "../src/engine/random";
+import { Menu, TextBox } from "../src/screens/kit/widgets";
 import { rollEncounter } from "../src/overworld/encounters";
 import { inBounds, tileAt, triggerAt, tryMove, warpAt, type MapRuntime } from "../src/overworld/map";
 import { SEED_CHECK_STEPS } from "../src/overworld/nursery";
-import { dialogueProgress, GameplayTasks, NO_PROGRESS_MS, ProgressWatchdog } from "./detectors";
+import { AdvanceBudget, dialogueProgress, GameplayTasks, NO_PROGRESS_MS, ProgressWatchdog } from "./detectors";
+import { healingItem, strongestMove } from "./battle-driver";
 
 // ---------------------------------------------------------------------------
 // Handles on the running game
@@ -57,7 +61,19 @@ const W = window as Win;
 const T = () => W.__t!;
 const VR = () => W.__vr!;
 const ctx = () => VR().ctx;
+const seed = devSeed();
+// Fixture IVs must not depend on how long pathfinding waited for an NPC.
+const fixtureRng = seed === null ? () => ctx().rng() : randomStream(seed, "e2e:fixtures");
 const stack = () => VR().scenes.all();
+type BattleView = Scene & { s: BattleState; req: { kind: string }; finished: boolean };
+function battleScene(): BattleView | null {
+  const scene = stack().find((sc) => "req" in sc && "s" in sc && !(sc as BattleView).finished);
+  return scene as BattleView | undefined ?? null;
+}
+let battleMenu: { menu: Menu; target: number } | null = null;
+let medicine: { item: ItemId; active: number } | null = null;
+let bagKey: keyof typeof KEY | null = null;
+let bagAtCancel = false;
 const requestedSpeed = new URLSearchParams(location.search).get("speed");
 const speed = requestedSpeed && /^\d+$/.test(requestedSpeed)
   && Number(requestedSpeed) >= 1 && Number(requestedSpeed) <= 16 ? Number(requestedSpeed) : 1;
@@ -85,8 +101,10 @@ function progressSignature(): string {
   const o = ow();
   const scenes = stack().map((scene) => {
     if (!sceneIds.has(scene)) sceneIds.set(scene, ++nextSceneId);
-    const s = scene as unknown as { ui?: { tb?: unknown } };
-    return [sceneIds.get(scene), dialogueProgress(s.ui?.tb)];
+    const s = scene as unknown as { ui?: { tb?: unknown }; s?: BattleState };
+    const battle = s.s;
+    return [sceneIds.get(scene), dialogueProgress(s.ui?.tb), battle && [battle.turn,
+      ...battle.sides.map((side) => [side.active, ...side.party.map((q) => [q.hp, q.status, q.moves.map((m) => m.pp)])])]];
   });
   return JSON.stringify([scenes, o?.mapId, o?.player.x, o?.player.y, o?.busy,
     report.texts.length, progressRevision, ctx().state.flags]);
@@ -110,6 +128,7 @@ export interface Issue { kind: string; msg: string; where?: string; t: number }
 
 export const report = {
   suite: "",
+  seed,
   started: 0,
   finished: false,
   beats: [] as Beat[],
@@ -174,6 +193,26 @@ function hookScenes() {
     const ui = (sc as unknown as { ui?: Record<string, unknown> & { __e2e?: boolean } }).ui;
     if (!ui || ui.__e2e || typeof ui.say !== "function") continue;
     ui.__e2e = true;
+    if (typeof ui.choose === "function" && sc === battleScene()) {
+      const choose = (ui.choose as (menu: Menu, ...args: unknown[]) => Promise<number>).bind(ui);
+      ui.choose = (menu: Menu, ...args: unknown[]) => {
+        const s = (sc as BattleView).s;
+        let target: number | undefined;
+        if (menu.options.join("/") === "FIGHT/BAG/QUICKENED/RUN") {
+          // Story battles may spend awarded medicine. Targeted checks (notably
+          // deliberate whiteouts and pod throws) keep their existing policy.
+          const item = report.suite === "full" || report.suite === "story"
+            ? healingItem(ctx().data, ctx().state.bag, active(s, 0)) : null;
+          medicine = item ? { item, active: s.sides[0].active } : null;
+          target = item ? 1 : 0;
+        } else if (menu.options[0] === ctx().data.moves[active(s, 0).moves[0]?.id]?.name.toUpperCase()) {
+          target = strongestMove(s);
+        }
+        const plan = target !== undefined && target >= 0 ? { menu, target } : null;
+        if (plan) battleMenu = plan;
+        return trackProgress(choose(menu, ...args)).finally(() => { if (battleMenu === plan) battleMenu = null; });
+      };
+    }
     const say = (ui.say as (...a: unknown[]) => Promise<unknown>).bind(ui);
     ui.say = (text: unknown, ...rest: unknown[]) => {
       const t = String(text);
@@ -204,7 +243,7 @@ let menuPlan: ((options: string[], prompt: string) => number | undefined) | null
 let partyPick: (() => number) | null = null;
 let instrumented = false;
 
-function instrument() {
+export function instrument() {
   if (instrumented) return;
   instrumented = true;
   const gameplayTasks = new GameplayTasks();
@@ -250,15 +289,36 @@ function instrument() {
   };
   // Party screens in pick mode (the NURSERY counter): steer the cursor with real key presses.
   const screens = ctx().screens as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>;
+  const bagScreen = screens.bag.bind(screens);
+  screens.bag = (opts?: unknown) => {
+    if (!medicine || !(opts as { inBattle?: boolean })?.inBattle) return bagScreen(opts);
+    const selected = medicine;
+    const show = TextBox.prototype.show;
+    // Bag scenes close over their cursor. Observe their descriptions, then
+    // navigate the actual pockets/list/USE menu with the driver's key presses.
+    TextBox.prototype.show = function (text, mode) {
+      bagAtCancel = text === "Close the bag.";
+      const item = Object.values(ctx().data.items).find((it) => it.description === text);
+      const pocketItems = Object.keys(ctx().state.bag).filter((id) => (ctx().state.bag[id] ?? 0) > 0
+        && ctx().data.items[id as ItemId]?.pocket === item?.pocket);
+      bagKey = item ? item.pocket !== ctx().data.items[selected.item].pocket ? "right"
+        : item.id === selected.item ? "a"
+          : pocketItems.indexOf(item.id) < pocketItems.indexOf(selected.item) ? "down" : "up"
+        : text === "Close the bag." ? "up" : "a";
+      return show.call(this, text, mode);
+    };
+    return trackProgress(bagScreen(opts)).finally(() => { TextBox.prototype.show = show; bagKey = null; bagAtCancel = false; });
+  };
   const partyScreen = screens.party.bind(screens);
   screens.party = (opts?: unknown) => {
     const o = opts as { mode?: string; prompt?: string } | undefined;
-    if (o?.mode === "pick" && partyPick) {
-      const i = partyPick();
+    const healing = o?.mode === "pick" && o.prompt === "Use on which?" && medicine;
+    if (o?.mode === "pick" && (partyPick || healing)) {
+      const i = healing ? healing.active : partyPick!();
       report.texts.push({ t: now(), map: ow()?.mapId, text: `[party pick] ${o.prompt ?? ""} -> ${i}` });
       if (i > 0) { menuDown = i; menuDelay = 900; }
     }
-    return partyScreen(opts);
+    return partyScreen(opts).finally(() => { if (healing) medicine = null; });
   };
   for (const level of ["error", "warn"] as const) {
     const orig = console[level].bind(console);
@@ -370,9 +430,13 @@ export function installSpeedDriver() {
 /** Mash through text, menus and battles until the overworld is idle again. */
 export async function advance(maxPresses = 400, done: () => boolean = idle): Promise<boolean> {
   const watchdog = new ProgressWatchdog();
-  for (let i = 0; i < maxPresses; i++) {
+  const budget = new AdvanceBudget(maxPresses);
+  let presses = 0;
+  for (;;) {
     await sleep(120);
     if (done()) { await sleep(150); if (done()) return true; }
+    if (!budget.spend(battleScene())) break;
+    presses++;
     if (expectName) {
       // Name entry: START jumps to END, A accepts (an empty name takes the default).
       expectName = false;
@@ -389,13 +453,25 @@ export async function advance(maxPresses = 400, done: () => boolean = idle): Pro
       await sleep(menuDelay);
       for (let k = 0; k < n; k++) { await press("down", 60); await sleep(140); }
     }
-    await press(pendingNo ? "b" : "a");
+    let key: keyof typeof KEY = pendingNo ? "b" : "a";
+    if (bagKey) key = bagKey;
+    else if (battleMenu) {
+      const { menu, target } = battleMenu;
+      const cols = menu.opts.cols ?? 1;
+      if (Math.floor(menu.index / cols) !== Math.floor(target / cols)) key = menu.index < target ? "down" : "up";
+      else if (menu.index !== target) key = menu.index < target ? "right" : "left";
+    }
+    await press(key);
+    // An empty pocket has only CANCEL, so UP cannot change its description.
+    // Try the next pocket after that one probe instead of circling forever.
+    if (key === "up" && bagAtCancel && bagKey === "up") bagKey = "right";
     const sig = progressSignature();
     if (watchdog.sample(sig, performance.now())) {
       issue("soft-lock?", `no state progress for ${NO_PROGRESS_MS / 1000}s (${sig})`);
+      return false;
     }
   }
-  issue("advance-timeout", `still busy after ${maxPresses} presses`);
+  issue("advance-timeout", `still busy after ${presses} presses (ordinary limit ${maxPresses}, battle limit 3000)`);
   return false;
 }
 
@@ -733,14 +809,10 @@ function boostParty(level: number) {
   if (st.party.some((q) => (q as { e2e?: boolean }).e2e)) return;
   const species = (new URLSearchParams(location.search).get("helper") as SpeciesId) || "red_chili" as SpeciesId;
   let q;
-  try { q = createQuickened(ctx().data, species, level, Math.random); } catch {
-    q = createQuickened(ctx().data, st.party[0]?.species ?? ("oak_acorn" as SpeciesId), level, Math.random);
+  try { q = createQuickened(ctx().data, species, level, fixtureRng); } catch {
+    q = createQuickened(ctx().data, st.party[0]?.species ?? ("oak_acorn" as SpeciesId), level, fixtureRng);
   }
   (q as unknown as { e2e: boolean }).e2e = true;
-  // Strongest damaging move first, so mashing A ends battles quickly.
-  const moves = ctx().data.moves as unknown as Record<string, { power?: number }>;
-  const score = (m: { id: string; pp: number }) => (moves[m.id]?.power ?? 0) * (m.pp >= 10 ? 2 : 1);
-  q.moves.sort((m1, m2) => score(m2) - score(m1));
   st.party.unshift(q);
   healParty(st.party, ctx().data);
 }
@@ -1047,7 +1119,7 @@ async function nurseryBreeding() {
   const pair = "dandelion_bud" as SpeciesId;
   const nursery = () => st.nursery ?? { slots: [], steps: 0, seedReady: false };
   if (nursery().slots.length < 2 && !nursery().seedReady) {
-    for (let i = nursery().slots.length; i < 2; i++) st.party.push(createQuickened(ctx().data, pair, 8, Math.random));
+    for (let i = nursery().slots.length; i < 2; i++) st.party.push(createQuickened(ctx().data, pair, 8, fixtureRng));
     let boards = 2 - nursery().slots.length;
     menuPlan = (options, prompt) => {
       if (!/help/i.test(prompt)) return undefined;
@@ -1224,7 +1296,7 @@ export const CHECKS: Record<string, () => Promise<void>> = {
     await settle();
     const st = ctx().state;
     if (st.party.length < 2) {
-      st.party.push(createQuickened(ctx().data, "dandelion_bud" as SpeciesId, 6, Math.random));
+      st.party.push(createQuickened(ctx().data, "dandelion_bud" as SpeciesId, 6, fixtureRng));
     }
     await nav((new URLSearchParams(location.search).get("cabinet") as MapId) || "bramblegate_greenhouse");
     const o = ow()!;
@@ -1309,7 +1381,7 @@ export const CHECKS: Record<string, () => Promise<void>> = {
     instrument();
     await settle();
     const st = ctx().state;
-    const q = createQuickened(ctx().data, "dandelion_bud" as SpeciesId, 11, Math.random);
+    const q = createQuickened(ctx().data, "dandelion_bud" as SpeciesId, 11, fixtureRng);
     // One win from level 12 (medium rate: 12^3 exp), where the dandelion line grows.
     q.exp = 12 ** 3 - 5;
     st.party.unshift(q);
@@ -1422,6 +1494,7 @@ export function summary() {
   const f = report.frame;
   return {
     suite: report.suite,
+    seed: report.seed,
     finished: report.finished,
     t: now(),
     beats: report.beats.map((b) => `${b.ok ? "OK" : "FAIL"} ${b.t}s ${b.name} ${b.map ?? ""}@${b.pos ?? ""} +[${b.newFlags.join(",")}]${b.note ? " — " + b.note : ""}`),

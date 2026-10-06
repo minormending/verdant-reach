@@ -6,14 +6,20 @@ import { createServer } from "vite";
 
 const args = process.argv.slice(2);
 let speed = 8;
+let seed = 1;
 let headed = false;
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--headed") headed = true;
   else if (args[i] === "--speed" && /^\d+$/.test(args[i + 1] ?? "")) speed = Number(args[++i]);
+  else if (args[i] === "--seed" && /^\d+$/.test(args[i + 1] ?? "")) seed = Number(args[++i]);
   else {
-    console.error("Usage: npm run e2e -- [--speed N] [--headed] (N: 1–16)");
+    console.error("Usage: npm run e2e -- [--speed N] [--seed N] [--headed] (speed: 1–16; seed: 0–4294967295)");
     process.exit(1);
   }
+}
+if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
+  console.error("--seed must be an integer from 0 to 4294967295");
+  process.exit(1);
 }
 if (!Number.isInteger(speed) || speed < 1 || speed > 16) {
   console.error("--speed must be an integer from 1 to 16");
@@ -52,6 +58,7 @@ function printProgress(current) {
 }
 
 try {
+  console.log(`Full playthrough: speed=${speed}, seed=${seed}, time=day, ${headed ? "headed" : "headless"}`);
   // Port 0 lets the OS reserve a free port atomically. Vite's API keeps the
   // server in this process: cleanup cannot target someone else's server.
   server = await createServer({
@@ -62,8 +69,8 @@ try {
   abort.signal.throwIfAborted();
   const address = server.httpServer.address();
   if (!address || typeof address === "string") throw new Error("Vite did not bind a TCP port");
-  const url = `http://127.0.0.1:${address.port}/?e2e=full&timer&speed=${speed}`;
-  console.log(`Full playthrough: speed=${speed}, ${headed ? "headed" : "headless"} (${url})`);
+  const url = `http://127.0.0.1:${address.port}/?e2e=full&timer&speed=${speed}&seed=${seed}&time=day`;
+  console.log(`Game: ${url}`);
   browser = await chromium.launch({ headless: !headed });
   abort.signal.throwIfAborted();
   page = await browser.newPage();
@@ -93,7 +100,8 @@ try {
   report ??= { suite: "full", finished: false, beats: [], issues: [], texts: [] };
   printProgress(report);
   for (const issue of runnerIssues) console.error(`RUNNER ISSUE: ${issue}`);
-  report.runner = { speed, headed, elapsedSeconds, issues: runnerIssues };
+  report.seed = seed;
+  report.runner = { speed, seed, time: "day", headed, elapsedSeconds, issues: runnerIssues };
   try {
     await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
     console.log(`Report: ${fileURLToPath(reportPath)}`);

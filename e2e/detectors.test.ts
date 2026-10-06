@@ -1,7 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { dialogueProgress, GameplayTasks, NO_PROGRESS_MS, ProgressWatchdog } from "./detectors";
+import { AdvanceBudget, dialogueProgress, GameplayTasks, NO_PROGRESS_MS, ProgressWatchdog } from "./detectors";
 import { JINGLE_DEFS } from "../src/audio/sfx";
 import { parseSong, TICKS_PER_QUARTER } from "../src/audio/song";
+
+describe("battle press budget", () => {
+  it("reserves extra presses for battles and retains the ordinary budget afterwards", () => {
+    const budget = new AdvanceBudget(3, 5);
+    const battle = {};
+    expect(budget.spend(null)).toBe(true);
+    for (let i = 0; i < 5; i++) expect(budget.spend(battle)).toBe(true);
+    expect(budget.spend(battle)).toBe(false);
+    expect(budget.spend(null)).toBe(true);
+    expect(budget.spend(null)).toBe(true);
+    expect(budget.spend(null)).toBe(false);
+  });
+
+  it("caps a progressing but endlessly repeating battle at 3000 presses", () => {
+    const budget = new AdvanceBudget(400);
+    const battle = {};
+    for (let i = 0; i < 3000; i++) expect(budget.spend(battle)).toBe(true);
+    expect(budget.spend(battle)).toBe(false);
+  });
+});
 
 describe("speed-independent liveness", () => {
   it.each([1, 8, 16])("flags a frozen state at speed %i, even with an idle animation ticking", (speed) => {

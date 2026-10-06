@@ -135,6 +135,8 @@ describe("advance watchdog integration", () => {
     const overworld = { mapId: "sugarbush_conservatory", busy: 1, player: { x: 5, y: 15 }, flow: async () => {} };
     const box = { page: 0, chars: 0, frame: 0, waiting: true };
     const scene = {
+      ...(battle ? { req: { kind: "trainer" }, finished: false,
+        s: { turn: 0, sides: [{ active: 0, party: [] }, { active: 0, party: [] }] } } : {}),
       flow: { run: async (_task: unknown) => {} },
       ui: { tb: box, say: async (_text: unknown) => {} },
     };
@@ -153,12 +155,12 @@ describe("advance watchdog integration", () => {
       },
     });
     const e2e = await import("./playthrough");
-    const run = e2e.advance(400, () => !frozen && taps >= 300);
-    await vi.advanceTimersByTimeAsync(30_000);
+    const run = e2e.advance(400, () => !frozen && taps >= (battle ? 1200 : 300));
+    await vi.advanceTimersByTimeAsync(90_000);
     expect(await run).toBe(!frozen);
     expect(taps).toBeGreaterThan(60);
     const locks = e2e.report.issues.filter((issue) => issue.kind === "soft-lock?");
     expect(locks).toHaveLength(frozen ? 1 : 0);
-    if (frozen) expect(e2e.report.issues.some((issue) => issue.kind === "advance-timeout")).toBe(true);
+    if (battle && !frozen) expect(taps).toBeGreaterThan(1000);
   });
 });
