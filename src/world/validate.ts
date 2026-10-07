@@ -73,6 +73,8 @@ export interface Grid {
   rafting?: boolean;
   /** NPC occupancy on ice maps; ordinary map validation keeps its existing policy. */
   occupied?: (x: number, y: number) => boolean;
+  /** A step-on warp stops a slide even on ice. */
+  warp?: (x: number, y: number) => boolean;
 }
 
 /** The map's walk grid. With `pruned`, every prunable tile reads as a cut stump
@@ -88,6 +90,7 @@ export function grid(map: MapDef, opts: { pruned?: boolean; rafting?: boolean } 
       return !!t && !!(TILES[t] as TileProps)?.slide;
     })));
   const npcs = new Set(map.npcs.map((n) => `${n.x},${n.y}`));
+  const warps = new Set(map.warps.map((w) => `${w.x},${w.y}`));
   for (const s of map.structures) {
     const def = STRUCTURES[s.key];
     for (let dy = 0; dy < def.h; dy++) {
@@ -101,6 +104,7 @@ export function grid(map: MapDef, opts: { pruned?: boolean; rafting?: boolean } 
   return {
     w, h, doors, rafting: opts.rafting,
     occupied: hasIce ? (x, y) => npcs.has(`${x},${y}`) : undefined,
+    warp: (x, y) => warps.has(`${x},${y}`),
     tile(x, y) {
       if (x < 0 || y < 0 || x >= w || y >= h) return undefined;
       const t = map.legend[map.tiles[y][x]];
@@ -147,7 +151,7 @@ function gridMove(g: Grid, x: number, y: number, dir: Dir) {
   };
   return slidePathFrom({ x, y }, dir, move, (px, py) => {
     const t = g.tile(px, py);
-    return !!t && !!(TILES[t] as TileProps).slide;
+    return !!t && !!(TILES[t] as TileProps).slide && !g.warp?.(px, py);
   }).at(-1);
 }
 
