@@ -48,7 +48,7 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("Chapter 11 Council world", () => {
   it("provides all seven prescribed maps, indoor music and no encounters", () => {
-    expect(MAP_IDS.slice(MAP_IDS.indexOf("council_1"))).toEqual([...ROOMS, "fellowship_hall"]);
+    expect(MAP_IDS.slice(MAP_IDS.indexOf("council_1"), MAP_IDS.indexOf("seed_vault_entrance"))).toEqual([...ROOMS, "fellowship_hall"]);
     for (const [i, id] of ["council_hall", ...ROOMS, "fellowship_hall"].entries()) {
       const m = WORLD.maps[id as MapId];
       expect([m.tiles[0].length, m.tiles.length]).toEqual(i === 0 ? [16, 12] : i === 5 ? [14, 16] : i === 6 ? [10, 8] : [12, 12]);

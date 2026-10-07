@@ -5,6 +5,8 @@ import type { Scripts } from "./build";
 import { TRAINERS } from "./trainers";
 import { storyScripts } from "./scripts/story";
 import { act1Scripts } from "./scripts/act1";
+import { postgameScripts } from "./scripts/postgame";
+import { seed_vault_entrance, seed_vault_b1, seed_vault_b2, seed_vault_b3, methuselah_ridge } from "./maps/seed_vault";
 import { ch11Scripts } from "./scripts/ch11";
 import { ch10Scripts } from "./scripts/ch10";
 import { ch9Scripts } from "./scripts/ch9";
@@ -175,6 +177,7 @@ const maps: Record<MapId, MapDef> = {
   elder_grove_heart,
   council_hall,
   council_1, council_2, council_3, council_4, keeper_hall, fellowship_hall,
+  seed_vault_entrance, seed_vault_b1, seed_vault_b2, seed_vault_b3, methuselah_ridge,
 
 };
 
@@ -201,7 +204,7 @@ function mergeScripts(...all: Scripts[]): Scripts {
 
 export const WORLD: WorldData = {
   maps,
-  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, ch8Scripts, ch9Scripts, ch10Scripts, ch11Scripts, questScripts, ...mapScripts),
+  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, ch8Scripts, ch9Scripts, ch10Scripts, ch11Scripts, postgameScripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
   quests: QUESTS,
   glide: [

@@ -58,6 +58,9 @@ const LIST: Item[] = [
     effect: { kind: "none" }, usableInBattle: false, usableInField: true },
 
   // Key items
+  { id: "old_diary", name: "Old Diary", pocket: "key", price: 0,
+    description: "FENNIMORE's grandfather's diary.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
   { id: "fig_root", name: "Fig Root", pocket: "key", price: 0,
     description: "Living roots that grow into bridges.",
     effect: { kind: "none" }, usableInBattle: false, usableInField: false },

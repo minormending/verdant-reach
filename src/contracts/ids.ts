@@ -119,6 +119,8 @@ export const MAP_IDS = [
   "elder_grove_2", "elder_grove_3", "elder_grove_heart", "council_hall",
   // Chapter 11 (CH11.md §3).
   "council_1", "council_2", "council_3", "council_4", "keeper_hall", "fellowship_hall",
+  // Post-game (POSTGAME.md §4); Fennimore keeps his existing interior.
+  "seed_vault_entrance", "seed_vault_b1", "seed_vault_b2", "seed_vault_b3", "methuselah_ridge",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -334,6 +336,7 @@ export type StatusId = (typeof STATUSES)[number];
 
 /** Item ids the world/story scripts rely on. The data agent may add more. */
 export const REQUIRED_ITEMS = [
+  "old_diary",             // Fennimore's grandfather's archive diary
   "terrarium_pod", "glass_pod",               // capture
   "water_flask", "spring_water", "rain_jar",  // healing: small / medium / full
   "compost",                                  // revive a wilted Quickened

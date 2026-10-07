@@ -3,6 +3,8 @@
 
 import type { SpeciesId, TrainerDef } from "../contracts";
 
+import { councilRematches } from "./rematches";
+
 type Team = TrainerDef["team"];
 
 function trainer(
@@ -499,5 +501,5 @@ const ch11Trainers: TrainerDef[] = [
 ];
 
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers, ...ch9Trainers, ...ch10Trainers, ...ch11Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers, ...ch9Trainers, ...ch10Trainers, ...ch11Trainers, ...councilRematches(ch11Trainers)].map((t) => [t.id, t]),
 );

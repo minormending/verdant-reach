@@ -25,6 +25,8 @@ export const council_hall: MapDef = {
     { x: 7, y: 0, to: "council_1", toX: 5, toY: 10, facing: "up" },
   ],
   npcs: [
+    { id: "rowan", sprite: "vale", x: 10, y: 7, facing: "down", script: "pg_wanderers",
+      visibleWhen: when({ game_cleared: true }) },
     { id: "keeper", sprite: "greenhouse_keeper", x: 2, y: 2, facing: "down", script: "ch11_heal" },
     { id: "clerk", sprite: "shopkeeper", x: 13, y: 2, facing: "down", script: "ch11_market" },
   ],

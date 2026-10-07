@@ -17,6 +17,7 @@
     "glass_pod": { "file": "glass_pod.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
     "lily_raft": { "file": "lily_raft.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/placeholder.py" } },
     "neem_spray": { "file": "neem_spray.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "old_diary": { "file": "old_diary.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/placeholder.py" } },
     "plant_food": { "file": "plant_food.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
     "pruning_shears": { "file": "pruning_shears.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
     "rain_jar": { "file": "rain_jar.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },

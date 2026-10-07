@@ -347,6 +347,20 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     });
   }
 
+  // Ordinary Council cores trained to 66–67, near the Vault encounter ceiling.
+  // Keep trainers as exact +8 clones; report the six seeded 300-battle rates.
+  it("Post-game: Keeper rematch has a 45–60% mean (two-point tolerance)", () => {
+    const parties = CH11_PARTIES.map((core) => ({ starterLevel: core.starterLevel + 7,
+      extras: core.extras.map(([species, level]): [SpeciesId, number] => [species, level + 7]) }));
+    const rates = parties.flatMap((core) => (["oak", "chili", "lily"] as Line[])
+      .map((line) => councilRate(line, core, ["rowan_rematch"])));
+    const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
+    console.log(`PG Keeper rematch: mean ${(mean * 100).toFixed(1)}%; cores oak/chili/lily: ${rates.map((r) => (r * 100).toFixed(1)).join(", ")}`);
+    for (const rate of rates) expect(rate).toBeGreaterThan(0.25);
+    expect(mean).toBeGreaterThanOrEqual(0.43);
+    expect(mean).toBeLessThanOrEqual(0.62);
+  });
+
   // A healed run is about the product of five per-fight odds (each 50-75%), so the
   // per-fight bands are the difficulty target; the run floor only guards against a wall.
   it("Chapter 11: healed Council run exceeds 8% for every starter with both cores", () => {

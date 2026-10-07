@@ -5,10 +5,11 @@ import {
   FIELD_MOVES, JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX,
 } from "../contracts";
 import type { Ambient, Cond, Dir, MapDef, MapId, NpcDef, ScriptCmd, TileKey, TileProps, WorldData } from "../contracts";
+import { POSTGAME_MAPS } from "./maps/seed_vault";
 import { pickupItem } from "./build";
 import { DATA } from "../data";
 import { glowField, glowLamps } from "../overworld/glow";
-import { buildMap } from "../overworld/map";
+import { buildMap, checkCond, refreshLegend, tileAt } from "../overworld/map";
 import { reachableBoulderTiles } from "../overworld/uproot";
 import { slidePathFrom } from "../overworld/ice";
 import { DIRS as MOVE_DIRS, type MoveResult } from "../overworld/map";
@@ -611,12 +612,77 @@ export function wrapText(text: string, cols = TEXTBOX.cols): string[] {
 /** Names can be up to 7 characters; measure tokens at that width. */
 export const expandTokens = (t: string) => t.replace(/<PLAYER>/g, "WWWWWWW").replace(/<RIVAL>/g, "WWWWWWW");
 
+/** Post-game access with every field crossing optimistically opened. This
+ * checks story gates independently of puzzle solvability and earlier chapters.
+ * Ordinary maps are already accessible; incoming post-game edges must still
+ * be reached from an ordinary arrival, never seeded from the dungeon itself. */
+export function reachablePostgameMaps(world: WorldData, flags: Record<string, boolean>): Set<MapId> {
+  const areas = new Set<MapId>(POSTGAME_MAPS);
+  const reached = new Set<MapId>();
+  const queue: { map: MapId; x: number; y: number }[] = [];
+  const optimistic = (map: MapDef): Grid => {
+    const runtime = buildMap(map);
+    refreshLegend(runtime, flags);
+    const base = grid({ ...map, npcs: map.npcs.filter((n) => checkCond(n.visibleWhen, flags)) });
+    return { ...base, rafting: true, tile: (x, y) => {
+      if (x < 0 || y < 0 || x >= base.w || y >= base.h) return undefined;
+      const tile = tileAt(runtime, x, y);
+      return tile === "pit" ? "filled_pit" : bridgeable(tile) ? "root_bridge" : prunable(tile) ? "bramble_stump" : tile;
+    } };
+  };
+  for (const map of Object.values(world.maps)) {
+    if (areas.has(map.id) || !map.warps.some((w) => areas.has(w.to))) continue;
+    const starts = Object.values(world.maps).filter((m) => !areas.has(m.id))
+      .flatMap((m) => m.warps.filter((w) => w.to === map.id).map((w) => ({ x: w.toX, y: w.toY })));
+    if (world.newGame.map === map.id) starts.push(world.newGame);
+    const tiles = flood(optimistic(map), starts);
+    for (const warp of map.warps) if (areas.has(warp.to) && tiles.has(`${warp.x},${warp.y}`)) {
+      queue.push({ map: warp.to, x: warp.toX, y: warp.toY });
+    }
+  }
+  const seen = new Set<string>();
+  for (let head = 0; head < queue.length; head++) {
+    const entry = queue[head], signature = `${entry.map}:${entry.x},${entry.y}`;
+    if (seen.has(signature)) continue;
+    seen.add(signature);
+    const map = world.maps[entry.map];
+    if (!map) continue;
+    reached.add(entry.map);
+    const tiles = flood(optimistic(map), [entry]);
+    for (const warp of map.warps) if (areas.has(warp.to) && tiles.has(`${warp.x},${warp.y}`)) {
+      queue.push({ map: warp.to, x: warp.toX, y: warp.toY });
+    }
+  }
+  return reached;
+}
+
+export function checkPostgameAccess(world: WorldData): string[] {
+  const errors: string[] = [];
+  // Assume all unrelated positive story gates are open, so an earlier closed
+  // door cannot conceal a missing post-game gate.
+  const flags: Record<string, boolean> = {};
+  for (const map of Object.values(world.maps)) for (const entry of map.legendWhen ?? []) {
+    for (const condition of entry.when) flags[condition.flag] = true;
+  }
+  for (const diary_read of [false, true]) {
+    const reached = reachablePostgameMaps(world, { ...flags, game_cleared: false, diary_read });
+    for (const area of reached) errors.push(`[${area}] reachable without game_cleared (diary_read=${diary_read})`);
+  }
+  if (reachablePostgameMaps(world, { ...flags, game_cleared: true, diary_read: false }).has("methuselah_ridge")) {
+    errors.push("[methuselah_ridge] reachable without diary_read");
+  }
+  for (const landing of world.glide ?? []) if ((POSTGAME_MAPS as readonly MapId[]).includes(landing.map)) {
+    errors.push(`[glide ${landing.map}] bypasses the post-game story gates`);
+  }
+  return errors;
+}
+
 /**
  * Returns the problems in `world`. Soft problems (a quest script narrative
  * hasn't written yet) go to `warnings` instead, when given.
  */
 export function validateWorld(world: WorldData, warnings: string[] = []): string[] {
-  const errs: string[] = [];
+  const errs: string[] = checkPostgameAccess(world);
   const progression = progress(world);
   const rafting = progression.after.enabled.has("raft");
   const bridged = progression.after.enabled.has("rootbridge");

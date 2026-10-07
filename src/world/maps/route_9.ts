@@ -1,11 +1,12 @@
 import type { MapDef } from "../../contracts";
-import { OUTDOOR } from "../build";
+import { OUTDOOR, when } from "../build";
 
 export const route_9: MapDef = {
   id: "route_9", name: "ROUTE 9", outdoor: true, music: "route", ambient: "mist",
-  border: "tree", legend: OUTDOOR,
+  border: "tree", legend: { ...OUTDOOR, Z: "stairs_down" },
+  legendWhen: [{ when: when({ game_cleared: false }), legend: { Z: "cliff" } }],
   tiles: [
-    "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT",
+    "TTTTTTZTTTTTTT::TTTTTTTTTTTTTT",
     "T.............::.............T",
     "T.????????????::????????????.T",
     "T.????????????::????????????.T",
@@ -64,6 +65,7 @@ export const route_9: MapDef = {
   ],
   structures: [],
   warps: [
+    { x: 6, y: 0, to: "seed_vault_entrance", toX: 6, toY: 10, facing: "up" },
     { x: 14, y: 55, to: "cedarhallow", toX: 17, toY: 2, facing: "down" },
     { x: 14, y: 0, to: "larchmere", toX: 17, toY: 28, facing: "up" },
     { x: 15, y: 0, to: "larchmere", toX: 18, toY: 28, facing: "up" },
