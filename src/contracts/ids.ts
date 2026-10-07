@@ -107,6 +107,9 @@ export const MAP_IDS = [
   // Chapter 9 (CH9.md §4 order; the extra healing interior follows Route 11).
   "route_10", "thistledown", "thistledown_greenhouse", "thistledown_market",
   "thistledown_house", "route_11", "sanguine_greenhouse", "sanguine_ridge", "sanguine_conservatory",
+  // Chapter 10 (CH10.md §4 order).
+  "route_12", "council_arboretum", "arboretum_greenhouse", "elder_grove_1",
+  "elder_grove_2", "elder_grove_3", "elder_grove_heart", "council_hall",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 

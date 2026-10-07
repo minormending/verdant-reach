@@ -1,0 +1,50 @@
+import { groveEncounters } from "./elder_grove_2";
+import type { MapDef } from "../../contracts";
+import { OUTDOOR, when } from "../build";
+
+export const elder_grove_3: MapDef = {
+  id: "elder_grove_3", name: "ELDER GROVE", outdoor: true, music: "sugarbush_grove",
+  border: "tree", legend: OUTDOOR,
+  tiles: [
+    "TTTTTTTTTTTTTNTTTTTTTTTTTT",
+    "T........................T",
+    "T........................T",
+    "T.,,,,...................T",
+    "T.,,,,...................T",
+    "T.,,,,...................T",
+    "T........................T",
+    "T........................T",
+    "T.TTTTTTTTTTTTTTTTTTT....T",
+    "T.TTTTTTTTTTTTTTTTTTT....T",
+    "T........................T",
+    "T........................T",
+    "T........................T",
+    "T........................T",
+    "T........................T",
+    "T........................T",
+    "T........................T",
+    "T....TTTTTTTTTTTTTTTTTTT.T",
+    "T....TTTTTTTTTTTTTTTTTTT.T",
+    "T..................,,,,..T",
+    "T..................,,,,..T",
+    "T..................,,,,..T",
+    "T........................T",
+    "T........................T",
+    "T........................T",
+    "TTTTTTTTTTTTT:TTTTTTTTTTTT",
+  ],
+  legendWhen: [{ when: when({ beat_wren_2: false }), legend: { N: "tree" } }],
+  structures: [],
+  warps: [
+    { x: 13, y: 25, to: "elder_grove_2", toX: 15, toY: 1, facing: "down" },
+    { x: 13, y: 0, to: "elder_grove_heart", toX: 10, toY: 18, facing: "up" },
+  ],
+  npcs: [
+    { id: "grunt_g3_1", sprite: "grunt", x: 7, y: 20, facing: "right", trainer: "grunt_g3_1", sight: 1 },
+    { id: "grunt_g3_2", sprite: "grunt", x: 21, y: 13, facing: "left", trainer: "grunt_g3_2", sight: 1 },
+    { id: "wren_2", sprite: "wren", x: 11, y: 3, facing: "down", trainer: "wren_2", sight: 1 },
+    { id: "bram_ring_3", sprite: "bram", x: 15, y: 3, facing: "left", script: "ch10_bram_heal", visibleWhen: when({ bram_joined: true, beat_mercer: false }) },
+  ],
+  signs: [], triggers: [{ x: 13, y: 1, script: "ch10_bram_heal", when: when({ beat_wren_2: true }) }],
+  encounters: groveEncounters,
+};

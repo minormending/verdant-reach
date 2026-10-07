@@ -199,3 +199,28 @@ describe("Chapter 9 SEED GLIDE visits", () => {
     expect(glideLanding(WORLD, state, "thistledown")).toMatchObject({ x: 6, y: 11 });
   });
 });
+
+describe("Chapter 10 SEED GLIDE visits", () => {
+  it.each(["council_arboretum", "arboretum_greenhouse", "council_hall", "elder_grove_1", "elder_grove_2", "elder_grove_3", "elder_grove_heart"] as MapId[])("infers Arboretum visits from %s and its healing point", (map) => {
+    const state = fresh();
+    state.position.map = map;
+    expect(visitedGlideMaps(state)).toHaveLength(11);
+    state.position.map = "player_home";
+    state.heal.map = map;
+    expect(glideLanding(WORLD, state, "council_arboretum")).toMatchObject({ x: 6, y: 20 });
+  });
+
+  it("requires arrival evidence beyond the west road and the eight marks", () => {
+    const state = fresh();
+    state.flags.ch9_done = true;
+    state.position.map = "route_12";
+    state.marks = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark", "cactus_mark", "mangrove_mark", "snowdrop_mark", "resin_mark"];
+    expect(glideLanding(WORLD, state, "council_arboretum")).toBeUndefined();
+    for (const flag of ["ch10_arrived", "bram_joined", "beat_shears_2", "beat_mercer", "ch10_done", "visited_council_arboretum"]) {
+      state.flags = { [flag]: true };
+      expect(glideLanding(WORLD, state, "council_arboretum")).toBeDefined();
+    }
+    state.position.map = "council_arboretum";
+    expect(glideLanding(WORLD, state, "council_arboretum")).toBeUndefined();
+  });
+});

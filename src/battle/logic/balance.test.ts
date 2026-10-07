@@ -98,6 +98,24 @@ const MILESTONES_R9: Record<string, Milestone> = {
   rival_5: { trainer: (l) => `rival_5_${COUNTER[l]}`, starterLevel: 49, extras: [["fireweed", 49], ["bladderwort", 48], ["dragon_tree", 48]] },
   rival_5_r9: { trainer: (l) => `rival_5_${COUNTER[l]}`, starterLevel: 49, extras: [["skunk_cabbage", 49], ["larch", 48], ["lithops_bloom", 48]] },
 };
+// Chapter 10: keep the two Chapter 9 party cores, raised through Route 12.
+// Four plants face the admins; by the heart two familiar reserve catches
+// fill the party against Mercer's six. No legendary or purpose-picked counter.
+const MILESTONES_R10: Record<string, Milestone> = Object.fromEntries(
+  ["shears_2", "calloway_2", "wren_2", "mercer"].flatMap((id, i) => {
+    const lv = [54, 55, 56, 58][i];
+    const first: [SpeciesId, number][] = [["fireweed", lv], ["bladderwort", lv - 1], ["dragon_tree", lv - 1]];
+    const second: [SpeciesId, number][] = [["skunk_cabbage", lv], ["larch", lv - 1], ["lithops_bloom", lv - 1]];
+    if (id === "mercer") {
+      first.push(["larch", lv - 1], ["edelweiss", lv - 1]);
+      second.push(["red_mangrove", lv - 1], ["edelweiss", lv - 1]);
+    }
+    return [
+      [id, { trainer: () => id, starterLevel: lv, extras: first }],
+      [`${id}_r10`, { trainer: () => id, starterLevel: lv, extras: second }],
+    ];
+  }),
+);
 const THIRD_STARTER: Record<Line, SpeciesId> = { oak: "great_oak", chili: "red_chili", lily: "giant_water_lily" };
 
 // Route 4, the Palm House, Route 5 and the Conservatory 3 juniors: ordinary
@@ -266,6 +284,30 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     expect(mean(rival)).toBeLessThanOrEqual(0.85);
     expect(mean(rook)).toBeLessThan(mean(rival));
   });
+
+  for (const id of ["shears_2", "calloway_2", "wren_2", "mercer"]) {
+    it(`Chapter 10: ${id} occupies its prescribed band`, () => {
+      const rates = [id, `${id}_r10`].flatMap((k) =>
+        (["oak", "chili", "lily"] as Line[]).map((l) => winRate(l, MILESTONES_R10[k], 300)));
+      const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
+      console.log(`${id} mean: ${(mean * 100).toFixed(1)}%; party rates (oak/chili/lily): ${rates.map((r) => (r * 100).toFixed(1)).join(", ")}`);
+      for (const rate of rates) expect(rate).toBeGreaterThan(0.25);
+      expect(mean).toBeGreaterThanOrEqual(id === "mercer" ? 0.55 : 0.70);
+      expect(mean).toBeLessThanOrEqual(id === "mercer" ? 0.68 : 0.82);
+      if (id === "mercer") {
+        // The climax must be harder than the earlier spikes on their own
+        // representative parties, as well as occupying its absolute band.
+        const previous = [
+          [MILESTONES_R4.flora, MILESTONES_R4.flora_r4, MILESTONES_R4.flora_r3],
+          [MILESTONES_R9.rook, MILESTONES_R9.rook_r9],
+        ];
+        for (const milestones of previous) {
+          const earlier = milestones.flatMap((m) => (["oak", "chili", "lily"] as Line[]).map((line) => winRate(line, m, 200)));
+          expect(mean).toBeLessThan(earlier.reduce((a, b) => a + b, 0) / earlier.length);
+        }
+      }
+    });
+  }
 
   for (const [area, { ids, m }] of Object.entries(CH4_TRAINERS)) {
     it(`${area} trainers: comfortable with every starter`, () => {

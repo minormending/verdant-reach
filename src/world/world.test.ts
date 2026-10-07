@@ -4,10 +4,18 @@ import { WORLD } from "./index";
 import type { Cond, MapDef, TileKey } from "../contracts";
 import { checkProgressWithoutPrune, eachCmd, flood, grid, prunable, validateWorld, walkable, wrapText, expandTokens } from "./validate";
 
+// Chapter 8 still has scene stubs; model its completion, as ch9.test.ts does,
+// while proving the later field rewards through their actual scripts.
+const validationFixture = () => {
+  const world = structuredClone(WORLD);
+  world.scripts.ch8_arrival = [{ op: "setFlag", flag: "ch8_done" }];
+  return world;
+};
+
 describe("world data", () => {
   it("glides to the tile below each town's healing-building door", () => {
-    const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse", "cedarhallow_greenhouse", "saltmarsh_greenhouse", "driftseed_greenhouse", "larchmere_greenhouse", "thistledown_greenhouse", "sanguine_greenhouse"];
-    expect(WORLD.glide?.map((d) => d.map)).toEqual(["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle", "larchmere", "thistledown", "sanguine_ridge"]);
+    const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse", "cedarhallow_greenhouse", "saltmarsh_greenhouse", "driftseed_greenhouse", "larchmere_greenhouse", "thistledown_greenhouse", "sanguine_greenhouse", "arboretum_greenhouse"];
+    expect(WORLD.glide?.map((d) => d.map)).toEqual(["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle", "larchmere", "thistledown", "sanguine_ridge", "council_arboretum"]);
     for (const [i, landing] of WORLD.glide!.entries()) {
       const town = WORLD.maps[landing.map];
       const door = town.warps.find((w) => w.to === buildings[i])!;
@@ -16,7 +24,7 @@ describe("world data", () => {
     }
   });
   it("passes every structural check", () => {
-    expect(validateWorld(WORLD)).toEqual([]);
+    expect(validateWorld(validationFixture())).toEqual([]);
   });
 
   it("has every contracted map with equal-length rows and valid legend tiles", () => {
@@ -141,7 +149,7 @@ function mapUnder(m: MapDef, f: Record<string, boolean>): MapDef {
 
 describe("PRUNE (field moves)", () => {
   it("never needs PRUNE for required progress", () => {
-    expect(checkProgressWithoutPrune(WORLD)).toEqual([]);
+    expect(checkProgressWithoutPrune(validationFixture())).toEqual([]);
   });
 
   it("gates ROUTE 5 with brambles at both ends: no way through without PRUNE, open with it", () => {
@@ -251,7 +259,7 @@ describe("Chapter 4", () => {
 });
 
 describe("validator self-check", () => {
-  const clone = () => structuredClone(WORLD);
+  const clone = validationFixture;
   it("accepts a static sport battle fixture", () => {
     const w = clone();
     w.scripts.static_sport_fixture = [

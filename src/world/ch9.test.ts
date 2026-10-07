@@ -11,7 +11,7 @@ const holds = (c: Cond | undefined, flags: Record<string, boolean>) => !c || c.e
 
 describe("Chapter 9 world", () => {
   it("appends the eight maps in order, with the extra greenhouse after Route 11", () => {
-    expect(MAP_IDS.slice(MAP_IDS.indexOf("route_10"))).toEqual(CH9);
+    expect(MAP_IDS.slice(MAP_IDS.indexOf("route_10"), MAP_IDS.indexOf("route_10") + CH9.length)).toEqual(CH9);
     for (const [id, w, h, outdoor, music, ambient] of [
       ["route_10", 50, 20, true, "route", "leaves"],
       ["thistledown", 30, 26, true, "small_town", "leaves"],

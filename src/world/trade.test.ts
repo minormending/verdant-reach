@@ -7,7 +7,7 @@ type Trade = Extract<ScriptCmd, { op: "trade" }>;
 const trade = (gives: Partial<Trade["gives"]> = {}): Trade => ({
   op: "trade", wants: ["oak_acorn", "maple_samara"], gives: { species: "moonflower_seed", level: 12, ...gives },
 });
-const errors = (cmd: Trade) => validateWorld({ ...WORLD, scripts: { ...WORLD.scripts, fixture_trade: [cmd] } });
+const errors = (cmd: Trade) => validateWorld({ ...WORLD, scripts: { ...WORLD.scripts, ch8_arrival: [{ op: "setFlag", flag: "ch8_done" }], fixture_trade: [cmd] } });
 
 describe("trade script validation", () => {
   it("accepts existing species, boundary levels, and a ten-character nickname", () => {

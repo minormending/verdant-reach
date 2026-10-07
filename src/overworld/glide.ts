@@ -2,7 +2,7 @@
 // Pure: callers persist the inferred visits when the overworld loads a map.
 import type { GameState, GlideDestination, MapDef, MapId, WorldData } from "../contracts";
 
-const TOWNS = ["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle", "larchmere", "thistledown", "sanguine_ridge"] as const;
+const TOWNS = ["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle", "larchmere", "thistledown", "sanguine_ridge", "council_arboretum"] as const;
 type TravelState = Pick<GameState, "flags" | "marks" | "position" | "heal" | "bag">;
 
 export const visitedTownFlag = (map: MapId): string => `visited_${map}`;
@@ -13,6 +13,8 @@ export const visitedTownFlag = (map: MapId): string => `visited_${map}`;
 export function visitedGlideMaps(state: TravelState): MapId[] {
   let furthest = 0; // Fallowfield is home, including the prologue on its roof.
   const fromMap = (map: MapId): number => {
+    if (map === "council_arboretum" || map === "council_hall" || map === "arboretum_greenhouse" || map.startsWith("elder_grove_")) return 10;
+    if (map === "route_12") return 9;
     if (map === "sanguine_ridge" || map.startsWith("sanguine_")) return 9;
     if (map === "thistledown" || map.startsWith("thistledown_") || map === "route_11") return 8;
     if (map === "route_10" || map.startsWith("relay_")) return 7;
@@ -40,6 +42,7 @@ export function visitedGlideMaps(state: TravelState): MapId[] {
     ["ch7_arrived", "lodge_grunt_seen", "beat_calloway", "lake_calmed", "beat_signe", "ch7_done"],
     ["ch9_arrived", "tumbleweed_seen", "rival_5_done"],
     ["beat_rook", "got_fig_root", "ch9_done"],
+    ["ch10_arrived", "bram_joined", "beat_shears_2", "beat_calloway_2", "beat_wren_2", "beat_mercer", "centuryheart_planted", "elder_caught", "ch10_done"],
   ];
   TOWNS.forEach((map, i) => {
     if (state.flags[visitedTownFlag(map)] || evidence[i].some((flag) => state.flags[flag])) furthest = Math.max(furthest, i);

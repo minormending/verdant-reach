@@ -414,6 +414,50 @@ const ch9Trainers: TrainerDef[] = [
   ], ch9Lines("rook"), { ai: "smart", music: "battle_leader", mark: "resin_mark", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
+// Chapter 10 (CH10.md §5); dialogue belongs to the story pass.
+// Balance (two mixed parties, 300 seeded trials per starter, no items):
+// Shears +2 throughout (76.1%); Calloway +1 throughout (75.2%);
+// Wren unchanged levels with explicit learned moves (76.1%);
+// Mercer +2 on his first five, +1 on the ace (56.8%, minimum 28.3%).
+const ch10Lines = (id: string) => ({
+  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
+});
+const ch10Trainers: TrainerDef[] = [
+  trainer("r12_crag", "CRAG", "HIKER", "hiker", [T("lodgepole_pine", 50), T("lithops_bloom", 51)], ch10Lines("r12_crag")),
+  trainer("r12_gorge", "GORGE", "HIKER", "hiker", [T("saguaro", 51), T("dragon_tree", 52), T("prickly_pear", 51)], ch10Lines("r12_gorge")),
+  trainer("r12_kite", "KITE", "BIRDWATCHER", "birdwatcher", [T("larch", 51), T("edelweiss", 52)], ch10Lines("r12_kite")),
+  trainer("r12_rook", "ROOK", "BIRDWATCHER", "birdwatcher", [T("red_cedar", 52), T("moss_campion", 52), T("snowdrop", 53)], ch10Lines("r12_rook")),
+  trainer("r12_sedge", "SEDGE", "GARDENER", "gardener", [T("red_mangrove", 52), T("bladderwort", 52)], ch10Lines("r12_sedge")),
+  trainer("r12_heath", "HEATH", "GARDENER", "gardener", [T("fireweed", 53), T("dragon_fruit", 53), T("ghost_pipe", 52)], ch10Lines("r12_heath")),
+  trainer("grunt_arb_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 51), T("lodgepole_pine", 51)], ch10Lines("grunt_arb_1"), { music: "battle_rootstock" }),
+  trainer("grunt_arb_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 51), T("red_cedar", 51)], ch10Lines("grunt_arb_2"), { music: "battle_rootstock" }),
+  trainer("grunt_arb_3", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 51), T("lodgepole_pine", 51)], ch10Lines("grunt_arb_3"), { music: "battle_rootstock" }),
+  trainer("grunt_g1_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 52), T("lodgepole_pine", 52)], ch10Lines("grunt_g1_1"), { music: "battle_rootstock" }),
+  trainer("grunt_g1_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 52), T("red_cedar", 52)], ch10Lines("grunt_g1_2"), { music: "battle_rootstock" }),
+  trainer("grunt_g2_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 53), T("lodgepole_pine", 53)], ch10Lines("grunt_g2_1"), { music: "battle_rootstock" }),
+  trainer("grunt_g2_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 53), T("red_cedar", 53)], ch10Lines("grunt_g2_2"), { music: "battle_rootstock" }),
+  trainer("grunt_g3_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 54), T("lodgepole_pine", 54)], ch10Lines("grunt_g3_1"), { music: "battle_rootstock" }),
+  trainer("grunt_g3_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 54), T("red_cedar", 54)], ch10Lines("grunt_g3_2"), { music: "battle_rootstock" }),
+  trainer("grunt_heart_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 54), T("lodgepole_pine", 54)], ch10Lines("grunt_heart_1"), { music: "battle_rootstock" }),
+  trainer("grunt_heart_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 54), T("red_cedar", 54)], ch10Lines("grunt_heart_2"), { music: "battle_rootstock" }),
+  trainer("shears_2", "SHEARS", "ADMIN", "shears", [
+    T("bramble_berry", 55), T("holly", 56), T("stinging_nettle", 57), T("blackberry", 58),
+  ], ch10Lines("shears_2"), { ai: "smart", music: "battle_rootstock" }),
+  trainer("calloway_2", "CALLOWAY", "ADMIN", "shears", [
+    { ...T("red_mangrove", 56), grafted: true }, T("lodgepole_pine", 55), T("ghost_pipe", 55),
+    { ...T("saguaro", 57), grafted: true },
+  ], ch10Lines("calloway_2"), { ai: "smart", music: "battle_rootstock" }),
+  trainer("wren_2", "WREN", "ADMIN", "researcher", [
+    T("moth_orchid", 54, ["wind_scatter", "moonbeam", "false_nectar", "long_bloom"]),
+    T("ghost_pipe", 55, ["moonbeam", "root_siphon", "spore_cloud"]),
+    T("red_cedar", 56, ["leaf_edge", "pale_touch", "sap_seal", "heartwood"]),
+    T("quaking_aspen", 57, ["many_trunks", "pale_touch", "bark_skin", "sap_seal"]),
+  ], ch10Lines("wren_2"), { ai: "smart", music: "battle_rootstock" }),
+  trainer("mercer", "MERCER", "ROOTSTOCK", "gentleman", [
+    T("apple_tree", 58), T("wild_rose", 58), T("sugar_maple", 59), T("red_cedar", 59), T("dragon_tree", 60), T("quaking_aspen", 61),
+  ], ch10Lines("mercer"), { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 3 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers, ...ch9Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers, ...ch9Trainers, ...ch10Trainers].map((t) => [t.id, t]),
 );

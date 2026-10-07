@@ -5,6 +5,7 @@ import type { Scripts } from "./build";
 import { TRAINERS } from "./trainers";
 import { storyScripts } from "./scripts/story";
 import { act1Scripts } from "./scripts/act1";
+import { ch10Scripts } from "./scripts/ch10";
 import { ch9Scripts } from "./scripts/ch9";
 import { ch8Scripts } from "./scripts/ch8";
 import { ch7Scripts } from "./scripts/ch7";
@@ -83,6 +84,15 @@ import { sanguine_greenhouse } from "./maps/sanguine_greenhouse";
 import { sanguine_ridge } from "./maps/sanguine_ridge";
 import { sanguine_conservatory } from "./maps/sanguine_conservatory";
 
+import { route_12 } from "./maps/route_12";
+import { council_arboretum } from "./maps/council_arboretum";
+import { arboretum_greenhouse } from "./maps/arboretum_greenhouse";
+import { elder_grove_1 } from "./maps/elder_grove_1";
+import { elder_grove_2 } from "./maps/elder_grove_2";
+import { elder_grove_3 } from "./maps/elder_grove_3";
+import { elder_grove_heart } from "./maps/elder_grove_heart";
+import { council_hall } from "./maps/council_hall";
+
 const maps: Record<MapId, MapDef> = {
   player_home: player_home.player_home,
   herbarium: herbarium.herbarium,
@@ -152,6 +162,16 @@ const maps: Record<MapId, MapDef> = {
   sanguine_greenhouse,
   sanguine_ridge,
   sanguine_conservatory,
+  // Chapter 10
+  route_12,
+  council_arboretum,
+  arboretum_greenhouse,
+  elder_grove_1,
+  elder_grove_2,
+  elder_grove_3,
+  elder_grove_heart,
+  council_hall,
+
 };
 
 const mapScripts: Scripts[] = [
@@ -177,7 +197,7 @@ function mergeScripts(...all: Scripts[]): Scripts {
 
 export const WORLD: WorldData = {
   maps,
-  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, ch8Scripts, ch9Scripts, questScripts, ...mapScripts),
+  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, ch8Scripts, ch9Scripts, ch10Scripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
   quests: QUESTS,
   glide: [
@@ -191,6 +211,7 @@ export const WORLD: WorldData = {
     { map: "larchmere", x: 6, y: 12, facing: "down", name: "LARCHMERE" },
     { map: "thistledown", x: 6, y: 11, facing: "down", name: "THISTLEDOWN" },
     { map: "sanguine_ridge", x: 6, y: 12, facing: "down", name: "SANGUINE RIDGE" },
+    { map: "council_arboretum", x: 6, y: 20, facing: "down", name: "ARBORETUM" },
   ],
   // Prologue: the observation deck at night, beside DR. VALE.
   newGame: { map: "herbarium_roof", x: 5, y: 6, facing: "up", script: "prologue" },
