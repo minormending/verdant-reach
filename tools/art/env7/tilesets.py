@@ -89,45 +89,60 @@ def root_gap(bridged=False):
     d.line((5, 1, 5, 4), fill=2)
     d.line((10, 10, 10, 13), fill=2)
     if bridged:
-        # Three broad strands weave over/under one another. Roots thicken
-        # into the banks rather than ending like cut planks or a ladder.
+        # A broad, level root deck crosses the entire fissure. Each living
+        # strand continues into both banks; black remains above/below it.
+        d.polygon([(0, 4), (3, 4), (5, 5), (10, 5), (13, 4), (15, 4),
+                   (15, 11), (12, 11), (10, 12), (5, 12), (2, 11), (0, 11)], fill=2)
         strands = (
-            [(1, 6), (4, 5), (7, 6), (10, 8), (14, 7)],
-            [(1, 9), (4, 8), (7, 8), (10, 6), (14, 6)],
-            [(2, 10), (5, 10), (8, 9), (11, 10), (14, 9)],
+            [(0, 5), (3, 5), (6, 7), (9, 7), (12, 5), (15, 5)],
+            [(0, 8), (3, 8), (6, 5), (9, 5), (12, 8), (15, 8)],
+            [(0, 10), (3, 10), (6, 10), (9, 9), (12, 10), (15, 10)],
         )
         for points in strands:
             d.line([(x, y + 1) for x, y in points], fill=2, width=3)
             d.line(points, fill=1, width=2)
             d.line([(x, y - 1) for x, y in points], fill=0)
-        # Short collars at each crossing distinguish braided living roots.
-        d.line((6, 6, 7, 7), fill=2)
-        d.line((9, 8, 10, 9), fill=2)
-        d.line((3, 5, 3, 7), fill=1)
-        d.line((12, 6, 12, 8), fill=1)
+        # Overlapping ridges and diagonal bark seams make the twist readable
+        # without rope collars. Forked ends spread into the soil banks.
+        d.line([(4, 6), (6, 7), (8, 7)], fill=0)
+        d.line([(5, 8), (7, 8), (9, 6)], fill=2)
+        d.line([(8, 9), (10, 8), (11, 7)], fill=0)
+        d.line([(2, 4), (1, 3), (0, 3)], fill=1)
+        d.line([(13, 4), (14, 3), (15, 3)], fill=1)
+        d.line([(2, 11), (1, 12), (0, 12)], fill=1)
+        d.line([(13, 11), (14, 12), (15, 12)], fill=1)
     return rgba(im, "roots")
 
 
 def pit(filled=False):
-    # A small flush stone socket is intentional: the hole keeps its identity
-    # on grass/dirt as well as on conservatory floors, without transparency.
+    # An angular, foreshortened socket sits in the floor plane. Both states
+    # share the same level rim, with no raised bevel or upper-left glint.
     im = canvas(1)
     d = ImageDraw.Draw(im)
-    d.line((1, 2, 3, 2), fill=0)
-    d.line((12, 13, 14, 13), fill=2)
-    d.ellipse((1, 2, 14, 14), fill=2)
-    d.arc((1, 2, 14, 14), 195, 285, fill=0)
-    d.ellipse((2, 3, 13, 13), fill=3)
+    rim = [(4, 4), (11, 4), (14, 6), (14, 10),
+           (11, 12), (4, 12), (1, 10), (1, 6)]
+    top = [(4, 5), (11, 5), (13, 7), (13, 9),
+           (11, 11), (4, 11), (2, 9), (2, 7)]
+    d.polygon(rim, fill=2)
     if filled:
-        # Flat boulder crown, sunk to the socket rim: no upright side wall.
-        d.ellipse((2, 3, 13, 13), fill=1)
-        d.polygon([(4, 4), (8, 3), (11, 5), (9, 7), (4, 8), (3, 6)], fill=0)
-        d.line([(10, 6), (11, 9), (9, 11), (5, 12)], fill=2)
-        d.line([(6, 8), (8, 9), (9, 9)], fill=2)
-        d.line((6, 7, 8, 7), fill=1)
+        # A thin seam encloses a flat, pale stone face. Broken planar patches
+        # cross the crown instead of shading it as a rounded coin/boulder.
+        d.polygon(top, fill=1)
+        d.line((4, 4, 11, 4), fill=3)
+        d.line((1, 7, 1, 9), fill=3)
+        d.line((14, 7, 14, 9), fill=3)
+        d.polygon([(4, 5), (7, 5), (6, 7), (3, 8), (2, 7)], fill=0)
+        d.polygon([(9, 8), (12, 7), (13, 9), (11, 11), (8, 11)], fill=0)
+        d.line([(8, 5), (7, 7), (8, 8), (6, 10), (6, 11)], fill=2)
+        d.line([(8, 8), (10, 8), (11, 6)], fill=2)
     else:
-        # The cool near wall drops sharply to black, unlike a surface rock.
-        d.arc((3, 4, 12, 12), 190, 300, fill=2, width=2)
+        # Shadow covers the upper inner wall and the deep centre. Only the
+        # lower inner wall catches light: a broad near-side crescent, never
+        # a specular spot on the far edge that would imply a convex sphere.
+        d.polygon(top, fill=3)
+        d.polygon([(2, 9), (4, 10), (11, 10), (13, 9),
+                   (11, 11), (4, 11)], fill=2)
+        d.line((5, 11, 10, 11), fill=1)
     return rgba(im, "stone")
 
 
