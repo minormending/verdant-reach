@@ -72,7 +72,6 @@ describe("Chapter 6 world", () => {
 
   it("requires obtainable saxifrage for the boulder rooms", () => {
     const staged = structuredClone(WORLD);
-    staged.scripts.ch8_arrival = [{ op: "setFlag", flag: "ch8_done" }];
     expect(checkProgressWithoutSaxifrage(staged)).toEqual([]);
     const without = structuredClone(staged);
     without.scripts.ch6_elder = [];

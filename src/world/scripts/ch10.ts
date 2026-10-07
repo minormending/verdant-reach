@@ -101,7 +101,8 @@ export const ch10Scripts: Scripts = {
       { op: "still", image: "bloom" }, wait(30), { op: "shake", frames: 45 },
       say("TODO(text): The seed sprouts within the Elder's root.", "NARRATOR"),
       say("TODO(text): The alarm quiets through every pale trunk.", "NARRATOR"),
-      { op: "music", id: "prologue_bloom" },
+      // Mercer's win flag is set after battle return; refresh the conditional track now.
+      { op: "restoreMusic" },
       say("TODO(text): The Quickened stay awake. They choose to stay awake.", "NARRATOR"),
       say("TODO(text): Their lives and their growth are their own.", "ROWAN"),
       { op: "stillClear" }, flag("centuryheart_planted"),
@@ -116,6 +117,11 @@ export const ch10Scripts: Scripts = {
   ch10_elder: [ifFlags({ centuryheart_planted: true, elder_caught: false }, [
     say("TODO(text): The Elder leans toward the player and offers a challenge.", "NARRATOR"),
     { op: "wildBattle", species: "elder", level: 60, canLose: true },
+    // The Elder isn't hostile: a loss heals the party where it stands, and it waits.
+    { op: "ifLastBattle", result: "lost", then: [
+      { op: "heal" },
+      say("TODO(text): The Elder's roots mend your team. It waits for you.", "NARRATOR"),
+    ] },
     { op: "ifLastBattle", result: "caught", then: [
       flag("elder_caught"), { op: "hideNpc", npc: "the_elder" },
       say("TODO(text): The Elder chooses to travel with the player.", "NARRATOR"),
@@ -133,6 +139,5 @@ export const ch10Scripts: Scripts = {
   ch10_bram_ring_1: [say("TODO(text): Every trunk leans toward us. Let's keep going.", "BRAM")],
   ch10_bram_ring_2: [say("TODO(text): Listen in the clearings; the lanes shift with the Grove.", "BRAM")],
   ch10_arboretum_enter: [call("ch10_arrival"), call("ch10_end")],
-  ch10_heart_enter: [ifFlags({ beat_mercer: true }, [{ op: "music", id: "prologue_bloom" }])],
   ch10_listening_clearing: [ifFlags({ grove_lean: true }, [flag("grove_lean", false)], [flag("grove_lean")])],
 };

@@ -3,6 +3,7 @@ import { OUTDOOR, when } from "../build";
 
 export const elder_grove_heart: MapDef = {
   id: "elder_grove_heart", name: "THE HEART", outdoor: true, music: "rootstock_appears",
+  musicWhen: [{ when: when({ beat_mercer: true }), music: "prologue_bloom" }],
   border: "tree", legend: OUTDOOR,
   tiles: [
     "TTTTTTTTTTTTTTTTTTTT",
@@ -37,5 +38,5 @@ export const elder_grove_heart: MapDef = {
     { id: "grunt_heart_2", sprite: "grunt", x: 4, y: 6, facing: "down", trainer: "grunt_heart_2", sight: 1, visibleWhen: when({ centuryheart_planted: false }) },
     { id: "the_elder", sprite: "potted_plant", x: 9, y: 10, facing: "down", script: "ch10_elder", visibleWhen: when({ centuryheart_planted: true, elder_caught: false }) },
   ],
-  signs: [], triggers: [], onEnter: "ch10_heart_enter",
+  signs: [], triggers: [],
 };

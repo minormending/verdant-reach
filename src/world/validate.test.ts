@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { MapDef } from "../contracts";
-import { canReach, flood, grid, walkable } from "./validate";
+import type { MapDef, TileKey } from "../contracts";
+import { canReach, flood, grid, validateWorld, walkable } from "./validate";
+import { WORLD } from "./index";
 
 function testGrid(tiles: string[]) {
   const map: MapDef = {
@@ -83,5 +84,18 @@ describe("canReach", () => {
           .toBe(flood(g, [start]).has(targetKey));
       }
     }
+  });
+});
+
+describe("conditional terrain validation", () => {
+  it.each(["bramble_bush", "root_gap", "pit"] as TileKey[])("rejects conditional %s on Route 11", (tile) => {
+    const world = structuredClone(WORLD);
+    const map = world.maps.route_11;
+    map.tiles[28] = "AAAAAAAAAAAAAggAAAAAAAAAAAAA";
+    map.legend = { ...map.legend, g: "dirt" };
+    map.legendWhen = [{ when: [{ flag: "rival_5_done", is: true }], legend: { g: tile } }];
+    expect(validateWorld(world)).toContain(
+      `[route_11] legendWhen must not introduce field-move or pit tiles (${tile})`,
+    );
   });
 });

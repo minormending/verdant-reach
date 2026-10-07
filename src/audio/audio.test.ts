@@ -3,7 +3,7 @@ import { JINGLES, MUSIC, SFX, SPECIES_IDS } from "../contracts";
 import { CHANNELS, expandRepeats, lenText, noteText, parseChannel, parseSong, songSeconds } from "./song";
 import { ARRANGEMENTS, MUSIC_DEFS } from "./music";
 import { JINGLE_DEFS, SFX_DEFS } from "./sfx";
-import { arrange, parseChord } from "./arrange";
+import { arrange, barCount, parseChord } from "./arrange";
 import { cryFor } from "./cry";
 import { createAudio } from "./index";
 
@@ -85,17 +85,35 @@ describe("music", () => {
     }
   });
 
-  it("every melody bar is exactly one bar long", () => {
+  it("every melody bar (and every hand-written part's bar) is exactly one bar long", () => {
     for (const [id, a] of Object.entries(ARRANGEMENTS)) {
       const barTicks = (a.meter ?? 4) * 48;
-      const ch = parseChannel(a.melody);
-      let prev = 0;
-      ch.bars.forEach((t, i) => {
-        expect(t - prev, `${id} bar ${i + 1}`).toBe(barTicks);
-        prev = t;
-      });
-      expect(ch.length, id).toBe(prev);
+      const parts = { melody: a.melody, harmonyLine: a.harmonyLine, bassLine: a.bassLine, drumLine: a.drumLine };
+      for (const [part, src] of Object.entries(parts)) {
+        if (!src) continue;
+        const ch = parseChannel(src);
+        let prev = 0;
+        ch.bars.forEach((t, i) => {
+          expect(t - prev, `${id}.${part} bar ${i + 1}`).toBe(barTicks);
+          prev = t;
+        });
+        expect(ch.length, `${id}.${part}`).toBe(prev);
+        expect(ch.bars.length, `${id}.${part} bar count`).toBe(barCount(a));
+      }
     }
+  });
+
+  it("uses hand-written parts in place of the generated ones", () => {
+    const def = arrange({
+      bpm: 90, chords: "C | G", melody: "c1 | d1 |", harmony: "arp8", bass: "half", drums: "rock",
+      harmonyLine: "v3 e1 | g1 |", bassLine: "v9 o2c1 | ^1 |", drumLine: "k1 | r1 |",
+    });
+    expect(def.p2).toBe("v3 e1 | g1 |");
+    expect(def.wave).toBe("v9 o2c1 | ^1 |");
+    expect(def.noise).toBe("k1 | r1 |");
+    const song = parseSong(def);
+    expect(song.channels.wave!.events).toHaveLength(1);       // the tie holds one note
+    expect(song.channels.wave!.events[0].len).toBe(384);
   });
 
   it("keeps melodies in a comfortable pulse range", () => {
@@ -105,6 +123,57 @@ describe("music", () => {
         expect(e.midi!, id).toBeLessThanOrEqual(96);
       }
     }
+  });
+
+  // Chapter 5: each track's character is written into its parts, so check it.
+  it("cedarhallow: a slow, drumless D dorian hymn with bells between pad notes", () => {
+    const a = ARRANGEMENTS.cedarhallow;
+    expect(a.bpm).toBeLessThanOrEqual(80);
+    const song = parseSong(MUSIC_DEFS.cedarhallow);
+    expect(song.channels.noise).toBeUndefined();
+    // dorian: B natural, never B-flat, in the tune
+    const pcs = new Set(song.channels.p1!.events.map((e) => e.midi! % 12));
+    expect(pcs.has(11)).toBe(true);
+    expect(pcs.has(10)).toBe(false);
+    const p2 = song.channels.p2!.events;
+    const bells = p2.filter((e) => e.env > 0);
+    expect(bells.length).toBeGreaterThanOrEqual(8);
+    expect(bells.length).toBeLessThan(p2.length);              // mostly pad, sparse bells
+    for (const b of bells) expect(b.midi!).toBeGreaterThanOrEqual(81);
+  });
+
+  it("burnt_stand: a low heartbeat and a melody that keeps stopping short", () => {
+    const song = parseSong(MUSIC_DEFS.burnt_stand);
+    const noise = song.channels.noise!.events;
+    const kicks = noise.filter((e) => e.drum === "k");
+    expect(kicks.length).toBeGreaterThanOrEqual(64);           // lub-dub in every bar
+    for (const k of kicks) expect(k.vol).toBeLessThanOrEqual(5); // low in the mix
+    expect(noise.every((e) => e.drum === "k" || e.drum === "h")).toBe(true);
+    // phrases stop short: at least half the bars end in silence
+    const p1 = song.channels.p1!;
+    const barTicks = 192;
+    let silentEnds = 0;
+    for (let b = 1; b <= p1.bars.length; b++) {
+      const end = b * barTicks;
+      const sounding = p1.events.some((e) => e.tick < end && e.tick + e.len > end - 24);
+      if (!sounding) silentEnds++;
+    }
+    expect(silentEnds).toBeGreaterThanOrEqual(p1.bars.length / 2);
+  });
+
+  it("hollow: a tied drone, a slow inner voice and irregular high drips", () => {
+    const song = parseSong(MUSIC_DEFS.hollow);
+    expect(song.channels.noise).toBeUndefined();
+    const wave = song.channels.wave!.events;
+    expect(wave.length).toBeLessThanOrEqual(10);               // held, not re-struck each bar
+    expect(Math.max(...wave.map((e) => e.midi!))).toBeLessThanOrEqual(52);
+    for (const e of song.channels.p1!.events) expect(e.len).toBeGreaterThanOrEqual(96); // halves and wholes
+    const p2 = song.channels.p2!.events;
+    for (const d of p2) expect(d.midi!).toBeGreaterThanOrEqual(84);
+    const drips = p2.filter((e) => e.vol >= 6);                 // the echoes are fainter
+    expect(drips.length).toBeGreaterThanOrEqual(12);
+    const gaps = [...drips.slice(1).map((d, i) => d.tick - drips[i].tick), song.length - drips.at(-1)!.tick + drips[0].tick];
+    expect(new Set(gaps).size).toBe(gaps.length);               // irregular: no two gaps alike, even across the loop
   });
 
   it("arranges a 3/4 chart correctly", () => {

@@ -112,11 +112,11 @@ describe("Chapter 10 scripts", () => {
     expect(state.bag.centuryheart_seed).toBeUndefined();
     expect(events).toEqual(["still:bloom", "shake", "stillClear", "hide:mercer", "hide:rowan", "hide:grunt_heart_1", "hide:grunt_heart_2", "show:the_elder"]);
     expect(host.ctx.ui.say).toHaveBeenCalledWith("TODO(text): The Quickened stay awake. They choose to stay awake.", { speaker: "NARRATOR" });
-    expect(host.ctx.audio.playMusic).toHaveBeenCalledWith("prologue_bloom");
     await run("mercer");
     await run("mercer_after");
     await run("ch10_planting");
     expect(host.still).toHaveBeenCalledOnce();
+    expect(host.restoreMusic).toHaveBeenCalledOnce();
     expect(host.battle).toHaveBeenCalledTimes(4);
     vi.mocked(host.battle).mockResolvedValue("caught");
     await run("ch10_elder");
@@ -218,7 +218,9 @@ describe("Chapter 10 scripts", () => {
     await run("ch10_elder");
     expect(host.battle).toHaveBeenCalledWith({ kind: "wild", wild: { species: "elder", level: 60, sport: undefined }, canLose: true, backdrop: undefined });
     expect(state.flags.elder_caught ?? false).toBe(outcome === "caught");
+    // A loss to the Elder heals in place instead of whiting out.
     expect(host.whiteout).not.toHaveBeenCalled();
+    expect(host.healParty).toHaveBeenCalledTimes(outcome === "lost" ? 1 : 0);
     const elder = WORLD.maps.elder_grove_heart.npcs.find((n) => n.id === "the_elder")!;
     await enter("elder_grove_heart");
     expect(checkCond(elder.visibleWhen, state.flags)).toBe(outcome !== "caught");

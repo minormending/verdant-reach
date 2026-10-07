@@ -12,9 +12,10 @@ type TestScene = Scene & {
   host: ScriptHost;
   attemptMove(dir: Dir): void;
   wildEncounter(species: string, level: number, kind: string): Promise<void>;
+  useWarp(warp: MapDef["warps"][number]): Promise<void>;
 };
 
-function setup(blocker = false) {
+function setup(blocker = false, warpX?: number) {
   const room: MapDef = {
     id: "route_1", name: "ICE TEST", outdoor: true, music: "route", border: "wall",
     tiles: ["########", "#.IIIS.#", "#......#", "########"],
@@ -26,6 +27,10 @@ function setup(blocker = false) {
     grass: { rate: 100, slots: [{ species: "nettle_sprout", minLevel: 3, maxLevel: 3, weight: 100 }] },
   } }];
   if (blocker) room.npcs = [{ id: "blocker", sprite: "hiker", x: 4, y: 1, facing: "left" }];
+  if (warpX !== undefined) {
+    room.tiles = ["#######", "#.III.#", "#######"];
+    room.warps = [{ x: warpX, y: 1, to: "route_2", toX: 1, toY: 1 }];
+  }
   const world = { ...WORLD, maps: { ...WORLD.maps, route_1: room } };
   const state = newGameState({ world });
   state.position = { map: "route_1", x: 1, y: 1, facing: "right" };
@@ -45,6 +50,21 @@ function setup(blocker = false) {
 afterEach(() => vi.restoreAllMocks());
 
 describe("ICE overworld flow", () => {
+  it.each([3, 5])("uses a warp exactly once at x=%s, on ice or the non-ice landing", async (warpX) => {
+    const { ctx, scene, encounter } = setup(false, warpX);
+    const warp = vi.spyOn(scene, "useWarp").mockResolvedValue(undefined);
+    scene.attemptMove("right");
+    for (let i = 0; i < 40; i++) {
+      scene.update(0);
+      await Promise.resolve();
+    }
+    expect(warp).toHaveBeenCalledExactlyOnceWith({ x: warpX, y: 1, to: "route_2", toX: 1, toY: 1 });
+    expect(scene.player).toMatchObject({ x: warpX, y: 1 });
+    expect(scene.player.moving).toBe(false);
+    expect(ctx.state.position).toMatchObject({ x: warpX, y: 1 });
+    expect(encounter).not.toHaveBeenCalled();
+  });
+
   it("slides after a scripted player step too", async () => {
     const { ctx, scene, encounter } = setup();
     const moving = scene.host.movePlayer(["right"]);

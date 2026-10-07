@@ -1,12 +1,13 @@
 // Pure ICE movement: one direction carries the player to the next slide stop.
 import type { Dir } from "../contracts";
-import { DIRS, isWalkable, key, tileAt, tileProps, tryMove, type MapRuntime, type MoveResult } from "./map";
+import { DIRS, isWalkable, key, tileAt, tileProps, tryMove, warpAt, type MapRuntime, type MoveResult } from "./map";
 
 export interface IcePosition { x: number; y: number }
 type LegalMove = Exclude<MoveResult, { kind: "blocked" }>;
 
 /** Shared trace for runtime movement and composed validator terrain. Include
- *  the walkable non-ice landing; a blocked next step leaves the last ice tile. */
+ *  the walkable non-ice landing; a blocked next step leaves the last ice tile.
+ *  Warp tiles stop the trace even when their terrain is ice. */
 export function slidePathFrom(
   start: IcePosition, dir: Dir,
   move: (x: number, y: number, dir: Dir) => MoveResult,
@@ -29,7 +30,7 @@ export function slidePath(
 ): LegalMove[] {
   return slidePathFrom({ x, y }, dir,
     (px, py, d) => tryMove(map, px, py, d, occupied),
-    (px, py) => !!tileProps(tileAt(map, px, py)).slide);
+    (px, py) => !!tileProps(tileAt(map, px, py)).slide && !warpAt(map, px, py));
 }
 
 /** BFS states are stops, never intermediate ice tiles where turning is illegal.

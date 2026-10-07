@@ -1,0 +1,10 @@
+{
+  "format": "verdant.character/1",
+  "id": "lumberjack",
+  "sheet": "sheet.png",
+  "frame": [16, 16],
+  "rows": ["down", "up", "left", "right"],
+  "columns": ["stand", "stepA", "stepB"],
+  "credits": "Hand-authored pixel art for Verdant Reach (Chapter 5 cast generator).",
+  "source": { "kind": "generated", "tool": "tools/art/cast5/chars5.py" }
+}

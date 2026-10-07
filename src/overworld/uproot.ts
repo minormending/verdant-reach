@@ -2,7 +2,7 @@
 // Boulder positions belong to map actors; filled pits belong to save flags.
 
 import type { Dir } from "../contracts";
-import { DIRS, inBounds, isWalkable, key, tileAt, tileProps, tryMove, type MapRuntime } from "./map";
+import { DIRS, inBounds, isMatWarp, isWalkable, key, tileAt, tileProps, tryMove, warpAt, type MapRuntime } from "./map";
 import { tryRaftMove } from "./raft";
 import { slidePathFrom } from "./ice";
 
@@ -48,8 +48,8 @@ export interface BoulderPuzzleOptions {
 
 /** All player tiles reachable across the BFS's boulder layouts. Walks within
  *  one layout are flooded first, so states represent pushes rather than every
- *  footstep. Boulders are interchangeable; the entire reachable player region
- *  is part of the key, preserving one-way ledge behaviour. Inputs stay intact. */
+ *  footstep. Boulders are interchangeable; reachable arrivals and standing
+ *  tiles are part of the key, preserving ledges and terminal warps. Inputs stay intact. */
 export function reachableBoulderTiles(
   map: MapRuntime, boulders: readonly BoulderPosition[], player: BoulderPosition,
   opts: BoulderPuzzleOptions = {},
@@ -58,10 +58,14 @@ export function reachableBoulderTiles(
   const occupied = opts.occupied ?? ((x: number, y: number) => npcs.has(key(x, y)));
   const walkRegion = (terrain: MapRuntime, start: BoulderPosition, blocked: (x: number, y: number) => boolean) => {
     const region = new Set<string>();
+    // Arriving at a forced warp is reachable, but cannot be a walking or
+    // pushing position. A loaded entrance remains a valid starting position.
+    const stands = new Set<string>();
     const onWater = (x: number, y: number) => !!tileProps(tileAt(terrain, x, y)).water;
     if ((!isWalkable(terrain, start.x, start.y) && !(opts.rafting && inBounds(terrain, start.x, start.y) &&
-      onWater(start.x, start.y) && !terrain.solid.has(key(start.x, start.y)))) || blocked(start.x, start.y)) return region;
+      onWater(start.x, start.y) && !terrain.solid.has(key(start.x, start.y)))) || blocked(start.x, start.y)) return { region, stands };
     region.add(key(start.x, start.y));
+    stands.add(key(start.x, start.y));
     const walks = [start];
     for (let i = 0; i < walks.length; i++) {
       const p = walks[i];
@@ -71,14 +75,18 @@ export function reachableBoulderTiles(
             ? tryRaftMove(terrain, x, y, d, onWater(x, y), true, blocked)
             : tryMove(terrain, x, y, d, blocked);
           return move.kind === "mount" ? { kind: "walk", x: move.x, y: move.y } : move;
-        }, (x, y) => !!tileProps(tileAt(terrain, x, y)).slide);
+        }, (x, y) => !!tileProps(tileAt(terrain, x, y)).slide && !warpAt(terrain, x, y));
         const move = path.at(-1);
-        if (!move || region.has(key(move.x, move.y))) continue;
-        region.add(key(move.x, move.y));
+        if (!move) continue;
+        const cell = key(move.x, move.y);
+        region.add(cell);
+        if (warpAt(terrain, move.x, move.y) && (!isMatWarp(terrain, move.x, move.y) || dir === "down")) continue;
+        if (stands.has(cell)) continue;
+        stands.add(cell);
         walks.push({ x: move.x, y: move.y });
       }
     }
-    return region;
+    return { region, stands };
   };
   // Once every potentially reachable tile has been seen, no further layouts
   // can improve the answer. This avoids exhausting free boulder arrangements.
@@ -87,7 +95,7 @@ export function reachableBoulderTiles(
   for (let y = 0; y < map.h; y++) for (let x = 0; x < map.w; x++) {
     if (tileAt(map, x, y) === "pit") allFilled.add(key(x, y));
   }
-  const potential = walkRegion({ ...map, filled: allFilled }, player, occupied);
+  const potential = walkRegion({ ...map, filled: allFilled }, player, occupied).region;
   const reached = new Set<string>();
   const seen = new Set<string>();
   const queue: { stones: BoulderPosition[]; player: BoulderPosition; filled: Set<string> }[] = [
@@ -98,9 +106,9 @@ export function reachableBoulderTiles(
     const terrain = { ...map, filled: state.filled };
     const at = new Set(state.stones.map((b) => key(b.x, b.y)));
     const blocked = (x: number, y: number) => at.has(key(x, y)) || occupied(x, y);
-    const region = walkRegion(terrain, state.player, blocked);
+    const { region, stands } = walkRegion(terrain, state.player, blocked);
     if (!region.size) continue;
-    const signature = [...at].sort().join(";") + "|" + [...state.filled].sort().join(";") + "|" + [...region].sort().join(";");
+    const signature = [at, state.filled, region, stands].map((cells) => [...cells].sort().join(";")).join("|");
     if (seen.has(signature)) continue;
     seen.add(signature);
     for (const tile of region) reached.add(tile);
@@ -111,7 +119,7 @@ export function reachableBoulderTiles(
       for (const dir of Object.keys(DIRS) as Dir[]) {
         const { dx, dy } = DIRS[dir];
         const stand = { x: b.x - dx, y: b.y - dy };
-        if (!region.has(key(stand.x, stand.y))) continue;
+        if (!stands.has(key(stand.x, stand.y))) continue;
         const push = tryPushBoulder(terrain, b, dir, true, blocked);
         if (push.kind !== "push" && push.kind !== "fill") continue;
         const stones = push.kind === "fill" ? state.stones.filter((_, j) => j !== i)

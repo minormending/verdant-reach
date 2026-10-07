@@ -13,6 +13,7 @@ export const glasshouse_relay: MapDef = {
   name: "ROOT RELAY",
   outdoor: false,
   music: "root_relay",
+  musicWhen: [{ when: when({ ch8_started: true, beat_wren: false }), music: "rootstock_appears" }],
   border: "void",
   legend: LEGEND,
   tiles: [

@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 /** Exercise the real battle scene, menus, item screens and input driver. This
- * supplements (does not replace) the browser's full 99-beat playthrough. */
+ * supplements (does not replace) the browser's full 126-beat playthrough. */
 async function fight(seed: number, wounded = false, active = 0, trainer: TrainerId = "flora") {
   const originalConsole = { log: console.log, warn: console.warn, error: console.error };
   vi.resetModules();
@@ -97,6 +97,6 @@ it("selects the active party member when healing a helper outside slot zero", as
   expect(result.texts).toContain("[battle] RED CHILI recovered 60 HP!");
 });
 
-it.each(["saguaro", "reyes"] as const)("drives %s with the story helper and seed 1", async (trainer) => {
+it.each(["saguaro", "reyes", "calloway", "signe"] as const)("drives %s with the story helper and seed 1", async (trainer) => {
   await fight(1, false, 0, trainer);
 });

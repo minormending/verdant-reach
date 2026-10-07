@@ -13,6 +13,15 @@ function room(tiles: string[]): MapDef {
 }
 
 describe("ICE reachability validation", () => {
+  it("reaches an intermediate ice warp as a stop in both directions of validation", () => {
+    const map = room(["#######", "#.III.#", "#######"]);
+    map.warps = [{ x: 3, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    const g = grid(map);
+    expect(flood(g, [{ x: 1, y: 1 }]).has("3,1")).toBe(true);
+    expect(canReach(g, [{ x: 3, y: 1 }]).has("1,1")).toBe(true);
+    expect(canReach(g, [{ x: 3, y: 1 }]).has("5,1")).toBe(true);
+  });
+
   it("provides distinct legend characters for ice and snow", () => {
     expect(Object.values(LEGEND)).toContain("ice");
     expect(Object.values(LEGEND)).toContain("snow");

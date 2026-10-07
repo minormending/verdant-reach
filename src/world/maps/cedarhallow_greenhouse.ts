@@ -13,6 +13,9 @@ export const cedarhallow_greenhouse = greenhouseMap(
     "WYpgrrrgpPW",
     "WWWWWEWWWWW",
   ], { to: "cedarhallow", x: 6, y: 17 },
-  { script: "ch5_gh_visitor", sprite: "hiker", x: 3, y: 5 },
+  { script: "ch5_gh_visitor", sprite: "forager", x: 3, y: 5 },
 );
-export const scripts: Scripts = { ch5_gh_visitor: [say("TODO(text): ch5_gh_visitor")] };
+export const scripts: Scripts = { ch5_gh_visitor: [
+  say("Came up ROUTE 6 by night. GHOST PIPES all along the trail, pale as candles."),
+  say("No green in them at all. They don't need the sun one bit."),
+] };

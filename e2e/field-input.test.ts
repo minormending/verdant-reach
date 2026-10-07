@@ -328,3 +328,479 @@ it("selects the caught vine through the trader's party filter and finishes POLLY
     expect(e2e.report.issues).toEqual([]);
   } finally { stop(); }
 });
+
+it("routes between real ICE slide stops to SIGNE and back without turning mid-slide", async () => {
+  const { ctx, e2e, drive, stop } = await setup("larchmere_conservatory", 7, 18);
+  Object.assign(ctx.state.flags, { lake_calmed: true, beat_jr_flurry: true, beat_jr_hoarfrost: true });
+  const driver = (window as unknown as { __t: { step(d: string): Promise<void> } }).__t;
+  const moves: { dir: string; from: string; to: string }[] = [];
+  const step = driver.step;
+  vi.spyOn(driver, "step").mockImplementation(async (dir) => {
+    const from = `${ctx.state.position.x},${ctx.state.position.y}`;
+    await step(dir);
+    moves.push({ dir, from, to: `${ctx.state.position.x},${ctx.state.position.y}` });
+  });
+  try {
+    expect(await drive(() => e2e.walkTo(7, 14))).toBe(false); // an intermediate ice cell is no stop
+    expect(await drive(() => e2e.walkTo(7, 3))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ x: 7, y: 3 });
+    expect(moves).toEqual(expect.arrayContaining([
+      { dir: "right", from: "2,14", to: "13,14" },
+      { dir: "left", from: "13,10", to: "2,10" },
+      { dir: "right", from: "2,6", to: "13,6" },
+    ]));
+    expect(await drive(() => e2e.walkTo(7, 18))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ x: 7, y: 18 });
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("stores the last party member through the real LARCHMERE cabinet to make catch room", async () => {
+  const { ctx, e2e, drive, stop } = await setup("larchmere_greenhouse", 5, 7);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = Array.from({ length: 6 }, () => createQuickened(ctx.data, "red_chili", 48, () => 0.5));
+  const last = ctx.state.party[5];
+  try {
+    expect(await drive(() => e2e.makePartyRoom())).toBe(true);
+    expect(ctx.state.party).toHaveLength(5);
+    expect(ctx.state.box).toContain(last);
+    expect(e2e.report.texts.some((t) => /opened the SPECIMEN CABINET/.test(t.text))).toBe(true);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("drives COLD SNAP's real party picker and consumes one item when the bulb grows", async () => {
+  const { ctx, e2e, drive, stop } = await setup("larchmere_conservatory", 7, 3);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5),
+    createQuickened(ctx.data, "snowdrop_bulb", 33, () => 0.5)];
+  ctx.state.bag.cold_snap = 2;
+  const bulb = ctx.state.party[1];
+  try {
+    await drive(() => e2e.growWithItem(1, "cold_snap"));
+    expect(bulb.species).toBe("snowdrop_shoot");
+    expect(ctx.state.bag.cold_snap).toBe(1);
+    expect(ctx.state.herbarium.caught).toContain("snowdrop_shoot");
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("uses Chapter 7's closed gate, raft, bookcase, guarded emitters and files through field input", async () => {
+  const { ctx, e2e, drive, stop } = await setup("larchmere", 17, 28);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  Object.assign(ctx.state.flags, { ch6_done: true, ch7_arrived: true });
+  // Field routing and script prerequisites are the subject here. The real
+  // seeded boss scenes are exercised in battle-scene.test.ts and the suite.
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  vi.spyOn(ctx.assets, "image").mockReturnValue({} as HTMLImageElement);
+  try {
+    expect(await drive(() => e2e.trigger("ch7_cons7_door"))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ map: "larchmere", x: 26, y: 11 });
+    expect(ctx.state.flags.lake_calmed).not.toBe(true);
+    expect(await drive(() => e2e.nav("bloom_lake"))).toBe(true);
+    expect(await drive(() => e2e.walkTo(18, 19))).toBe(true);
+    expect(ctx.state.rafting).toBeUndefined();
+    expect(e2e.report.texts.some((t) => /Ride the LILY RAFT/.test(t.text))).toBe(true);
+    expect(await drive(() => e2e.talkTo("crimson_lily"))).toBe(true);
+    expect(ctx.battle).toHaveBeenCalledWith(expect.objectContaining({ kind: "wild",
+      wild: { species: "giant_water_lily", level: 40, sport: true } }));
+    expect(ctx.state.flags.crimson_lily_done).toBe(true);
+    expect(await drive(() => e2e.nav("larchmere_lodge"))).toBe(true);
+    if (!ctx.state.flags.lodge_grunt_seen) expect(await drive(() => e2e.trigger("ch7_lodge_grunt"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ lodge_grunt_seen: true, beat_grunt_lodge: true });
+    expect(await drive(() => e2e.trigger("ch7_bookcase"))).toBe(true);
+    expect(ctx.state.position.map).toBe("rootstock_hideout_1");
+    for (const n of [1, 2, 3]) {
+      expect(await drive(() => e2e.talkTo(`grunt_b1_${n}`))).toBe(true);
+      expect(await drive(() => e2e.talkTo(`emitter_${n}`))).toBe(true);
+      expect(ctx.state.flags[`emitter_${n}_off`]).toBe(true);
+    }
+    expect(ctx.state.flags.emitters_off).toBe(true);
+    expect(await drive(() => e2e.nav("rootstock_hideout_2"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("calloway"))).toBe(true);
+    expect(ctx.state.flags.calloway_escaped).toBe(true);
+    expect(await drive(() => e2e.trigger("ch7_files"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ files_read: true, lake_calmed: true });
+    expect(await drive(() => e2e.nav("larchmere"))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ x: 30, y: 23 });
+    expect(await drive(() => e2e.nav("larchmere_conservatory"))).toBe(true);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("searches ROUTE 9's snow and returns the real hidden pack for LOST CLIMBER's reward", async () => {
+  const { ctx, e2e, drive, stop } = await setup("route_9", 14, 54);
+  ctx.battle = vi.fn().mockResolvedValue("fled");
+  try {
+    expect(await drive(() => e2e.talkTo("mountaineer"))).toBe(true);
+    expect(ctx.state.flags.quest_lost_climber_started).toBe(true);
+    expect(await drive(() => e2e.walkTo(8, 8))).toBe(true);
+    await drive(async () => { await e2e.press("a"); await e2e.advance(); });
+    expect(ctx.state.flags.hidden_route_9_8_8).toBe(true);
+    expect(ctx.state.bag.climber_pack).toBe(1);
+    expect(await drive(() => e2e.walkTo(8, 40))).toBe(true);
+    const rain = ctx.state.bag.rain_jar ?? 0, cold = ctx.state.bag.cold_snap ?? 0;
+    expect(await drive(() => e2e.talkTo("mountaineer"))).toBe(true);
+    expect(ctx.state.flags.quest_lost_climber_done).toBe(true);
+    expect(ctx.state.bag.climber_pack ?? 0).toBe(0);
+    expect(ctx.state.bag.rain_jar).toBe(rain + 2);
+    expect(ctx.state.bag.cold_snap).toBe(cold + 1);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("walks Chapter 8's keycard gate, Relay floors and C/A/B talks through WREN and MERCER", async () => {
+  const fixture = await setup("glasshouse_greenhouse", 5, 7);
+  const { ctx, e2e, drive, field, stop } = fixture;
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  Object.assign(ctx.state.flags, { ch7_done: true, ch4_done: true, gc_arrival_seen: true,
+    relay_listened: true, ch4_grunt_seen: true });
+  // Exercise real field routing and scripts; seeded battles run in the full
+  // browser suite. These fixtures do not grant any Chapter 8 progression.
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  vi.spyOn(ctx.assets, "image").mockReturnValue({} as HTMLImageElement);
+  try {
+    expect(await drive(() => e2e.nav("glasshouse_city"))).toBe(true);
+    expect(ctx.state.flags.ch8_started).toBe(true);
+    expect(await drive(() => e2e.trigger("ch8_relay_door"))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ map: "glasshouse_city", x: 5, y: 8 });
+    expect(ctx.state.bag.relay_keycard).toBeUndefined();
+    expect(await drive(() => e2e.nav("palm_house"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("director_hiding"))).toBe(true);
+    expect(ctx.state.flags.got_keycard).toBe(true);
+    expect(ctx.state.bag.relay_keycard).toBe(1);
+    expect(await drive(() => e2e.nav("glasshouse_city"))).toBe(true);
+    for (const id of ["grunt_r0_1", "grunt_r0_2"]) {
+      if (!ctx.state.flags[`beat_${id}`]) expect(await drive(() => e2e.talkTo(id))).toBe(true);
+      expect(ctx.state.flags[`beat_${id}`]).toBe(true);
+    }
+    expect(await drive(() => e2e.nav("glasshouse_relay"))).toBe(true);
+    for (const id of ["grunt_r1_1", "grunt_r1_2"]) {
+      if (!ctx.state.flags[`beat_${id}`]) expect(await drive(() => e2e.talkTo(id))).toBe(true);
+      expect(ctx.state.flags[`beat_${id}`]).toBe(true);
+    }
+    expect(await drive(() => e2e.nav("relay_2f"))).toBe(true);
+    for (const id of ["grunt_r2_1", "grunt_r2_2", "grunt_r2_3"]) {
+      if (!ctx.state.flags[`beat_${id}`]) expect(await drive(() => e2e.talkTo(id))).toBe(true);
+      expect(ctx.state.flags[`beat_${id}`]).toBe(true);
+    }
+    expect(await drive(() => e2e.trigger("ch8_patch_note"))).toBe(true);
+    expect(ctx.state.flags.patch_note_read).toBe(true);
+    expect(await drive(() => e2e.nav("relay_3f"))).toBe(true);
+    expect(ctx.state.flags.ch8_bram_met).toBe(true);
+    for (const id of ["grunt_r3_1", "grunt_r3_2"]) {
+      if (!ctx.state.flags[`beat_${id}`]) expect(await drive(() => e2e.talkTo(id))).toBe(true);
+      expect(ctx.state.flags[`beat_${id}`]).toBe(true);
+    }
+    const taps = fieldTaps(fixture);
+    for (const id of ["c", "a", "b"]) {
+      expect(await drive(() => e2e.trigger(`ch8_console_${id}`))).toBe(true);
+      expect(ctx.state.flags.relay_patched ?? false).toBe(id === "b");
+    }
+    expect(taps).toEqual([
+      { x: 11, y: 2, facing: "up", facingFollower: false },
+      { x: 5, y: 2, facing: "up", facingFollower: false },
+      { x: 8, y: 2, facing: "up", facingFollower: false },
+    ]);
+    expect(await drive(() => e2e.nav("relay_roof"))).toBe(true);
+    expect(await drive(() => e2e.trigger("ch8_wren"))).toBe(true);
+    expect(ctx.battle).toHaveBeenCalledWith(expect.objectContaining({ kind: "trainer", trainer: "wren" }));
+    expect(ctx.state.flags).toMatchObject({ beat_wren: true, broadcast_off: true,
+      mercer_seen: true, mercer_left: true, ch8_takeover: false });
+    // NPC overrides and persistent conditions agree after the roof cutscene.
+    expect(field.npcs.filter((n) => ["wren", "mercer"].includes(n.id)).every((n) =>
+      !(field as typeof field & { visible(n: (typeof field.npcs)[number]): boolean }).visible(n))).toBe(true);
+    expect(await drive(() => e2e.nav("relay_2f"))).toBe(true);
+    expect(await drive(() => e2e.walkTo(2, 11))).toBe(true);
+    const money = ctx.state.money, rain = ctx.state.bag.rain_jar ?? 0;
+    await drive(async () => {
+      await e2e.press("down"); // downstairs warp; lobby onEnter starts the reward/end chain
+      expect(await e2e.advance(400, () => !!ctx.state.flags.relay_reward)).toBe(true);
+    });
+    expect(ctx.state.position.map).toBe("glasshouse_relay");
+    expect(ctx.state.money).toBe(money + 3000);
+    expect(ctx.state.bag.rain_jar).toBe(rain + 2);
+    // The reward beat can be recorded before continuing VALE's call/card.
+    expect(ctx.state.flags.ch8_done).not.toBe(true);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it.each(["won", "lost"] as const)("walks the east gate, tumbleweed and BRAM's %s battle into ROOK's conservatory", async (outcome) => {
+  const { ctx, e2e, drive, field, stop } = await setup("glasshouse_city", 37, 23);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  // Only the previous chapter's prerequisites are fixtures. Every Chapter 9
+  // flag below is earned by the real scripts, interactions and movement.
+  Object.assign(ctx.state.flags, { ch8_done: true, ch7_done: true, ch4_done: true,
+    gc_arrival_seen: true, relay_listened: true, ch4_grunt_seen: true });
+  ctx.battle = vi.fn().mockImplementation(async (req) => req.trainer?.startsWith("rival_5_") ? outcome : "won");
+  try {
+    expect(await drive(() => e2e.nav("route_10"))).toBe(true);
+    expect(await drive(() => e2e.nav("thistledown"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ ch9_arrived: true, tumbleweed_seen: true, visited_thistledown: true });
+    expect(await drive(() => e2e.nav("thistledown_house"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("stone_botanist"))).toBe(true);
+    expect(ctx.state.flags.quest_window_panes_started).toBe(true);
+    expect(await drive(() => e2e.nav("route_11"))).toBe(true);
+    // Walking past the southern trainer may start its battle mid-path.
+    expect(await drive(() => e2e.trigger("rival_5"))).toBe(true);
+    expect(ctx.battle).toHaveBeenCalledWith(expect.objectContaining({ kind: "trainer",
+      trainer: expect.stringMatching(/^rival_5_/), canLose: true }));
+    expect(ctx.state.flags.rival_5_done).toBe(true);
+    expect(await drive(() => e2e.nav("sanguine_ridge"))).toBe(true);
+    expect(ctx.state.flags.visited_sanguine_ridge).toBe(true);
+    expect(await drive(() => e2e.nav("sanguine_conservatory"))).toBe(true);
+    expect(await drive(() => e2e.solveSanguinePits())).toBe(true);
+    expect(await drive(() => e2e.talkTo("rook"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ beat_rook: true, got_fig_root: true });
+    expect(ctx.state.marks).toContain("resin_mark");
+    expect(ctx.state.bag.fig_root).toBe(1);
+    expect(await drive(() => e2e.walkTo(8, 18))).toBe(true);
+    await drive(async () => {
+      await e2e.press("down");
+      expect(await e2e.advance(400, () => !!ctx.state.flags.ch9_done)).toBe(true);
+    });
+    expect(ctx.state.flags.slice_done).toBe(true);
+    expect(field.player).toMatchObject({ x: 25, y: 9 });
+    expect(ctx.state.position.map).toBe("sanguine_ridge");
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("fills all three ridge pits with A/YES, consumes the boulders and persists the filled tiles on reentry", async () => {
+  const { ctx, e2e, drive, field, stop } = await setup("sanguine_conservatory", 8, 18);
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  // Keep the exit from ending the chapter; this test concerns pit persistence.
+  ctx.state.flags.rival_5_done = true;
+  const { tileAt } = await import("../src/overworld/map");
+  const runtime = () => (field as typeof field & { map: import("../src/overworld/map").MapRuntime }).map;
+  try {
+    expect(await drive(() => e2e.solveSanguinePits())).toBe(true);
+    expect(ctx.state.position).toMatchObject({ x: 8, y: 3 });
+    expect(e2e.report.texts.filter((t) => t.text === "[?] UPROOT it?")).toHaveLength(3);
+    for (const y of [14, 10, 6]) {
+      expect(ctx.state.flags[`filled_sanguine_conservatory_8_${y}`]).toBe(true);
+      expect(tileAt(runtime(), 8, y)).toBe("filled_pit");
+    }
+    expect(await drive(() => e2e.nav("sanguine_ridge"))).toBe(true);
+    expect(await drive(() => e2e.nav("sanguine_conservatory"))).toBe(true);
+    for (const y of [14, 10, 6]) expect(tileAt(runtime(), 8, y)).toBe("filled_pit");
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("bridges ROUTE 11 by A/YES and walks across it to search the hidden RAIN JAR", async () => {
+  const fixture = await setup("route_11", 18, 34);
+  const { ctx, e2e, drive, stop } = fixture;
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  // A post-chapter save supplies the root, but never the bridge/item flags.
+  ctx.state.bag.fig_root = 1;
+  ctx.state.flags.rival_5_done = true;
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  try {
+    const taps = fieldTaps(fixture);
+    expect(await drive(() => e2e.walkTo(23, 35))).toBe(false);
+    expect(await drive(() => e2e.bridgeRoute11Gap()), JSON.stringify({ position: ctx.state.position,
+      flags: ctx.state.flags, texts: e2e.report.texts, issues: e2e.report.issues })).toBe(true);
+    expect(taps).toContainEqual({ x: 18, y: 35, facing: "right", facingFollower: false });
+    const rain = ctx.state.bag.rain_jar ?? 0;
+    expect(await drive(() => e2e.walkTo(23, 35))).toBe(true);
+    await drive(async () => { await e2e.press("a"); await e2e.advance(); });
+    expect(ctx.state.flags).toMatchObject({ bridged_route_11_19_35: true, hidden_route_11_23_35: true });
+    expect(ctx.state.bag.rain_jar).toBe(rain + 1);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("catches a seeded canyon LITHOPS, grows it with battle EXP and earns WINDOW PANES through its records", async () => {
+  const { ctx, e2e, drive, stop } = await setup("route_11", 3, 35);
+  const { createQuickened } = await import("../src/battle");
+  const helper = createQuickened(ctx.data, "red_chili", 65, () => 0.5);
+  Object.assign(helper, { e2e: true });
+  ctx.state.party = [helper];
+  ctx.state.bag.spring_water = 20;
+  e2e.report.suite = "full";
+  ctx.state.flags.ch8_done = true;
+  ctx.state.flags.ch9_arrived = true;
+  try {
+    // Real grass rolls, wild battle scene, pod menu and catch registration.
+    await drive(() => e2e.catchCoastalPlant("lithops", "route_11", [[3, 35], [4, 35]], "caught canyon LITHOPS", "glass_pod"));
+    expect(e2e.report.beats.at(-1)?.ok, JSON.stringify({ beats: e2e.report.beats, issues: e2e.report.issues,
+      texts: e2e.report.texts, battles: e2e.report.battles })).toBe(true);
+    const stone = ctx.state.party.find((q) => q.species === "lithops_pair");
+    expect(stone).toBeDefined();
+    stone!.exp = ctx.data.expForLevel(ctx.data.species[stone!.species].growthRate, 40) - 5;
+    // Real trainer battle/EXP/growth screens, including BRAM's departure.
+    expect(await drive(() => e2e.trigger("rival_5"))).toBe(true);
+    expect(ctx.state.flags.rival_5_done).toBe(true);
+    expect(stone!.species).toBe("lithops_bloom");
+    expect(ctx.state.herbarium.caught).toEqual(expect.arrayContaining(["lithops_pair", "lithops_bloom"]));
+    expect(await drive(() => e2e.nav("thistledown_house"))).toBe(true);
+    const rain = ctx.state.bag.rain_jar ?? 0, pods = ctx.state.bag.glass_pod ?? 0;
+    expect(await drive(() => e2e.talkTo("stone_botanist"))).toBe(true);
+    expect(ctx.state.flags.quest_window_panes_done).toBe(true);
+    expect(ctx.state.bag.rain_jar).toBe(rain + 2);
+    expect(ctx.state.bag.glass_pod).toBe(pods + 5);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("crosses Route 12 with all four required field moves through real prompts", async () => {
+  const fixture = await setup("sanguine_ridge", 2, 15);
+  const { ctx, e2e, drive, field, stop } = fixture;
+  const { MARKS } = await import("../src/contracts");
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 65, () => 0.5)];
+  ctx.state.flags.ch9_done = true;
+  ctx.state.marks = [...MARKS];
+  ctx.state.bag.fig_root = 1;
+  ctx.state.bag.pruning_shears = 1;
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  try {
+    expect(await drive(() => e2e.nav("route_12"))).toBe(true);
+    const taps = fieldTaps(fixture);
+    for (const [x, y] of [[30, 26], [22, 18], [14, 10]]) {
+      expect(await drive(() => e2e.bridgeRoute12Gap(x, y)), JSON.stringify({x, y, position:ctx.state.position, flags:ctx.state.flags, texts:e2e.report.texts, issues:e2e.report.issues})).toBe(true);
+      expect(ctx.state.flags[`bridged_route_12_${x}_${y}`]).toBe(true);
+      expect(taps).toContainEqual({ x: x + 1, y, facing: "left", facingFollower: false });
+    }
+    expect(await drive(() => e2e.solveRoute12Pits())).toBe(true);
+    expect(e2e.report.texts.filter((t) => t.text === "[?] A narrow gap. ROOT BRIDGE it?")).toHaveLength(3);
+    expect(e2e.report.texts.filter((t) => t.text === "[?] UPROOT it?")).toHaveLength(2);
+    for (const x of [5, 6]) {
+      expect(ctx.state.flags[`filled_route_12_${x}_7`]).toBe(true);
+      expect(taps).toContainEqual({ x, y: 9, facing: "up", facingFollower: false });
+    }
+    expect(await drive(() => e2e.raftRoute12Pond())).toBe(true);
+    expect(taps).toContainEqual({ x: 5, y: 6, facing: "up", facingFollower: false });
+    expect(ctx.state.rafting).toBeUndefined();
+    expect(await drive(() => e2e.pruneRoute12Bramble())).toBe(true);
+    expect(ctx.state.flags.pruned_route_12_3_3).toBe(true);
+    expect(taps).toContainEqual({ x: 4, y: 3, facing: "left", facingFollower: false });
+    expect(await drive(() => e2e.talkTo("marks_warden"))).toBe(true);
+    expect(field.player).toMatchObject({ x: 3, y: 3, facing: "up" });
+    expect(ctx.state.flags.ch10_marks_checked).toBe(true);
+    expect(await drive(() => e2e.nav("council_arboretum"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ ch10_arrived: true, visited_council_arboretum: true });
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("joins BRAM, rematches each admin and listens through all three clearings in both directions", async () => {
+  const fixture = await setup("council_arboretum", 32, 22);
+  const { ctx, e2e, drive, stop } = fixture;
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 65, () => 0.5)];
+  // Only prerequisites from the earlier chapters; all Grove flags are earned.
+  ctx.state.flags.ch10_arrived = true;
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  try {
+    expect(await drive(() => e2e.trigger("ch10_council_door"))).toBe(true);
+    expect(ctx.state.position.map).toBe("council_arboretum");
+    expect(await drive(() => e2e.talkTo("bram_arboretum"))).toBe(true);
+    expect(ctx.state.flags.bram_joined).toBe(true);
+    expect(await drive(() => e2e.nav("elder_grove_1"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("shears_2"))).toBe(true);
+    expect(ctx.state.flags.shears_2_yielded).toBe(true);
+    expect(await drive(() => e2e.nav("elder_grove_2"))).toBe(true);
+    expect(await drive(() => e2e.solveGroveLanes()), JSON.stringify({position:ctx.state.position, flags:ctx.state.flags, texts:e2e.report.texts, issues:e2e.report.issues})).toBe(true);
+    expect(ctx.state.flags.grove_lean).toBe(true);
+    // This grunt is south of the upper lane; talking must return through a
+    // live open lane without accidentally revisiting a listening clearing.
+    expect(await drive(() => e2e.talkTo("grunt_g2_2"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("calloway_2"))).toBe(true);
+    expect(ctx.state.flags.calloway_2_yielded).toBe(true);
+    expect(await drive(() => e2e.nav("elder_grove_3"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("wren_2"))).toBe(true);
+    expect(ctx.state.flags.wren_2_yielded).toBe(true);
+    const q = ctx.state.party[0];
+    q.hp = 1;
+    q.moves[0].pp = 0;
+    expect(await drive(() => e2e.talkTo("bram_ring_3"))).toBe(true);
+    expect(ctx.state.flags.ch10_bram_healed).toBe(true);
+    expect(q.hp).toBe(q.stats.hp);
+    expect(q.moves[0].pp).toBe(ctx.data.moves[q.moves[0].id].pp);
+    expect(await drive(() => e2e.nav("elder_grove_2"))).toBe(true);
+    expect(await drive(() => e2e.solveGroveLanes(false))).toBe(true);
+    expect(ctx.state.flags.grove_lean).toBe(false);
+    expect(await drive(() => e2e.nav("elder_grove_1"))).toBe(true);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("heals in place after the Elder wilts the party and starts a playable retry", async () => {
+  const { ctx, e2e, drive, stop } = await setup("elder_grove_heart", 10, 18);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "oak_acorn", 1, () => 0.5)];
+  Object.assign(ctx.state.flags, { beat_mercer: true, beat_wren_2: true, centuryheart_planted: true });
+  ctx.state.heal = { map: "elder_grove_3", x: 13, y: 2 };
+  ctx.state.money = 1001;
+  const battle = ctx.battle.bind(ctx);
+  const hpAtLoss: number[][] = [];
+  ctx.battle = async (request) => {
+    const outcome = await battle(request);
+    if (outcome === "lost") hpAtLoss.push(ctx.state.party.map((q) => q.hp));
+    return outcome;
+  };
+  try {
+    expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
+    expect(hpAtLoss).toEqual([[0]]);
+    expect(e2e.report.battles.at(-1)?.outcome).toBe("lost");
+    // The Elder's roots mend the party at the heart: no whiteout, no money lost.
+    expect(ctx.state.position.map).toBe("elder_grove_heart");
+    expect(ctx.state.money).toBe(1001);
+    expect(ctx.state.party[0].hp).toBe(ctx.state.party[0].stats.hp);
+    expect(ctx.state.flags.elder_caught).not.toBe(true);
+    const texts = e2e.report.texts.length;
+    expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
+    expect(hpAtLoss).toEqual([[0], [0]]);
+    expect(e2e.report.battles.map((b) => b.outcome)).toEqual(["lost", "lost"]);
+    expect(e2e.report.texts.slice(texts).some((t) => t.text.includes("OAK ACORN used"))).toBe(true);
+    expect(ctx.state.flags.elder_caught).not.toBe(true);
+    expect(ctx.state.money).toBe(1001);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("keeps the Elder after a real uncaught battle and can challenge it again with real pods", async () => {
+  const { ctx, e2e, drive, field, stop } = await setup("elder_grove_heart", 10, 18);
+  const { createQuickened } = await import("../src/battle");
+  const helper = createQuickened(ctx.data, "red_chili", 85, () => 0.5);
+  Object.assign(helper, { e2e: true });
+  ctx.state.party = [helper];
+  Object.assign(ctx.state.flags, { centuryheart_planted: true, beat_mercer: true, beat_wren_2: true });
+  ctx.state.heal = { map: "elder_grove_3", x: 13, y: 2 };
+  e2e.report.suite = "full";
+  const visible = () => {
+    const n = field.npcs.find((n) => n.id === "the_elder")!;
+    return (field as typeof field & { visible(n: typeof n): boolean }).visible(n);
+  };
+  try {
+    // Normal FIGHT input wilts it; no battle outcome or story flag is forced.
+    expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
+    expect(e2e.report.battles.at(-1)?.outcome).toBe("won");
+    expect(ctx.state.flags.elder_caught).not.toBe(true);
+    expect(visible()).toBe(true);
+    e2e.beat("refresh helper before the retry");
+    const before = e2e.report.battles.length;
+    expect(await drive(() => e2e.challengeElder()), JSON.stringify({ battles: e2e.report.battles,
+      issues: e2e.report.issues, position: ctx.state.position })).toBe(true);
+    const attempts = e2e.report.battles.slice(before);
+    expect(attempts.length).toBeGreaterThanOrEqual(1);
+    expect(attempts.length).toBeLessThanOrEqual(2);
+    expect(attempts.every((b) => b.request.kind === "wild" && b.request.wild?.species === "elder"
+      && b.request.wild.level === 60 && b.request.canLose === true && b.outcome)).toBe(true);
+    if (ctx.state.flags.elder_caught) {
+      expect(visible()).toBe(false);
+      expect(ctx.state.herbarium.caught).toContain("elder");
+    } else {
+      expect(attempts).toHaveLength(2);
+      expect(visible()).toBe(true);
+    }
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
