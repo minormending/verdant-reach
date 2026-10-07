@@ -33,10 +33,10 @@ if (!Number.isInteger(speed) || speed < 1 || speed > 16) {
 }
 
 const started = performance.now();
-// The full suite grows each chapter (162 beats through Chapter 9), including
-// real catches, the seized ROOT RELAY, boulder pits and ROOT BRIDGE. Allow
-// room for alternate seeds and the living-stone catch/growth.
-const timeoutMs = timeoutMin ? timeoutMin * 60_000 : Math.max(40 * 60_000, 180 * 60_000 / speed);
+// The full suite grows each chapter (183 beats through Chapter 10), including
+// real catches, ROOT BRIDGE, boulder pits, shifting lanes and the Elder retry.
+// Allow room for alternate seeds and the legendary's low catch rate.
+const timeoutMs = timeoutMin ? timeoutMin * 60_000 : Math.max(50 * 60_000, 240 * 60_000 / speed);
 const reportPath = reportFile ? new URL(reportFile, `file://${process.cwd()}/`) : new URL("./last-report.json", import.meta.url);
 const abort = new AbortController();
 let server;
@@ -95,7 +95,7 @@ try {
     await sleep(1000, undefined, { signal: abort.signal });
   }
   const failures = report.beats.filter((b) => !b.ok).length;
-  if (report.beats.length !== 162) runnerIssues.push(`Expected all 162 beats; received ${report.beats.length}`);
+  if (report.beats.length !== 183) runnerIssues.push(`Expected all 183 beats; received ${report.beats.length}`);
   process.exitCode = failures === 0 && report.issues.length === 0 && runnerIssues.length === 0 ? 0 : 1;
 } catch (error) {
   runnerIssues.push(error.stack ?? String(error));
