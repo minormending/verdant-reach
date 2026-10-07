@@ -4,40 +4,42 @@ import { OUTDOOR, ifFlags, say, type Scripts } from "../build";
 // Living cedars enclose the town. The northern avenue connects the ranger's
 // house (built into a cedar's foot), MORROW's dark glasshouse and THE HOLLOW,
 // the oldest trunk; the southern path serves travellers and branches east
-// toward the fire-scarred stand. Two giant cedars and fern beds frame it.
+// toward the fire-scarred stand. Giant cedars stand between the buildings and
+// along the packed-earth lanes, and the old growth pushes in at the edges, so
+// every view of the town has a trunk in it.
 export const cedarhallow: MapDef = {
   id: "cedarhallow", name: "CEDARHALLOW", outdoor: true, music: "cedarhallow",
   border: "oldgrowth_tree", ambient: "leaves",
-  legend: { ...OUTDOOR, T: "oldgrowth_tree", ".": "moss", "@": "moss", ",": "fern_brush" },
+  legend: { ...OUTDOOR, T: "oldgrowth_tree", ".": "moss", "@": "moss", ":": "dirt" },
   tiles: [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", // 0
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT", // 1
     "TTT.......T..........TT.......TTTTTT", // 2
-    "TT........................@@@@@...TT", // 3
-    "TT...@@@@......@@@@@@.....@@@@@....T", // 4
-    "TT,..@@@@......@@@@@@.....@@@@@....T", // 5
-    "TT,,.@@@@......@@@@@@.....@@@@@....T", // 6
-    "TT,,.@@@@......@@@@@@.....@@@@@...TT", // 7
-    "TT,...::::.6......::....6...::....TT", // 8
+    "TT........@@@........TTT..@@@@@...TT", // 3
+    "TT...@@@@.@@@..@@@@@@.TT..@@@@@....T", // 4
+    "TTT..@@@@.@@@..@@@@@@.....@@@@@....T", // 5
+    "TTTT.@@@@.@@@5.@@@@@@.....@@@@@....T", // 6
+    "TTTT.@@@@......@@@@@@.....@@@@@...TT", // 7
+    "TT....::::.6......::....6...::....TT", // 8
     "TT......::........::........::....TT", // 9
     "TT.5....::::::::::::::::::::::....TT", // 10
-    "TT......::::::::::::::::::::::....TT", // 11
-    "TT......::........::...*....::.5..TT", // 12
-    "T.......::........::........::....TT", // 13
-    "TT..@@@@::........::.....@@@@:....TT", // 14
-    "TT..@@@@::..9.....::.....@@@@:...TTT", // 15
+    "TT......::::::::::::::::::::::.@@@TT", // 11
+    "TT......::....@@@.::.@@@....::.@@@TT", // 12
+    "T.......::....@@@.::.@@@5...::.@@@TT", // 13
+    "TT..@@@@::...5@@@.::.@@@.@@@@:5@@@TT", // 14
+    "TT..@@@@::..9.@@@.::.@@@.@@@@:...TTT", // 15
     "TT..@@@@::........::.....@@@@:....TT", // 16
     "TT.:::::::::::::::::::::::::::::::::", // 17
     "TT.:::::::::::::::::::::::::::::::::", // 18
-    "TT...............::...............TT", // 19
-    "TT...............::...9.......,,,.TT", // 20
-    "TT.@@@...........::..........,,,,.TT", // 21
-    "TT.@@@....*..4...::.........@@@,,.TT", // 22
-    "TT.@@@.....*.....::.........@@@...TT", // 23
-    "TT.@@@......3....::.........@@@...TT", // 24
-    "T................::....5....@@@...TT", // 25
-    "TT,,.............::..............,TT", // 26
-    "TTT,,............::.............TTTT", // 27
+    "TT5..............::...............TT", // 19
+    "TT...............::...9........TTTTT", // 20
+    "TT.@@@...........::.@@@........TTTTT", // 21
+    "TT.@@@....*..4...::.@@@.....@@@.TTTT", // 22
+    "TT.@@@.....*.....::.@@@.....@@@...TT", // 23
+    "TT.@@@..@@@.3....::5@@@.....@@@...TT", // 24
+    "T.......@@@......::....5....@@@.5.TT", // 25
+    "TTTT....@@@......::..............TTT", // 26
+    "TTTTT...@@@5.....::.............TTTT", // 27
     "TTTTTTTTTTTTTTTTT::TTTTTTTTTTTTTTTTT", // 28
     "TTTTTTTTTTTTTTTTT::TTTTTTTTTTTTTTTTT", // 29
   ],
@@ -49,6 +51,12 @@ export const cedarhallow: MapDef = {
     { key: "hollow_trunk", x: 26, y: 3 }, // THE HOLLOW, door 28,7
     { key: "giant_cedar", x: 3, y: 21 },
     { key: "giant_cedar", x: 28, y: 22 },
+    { key: "giant_cedar", x: 14, y: 12 },
+    { key: "giant_cedar", x: 21, y: 12 },
+    { key: "giant_cedar", x: 10, y: 3 },
+    { key: "giant_cedar", x: 31, y: 11 },
+    { key: "giant_cedar", x: 8, y: 24 },
+    { key: "giant_cedar", x: 20, y: 21 },
   ],
   warps: [
     { x: 17, y: 29, to: "route_6", toX: 14, toY: 1, facing: "down" },
