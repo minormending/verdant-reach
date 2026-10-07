@@ -33,9 +33,9 @@ export const rootstock_hideout_1: MapDef = {
     { x: 21, y: 2, to: "rootstock_hideout_2", toX: 2, toY: 13, facing: "up" },
   ],
   npcs: [
-    { id: "emitter_1", sprite: "lever", x: 6, y: 5, facing: "down", script: "ch7_emitter_1" },
-    { id: "emitter_2", sprite: "lever", x: 17, y: 8, facing: "down", script: "ch7_emitter_2" },
-    { id: "emitter_3", sprite: "lever", x: 8, y: 13, facing: "down", script: "ch7_emitter_3" },
+    { id: "emitter_1", stateFlag: "emitter_1_off", sprite: "lever", x: 6, y: 5, facing: "down", script: "ch7_emitter_1" },
+    { id: "emitter_2", stateFlag: "emitter_2_off", sprite: "lever", x: 17, y: 8, facing: "down", script: "ch7_emitter_2" },
+    { id: "emitter_3", stateFlag: "emitter_3_off", sprite: "lever", x: 8, y: 13, facing: "down", script: "ch7_emitter_3" },
     { id: "grunt_b1_1", sprite: "grunt", x: 6, y: 7, facing: "down", trainer: "grunt_b1_1", sight: 1 },
     { id: "grunt_b1_2", sprite: "grunt", x: 17, y: 10, facing: "down", trainer: "grunt_b1_2", sight: 1 },
     { id: "grunt_b1_3", sprite: "grunt", x: 8, y: 15, facing: "down", trainer: "grunt_b1_3", sight: 1 },

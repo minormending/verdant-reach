@@ -26,14 +26,38 @@ export interface HudView {
 
 export const newHud = (): HudView => ({ q: null, visible: false, hp: 0, level: 1, status: null, exp: 0, flash: 0, dx: 0 });
 
-/** Temporary collar art: a 2px ochre band with a 1px black outline at the
- *  lower third of the 56px front. Shares the sprite's scale, drop and clipping. */
+/** The graft collar, drawn over a grafted Quickened's front sprite: a dark
+ *  leather strap with a brass buckle and rivets, clamped round the lower third
+ *  of the 56px front, and a wire splint run up and down through it. Shares the
+ *  sprite's scale, drop and clipping; with a silhouette it draws in that colour.
+ *  (The name predates the art; scene.ts imports it.) */
 export function drawGraftCollarPlaceholder(g: CanvasRenderingContext2D, x: number, y: number, opts: SpriteDrawOpts = {}) {
   const scale = opts.scale ?? 1;
   if (scale <= 0) return;
   const size = Math.max(1, Math.round(56 * scale));
   const dx = Math.round(x + (56 - size) / 2);
   const dy = Math.round(y + 56 - size + (opts.drop ?? 0));
+  // 18x13 pixel map at (19, 33): K outline, h/L/D leather lit/mid/shade,
+  // s stitching, B/b brass lit/shade, R rivet, W/w splint wire lit/shade.
+  const ink: Record<string, string> = {
+    K: "#181818", h: "#a07040", L: "#704828", D: "#40281a", s: "#c09060",
+    B: "#e0b048", b: "#a07818", R: "#f0d890", W: "#d8d8e0", w: "#888898",
+  };
+  const rows = [
+    "..K...........K...",
+    ".KWK.........KWK..",
+    ".KWK.........KwK..",
+    ".KWK.........KwK..",
+    ".KKKKKKKKKKKKKKKK.",
+    "KhWhhhKBBBBKhhWhDK",
+    "KLWsLsKBKKbKsLWsDK",
+    "KLWLRLKBKKbKLRwLDK",
+    "KDwDDDKbbbbKDDwDDK",
+    ".KKKKKKKKKKKKKKKK.",
+    ".KwK.........KwK..",
+    ".KwK.........KwK..",
+    "..K...........K...",
+  ];
   g.save();
   if (opts.clipBottom !== undefined) {
     g.beginPath();
@@ -42,10 +66,18 @@ export function drawGraftCollarPlaceholder(g: CanvasRenderingContext2D, x: numbe
   }
   g.translate(dx, dy);
   g.scale(size / 56, size / 56);
-  g.fillStyle = opts.silhouette ?? "#181818";
-  g.fillRect(0, 36, 56, 4);
-  g.fillStyle = opts.silhouette ?? "#a07840";
-  g.fillRect(1, 37, 54, 2);
+  rows.forEach((row, j) => {
+    for (let i = 0; i < row.length;) {
+      const c = row[i];
+      let n = 1;
+      while (row[i + n] === c) n++;
+      if (c !== ".") {
+        g.fillStyle = opts.silhouette ?? ink[c];
+        g.fillRect(19 + i, 33 + j, n, 1);
+      }
+      i += n;
+    }
+  });
   g.restore();
 }
 

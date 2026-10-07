@@ -149,7 +149,7 @@ The CRIMSON LILY script sets `crimson_lily_done` whatever the outcome
 
 | id | Name | ≈ size | Outdoor | Music (existing) | Ambient | Layout |
 |---|---|---|---|---|---|---|
-| `route_9` | ROUTE 9 | 30×56 | yes | `route` | `leaves` (south) / `mist` | Cedarhallow north avenue (gate NPC `pass_ranger`, `visibleWhen ch6_done=false`) to Larchmere. Larch forest (tree), then scree (rock, ledges), then snow (`snow`). 4 trainers, 2 hidden items (one is the LOST CLIMBER pack). |
+| `route_9` | ROUTE 9 | 30×56 | yes | `route` | `mist` | Cedarhallow north avenue (gate NPC `pass_ranger`, `visibleWhen ch6_done=false`) to Larchmere. Larch forest (tree), then scree (rock, ledges), then snow (`snow`). 4 trainers, 2 hidden items (one is the LOST CLIMBER pack). |
 | `larchmere` | LARCHMERE | 36×30 | yes | `small_town` | `none` | Exits: south to route_9, east to bloom_lake (shore). Greenhouse, market, Lodge (`lodge` structure), Conservatory. Glide landing. |
 | `larchmere_greenhouse` | GREENHOUSE | helper | no | `greenhouse` | — | `greenhouseMap()` |
 | `larchmere_market` | MARKET | like the others | no | `market` | — | Same stock as Saltmarsh (`cold_snap` is never sold). |

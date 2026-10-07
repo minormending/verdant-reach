@@ -39,6 +39,9 @@ export const MUSIC_TRIM: Partial<Record<MusicId, number>> = {
   victory_trainer: 0.95,   // -12.9 -> -13.3
   root_relay: 1.25,        // -19.6 -> -17.7 (a sparse hum and pad: kept under the rest, like the grove)
   palm_house: 1.06,        // -17.5 -> -17.0
+  cedarhallow: 1.12,       // -18.5 -> -17.5 (hushed: a pad, a drone, no drums)
+  burnt_stand: 1.22,       // -19.5 -> -17.8 (sparse and eerie: kept under, like the grove)
+  // hollow: -17.5 untrimmed (the held drone carries it), level with root_relay.
 };
 
 /** Per-effect gain: quiet UI blips up, the long hot ones down. */

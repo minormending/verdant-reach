@@ -252,6 +252,11 @@ describe("Chapter 4", () => {
 
 describe("validator self-check", () => {
   const clone = () => structuredClone(WORLD);
+  it("rejects unknown conditional map music, even when its condition is false", () => {
+    const w = clone();
+    w.maps.glasshouse_relay.musicWhen = [{ when: [{ flag: "unused", is: true }], music: "missing_track" as MapDef["music"] }];
+    expect(validateWorld(w)).toContain("[glasshouse_relay] musicWhen[0] bad music missing_track");
+  });
   it("accepts a static sport battle fixture", () => {
     const w = clone();
     w.scripts.static_sport_fixture = [

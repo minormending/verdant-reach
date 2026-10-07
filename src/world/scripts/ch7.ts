@@ -10,12 +10,10 @@ const cameraReset = (): ScriptCmd => ({ op: "cameraReset", frames: 30 });
 const emitter = (n: number): ScriptCmd[] => [
   ifFlags({ lodge_stair_open: true }, [
     ifFlags({ [`emitter_${n}_off`]: true }, [
-      face(`emitter_${n}`, "up"),
       say("TODO(text): This signal emitter is already silent.", "NARRATOR"),
     ], [
       ifFlags({ [`beat_grunt_b1_${n}`]: true }, [
         say("TODO(text): The emitter forces the lake's plants awake.", "NARRATOR"),
-        face(`emitter_${n}`, "up"),
         { op: "sfx", id: "select" },
         wait(20),
         flag(`emitter_${n}_off`),

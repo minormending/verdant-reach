@@ -47,6 +47,17 @@ describe("ICE movement", () => {
 });
 
 describe("ICE puzzle BFS", () => {
+  it("stops the trace at an intermediate ice warp and reaches it as a solver goal", () => {
+    const def = iceRoom(["#######", "#.III.#", "#######"]);
+    def.warps = [{ x: 3, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    const map = buildMap(def);
+    expect(slidePath(map, 1, 1, "right")).toEqual([
+      { kind: "walk", x: 2, y: 1 }, { kind: "walk", x: 3, y: 1 },
+    ]);
+    expect(reachableIceStops(map, { x: 1, y: 1 }).has("3,1")).toBe(true);
+    expect(solveIcePuzzle(map, { x: 1, y: 1 }, { x: 3, y: 1 })).toBe(true);
+  });
+
   it.each([
     { tiles: ["######", "#.IIS#", "######"], goal: { x: 4, y: 1 }, solves: true },
     { tiles: ["#######", "#.IIII#", "#####I#", "#####.#", "#######"], goal: { x: 5, y: 3 }, solves: true },

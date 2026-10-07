@@ -24,7 +24,7 @@ export const relay_roof: MapDef = {
     { id: "wren", sprite: "wren", x: 7, y: 6, facing: "down", movement: "static", script: "ch8_wren",
       visibleWhen: when({ beat_wren: false }) },
     { id: "mercer", sprite: "gentleman", x: 8, y: 5, facing: "down", movement: "static", script: "ch8_wren_after",
-      visibleWhen: when({ mercer_seen: true }) },
+      visibleWhen: when({ mercer_seen: true, mercer_left: false }) },
   ],
   signs: [],
   triggers: [{ x: 7, y: 7, script: "ch8_wren", when: when({ beat_wren: false }) }],
