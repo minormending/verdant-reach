@@ -1,0 +1,391 @@
+{
+  "schema": "verdant.art-qa/1",
+  "changed_ref": "ch6",
+  "species": {
+    "saguaro_pup": {
+      "crystal": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 errors/0 warnings",
+        "messages": []
+      },
+      "face_risk": {
+        "status": "PASS",
+        "level": "error",
+        "value": 0,
+        "coordinates": []
+      },
+      "size_class": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "baby: 42px/34.8%/1 edges",
+        "extent": 42,
+        "fill": 0.3482142857142857,
+        "edges": 1,
+        "bottom": 55,
+        "com_x": 30.724358974358974,
+        "frame": 0,
+        "frames": [
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "baby: 42px/34.8%/1 edges",
+            "extent": 42,
+            "fill": 0.3482142857142857,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 30.724358974358974,
+            "frame": 0
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "baby: 42px/34.6%/1 edges",
+            "extent": 42,
+            "fill": 0.34566326530612246,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 30.653136531365313,
+            "frame": 1
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "baby: 42px/35.7%/1 edges",
+            "extent": 42,
+            "fill": 0.35682397959183676,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 30.638069705093834,
+            "frame": 2
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "baby: 42px/35.6%/1 edges",
+            "extent": 42,
+            "fill": 0.3561862244897959,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 30.62936436884512,
+            "frame": 3
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "baby: 42px/35.0%/1 edges",
+            "extent": 42,
+            "fill": 0.34980867346938777,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 30.620783956244303,
+            "frame": 4
+          }
+        ]
+      },
+      "grounding": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 55,
+        "frame": 0
+      },
+      "centre_of_mass": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 30.72,
+        "frame": 0
+      },
+      "back_fill": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "63.2%",
+        "fill": 0.6319444444444444
+      },
+      "anim_signature": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "48.3% changed/100.0% inside",
+        "changed": 527,
+        "change_share": 0.4826007326007326,
+        "inside_share": 1.0,
+        "boxes_missing": false
+      },
+      "clone_risk": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 pairs; nearest a/d=8/10",
+        "pairs": []
+      },
+      "silhouette_noise": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "4 tips/0 holes",
+        "protrusions": 4,
+        "holes": 0,
+        "frame": 0
+      },
+      "stage_progression": {
+        "status": "PASS",
+        "level": "error",
+        "value": "first stage"
+      }
+    },
+    "saguaro_column": {
+      "crystal": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 errors/0 warnings",
+        "messages": []
+      },
+      "face_risk": {
+        "status": "PASS",
+        "level": "error",
+        "value": 0,
+        "coordinates": []
+      },
+      "size_class": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "teen: 50px/38.6%/1 edges",
+        "extent": 50,
+        "fill": 0.3861607142857143,
+        "edges": 1,
+        "bottom": 55,
+        "com_x": 30.904211395540877,
+        "frame": 0,
+        "frames": [
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 50px/38.6%/1 edges",
+            "extent": 50,
+            "fill": 0.3861607142857143,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 30.904211395540877,
+            "frame": 0
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 50px/38.4%/1 edges",
+            "extent": 50,
+            "fill": 0.38392857142857145,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 31.04485049833887,
+            "frame": 1
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 50px/38.9%/1 edges",
+            "extent": 50,
+            "fill": 0.3893494897959184,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 30.632268632268634,
+            "frame": 2
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 50px/38.6%/1 edges",
+            "extent": 50,
+            "fill": 0.3861607142857143,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 30.794384805945498,
+            "frame": 3
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 50px/38.5%/1 edges",
+            "extent": 50,
+            "fill": 0.3848852040816326,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 30.980115990057996,
+            "frame": 4
+          }
+        ]
+      },
+      "grounding": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 55,
+        "frame": 0
+      },
+      "centre_of_mass": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 30.9,
+        "frame": 0
+      },
+      "back_fill": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "69.3%",
+        "fill": 0.6927083333333334
+      },
+      "anim_signature": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "20.7% changed/100.0% inside",
+        "changed": 251,
+        "change_share": 0.20726672171758878,
+        "inside_share": 1.0,
+        "boxes_missing": false
+      },
+      "clone_risk": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 pairs; nearest a/d=7/11",
+        "pairs": []
+      },
+      "silhouette_noise": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "2 tips/0 holes",
+        "protrusions": 2,
+        "holes": 0,
+        "frame": 0
+      },
+      "stage_progression": {
+        "status": "PASS",
+        "level": "error",
+        "value": "42->50px/34.8%->38.6%"
+      }
+    },
+    "saguaro": {
+      "crystal": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 errors/0 warnings",
+        "messages": []
+      },
+      "face_risk": {
+        "status": "PASS",
+        "level": "error",
+        "value": 0,
+        "coordinates": []
+      },
+      "size_class": {
+        "status": "WARN",
+        "level": "warn",
+        "value": "adult: 56px/57.7%/2 edges",
+        "extent": 56,
+        "fill": 0.5774872448979592,
+        "edges": 2,
+        "bottom": 55,
+        "com_x": 29.365543898398673,
+        "frame": 0,
+        "frames": [
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/57.7%/2 edges",
+            "extent": 56,
+            "fill": 0.5774872448979592,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 29.365543898398673,
+            "frame": 0
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/56.6%/2 edges",
+            "extent": 56,
+            "fill": 0.5656887755102041,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 29.389515219842163,
+            "frame": 1
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/60.2%/2 edges",
+            "extent": 56,
+            "fill": 0.6017219387755102,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 29.289878113407525,
+            "frame": 2
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/59.1%/2 edges",
+            "extent": 56,
+            "fill": 0.5911989795918368,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 29.307443365695793,
+            "frame": 3
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/57.4%/2 edges",
+            "extent": 56,
+            "fill": 0.5736607142857143,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 29.383546414674818,
+            "frame": 4
+          }
+        ]
+      },
+      "grounding": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 55,
+        "frame": 0
+      },
+      "centre_of_mass": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 29.37,
+        "frame": 0
+      },
+      "back_fill": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "84.1%",
+        "fill": 0.8407118055555556
+      },
+      "anim_signature": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "19.7% changed/100.0% inside",
+        "changed": 356,
+        "change_share": 0.1965764770844837,
+        "inside_share": 1.0,
+        "boxes_missing": false
+      },
+      "clone_risk": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 pairs; nearest a/d=9/16",
+        "pairs": []
+      },
+      "silhouette_noise": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "7 tips/0 holes",
+        "protrusions": 7,
+        "holes": 0,
+        "frame": 0
+      },
+      "stage_progression": {
+        "status": "PASS",
+        "level": "error",
+        "value": "50->56px/38.6%->57.7%"
+      }
+    }
+  },
+  "error_count": 0
+}
