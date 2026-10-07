@@ -2031,6 +2031,11 @@ export async function chapter10() {
     && report.texts.slice(doorTexts).some((t) => t.text.includes("Council has gone to the Grove")));
   await talkTo("bram_arboretum");
   beat("BRAM: joins at the Arboretum", flag("bram_joined"));
+  // Heal at the Arboretum, as a player would: it's also where a whiteout in the Grove returns.
+  await nav("arboretum_greenhouse");
+  await talkTo("keeper");
+  beat("ARBORETUM GREENHOUSE: heal before the Grove", ctx().state.heal.map === "arboretum_greenhouse");
+  await nav("council_arboretum");
   beat("GROVE GATE: defeat the three guards", await defeated(["grunt_arb_1", "grunt_arb_2", "grunt_arb_3"]));
 
   await nav("elder_grove_1");
