@@ -18,7 +18,8 @@ import {
 } from "./logic/exp";
 import { applyItem, consumeItem, isMedicine } from "./logic/items";
 import { getItem, getMove, getSpecies, itemName, qName, speciesName, TYPE_NAMES } from "./logic/lookup";
-import { createQuickened } from "./logic/stats";
+import { calcStats, createQuickened, trainerIvs } from "./logic/stats";
+import { finishWandererBattle, wandererFlees, wandererHealth, WANDERER_LEVEL } from "../overworld/roaming";
 import { createTrainerQuickened, graftCollarText } from "./logic/trainer";
 import {
   drawBackdrop, drawEnemyHud, drawGraftCollarPlaceholder, drawHudBacking, drawPlayerHud, drawPodRow, drawStatWindow, drawTrainer, drawVersusBanner, newHud,
@@ -378,7 +379,14 @@ class BattleScene implements Scene {
         console.error("[battle] wild battle without a species");
         return "fled";
       }
-      const foe = createQuickened(this.data, req.wild.species, req.wild.level, ctx.rng);
+      const foe = createQuickened(this.data, req.wanderer ?? req.wild.species, req.wanderer ? WANDERER_LEVEL : req.wild.level, ctx.rng);
+      if (req.wanderer) {
+        foe.ivs = trainerIvs();
+        foe.stats = calcStats(getSpecies(this.data, foe.species), foe.ivs, foe.evs, foe.level);
+        const health = wandererHealth(ctx.state, req.wanderer);
+        foe.hp = health.hp;
+        foe.status = health.status;
+      }
       foe.sport = req.wild.sport ?? foe.sport;
       foeParty = [foe];
     }
@@ -408,6 +416,9 @@ class BattleScene implements Scene {
       const events = resolveTurn(this.s, pAction, fAction, ctx.rng);
       await this.play(events);
       outcome = await this.afterTurn();
+    }
+    if (req.kind === "wild" && req.wanderer) {
+      Object.assign(ctx.state, finishWandererBattle(ctx.state, req.wanderer, this.foe(), outcome, new Date()));
     }
     await this.ending(outcome);
     return outcome;
@@ -1071,6 +1082,13 @@ class BattleScene implements Scene {
     }
     if (me.hp <= 0) {
       if (!canContinue(this.party)) return "lost";
+    }
+    if (this.req.wanderer && wandererFlees(this.s.wild, this.s.turn, foe.hp, null)) {
+      this.ctx.audio.playSfx("run");
+      await this.say(`${qName(this.data, foe)} fled!`, "wait");
+      return "fled";
+    }
+    if (me.hp <= 0) {
       const r = await this.forcedSwitch();
       if (r) return r;
     }

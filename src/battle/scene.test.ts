@@ -8,6 +8,10 @@ import { sendOutFoe, type BattleState } from "./logic/battle";
 import { createQuickened } from "./logic/stats";
 import { seeded } from "./logic/rng";
 import { createBattleScene } from "./scene";
+import { newGameState } from "../save";
+import { WORLD } from "../world";
+import { type BattleEvent } from "./logic/battle";
+import { wandererHealth } from "../overworld/roaming";
 
 vi.mock("./hud", async (original) => ({
   ...await original<typeof import("./hud")>(), drawGraftCollarPlaceholder: vi.fn(),
@@ -24,7 +28,9 @@ interface SceneHarness {
   preload(): Promise<void>;
   intro(): Promise<void>;
   ending(): Promise<void>;
-  chooseAction(): Promise<{ kind: "fled" | "caught" | "pod_failed" }>;
+  chooseAction(): Promise<{ kind: "fled" | "caught" | "pod_failed" } | { kind: "move"; slot: number } | { kind: "switch"; index: number }>;
+  play(events: BattleEvent[]): Promise<void>;
+  awardExp(foe: Quickened): Promise<void>;
   sendOutFoeAnim(text: string): Promise<void>;
   throwPod(item: string): Promise<{ kind: "caught" | "pod_failed" } | null>;
   say(text: string, mode: string): Promise<void>;
@@ -54,18 +60,21 @@ const trainer: TrainerDef = {
   team: [{ species: "great_oak", level: 27, grafted: true }, { species: "oak_sapling", level: 25 }],
 };
 
-async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: boolean; fullParty?: boolean } = {}) {
+async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: boolean; fullParty?: boolean;
+  prepare?: (ctx: GameContext) => void; choice?: (scene: SceneHarness) => ReturnType<SceneHarness["chooseAction"]> } = {}) {
   vi.stubGlobal("window", {});
   const ctx = {
     data: DATA, rng: opts.rng ?? seeded(1), input: {}, timeOfDay: () => "day",
     world: { maps: {}, trainers: { [trainer.id]: trainer } },
     state: {
+      ...newGameState({ world: WORLD }),
       party: [createQuickened(DATA, "great_oak", 27, seeded(10))],
       box: [], position: { map: "route_1" }, playerName: "ROWAN",
       herbarium: { seen: [], caught: [] }, options: {}, bag: { terrarium_pod: 1 },
     },
-    audio: { playSfx() {}, playCry() {}, async playJingle() {} },
+    audio: { playSfx() {}, playMusic() {}, playCry() {}, async playJingle() {} },
   } as unknown as GameContext;
+  opts.prepare?.(ctx);
   if (opts.fullParty) {
     for (let i = 0; i < 5; i++) ctx.state.party.push(createQuickened(DATA, "oak_acorn", 5, seeded(20 + i)));
   }
@@ -73,7 +82,10 @@ async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: b
   scene.preload = vi.fn(async () => {});
   scene.intro = vi.fn(async () => {});
   scene.ending = vi.fn(async () => {});
+  scene.play = vi.fn(async () => {});
+  scene.awardExp = vi.fn(async () => {});
   scene.chooseAction = vi.fn(async () => {
+    if (opts.choice) return opts.choice(scene);
     if (!opts.capture) return { kind: "fled" as const };
     ctx.rng = () => 0; // All capture wobble checks pass, independently of the sport roll.
     return await scene.throwPod("terrarium_pod") ?? { kind: "fled" as const };
@@ -136,6 +148,124 @@ describe("static sport wild battles", () => {
       kind: "wild", wild: { species: "giant_water_lily", level: 40, sport: false },
     }, { rng: () => 0.001 });
     expect(scene.s.sides[1].party[0].sport).toBe(false);
+  });
+});
+
+describe("wanderer battle scene", () => {
+  it.each(["tumbleweed", "coconut", "burr"] as const)("restores %s health, resolves one full turn and writes health back before fleeing", async (id) => {
+    const { ctx, scene, outcome } = await setup({ kind: "wild", wild: { species: id, level: 60 }, wanderer: id }, {
+      rng: () => 0.5,
+      prepare(ctx) {
+        ctx.state.party = [createQuickened(DATA, "great_oak", 100, seeded(10))];
+        Object.assign(wandererHealth(ctx.state, id), { hp: 70, status: "scorch" });
+      },
+      choice: async (scene) => {
+        const foe = scene.s.sides[1].party[0];
+        expect(foe).toMatchObject({ level: 60, hp: 70, status: "scorch" });
+        return { kind: "pod_failed" };
+      },
+    });
+    expect(outcome).toBe("fled");
+    expect(scene.s.turn).toBe(1);
+    expect(scene.chooseAction).toHaveBeenCalledTimes(1);
+    const foe = scene.s.sides[1].party[0];
+    expect(foe.hp).toBeLessThan(70); // residual scorch is applied before fleeing
+    expect(wandererHealth(ctx.state, id)).toMatchObject({ hp: foe.hp, status: foe.status });
+    expect(scene.say).toHaveBeenCalledWith(`${DATA.species[id].name.toUpperCase()} fled!`, "wait");
+    expect(scene.play).toHaveBeenCalledOnce();
+  });
+
+  it("flees after a player switch even if dormant and ROOT TAPped", async () => {
+    const { scene, outcome } = await setup({ kind: "wild", wild: { species: "tumbleweed", level: 60 }, wanderer: "tumbleweed" }, {
+      rng: () => 0.5,
+      prepare(ctx) {
+        ctx.state.party = [createQuickened(DATA, "great_oak", 100, seeded(10)), createQuickened(DATA, "great_oak", 100, seeded(11))];
+        ctx.state.roamers.tumbleweed.status = "dormant";
+      },
+      choice: async (scene) => {
+        scene.s.sides[1].vol.rootTapped = true;
+        return { kind: "switch", index: 1 };
+      },
+    });
+    expect(outcome).toBe("fled");
+    expect(scene.s.sides[0].active).toBe(1);
+    expect(scene.s.turn).toBe(1);
+  });
+
+  it("capture ends the encounter immediately and permanently removes the wanderer", async () => {
+    const { ctx, scene, outcome } = await setup({ kind: "wild", wild: { species: "burr", level: 60 }, wanderer: "burr" }, {
+      capture: true, prepare(ctx) { ctx.state.burr.hp = 1; },
+    });
+    expect(outcome).toBe("caught");
+    expect(scene.s.turn).toBe(0);
+    expect(ctx.state.flags.wanderer_caught_burr).toBe(true);
+    expect(ctx.state.herbarium.caught).toContain("burr");
+    expect(ctx.state.party.at(-1)?.hp).toBe(1);
+    expect(scene.say).not.toHaveBeenCalledWith("BURR fled!", "wait");
+  });
+
+  it("writes back a status inflicted during the first turn", async () => {
+    const { ctx, scene, outcome } = await setup({ kind: "wild", wild: { species: "tumbleweed", level: 60 }, wanderer: "tumbleweed" }, {
+      rng: () => 0.5,
+      prepare(ctx) {
+        const lead = createQuickened(DATA, "great_oak", 100, seeded(10));
+        lead.moves = [{ id: "root_snare", pp: 20 }];
+        ctx.state.party = [lead];
+      },
+      choice: async () => ({ kind: "move", slot: 0 }),
+    });
+    expect(outcome).toBe("fled");
+    expect(scene.s.turn).toBe(1);
+    expect(ctx.state.roamers.tumbleweed.status).toBe("rootbound");
+  });
+
+  it("keeps a player whiteout outcome and still persists wanderer health", async () => {
+    const { ctx, scene, outcome } = await setup({ kind: "wild", wild: { species: "tumbleweed", level: 60 }, wanderer: "tumbleweed" }, {
+      rng: () => 0.5,
+      prepare(ctx) {
+        const lead = createQuickened(DATA, "great_oak", 1, seeded(10));
+        lead.hp = 1; lead.status = "blight";
+        ctx.state.party = [lead];
+        ctx.state.roamers.tumbleweed.status = "blight";
+      },
+      choice: async () => ({ kind: "pod_failed" }),
+    });
+    expect(outcome).toBe("lost");
+    expect(scene.s.turn).toBe(1);
+    expect(ctx.state.roamers.tumbleweed).toMatchObject({ hp: scene.s.sides[1].party[0].hp, status: "blight" });
+    expect(scene.say).not.toHaveBeenCalledWith("TUMBLEWEED fled!", "wait");
+  });
+
+  it("does not make ordinary wild battles flee after their first turn", async () => {
+    let choices = 0;
+    const { scene, outcome } = await setup({ kind: "wild", wild: { species: "oak_acorn", level: 2 } }, {
+      rng: () => 0.5,
+      prepare(ctx) { ctx.state.party = [createQuickened(DATA, "great_oak", 100, seeded(10))]; },
+      choice: async () => ++choices === 1 ? { kind: "pod_failed" } : { kind: "fled" },
+    });
+    expect(outcome).toBe("fled");
+    expect(scene.chooseAction).toHaveBeenCalledTimes(2);
+    expect(scene.s.turn).toBe(1);
+    expect(scene.say).not.toHaveBeenCalledWith("OAK ACORN fled!", "wait");
+  });
+
+  it("wilting from end-of-turn status wins over fleeing and records the real date", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 7, 23, 59));
+    try {
+      const { ctx, scene, outcome } = await setup({ kind: "wild", wild: { species: "coconut", level: 60 }, wanderer: "coconut" }, {
+        rng: () => 0.5,
+        prepare(ctx) {
+          ctx.state.party = [createQuickened(DATA, "great_oak", 100, seeded(10))];
+          Object.assign(ctx.state.roamers.coconut, { hp: 1, status: "blight" });
+        },
+        choice: async () => ({ kind: "pod_failed" }),
+      });
+      expect(outcome).toBe("won");
+      expect(ctx.state.roamers.coconut.hp).toBe(0);
+      expect(ctx.state.wandererWilted?.coconut).toBe("2026-10-07");
+      expect(scene.say).not.toHaveBeenCalledWith("COCONUT fled!", "wait");
+    } finally { vi.useRealTimers(); }
   });
 });
 
