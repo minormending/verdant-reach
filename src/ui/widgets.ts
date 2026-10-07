@@ -3,7 +3,7 @@
 
 import type { GameContext, MarkId, Scene } from "../contracts";
 import { MARKS, SCREEN_H, SCREEN_W, UI, characterPath } from "../contracts";
-import { drawImagePath, hasImage } from "../engine/gfx";
+import { characterFrame, drawImagePath, hasImage } from "../engine/gfx";
 import { currentSessionId, formatDate, formatPlayTime, type SaveEnvelope, type SaveMeta } from "../save";
 import { drawText, drawTextScaled, drawWindow } from "./kit";
 
@@ -148,13 +148,16 @@ export function trainerCard(ctx: GameContext): Promise<void> {
           drawText(g, k, 12, 30 + i * 14, UI.dark);
           rightText(g, v, 108, 30 + i * 14);
         });
-        // portrait: overworld sprite at 2x, gently stepping in place
+        // Portrait: keep the feet at y=62; tall frames fit at 1x instead of 2x.
         g.fillStyle = "#e8f0e0";
         g.fillRect(114, 28, 36, 36);
         g.fillStyle = UI.light;
         g.fillRect(114, 63, 36, 1);
         const col = [0, 1, 0, 2][Math.floor(frame / 30) % 4];
-        drawImagePath(g, ctx.assets, characterPath("player"), col * 16, 0, 16, 16, 116, 30, 32, 32);
+        const [w, h] = characterFrame(ctx.assets, "player");
+        const scale = Math.min(2, Math.floor(32 / w), Math.floor(32 / h));
+        drawImagePath(g, ctx.assets, characterPath("player"), col * w, 0, w, h,
+          132 - w * scale / 2, 62 - h * scale, w * scale, h * scale);
         drawText(g, "PRESSED MARKS", 12, 92, UI.dark);
         for (let i = 0; i < REGION_MARKS; i++) drawMarkSlot(g, ctx, MARKS[i] ?? null, 12 + i * 17, 106);
       },

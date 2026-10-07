@@ -8,6 +8,7 @@ import type { GameContext, MapDef, MapId, Scene, TileKey } from "../contracts";
 import { flood, grid, validateWorld, walkable } from "./validate";
 import { createOverworldScene } from "../overworld";
 import { createQuickened } from "../battle";
+import { characterFrame } from "../engine/gfx";
 
 const COLORS: Partial<Record<TileKey, string>> = {
   grass: "#78c850", tall_grass: "#3f9a3a", flowers: "#e8a0c8", path: "#d8c088", dirt: "#a07848",
@@ -96,7 +97,7 @@ export default function worldDev(ctx: GameContext): Scene {
 
   const canvas = document.createElement("canvas");
   root.appendChild(canvas);
-  render(ctx, map, canvas, scale);
+  renderWorldPreview(ctx, map, canvas, scale);
 
   const list = document.createElement("pre");
   const mine = errors.filter((e) => e.includes(`[${current}]`));
@@ -121,17 +122,23 @@ export default function worldDev(ctx: GameContext): Scene {
   return { update() {}, draw() {} };
 }
 
-function render(ctx: GameContext, map: MapDef, canvas: HTMLCanvasElement, scale: number) {
+export function renderWorldPreview(ctx: GameContext, map: MapDef, canvas: HTMLCanvasElement, scale: number) {
   const T = 16;
   const w = map.tiles[0].length;
   const h = map.tiles.length;
+  // Make room above the map for tall NPCs on its first row, without moving
+  // their feet relative to the map or changing the existing 16x16 overview.
+  const topPadding = map.npcs.reduce((pad, n) =>
+    Math.max(pad, characterFrame(ctx.assets, n.sprite)[1] - (n.y + 1) * T), 0);
   canvas.width = w * T;
-  canvas.height = h * T;
+  canvas.height = h * T + topPadding;
   canvas.style.width = `${w * T * scale}px`;
-  canvas.style.height = `${h * T * scale}px`;
+  canvas.style.height = `${canvas.height * scale}px`;
   canvas.style.imageRendering = "pixelated";
   const g = canvas.getContext("2d")!;
   g.imageSmoothingEnabled = false;
+  g.save();
+  g.translate(0, topPadding);
 
   const gr = grid(map);
   // Mirror the engine's tile choice: an autotile edge variant when the art has
@@ -235,7 +242,8 @@ function render(ctx: GameContext, map: MapDef, canvas: HTMLCanvasElement, scale:
   // npcs
   for (const n of map.npcs) {
     const img = ctx.assets.image(characterPath(n.sprite));
-    if (img) g.drawImage(img, 0, 0, 16, 16, n.x * T, n.y * T, 16, 16);
+    const [fw, fh] = characterFrame(ctx.assets, n.sprite);
+    if (img) g.drawImage(img, 0, 0, fw, fh, n.x * T + (T - fw) / 2, (n.y + 1) * T - fh, fw, fh);
     else {
       g.fillStyle = n.trainer ? "#ff4040" : n.sprite === "item_pickup" ? "#ffd040" : n.visibleWhen ? "#c080ff" : "#ffffff";
       g.beginPath();
@@ -254,4 +262,5 @@ function render(ctx: GameContext, map: MapDef, canvas: HTMLCanvasElement, scale:
       g.stroke();
     }
   }
+  g.restore();
 }

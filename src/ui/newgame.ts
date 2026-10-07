@@ -4,7 +4,7 @@
 import type { CharacterKey, GameContext, Scene, SpeciesId } from "../contracts";
 import { SCREEN_H, SCREEN_W, UI, characterPath, speciesPath } from "../contracts";
 import { clearScenes } from "../engine/core";
-import { Fader, Timers, drawImagePath } from "../engine/gfx";
+import { Fader, Timers, characterFrame, drawImagePath } from "../engine/gfx";
 import { DEFAULT_PLAYER_NAME, beginNewGameSession, loadOptions, newGameState } from "../save";
 import { drawWindow } from "./kit";
 import { nameEntry } from "./nameEntry";
@@ -45,7 +45,11 @@ export async function runNewGame(ctx: GameContext): Promise<void> {
         g.fillRect(53, 17, 54, 54);
         if (portrait.kind === "char") {
           const sheet = characterPath(portrait.key);
-          drawImagePath(g, ctx.assets, sheet, 0, 0, 16, 16, 56, 20, 48, 48);
+          const [w, h] = characterFrame(ctx.assets, portrait.key);
+          // Fit at an integer scale (3x GBC, 1x tall), feet still at y=68.
+          const scale = Math.min(3, Math.floor(48 / w), Math.floor(48 / h));
+          drawImagePath(g, ctx.assets, sheet, 0, 0, w, h,
+            80 - w * scale / 2, 68 - h * scale, w * scale, h * scale);
         } else {
           drawImagePath(g, ctx.assets, speciesPath(portrait.id, "front"), 0, 0, 56, 56, 52, 16);
         }
