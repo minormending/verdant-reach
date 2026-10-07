@@ -173,9 +173,7 @@ describe("Chapter 10 world", () => {
     const calls: string[] = [];
     eachCmd(WORLD.scripts[m.onEnter!], (c) => { if (c.op === "call") calls.push(c.script); });
     expect(calls).toEqual(["ch10_arrival", "ch10_end"]);
-    const fixture = structuredClone(WORLD);
-    fixture.scripts.ch8_arrival = [{ op: "setFlag", flag: "ch8_done" }];
-    expect(validateWorld(fixture)).toEqual([]);
+    expect(validateWorld(WORLD)).toEqual([]);
   });
 
   it("keeps the prescribed boss species, grafts, levels within ±2 and only learned moves", () => {

@@ -162,7 +162,7 @@ Full roster review: `tools/art/review/roster_crystal.png`.
 - **Writing in the game:** an 18-column x 2-line text box, a warm and concise
   voice (docs/STYLE.md), and UPPER-CASE names in dialogue (DR. VALE, BRAM).
 - **Balance:** guarded by `src/battle/logic/balance.test.ts`. Keep it green.
-  Flora (Conservatory 3) is meant to be the hardest boss so far.
+  FLORA (Conservatory 3) is the early difficulty spike; ROOK is the hardest leader.
 - **Process safety:** stop only processes you started yourself. Never kill a
   process by port or PID unless you launched it.
 

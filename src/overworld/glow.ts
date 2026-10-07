@@ -34,11 +34,14 @@ export function glowTiles(w: number, h: number, player: GlowPosition | null, lam
   return Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => bandAt(x, y)));
 }
 
-/** Find active lamp_post tiles through a caller's resolved legend/tile lookup. */
+/** Tiles that light a dark map (2-tile radius each). */
+export const LIGHT_TILES: ReadonlySet<string> = new Set(["lamp_post", "glow_pipe"]);
+
+/** Find active light tiles through a caller's resolved legend/tile lookup. */
 export function glowLamps(w: number, h: number, tile: (x: number, y: number) => string | undefined): GlowPosition[] {
   const lamps: GlowPosition[] = [];
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    if (tile(x, y) === "lamp_post") lamps.push({ x, y });
+    if (LIGHT_TILES.has(tile(x, y) ?? "")) lamps.push({ x, y });
   }
   return lamps;
 }

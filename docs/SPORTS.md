@@ -98,3 +98,26 @@ Round 4 Palm House lines (set in `tools/art/crystal/{orchid,monstera,lotus}.py` 
 | monstera | 'Thai Constellation' | Monstera deliciosa 'Thai Constellation' (a stable tissue-culture sport from Thailand): milky, cream-speckled green leaves, grey-green shade. | `#405848 #b0c8a0 #f8f8f8` |
 | lotus_seed | 'Chawan Basu' | Nelumbo nucifera 'Chawan Basu' (Indian bowl lotus): white petals tipped blush pink; the pink slot (petal, pod flank, roots) goes blush. | `#406050 #f0b8c0 #f8f8f8` |
 | sacred_lotus | 'Alba Grandiflora' | Nelumbo nucifera 'Alba Grandiflora', the great white 'magnolia' lotus: white petals, grey-green leaves. | `#486858 #d0d0c0 #f8f8f8` |
+
+Chapter 5 lodgepole, skunk cabbage and cedar lines (set in `tools/art/crystal/{lodgepole,skunk_cabbage,cedar}.py`; palettes are dark, light, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| lodgepole_cone | 'Chief Joseph' | Pinus contorta var. latifolia 'Chief Joseph' (found wild in Oregon's Wallowa Mountains): green in summer, its needles turn bright gold in winter. Crystal: gold needles, a warm bark and cone brown. | `#805830 #d8c030 #f8f8f8` |
+| lodgepole_seedling | 'Chief Joseph' | Pinus contorta var. latifolia 'Chief Joseph' (found wild in Oregon's Wallowa Mountains): green in summer, its needles turn bright gold in winter. Crystal: gold needles, a warm bark and cone brown. | `#805830 #d8c030 #f8f8f8` |
+| lodgepole_pine | 'Chief Joseph' | Pinus contorta var. latifolia 'Chief Joseph' (found wild in Oregon's Wallowa Mountains): green in summer, its needles turn bright gold in winter. Crystal: gold needles, a warm bark and cone brown. | `#805830 #d8c030 #f8f8f8` |
+| skunk_cabbage_shoot | yellow-green spathe (natural variant; no named form) | No cultivar or named botanical form of Symplocarpus foetidus exists. Wild spathes vary from solid maroon through mottled to almost plain yellow-green, so the sport is that natural yellow-green spathe, kept close to the source. Crystal: an olive-gold spathe, a fresher leaf green. | `#686818 #b0d050 #f8f8f8` |
+| skunk_cabbage | yellow-green spathe (natural variant; no named form) | No cultivar or named botanical form of Symplocarpus foetidus exists. Wild spathes vary from solid maroon through mottled to almost plain yellow-green, so the sport is that natural yellow-green spathe, kept close to the source. Crystal: an olive-gold spathe, a fresher leaf green. | `#686818 #b0d050 #f8f8f8` |
+| cedar_seedling | 'Zebrina' | Thuja plicata 'Zebrina': green sprays banded creamy yellow. Crystal: golden-lime sprays over the same red-brown bark family. | `#884830 #c0c840 #f8f8f8` |
+| red_cedar | 'Zebrina' | Thuja plicata 'Zebrina': green sprays banded creamy yellow. Crystal: golden-lime sprays over the same red-brown bark family. | `#884830 #c0c840 #f8f8f8` |
+
+Chapter 5 ghostpipe and fireweed lines (set in `tools/art/crystal/{ghostpipe,fireweed}.py`; palettes are dark, light, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| ghostpipe_stalk | pink form | the natural pink form of the ghost pipe, Monotropa uniflora (uncommon pink-flushed plants occur in the wild): pale rose wax, a dusky rose shade. | `#985068 #e8b0c8 #f8f8f8` |
+| ghostpipe_nodding | pink form | the natural pink form of the ghost pipe, Monotropa uniflora (uncommon pink-flushed plants occur in the wild): pale rose wax, a dusky rose shade. | `#985068 #e8b0c8 #f8f8f8` |
+| ghost_pipe | pink form | the natural pink form of the ghost pipe, Monotropa uniflora (uncommon pink-flushed plants occur in the wild): pale rose wax, a dusky rose shade. | `#985068 #e8b0c8 #f8f8f8` |
+| fireweed_fluff | f. albiflorum | Chamaenerion angustifolium f. albiflorum, the white-flowered form (it lacks the red pigment): white flowers on green stems and pods. | `#487838 #d0d0c0 #f8f8f8` |
+| fireweed_shoot | f. albiflorum | Chamaenerion angustifolium f. albiflorum, the white-flowered form (it lacks the red pigment): white flowers on green stems and pods. | `#487838 #d0d0c0 #f8f8f8` |
+| fireweed | f. albiflorum | Chamaenerion angustifolium f. albiflorum, the white-flowered form (it lacks the red pigment): white flowers on green stems and pods. | `#487838 #d0d0c0 #f8f8f8` |

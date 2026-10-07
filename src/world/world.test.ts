@@ -4,14 +4,6 @@ import { WORLD } from "./index";
 import type { Cond, MapDef, TileKey } from "../contracts";
 import { checkProgressWithoutPrune, eachCmd, flood, grid, prunable, validateWorld, walkable, wrapText, expandTokens } from "./validate";
 
-// Chapter 8 still has scene stubs; model its completion, as ch9.test.ts does,
-// while proving the later field rewards through their actual scripts.
-const validationFixture = () => {
-  const world = structuredClone(WORLD);
-  world.scripts.ch8_arrival = [{ op: "setFlag", flag: "ch8_done" }];
-  return world;
-};
-
 describe("world data", () => {
   it("glides to the tile below each town's healing-building door", () => {
     const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse", "cedarhallow_greenhouse", "saltmarsh_greenhouse", "driftseed_greenhouse", "larchmere_greenhouse", "thistledown_greenhouse", "sanguine_greenhouse", "arboretum_greenhouse"];
@@ -24,7 +16,7 @@ describe("world data", () => {
     }
   });
   it("passes every structural check", () => {
-    expect(validateWorld(validationFixture())).toEqual([]);
+    expect(validateWorld(WORLD)).toEqual([]);
   });
 
   it("has every contracted map with equal-length rows and valid legend tiles", () => {
@@ -149,7 +141,7 @@ function mapUnder(m: MapDef, f: Record<string, boolean>): MapDef {
 
 describe("PRUNE (field moves)", () => {
   it("never needs PRUNE for required progress", () => {
-    expect(checkProgressWithoutPrune(validationFixture())).toEqual([]);
+    expect(checkProgressWithoutPrune(WORLD)).toEqual([]);
   });
 
   it("gates ROUTE 5 with brambles at both ends: no way through without PRUNE, open with it", () => {
@@ -259,7 +251,12 @@ describe("Chapter 4", () => {
 });
 
 describe("validator self-check", () => {
-  const clone = validationFixture;
+  const clone = () => structuredClone(WORLD);
+  it("rejects unknown conditional map music, even when its condition is false", () => {
+    const w = clone();
+    w.maps.glasshouse_relay.musicWhen = [{ when: [{ flag: "unused", is: true }], music: "missing_track" as MapDef["music"] }];
+    expect(validateWorld(w)).toContain("[glasshouse_relay] musicWhen[0] bad music missing_track");
+  });
   it("accepts a static sport battle fixture", () => {
     const w = clone();
     w.scripts.static_sport_fixture = [

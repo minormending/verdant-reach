@@ -301,59 +301,59 @@ const LIST: HerbariumEntry[] = [
   // Fact: No chlorophyll; food comes from fungi linked to nearby trees' roots.
   // Source: https://www.fs.usda.gov/wildflowers/plant-of-the-week/monotropa_uniflora.shtml
   h("ghostpipe_stalk", "Monotropa uniflora", "Ghost Stalk", 0.08, 0.1,
-    "It listens quietly under the trees. Ghost pipe has no chlorophyll. Fungi linked to nearby trees' roots supply its food."),
+    "It pushes up through the leaf litter, white as a candle. Ghost pipe has no chlorophyll at all. Its food comes from fungi linked to the roots of nearby trees."),
   // Fact: No chlorophyll; food comes from fungi linked to nearby trees' roots.
   // Source: https://www.fs.usda.gov/wildflowers/plant-of-the-week/monotropa_uniflora.shtml
   h("ghostpipe_nodding", "Monotropa uniflora", "Nodding Pipe", 0.15, 0.2,
-    "It nods as if someone below has spoken. Without chlorophyll, ghost pipe gets food from fungi connected to the roots of nearby trees."),
+    "Its one flower hangs its head, as if someone below had spoken. With no chlorophyll, it can't feed on light; fungi linked to the roots of nearby trees feed it instead."),
   // Fact: No chlorophyll; food comes from fungi linked to nearby trees' roots.
   // Source: https://www.fs.usda.gov/wildflowers/plant-of-the-week/monotropa_uniflora.shtml
   h("ghost_pipe", "Monotropa uniflora", "Ghost Pipe", 0.25, 0.4,
-    "It keeps its woodland friends close. Ghost pipe has no chlorophyll; it receives food from fungi linked to nearby trees' roots."),
+    "A clump of waxy stems that seems to listen to the ground. It makes no food of its own: with no chlorophyll, it takes its food from fungi linked to the roots of the trees around it."),
 
   // Fact: Fireweed is one of the first plants to grow back after a forest fire.
   // Source: https://www.fs.usda.gov/wildflowers/plant-of-the-week/chamerion_angustifolium.shtml
   h("fireweed_fluff", "Chamaenerion angustifolium", "Fire Fluff", 0.05, 0.1,
-    "It hurries toward the ash, full of hope. Fireweed is one of the first plants to grow back after a forest fire."),
+    "A wisp of down that drifts toward wherever the ground is blackest. Fireweed is one of the first plants to grow back after a forest fire."),
   // Fact: Fireweed is one of the first plants to grow back after a forest fire.
   // Source: https://www.fs.usda.gov/wildflowers/plant-of-the-week/chamerion_angustifolium.shtml
   h("fireweed_shoot", "Chamaenerion angustifolium", "Fire Shoot", 0.4, 0.6,
-    "It stands bravely where the fire passed. Fireweed is among the first plants to return after a forest fire."),
+    "It shoulders up out of the ash, red-stemmed and stubborn. After a forest fire, fireweed is among the first plants to return."),
   // Fact: Fireweed is one of the first plants to grow back after a forest fire.
   // Source: https://www.fs.usda.gov/wildflowers/plant-of-the-week/chamerion_angustifolium.shtml
   h("fireweed", "Chamaenerion angustifolium", "Fire Bloom", 1.5, 2.5,
-    "It greets the burnt clearing like an old friend. After a forest fire, fireweed is one of the first plants to grow back."),
+    "Its magenta spikes are often the first colour back in a burnt clearing. Fireweed is one of the first plants to grow back after a forest fire."),
 
   // Fact: Many cones are resin-sealed and open only in fire's heat (serotiny).
   // Source: https://www.fs.usda.gov/database/feis/plants/tree/pinconl/all.html
   h("lodgepole_cone", "Pinus contorta", "Sealed Cone", 0.08, 0.2,
-    "It waits, tightly tucked away. Many lodgepole cones are sealed with resin and open only in the heat of a fire, called serotiny."),
+    "Sealed tight, it can sit out the years without a twitch. Many lodgepole cones are glued shut with resin and open only in the heat of a fire, a trick called serotiny."),
   // Fact: Many cones are resin-sealed and open only in fire's heat (serotiny).
   // Source: https://www.fs.usda.gov/database/feis/plants/tree/pinconl/all.html
   h("lodgepole_seedling", "Pinus contorta", "Pine Sprout", 0.5, 1.5,
-    "It takes its first steps through the ash. Many lodgepole cones stay resin-sealed until fire's heat opens them. This is serotiny."),
+    "It sprang from a cone that was waiting for a fire. Many lodgepole cones stay sealed with resin until a fire's heat opens them; this is called serotiny."),
   // Fact: Many cones are resin-sealed and open only in fire's heat (serotiny).
   // Source: https://www.fs.usda.gov/database/feis/plants/tree/pinconl/all.html
   h("lodgepole_pine", "Pinus contorta", "Lodgepole", 8.0, 350,
-    "It holds its ground patiently. Many of its cones are sealed with resin and open only in fire's heat, a trait called serotiny."),
+    "Tall, straight and slim, it keeps its sealed cones in reserve. Many of them are shut with resin and open only in a fire's heat, a trait called serotiny."),
 
   // Fact: Flowers heat well above air temperature and melt surrounding snow.
   // Source: https://en.wikipedia.org/wiki/Symplocarpus_foetidus
   h("skunk_cabbage_shoot", "Symplocarpus foetidus", "Skunk Shoot", 0.15, 0.4,
-    "It seems quite cosy in the cold. Skunk cabbage can heat its own flowers well above the air temperature, melting snow around them."),
+    "Its mottled hood pokes up through the snow, perfectly snug. Skunk cabbage can heat its own flowers well above the air temperature, melting the snow around them."),
   // Fact: Flowers heat well above air temperature and melt surrounding snow.
   // Source: https://en.wikipedia.org/wiki/Symplocarpus_foetidus
   h("skunk_cabbage", "Symplocarpus foetidus", "Skunk Cabbage", 0.6, 3.0,
-    "It offers a warm welcome. Its flowers can become much warmer than the air, melting the snow around them."),
+    "Big bright leaves, a hooded flower, and a smell that earns its name. Its flowers can make themselves far warmer than the air, melting the snow around them."),
 
   // Fact: Western red cedar can live for over a thousand years.
   // Source: https://www.fs.usda.gov/database/feis/plants/tree/thupli/all.html
   h("cedar_seedling", "Thuja plicata", "Cedar Sprout", 0.4, 1.0,
-    "It is in no hurry to grow up. A western red cedar can live for over a thousand years."),
+    "Flat sprays of tiny scale leaves on a thread of a stem. It's in no hurry to grow up: a western red cedar can live for over a thousand years."),
   // Fact: Western red cedar can live for over a thousand years.
   // Source: https://www.fs.usda.gov/database/feis/plants/tree/thupli/all.html
   h("red_cedar", "Thuja plicata", "Ancient Cedar", 12.0, 900,
-    "It listens as though it has all the time in the world. Western red cedars can live for more than a thousand years."),
+    "It listens as though it has all the time in the world, and it may. Western red cedars can live for more than a thousand years."),
 
   // ---------------------------------------------------------------- Chapter 6
   // Fact: Its seeds sprout while still on the parent tree, then drop as long propagules that can float at sea for months.

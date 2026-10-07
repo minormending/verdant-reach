@@ -74,6 +74,8 @@ export interface Grid {
   rafting?: boolean;
   /** NPC occupancy on ice maps; ordinary map validation keeps its existing policy. */
   occupied?: (x: number, y: number) => boolean;
+  /** A step-on warp stops a slide even on ice. */
+  warp?: (x: number, y: number) => boolean;
 }
 
 /** The map's walk grid after the selected field moves become available. */
@@ -88,6 +90,7 @@ export function grid(map: MapDef, opts: { pruned?: boolean; bridged?: boolean; r
       return !!t && !!(TILES[t] as TileProps)?.slide;
     })));
   const npcs = new Set(map.npcs.map((n) => `${n.x},${n.y}`));
+  const warps = new Set(map.warps.map((w) => `${w.x},${w.y}`));
   for (const s of map.structures) {
     const def = STRUCTURES[s.key];
     for (let dy = 0; dy < def.h; dy++) {
@@ -101,6 +104,7 @@ export function grid(map: MapDef, opts: { pruned?: boolean; bridged?: boolean; r
   return {
     w, h, doors, rafting: opts.rafting,
     occupied: hasIce ? (x, y) => npcs.has(`${x},${y}`) : undefined,
+    warp: (x, y) => warps.has(`${x},${y}`),
     tile(x, y) {
       if (x < 0 || y < 0 || x >= w || y >= h) return undefined;
       const t = map.legend[map.tiles[y][x]];
@@ -148,7 +152,7 @@ function gridMove(g: Grid, x: number, y: number, dir: Dir) {
   };
   return slidePathFrom({ x, y }, dir, move, (px, py) => {
     const t = g.tile(px, py);
-    return !!t && !!(TILES[t] as TileProps).slide;
+    return !!t && !!(TILES[t] as TileProps).slide && !g.warp?.(px, py);
   }).at(-1);
 }
 
@@ -668,6 +672,9 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const where = `[${id}]`;
     if (map.id !== id) errs.push(`${where} id mismatch ${map.id}`);
     if (!music.has(map.music)) errs.push(`${where} bad music ${map.music}`);
+    for (const [i, entry] of (map.musicWhen ?? []).entries()) {
+      if (!music.has(entry.music)) errs.push(`${where} musicWhen[${i}] bad music ${entry.music}`);
+    }
     if (!(map.border in TILES)) errs.push(`${where} bad border ${map.border}`);
 
     // rows + legend
@@ -686,9 +693,13 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     if (map.ambient === "fireflies" && !map.outdoor) errs.push(`${where} fireflies indoors never show (night tint is outdoor only)`);
 
     // legendWhen: every override maps a character the map uses to a real tile,
-    // and the swapped-in tiles are checked for reachability like the base map.
+    // but field-move terrain and pits must stay in the base legend so their
+    // progression and persistent cell state cannot depend on story flags.
     for (const [i, lw] of (map.legendWhen ?? []).entries()) {
       for (const [ch, t] of Object.entries(lw.legend)) {
+        if (t === "pit" || (TILES[t] as TileProps | undefined)?.fieldMove) {
+          errs.push(`${where} legendWhen must not introduce field-move or pit tiles (${t})`);
+        }
         if (!(t in TILES)) errs.push(`${where} legendWhen[${i}] '${ch}' -> unknown tile ${t}`);
         if (!(ch in map.legend)) errs.push(`${where} legendWhen[${i}] '${ch}' is not in the base legend`);
         if (!map.tiles.some((row) => row.includes(ch))) errs.push(`${where} legendWhen[${i}] '${ch}' is never used in the tiles`);

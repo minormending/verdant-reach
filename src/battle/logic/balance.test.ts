@@ -200,7 +200,7 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     });
   }
 
-  // Flora is THE difficulty spike: hard, but no starter is walled, and no
+  // Flora is the early difficulty spike: hard, but no starter is walled, and no
   // starter strolls through her either.
   it("flora: a spike, but fair", () => {
     const all = ["flora", "flora_r4", "flora_r3"].flatMap((k) =>
@@ -272,6 +272,11 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     const rates = (id: string) => [id, `${id}_r9`].flatMap((k) =>
       (["oak", "chili", "lily"] as Line[]).map((l) => winRate(l, MILESTONES_R9[k], 300)));
     const rook = rates("rook"), rival = rates("rival_5");
+    const lines: Line[] = ["oak", "chili", "lily"];
+    const signe = Object.values(MILESTONES_R7).filter((m) => m.trainer("oak") === "signe")
+      .flatMap((m) => lines.map((l) => winRate(l, m, 300)));
+    const flora = ["flora", "flora_r4", "flora_r3"]
+      .flatMap((k) => lines.map((l) => winRate(l, MILESTONES_R4[k], 200)));
     const mean = (r: number[]) => r.reduce((a, b) => a + b, 0) / r.length;
     console.log(`rook mean: ${(mean(rook) * 100).toFixed(1)}%; rival_5 mean: ${(mean(rival) * 100).toFixed(1)}%`);
     for (const r of [rook, rival]) {
@@ -283,6 +288,9 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     expect(mean(rival)).toBeGreaterThanOrEqual(0.70);
     expect(mean(rival)).toBeLessThanOrEqual(0.85);
     expect(mean(rook)).toBeLessThan(mean(rival));
+    console.log(`leader ranking: rook ${(mean(rook) * 100).toFixed(1)}%; signe ${(mean(signe) * 100).toFixed(1)}%; flora ${(mean(flora) * 100).toFixed(1)}%`);
+    expect(mean(rook)).toBeLessThan(mean(signe));
+    expect(mean(rook)).toBeLessThan(mean(flora));
   });
 
   for (const id of ["shears_2", "calloway_2", "wren_2", "mercer"]) {
