@@ -96,7 +96,7 @@ export const ch6Scripts: Scripts = {
         wait(30),
         { op: "flash", color: "gold" },
         { op: "sfx", id: "pulse" },
-        { op: "still", image: "bloom" },
+        { op: "still", image: "lantern_tree_healed" },
         say("TODO(text): A glow spreads through the mangrove's branches.", "NARRATOR"),
         wait(40),
         say("TODO(text): Fireflies return and light the harbour.", "NARRATOR"),

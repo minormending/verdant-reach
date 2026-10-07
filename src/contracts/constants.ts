@@ -110,5 +110,5 @@ export const itemIconPath = (id: string) => `assets/items/${id}.png`;
 
 /** 160x144 title screen art and other full-screen UI images. */
 export const uiPath = (name: "title" | "title_logo" | "pod" | "pod_open" | "mark_bramble" | "mark_sundew" | "mark_rose" | "battle_ground"
-  | "seed" | "seed__2" | "seed_big" | "mark_pipe") => // Round 4: Nursery seed — 16x16 party icon (2 frames) and 56x56 summary/sprouting art
+  | "seed" | "seed__2" | "seed_big" | "mark_pipe" | "raft") => // Round 4: Nursery seed — 16x16 party icon (2 frames) and 56x56 summary/sprouting art
   `assets/ui/${name}.png`;

@@ -274,6 +274,8 @@ export const CHARACTERS = [
   // Chapter 5
   "morrow", "shrine_keeper", "ranger", "lumberjack", "forager", "night_gardener",
   "cone_sack",                   // a Rootstock sack of sealed cones (static object)
+  // Chapter 6
+  "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", "island_elder",
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -283,6 +285,7 @@ export const TRAINER_PORTRAITS = [
   "gardener", "schoolkid", "birdwatcher", "hiker", "beekeeper", "florist",
   "flora_vance", "orchardist", "arranger", "researcher", "gentleman", // Round 4
   "morrow", "lumberjack", "forager", "night_gardener", // Chapter 5
+  "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", // Chapter 6
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -350,6 +353,7 @@ export const STILLS = [
   "bloom", "greenhouse_morning", "theft", "grove_taps", "graft_collar", "vale_call",
   "glasshouse_dome", "relay_pulse", // Round 4
   "fire_cone_vision", "morrow_listening", // Chapter 5
+  "lantern_tree_healed", // Chapter 6
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 
