@@ -59,7 +59,6 @@ export const ch8Scripts: Scripts = {
   ch8_relay_enter: [
     ifFlags({ ch8_started: true, beat_wren: false }, [
       flag("ch8_takeover"),
-      { op: "music", id: "rootstock_appears" },
     ], [flag("ch8_takeover", false)]),
     ifFlags({ beat_wren: true, ch8_done: false }, [call("ch8_reward"), call("ch8_end")]),
   ],

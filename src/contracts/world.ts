@@ -27,6 +27,8 @@ export interface MapDef {
   /** Black outside player/lamppost light; the bag's FOXFIRE LANTERN expands player light. */
   dark?: boolean;
   music: MusicId;
+  /** Conditional map tracks. First match wins; otherwise use `music`. */
+  musicWhen?: { when: Cond; music: MusicId }[];
   /** Rows of single characters; `legend` maps each character to a tile. */
   tiles: string[];
   legend: Record<string, TileKey>;

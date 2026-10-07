@@ -113,7 +113,7 @@ describe("Chapter 8 scripts", () => {
     expect(host.movePlayer).toHaveBeenCalledOnce();
     s.enter("glasshouse_relay");
     await run(WORLD.maps.glasshouse_relay.onEnter!);
-    expect(host.ctx.audio.playMusic).toHaveBeenCalledWith("rootstock_appears");
+    expect(host.ctx.audio.playMusic).not.toHaveBeenCalled();
     expect(s.tile("glasshouse_relay", 13, 7)).toBe("stairs_up");
     s.enter("relay_2f");
     await run("ch8_patch_note");

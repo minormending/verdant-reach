@@ -164,7 +164,7 @@ describe("Chapter 8 world", () => {
         const n = m.npcs.find((q) => q.id === id)!;
         expect(checkCond(n.visibleWhen, s.state.flags), id).toBe(!(started && !beaten) && (id !== "flora" || !listened));
       }
-      expect(vi.mocked(s.host.ctx.audio.playMusic).mock.calls).toEqual(started && !beaten ? [["rootstock_appears"]] : []);
+      expect(s.host.ctx.audio.playMusic).not.toHaveBeenCalled();
     }
   });
 
