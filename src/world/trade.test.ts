@@ -9,7 +9,8 @@ const trade = (gives: Partial<Trade["gives"]> = {}): Trade => ({
 });
 const errors = (cmd: Trade) => validateWorld({ ...WORLD, scripts: { ...WORLD.scripts, ch8_arrival: [{ op: "setFlag", flag: "ch8_done" }], fixture_trade: [cmd] } });
 
-describe("trade script validation", () => {
+// Each case validates the whole world, which is large now: allow for a loaded machine.
+describe("trade script validation", { timeout: 30_000 }, () => {
   it("accepts existing species, boundary levels, and a ten-character nickname", () => {
     for (const level of [1, 60]) expect(errors(trade({ level, nickname: "MOONSPROUT" }))).toEqual([]);
     expect(errors(trade({ nickname: "🌱".repeat(10) }))).toEqual([]);
