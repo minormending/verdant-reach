@@ -16,6 +16,7 @@ npm run qa:art -- --all --json /tmp/art-qa-report.json
 npm run qa:art -- --all --strict
 npm run qa:art -- --tiles terrain --json /tmp/tile-qa.json
 npm run qa:art -- --tiles --json /tmp/all-tile-qa.json
+npm run qa:art -- --tiles --patch /tmp/tile-patches.png --changed main
 npm run qa:art -- --all --changed HEAD --json /tmp/changed-art.json
 npm run qa:art:changed
 npm run qa:art -- --sheet /tmp/milestone.png --changed HEAD~1
@@ -109,6 +110,41 @@ at 0, WARN for a nonzero difference up to 16 (including 1–16), and an error
 only above the shared `seam` threshold of 16. North/east/south/west are bits
 1/2/4/8. This exposes existing texture discontinuities without treating every
 small mismatch as an error.
+
+**A seam fix must not introduce a visible per-tile pattern.** Hiding seams
+by stamping the same border into every tile is a regression. Connected
+planks and brick courses should continue their texture across the boundary;
+a four-way-connected wall interior should read as one continuous surface.
+Small residual edge differences up to 16 are acceptable when they read
+better than a grid. Review patches before accepting a numerical improvement.
+
+`grid_artifact` is a warning against the before version (`--changed` ref,
+or `HEAD` when omitted). Repeat mask 15 in a 4×4 block; for ground, repeat
+the base and each alternate instead. It measures absolute Fourier energy
+at the 16px fundamental along both axes and their diagonal combinations
+(frequencies 0 and ±4 in the 64px block, excluding DC). Signals are RGB
+composited over black plus alpha; hidden RGB is ignored. WARN if energy
+increases by more than 75% **and** more than 4 squared channel levels
+(2 levels RMS). JSON includes before/after energy, ratio and delta for
+every frame. Shorter repeating courses, existing regular motifs, and
+quieter textures are not penalized just for being periodic. This heuristic
+can flag a legitimate course change and can miss visible grids; it never
+replaces the patch review or gates the build. New tiles have no comparison.
+
+`qa.py --tiles --patch <out.png> [--changed <ref>]` writes one labelled row
+per changed autotile key or ground key, before on the left and after on the
+right, at nearest-neighbour 2×. Each view is the lead's 5-row × 9-column
+cross: columns 2–6 form the stem and rows 2–3 form the arms (zero-based).
+Masks use N/E/S/W bits and out-of-bounds neighbours count as joined, like
+the game; missing variants fall back to base. Every animation frame and
+ground alternate gets a labelled pair in the same key's row. Alternates
+use a plain repeat so their texture can be inspected independently. The
+comparison defaults to `HEAD`; `--changed` also filters the QA selection.
+Keys are compared by resolved cell pixels and mask/alternate availability,
+not sheet offsets, so a changed sheet does not add unchanged keys. Pack
+tileset overrides and removed/added keys are included; an empty comparison
+gets an explicit labelled PNG. This diagnostic uses base fallback rather
+than the game's position-hashed decorated alternate selection.
 
 `qa:maps` uses Vitest already installed in the repository. It prints a table
 and writes `/tmp/art-qa-maps.json` (override with `ART_QA_MAPS_JSON`). Its five
