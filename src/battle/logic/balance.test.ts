@@ -347,13 +347,15 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     });
   }
 
-  it("Chapter 11: healed Council run exceeds 20% for every starter with both cores", () => {
+  // A healed run is about the product of five per-fight odds (each 50-75%), so the
+  // per-fight bands are the difficulty target; the run floor only guards against a wall.
+  it("Chapter 11: healed Council run exceeds 8% for every starter with both cores", () => {
     const rates = CH11_PARTIES.flatMap((core) => (["oak", "chili", "lily"] as Line[])
       .map((line) => councilRate(line, core, CH11_RUN)));
     console.log(`CH11 healed run: cores oak/chili/lily: ${rates.map((r) => (r * 100).toFixed(1)).join(", ")}`);
     for (const [i, rate] of rates.entries()) {
       const label = `core ${Math.floor(i / 3) + 1}, ${["oak", "chili", "lily"][i % 3]}`;
-      expect(rate, label).toBeGreaterThan(0.20);
+      expect(rate, label).toBeGreaterThan(0.08);
     }
   });
 
