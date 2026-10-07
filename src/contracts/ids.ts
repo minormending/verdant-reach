@@ -181,6 +181,8 @@ export const TILES = {
   bramble_stump:  { walk: true },                // a pruned bramble (drawn where PRUNE cut one)
   root_gap:      { walk: false, fieldMove: "rootbridge" },
   root_bridge:   { walk: true },                // living roots span a bridged gap
+  pit:           { walk: false },               // UPROOT consumes a boulder to fill it
+  filled_pit:    { walk: true },                // filling persists when boulders reset
   paving:         { walk: true },                // city flagstones
   tropical_grass: { walk: true, encounter: "grass" }, // Palm House undergrowth
   orchard_tree:   { walk: false },               // apple trees (canopy group "orchard")

@@ -99,6 +99,8 @@ export const LEGEND: Record<string, TileKey> = {
   "?": "snow",
   "<": "root_gap",
   ">": "root_bridge",
+  "ø": "pit",
+  "Ø": "filled_pit",
 };
 
 /** Outdoor maps: structure footprints sit on grass, so scenery with soft edges

@@ -6,17 +6,23 @@
   "sheet": "sheet.png",
   "columns": 16,
   "tiles": {
-    "ice": {
+    "filled_pit": {
       "base": 0
     },
-    "root_bridge": {
+    "ice": {
       "base": 1
     },
-    "root_gap": {
+    "pit": {
       "base": 2
     },
-    "snow": {
+    "root_bridge": {
       "base": 3
+    },
+    "root_gap": {
+      "base": 4
+    },
+    "snow": {
+      "base": 5
     }
   },
   "credits": "Placeholder (no art yet).",

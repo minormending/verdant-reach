@@ -620,6 +620,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
   const progression = progress(world);
   const rafting = progression.after.enabled.has("raft");
   const bridged = progression.after.enabled.has("rootbridge");
+  const uprooting = progression.after.enabled.has("uproot");
   const stills = new Set<string>(STILLS);
   const species = new Set<string>(SPECIES_IDS);
   // Story items (the contract) plus everything the data owner defines (PLANT FOOD, ...).
@@ -818,7 +819,8 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     // Brambles are optional; root gaps open only after a reachable Fig Root grant.
     // The progress pass also proves acquisition without crossing a root gap.
     const gp = grid(map, { pruned: true, bridged, rafting });
-    const reach = flood(gp, starts);
+    const reach = uprooting && map.npcs.some((n) => n.pushable)
+      ? boulderReach(map, gp, starts) : flood(gp, starts);
     const has = (x: number, y: number) => reach.has(`${x},${y}`);
     const canTalk = (x: number, y: number) => DIRS.some(([dx, dy]) => {
       if (has(x + dx, y + dy)) return true;
@@ -906,7 +908,12 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     // both before the PRUNING SHEARS (brambles solid) and after (brambles cut).
     if (map.warps.length) {
       for (const [gg, from, when] of [[g, flood(g, starts), "before PRUNE"], [gp, reach, "with PRUNE"]] as const) {
-        const canExit = canReach(gg, map.warps);
+        // Solver-reachable pits are filled on the way in. The ordinary terrain
+        // exit check must use those bridges too; reset-layout puzzle checks
+        // separately prove progress with the boulders back at their starts.
+        const exits: Grid = { ...gg, tile: (x, y) => gg.tile(x, y) === "pit" && from.has(`${x},${y}`)
+          ? "filled_pit" : gg.tile(x, y) };
+        const canExit = canReach(exits, map.warps);
         for (const k of from) {
           if (!canExit.has(k)) {
             errs.push(`${where} soft-lock ${when}: no exit from ${k}`);

@@ -1,7 +1,7 @@
 // Pure map logic: tile lookup with borders, structure footprints, and the
 // movement rules (walls, ledges, occupancy). No DOM; unit-tested.
 
-import type { Cond, Dir, MapDef, TileKey, TileProps } from "../contracts";
+import type { Cond, Dir, MapDef, MapId, TileKey, TileProps } from "../contracts";
 import { STRUCTURES, TILES } from "../contracts";
 import { FIELD_MOVE_FX, fieldMoveCells, fieldMoveFlag, fieldMoveOf } from "./fieldmove";
 
@@ -24,14 +24,20 @@ export interface MapRuntime {
   doors: Set<string>;
   /** Active `legendWhen` overrides; refreshed from flags by the overworld. */
   legendOverride?: Record<string, TileKey>;
-  /** Which `legendWhen` entries are active and which field-move cells are cleared
+  /** Which `legendWhen` entries are active, field-move cells cleared and pits filled
    *  ("" = none); changes invalidate tile caches. */
   legendSig?: string;
   /** Cells that may hold a field-move tile, found at build time. */
   fieldCells?: { x: number; y: number }[];
   /** "x,y" of field-move cells cleared by their own move's flag. */
   cleared?: Set<string>;
+  /** Cells that may hold pits, including conditional legends. */
+  pitCells?: { x: number; y: number }[];
+  /** Filled pits persist in flags; separate from temporary boulder layouts. */
+  filled?: Set<string>;
 }
+
+export const filledPitFlag = (map: MapId, x: number, y: number) => `filled_${map}_${x}_${y}`;
 
 /** Recompute flag-dependent legend overrides (cheap; called every frame). */
 export function refreshLegend(m: MapRuntime, flags: Record<string, boolean>): void {
@@ -52,7 +58,15 @@ export function refreshLegend(m: MapRuntime, flags: Record<string, boolean>): vo
     (cleared ??= new Set()).add(key(c.x, c.y));
     sig += `|${move}:${c.x},${c.y}`;
   }
+  let filled: Set<string> | undefined;
+  for (const c of m.pitCells ?? []) {
+    const ch = Array.from(m.def.tiles[c.y])[c.x];
+    if ((merged?.[ch] ?? m.def.legend[ch]) !== "pit" || !flags[filledPitFlag(m.def.id, c.x, c.y)]) continue;
+    (filled ??= new Set()).add(key(c.x, c.y));
+    sig += `|filled:${c.x},${c.y}`;
+  }
   if (sig === m.legendSig) return;
+  m.filled = filled;
   m.cleared = cleared;
   m.legendOverride = merged;
   m.legendSig = sig;
@@ -77,7 +91,12 @@ export function buildMap(def: MapDef): MapRuntime {
     }
   }
   const w = Math.max(0, ...def.tiles.map((r) => Array.from(r).length));
-  return { def, w, h: def.tiles.length, solid, doors, fieldCells: fieldMoveCells(def) };
+  const legends = [def.legend, ...(def.legendWhen ?? []).map((entry) => entry.legend)];
+  const pitCells: { x: number; y: number }[] = [];
+  def.tiles.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (legends.some((legend) => legend[ch] === "pit")) pitCells.push({ x, y });
+  }));
+  return { def, w, h: def.tiles.length, solid, doors, fieldCells: fieldMoveCells(def), pitCells };
 }
 
 export function inBounds(m: MapRuntime, x: number, y: number) {
@@ -98,6 +117,7 @@ export function tileAt(m: MapRuntime, x: number, y: number): TileKey {
     }
     return m.def.border;
   }
+  if (t === "pit" && m.filled?.has(key(x, y))) return "filled_pit";
   if (m.cleared?.has(key(x, y))) {
     const move = fieldMoveOf(t);
     if (move) return FIELD_MOVE_FX[move].cleared;
