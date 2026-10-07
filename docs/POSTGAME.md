@@ -107,7 +107,8 @@ and dialogue as `say("TODO(text): …")`.
 - `state.roamers: Record<"tumbleweed" | "coconut", { map, hp, status }>`
   (save migration).
 - **Movement:** on every map change, each free roamer moves to a random map
-  from its list (seeded RNG), never the player's current map.
+  from its list (seeded RNG). It **may** land on the player's new map: that's
+  how the player meets it, as in Crystal.
 - **Meeting:**
   - when the player's map holds a roamer, a grass encounter (tumbleweed) or
     a water encounter (coconut) is replaced by the roamer with probability
@@ -117,7 +118,7 @@ and dialogue as `say("TODO(text): …")`.
   - HP and status write back afterwards.
 - **BURR:** a separate hook on outdoor map entry (1/8, seeded), placing a
   temporary NPC behind the player, if that tile is walkable and free.
-- **Tests:** movement never lands on the current map; the flee rule; HP
+- **Tests:** movement is seeded and can land on the player's new map; the flee rule; HP
   persistence; caught means gone; wilted means back the next day; BURR's
   placement only on free walkable tiles; save and Continue.
 
