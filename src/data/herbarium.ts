@@ -466,6 +466,42 @@ const LIST: HerbariumEntry[] = [
   // Source: https://en.wikipedia.org/wiki/Utricularia
   h("bladderwort", "Utricularia vulgaris", "Bladderwort", 0.8, 0.2,
     "It never misses its cue. In roughly a millisecond, its little underwater bladders open with a snap and draw prey inside."),
+
+  // ---------------------------------------------------------------- Chapter 9
+  // Fact: Its red resin is called dragon's blood, and it grows an umbrella-shaped crown.
+  // Source: https://en.wikipedia.org/wiki/Dracaena_cinnabari
+  h("dragon_seedling", "Dracaena cinnabari", "Dragon Seed", 0.2, 0.3,
+    "It dreams of standing beside you. Its kind grows an umbrella-shaped crown and has red resin called dragon's blood."),
+  // Fact: Its red resin is called dragon's blood, and it grows an umbrella-shaped crown.
+  // Source: https://en.wikipedia.org/wiki/Dracaena_cinnabari
+  h("dragon_sapling", "Dracaena cinnabari", "Umbrella Pup", 1.5, 12,
+    "It seems proud of its place in your party. Its red resin is named dragon's blood, and its crown grows like an umbrella."),
+  // Fact: Its red resin is called dragon's blood, and it grows an umbrella-shaped crown.
+  // Source: https://en.wikipedia.org/wiki/Dracaena_cinnabari
+  h("dragon_tree", "Dracaena cinnabari", "Dragon Tree", 8, 600,
+    "It welcomes you like an old friend. The red resin is known as dragon's blood, and the crown spreads into an umbrella shape."),
+
+  // Fact: Its huge flowers open at night and last only one night.
+  // Source: https://en.wikipedia.org/wiki/Selenicereus_undatus
+  h("pitaya_cutting", "Selenicereus undatus", "Pitaya Pad", 0.3, 0.4,
+    "It seems to be saving you a surprise. Its huge flowers open at night and last for just that one night."),
+  // Fact: Its huge flowers open at night and last only one night.
+  // Source: https://en.wikipedia.org/wiki/Selenicereus_undatus
+  h("dragon_fruit", "Selenicereus undatus", "Dragon Fruit", 3, 15,
+    "It makes an evening feel like a celebration. Each enormous flower opens after dark, lasting only a single night."),
+
+  // Fact: It grows almost buried, letting light in through translucent windows on its leaf tips.
+  // Source: https://en.wikipedia.org/wiki/Lithops
+  h("lithops_pebble", "Lithops", "Pebble Leaf", 0.02, 0.02,
+    "It seems happy to keep you company. Growing almost buried, it lets light through translucent windows at its leaf tips."),
+  // Fact: It grows almost buried, letting light in through translucent windows on its leaf tips.
+  // Source: https://en.wikipedia.org/wiki/Lithops
+  h("lithops_pair", "Lithops", "Split Stone", 0.03, 0.05,
+    "It feels like a familiar little neighbour. Translucent leaf-tip windows admit light while nearly all of the plant grows buried."),
+  // Fact: It grows almost buried, letting light in through translucent windows on its leaf tips.
+  // Source: https://en.wikipedia.org/wiki/Lithops
+  h("lithops_bloom", "Lithops", "Living Stone", 0.05, 0.1,
+    "It offers a quiet welcome home. Almost buried as it grows, it receives light through the translucent windows on its leaf tips."),
 ];
 
 export const HERBARIUM = Object.fromEntries(LIST.map((e) => [e.species, e])) as Record<SpeciesId, HerbariumEntry>;

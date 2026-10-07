@@ -162,6 +162,11 @@ const LIST: Move[] = [
   m("needle_drop", "Needle Drop", "wood", "physical", 25, 100, 20, "Falling needles strike 2-5 times.", [{ kind: "multi_hit", min: 2, max: 5 }]),
   m("woolly_coat", "Woolly Coat", "frost", "status", 0, null, 15, "Woolly hairs sharply up SP.DEF.", [self("spd", 2)]),
   m("vacuum_trap", "Vacuum Trap", "bug", "physical", 60, 100, 15, "A sudden suction. Strikes first.", [], 1),
+
+  // ------------------------------------------------------------- Chapter 9
+  m("dragon_resin", "Dragon Resin", "dragon", "special", 80, 100, 10, "Red resin heals 1/4 damage dealt.", [{ kind: "drain", fraction: 0.25 }]),
+  m("night_bloom", "Night Bloom", "dragon", "special", 70, 100, 15, "Night bloom hits. Ups SPEED.", [self("spe", 1)]),
+  m("stone_window", "Stone Window", "thorn", "status", 0, null, 15, "Leaf windows up DEF and SP.DEF.", [self("def", 1), self("spd", 1)]),
 ];
 
 export const MOVES: Record<string, Move> = Object.fromEntries(LIST.map((mv) => [mv.id, mv]));

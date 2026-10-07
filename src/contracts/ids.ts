@@ -57,6 +57,10 @@ export const SPECIES_IDS = [
   "larch_seedling", "larch",
   "edelweiss_bud", "edelweiss",
   "bladderwort_sprig", "bladderwort",
+  // Chapter 9
+  "dragon_seedling", "dragon_sapling", "dragon_tree",
+  "pitaya_cutting", "dragon_fruit",
+  "lithops_pebble", "lithops_pair", "lithops_bloom",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 

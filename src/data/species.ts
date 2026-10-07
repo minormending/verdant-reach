@@ -90,6 +90,9 @@ const POLLINATION: Record<string, PollinationGroup[]> = {
   larch: ["woodland"],
   edelweiss: ["meadow"],
   bladderwort: ["carnivore"],
+  dragontree: ["woodland"],
+  pitaya: ["garden", "tropical"],    // no moth group: use moonflower's night-garden groups
+  lithops: ["meadow"],
 };
 
 function sp(d: Def): Species {
@@ -201,6 +204,15 @@ const EDELWEISS: L = [[1, "hoarfrost"], [1, "perfume"], [5, "pollen_puff"], [9, 
   [18, "wind_scatter"], [24, "woolly_coat"], [28, "frost_bloom"], [34, "sunbeam"], [38, "photosynthesise"], [42, "snowdrift"]];
 const BLADDERWORT: L = [[1, "quick_snap"], [1, "nectar_lure"], [5, "dew_drop"], [9, "pad_slap"], [13, "sticky_dew"],
   [17, "undertow"], [21, "digest"], [25, "vacuum_trap"], [30, "snap_trap"], [36, "flood"], [40, "pitfall"]];
+
+// Chapter 9 (wild levels 40-46). Dragon Resin starts at stage 2;
+// pitaya and lithops keep their stage-1 signatures through growth.
+const DRAGONTREE: L = [[1, "dragon_nip"], [1, "sap_seal"], [5, "vine_lash"], [9, "sap_drain"], [13, "root_tap"],
+  [17, "fossil_print"], [22, "leaf_edge"], [25, "red_resin"], [30, "bark_skin"], [36, "sap_spout"], [40, "leaf_gale"], [50, "old_growth"]];
+const PITAYA: L = [[1, "dragon_nip"], [1, "perfume"], [5, "thorn_jab"], [9, "sap_drain"], [13, "nectar_lure"],
+  [17, "red_resin"], [22, "thorn_lash"], [26, "spine_volley"], [30, "night_bloom"], [36, "moonbeam"], [42, "photosynthesise"], [48, "hook_thorns"]];
+const LITHOPS: L = [[1, "thorn_jab"], [1, "curl_up"], [5, "sap_seal"], [9, "burr_hitch"], [13, "bristle"],
+  [17, "spine_volley"], [21, "sap_drain"], [24, "stone_window"], [30, "thorn_lash"], [38, "hook_thorns"], [46, "photosynthesise"]];
 
 const ALL: Species[] = [
   // ------------------------------------------------------------- starters
@@ -605,6 +617,37 @@ const ALL: Species[] = [
   sp({ id: "bladderwort", name: "Bladderwort", line: "bladderwort", stage: 2, types: ["bug", "water"],
     base: st(65, 105, 55, 70, 60, 110), rate: "medium", catchRate: 60, baseExp: 172, ev: { spe: 1, atk: 1 },
     learnset: learn(BLADDERWORT) }),
+
+  // ============================================================== Chapter 9
+  // ------------------------------------------------------------- dragon's blood tree (slow HP/defence/special-defence tank)
+  sp({ id: "dragon_seedling", name: "Dragon Seed", line: "dragontree", stage: 1, types: ["dragon", "wood"],
+    base: st(70, 35, 65, 45, 65, 20), rate: "slow", catchRate: 120, baseExp: 66, ev: { hp: 1 },
+    grows: ["dragon_sapling", vigor(30)], learnset: learn(DRAGONTREE) }),
+  sp({ id: "dragon_sapling", name: "Umbrella Pup", line: "dragontree", stage: 2, types: ["dragon", "wood"],
+    base: st(95, 50, 90, 65, 90, 30), rate: "slow", catchRate: 60, baseExp: 146, ev: { hp: 1, def: 1 },
+    grows: ["dragon_tree", vigor(45)], learnset: learn(DRAGONTREE, [[45, "dragon_resin"]]) }),
+  sp({ id: "dragon_tree", name: "Dragon Tree", line: "dragontree", stage: 3, types: ["dragon", "wood"],
+    base: st(120, 65, 115, 80, 115, 35), rate: "slow", catchRate: 45, baseExp: 210, ev: { hp: 1, def: 1, spd: 1 },
+    learnset: learn(DRAGONTREE, [[45, "dragon_resin"]]) }),
+
+  // ------------------------------------------------------------- pitaya (special attack and speed; night only)
+  sp({ id: "pitaya_cutting", name: "Pitaya Pad", line: "pitaya", stage: 1, types: ["dragon", "thorn"],
+    base: st(50, 40, 40, 75, 45, 70), rate: "medium", catchRate: 120, baseExp: 70, ev: { spa: 1 },
+    activity: "night", grows: ["dragon_fruit", vigor(38)], learnset: learn(PITAYA) }),
+  sp({ id: "dragon_fruit", name: "Dragon Fruit", line: "pitaya", stage: 2, types: ["dragon", "thorn"],
+    base: st(75, 60, 60, 115, 75, 110), rate: "medium", catchRate: 60, baseExp: 184, ev: { spa: 1, spe: 1 },
+    activity: "night", learnset: learn(PITAYA) }),
+
+  // ------------------------------------------------------------- lithops (both defences; very low speed)
+  sp({ id: "lithops_pebble", name: "Pebble Leaf", line: "lithops", stage: 1, types: ["thorn"],
+    base: st(45, 35, 90, 35, 75, 10), rate: "medium", catchRate: 190, baseExp: 64, ev: { def: 1 },
+    activity: "day", grows: ["lithops_pair", vigor(28)], learnset: learn(LITHOPS) }),
+  sp({ id: "lithops_pair", name: "Split Stone", line: "lithops", stage: 2, types: ["thorn"],
+    base: st(60, 50, 120, 45, 110, 15), rate: "medium", catchRate: 75, baseExp: 138, ev: { def: 1, spd: 1 },
+    activity: "day", grows: ["lithops_bloom", vigor(40)], learnset: learn(LITHOPS) }),
+  sp({ id: "lithops_bloom", name: "Living Stone", line: "lithops", stage: 3, types: ["thorn", "bloom"],
+    base: st(75, 65, 140, 55, 135, 20), rate: "medium", catchRate: 45, baseExp: 196, ev: { def: 2, spd: 1 },
+    activity: "day", learnset: learn(LITHOPS, [[1, "pollen_puff"], [34, "sunbeam"]]) }),
 ];
 
 export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;
