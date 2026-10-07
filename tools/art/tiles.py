@@ -1049,7 +1049,9 @@ def wall(mask: int) -> np.ndarray:
         a = PAPER.copy()
         if not n:
             a[0, :] = c("E3")
-            a[1, :] = c("E2")
+            # Keep the lit rim in the existing paper tone, leaving one
+            # quadrant slot for the shared wood trim at connected sides.
+            a[1, :] = c("E1")
         return reduce_quads(a, [("E2", "E1")])
     a = fill("E3")
     if not n:
@@ -2183,11 +2185,16 @@ def check():
 
 
 def build() -> None:
-    bad = check()
+    from tile_edges import join_edges
     from artkit import emit
+    # The papered face and dark cap meet through their existing wood trim.
+    # A single trim hue avoids light corner flecks on the plain cap.
+    out = join_edges(OUT, repeat=("stone_path",), palette=RGBA,
+                     edge_colours={"wall": (c("O2"),)})
+    bad = {k: quad_counts(a) for k, a in out.items() if quad_counts(a) > 4}
     # one bundle per themed tileset (artkit/tilegroups.py); STALE stems simply
     # aren't in OUT any more, so they drop out of the sheets
-    emit.legacy_tiles({stem: to_img(a) for stem, a in OUT.items()}, "tools/art/tiles.py")
+    emit.legacy_tiles({stem: to_img(a) for stem, a in out.items()}, "tools/art/tiles.py")
     review()
     if bad:
         print("over 4 colours/quadrant:", bad)

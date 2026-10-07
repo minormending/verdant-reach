@@ -185,6 +185,8 @@ from artkit import emit as _emit  # noqa: E402
 
 
 def write_tileset(tid: str, name: str, out: dict[str, np.ndarray], order: list[str], tool: str) -> bool:
+    from tile_edges import join_edges
+    out = join_edges(out, palette=RGBA)
     return _emit.tileset(tid, {stem: to_rgba(a) for stem, a in out.items()}, tool=tool, name=name,
                          order=order, credits=CREDITS)
 
