@@ -281,6 +281,35 @@ becomes pack `palette[i]`). A recolour pack therefore needs no images at all.
 - The Art Lab's pack toggles, saved in `localStorage["verdant.artPacks"]`.
 - Packs are listed in `index.json`.
 
+### Local packs
+
+`LOCAL_PACKS` in `tools/art/index.mjs` and `src/art/format.ts` lists private,
+gitignored packs (currently `limezu`; the lists are checked by a test).
+`npm run art:index` excludes them from the committed `public/art/index.json`
+and writes each present pack to `public/art/packs/<id>/index.json` instead.
+The committed index stays byte-identical with or without these local folders.
+`--check` checks both the committed index and any present local pack indexes.
+
+Each local index uses `verdant.artindex/1`, with empty base trees and `legacy`,
+and exactly one entry in `packs`, keyed by its folder id. Pack metadata and
+bundle file lists have the same shape as a committed pack entry. A local pack
+needs `pack.json` like any other pack; indexing never creates absent folders.
+
+At startup the registry tries `art/packs/<id>/index.json` for every local id.
+Available packs join the catalogue and turn on by default before URL or saved
+packs; later packs still win. Missing indexes (404), network errors and invalid
+indexes are silent, leaving the existing base-art fallback unchanged.
+`?art=base` disables local defaults; `?art=base,classic` disables those defaults
+and enables `classic`. `?art=classic,traced` keeps local defaults underneath,
+and `?art=` keeps them on. The Art Lab marks discovered local packs **LOCAL**;
+its saved toggles and Play link preserve explicitly disabled local packs using
+the `base` marker. Compare views still use exactly the packs selected there.
+
+The `limezu` folder is gitignored. No LimeZu pixels or derivatives may enter
+git, including source sheets, cropped bundles or review sheets. See
+`docs/RESTYLE.md` §1 for the licence and local importer plan. Public clones
+and CI use the supported GBC fallback until shipping is decided.
+
 ## 9. Validation (`src/art/bundles.test.ts`, run by `npm test` and CI)
 
 - Every JSON file parses, has the right `format` and matches its folder id.

@@ -12,8 +12,8 @@ import type { ArtImage, Assets, CharacterKey, SpeciesAnim, SpeciesId } from "../
 import { parseSpeciesAnim } from "./anim";
 import { ArtCatalog, LAB_LAYER, type BundleView, type Resolution } from "./catalog";
 import {
-  BUNDLE_KINDS, bundleJsonUrl, emptyIndex, INDEX_FORMAT, rawBundlesOf,
-  type ArtIndex, type BundleKind, type RawBundle,
+  BUNDLE_KINDS, bundleJsonUrl, emptyIndex, INDEX_FORMAT, LOCAL_PACKS, rawBundlesOf,
+  type ArtIndex, type BundleKind, type IndexPack, type RawBundle,
 } from "./format";
 import { recolorRgba } from "./palette";
 import type { Rgba } from "./png";
@@ -22,12 +22,13 @@ import { validateArt, type ValidateResult } from "./validate";
 
 export const PACKS_STORAGE_KEY = "verdant.artPacks";
 
-export interface PackInfo { id: string; name: string; description: string; author: string }
+export interface PackInfo { id: string; name: string; description: string; author: string; local: boolean }
 
 export interface ArtRegistryOptions {
   /** URL prefix of the art tree, relative to the page (default "art/"). */
   artRoot?: string;
-  /** Packs to activate. Default: `?art=a,b` from the URL, else localStorage. */
+  /** Packs after discovered local defaults. `base` disables those defaults.
+   * Default: `?art=a,b` from the URL, else localStorage. */
   packs?: readonly string[];
 }
 
@@ -52,6 +53,18 @@ export function requestedPacks(): string[] {
   }
 }
 
+/** Reject malformed optional indexes before their file lists reach the catalogue. */
+function validIndexPack(pack: unknown): pack is IndexPack {
+  if (!pack || typeof pack !== "object") return false;
+  const p = pack as IndexPack;
+  if (![p.name, p.description, p.author].every((v) => typeof v === "string")) return false;
+  return BUNDLE_KINDS.every((kind) => {
+    const tree = p[kind];
+    return !!tree && typeof tree === "object" && !Array.isArray(tree) &&
+      Object.values(tree).every((files) => Array.isArray(files) && files.every((f) => typeof f === "string"));
+  });
+}
+
 function makeCanvas(w: number, h: number): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = w;
@@ -72,6 +85,7 @@ export class ArtRegistry implements Assets {
 
   private requested: readonly string[] | undefined;
   private active: string[] = [];
+  private local = new Set<string>();
   private initPromise: Promise<void> | null = null;
   private isReady = false;
   private files = new Map<string, FileEntry>();
@@ -109,6 +123,23 @@ export class ArtRegistry implements Assets {
     } catch (e) {
       console.warn(`[art] could not load ${this.artRoot}index.json; using legacy files only`, e);
     }
+    // Optional indexes are deliberately silent: public clones have no private art.
+    const locals = await Promise.all(LOCAL_PACKS.map(async (id) => {
+      try {
+        const res = await fetch(`${this.artRoot}packs/${id}/index.json`, { cache: "no-cache" });
+        if (!res.ok) return null;
+        const json: unknown = await res.json();
+        if (!json || typeof json !== "object" || (json as ArtIndex).format !== INDEX_FORMAT) return null;
+        const pack = (json as ArtIndex).packs?.[id];
+        if (!validIndexPack(pack)) return null;
+        return { id, pack };
+      } catch { return null; }
+    }));
+    for (const entry of locals) {
+      if (!entry) continue;
+      this.index.packs[entry.id] = entry.pack;
+      this.local.add(entry.id);
+    }
     this.raw = await Promise.all(rawBundlesOf(this.index).map(async (r) => {
       const url = bundleJsonUrl(r.kind, r.id, r.pack, this.artRoot);
       try {
@@ -121,9 +152,10 @@ export class ArtRegistry implements Assets {
       }
     }));
     const want = this.requested ?? requestedPacks();
-    const unknown = want.filter((p) => !this.index.packs[p]);
+    const unknown = want.filter((p) => p !== "base" && !this.index.packs[p]);
     if (unknown.length) console.warn(`[art] unknown art pack(s): ${unknown.join(", ")}`);
-    this.active = want.filter((p) => this.index.packs[p]);
+    const defaults = want.includes("base") ? [] : [...this.local].filter((p) => !want.includes(p));
+    this.active = [...new Set([...defaults, ...want.filter((p) => p !== "base" && this.index.packs[p])])];
     this.rebuild();
     this.isReady = true;
     if (this.active.length) console.info(`[art] packs: ${this.active.join(", ")}`);
@@ -267,15 +299,20 @@ export class ArtRegistry implements Assets {
   // ---- packs -------------------------------------------------------------------
 
   packs(): PackInfo[] {
-    return Object.entries(this.index.packs).map(([id, p]) => ({ id, name: p.name, description: p.description, author: p.author }));
+    return Object.entries(this.index.packs).map(([id, p]) => ({ id, name: p.name, description: p.description, author: p.author, local: this.local.has(id) }));
   }
   activePacks(): readonly string[] { return this.active; }
+
+  /** URL/storage selection that preserves local packs disabled in the Art Lab. */
+  packSelection(): readonly string[] {
+    return [...this.local].some((p) => !this.active.includes(p)) ? ["base", ...this.active] : this.active;
+  }
 
   /** Switch packs live (lowest priority first). `persist` saves them for the next boot. */
   setActivePacks(ids: readonly string[], persist = false) {
     this.active = ids.filter((p) => this.index.packs[p]);
     if (persist) {
-      try { localStorage.setItem(PACKS_STORAGE_KEY, JSON.stringify(this.active)); } catch { /* storage unavailable */ }
+      try { localStorage.setItem(PACKS_STORAGE_KEY, JSON.stringify(this.packSelection())); } catch { /* storage unavailable */ }
     }
     this.rebuild();
   }
@@ -289,6 +326,7 @@ export class ArtRegistry implements Assets {
     const r = new ArtRegistry({ artRoot: this.artRoot, packs });
     r.index = this.index;
     r.indexLoaded = this.indexLoaded;
+    r.local = new Set(this.local);
     r.raw = this.raw;
     r.files = this.files;
     r.active = packs.filter((p) => this.index.packs[p]);

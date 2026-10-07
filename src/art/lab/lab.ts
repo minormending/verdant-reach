@@ -204,12 +204,12 @@ export class Lab {
                 this.reg.setActivePacks(next, true);
                 this.toast(`${on ? "Disabled" : "Enabled"} pack ${p.name} (saved for the game too)`);
               },
-            }, p.id);
+            }, p.id, p.local ? h("span", { class: "al-chip pack" }, "LOCAL") : null);
           }))
         : null,
       h("div", { class: "al-spacer" }),
       nOv ? h("button", { class: "al-btn small warn", title: [...ov.bundles, ...ov.files].join("\n"), onclick: () => { this.reg.clearOverrides(); this.toast("Cleared all in-memory edits"); } }, `Revert ${nOv} edit${nOv > 1 ? "s" : ""}`) : null,
-      h("a", { class: "al-btn small", href: location.pathname + (active.length ? `?art=${active.join(",")}` : ""), title: "Back to the game (with the selected packs)" }, "▶ Play"),
+      h("a", { class: "al-btn small", href: location.pathname + (this.reg.packSelection().length ? `?art=${this.reg.packSelection().join(",")}` : ""), title: "Back to the game (with the selected packs)" }, "▶ Play"),
     ]));
   }
 
@@ -242,7 +242,8 @@ export class Lab {
       for (const p of this.reg.packs()) {
         if (q && !`${p.id} ${p.name}`.toLowerCase().includes(q)) continue;
         this.list.append(h("div", { class: `al-item${s.id === p.id ? " on" : ""}`, onclick: () => this.env().go("packs", p.id) },
-          h("div", { class: "name" }, p.name, h("div", { class: "sub" }, p.id, active.includes(p.id) ? " · active" : ""))));
+          h("div", { class: "name" }, p.name, h("div", { class: "sub" }, p.id, active.includes(p.id) ? " · active" : "")),
+          p.local ? h("span", { class: "al-chip pack" }, "LOCAL") : null));
       }
       if (!this.reg.packs().length) this.list.append(h("div", { class: "al-empty" }, "No packs in public/art/packs/."));
       return;

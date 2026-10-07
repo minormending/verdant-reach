@@ -5,6 +5,8 @@ Art bundles (Round 4): every bundle under `public/art/` also carries its own
 imported from). Art packs keep their own credits: see
 `packs/traced/CREDITS.md` for the photo-traced demo pack.
 
+Modern Interiors, Modern Exteriors and Modern UI by LimeZu (limezu.itch.io), used under the LimeZu licence; this art is not included in this repository.
+
 ## Creature sprites
 
 Every Quickened sprite is traced from a real photograph of the plant by the

@@ -27,6 +27,8 @@ import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const INDEX_FORMAT = "verdant.artindex/1";
+// Private, gitignored packs. Keep in sync with src/art/format.ts (tested).
+export const LOCAL_PACKS = ["limezu"];
 
 /** Bundle kinds: folder name -> the JSON file that marks a bundle folder. */
 export const BUNDLE_KINDS = {
@@ -105,15 +107,8 @@ export function buildIndex(publicDir = DEFAULT_PUBLIC) {
   if (isDir(packsDir)) {
     for (const id of sorted(readdirSync(packsDir))) {
       const d = join(packsDir, id);
-      if (!visible(id) || !isDir(d) || !existsSync(join(d, "pack.json"))) continue;
-      let meta = {};
-      try { meta = JSON.parse(readFileSync(join(d, "pack.json"), "utf8")); } catch { meta = {}; }
-      index.packs[id] = {
-        name: typeof meta.name === "string" ? meta.name : id,
-        description: typeof meta.description === "string" ? meta.description : "",
-        author: typeof meta.author === "string" ? meta.author : "",
-        ...scanTree(d),
-      };
+      if (LOCAL_PACKS.includes(id) || !visible(id) || !isDir(d) || !existsSync(join(d, "pack.json"))) continue;
+      index.packs[id] = scanPack(d, id);
     }
   }
   const legacyDir = join(publicDir, "assets");
@@ -131,6 +126,29 @@ export function buildIndex(publicDir = DEFAULT_PUBLIC) {
     index.legacy = sorted(files);
   }
   return index;
+}
+
+function scanPack(dir, id) {
+  let meta = {};
+  try { meta = JSON.parse(readFileSync(join(dir, "pack.json"), "utf8")) ?? {}; } catch { /* empty metadata */ }
+  return {
+    name: typeof meta.name === "string" ? meta.name : id,
+    description: typeof meta.description === "string" ? meta.description : "",
+    author: typeof meta.author === "string" ? meta.author : "",
+    ...scanTree(dir),
+  };
+}
+
+/** Separate indexes with empty base trees and exactly one local pack each. */
+export function buildLocalIndexes(publicDir = DEFAULT_PUBLIC) {
+  const indexes = {};
+  for (const id of LOCAL_PACKS) {
+    const dir = join(publicDir, "art", "packs", id);
+    if (!isDir(dir) || !existsSync(join(dir, "pack.json"))) continue;
+    const emptyTree = Object.fromEntries(Object.keys(BUNDLE_KINDS).map((k) => [k, {}]));
+    indexes[id] = { format: INDEX_FORMAT, ...emptyTree, packs: { [id]: scanPack(dir, id) }, legacy: [] };
+  }
+  return indexes;
 }
 
 /** Stable, diff-friendly text: one line per bundle. */
@@ -168,27 +186,36 @@ export function formatIndex(index) {
   return lines.join("\n") + "\n";
 }
 
-function main(argv) {
-  const publicDir = DEFAULT_PUBLIC;
+export function main(argv, publicDir = DEFAULT_PUBLIC) {
   const out = join(publicDir, "art", "index.json");
   const index = buildIndex(publicDir);
   const text = formatIndex(index);
+  const outputs = [
+    { path: out, text },
+    ...Object.entries(buildLocalIndexes(publicDir)).map(([id, local]) => ({
+      path: join(publicDir, "art", "packs", id, "index.json"), text: formatIndex(local),
+    })),
+  ];
   const stray = strayFolders(publicDir);
   for (const s of stray) console.warn(`warning: ${s}/ has no bundle JSON; it is not indexed`);
   if (argv.includes("--check")) {
-    const current = existsSync(out) ? readFileSync(out, "utf8") : "";
-    if (current !== text) {
-      console.error("public/art/index.json is out of date: run `npm run art:index`");
-      return 1;
+    let stale = false;
+    for (const output of outputs) {
+      const current = existsSync(output.path) ? readFileSync(output.path, "utf8") : "";
+      if (current !== output.text) {
+        console.error(`${relative(publicDir, output.path)} is out of date: run \`npm run art:index\``);
+        stale = true;
+      }
     }
-    console.log("public/art/index.json is up to date");
+    if (stale) return 1;
+    console.log("art indexes are up to date");
     return 0;
   }
   if (!isDir(join(publicDir, "art"))) {
     console.error("public/art/ does not exist");
     return 1;
   }
-  writeFileSync(out, text);
+  for (const output of outputs) writeFileSync(output.path, output.text);
   const count = (t) => Object.values(BUNDLE_KINDS).length && Object.keys(BUNDLE_KINDS).map((k) => `${Object.keys(t[k]).length} ${k}`).join(", ");
   console.log(`wrote public/art/index.json: ${count(index)}; ${Object.keys(index.packs).length} pack(s); ${index.legacy.length} legacy file(s)`);
   return 0;

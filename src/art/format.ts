@@ -17,6 +17,8 @@ export const BUNDLE_JSON: Record<BundleKind, { file: string; format: string }> =
 };
 export const PACK_FORMAT = "verdant.pack/1";
 export const INDEX_FORMAT = "verdant.artindex/1";
+/** Private packs discovered separately. Keep in sync with tools/art/index.mjs (tested). */
+export const LOCAL_PACKS: readonly string[] = ["limezu"];
 
 export type SourceInfo =
   | { kind: "generated"; tool: string }

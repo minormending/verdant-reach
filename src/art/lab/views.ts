@@ -636,13 +636,15 @@ const packsView: View = (env, el) => {
         "Toggle packs in the top bar (saved to localStorage[\"verdant.artPacks\"] for the game), or play with ?art=a,b. Later packs win."));
     if (!packs.length) el.append(h("div", { class: "al-empty" }, "No packs yet."));
     for (const x of packs) el.append(h("div", { class: "al-card", style: "margin-bottom: 8px; cursor: pointer", onclick: () => env.go("packs", x.id) },
-      h("b", null, x.name), " ", h("code", null, x.id), active.includes(x.id) ? h("span", { class: "al-chip pack", style: "margin-left: 8px" }, "active") : null,
+      h("b", null, x.name), " ", h("code", null, x.id), x.local ? h("span", { class: "al-chip pack" }, "LOCAL") : null,
+      active.includes(x.id) ? h("span", { class: "al-chip pack", style: "margin-left: 8px" }, "active") : null,
       h("div", { class: "al-hint" }, x.description)));
     return;
   }
   const tree = reg.index.packs[p.id];
   const on = active.includes(p.id);
-  el.append(h("h1", null, p.name), h("div", { class: "al-meta" }, h("code", null, `public/art/packs/${p.id}/`), p.author ? `by ${p.author}` : null,
+  el.append(h("h1", null, p.name), h("div", { class: "al-meta" }, h("code", null, `public/art/packs/${p.id}/`),
+    p.local ? h("span", { class: "al-chip pack" }, "LOCAL") : null, p.author ? `by ${p.author}` : null,
     h("button", { class: `al-btn small pack${on ? " on" : ""}`, onclick: () => reg.setActivePacks(on ? active.filter((x) => x !== p.id) : [...active, p.id], true) }, on ? "Active — click to disable" : "Enable")),
   h("p", null, p.description));
   for (const kind of ["species", "tilesets", "structures", "characters", "sets"] as BundleKind[]) {
