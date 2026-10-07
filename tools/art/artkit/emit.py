@@ -104,14 +104,15 @@ def legacy_tiles(images: Mapping[str, Img], tool: str, root=ART) -> list[str]:
     return done
 
 
-def structure(id_: str, img: Img, tool: str, credits: str | None = None, root=ART) -> bool:
+def structure(id_: str, img: Img, tool: str, credits: str | None = None, root=ART,
+              notes: str | None = None) -> bool:
     meta = _locked("structure", id_, root)
     if meta is None:
         return False
     out = {"credits": credits if credits is not None else meta.get("credits") or DEFAULT_CREDITS.format(tool=tool),
            "source": {"kind": "generated", "tool": tool}}
-    if meta.get("notes"):
-        out["notes"] = meta["notes"]
+    if notes is not None or meta.get("notes"):
+        out["notes"] = notes if notes is not None else meta["notes"]
     B.write_structure(id_, to_rgba(img), out, root)
     return True
 

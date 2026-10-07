@@ -37,6 +37,8 @@ sys.path.insert(0, str(HERE))
 BUILDERS: list[tuple[str, str]] = [
     ("tiles", "tiles:build"),
     ("structures", "structures:build"),
+    ("props_contracts", "limezu/gen_props.py"),
+    ("props", "props_fallback:build"),
     ("characters", "characters:build"),   # after tiles: the hedge gate samples the hedge tile
     ("portraits", "portraits:build"),
     ("items", "items:build"),

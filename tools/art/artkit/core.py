@@ -154,6 +154,9 @@ def contracts() -> dict[str, Any]:
     m = re.search(r"const STRUCTURE(?:S|_SPECS) = \{(.*?)\n\} as const", src, re.S)
     structures = {g[0]: (int(g[1]), int(g[2])) for g in
                   re.findall(r"^\s*([a-z_]+):\s*\{ w: (\d+), h: (\d+)", m.group(1) if m else "", re.M)}
+    props = (IDS_TS.parent / "props.ts").read_text()
+    structures.update({g[0]: (int(g[1]), int(g[2])) for g in
+                       re.findall(r"^\s*(prop_[a-z_]+):\s*\{ w: (\d+), h: (\d+)", props, re.M)})
     return {
         "species": _const_list(src, "SPECIES_IDS"),
         "tiles": _const_keys(src, "TILES"),

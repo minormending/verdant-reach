@@ -204,7 +204,7 @@ function checkBundle(cat: ArtCatalog, v: BundleView, add: Add, img: Img, prefix:
         checkRef(def.base, "base");
         const baseFrames = isRef(def.base) ? refCells(def.base).length : 1;
         if (def.alts !== undefined) {
-          if (!Array.isArray(def.alts) || def.alts.length > 3) add(tw, "alts must be a list of up to 3 refs");
+          if (!Array.isArray(def.alts) || def.alts.length > 5) add(tw, "alts must be a list of up to 5 refs");
           else def.alts.forEach((a, i) => {
             if (typeof a !== "number") add(tw, `alts[${i}] must be a static cell number`);
             else checkRef(a, `alts[${i}]`);
