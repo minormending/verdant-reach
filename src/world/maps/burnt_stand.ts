@@ -54,7 +54,7 @@ export const burnt_stand: MapDef = {
     { id: "grunt_bs_2", sprite: "grunt", x: 15, y: 20, facing: "left", trainer: "grunt_bs_2", sight: 2 },
     { id: "grunt_bs_3", sprite: "grunt", x: 23, y: 14, facing: "down", trainer: "grunt_bs_3", sight: 2 },
     { id: "bram", sprite: "bram", x: 29, y: 15, facing: "left", movement: "static", script: "rival_4", visibleWhen: when({ rival_4_done: false }) },
-    { id: "morrow_bs", sprite: "morrow", x: 34, y: 11, facing: "down", movement: "static", script: "ch5_morrow_burnt", visibleWhen: when({ burnt_vision_seen: true, morrow_returned: false }) },
+    { id: "morrow_bs", sprite: "morrow", x: 34, y: 11, facing: "down", movement: "static", script: "ch5_morrow_burnt", visibleWhen: when({ burnt_vision_seen: true, morrow_returned: false, beat_morrow: false }) },
     ...pickups([{ item: "ember_ash", x: 6, y: 11 }, { item: "ember_ash", x: 27, y: 25, n: 2 }]),
     // The cone sacks round the camp tent (ch5_grunts pans the camera to 11,19).
     { id: "cone_sack_1", sprite: "cone_sack", x: 9, y: 20, facing: "down", movement: "static", script: "ch5_cone_sack" },

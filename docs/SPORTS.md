@@ -121,3 +121,12 @@ Chapter 5 ghostpipe and fireweed lines (set in `tools/art/crystal/{ghostpipe,fir
 | fireweed_fluff | f. albiflorum | Chamaenerion angustifolium f. albiflorum, the white-flowered form (it lacks the red pigment): white flowers on green stems and pods. | `#487838 #d0d0c0 #f8f8f8` |
 | fireweed_shoot | f. albiflorum | Chamaenerion angustifolium f. albiflorum, the white-flowered form (it lacks the red pigment): white flowers on green stems and pods. | `#487838 #d0d0c0 #f8f8f8` |
 | fireweed | f. albiflorum | Chamaenerion angustifolium f. albiflorum, the white-flowered form (it lacks the red pigment): white flowers on green stems and pods. | `#487838 #d0d0c0 #f8f8f8` |
+
+Chapter 6 seagrass line (set in `tools/art/crystal/seagrass.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| seagrass_shoot | warmer green foliage (natural variation; no named colour form identified) | Zostera marina. No named cultivar or botanical colour form was identified in the consulted references. The sport interprets ordinary green foliage with a modest warmer green shift; it does not claim a named or genetically stable sport. See references below. | `#286048 #80b868 #f8f8f8` |
+| eelgrass | warmer green foliage (natural variation; no named colour form identified) | Zostera marina, the same natural green variation as the shoot; no named colour form identified. White midrib, sheath and oxygen-bubble highlights stay white. | `#286048 #80b868 #f8f8f8` |
+
+References: the [USDA NRCS eelgrass fact sheet](https://plants.usda.gov/DocumentLibrary/factsheet/pdf/fs_zoma.pdf) describes the creeping rhizome, rounded ribbon leaves and reproductive spathes. [Fonseca & Uhrin, Marine Fisheries Review 71(3)](https://spo.nmfs.noaa.gov/sites/default/files/pdf-content/MFR/mfr713/mfr7134.pdf) describes dark green foliage. [Dennison & Alberte, photosynthetic responses to light intensity](https://pubmed.ncbi.nlm.nih.gov/28311224/) measured changes in leaf chlorophyll under different light conditions; the particular warmer green palette is an artistic interpretation, not a documented named form.
