@@ -233,6 +233,15 @@ describe("script interpreter", () => {
     expect(state.flags.static_sport_done).toBeUndefined();
   });
 
+  it("calls normal whiteout recovery and aborts the remaining script", async () => {
+    const { host, said } = setup();
+    await expect(runScript(host, [
+      { op: "call", script: "whiteout" }, { op: "say", text: "after" },
+    ])).rejects.toThrow("whiteout");
+    expect(host.whiteout).toHaveBeenCalledOnce();
+    expect(said).not.toContain("after");
+  });
+
   it("heals and records the heal point", async () => {
     const { host, state, jingles } = setup();
     state.party.push({ ...makeQ("oak_acorn", 5), hp: 0, stats: { hp: 20, atk: 1, def: 1, spa: 1, spd: 1, spe: 1 } });

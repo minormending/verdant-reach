@@ -649,7 +649,7 @@ it("catches a seeded canyon LITHOPS, grows it with battle EXP and earns WINDOW P
   } finally { stop(); }
 });
 
-it("crosses Route 12 with three real ROOT BRIDGE prompts and both real pit pushes", async () => {
+it("crosses Route 12 with all four required field moves through real prompts", async () => {
   const fixture = await setup("sanguine_ridge", 2, 15);
   const { ctx, e2e, drive, field, stop } = fixture;
   const { MARKS } = await import("../src/contracts");
@@ -658,6 +658,7 @@ it("crosses Route 12 with three real ROOT BRIDGE prompts and both real pit pushe
   ctx.state.flags.ch9_done = true;
   ctx.state.marks = [...MARKS];
   ctx.state.bag.fig_root = 1;
+  ctx.state.bag.pruning_shears = 1;
   ctx.battle = vi.fn().mockResolvedValue("won");
   try {
     expect(await drive(() => e2e.nav("route_12"))).toBe(true);
@@ -674,6 +675,12 @@ it("crosses Route 12 with three real ROOT BRIDGE prompts and both real pit pushe
       expect(ctx.state.flags[`filled_route_12_${x}_7`]).toBe(true);
       expect(taps).toContainEqual({ x, y: 9, facing: "up", facingFollower: false });
     }
+    expect(await drive(() => e2e.raftRoute12Pond())).toBe(true);
+    expect(taps).toContainEqual({ x: 5, y: 6, facing: "up", facingFollower: false });
+    expect(ctx.state.rafting).toBeUndefined();
+    expect(await drive(() => e2e.pruneRoute12Bramble())).toBe(true);
+    expect(ctx.state.flags.pruned_route_12_3_3).toBe(true);
+    expect(taps).toContainEqual({ x: 4, y: 3, facing: "left", facingFollower: false });
     expect(await drive(() => e2e.talkTo("marks_warden"))).toBe(true);
     expect(field.player).toMatchObject({ x: 3, y: 3, facing: "up" });
     expect(ctx.state.flags.ch10_marks_checked).toBe(true);
@@ -725,13 +732,49 @@ it("joins BRAM, rematches each admin and listens through all three clearings in 
   } finally { stop(); }
 });
 
+it("whites out after the Elder wilts the party and starts a playable retry", async () => {
+  const { ctx, e2e, drive, stop } = await setup("elder_grove_heart", 10, 18);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "oak_acorn", 1, () => 0.5)];
+  Object.assign(ctx.state.flags, { beat_mercer: true, beat_wren_2: true, centuryheart_planted: true });
+  // BRAM's ring-three heal is a real possible last heal point.
+  ctx.state.heal = { map: "elder_grove_3", x: 13, y: 2 };
+  ctx.state.money = 1001;
+  const battle = ctx.battle.bind(ctx);
+  const hpAtLoss: number[][] = [];
+  ctx.battle = async (request) => {
+    const outcome = await battle(request);
+    if (outcome === "lost") hpAtLoss.push(ctx.state.party.map((q) => q.hp));
+    return outcome;
+  };
+  try {
+    expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
+    expect(hpAtLoss).toEqual([[0]]);
+    expect(e2e.report.battles.at(-1)?.outcome).toBe("lost");
+    expect(ctx.state.position).toEqual({ ...ctx.state.heal, facing: "up" });
+    expect(ctx.state.money).toBe(501);
+    expect(ctx.state.party[0].hp).toBe(ctx.state.party[0].stats.hp);
+    expect(ctx.state.flags.elder_caught).not.toBe(true);
+    expect(await drive(() => e2e.nav("elder_grove_heart"))).toBe(true);
+    const texts = e2e.report.texts.length;
+    expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
+    expect(hpAtLoss).toEqual([[0], [0]]);
+    expect(e2e.report.battles.map((b) => b.outcome)).toEqual(["lost", "lost"]);
+    expect(e2e.report.texts.slice(texts).some((t) => t.text.includes("OAK ACORN used"))).toBe(true);
+    expect(ctx.state.flags.elder_caught).not.toBe(true);
+    expect(ctx.state.money).toBe(251);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
 it("keeps the Elder after a real uncaught battle and can challenge it again with real pods", async () => {
   const { ctx, e2e, drive, field, stop } = await setup("elder_grove_heart", 10, 18);
   const { createQuickened } = await import("../src/battle");
   const helper = createQuickened(ctx.data, "red_chili", 85, () => 0.5);
   Object.assign(helper, { e2e: true });
   ctx.state.party = [helper];
-  ctx.state.flags.centuryheart_planted = true;
+  Object.assign(ctx.state.flags, { centuryheart_planted: true, beat_mercer: true, beat_wren_2: true });
+  ctx.state.heal = { map: "elder_grove_3", x: 13, y: 2 };
   e2e.report.suite = "full";
   const visible = () => {
     const n = field.npcs.find((n) => n.id === "the_elder")!;

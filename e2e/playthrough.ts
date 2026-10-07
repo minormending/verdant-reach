@@ -1896,6 +1896,29 @@ export async function solveRoute12Pits(): Promise<boolean> {
     && report.texts.slice(before).filter((t) => t.text === "[?] UPROOT it?").length === 2;
 }
 
+/** Mount at the south landing, cross both pond rows and dismount on the north bank. */
+export async function raftRoute12Pond(): Promise<boolean> {
+  if (ow()?.mapId !== "route_12" || !(await walkTo(5, 6))) return false;
+  const before = report.texts.length;
+  return await walkTo(5, 3) && onTile(5, 3) && !ctx().state.rafting
+    && report.texts.slice(before).some((t) => t.text === "[?] Ride the LILY RAFT?");
+}
+
+/** Cut the only approach to the marks checkpoint with the real PRUNE prompt. */
+export async function pruneRoute12Bramble(): Promise<boolean> {
+  if (ow()?.mapId !== "route_12" || !(await walkTo(4, 3))) return false;
+  const before = report.texts.length;
+  await face("left");
+  await press("a");
+  await sleep(250);
+  await settle();
+  const o = ow();
+  return !!o && flag("pruned_route_12_3_3")
+    && tileAt(o.map as unknown as MapRuntime, 3, 3) === "bramble_stump"
+    && report.texts.slice(before).some((t) => t.text === "[?] A thorny tangle. PRUNE it?")
+    && await walkTo(3, 3) && onTile(3, 3);
+}
+
 /** Real steps change the live legend. Static nav cannot plan across both
  * lean states, so cross each open lane between the listening clearings.
  * The return journey uses the same puzzle before the Arboretum end trigger. */
@@ -1940,6 +1963,7 @@ export async function challengeElder(): Promise<boolean> {
     for (let attempt = 0; attempt < 2; attempt++) {
       st.bag.glass_pod = Math.max(st.bag.glass_pod ?? 0, 30);
       const before = report.battles.length, texts = report.texts.length, pods = st.bag.glass_pod;
+      const money = st.money, heal = { ...st.heal };
       if (!(await talkTo("the_elder"))) return false;
       const battles = report.battles.slice(before);
       const battle = battles[0];
@@ -1948,6 +1972,16 @@ export async function challengeElder(): Promise<boolean> {
         || (st.bag.glass_pod ?? 0) >= pods
         || !report.texts.slice(texts).some((t) => t.text.toUpperCase().includes("USED GLASS POD"))) return false;
       if (battle.outcome === "caught") return caught();
+      if (battle.outcome === "lost") {
+        if (st.position.map !== heal.map || st.position.x !== heal.x || st.position.y !== heal.y
+          || st.money !== money - Math.floor(money / 2)
+          || !st.party.every((q) => q.seed || q.hp === q.stats.hp && q.status === null)) return false;
+        if (ow()?.mapId !== "elder_grove_3") {
+          await nav("elder_grove_2");
+          if (!(await solveGroveLanes())) return false;
+        }
+        await nav("elder_grove_heart");
+      }
       if (flag("elder_caught") || !visible() || st.herbarium.caught.includes("elder")) return false;
       refreshHelper();
     }
@@ -1983,6 +2017,8 @@ export async function chapter10() {
   beat("ROUTE 12: defeat the six plateau trainers", await defeated(["r12_heath"])
     && ["crag", "gorge", "kite", "rook", "sedge", "heath"].every((id) => flag(`beat_r12_${id}`)));
   beat("ROUTE 12: UPROOT both boulders into the pit row", await solveRoute12Pits());
+  beat("ROUTE 12: RAFT the plateau pond", await raftRoute12Pond());
+  beat("ROUTE 12: PRUNE the checkpoint bramble", await pruneRoute12Bramble());
   await talkTo("marks_warden");
   beat("MARKS WARDEN: all eight marks", flag("ch10_marks_checked") && st().marks.length === 8);
   await nav("council_arboretum");

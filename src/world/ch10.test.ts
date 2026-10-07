@@ -58,7 +58,7 @@ describe("Chapter 10 world", () => {
       expect(m.outdoor).toBe(!["arboretum_greenhouse", "council_hall"].includes(id));
     });
     expect(WORLD.maps.elder_grove_heart.structures).toContainEqual({ key: "big_oak", x: 8, y: 7 });
-    expect(ops(WORLD.scripts.ch10_heart_enter, { beat_mercer: true })).toContainEqual({ op: "music", id: "prologue_bloom" });
+    expect(WORLD.maps.elder_grove_heart.musicWhen).toEqual([{ when: [{ flag: "beat_mercer", is: true }], music: "prologue_bloom" }]);
   });
 
   it("requires Chapter 9 before the west road, and eight actual marks before the Arboretum", () => {
@@ -75,33 +75,42 @@ describe("Chapter 10 world", () => {
       expect(script.some((c) => c.op === "setFlag")).toBe(missing === -1);
     }
     // The only western exit has a single approach through the checking trigger.
-    const route = WORLD.maps.route_12, g = grid(route, { bridged: true });
+    const route = WORLD.maps.route_12, g = grid(route, { bridged: true, pruned: true, rafting: true });
     const terrain = { ...g, tile: (x: number, y: number) => g.tile(x, y) === "pit" ? "filled_pit" as const : g.tile(x, y) };
     expect(flood(terrain, [{ x: 38, y: 28 }]).has("0,3")).toBe(true);
-    expect(flood({ ...terrain, structureSolid: (x, y) => g.structureSolid(x, y) || (x === 2 && y === 3) }, [{ x: 38, y: 28 }]).has("0,3")).toBe(false);
-    expect(route.triggers.find((t) => t.x === 2 && t.y === 3)?.script).toBe("ch10_marks_warden");
+    expect(flood({ ...terrain, structureSolid: (x, y) => g.structureSolid(x, y) || (x === 1 && y === 3) }, [{ x: 38, y: 28 }]).has("0,3")).toBe(false);
+    expect(route.triggers.find((t) => t.x === 1 && t.y === 3)?.script).toBe("ch10_marks_warden");
+  });
+
+  it.each([undefined, "rootbridge", "uproot", "prune", "raft"])("blocks the required road when %s is missing", (missing) => {
+    const m = WORLD.maps.route_12;
+    expect(cells(m, "bramble_bush")).toEqual([{ x: 3, y: 3 }]);
+    expect(cells(m, "water")).toHaveLength(4);
+    const g = grid(m, { bridged: missing !== "rootbridge", pruned: missing !== "prune", rafting: missing !== "raft" });
+    const solved = { ...g, tile: (x: number, y: number) => g.tile(x, y) === "pit" && missing !== "uproot" ? "filled_pit" as const : g.tile(x, y) };
+    expect(flood(solved, [{ x: 38, y: 28 }]).has("0,3")).toBe(!missing);
   });
 
   it("requires all three root gaps independently and a filled pit", () => {
     const m = WORLD.maps.route_12, gaps = cells(m, "root_gap"), pits = cells(m, "pit");
     expect(gaps).toHaveLength(3);
     expect(pits).toEqual([{ x: 5, y: 7 }, { x: 6, y: 7 }]);
-    const flags = Object.fromEntries([...gaps.map((p) => [`bridged_route_12_${p.x}_${p.y}`, true]), ...pits.map((p) => [filledPitFlag(m.id, p.x, p.y), true])]);
+    const flags = Object.fromEntries([["pruned_route_12_3_3", true], ...gaps.map((p) => [`bridged_route_12_${p.x}_${p.y}`, true]), ...pits.map((p) => [filledPitFlag(m.id, p.x, p.y), true])]);
     for (const removed of [undefined, ...gaps]) {
       const rt = buildMap(m), chosen = { ...flags };
       if (removed) chosen[`bridged_route_12_${removed.x}_${removed.y}`] = false;
       refreshLegend(rt, chosen);
-      const g = { ...grid(m), tile: (x: number, y: number) => tileAt(rt, x, y) };
+      const g = { ...grid(m, { rafting: true }), tile: (x: number, y: number) => tileAt(rt, x, y) };
       expect(flood(g, [{ x: 38, y: 28 }]).has("0,3")).toBe(!removed);
     }
-    expect(flood(grid(m, { bridged: true }), [{ x: 38, y: 28 }]).has("0,3")).toBe(false);
+    expect(flood(grid(m, { bridged: true, pruned: true, rafting: true }), [{ x: 38, y: 28 }]).has("0,3")).toBe(false);
     const stones = m.npcs.filter((n) => n.pushable);
     for (let subset = 0; subset < 4; subset++) {
       const rt = buildMap(m);
       refreshLegend(rt, { ...flags, ...Object.fromEntries(pits.map((p, i) => [filledPitFlag(m.id, p.x, p.y), !!(subset & (1 << i))])) });
-      expect(solveBoulderPuzzle(rt, stones, { x: 38, y: 28 }, { x: 0, y: 3 })).toBe(true);
-      const reach = reachableBoulderTiles(rt, stones, { x: 38, y: 28 });
-      const g = { ...grid(m), tile: (x: number, y: number) => tileAt(rt, x, y) === "pit" && reach.has(key(x, y)) ? "filled_pit" as const : tileAt(rt, x, y) };
+      expect(solveBoulderPuzzle(rt, stones, { x: 38, y: 28 }, { x: 0, y: 3 }, { rafting: true })).toBe(true);
+      const reach = reachableBoulderTiles(rt, stones, { x: 38, y: 28 }, { rafting: true });
+      const g = { ...grid(m, { rafting: true }), tile: (x: number, y: number) => tileAt(rt, x, y) === "pit" && reach.has(key(x, y)) ? "filled_pit" as const : tileAt(rt, x, y) };
       const exits = canReach(g, m.warps);
       expect([...reach].every((k) => exits.has(k))).toBe(true);
     }
@@ -140,7 +149,7 @@ describe("Chapter 10 world", () => {
     for (const id of ["elder_grove_1", "elder_grove_3", "elder_grove_heart"] as const) {
       const m = WORLD.maps[id], rt = buildMap(m);
       refreshLegend(rt, { beat_shears_2: true, beat_wren_2: true });
-      const g = { ...grid(m), tile: (x: number, y: number) => tileAt(rt, x, y) };
+      const g = { ...grid(m, { rafting: true }), tile: (x: number, y: number) => tileAt(rt, x, y) };
       const reach = flood(g, [{ x: m.warps[0].x, y: m.warps[0].y }]), exits = canReach(g, m.warps);
       expect([...reach].every((k) => exits.has(k))).toBe(true);
       expect(m.warps.every((w) => reach.has(key(w.x, w.y)))).toBe(true);
