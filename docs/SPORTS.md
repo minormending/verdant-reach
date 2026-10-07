@@ -140,3 +140,13 @@ Chapter 6 mangrove line (set in `tools/art/crystal/mangrove.py`; palettes are da
 | red_mangrove | sun-bleached yellow-green (natural colour interpretation) | Rhizophora mangle, the same natural yellow-green interpretation; no named cultivar. The dense canopy changes to yellow-green over warm brown prop roots, with the shared white reserved for gloss and water reflections. | `#906038 #b8c868 #f8f8f8` |
 
 Botanical references: [University of Florida IFAS, Red Mangrove (FR460)](https://ask.ifas.ufl.edu/publication/FR460) describes the long green propagules, glossy leaves and arching aerial roots; [UF/IFAS Center for Aquatic and Invasive Plants](https://plant-directory.ifas.ufl.edu/plant-directory/rhizophora-mangle/) describes the shiny evergreen foliage and bowed stilt roots. These support the plant anatomy; the particular sun-bleached yellow-green palette is an artistic interpretation, not a documented named colour form.
+
+Chapter 6 prickly pear line (set in `tools/art/crystal/prickly_pear.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| pear_pad | Santa Rita purple prickly pear | Opuntia 'Santa Rita' (also listed as O. santa-rita / O. violacea 'Santa Rita'): violet-purple pads, particularly in cold or dry conditions. Crystal: purple-violet paddle faces, plum-magenta in the dark slot; white glochid highlights stay white. | `#782850 #b088c0 #f8f8f8` |
+| padded_cactus | Santa Rita purple prickly pear | The same real purple prickly pear as pear_pad, expressed in the four joined paddle faces. White areole tufts and edge highlights stay white. | `#782850 #b088c0 #f8f8f8` |
+| prickly_pear | Santa Rita purple prickly pear | The same purple prickly pear: violet pads with red-purple fruit. The four-colour interpretation retains plum-magenta tunas; the flower cups share the pad tone and white petal rims. | `#782850 #b088c0 #f8f8f8` |
+
+Botanical references: the [University of Arizona Campus Arboretum, Santa Rita prickly pear](https://apps.cals.arizona.edu/arboretum/taxon.aspx?id=893) describes violet-purple pads, yellow flowers along upper pad edges and red-purple fruits. The [University of Arizona Extension garden plant list](https://extension.arizona.edu/sites/extension.arizona.edu/files/programs/2022master-gardener-EG-plant-list.pdf) lists Opuntia violacea 'Santa Rita' and its purple colour in cold or dry weather. The sprite's exact two-tone palette is an artistic interpretation; yellow flowers share warm sage in the base art because a separate yellow hue would require a palette exception.
