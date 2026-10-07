@@ -17,6 +17,7 @@ import { Fader, Shaker, Timers, drawImagePath } from "../engine/gfx";
 import { drawWindow } from "../ui/kit";
 import { nameEntry } from "../ui/nameEntry";
 import { saveDialog } from "../ui/widgets";
+import { rollCredits } from "../ui/credits";
 import { drawSeedBig, seedIcon } from "../ui/seedArt";
 import { Actor, dirTo, type Emote } from "./actor";
 import { rollEncounter, type EncounterKind } from "./encounters";
@@ -1075,6 +1076,8 @@ class Overworld implements Scene {
   async whiteout() {
     const ctx = this.ctx;
     const st = ctx.state;
+    // Capture the losing map before recovery loads the healing map.
+    const onWhiteout = this.map.def.onWhiteout;
     this.fader.set("black");
     ctx.audio.stopMusic(10);
     await ctx.ui.say("{PLAYER} has no healthy Quickened left!");
@@ -1087,6 +1090,7 @@ class Overworld implements Scene {
     this.playMapMusic();
     await this.timers.frames(20);
     await this.fader.to("clear", 16);
+    if (onWhiteout) await this.runScript(onWhiteout);
   }
 
   async endSlice() {
@@ -1247,6 +1251,7 @@ class Overworld implements Scene {
         });
       },
       endSlice: () => self.endSlice(),
+      credits: () => rollCredits(ctx),
       camera(x, y, frames) {
         if (self.camera.following) self.camera.update(self.followCam());
         return self.camera.pan(camForTile(x, y), frames);

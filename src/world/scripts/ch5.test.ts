@@ -23,6 +23,7 @@ function setup(map: MapId = "burnt_stand", outcome: BattleOutcome = "won") {
     },
   } as unknown as GameContext;
   const host: ScriptHost = {
+    credits: vi.fn(async () => {}),
     ctx, mapId: () => map, map: () => WORLD.maps[map],
     createQuickened: () => { throw new Error("No species grants in Chapter 5"); },
     healParty: vi.fn(), battle: vi.fn(async () => outcome), whiteout: vi.fn(async () => {}),

@@ -785,6 +785,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       if (!world.scripts[t.script]) errs.push(`${where} trigger script ${t.script} missing`);
     }
     if (map.onEnter && !world.scripts[map.onEnter]) errs.push(`${where} onEnter ${map.onEnter} missing`);
+    if (map.onWhiteout && !world.scripts[map.onWhiteout]) errs.push(`${where} onWhiteout ${map.onWhiteout} missing`);
     if (map.healPoint && !walkable(grid(map), map.healPoint.x, map.healPoint.y)) errs.push(`${where} healPoint is solid`);
 
     // encounters

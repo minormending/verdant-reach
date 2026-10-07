@@ -60,6 +60,8 @@ export interface MapDef {
   ambient?: Ambient;
   /** Runs each time the map is entered (after fade-in). */
   onEnter?: ScriptId;
+  /** Losing map's script, run after normal whiteout recovery at the last heal point. */
+  onWhiteout?: ScriptId;
   /** Where to send the player after wilting out, if this is a healing map. */
   healPoint?: { x: number; y: number };
 }
@@ -144,6 +146,8 @@ export type ScriptCmd =
   | { op: "trade"; wants: SpeciesId[]; gives: { species: SpeciesId; level: number; nickname?: string }; then?: ScriptCmd[]; else?: ScriptCmd[] }
   /** True while a seed is waiting at the Nursery (the yard keeper's hint). */
   | { op: "ifNurserySeed"; then: ScriptCmd[]; else?: ScriptCmd[] }
+  | { op: "credits" }                                     // scrolling cast; B skips, then script continues
+  | { op: "hallOfFame" }                                  // append a snapshot of this clear's party
   | { op: "endSlice" }                                    // "to be continued" card -> title
   | { op: "end" };
 

@@ -40,6 +40,8 @@ export interface ScriptHost {
   nameEntry(opts: { kind: "player" | "rival" | "nickname"; species?: SpeciesId; defaultName: string; max: number }): Promise<string>;
   /** Save offer, "TO BE CONTINUED", then back to the title. Never resolves normally in game. */
   endSlice(): Promise<void>;
+  /** Scroll the cast, or skip with B, then return to the running script. */
+  credits(): Promise<void>;
   /** Optional: battle backdrop for scripted battles. */
   backdrop?(): BattleRequest["backdrop"];
   /** Cutscene camera: eased pan to centre a tile; holds there until `cameraReset`. */
@@ -420,6 +422,15 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       return exec(host, (await tradeFlow(host, cmd)) ? cmd.then : cmd.else, st);
     case "ifNurserySeed":
       return exec(host, ctx.state.nursery?.seedReady ? cmd.then : cmd.else, st);
+    case "credits":
+      return host.credits();
+    case "hallOfFame": {
+      const team = ctx.state.party.map(({ species, level, nickname }) => ({
+        species, level, ...(nickname !== undefined ? { nickname } : {}),
+      }));
+      (ctx.state.hallOfFame ??= []).push(team);
+      return;
+    }
     case "endSlice":
       await host.endSlice();
       throw new ScriptAbort("endSlice");

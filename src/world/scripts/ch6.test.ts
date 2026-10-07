@@ -25,6 +25,7 @@ function setup(map: MapId = "saltmarsh_harbour", outcome: BattleOutcome = "won",
     },
   } as unknown as GameContext;
   const host: ScriptHost = {
+    credits: vi.fn(async () => {}),
     ctx, mapId: () => map, map: () => WORLD.maps[map], createQuickened,
     healParty: vi.fn(), battle: vi.fn(async () => outcome), whiteout: vi.fn(async () => {}),
     warp: vi.fn(async () => {}), movePlayer: vi.fn(async () => {}),

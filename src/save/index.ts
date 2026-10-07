@@ -3,7 +3,7 @@
 // survive "NEW GAME" and apply at the title screen.
 
 import type { GameContext, GameState, MapId } from "../contracts";
-import { MAP_IDS } from "../contracts";
+import { MAP_IDS, SPECIES_IDS } from "../contracts";
 
 export const SAVE_KEY = "verdant-reach-save";
 export const OPTIONS_KEY = "verdant-reach-options";
@@ -78,6 +78,24 @@ function cleanHarvested(raw: unknown): Record<string, string> | undefined {
   return out;
 }
 
+/** Additive v1 migration: pre-Council saves have no history, never a fabricated clear. */
+function cleanHallOfFame(raw: unknown): GameState["hallOfFame"] {
+  if (!Array.isArray(raw)) return undefined;
+  const out: NonNullable<GameState["hallOfFame"]> = [];
+  for (const team of raw) {
+    // Keep only whole, valid teams so a damaged record cannot invent a smaller clear.
+    if (!Array.isArray(team) || team.length > 6 || !team.every((q) =>
+      q && typeof q === "object" && SPECIES_IDS.includes(q.species)
+      && Number.isInteger(q.level) && q.level >= 1 && q.level <= 100
+      && (q.nickname === undefined || typeof q.nickname === "string"),
+    )) continue;
+    out.push(team.map(({ species, level, nickname }) => ({
+      species, level, ...(nickname !== undefined ? { nickname } : {}),
+    })));
+  }
+  return out;
+}
+
 /**
  * Round 4: the Nursery Garden. Optional, so older saves load without it. Keeps up
  * to 2 well-formed boarders; a bad step count or flag falls back to a fresh one.
@@ -141,12 +159,14 @@ export function normalizeState(raw: unknown, fallback: GameState): GameState | n
   if (!r.position || !MAP_IDS.includes(r.position.map as MapId)) return null;
   const arr = <T>(v: unknown, d: T[]): T[] => (Array.isArray(v) ? (v as T[]) : d);
   const obj = <T extends object>(v: unknown, d: T): T => (v && typeof v === "object" && !Array.isArray(v) ? (v as T) : d);
+  const hallOfFame = cleanHallOfFame(r.hallOfFame);
   return {
     version: 1,
     playerName: typeof r.playerName === "string" && r.playerName ? r.playerName : DEFAULT_PLAYER_NAME,
     rivalName: typeof r.rivalName === "string" && r.rivalName ? r.rivalName : DEFAULT_RIVAL_NAME,
     money: typeof r.money === "number" && isFinite(r.money) ? Math.max(0, Math.floor(r.money)) : fallback.money,
     party: cleanSeeds(arr(r.party, []).slice(0, 6)),
+    ...(hallOfFame !== undefined ? { hallOfFame } : {}),
     box: cleanSeeds(arr(r.box, [])),
     bag: obj(r.bag, {}),
     flags: obj(r.flags, {}),

@@ -5,6 +5,8 @@ import type {
 import { newGameState } from "../save";
 import { MARKS } from "../contracts";
 import { ifMarks } from "../world/build";
+import { createSceneStack } from "../engine/core";
+import { rollCredits } from "../ui/credits";
 import { runScript, scriptsAwardMark, type ScriptHost } from "./script";
 
 const world: WorldData = {
@@ -93,11 +95,66 @@ function setup(opts: { choices?: number[]; yesNo?: boolean[]; battles?: BattleOu
     restoreMusic: vi.fn(),
     nameEntry: vi.fn(async () => names.shift() ?? ""),
     endSlice: vi.fn(async () => {}),
+    credits: vi.fn(async () => {}),
   };
   return { ctx, host, state, said, jingles };
 }
 
 describe("script interpreter", () => {
+  it("waits for credits before continuing into the post-game", async () => {
+    const { host, state } = setup();
+    let finish!: () => void;
+    host.credits = vi.fn(() => new Promise<void>((resolve) => { finish = resolve; }));
+    const pending = runScript(host, [{ op: "credits" }, { op: "setFlag", flag: "game_cleared" }]);
+    expect(host.credits).toHaveBeenCalledOnce();
+    expect(state.flags.game_cleared).toBeUndefined();
+    finish();
+    await pending;
+    expect(state.flags.game_cleared).toBe(true);
+    expect(host.endSlice).not.toHaveBeenCalled();
+  });
+
+  it("continues through recording the team and waking at home when B skips the credits scene", async () => {
+    const { host, ctx, state } = setup();
+    state.party = [makeQ("great_oak", 66)];
+    ctx.scenes = createSceneStack();
+    ctx.input = { pressed: (b) => b === "b", held: () => false, repeat: () => false };
+    host.credits = () => rollCredits(ctx);
+    const pending = runScript(host, [
+      { op: "credits" }, { op: "setFlag", flag: "game_cleared" }, { op: "hallOfFame" },
+      { op: "warp", to: "player_home", x: 3, y: 5, facing: "up" },
+    ]);
+    expect(state.flags.game_cleared).toBeUndefined();
+    expect(host.warp).not.toHaveBeenCalled();
+    ctx.scenes.top()!.update(1000 / 60);
+    await pending;
+    expect(ctx.scenes.top()).toBeUndefined();
+    expect(state.flags.game_cleared).toBe(true);
+    expect(state.hallOfFame).toEqual([[{ species: "great_oak", level: 66 }]]);
+    expect(host.warp).toHaveBeenCalledWith("player_home", 3, 5, "up");
+    expect(host.endSlice).not.toHaveBeenCalled();
+  });
+
+  it("appends a separate Hall of Fame snapshot for each clear", async () => {
+    const { host, state } = setup();
+    const oak = makeQ("great_oak", 66);
+    oak.nickname = "ACORN";
+    state.party = [oak, makeQ("dandelion", 60)];
+    await runScript(host, [{ op: "hallOfFame" }]);
+    expect(state.hallOfFame).toEqual([[
+      { species: "great_oak", level: 66, nickname: "ACORN" },
+      { species: "dandelion", level: 60 },
+    ]]);
+    oak.level = 67;
+    oak.nickname = "OAK";
+    state.party.pop();
+    await runScript(host, [{ op: "hallOfFame" }]);
+    expect(state.hallOfFame).toEqual([
+      [{ species: "great_oak", level: 66, nickname: "ACORN" }, { species: "dandelion", level: 60 }],
+      [{ species: "great_oak", level: 67, nickname: "OAK" }],
+    ]);
+  });
+
   it("sets flags and branches with if / else", async () => {
     const { host, state, said } = setup();
     const script: ScriptCmd[] = [

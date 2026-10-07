@@ -354,4 +354,11 @@ describe("validator self-check", () => {
     expect(errs).toMatch(/script nope missing/);
     expect(errs).toMatch(/trainer nobody missing/);
   });
+  it("catches a missing whiteout hook script", () => {
+    const w = clone();
+    w.maps.route_1.onWhiteout = "no_whiteout_script";
+    expect(validateWorld(w).join("\n")).toMatch(/\[route_1\] onWhiteout no_whiteout_script missing/);
+    w.scripts.no_whiteout_script = [{ op: "setFlag", flag: "recovered" }];
+    expect(validateWorld(w)).toEqual([]);
+  });
 });
