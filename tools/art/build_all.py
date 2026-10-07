@@ -48,6 +48,8 @@ BUILDERS: list[tuple[str, str]] = [
     ("crystal", "crystal/build.py"),
     ("env4", "env4/build.py"),            # Chapter 4 tilesets + structures
     ("cast4", "cast4/build.py"),          # Chapter 4 characters, portraits, items, UI, stills
+    ("cast5", "cast5/build.py"),          # Chapter 5 characters, portraits, stills, PIPE MARK, item icons
+    ("env5", "env5/build.py"),            # Chapter 5 tilesets + structures
 ]
 
 

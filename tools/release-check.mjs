@@ -32,6 +32,10 @@ function checkNotes(value, path, location = "$") {
     if (key === "notes" && typeof child === "string" && child.startsWith("PLACEHOLDER")) {
       offenders.push(`${path}: ${childLocation} starts with PLACEHOLDER`);
     }
+    // Set images (item icons, UI) carry no notes: placeholder.py marks them by tool.
+    if (key === "tool" && child === "tools/art/placeholder.py") {
+      offenders.push(`${path}: ${childLocation} is placeholder art`);
+    }
     checkNotes(child, path, childLocation);
   }
 }

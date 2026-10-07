@@ -8,7 +8,6 @@ function fixture() {
   const world = structuredClone(WORLD);
   // As in ch9.test.ts, complete the staged Chapter 8 prerequisite so its
   // stub arrival doesn't prevent checking an unrelated script condition.
-  world.scripts.ch8_arrival = [{ op: "setFlag", flag: "ch8_done" }];
   return world;
 }
 

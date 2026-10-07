@@ -23,8 +23,8 @@ export const cedarhallow_market: MapDef = {
   signs: [], triggers: [],
 };
 export const scripts: Scripts = {
-  ch5_market_clerk: [say("TODO(text): ch5_market_clerk"), { op: "shop", stock: [
+  ch5_market_clerk: [say("Welcome in! Mind the floor. It's cedar. It creaks, but politely."), { op: "shop", stock: [
     "terrarium_pod", "glass_pod", "water_flask", "spring_water", "compost", "neem_spray", "aloe_gel", "cloche",
   ] }],
-  ch5_market_shopper: [say("TODO(text): ch5_market_shopper")],
+  ch5_market_shopper: [say("Moss on the roof, moss on the step, moss in my boots. You get used to it.")],
 };

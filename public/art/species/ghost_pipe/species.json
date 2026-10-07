@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "ghost_pipe",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#605070", "#b0a8c8", "#f8f8f8"],
+  "sport": ["#181818", "#985068", "#e8b0c8", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release.",
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  }
+  "anim": { "intro": [[0, 4], [1, 12], [2, 6], [3, 16], [2, 8], [4, 10], [0, 1]], "idle": [[0, 140], [1, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/ghostpipe.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/ghostpipe.py" },
+  "notes": "Crystal rule. LOOMING: a clump of five waxy pipes fanning out of the leaf litter, the bells nodding at every angle (one half-lifted). Gesture: the heads dip, then four LIFT upright together (as the real plant does when it fruits; one short pipe stays nodding), sway, and settle back. WHITE: ghost pipe has no chlorophyll, so the whole plant is waxy white; the lilac light slot shades the wax and the violet dark slot carries the form and the leaf litter. Sport: the natural pink form."
 }

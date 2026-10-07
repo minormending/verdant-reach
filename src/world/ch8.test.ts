@@ -164,7 +164,7 @@ describe("Chapter 8 world", () => {
         const n = m.npcs.find((q) => q.id === id)!;
         expect(checkCond(n.visibleWhen, s.state.flags), id).toBe(!(started && !beaten) && (id !== "flora" || !listened));
       }
-      expect(vi.mocked(s.host.ctx.audio.playMusic).mock.calls).toEqual(started && !beaten ? [["rootstock_appears"]] : []);
+      expect(s.host.ctx.audio.playMusic).not.toHaveBeenCalled();
     }
   });
 
@@ -180,7 +180,7 @@ describe("Chapter 8 world", () => {
     }
   });
 
-  it("wires the specified story actors, trainer guards, triggers and every stub", () => {
+  it("wires the specified story actors, trainer guards, triggers and every scene", () => {
     for (const id of ["ch8_arrival", "ch8_relay_door", "ch8_director", "ch8_patch_note", "ch8_console_a", "ch8_console_b", "ch8_console_c", "ch8_bram", "ch8_bram_after", "ch8_wren", "ch8_wren_after", "ch8_reward", "ch8_end"]) {
       expect(WORLD.scripts[id], id).toBeDefined();
     }
@@ -194,7 +194,7 @@ describe("Chapter 8 world", () => {
     expect(WORLD.maps.relay_roof.npcs.find((n) => n.id === "wren")).toMatchObject({ script: "ch8_wren" });
     expect(WORLD.maps.relay_roof.triggers.some((t) => t.script === "ch8_wren")).toBe(true);
     expect(WORLD.maps.relay_roof.npcs.find((n) => n.id === "mercer")).toMatchObject({
-      sprite: "gentleman", visibleWhen: [{ flag: "mercer_seen", is: true }],
+      sprite: "gentleman", visibleWhen: [{ flag: "mercer_seen", is: true }, { flag: "mercer_left", is: false }],
     });
     const called: string[] = [];
     eachCmd(WORLD.scripts.gc_enter, (c) => { if (c.op === "call") called.push(c.script); });

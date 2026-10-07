@@ -218,7 +218,8 @@ describe("items", () => {
   it("keeps found growth items field-only; ash opens lodgepole cones and cold opens snowdrop bulbs", () => {
     for (const [id, name] of [["ember_ash", "Ember Ash"], ["cold_snap", "Cold Snap"]]) {
       expect(DATA.items[id]).toMatchObject({
-        id, name, pocket: "items", price: 0, effect: { kind: "none" },
+        // Ember Ash is sold from Chapter 9 (Thistledown, CH9.md §4); Cold Snap never is.
+        id, name, pocket: "items", price: id === "ember_ash" ? 3000 : 0, effect: { kind: "none" },
         usableInBattle: false, usableInField: true,
       });
       expect(wrapText(DATA.items[id].description, 18).length).toBeLessThanOrEqual(2);

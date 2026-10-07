@@ -360,6 +360,11 @@ class BattleScene implements Scene {
   private async main(): Promise<BattleOutcome> {
     const ctx = this.ctx;
     const req = this.req;
+    const lead = firstHealthy(this.party);
+    if (lead < 0) {
+      console.error("[battle] no healthy Quickened in the party");
+      return "lost";
+    }
     // Foe party
     let foeParty: Quickened[];
     if (req.kind === "trainer") {
@@ -381,11 +386,6 @@ class BattleScene implements Scene {
       const foe = createQuickened(this.data, req.wild.species, req.wild.level, ctx.rng);
       foe.sport = req.wild.sport ?? foe.sport;
       foeParty = [foe];
-    }
-    const lead = firstHealthy(this.party);
-    if (lead < 0) {
-      console.error("[battle] no healthy Quickened in the party");
-      return req.kind === "wild" ? "fled" : "won";
     }
     this.s = createBattleState({
       data: this.data, playerParty: this.party, playerActive: lead, foeParty, wild: req.kind === "wild",

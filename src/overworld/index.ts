@@ -244,8 +244,9 @@ class Overworld implements Scene {
   }
 
   musicFor(def: MapDef) {
-    if (def.outdoor && def.music === "route" && mapTime(def, this.ctx.timeOfDay) === "night") return "route_night" as const;
-    return def.music;
+    const music = def.musicWhen?.find((entry) => checkCond(entry.when, this.ctx.state.flags))?.music ?? def.music;
+    if (def.outdoor && music === "route" && mapTime(def, this.ctx.timeOfDay) === "night") return "route_night" as const;
+    return music;
   }
 
   playMapMusic() {
@@ -543,6 +544,12 @@ class Overworld implements Scene {
     // Every step: nursery boarders grow, and seeds in the party count down.
     nurseryStep(st, this.ctx.data, this.ctx.rng);
     seedStep(st.party);
+    const w = warpAt(this.map, p.x, p.y);
+    if (w && (!isMatWarp(this.map, p.x, p.y) || p.facing === "down")) {
+      this.walking = false;
+      void this.flow(() => this.useWarp(w));
+      return;
+    }
     if (tileProps(tileAt(this.map, p.x, p.y)).slide) {
       const next = slidePath(this.map, p.x, p.y, p.facing, this.occupiedForPlayer)[0];
       if (next) {
@@ -551,12 +558,6 @@ class Overworld implements Scene {
         void p.begin(p.facing, next.kind === "ledge" ? HOP_FRAMES : WALK_FRAMES, { hop: next.kind === "ledge" });
         return;
       }
-    }
-    const w = warpAt(this.map, p.x, p.y);
-    if (w && (!isMatWarp(this.map, p.x, p.y) || p.facing === "down")) {
-      this.walking = false;
-      void this.flow(() => this.useWarp(w));
-      return;
     }
     const trig = triggerAt(this.map, p.x, p.y, st.flags);
     if (trig) {
@@ -1376,7 +1377,7 @@ class Overworld implements Scene {
       const groundY = py - camY;
       const sy = groundY - 4;
       if (sx < -16 || sx > SCREEN_W || sy - lift < -24 || sy - lift > SCREEN_H) continue;
-      const row = rowFor(a.id, a.sprite, a.facing, flags, this.pickedToday);
+      const row = rowFor(a.id, a.sprite, a.facing, flags, this.pickedToday, a.def?.stateFlag);
       if (a.wobble > 0) sx += [0, 1, 1, 0, -1, -1][a.wobble % 6];
       if (a.lastRow !== null && a.lastRow !== row) a.clunk = 8;
       a.lastRow = row;
@@ -1496,7 +1497,7 @@ class Overworld implements Scene {
     this.ambient.drawGlow(g, camX, camY);
     if (m.def.dark) {
       const { px, py } = this.player.pixel();
-      drawGlow(g, camX, camY, { x: px / TILE, y: py / TILE }, this.tiles.lamps, hasItem(ctx.state, "foxfire_lantern"));
+      drawGlow(g, camX, camY, { x: px / TILE, y: py / TILE }, this.tiles.lights, hasItem(ctx.state, "foxfire_lantern"));
     }
 
     // Story illustration (text boxes and the species window draw over it).

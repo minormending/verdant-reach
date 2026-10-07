@@ -13,7 +13,7 @@ import { UPROOT, reachableBoulderTiles, solveBoulderPuzzle, tryPushBoulder } fro
 function board(tiles: string[]): MapDef {
   return {
     id: "route_1", name: "TEST", outdoor: true, music: "route", border: "grass",
-    tiles, legend: { "#": "wall", ".": "grass", "~": "water", v: "ledge_down", P: "pit" },
+    tiles, legend: { "#": "wall", ".": "grass", "~": "water", v: "ledge_down", P: "pit", I: "ice", M: "mat_exit" },
     structures: [], warps: [], npcs: [], signs: [], triggers: [],
   };
 }
@@ -65,6 +65,41 @@ describe("UPROOT push rules", () => {
 });
 
 describe("BFS puzzle solver", () => {
+  it("cannot cross a forced warp beside a pit, but solves it with the warp off the path", () => {
+    const def = board(["########", "#...P..#", "########"]);
+    def.warps = [{ x: 3, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    const stone = { x: 2, y: 1 }, player = { x: 1, y: 1 }, goal = { x: 6, y: 1 };
+    expect(solveBoulderPuzzle(buildMap(def), [stone], player, goal)).toBe(false);
+    // A side pocket puts the warp off the required crossing.
+    def.tiles[0] = "#.######";
+    def.warps[0].x = 1;
+    def.warps[0].y = 0;
+    expect(solveBoulderPuzzle(buildMap(def), [stone], player, goal)).toBe(true);
+  });
+
+  it("cannot push from a forced warp arrival", () => {
+    const def = board(["########", "#...P..#", "########"]);
+    def.warps = [{ x: 2, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    expect(solveBoulderPuzzle(buildMap(def), [{ x: 3, y: 1 }], { x: 1, y: 1 }, { x: 6, y: 1 })).toBe(false);
+    expect(reachableBoulderTiles(buildMap(def), [], { x: 1, y: 1 })).toContain("2,1");
+  });
+
+  it("stops ice traversal at a forced warp", () => {
+    const def = board(["#######", "#.III.#", "#######"]);
+    def.warps = [{ x: 3, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    expect(solveBoulderPuzzle(buildMap(def), [], { x: 1, y: 1 }, { x: 5, y: 1 })).toBe(false);
+    expect(reachableBoulderTiles(buildMap(def), [], { x: 1, y: 1 })).toContain("3,1");
+  });
+
+  it("allows crossing exit mats sideways, but cannot continue after arriving downward", () => {
+    const def = board(["#####", "#...#", "#MM.#", "#...#", "#####"]);
+    def.warps = [{ x: 1, y: 2, to: "route_2", toX: 1, toY: 1 }];
+    expect(solveBoulderPuzzle(buildMap(def), [], { x: 1, y: 2 }, { x: 3, y: 2 })).toBe(true);
+    // Both mats share the warp; a wall prevents walking around them.
+    def.tiles = ["#####", "#..##", "#MM##", "#..##", "#####"];
+    expect(solveBoulderPuzzle(buildMap(def), [], { x: 1, y: 1 }, { x: 1, y: 3 })).toBe(false);
+  });
+
   it.each([
     { name: "one boulder needs the side pocket", tiles: ["#######", "###.###", "#.....#", "#...###", "#######"],
       stones: [{ x: 3, y: 2 }], goal: { x: 5, y: 2 }, solvable: true },
@@ -101,6 +136,8 @@ type TestOverworld = Scene & {
   loadMap(id: MapId, x: number, y: number, dir: Dir): void;
   uproot(boulder: Actor): Promise<void>;
   interact(): boolean;
+  onArrive(): void;
+  useWarp(warp: MapDef["warps"][number]): Promise<void>;
 };
 function scene(yes = true, tiles = ["....", "...."]) {
   const room = board(tiles);
@@ -167,6 +204,24 @@ describe("UPROOT overworld flow", () => {
 });
 
 describe("BOULDER PITS", () => {
+  it("fills the pit beside a warp, but runtime arrival exits before crossing the bridge", async () => {
+    const { ow, state, room } = scene(true, ["########", "#...P..#", "########"]);
+    room.npcs[0].x = 2;
+    room.npcs[0].y = 1;
+    room.warps = [{ x: 3, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    state.bag.saxifrage = 1;
+    ow.loadMap("route_1", 1, 1, "right");
+    const useWarp = vi.spyOn(ow, "useWarp").mockResolvedValue();
+    await push(ow);
+    ow.player.x = 2;
+    await push(ow);
+    expect(state.flags.filled_route_1_4_1).toBe(true);
+    ow.player.x = 3;
+    ow.onArrive();
+    await vi.waitFor(() => expect(useWarp).toHaveBeenCalledWith(room.warps[0]));
+    expect(ow.player.x).toBeLessThan(4);
+  });
+
   it("fills an unwalkable pit and draws its persistent walkable replacement", async () => {
     const { ow, state, room } = scene(true, ["..P.", "...."]);
     state.bag.saxifrage = 1;

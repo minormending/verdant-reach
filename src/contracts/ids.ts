@@ -217,6 +217,23 @@ export const TILES = {
   rose_bed:       { walk: false },
   floor_marble:   { walk: true },
   stage_floor:    { walk: true },
+  // --- Chapter 5: Route 6 old growth, Cedarhallow, the Hollow, the Burnt Stand
+  oldgrowth_tree: { walk: false },               // huge cedar/fir trunks (canopy group "oldgrowth")
+  moss:           { walk: true },                // old-growth forest floor
+  fern_brush:     { walk: true, encounter: "grass" }, // Route 6 undergrowth
+  canopy_boardwalk: { walk: true },              // the raised walkway (group "canopy_boardwalk")
+  canopy_drop:    { walk: false },               // the forest floor far below the walkway
+  rope_rail:      { walk: false },               // walkway railing
+  ash:            { walk: true },                // burnt ground
+  burnt_trunk:    { walk: false },               // standing dead snag
+  charred_log:    { walk: false },
+  fresh_shoots:   { walk: true, encounter: "grass" }, // fireweed regrowth in the Burnt Stand
+  shrine_floor:   { walk: true },                // inside the Hollow
+  hollow_wall:    { walk: false },               // the living wood of the giant trunk
+  carved_post:    { walk: false, interact: true }, // the Hollow's side-shrines
+  ghostpipe_clump:{ walk: false },               // pale ghost pipes (decoration, unlit)
+  glow_pipe:      { walk: false },               // glowing ghost pipes: a light source on dark maps, like lamp_post
+  night_floor:    { walk: true },                // Conservatory 4 slate
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -262,6 +279,12 @@ const STRUCTURE_SPECS = {
   rose_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 3
   fountain:          { w: 3, h: 3 },                       // city square centrepiece
   relay_mast:        { w: 1, h: 3 },                       // listening mast (scenery)
+  // Chapter 5: Cedarhallow
+  cedar_house:         { w: 4, h: 4, door: { x: 1, y: 3 } }, // plank house on a stone footing
+  hollow_trunk:        { w: 5, h: 5, door: { x: 2, y: 4 } }, // the giant cedar that holds the Hollow
+  night_conservatory:  { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 4 (dark glass)
+  giant_cedar:         { w: 3, h: 4 },                       // landmark tree (scenery)
+  camp_tent:           { w: 3, h: 2 },                       // Rootstock camp tent (scenery)
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
@@ -287,6 +310,9 @@ export const CHARACTERS = [
   "researcher", "orchardist", "arranger", "reporter", "gentleman",
   "rose_gate",                   // Conservatory 3 trellis gate (hide via visibleWhen to open)
   "boulder",                     // UPROOT puzzle object; resets on map entry
+  // Chapter 5
+  "morrow", "shrine_keeper", "ranger", "lumberjack", "forager", "night_gardener",
+  "cone_sack",                   // a Rootstock sack of sealed cones (static object)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -295,6 +321,7 @@ export const TRAINER_PORTRAITS = [
   "bram", "hollis", "nell_pitcher", "shears", "grunt",
   "gardener", "schoolkid", "birdwatcher", "hiker", "beekeeper", "florist",
   "flora_vance", "orchardist", "arranger", "researcher", "gentleman", // Round 4
+  "morrow", "lumberjack", "forager", "night_gardener", // Chapter 5
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -306,6 +333,7 @@ export const MUSIC = [
   "battle_leader", "battle_rootstock", "victory_wild", "victory_trainer",
   "victory_leader", "slice_end",
   "glasshouse_city", "palm_house", "root_relay", // Round 4
+  "cedarhallow", "burnt_stand", "hollow", // Chapter 5
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 
@@ -363,6 +391,7 @@ export type MarkId = (typeof MARKS)[number];
 export const STILLS = [
   "bloom", "greenhouse_morning", "theft", "grove_taps", "graft_collar", "vale_call",
   "glasshouse_dome", "relay_pulse", // Round 4
+  "fire_cone_vision", "morrow_listening", // Chapter 5
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

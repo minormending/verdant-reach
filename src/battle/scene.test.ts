@@ -54,7 +54,7 @@ const trainer: TrainerDef = {
   team: [{ species: "great_oak", level: 27, grafted: true }, { species: "oak_sapling", level: 25 }],
 };
 
-async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: boolean; fullParty?: boolean } = {}) {
+async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: boolean; fullParty?: boolean; wilted?: boolean } = {}) {
   vi.stubGlobal("window", {});
   const ctx = {
     data: DATA, rng: opts.rng ?? seeded(1), input: {}, timeOfDay: () => "day",
@@ -69,6 +69,7 @@ async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: b
   if (opts.fullParty) {
     for (let i = 0; i < 5; i++) ctx.state.party.push(createQuickened(DATA, "oak_acorn", 5, seeded(20 + i)));
   }
+  if (opts.wilted) ctx.state.party.forEach((q) => { q.hp = 0; });
   const scene = createBattleScene(ctx, req, () => {}) as unknown as SceneHarness;
   scene.preload = vi.fn(async () => {});
   scene.intro = vi.fn(async () => {});
@@ -92,7 +93,22 @@ async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: b
   return { scene, ctx, outcome };
 }
 
-afterEach(() => { vi.clearAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+describe("battles without a healthy party", () => {
+  it.each([false, true])("returns lost for trainers and wild encounters (canLose: %s)", async (canLose) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    for (const req of [
+      { kind: "trainer" as const, trainer: trainer.id, canLose },
+      { kind: "wild" as const, wild: { species: "elder" as const, level: 60 }, canLose },
+    ]) {
+      const { scene, outcome } = await setup(req, { wilted: true });
+      expect(outcome).toBe("lost");
+      expect(scene.intro).not.toHaveBeenCalled();
+      expect(scene.chooseAction).not.toHaveBeenCalled();
+    }
+  });
+});
 
 describe("static sport wild battles", () => {
   it("creates a sport and uses its palette for the wild send-out", async () => {
