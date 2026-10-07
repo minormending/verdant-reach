@@ -52,6 +52,7 @@ BUILDERS: list[tuple[str, str]] = [
     ("env5", "env5/build.py"),            # Chapter 5 tilesets + structures
     ("env6", "env6/build.py"),            # Chapter 6 coast, island and harbour structures
     ("cast6", "cast6/build.py"),          # Chapter 6 cast, portraits, items, Marks, raft and healed tree
+    ("env7", "env7/build.py"),            # Frontier ice, snow, living bridges and boulder pits
 ]
 
 
