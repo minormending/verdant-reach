@@ -33,6 +33,15 @@ export const FIELD_MOVE_FX: Record<FieldMove, FieldMoveFx> = {
     sfx: "prune",
     particles: "snip",
   },
+  rootbridge: {
+    name: "ROOT BRIDGE",
+    flag: "bridged",
+    cleared: "root_bridge",
+    locked: "A narrow gap. Roots could bridge it.",
+    prompt: "A narrow gap. ROOT BRIDGE it?",
+    sfx: "prune",
+    particles: "snip",
+  },
 };
 
 export function fieldMoveOf(t: TileKey): FieldMove | undefined {

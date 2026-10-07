@@ -179,6 +179,8 @@ export const TILES = {
   microscope:     { walk: false, interact: true },
   // --- Round 4: Chapter 4 ----------------------------------------------------
   bramble_stump:  { walk: true },                // a pruned bramble (drawn where PRUNE cut one)
+  root_gap:      { walk: false, fieldMove: "rootbridge" },
+  root_bridge:   { walk: true },                // living roots span a bridged gap
   paving:         { walk: true },                // city flagstones
   tropical_grass: { walk: true, encounter: "grass" }, // Palm House undergrowth
   orchard_tree:   { walk: false },               // apple trees (canopy group "orchard")
@@ -208,12 +210,15 @@ export interface TileProps {
   water?: boolean;
   ledge?: "down";
   interact?: boolean;
-  /** A field move clears this tile (sets flag `pruned_<map>_<x>_<y>`; then drawn as bramble_stump, walkable). */
+  /** A field move sets its per-cell flag and replaces this tile with walkable terrain. */
   fieldMove?: FieldMove;
 }
 
 /** Field moves (HM equivalents). No move slots: each is unlocked by a key item. */
-export const FIELD_MOVES = { prune: { item: "pruning_shears" } } as const;
+export const FIELD_MOVES = {
+  prune: { item: "pruning_shears" },
+  rootbridge: { item: "fig_root" },
+} as const;
 export type FieldMove = keyof typeof FIELD_MOVES;
 
 /** Multi-tile buildings drawn from one image; footprint is solid except the
@@ -318,6 +323,7 @@ export const REQUIRED_ITEMS = [
   "wild_berry", "rose_hip",                   // harvested from bushes: heal / cure
   "syrup_jar",                                // key item for the SAP RUN quest
   "pruning_shears",                           // key item: unlocks the PRUNE field move
+  "fig_root",                                 // key item: unlocks ROOT BRIDGE
   "foxfire_lantern",                          // key item: automatically lights dark maps
   "lily_raft",                                // key item: ride water with RAFT
   "saxifrage",                                // key item: unlocks UPROOT boulder pushes

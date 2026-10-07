@@ -58,6 +58,9 @@ const LIST: Item[] = [
     effect: { kind: "none" }, usableInBattle: false, usableInField: true },
 
   // Key items
+  { id: "fig_root", name: "Fig Root", pocket: "key", price: 0,
+    description: "Living roots that grow into bridges.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
   { id: "relay_keycard", name: "Keycard", pocket: "key", price: 0,
     description: "ODELL's pass to every RELAY floor.",
     effect: { kind: "none" }, usableInBattle: false, usableInField: false },

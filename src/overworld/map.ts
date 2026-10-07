@@ -27,9 +27,9 @@ export interface MapRuntime {
   /** Which `legendWhen` entries are active and which field-move cells are cleared
    *  ("" = none); changes invalidate tile caches. */
   legendSig?: string;
-  /** Cells that may hold a field-move tile (brambles), found at build time. */
+  /** Cells that may hold a field-move tile, found at build time. */
   fieldCells?: { x: number; y: number }[];
-  /** "x,y" of field-move cells cleared by their flag (PRUNE): they read as the move's `cleared` tile. */
+  /** "x,y" of field-move cells cleared by their own move's flag. */
   cleared?: Set<string>;
 }
 
@@ -37,22 +37,23 @@ export interface MapRuntime {
 export function refreshLegend(m: MapRuntime, flags: Record<string, boolean>): void {
   const list = m.def.legendWhen ?? [];
   let sig = "";
-  for (let i = 0; i < list.length; i++) if (checkCond(list[i].when, flags)) sig += `${i},`;
+  let merged: Record<string, TileKey> | undefined;
+  for (let i = 0; i < list.length; i++) {
+    if (!checkCond(list[i].when, flags)) continue;
+    sig += `${i},`;
+    merged = { ...list[i].legend, ...merged };
+  }
   // Cleared field-move cells (any move's flag) join the signature so tile caches rebuild.
   let cleared: Set<string> | undefined;
   for (const c of m.fieldCells ?? []) {
-    for (const move of Object.keys(FIELD_MOVE_FX) as (keyof typeof FIELD_MOVE_FX)[]) {
-      if (!flags[fieldMoveFlag(move, m.def.id, c.x, c.y)]) continue;
-      (cleared ??= new Set()).add(key(c.x, c.y));
-      sig += `|${c.x},${c.y}`;
-    }
+    const ch = Array.from(m.def.tiles[c.y])[c.x];
+    const move = fieldMoveOf(merged?.[ch] ?? m.def.legend[ch]);
+    if (!move || !flags[fieldMoveFlag(move, m.def.id, c.x, c.y)]) continue;
+    (cleared ??= new Set()).add(key(c.x, c.y));
+    sig += `|${move}:${c.x},${c.y}`;
   }
   if (sig === m.legendSig) return;
   m.cleared = cleared;
-  let merged: Record<string, TileKey> | undefined;
-  for (const o of list) {
-    if (checkCond(o.when, flags)) merged = { ...o.legend, ...merged };
-  }
   m.legendOverride = merged;
   m.legendSig = sig;
 }

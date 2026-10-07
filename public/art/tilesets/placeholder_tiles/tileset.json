@@ -9,8 +9,14 @@
     "ice": {
       "base": 0
     },
-    "snow": {
+    "root_bridge": {
       "base": 1
+    },
+    "root_gap": {
+      "base": 2
+    },
+    "snow": {
+      "base": 3
     }
   },
   "credits": "Placeholder (no art yet).",

@@ -57,6 +57,7 @@ export const isBoarder = (n: NpcDef): boolean => /^boarder_\d+$/.test(n.id);
  */
 export const PRUNE_OPTIONAL_MAPS: MapId[] = ["route_5"];
 export const prunable = (t: TileKey | undefined): boolean => !!t && (TILES[t] as { fieldMove?: string }).fieldMove === "prune";
+export const bridgeable = (t: TileKey | undefined): boolean => !!t && (TILES[t] as TileProps).fieldMove === "rootbridge";
 
 /** Every `Ambient` value (src/contracts/world.ts). Kept exhaustive by the type. */
 const AMBIENT_VALUES: Record<Ambient, true> = { none: true, pollen: true, leaves: true, fireflies: true, rain: true, mist: true, spores: true };
@@ -75,9 +76,8 @@ export interface Grid {
   occupied?: (x: number, y: number) => boolean;
 }
 
-/** The map's walk grid. With `pruned`, every prunable tile reads as a cut stump
- *  (the world once the PRUNING SHEARS are in hand). */
-export function grid(map: MapDef, opts: { pruned?: boolean; rafting?: boolean } = {}): Grid {
+/** The map's walk grid after the selected field moves become available. */
+export function grid(map: MapDef, opts: { pruned?: boolean; bridged?: boolean; rafting?: boolean } = {}): Grid {
   const h = map.tiles.length;
   const w = map.tiles[0]?.length ?? 0;
   const solid = new Set<string>();
@@ -104,6 +104,7 @@ export function grid(map: MapDef, opts: { pruned?: boolean; rafting?: boolean } 
     tile(x, y) {
       if (x < 0 || y < 0 || x >= w || y >= h) return undefined;
       const t = map.legend[map.tiles[y][x]];
+      if (opts.bridged && bridgeable(t)) return "root_bridge";
       return opts.pruned && prunable(t) ? "bramble_stump" : t;
     },
     structureSolid: (x, y) => solid.has(`${x},${y}`),
@@ -269,6 +270,12 @@ const PROGRESS_GATES: readonly ProgressGate[] = [
     affects: (m) => m.tiles.some((row) => [...row].some((ch) => prunable(m.legend[ch]))),
     terrain: (_m, g, enabled) => enabled ? { ...g, tile: (x, y) => prunable(g.tile(x, y)) ? "bramble_stump" : g.tile(x, y) } : g,
     optionalMaps: PRUNE_OPTIONAL_MAPS,
+  },
+  {
+    id: "rootbridge", name: "ROOT BRIDGE", item: FIELD_MOVES.rootbridge.item, flag: "got_fig_root", policy: "content",
+    affects: (m) => m.tiles.some((row) => [...row].some((ch) => bridgeable(m.legend[ch]))),
+    terrain: (_m, g, enabled) => enabled ? { ...g, tile: (x, y) => bridgeable(g.tile(x, y)) ? "root_bridge" : g.tile(x, y) } : g,
+    path: "a path around root gaps",
   },
   {
     id: "raft", name: "RAFT", item: "lily_raft", flag: "got_raft", policy: "content",
@@ -551,6 +558,11 @@ export function checkProgressWithoutPrune(world: WorldData): string[] {
   return progress(world).check(gateById("prune"));
 }
 
+/** Gap-guarded content needs a Fig Root grant reachable before bridging. */
+export function checkProgressWithoutFigRoot(world: WorldData): string[] {
+  return progress(world).check(gateById("rootbridge"));
+}
+
 /** Only stationary lamp light is a safe story path before the lantern. */
 export function checkProgressWithoutLantern(world: WorldData): string[] {
   return progress(world).check(gateById("glow"));
@@ -607,6 +619,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
   const errs: string[] = [];
   const progression = progress(world);
   const rafting = progression.after.enabled.has("raft");
+  const bridged = progression.after.enabled.has("rootbridge");
   const stills = new Set<string>(STILLS);
   const species = new Set<string>(SPECIES_IDS);
   // Story items (the contract) plus everything the data owner defines (PLANT FOOD, ...).
@@ -640,7 +653,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const g = grid(map);
     if (!Number.isInteger(landing.x) || !Number.isInteger(landing.y) || !walkable(g, landing.x, landing.y)) {
       errs.push(`${at} is not walkable`);
-    } else if (!flood(grid(map, { rafting }), entries.get(landing.map) ?? []).has(`${landing.x},${landing.y}`)) {
+    } else if (!flood(grid(map, { bridged, rafting }), entries.get(landing.map) ?? []).has(`${landing.x},${landing.y}`)) {
       errs.push(`${at} is unreachable`);
     }
     if (!map.outdoor) errs.push(`${at} is indoors`);
@@ -665,7 +678,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
         if (!t || !(t in TILES)) errs.push(`${where} row ${y}: char '${ch}' has no valid tile`);
       }
     });
-    const g = grid(map, { rafting });
+    const g = grid(map, { bridged, rafting });
 
     // ambient particles
     if (map.ambient !== undefined && !AMBIENTS.has(map.ambient)) errs.push(`${where} bad ambient ${map.ambient}`);
@@ -703,7 +716,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       if (!walkable(g, wp.x, wp.y)) errs.push(`${where} warp at ${wp.x},${wp.y} is not walkable`);
       const target = world.maps[wp.to];
       if (!target) { errs.push(`${where} warp to missing map ${wp.to}`); continue; }
-      const tg = grid(target, { rafting: rafting && raftTile(g, wp.x, wp.y) });
+      const tg = grid(target, { bridged, rafting: rafting && raftTile(g, wp.x, wp.y) });
       if (!walkable(tg, wp.toX, wp.toY)) errs.push(`${where} warp lands on solid ${wp.to} ${wp.toX},${wp.toY}`);
       if (target.warps.some((o) => o.x === wp.toX && o.y === wp.toY) && tg.tile(wp.toX, wp.toY) !== "mat_exit") {
         errs.push(`${where} warp lands on another warp in ${wp.to} ${wp.toX},${wp.toY}`);
@@ -800,11 +813,11 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const starts = entries.get(id) ?? [];
     if (!starts.length) { errs.push(`${where} has no way in`); continue; }
     for (const s of starts) {
-      if (!walkable(grid(map, { rafting: rafting && s.rafting }), s.x, s.y)) errs.push(`${where} entry ${s.x},${s.y} is solid`);
+      if (!walkable(grid(map, { bridged, rafting: rafting && s.rafting }), s.x, s.y)) errs.push(`${where} entry ${s.x},${s.y} is solid`);
     }
-    // Everything is checked as eventually reachable (brambles cut); the
-    // required-progress pass after this loop checks the world without PRUNE.
-    const gp = grid(map, { pruned: true, rafting });
+    // Brambles are optional; root gaps open only after a reachable Fig Root grant.
+    // The progress pass also proves acquisition without crossing a root gap.
+    const gp = grid(map, { pruned: true, bridged, rafting });
     const reach = flood(gp, starts);
     const has = (x: number, y: number) => reach.has(`${x},${y}`);
     const canTalk = (x: number, y: number) => DIRS.some(([dx, dy]) => {
@@ -829,7 +842,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     // without them must stay reachable with them.
     const scenery = map.structures.filter((s) => STRUCTURES[s.key] && !STRUCTURES[s.key].door);
     if (scenery.length) {
-      const open = grid({ ...map, structures: map.structures.filter((s) => STRUCTURES[s.key]?.door) }, { rafting });
+      const open = grid({ ...map, structures: map.structures.filter((s) => STRUCTURES[s.key]?.door) }, { bridged, rafting });
       // Treat the scenery footprint itself as solid in the open grid, so we only
       // compare paths around it, not the cells it covers.
       const covers = new Set<string>();
