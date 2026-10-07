@@ -84,7 +84,7 @@ already knows.
 - **MAP_IDS** (append in this order): `relay_2f`, `relay_3f`, `relay_roof`.
 - **Item** `relay_keycard`:
   - key pocket, name "Keycard";
-  - description "ODELL's pass to every floor of the RELAY." (36 characters
+  - description "ODELL's pass to every RELAY floor." (36 characters
     at most);
   - add it to REQUIRED_ITEMS;
   - placeholder icon: `python tools/art/placeholder.py items relay_keycard`.
