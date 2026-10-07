@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "driftwood_hut",
+  "image": "structure.png",
+  "size": [4, 3],
+  "credits": "Original hand-pixelled Chapter 6 environment for Verdant Reach; no copied or traced game art.",
+  "source": { "kind": "generated", "tool": "tools/art/env6/buildings.py" }
+}

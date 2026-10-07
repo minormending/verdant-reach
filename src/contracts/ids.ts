@@ -209,6 +209,22 @@ export const TILES = {
   ghostpipe_clump:{ walk: false },               // pale ghost pipes (decoration, unlit)
   glow_pipe:      { walk: false },               // glowing ghost pipes: a light source on dark maps, like lamp_post
   night_floor:    { walk: true },                // Conservatory 4 slate
+  // Chapter 6: tidal coast and volcanic island
+  seagrass_bed:   { walk: false, water: true },
+  mangrove_roots: { walk: false },
+  tide_pool:      { walk: false, water: true },
+  pier:           { walk: true },
+  salt_flat:      { walk: true },
+  driftwood:      { walk: false },
+  beach_rock:     { walk: false },
+  fishing_net:    { walk: false },
+  dry_grass:      { walk: true },               // sparse dune tufts, no encounters
+  shell_scatter:  { walk: true },
+  vent_moss:      { walk: true, encounter: "grass" },
+  cactus_scrub:   { walk: true, encounter: "grass" },
+  volcanic_rock:  { walk: false },
+  basalt_floor:   { walk: true },
+  vent_steam:     { walk: false },
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -257,6 +273,12 @@ const STRUCTURE_SPECS = {
   night_conservatory:  { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 4 (dark glass)
   giant_cedar:         { w: 3, h: 4 },                       // landmark tree (scenery)
   camp_tent:           { w: 3, h: 2 },                       // Rootstock camp tent (scenery)
+  // Chapter 6: Saltmarsh Harbour and Driftseed Isle
+  harbour_house:      { w: 4, h: 3, door: { x: 1, y: 2 } },
+  lantern_tree:       { w: 3, h: 4 },
+  tide_conservatory:  { w: 6, h: 4, door: { x: 3, y: 3 } },
+  adobe_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } },
+  driftwood_hut:      { w: 4, h: 3, door: { x: 1, y: 2 } },
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
@@ -285,6 +307,8 @@ export const CHARACTERS = [
   // Chapter 5
   "morrow", "shrine_keeper", "ranger", "lumberjack", "forager", "night_gardener",
   "cone_sack",                   // a Rootstock sack of sealed cones (static object)
+  // Chapter 6
+  "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", "island_elder",
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -294,6 +318,7 @@ export const TRAINER_PORTRAITS = [
   "gardener", "schoolkid", "birdwatcher", "hiker", "beekeeper", "florist",
   "flora_vance", "orchardist", "arranger", "researcher", "gentleman", // Round 4
   "morrow", "lumberjack", "forager", "night_gardener", // Chapter 5
+  "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", // Chapter 6
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -362,6 +387,7 @@ export const STILLS = [
   "bloom", "greenhouse_morning", "theft", "grove_taps", "graft_collar", "vale_call",
   "glasshouse_dome", "relay_pulse", // Round 4
   "fire_cone_vision", "morrow_listening", // Chapter 5
+  "lantern_tree_healed", // Chapter 6
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

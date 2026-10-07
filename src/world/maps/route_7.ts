@@ -3,7 +3,7 @@ import { OUTDOOR } from "../build";
 
 export const route_7: MapDef = {
   id: "route_7", name: "ROUTE 7", outdoor: true, music: "route", ambient: "mist",
-  border: "tree", legend: OUTDOOR,
+  border: "mangrove_roots", legend: { ...OUTDOOR, ".": "salt_flat", "@": "salt_flat", T: "mangrove_roots" },
   tiles: [
     "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT",
     "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT",
@@ -64,8 +64,8 @@ export const route_7: MapDef = {
     { x: 15, y: 49, to: "saltmarsh_harbour", toX: 19, toY: 1, facing: "down" },
   ],
   npcs: [
-    { id: "angler_reed", sprite: "hiker", x: 11, y: 12, facing: "right", trainer: "angler_reed", sight: 3 },
-    { id: "angler_moss", sprite: "hiker", x: 19, y: 26, facing: "left", trainer: "angler_moss", sight: 3 },
+    { id: "angler_reed", sprite: "angler", x: 11, y: 12, facing: "right", trainer: "angler_reed", sight: 3 },
+    { id: "angler_moss", sprite: "angler", x: 19, y: 26, facing: "left", trainer: "angler_moss", sight: 3 },
     { id: "birder_tern", sprite: "birdwatcher", x: 11, y: 42, facing: "right", trainer: "birder_tern", sight: 3 },
   ],
   hidden: [{ x: 7, y: 13, item: "spring_water" }, { x: 23, y: 40, item: "glass_pod" }],

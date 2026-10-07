@@ -1394,7 +1394,7 @@ class Overworld implements Scene {
         base: py + TILE, order: 1,
         draw: () => {
           if (lift && (!a.fly || a.fly.t < 24)) drawShadow(g, sx, groundY, lift);
-          if (a === this.player && this.ctx.state.rafting) drawLilyRaft(g, sx, groundY);
+          if (a === this.player && this.ctx.state.rafting) drawLilyRaft(g, assets, sx, groundY, second);
           drawCharacter(g, assets, a.sprite, col, row, sx, sy - lift + clunk);
           if (lg) eraseCharacter(lg, assets, a.sprite, col, row, sx, sy - lift + clunk);
           if (!lift) {
