@@ -1,6 +1,5 @@
 // Chapter 10's climax (docs/CH10.md §1 and §6).
 // Bram uses the scripted ring appearances: the overworld has one follower.
-import { WHITEOUT_SCRIPT } from "../../overworld/script";
 import { MARKS, type ScriptCmd } from "../../contracts";
 import { face, flag, ifFlags, ifMarks, movePlayer, say, wait, type Scripts } from "../build";
 
@@ -118,7 +117,11 @@ export const ch10Scripts: Scripts = {
   ch10_elder: [ifFlags({ centuryheart_planted: true, elder_caught: false }, [
     say("TODO(text): The Elder leans toward the player and offers a challenge.", "NARRATOR"),
     { op: "wildBattle", species: "elder", level: 60, canLose: true },
-    { op: "ifLastBattle", result: "lost", then: [call(WHITEOUT_SCRIPT)] },
+    // The Elder isn't hostile: a loss heals the party where it stands, and it waits.
+    { op: "ifLastBattle", result: "lost", then: [
+      { op: "heal" },
+      say("TODO(text): The Elder's roots mend your team. It waits for you.", "NARRATOR"),
+    ] },
     { op: "ifLastBattle", result: "caught", then: [
       flag("elder_caught"), { op: "hideNpc", npc: "the_elder" },
       say("TODO(text): The Elder chooses to travel with the player.", "NARRATOR"),

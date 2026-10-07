@@ -732,12 +732,11 @@ it("joins BRAM, rematches each admin and listens through all three clearings in 
   } finally { stop(); }
 });
 
-it("whites out after the Elder wilts the party and starts a playable retry", async () => {
+it("heals in place after the Elder wilts the party and starts a playable retry", async () => {
   const { ctx, e2e, drive, stop } = await setup("elder_grove_heart", 10, 18);
   const { createQuickened } = await import("../src/battle");
   ctx.state.party = [createQuickened(ctx.data, "oak_acorn", 1, () => 0.5)];
   Object.assign(ctx.state.flags, { beat_mercer: true, beat_wren_2: true, centuryheart_planted: true });
-  // BRAM's ring-three heal is a real possible last heal point.
   ctx.state.heal = { map: "elder_grove_3", x: 13, y: 2 };
   ctx.state.money = 1001;
   const battle = ctx.battle.bind(ctx);
@@ -751,18 +750,18 @@ it("whites out after the Elder wilts the party and starts a playable retry", asy
     expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
     expect(hpAtLoss).toEqual([[0]]);
     expect(e2e.report.battles.at(-1)?.outcome).toBe("lost");
-    expect(ctx.state.position).toEqual({ ...ctx.state.heal, facing: "up" });
-    expect(ctx.state.money).toBe(501);
+    // The Elder's roots mend the party at the heart: no whiteout, no money lost.
+    expect(ctx.state.position.map).toBe("elder_grove_heart");
+    expect(ctx.state.money).toBe(1001);
     expect(ctx.state.party[0].hp).toBe(ctx.state.party[0].stats.hp);
     expect(ctx.state.flags.elder_caught).not.toBe(true);
-    expect(await drive(() => e2e.nav("elder_grove_heart"))).toBe(true);
     const texts = e2e.report.texts.length;
     expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
     expect(hpAtLoss).toEqual([[0], [0]]);
     expect(e2e.report.battles.map((b) => b.outcome)).toEqual(["lost", "lost"]);
     expect(e2e.report.texts.slice(texts).some((t) => t.text.includes("OAK ACORN used"))).toBe(true);
     expect(ctx.state.flags.elder_caught).not.toBe(true);
-    expect(ctx.state.money).toBe(251);
+    expect(ctx.state.money).toBe(1001);
     expect(e2e.report.issues).toEqual([]);
   } finally { stop(); }
 });

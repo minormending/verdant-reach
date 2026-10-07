@@ -1978,14 +1978,9 @@ export async function challengeElder(): Promise<boolean> {
       if (battle.outcome === "caught") return caught();
       st = ctx().state;
       if (battle.outcome === "lost") {
-        if (st.position.map !== heal.map || st.position.x !== heal.x || st.position.y !== heal.y
-          || st.money !== money - Math.floor(money / 2)
-          || !st.party.every((q) => q.seed || q.hp === q.stats.hp && q.status === null)) return fail("check 4");
-        if (ow()?.mapId !== "elder_grove_3") {
-          await nav("elder_grove_2");
-          if (!(await solveGroveLanes())) return fail("check 5");
-        }
-        await nav("elder_grove_heart");
+        // The Elder heals a defeated party in place: still at the heart, no money lost.
+        if (ow()?.mapId !== "elder_grove_heart" || st.money !== money
+          || !st.party.every((q) => q.seed || q.hp === q.stats.hp && q.status === null)) return fail("check 4 (heal in place)");
       }
       if (flag("elder_caught") || !visible() || st.herbarium.caught.includes("elder")) return fail("check 6");
       refreshHelper();

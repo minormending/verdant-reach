@@ -217,7 +217,9 @@ describe("Chapter 10 scripts", () => {
     await run("ch10_elder");
     expect(host.battle).toHaveBeenCalledWith({ kind: "wild", wild: { species: "elder", level: 60, sport: undefined }, canLose: true, backdrop: undefined });
     expect(state.flags.elder_caught ?? false).toBe(outcome === "caught");
-    expect(host.whiteout).toHaveBeenCalledTimes(outcome === "lost" ? 1 : 0);
+    // A loss to the Elder heals in place instead of whiting out.
+    expect(host.whiteout).not.toHaveBeenCalled();
+    expect(host.healParty).toHaveBeenCalledTimes(outcome === "lost" ? 1 : 0);
     const elder = WORLD.maps.elder_grove_heart.npcs.find((n) => n.id === "the_elder")!;
     await enter("elder_grove_heart");
     expect(checkCond(elder.visibleWhen, state.flags)).toBe(outcome !== "caught");
