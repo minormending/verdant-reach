@@ -46,7 +46,7 @@ export const elder_grove_1: MapDef = {
   npcs: [
     { id: "grunt_g1_1", sprite: "grunt", x: 7, y: 24, facing: "right", trainer: "grunt_g1_1", sight: 1 },
     { id: "grunt_g1_2", sprite: "grunt", x: 25, y: 13, facing: "left", trainer: "grunt_g1_2", sight: 1 },
-    { id: "shears_2", sprite: "shears", x: 13, y: 3, facing: "down", trainer: "shears_2", sight: 1 },
+    { id: "shears_2", sprite: "shears", x: 13, y: 3, facing: "down", script: "shears_2" },
     { id: "bram_ring_1", sprite: "bram", x: 17, y: 3, facing: "left", script: "ch10_bram_ring_1", visibleWhen: when({ bram_joined: true, beat_mercer: false }) },
   ],
   signs: [], triggers: [],

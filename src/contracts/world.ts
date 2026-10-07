@@ -1,6 +1,8 @@
 // World data shapes. Owned by the world agent (src/world/), interpreted by the
 // engine agent (src/overworld/).
 
+import type { BattleOutcome } from "./runtime";
+
 import type {
   CharacterKey, Dir, ItemId, MapId, MarkId, MoveId, MusicId, ScriptId, StillKey,
   SfxId, JingleId, SpeciesId, StructureKey, TileKey, TrainerId, TrainerPortraitKey,
@@ -97,7 +99,7 @@ export type ScriptCmd =
   | { op: "ifMarks"; marks: MarkId[]; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "battle"; trainer: TrainerId; canLose?: boolean } // sets flag `beat_<trainer>` on win
   | { op: "wildBattle"; species: SpeciesId; level: number; sport?: boolean; canLose?: boolean }
-  | { op: "ifLastBattle"; result: "won" | "lost"; then: ScriptCmd[]; else?: ScriptCmd[] }
+  | { op: "ifLastBattle"; result: BattleOutcome; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "heal" }                                        // full party heal + jingle
   | { op: "warp"; to: MapId; x: number; y: number; facing?: Dir }
   | { op: "movePlayer"; path: Dir[] }

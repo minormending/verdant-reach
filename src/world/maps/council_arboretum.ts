@@ -50,6 +50,7 @@ export const council_arboretum: MapDef = {
   ],
   signs: [],
   triggers: [
+    { x: 16, y: 1, script: "ch10_bram_joins", when: when({ bram_joined: false }) },
     { x: 15, y: 14, script: "ch10_council_door", when: when({ ch10_done: false }) },
     { x: 22, y: 20, script: "ch10_bram_joins", when: when({ bram_joined: false }) },
   ],

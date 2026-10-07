@@ -118,7 +118,7 @@ describe("Chapter 10 world", () => {
         expect(isWalkable(rt, m.warps[0].x, m.warps[0].y)).toBe(true);
         expect(WORLD.maps[next].warps.some((w) => w.to === id)).toBe(true);
       }
-      expect(m.npcs.find((n) => n.id === admin)?.trainer).toBe(admin);
+      expect(m.npcs.find((n) => n.id === admin)?.script).toBe(admin);
     }
   });
 

@@ -60,7 +60,7 @@ export const elder_grove_2: MapDef = {
   npcs: [
     { id: "grunt_g2_1", sprite: "grunt", x: 5, y: 27, facing: "right", trainer: "grunt_g2_1", sight: 1 },
     { id: "grunt_g2_2", sprite: "grunt", x: 24, y: 14, facing: "left", trainer: "grunt_g2_2", sight: 1 },
-    { id: "calloway_2", sprite: "shears", x: 13, y: 3, facing: "down", trainer: "calloway_2", sight: 1 },
+    { id: "calloway_2", sprite: "shears", x: 13, y: 3, facing: "down", script: "calloway_2" },
     { id: "bram_ring_2", sprite: "bram", x: 17, y: 3, facing: "left", script: "ch10_bram_ring_2", visibleWhen: when({ bram_joined: true, beat_mercer: false }) },
   ],
   signs: [],
