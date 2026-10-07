@@ -141,8 +141,13 @@ export const ch5Scripts: Scripts = {
       say("...It isn't dreaming.", "MORROW"),
       say("It's frightened.", "MORROW"),
       say("GHOST PIPES feed on the fungi under the roots. I hear what they hear.", "MORROW"),
-      say("You'll need a light. Ask the keeper in THE HOLLOW.", "MORROW"),
-      say("I'm MORROW. I keep the CONSERVATORY. Come when you can see in the dark.", "MORROW"),
+      ifFlags({ got_lantern: false }, [
+        say("You'll need a light. Ask the keeper in THE HOLLOW.", "MORROW"),
+        say("I'm MORROW. I keep the CONSERVATORY. Come when you can see in the dark.", "MORROW"),
+      ], [
+        say("You carry FOXFIRE already. Good. The dark won't stop you.", "MORROW"),
+        say("I'm MORROW. I keep the CONSERVATORY. Come and find me there.", "MORROW"),
+      ]),
       // From (34,11), down to the east-west lane, then toward town at x28.
       camera(31, 15, 30),
       moveNpc("morrow_bs", ...steps("down", 4), ...steps("left", 6)),

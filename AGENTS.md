@@ -139,6 +139,14 @@ Without a seed, the game uses its usual randomness.
    then `npm run art:index`. The bundle test fails until every required
    frame exists.
 
+## Art QA
+
+Run `npm run qa:art -- --line <line>` while refining art, and use
+`npm run qa:art -- --sheet /tmp/milestone.png --changed <git-ref>` for the
+final changed-only review. `npm run qa:maps` measures outdoor landmark coverage.
+See [docs/ART_QA.md](docs/ART_QA.md) for thresholds, calibration flags and the
+existing roster failures; the QA tools never modify art.
+
 ## Known weak sprites (a good next task)
 
 - `holly`: the adult reads as a bush, not a knight.
