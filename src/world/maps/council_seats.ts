@@ -36,7 +36,7 @@ export const fellowship_hall: MapDef = {
   structures: [], warps: [{ x: 4, y: 7, to: "council_hall", toX: 7, toY: 1, facing: "down" }],
   npcs: [
     { id: "rowan", sprite: "vale", x: 4, y: 2, facing: "down", script: "ch11_ending" },
-    { id: "imogen", sprite: "vale", x: 6, y: 2, facing: "down", script: "ch11_ending" },
+    { id: "imogen", sprite: "vale", x: 6, y: 2, facing: "down", script: "ch11_ending", visibleWhen: when({ game_cleared: true }) },
   ],
   signs: [], triggers: [], onEnter: "ch11_ending",
 };

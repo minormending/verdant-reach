@@ -113,13 +113,15 @@ describe("Chapter 11 Council world", () => {
     expect(state.flags.council_run).toBe(false);
   });
 
-  it("gates the Arboretum hall script and preserves the story pass's stub ids", async () => {
+  it("gates the Arboretum hall script and wires the Council encounter ids", async () => {
     const { state, scene } = sceneAt("council_hall");
     await runScript(scene.host, "ch11_hall_door");
     expect(state.position).toEqual({ map: "council_hall", x: 7, y: 10, facing: "up" });
-    for (const id of ["belladonna", "mimi_osa", "titus_arum", "pyra", "rowan"]) {
-      expect(WORLD.scripts[id][0]).toMatchObject({ op: "say", text: `TODO(text): ${id}` });
+    for (const [i, id] of ["belladonna", "mimi_osa", "titus_arum", "pyra", "rowan"].entries()) {
+      expect(WORLD.scripts[id]).toBeDefined();
       expect(WORLD.scripts[`${id}_after`]).toBeDefined();
+      expect(WORLD.maps[ROOMS[i]].npcs)
+        .toContainEqual(expect.objectContaining({ id, script: id }));
     }
     expect(WORLD.scripts.ch11_ending).toBeDefined();
   });
