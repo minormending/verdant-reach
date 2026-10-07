@@ -171,7 +171,7 @@ describe("Chapter 6 scripts", () => {
     expect(host.battle).toHaveBeenCalledOnce();
     events.length = 0;
     await run("ch6_lantern_tree");
-    expect(events).toEqual(["flash:gold", "sfx:pulse", "still:bloom", "stillClear", "hide:reyes_point"]);
+    expect(events).toEqual(["flash:gold", "sfx:pulse", "still:lantern_tree_healed", "stillClear", "hide:reyes_point"]);
     expect(state.flags.lantern_healed).toBe(true);
     expect(state.bag.cactus_sap ?? 0).toBe(0);
     await run("ch6_lantern_tree");
