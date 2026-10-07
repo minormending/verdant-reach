@@ -1,0 +1,9 @@
+{
+  "format": "verdant.structure/1",
+  "id": "prop_flower_bucket",
+  "image": "structure.png",
+  "size": [1, 2],
+  "credits": "Original pixel art for Verdant Reach (tools/art/props_fallback.py).",
+  "source": { "kind": "generated", "tool": "tools/art/props_fallback.py" },
+  "notes": "FALLBACK: Original GBC plant for supported no-pack play."
+}

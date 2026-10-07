@@ -162,7 +162,7 @@ first `front` file) and how long it shows, in 60 fps ticks.
 **References.** A *ref* is a cell number (a static tile) or an array of 1–2
 cell numbers (animation frames 1 and 2).
 - `base` (required) is the plain tile.
-- `alts` (optional, up to 3 static refs) are ground variations, picked by a
+- `alts` (optional, up to 5 static refs) are ground variations, picked by a
   position hash.
 - `masks` (optional) are autotile variants keyed `"0"`–`"15"`, where
   N=1, E=2, S=4 and W=8 are set for same-group neighbours.
@@ -309,6 +309,54 @@ The `limezu` folder is gitignored. No LimeZu pixels or derivatives may enter
 git, including source sheets, cropped bundles or review sheets. See
 `docs/RESTYLE.md` §1 for the licence and local importer plan. Public clones
 and CI use the supported GBC fallback until shipping is decided.
+
+### LimeZu importer
+
+`tools/art/limezu/build_pack.py` builds the interior half of the private
+`limezu` pack: mapped furniture props, four six-cell floor blocks, cream
+wall faces and all sixteen tan-border wall masks. It reads coordinates
+from `tools/art/limezu/mapping/interior_props.json`. Unmapped (`source: null`)
+props have no contract or bundle yet. Map re-layouts are a separate phase.
+
+Set `LIMEZU_INTERIORS`, `LIMEZU_EXTERIORS` and optionally `LIMEZU_UI` to the
+local pack roots, or create **gitignored** `tools/art/limezu/local.json`:
+
+```json
+{
+  "interiors": "/absolute/path/to/moderninteriors-win",
+  "exteriors": "/absolute/path/to/modernexteriors-win",
+  "ui": "/absolute/path/to/modernuserinterface-win"
+}
+```
+
+Environment variables take precedence. These paths are local configuration;
+never commit `local.json`. Run with the pinned art Python environment:
+
+```bash
+$PY tools/art/limezu/gen_props.py          # public geometry only: src/contracts/props.ts
+$PY tools/art/props_fallback.py            # original GBC bundles for every mapped prop
+npm run art:index                         # after adding/removing fallback bundles
+$PY tools/art/limezu/build_pack.py         # private crops + interior shell + local index
+$PY tools/art/limezu/build_pack.py --check # read-only freshness check; exit 1 if stale
+$PY tools/art/limezu/gen_props.py --check  # public contract freshness
+$PY tools/art/limezu/test_build_pack.py    # synthetic-pixel importer tests
+```
+
+The `props_contracts` and `props` builders regenerate public geometry and
+fallback art in `build_all.py --regen`. Fallback notes begin `FALLBACK:`;
+these original pixels support no-pack play and pass the release gate.
+Prop boxes round up to tiles; crops are bottom-aligned and horizontally
+centred without scaling. Collision uses the bottom `max(1, h-1)` tile rows.
+Rugs, windows and paintings use the non-solid floor layer.
+
+**Nothing the importer writes may be committed.** Its only destination is
+`public/art/packs/limezu/`, including its private generation manifest and
+the R1b local index. It verifies every destination with `git check-ignore`
+before writing, rejects symlinks and paths outside that folder, and never
+rewrites the committed index. PNG/JSON bytes are deterministic; repeated
+runs leave unchanged files untouched. Each imported bundle credits
+[LimeZu](https://limezu.itch.io/). Do not copy imported crops, source sheets,
+or review images into public bundle folders or git. See RESTYLE.md §1.
 
 ## 9. Validation (`src/art/bundles.test.ts`, run by `npm test` and CI)
 

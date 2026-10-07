@@ -5,7 +5,7 @@ Per-tile images are named with the legacy stems, which are also the names
 `art.py explode` writes and `art.py pack` reads:
 
     <key>            base, frame 1          <key>__2         base, frame 2
-    <key>~<n>        alt n (1..3, static)
+    <key>~<n>        alt n (1..5, static)
     <key>@<m>        mask m (0..15) frame 1 <key>@<m>__2     mask m, frame 2
 
 Sheet layout written by `assemble` (16 columns):
@@ -24,7 +24,7 @@ import numpy as np
 
 TILE = 16
 COLUMNS = 16
-STEM_RE = re.compile(r"^(?P<key>[a-z0-9_]+?)(?:~(?P<alt>[1-3])|@(?P<mask>\d{1,2}))?(?:__(?P<frame>2))?$")
+STEM_RE = re.compile(r"^(?P<key>[a-z0-9_]+?)(?:~(?P<alt>[1-5])|@(?P<mask>\d{1,2}))?(?:__(?P<frame>2))?$")
 
 
 def parse_stem(stem: str) -> tuple[str, str, int, int]:

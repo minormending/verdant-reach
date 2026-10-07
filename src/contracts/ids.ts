@@ -2,6 +2,8 @@
 // here is a contract change (ask main), adding content under an existing id
 // is not.
 
+import { PROP_SPECS } from "./props";
+
 export const TYPES = [
   "wood", "fire", "water", "bug", "bloom", "ghost", "thorn", "frost", "dragon",
 ] as const;
@@ -279,6 +281,7 @@ export type FieldMove = keyof typeof FIELD_MOVES;
 /** Buildings and furniture props drawn from one image; the footprint is
  *  solid except the door. Floor-layer props are never solid. */
 const STRUCTURE_SPECS = {
+  ...PROP_SPECS,
   house_small:  { w: 4, h: 3, door: { x: 1, y: 2 } },
   house_large:  { w: 5, h: 4, door: { x: 2, y: 3 } },
   herbarium:    { w: 6, h: 4, door: { x: 2, y: 3 } },

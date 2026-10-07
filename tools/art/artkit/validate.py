@@ -93,9 +93,9 @@ def check_tileset(b: B.Bundle, out: list[Problem]) -> None:
             continue
         refs = list(base)
         alts = e.get("alts", [])
-        if not isinstance(alts, list) or len(alts) > 3 or any(_refcells(x) is None or len(_refcells(x)) != 1
+        if not isinstance(alts, list) or len(alts) > 5 or any(_refcells(x) is None or len(_refcells(x)) != 1
                                                                and not isinstance(x, int) for x in alts):
-            bad("alts must be up to 3 static cells")
+            bad("alts must be up to 5 static cells")
         else:
             refs += [x if isinstance(x, int) else x[0] for x in alts]
         for m, r in (e.get("masks") or {}).items():
