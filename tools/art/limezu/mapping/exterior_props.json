@@ -1,0 +1,286 @@
+{
+ "barn": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/24_Additional_Houses_16x16.png",
+  "box": [
+   0,
+   4277,
+   206,
+   4424
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "barrel_out": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",
+  "box": [
+   370,
+   353,
+   381,
+   368
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "bench_park": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/4_Generic_Buildings_16x16.png",
+  "box": [
+   367,
+   2138,
+   401,
+   2161
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "boat": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/11_Camping_16x16.png",
+  "box": [
+   7,
+   592,
+   95,
+   652
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "bush": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "camp_tent": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/11_Camping_16x16.png",
+  "box": [
+   448,
+   308,
+   511,
+   369
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "city_house": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/4_Generic_Buildings_16x16.png",
+  "box": [
+   367,
+   572,
+   465,
+   689
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "conservatory": {
+  "source": null,
+  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+ },
+ "crate_out": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/11_Camping_16x16.png",
+  "box": [
+   240,
+   342,
+   272,
+   368
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "dock": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "flower_bed": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/7_Villas_16x16.png",
+  "box": [
+   5,
+   559,
+   27,
+   571
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "fountain": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "greenhouse": {
+  "source": null,
+  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+ },
+ "harbour_house": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/24_Additional_Houses_16x16.png",
+  "box": [
+   0,
+   4277,
+   206,
+   4424
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "haybale": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "hedge_block": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "herbarium": {
+  "source": null,
+  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+ },
+ "house_large": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/7_Villas_16x16.png",
+  "box": [
+   0,
+   0,
+   145,
+   209
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "house_small": {
+  "source": null,
+  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+ },
+ "lamp_street": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/11_Camping_16x16.png",
+  "box": [
+   275,
+   2787,
+   285,
+   2865
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "lodge": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/7_Villas_16x16.png",
+  "box": [
+   271,
+   767,
+   353,
+   908
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "log": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/7_Villas_16x16.png",
+  "box": [
+   307,
+   625,
+   333,
+   640
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "mailbox": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/24_Additional_Houses_16x16.png",
+  "box": [
+   432,
+   694,
+   448,
+   713
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "market": {
+  "source": null,
+  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+ },
+ "market_large": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/9_Shopping_Center_and_Markets_16x16.png",
+  "box": [
+   0,
+   405,
+   161,
+   545
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "picnic_table": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "rock_large": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "scarecrow": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "signpost": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "statue": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",
+  "box": [
+   1,
+   229,
+   30,
+   273
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "stump": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/7_Villas_16x16.png",
+  "box": [
+   229,
+   663,
+   270,
+   688
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "tree_autumn": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/11_Camping_16x16.png",
+  "box": [
+   193,
+   1398,
+   256,
+   1489
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "tree_dead": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/11_Camping_16x16.png",
+  "box": [
+   144,
+   1159,
+   176,
+   1200
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "tree_palm": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "tree_pine": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/11_Camping_16x16.png",
+  "box": [
+   255,
+   963,
+   353,
+   1057
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "tree_round": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/7_Villas_16x16.png",
+  "box": [
+   199,
+   689,
+   269,
+   753
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "well": {
+  "source": null,
+  "note": "no fitting single piece found; source elsewhere or draw our own"
+ },
+ "windmill": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/24_Additional_Houses_16x16.png",
+  "box": [
+   256,
+   4285,
+   321,
+   4401
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ }
+}
