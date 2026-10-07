@@ -1,0 +1,390 @@
+{
+ "armchair": {
+  "source": null,
+  "note": "no fitting single piece in the Theme Sorter catalogues; build from Room Builder pieces or draw our own"
+ },
+ "barrel": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",
+  "box": [
+   399,
+   0,
+   417,
+   17
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "bed_single": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/4_Bedroom_16x16.png",
+  "box": [
+   130,
+   332,
+   158,
+   374
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "bookcase": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/5_Classroom_and_library_16x16.png",
+  "box": [
+   129,
+   314,
+   158,
+   347
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "bookcase_narrow": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/5_Classroom_and_library_16x16.png",
+  "box": [
+   66,
+   256,
+   95,
+   298
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "cabinet_glass": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/2_LivingRoom_16x16.png",
+  "box": [
+   145,
+   79,
+   174,
+   108
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "cash_register": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/16_Grocery_store_16x16.png",
+  "box": [
+   235,
+   715,
+   256,
+   733
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "chair": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/2_LivingRoom_16x16.png",
+  "box": [
+   209,
+   288,
+   223,
+   312
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "clock": {
+  "source": null,
+  "note": "no fitting single piece in the Theme Sorter catalogues; build from Room Builder pieces or draw our own"
+ },
+ "counter": {
+  "source": null,
+  "note": "no fitting single piece in the Theme Sorter catalogues; build from Room Builder pieces or draw our own"
+ },
+ "crate": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",
+  "box": [
+   289,
+   533,
+   319,
+   560
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "desk": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/5_Classroom_and_library_16x16.png",
+  "box": [
+   120,
+   57,
+   150,
+   81
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "display_case": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/22_Museum.png",
+  "box": [
+   36,
+   311,
+   62,
+   328
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "dresser": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/4_Bedroom_16x16.png",
+  "box": [
+   187,
+   6,
+   256,
+   46
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "fireplace": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/2_LivingRoom_16x16.png",
+  "box": [
+   143,
+   671,
+   177,
+   713
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "fish_tank": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/9_Fishing_16x16.png",
+  "box": [
+   3,
+   406,
+   29,
+   431
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "flower_bucket": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",
+  "box": [
+   417,
+   347,
+   430,
+   368
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "fridge": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/12_Kitchen_16x16.png",
+  "box": [
+   143,
+   422,
+   169,
+   460
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "globe": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/5_Classroom_and_library_16x16.png",
+  "box": [
+   208,
+   16,
+   223,
+   39
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "lamp_floor": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/2_LivingRoom_16x16.png",
+  "box": [
+   175,
+   182,
+   192,
+   209
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "microscope": {
+  "source": null,
+  "note": "no fitting single piece in the Theme Sorter catalogues; build from Room Builder pieces or draw our own"
+ },
+ "painting": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/22_Museum.png",
+  "box": [
+   224,
+   469,
+   256,
+   495
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "plant_palm": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",
+  "box": [
+   211,
+   407,
+   236,
+   440
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "plant_small": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/2_LivingRoom_16x16.png",
+  "box": [
+   1,
+   85,
+   15,
+   101
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "plant_tall": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/2_LivingRoom_16x16.png",
+  "box": [
+   212,
+   344,
+   236,
+   376
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "plant_tree": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",
+  "box": [
+   214,
+   456,
+   234,
+   489
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "planter_box": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",
+  "box": [
+   321,
+   528,
+   383,
+   560
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "potting_bench": {
+  "source": null,
+  "note": "no fitting single piece in the Theme Sorter catalogues; build from Room Builder pieces or draw our own"
+ },
+ "rug_large": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",
+  "box": [
+   195,
+   338,
+   253,
+   398
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "rug_small": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",
+  "box": [
+   147,
+   168,
+   173,
+   188
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "sack": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/16_Grocery_store_16x16.png",
+  "box": [
+   192,
+   714,
+   207,
+   734
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "seed_tray": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",
+  "box": [
+   63,
+   949,
+   144,
+   977
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "shelf_jars": {
+  "source": null,
+  "note": "no fitting single piece in the Theme Sorter catalogues; build from Room Builder pieces or draw our own"
+ },
+ "shop_shelf": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/16_Grocery_store_16x16.png",
+  "box": [
+   7,
+   69,
+   26,
+   97
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "sink": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/16_Grocery_store_16x16.png",
+  "box": [
+   167,
+   877,
+   205,
+   910
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "sofa": {
+  "source": null,
+  "note": "no fitting single piece in the Theme Sorter catalogues; build from Room Builder pieces or draw our own"
+ },
+ "stool": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",
+  "box": [
+   0,
+   283,
+   15,
+   298
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "stove": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/12_Kitchen_16x16.png",
+  "box": [
+   240,
+   474,
+   256,
+   495
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "table_large": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",
+  "box": [
+   12,
+   592,
+   52,
+   631
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "table_small": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/12_Kitchen_16x16.png",
+  "box": [
+   183,
+   241,
+   201,
+   257
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "wardrobe": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/2_LivingRoom_16x16.png",
+  "box": [
+   113,
+   67,
+   142,
+   108
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "watering_can": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",
+  "box": [
+   451,
+   385,
+   476,
+   400
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ },
+ "window": {
+  "source": "interiors:1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",
+  "box": [
+   226,
+   694,
+   253,
+   716
+  ],
+  "picked_by": "codex lz-pick, checked by the lead"
+ }
+}
