@@ -130,3 +130,42 @@ Chapter 6 seagrass line (set in `tools/art/crystal/seagrass.py`; palettes are da
 | eelgrass | warmer green foliage (natural variation; no named colour form identified) | Zostera marina, the same natural green variation as the shoot; no named colour form identified. White midrib, sheath and oxygen-bubble highlights stay white. | `#286048 #80b868 #f8f8f8` |
 
 References: the [USDA NRCS eelgrass fact sheet](https://plants.usda.gov/DocumentLibrary/factsheet/pdf/fs_zoma.pdf) describes the creeping rhizome, rounded ribbon leaves and reproductive spathes. [Fonseca & Uhrin, Marine Fisheries Review 71(3)](https://spo.nmfs.noaa.gov/sites/default/files/pdf-content/MFR/mfr713/mfr7134.pdf) describes dark green foliage. [Dennison & Alberte, photosynthetic responses to light intensity](https://pubmed.ncbi.nlm.nih.gov/28311224/) measured changes in leaf chlorophyll under different light conditions; the particular warmer green palette is an artistic interpretation, not a documented named form.
+
+Chapter 6 mangrove line (set in `tools/art/crystal/mangrove.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| mangrove_propagule | sun-bleached yellow-green (natural colour interpretation) | Rhizophora mangle. No named cultivar is claimed: the green propagule and first leaves take the natural yellow-green of sun-bleached foliage, interpreted artistically rather than as a genetically stable sport. Brown rooting tip and mud stay warm brown; white gloss stays white. | `#906038 #b8c868 #f8f8f8` |
+| mangrove_sapling | sun-bleached yellow-green (natural colour interpretation) | Rhizophora mangle, the same natural yellow-green interpretation as the propagule; no named cultivar. Red-brown stilt roots remain brown and the white water-line reflections stay white. | `#906038 #b8c868 #f8f8f8` |
+| red_mangrove | sun-bleached yellow-green (natural colour interpretation) | Rhizophora mangle, the same natural yellow-green interpretation; no named cultivar. The dense canopy changes to yellow-green over warm brown prop roots, with the shared white reserved for gloss and water reflections. | `#906038 #b8c868 #f8f8f8` |
+
+Botanical references: [University of Florida IFAS, Red Mangrove (FR460)](https://ask.ifas.ufl.edu/publication/FR460) describes the long green propagules, glossy leaves and arching aerial roots; [UF/IFAS Center for Aquatic and Invasive Plants](https://plant-directory.ifas.ufl.edu/plant-directory/rhizophora-mangle/) describes the shiny evergreen foliage and bowed stilt roots. These support the plant anatomy; the particular sun-bleached yellow-green palette is an artistic interpretation, not a documented named colour form.
+
+Chapter 6 prickly pear line (set in `tools/art/crystal/prickly_pear.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| pear_pad | Santa Rita purple prickly pear | Opuntia 'Santa Rita' (also listed as O. santa-rita / O. violacea 'Santa Rita'): violet-purple pads, particularly in cold or dry conditions. Crystal: purple-violet paddle faces, plum-magenta in the dark slot; white glochid highlights stay white. | `#782850 #b088c0 #f8f8f8` |
+| padded_cactus | Santa Rita purple prickly pear | The same real purple prickly pear as pear_pad, expressed in the four joined paddle faces. White areole tufts and edge highlights stay white. | `#782850 #b088c0 #f8f8f8` |
+| prickly_pear | Santa Rita purple prickly pear | The same purple prickly pear: violet pads with red-purple fruit. The four-colour interpretation retains plum-magenta tunas; the flower cups share the pad tone and white petal rims. | `#782850 #b088c0 #f8f8f8` |
+
+Botanical references: the [University of Arizona Campus Arboretum, Santa Rita prickly pear](https://apps.cals.arizona.edu/arboretum/taxon.aspx?id=893) describes violet-purple pads, yellow flowers along upper pad edges and red-purple fruits. The [University of Arizona Extension garden plant list](https://extension.arizona.edu/sites/extension.arizona.edu/files/programs/2022master-gardener-EG-plant-list.pdf) lists Opuntia violacea 'Santa Rita' and its purple colour in cold or dry weather. The sprite's exact two-tone palette is an artistic interpretation; yellow flowers share warm sage in the base art because a separate yellow hue would require a palette exception.
+
+Chapter 6 saguaro line (set in `tools/art/crystal/saguaro.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| saguaro_pup | blue-grey waxy bloom (unnamed colour interpretation) | Carnegiea gigantea: an artistic blue-grey interpretation of waxy bloom on drought-stressed stems, not a named cultivar or genetically stable colour sport. Only the two green slots change; white spine highlights stay white. | `#405c68 #98b0b8 #f8f8f8` |
+| saguaro_column | blue-grey waxy bloom (unnamed colour interpretation) | The same unnamed waxy-bloom interpretation on the unbranched stem. Cristate (crested) growth changes shape, so it cannot be represented by this palette sport. | `#405c68 #98b0b8 #f8f8f8` |
+| saguaro | blue-grey waxy bloom (unnamed colour interpretation) | The same unnamed blue-grey stem interpretation; white flowers and spine highlights remain white. No named cultivar or cristate shape is claimed. | `#405c68 #98b0b8 #f8f8f8` |
+
+Botanical references: [NPS, Saguaro Cactus](https://home.nps.gov/orpi/learn/nature/saguaro-cactus.htm) describes the protective waxy skin and nurse plants; [NPS, Saguaro Growth](https://home.nps.gov/sagu/learn/nature/saguaro-growth.htm) describes flower crowns on the stem and arms. These support the anatomy and waxy surface. The blue-grey palette and its drought-stressed appearance are an artistic interpretation: these references do not establish a named blue-grey form or a drought-induced colour change.
+
+Chapter 6 vanilla line (set in `tools/art/crystal/vanilla.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| vanilla_vine | 'Variegata' | Vanilla planifolia 'Variegata': fleshy green leaves striped creamy white. Crystal: a pale cream-green leaf face over olive-green shade and a green-brown stake; the existing longitudinal highlights suggest the striping. Palette swap only. | `#586040 #d0d8a0 #f8f8f8` |
+| vanilla_orchid | 'Variegata' | The same cream-striped Vanilla planifolia form as vanilla_vine. Leaf faces and orchid segments take pale cream-green; the stake and long green capsules retain an olive dark tone. Shared white stays reserved for rims and gloss, with identical geometry. | `#586040 #d0d8a0 #f8f8f8` |
+
+Botanical references: [University of California Riverside Botanic Gardens, Fall 2021 plant list](https://gardens.ucr.edu/sites/g/files/rcwecm4706/files/2021-09/Online%20Fall%202021%20Plant%20List%209.21.2021.pdf) lists Vanilla planifolia 'Variegata' with succulent leaves striped creamy white and pale yellow-green flowers. [UF/IFAS, Vanilla Growing in South Florida (HS1348)](https://ask.ifas.ufl.edu/publication/HS1348) describes the fleshy climbing vine, oval pointed leaves, aerial roots, cream-green flowers with a modified lip, and elongated green capsules. The exact cream-green palette is an artistic interpretation of variegation within two colour slots.
