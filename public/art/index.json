@@ -116,6 +116,7 @@
   "tilesets": {
     "burnt": ["sheet.png"],
     "city": ["sheet.png"],
+    "frontier": ["sheet.png"],
     "hollow": ["sheet.png"],
     "interior": ["sheet.png"],
     "nature": ["sheet.png"],
@@ -123,7 +124,6 @@
     "oldgrowth": ["sheet.png"],
     "orchard": ["sheet.png"],
     "palm_house": ["sheet.png"],
-    "placeholder_tiles": ["sheet.png"],
     "relay": ["sheet.png"],
     "rose": ["sheet.png"],
     "terrain": ["sheet.png"],
