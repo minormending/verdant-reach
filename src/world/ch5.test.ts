@@ -50,7 +50,7 @@ describe("Chapter 5 world", () => {
     const north = m.warps.filter((w) => w.to === "route_6");
     expect(north).toHaveLength(1);
     const ranger = m.npcs.find((n) => n.id === "grove_ranger")!;
-    expect(ranger).toMatchObject({ sprite: "hiker", script: "ch5_grove_ranger" });
+    expect(ranger).toMatchObject({ sprite: "ranger", script: "ch5_grove_ranger" });
     for (const done of [false, true]) {
       const g = occupiedGrid(m, { ch4_done: done, grove_cleared: true });
       const reach = flood(g, [{ x: 13, y: 26 }]);
@@ -61,12 +61,12 @@ describe("Chapter 5 world", () => {
   it("makes the long canopy walkway the only connection between the clearings", () => {
     const m = WORLD.maps.route_6, g = grid(m);
     for (let y = 21; y <= 39; y++) {
-      expect(g.tile(14, y)).toBe("boardwalk");
-      expect(g.tile(13, y)).toBe("water");
+      expect(g.tile(14, y)).toBe("canopy_boardwalk");
+      expect(g.tile(13, y)).toBe("rope_rail");
     }
     const start = [{ x: 14, y: 58 }];
     expect(flood(g, start).has("14,1")).toBe(true);
-    const severed = { ...g, tile: (x: number, y: number) => y === 30 && g.tile(x, y) === "boardwalk" ? "water" as const : g.tile(x, y) };
+    const severed = { ...g, tile: (x: number, y: number) => y === 30 && g.tile(x, y) === "canopy_boardwalk" ? "canopy_drop" as const : g.tile(x, y) };
     expect(flood(severed, start).has("14,1")).toBe(false);
     expect(m.npcs.filter((n) => n.trainer)).toHaveLength(4);
     expect(m.hidden).toHaveLength(2);

@@ -328,3 +328,124 @@ it("selects the caught vine through the trader's party filter and finishes POLLY
     expect(e2e.report.issues).toEqual([]);
   } finally { stop(); }
 });
+
+it("routes between real ICE slide stops to SIGNE and back without turning mid-slide", async () => {
+  const { ctx, e2e, drive, stop } = await setup("larchmere_conservatory", 7, 18);
+  Object.assign(ctx.state.flags, { lake_calmed: true, beat_jr_flurry: true, beat_jr_hoarfrost: true });
+  const driver = (window as unknown as { __t: { step(d: string): Promise<void> } }).__t;
+  const moves: { dir: string; from: string; to: string }[] = [];
+  const step = driver.step;
+  vi.spyOn(driver, "step").mockImplementation(async (dir) => {
+    const from = `${ctx.state.position.x},${ctx.state.position.y}`;
+    await step(dir);
+    moves.push({ dir, from, to: `${ctx.state.position.x},${ctx.state.position.y}` });
+  });
+  try {
+    expect(await drive(() => e2e.walkTo(7, 14))).toBe(false); // an intermediate ice cell is no stop
+    expect(await drive(() => e2e.walkTo(7, 3))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ x: 7, y: 3 });
+    expect(moves).toEqual(expect.arrayContaining([
+      { dir: "right", from: "2,14", to: "13,14" },
+      { dir: "left", from: "13,10", to: "2,10" },
+      { dir: "right", from: "2,6", to: "13,6" },
+    ]));
+    expect(await drive(() => e2e.walkTo(7, 18))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ x: 7, y: 18 });
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("stores the last party member through the real LARCHMERE cabinet to make catch room", async () => {
+  const { ctx, e2e, drive, stop } = await setup("larchmere_greenhouse", 5, 7);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = Array.from({ length: 6 }, () => createQuickened(ctx.data, "red_chili", 48, () => 0.5));
+  const last = ctx.state.party[5];
+  try {
+    expect(await drive(() => e2e.makePartyRoom())).toBe(true);
+    expect(ctx.state.party).toHaveLength(5);
+    expect(ctx.state.box).toContain(last);
+    expect(e2e.report.texts.some((t) => /opened the SPECIMEN CABINET/.test(t.text))).toBe(true);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("drives COLD SNAP's real party picker and consumes one item when the bulb grows", async () => {
+  const { ctx, e2e, drive, stop } = await setup("larchmere_conservatory", 7, 3);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5),
+    createQuickened(ctx.data, "snowdrop_bulb", 33, () => 0.5)];
+  ctx.state.bag.cold_snap = 2;
+  const bulb = ctx.state.party[1];
+  try {
+    await drive(() => e2e.growWithItem(1, "cold_snap"));
+    expect(bulb.species).toBe("snowdrop_shoot");
+    expect(ctx.state.bag.cold_snap).toBe(1);
+    expect(ctx.state.herbarium.caught).toContain("snowdrop_shoot");
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("uses Chapter 7's closed gate, raft, bookcase, guarded emitters and files through field input", async () => {
+  const { ctx, e2e, drive, stop } = await setup("larchmere", 17, 28);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  Object.assign(ctx.state.flags, { ch6_done: true, ch7_arrived: true });
+  // Field routing and script prerequisites are the subject here. The real
+  // seeded boss scenes are exercised in battle-scene.test.ts and the suite.
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  vi.spyOn(ctx.assets, "image").mockReturnValue({} as HTMLImageElement);
+  try {
+    expect(await drive(() => e2e.trigger("ch7_cons7_door"))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ map: "larchmere", x: 26, y: 11 });
+    expect(ctx.state.flags.lake_calmed).not.toBe(true);
+    expect(await drive(() => e2e.nav("bloom_lake"))).toBe(true);
+    expect(await drive(() => e2e.walkTo(18, 19))).toBe(true);
+    expect(ctx.state.rafting).toBeUndefined();
+    expect(e2e.report.texts.some((t) => /Ride the LILY RAFT/.test(t.text))).toBe(true);
+    expect(await drive(() => e2e.talkTo("crimson_lily"))).toBe(true);
+    expect(ctx.battle).toHaveBeenCalledWith(expect.objectContaining({ kind: "wild",
+      wild: { species: "giant_water_lily", level: 40, sport: true } }));
+    expect(ctx.state.flags.crimson_lily_done).toBe(true);
+    expect(await drive(() => e2e.nav("larchmere_lodge"))).toBe(true);
+    if (!ctx.state.flags.lodge_grunt_seen) expect(await drive(() => e2e.trigger("ch7_lodge_grunt"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ lodge_grunt_seen: true, beat_grunt_lodge: true });
+    expect(await drive(() => e2e.trigger("ch7_bookcase"))).toBe(true);
+    expect(ctx.state.position.map).toBe("rootstock_hideout_1");
+    for (const n of [1, 2, 3]) {
+      expect(await drive(() => e2e.talkTo(`grunt_b1_${n}`))).toBe(true);
+      expect(await drive(() => e2e.talkTo(`emitter_${n}`))).toBe(true);
+      expect(ctx.state.flags[`emitter_${n}_off`]).toBe(true);
+    }
+    expect(ctx.state.flags.emitters_off).toBe(true);
+    expect(await drive(() => e2e.nav("rootstock_hideout_2"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("calloway"))).toBe(true);
+    expect(ctx.state.flags.calloway_escaped).toBe(true);
+    expect(await drive(() => e2e.trigger("ch7_files"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ files_read: true, lake_calmed: true });
+    expect(await drive(() => e2e.nav("larchmere"))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ x: 30, y: 23 });
+    expect(await drive(() => e2e.nav("larchmere_conservatory"))).toBe(true);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("searches ROUTE 9's snow and returns the real hidden pack for LOST CLIMBER's reward", async () => {
+  const { ctx, e2e, drive, stop } = await setup("route_9", 14, 54);
+  ctx.battle = vi.fn().mockResolvedValue("fled");
+  try {
+    expect(await drive(() => e2e.talkTo("mountaineer"))).toBe(true);
+    expect(ctx.state.flags.quest_lost_climber_started).toBe(true);
+    expect(await drive(() => e2e.walkTo(8, 8))).toBe(true);
+    await drive(async () => { await e2e.press("a"); await e2e.advance(); });
+    expect(ctx.state.flags.hidden_route_9_8_8).toBe(true);
+    expect(ctx.state.bag.climber_pack).toBe(1);
+    expect(await drive(() => e2e.walkTo(8, 40))).toBe(true);
+    const rain = ctx.state.bag.rain_jar ?? 0, cold = ctx.state.bag.cold_snap ?? 0;
+    expect(await drive(() => e2e.talkTo("mountaineer"))).toBe(true);
+    expect(ctx.state.flags.quest_lost_climber_done).toBe(true);
+    expect(ctx.state.bag.climber_pack ?? 0).toBe(0);
+    expect(ctx.state.bag.rain_jar).toBe(rain + 2);
+    expect(ctx.state.bag.cold_snap).toBe(cold + 1);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});

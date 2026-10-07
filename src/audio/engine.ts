@@ -103,6 +103,10 @@ export class Chip {
     const peak = (ev.vol / 15) * CHANNEL_MIX[ch];
     if (peak <= 0) return [];
     const g = ctx.createGain();
+    // Start silent: a GainNode defaults to 1, and when the source's first
+    // frame rounds to just before the envelope's first event, one sample
+    // leaked through at full level (a click on about 1 kick in 8).
+    g.gain.value = 0;
     envelope(g.gain, t, dur, peak, ev);
     g.connect(out);
     const end = t + dur + RELEASE + 0.01;

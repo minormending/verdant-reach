@@ -7,7 +7,7 @@
     "mark_bramble": { "file": "mark_bramble.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/ui.py" } },
     "mark_cactus": { "file": "mark_cactus.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/placeholder.py" } },
     "mark_mangrove": { "file": "mark_mangrove.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/placeholder.py" } },
-    "mark_pipe": { "file": "mark_pipe.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/placeholder.py" } },
+    "mark_pipe": { "file": "mark_pipe.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast5/icons5.py" } },
     "mark_rose": { "file": "mark_rose.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/ui4.py" } },
     "mark_snowdrop": { "file": "mark_snowdrop.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/placeholder.py" } },
     "mark_sundew": { "file": "mark_sundew.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/ui.py" } },

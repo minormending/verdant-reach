@@ -64,6 +64,9 @@ export interface MapDef {
 
 export interface NpcDef {
   id: string;                   // unique within the map
+  /** Render UP while this flag is true, DOWN otherwise. Lever/valve IDs may
+   *  also use `lever:<flag>` / `valve:<flag>`; stateFlag takes precedence. */
+  stateFlag?: string;
   sprite: CharacterKey;
   x: number;
   y: number;
