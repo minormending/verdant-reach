@@ -515,6 +515,55 @@ const LIST: HerbariumEntry[] = [
   // Source: https://en.wikipedia.org/wiki/Pando_(tree)
   h("elder", "Populus tremuloides", "Elder Clone", 24, 6000000,
     "Every trunk turns toward you in welcome. A single aspen clone can grow thousands of trunks from one shared root system."),
+
+  // ---------------------------------------------------------------- Chapter 11
+  // Fact: All parts of the plant are toxic if eaten.
+  // Source: https://en.wikipedia.org/wiki/Atropa_belladonna
+  h("nightshade_sprout", "Atropa belladonna", "Shade Sprout", 0.2, 0.1,
+    "It waits quietly for you to settle beside it. All parts of the plant are toxic if eaten."),
+  // Fact: All parts of the plant are toxic if eaten.
+  // Source: https://en.wikipedia.org/wiki/Atropa_belladonna
+  h("nightshade", "Atropa belladonna", "Nightshade", 1.5, 2,
+    "It keeps you company through the longest evenings. All parts of the plant are toxic if eaten."),
+  // Fact: All parts of the plant are toxic if eaten.
+  // Source: https://en.wikipedia.org/wiki/Nerium
+  h("oleander", "Nerium oleander", "Oleander", 3, 30,
+    "It greets a familiar footstep with a little sway. All parts of the plant are toxic if eaten."),
+
+  // Fact: Its leaflets fold inward within seconds when touched.
+  // Source: https://en.wikipedia.org/wiki/Mimosa_pudica
+  h("mimosa_sprout", "Mimosa pudica", "Mimosa Shoot", 0.1, 0.05,
+    "It seems shy, but stays close to you. Its leaflets fold inward within seconds when touched."),
+  // Fact: Its leaflets fold inward within seconds when touched.
+  // Source: https://en.wikipedia.org/wiki/Mimosa_pudica
+  h("sensitive_plant", "Mimosa pudica", "Sensitive", 0.5, 0.4,
+    "It makes room for you among its soft leaves. Its leaflets fold inward within seconds when touched."),
+  // Fact: Its leaves fold upward at night, like hands in prayer.
+  // Source: https://en.wikipedia.org/wiki/Maranta_leuconeura
+  h("prayer_plant", "Maranta leuconeura", "Prayer Plant", 0.3, 0.5,
+    "It seems to wish you a peaceful evening. Its leaves fold upward at night, like hands in prayer."),
+
+  // Fact: Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it.
+  // Source: https://en.wikipedia.org/wiki/Amorphophallus_titanum
+  h("corpse_corm", "Amorphophallus titanum", "Corpse Corm", 0.3, 5,
+    "It seems content to wait for its moment. Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it."),
+  // Fact: Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it.
+  // Source: https://en.wikipedia.org/wiki/Amorphophallus_titanum
+  h("corpse_leaf", "Amorphophallus titanum", "Corpse Leaf", 4, 40,
+    "It offers you a broad patch of shade. Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it."),
+  // Fact: Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it.
+  // Source: https://en.wikipedia.org/wiki/Amorphophallus_titanum
+  h("titan_arum", "Amorphophallus titanum", "Titan Arum", 3, 100,
+    "It stands beside you with quiet pride. Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it."),
+
+  // Fact: It climbs by tendrils at the tips of its leaves.
+  // Source: https://en.wikipedia.org/wiki/Gloriosa_superba
+  h("flame_lily_tuber", "Gloriosa superba", "Flame Tuber", 0.15, 0.1,
+    "It seems eager to see what lies ahead. It climbs by tendrils at the tips of its leaves."),
+  // Fact: It climbs by tendrils at the tips of its leaves.
+  // Source: https://en.wikipedia.org/wiki/Gloriosa_superba
+  h("flame_lily", "Gloriosa superba", "Flame Lily", 3, 1,
+    "It reaches out as if offering to lead the way. It climbs by tendrils at the tips of its leaves."),
 ];
 
 export const HERBARIUM = Object.fromEntries(LIST.map((e) => [e.species, e])) as Record<SpeciesId, HerbariumEntry>;

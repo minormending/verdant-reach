@@ -9,7 +9,8 @@ const FACT = "A single aspen clone can grow thousands of trunks from one shared 
 
 describe("Chapter 10 species", () => {
   it("appends the three species after Chapter 9 in table order", () => {
-    expect(SPECIES_IDS.slice(SPECIES_IDS.indexOf("lithops_bloom") + 1)).toEqual(IDS);
+    const start = SPECIES_IDS.indexOf("lithops_bloom") + 1;
+    expect(SPECIES_IDS.slice(start, start + IDS.length)).toEqual(IDS);
   });
 
   it("uses the specified names, lines, stages, types, activity and totals", () => {

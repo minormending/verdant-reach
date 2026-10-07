@@ -168,6 +168,12 @@ const LIST: Move[] = [
   m("dragon_resin", "Dragon Resin", "dragon", "special", 80, 100, 10, "Red resin heals 1/4 damage dealt.", [{ kind: "drain", fraction: 0.25 }]),
   m("night_bloom", "Night Bloom", "dragon", "special", 70, 100, 15, "Night bloom hits. Ups SPEED.", [self("spe", 1)]),
   m("stone_window", "Stone Window", "thorn", "status", 0, null, 15, "Leaf windows up DEF and SP.DEF.", [self("def", 1), self("spd", 1)]),
+
+  // ------------------------------------------------------------- Chapter 11
+  m("atropine", "Atropine", "ghost", "special", 75, 100, 15, "A shadowy strike. May blight.", [inflict("blight", 20)]),
+  m("leaf_fold", "Leaf Fold", "wood", "status", 0, null, 15, "Folds leaves. Sharply ups DEF.", [self("def", 2)]),
+  m("carrion_bloom", "Corpse Bloom", "bug", "special", 90, 90, 10, "Carrion scent may cut SP.DEF.", [foe("spd", -1, 30)]),
+  m("climbing_flame", "Climb Flame", "fire", "physical", 80, 100, 15, "Fiery tendrils. May scorch.", [inflict("scorch", 10)]),
 ];
 
 export const MOVES: Record<string, Move> = Object.fromEntries(LIST.map((mv) => [mv.id, mv]));

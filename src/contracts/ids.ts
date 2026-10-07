@@ -63,6 +63,11 @@ export const SPECIES_IDS = [
   "lithops_pebble", "lithops_pair", "lithops_bloom",
   // Chapter 10
   "aspen_sucker", "quaking_aspen", "elder",
+  // Chapter 11 (CH11.md §2 order)
+  "nightshade_sprout", "nightshade", "oleander",
+  "mimosa_sprout", "sensitive_plant", "prayer_plant",
+  "corpse_corm", "corpse_leaf", "titan_arum",
+  "flame_lily_tuber", "flame_lily",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 

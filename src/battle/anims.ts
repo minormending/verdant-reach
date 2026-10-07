@@ -184,6 +184,11 @@ export const MOVE_ANIMS: Record<string, AnimSpec> = {
   dragon_resin: S("glob", "resin"),
   night_bloom: S("burst", "pale"),
   stone_window: S("harden", "evergreen"),
+  // Chapter 11: blighting bubbles, folding leaves, carrion scent and fire
+  atropine: S("toxin", "rot"),
+  leaf_fold: S("harden", "night"),
+  carrion_bloom: S("lure", "scent"),
+  climbing_flame: S("blaze"),
   // fallback move used with no PP left
   struggle: S("slam", "struggle"),
 };

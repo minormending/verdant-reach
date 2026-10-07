@@ -95,6 +95,12 @@ const POLLINATION: Record<string, PollinationGroup[]> = {
   lithops: ["meadow"],
   aspen: ["woodland"],
   elder: [],                         // legendary: the existing no-seed convention
+  nightshade: ["meadow"],
+  oleander: ["meadow"],
+  mimosa: ["meadow"],
+  prayer: ["woodland"],
+  titan: ["carnivore"],              // CH11 fallback: no carrion-fly group exists
+  flamelily: ["meadow"],
 };
 
 function sp(d: Def): Species {
@@ -224,6 +230,27 @@ const ASPEN: L = [[1, "vine_lash"], [1, "sap_seal"], [7, "pale_touch"], [12, "ro
 // Four starting moves keep Many Trunks in the legendary's level-60 encounter.
 const ELDER: L = [[1, "many_trunks"], [1, "root_tap"], [1, "pale_bloom"], [1, "bark_skin"],
   [65, "old_growth"], [70, "photosynthesise"]];
+
+// Chapter 11: shared line learnsets retain stage-1 signatures after growth.
+// Atropine and Corpse Bloom belong only to their specified mature stages.
+const NIGHTSHADE: L = [[1, "pollen_puff"], [1, "perfume"], [7, "pale_touch"], [12, "sap_drain"],
+  [17, "wind_scatter"], [22, "rot_touch"], [27, "night_fold"], [32, "moonbeam"],
+  [36, "photosynthesise"], [44, "pale_bloom"], [48, "petal_storm"], [54, "spore_cloud"]];
+const OLEANDER: L = [[1, "pollen_puff"], [1, "perfume"], [7, "pale_touch"], [12, "sap_drain"],
+  [17, "wind_scatter"], [22, "rot_touch"], [27, "night_fold"], [32, "moonbeam"],
+  [38, "photosynthesise"], [44, "sunbeam"], [48, "pale_bloom"], [54, "petal_storm"]];
+const MIMOSA: L = [[1, "pollen_puff"], [1, "sap_seal"], [7, "vine_lash"], [12, "sap_drain"],
+  [17, "wind_scatter"], [22, "leaf_edge"], [26, "spore_cloud"], [30, "leaf_fold"],
+  [38, "photosynthesise"], [44, "leaf_gale"], [50, "sunbeam"]];
+const PRAYER: L = [[1, "pollen_puff"], [1, "leaf_fold"], [7, "vine_lash"], [12, "sap_drain"],
+  [17, "wind_scatter"], [22, "leaf_edge"], [27, "spore_cloud"], [32, "night_fold"],
+  [38, "photosynthesise"], [44, "leaf_gale"], [50, "sunbeam"]];
+const TITAN: L = [[1, "quick_snap"], [1, "nectar_lure"], [7, "pale_touch"], [12, "sap_drain"],
+  [17, "sticky_dew"], [22, "pitfall"], [27, "rot_touch"], [32, "night_fold"],
+  [36, "moonbeam"], [42, "digest"], [44, "pale_bloom"], [48, "spore_cloud"], [58, "photosynthesise"]];
+const FLAMELILY: L = [[1, "ember_seed"], [1, "unfurl"], [7, "pollen_puff"], [12, "vine_lash"],
+  [17, "smoulder"], [22, "wind_scatter"], [27, "sun_flare"], [30, "photosynthesise"],
+  [34, "climbing_flame"], [40, "leaf_edge"], [46, "petal_storm"], [52, "wildfire"]];
 
 const ALL: Species[] = [
   // ------------------------------------------------------------- starters
@@ -673,6 +700,52 @@ const ALL: Species[] = [
   sp({ id: "elder", name: "The Elder", line: "elder", stage: 1, types: ["wood", "ghost"],
     base: st(160, 100, 100, 90, 160, 30), rate: "slow", catchRate: 3, baseExp: 255, ev: { hp: 1, spd: 2 },
     learnset: learn(ELDER) }),
+
+  // ============================================================== Chapter 11
+  // ------------------------------------------------------------- nightshade (special attack and speed)
+  sp({ id: "nightshade_sprout", name: "Shade Sprout", line: "nightshade", stage: 1, types: ["bloom", "ghost"],
+    base: st(45, 35, 40, 75, 50, 65), rate: "medium", catchRate: 150, baseExp: 68, ev: { spa: 1 },
+    activity: "night", grows: ["nightshade", vigor(36)], learnset: learn(NIGHTSHADE) }),
+  sp({ id: "nightshade", name: "Nightshade", line: "nightshade", stage: 2, types: ["bloom", "ghost"],
+    base: st(70, 55, 65, 120, 80, 100), rate: "medium", catchRate: 60, baseExp: 180, ev: { spa: 1, spe: 1 },
+    activity: "night", learnset: learn(NIGHTSHADE, [[40, "atropine"]]) }),
+
+  // ------------------------------------------------------------- oleander (special attack and special defence)
+  sp({ id: "oleander", name: "Oleander", line: "oleander", stage: 1, types: ["bloom", "ghost"],
+    base: st(85, 60, 80, 100, 100, 55), rate: "medium", catchRate: 60, baseExp: 176, ev: { spa: 1, spd: 1 },
+    activity: "day", learnset: learn(OLEANDER) }),
+
+  // ------------------------------------------------------------- mimosa (folding leaves, mixed defence)
+  sp({ id: "mimosa_sprout", name: "Mimosa Shoot", line: "mimosa", stage: 1, types: ["bloom", "wood"],
+    base: st(50, 45, 60, 55, 55, 35), rate: "medium", catchRate: 150, baseExp: 66, ev: { def: 1 },
+    activity: "day", grows: ["sensitive_plant", vigor(34)], learnset: learn(MIMOSA) }),
+  sp({ id: "sensitive_plant", name: "Sensitive", line: "mimosa", stage: 2, types: ["bloom", "wood"],
+    base: st(75, 65, 100, 85, 95, 60), rate: "medium", catchRate: 60, baseExp: 176, ev: { def: 1, spd: 1 },
+    activity: "day", learnset: learn(MIMOSA) }),
+
+  // ------------------------------------------------------------- prayer plant (special defence and defence)
+  sp({ id: "prayer_plant", name: "Prayer Plant", line: "prayer", stage: 1, types: ["bloom", "wood"],
+    base: st(80, 55, 95, 85, 105, 50), rate: "medium", catchRate: 60, baseExp: 172, ev: { def: 1, spd: 1 },
+    learnset: learn(PRAYER) }),
+
+  // ------------------------------------------------------------- titan arum (slow HP/special-attack/special-defence bulk)
+  sp({ id: "corpse_corm", name: "Corpse Corm", line: "titan", stage: 1, types: ["bug", "ghost"],
+    base: st(70, 35, 55, 60, 60, 20), rate: "slow", catchRate: 120, baseExp: 66, ev: { hp: 1 },
+    activity: "night", grows: ["corpse_leaf", vigor(40)], learnset: learn(TITAN) }),
+  sp({ id: "corpse_leaf", name: "Corpse Leaf", line: "titan", stage: 2, types: ["bug", "ghost"],
+    base: st(90, 50, 70, 95, 90, 25), rate: "slow", catchRate: 60, baseExp: 146, ev: { hp: 1, spa: 1 },
+    activity: "night", grows: ["titan_arum", vigor(52)], learnset: learn(TITAN) }),
+  sp({ id: "titan_arum", name: "Titan Arum", line: "titan", stage: 3, types: ["bug", "ghost"],
+    base: st(110, 60, 85, 125, 110, 30), rate: "slow", catchRate: 45, baseExp: 206, ev: { hp: 1, spa: 2 },
+    activity: "night", learnset: learn(TITAN, [[52, "carrion_bloom"]]) }),
+
+  // ------------------------------------------------------------- flame lily (attack and speed)
+  sp({ id: "flame_lily_tuber", name: "Flame Tuber", line: "flamelily", stage: 1, types: ["fire", "bloom"],
+    base: st(45, 65, 40, 60, 40, 55), rate: "medium", catchRate: 150, baseExp: 68, ev: { atk: 1 },
+    activity: "day", grows: ["flame_lily", vigor(38)], learnset: learn(FLAMELILY) }),
+  sp({ id: "flame_lily", name: "Flame Lily", line: "flamelily", stage: 2, types: ["fire", "bloom"],
+    base: st(70, 110, 60, 95, 65, 90), rate: "medium", catchRate: 60, baseExp: 180, ev: { atk: 1, spe: 1 },
+    activity: "day", learnset: learn(FLAMELILY) }),
 ];
 
 export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;
