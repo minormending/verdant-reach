@@ -10,14 +10,16 @@ let seed = 1;
 let headed = false;
 let allowTodo = false; // --allow-placeholders: tolerate TODO(text) dialogue (the chapter branches, until the writing pass)
 let timeoutMin = 0;
+let reportFile = "";
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--headed") headed = true;
   else if (args[i] === "--allow-placeholders") allowTodo = true;
   else if (args[i] === "--timeout-min" && /^\d+$/.test(args[i + 1] ?? "")) timeoutMin = Number(args[++i]);
   else if (args[i] === "--speed" && /^\d+$/.test(args[i + 1] ?? "")) speed = Number(args[++i]);
   else if (args[i] === "--seed" && /^\d+$/.test(args[i + 1] ?? "")) seed = Number(args[++i]);
+  else if (args[i] === "--report" && args[i + 1]) reportFile = args[++i]; // parallel runs: write elsewhere
   else {
-    console.error("Usage: npm run e2e -- [--speed N] [--seed N] [--headed] [--allow-placeholders] [--timeout-min N] (speed: 1–16; seed: 0–4294967295)");
+    console.error("Usage: npm run e2e -- [--speed N] [--seed N] [--headed] [--allow-placeholders] [--timeout-min N] [--report PATH] (speed: 1–16; seed: 0–4294967295)");
     process.exit(1);
   }
 }
@@ -34,7 +36,7 @@ const started = performance.now();
 // The full suite grows each chapter (126 beats through Chapter 7), including
 // real grass/water catches and raft crossings. Allow room for alternate seeds.
 const timeoutMs = timeoutMin ? timeoutMin * 60_000 : Math.max(30 * 60_000, 150 * 60_000 / speed);
-const reportPath = new URL("./last-report.json", import.meta.url);
+const reportPath = reportFile ? new URL(reportFile, `file://${process.cwd()}/`) : new URL("./last-report.json", import.meta.url);
 const abort = new AbortController();
 let server;
 let browser;

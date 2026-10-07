@@ -67,8 +67,8 @@ describe("Chapter 5 scripts", () => {
     for (const c of ops([...Object.values(ch5Scripts).flat(), ...Object.entries(questScripts)
       .filter(([id]) => /^q_(fire_followers|shrine_offerings)/.test(id)).flatMap(([, cmds]) => cmds)])) {
       if (c.op === "say") {
-        expect(c.text).toMatch(/^TODO\(text\): /);
-        expect(c.speaker).toBeTruthy();
+        expect(c.text).not.toMatch(/TODO/);
+        if (c.speaker) expect(c.speaker).toBe(c.speaker.toUpperCase());
       }
     }
   });
@@ -84,8 +84,10 @@ describe("Chapter 5 scripts", () => {
     await run("rival_4");
     events.length = 0;
     await run("ch5_vision");
-    expect(events).toEqual(["shake", "flash:gold", "sfx:pulse", "still:relay_pulse", "stillClear", "show:morrow_bs"]);
+    expect(events).toEqual(["shake", "flash:gold", "sfx:pulse", "still:fire_cone_vision", "stillClear", "show:morrow_bs"]);
+    const met = events.length;
     await run("ch5_morrow_burnt");
+    expect(events.slice(met, met + 2)).toEqual(["still:morrow_listening", "stillClear"]);
     expect(state.flags).toMatchObject({
       ch5_arrived: true, visited_cedarhallow: true, ch5_grunts_seen: true,
       rival_4_done: true, burnt_vision_seen: true, morrow_returned: true,

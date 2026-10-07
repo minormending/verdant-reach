@@ -7,6 +7,7 @@
 import type { Assets, TileKey } from "../contracts";
 import { SCREEN_H, SCREEN_W, TILE, tilePath } from "../contracts";
 import { TileCatalog, autotileMask, type CellArt } from "./autotile";
+import { LIGHT_TILES } from "./glow";
 import { tileAt, type MapRuntime } from "./map";
 import { drawFallbackTile, drawStumpFallback } from "./render";
 
@@ -68,6 +69,8 @@ export class TileLayer {
   private retry = 0;
   /** Lamp posts (for night glows). */
   lamps: { x: number; y: number }[] = [];
+  /** Light sources for dark maps (LIGHT_TILES: lamp posts and glowing ghost pipes). */
+  lights: { x: number; y: number }[] = [];
   /** True when some tile on this map animates. */
   animated = false;
 
@@ -93,13 +96,16 @@ export class TileLayer {
     this.h = m.h + MARGIN * 2;
     const cells: CellArt[] = [];
     this.lamps = [];
+    this.lights = [];
     this.animated = false;
     for (let y = this.y0; y < this.y0 + this.h; y++) {
       for (let x = this.x0; x < this.x0 + this.w; x++) {
         const art = this.resolve(m, x, y);
         cells.push(art);
         if (art.path2) this.animated = true;
-        if (art.key === "lamp_post" && x >= 0 && y >= 0 && x < m.w && y < m.h) this.lamps.push({ x, y });
+        const inside = x >= 0 && y >= 0 && x < m.w && y < m.h;
+        if (art.key === "lamp_post" && inside) this.lamps.push({ x, y });
+        if (LIGHT_TILES.has(art.key) && inside) this.lights.push({ x, y });
       }
     }
     const make = (prev: HTMLCanvasElement | null) => {

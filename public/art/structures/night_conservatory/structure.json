@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "night_conservatory",
+  "image": "structure.png",
+  "size": [6, 4],
+  "credits": "Generated pixel art for Verdant Reach (Chapter 5 environment).",
+  "source": { "kind": "generated", "tool": "tools/art/env5/buildings.py" }
+}

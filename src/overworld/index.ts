@@ -1485,7 +1485,7 @@ class Overworld implements Scene {
     this.ambient.drawGlow(g, camX, camY);
     if (m.def.dark) {
       const { px, py } = this.player.pixel();
-      drawGlow(g, camX, camY, { x: px / TILE, y: py / TILE }, this.tiles.lamps, hasItem(ctx.state, "foxfire_lantern"));
+      drawGlow(g, camX, camY, { x: px / TILE, y: py / TILE }, this.tiles.lights, hasItem(ctx.state, "foxfire_lantern"));
     }
 
     // Story illustration (text boxes and the species window draw over it).

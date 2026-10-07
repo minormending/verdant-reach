@@ -259,30 +259,90 @@ const ch4Trainers: TrainerDef[] = [
     { ai: "smart", music: "battle_leader", mark: "rose_mark", prize: 2200, items: [{ item: "spring_water", qty: 1 }] }),
 ];
 
-// Chapter 5 teams are fixed by CH5_IDS.md §C. Dialogue is deliberately stubbed.
+// Chapter 5 teams are fixed by CH5_IDS.md §C.
 // Balance: retain every prescribed level, but use explicit early moves on
 // Rival 4 and physical Ghost attacks on MORROW. The natural late movesets
 // wall older mixed parties; balance.test.ts guards both older and Ch. 5 catches.
-const ch5Lines = (id: string) => ({
+// Lines: one set per trainer; the three rival_4 variants share BRAM's.
+const CH5_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  lumberjack_hale: {
+    intro: "Came up here to fell timber. Then the timber started arguing back.",
+    defeat: "TIMBER! ...That's me. I'm the timber.",
+    after: "We only clear windfall now. You can't take a saw to a tree that flinches.",
+  },
+  lumberjack_birch: {
+    intro: "BIRCH by name, lumberjack by trade. The pumpkin's a long story.",
+    defeat: "Split like kindling!",
+    after: "Red cedar splits clean along the grain. Shingle makers swear by it.",
+  },
+  forager_sage: {
+    intro: "Shh, I'm foraging. You're the first thing I've found all morning.",
+    defeat: "Not one basket's worth!",
+    after: "SKUNK CABBAGE smells foul on purpose. The stink draws in the flies that carry its pollen.",
+  },
+  forager_ash: {
+    intro: "Basket's full of mushrooms. Hands are free for battling!",
+    defeat: "Spilled my whole basket!",
+    after: "Mushrooms aren't QUICKENED. They're just the fruit. The fungus lives underground.",
+  },
+  grunt_bs_1: {
+    intro: "This stand is ROOTSTOCK business. Hop it, sprout!",
+    defeat: "Not the sacks! Mind the sacks!",
+    after: "Cones that open with no fire. The doctor's ever so interested.",
+  },
+  grunt_bs_2: {
+    intro: "Oi! You're trampling the samples!",
+    defeat: "Ugh. That's going in my report.",
+    after: "The doctor says any growth can be hurried. These cones hurried themselves.",
+  },
+  grunt_bs_3: {
+    intro: "Nobody gets near the camp. Doctor's orders!",
+    defeat: "Doctor's orders didn't cover THIS.",
+    after: "Which doctor? ...I never said doctor. You misheard.",
+  },
+  rival_4: {
+    intro: "Go on. Prove it. PROVE IT.",
+    defeat: "No. It's GROWN. It's bigger than yours. How?!",
+    after: "Don't. Just... don't.",
+  },
+  jr_nightshade: {
+    intro: "Mind the dark! It's darker than it looks. Which is very.",
+    defeat: "Oh! Lights out for me.",
+    after: "MOONFLOWERS open at dusk and shut by morning. We work the same shift.",
+  },
+  jr_lantern: {
+    intro: "MORROW says listen before you leap. I'm leaping!",
+    defeat: "Should have listened...",
+    after: "GHOST PIPES turn black if you pick them. So we never pick them.",
+  },
+  morrow: {
+    intro: "Listen first. Then we'll begin.",
+    defeat: "...There. Did you hear it? I did.",
+    after: "Keep listening. Someone should.",
+  },
+};
+const ch5Lines = (id: string) => CH5_LINES[id.startsWith("rival_4_") ? "rival_4" : id];
+/** Chapter 6 lines are written in its writing pass. */
+const ch6Lines = (id: string) => ({
   intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
 });
 const ch5Trainers: TrainerDef[] = [
-  trainer("lumberjack_hale", "HALE", "HIKER", "hiker", [T("maple_sapling", 21), T("holly", 22)], ch5Lines("lumberjack_hale")),
-  trainer("lumberjack_birch", "BIRCH", "HIKER", "hiker", [T("pumpkin", 22)], ch5Lines("lumberjack_birch")),
-  trainer("forager_sage", "SAGE", "GARDENER", "gardener", [T("moonflower_vine", 20), T("skunk_cabbage_shoot", 21)], ch5Lines("forager_sage")),
-  trainer("forager_ash", "ASH", "BIRDWATCHER", "birdwatcher", [T("fireweed_fluff", 21), T("sundew", 22)], ch5Lines("forager_ash")),
-  trainer("grunt_bs_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 23), T("fireweed_shoot", 23)], ch5Lines("grunt_bs_1"), { music: "battle_rootstock" }),
-  trainer("grunt_bs_2", "GRUNT", "GRUNT", "grunt", [T("bramble_berry", 23), T("lodgepole_cone", 24)], ch5Lines("grunt_bs_2"), { music: "battle_rootstock" }),
-  trainer("grunt_bs_3", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 24), T("foxglove", 24)], ch5Lines("grunt_bs_3"), { music: "battle_rootstock" }),
+  trainer("lumberjack_hale", "HALE", "LUMBERJACK", "lumberjack", [T("maple_sapling", 21), T("holly", 22)], ch5Lines("lumberjack_hale")),
+  trainer("lumberjack_birch", "BIRCH", "LUMBERJACK", "lumberjack", [T("pumpkin", 22)], ch5Lines("lumberjack_birch")),
+  trainer("forager_sage", "SAGE", "FORAGER", "forager", [T("moonflower_vine", 20), T("skunk_cabbage_shoot", 21)], ch5Lines("forager_sage")),
+  trainer("forager_ash", "ASH", "FORAGER", "forager", [T("fireweed_fluff", 21), T("sundew", 22)], ch5Lines("forager_ash")),
+  trainer("grunt_bs_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 23), T("fireweed_shoot", 23)], ch5Lines("grunt_bs_1"), { music: "battle_rootstock" }),
+  trainer("grunt_bs_2", "GRUNT", "ROOTSTOCK", "grunt", [T("bramble_berry", 23), T("lodgepole_cone", 24)], ch5Lines("grunt_bs_2"), { music: "battle_rootstock" }),
+  trainer("grunt_bs_3", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 24), T("foxglove", 24)], ch5Lines("grunt_bs_3"), { music: "battle_rootstock" }),
   ...STARTER_LINES.map((line) => trainer(`rival_4_${line}`, "BRAM", "RIVAL", "bram", [
     T("blackberry", 25, ["thorn_jab", "bristle", "sap_seal"]),
     T("dandelion", 25, ["pollen_puff", "quick_snap", "perfume"]),
     T("sugar_maple", 26, ["samara_spin", "sugar_rush", "sap_seal"]),
     { ...T(STARTER_SPECIES[line][2], 27, RIVAL_3_MOVES[line]), grafted: true },
   ], ch5Lines(`rival_4_${line}`), { ai: "smart", prize: 2700 })),
-  trainer("jr_nightshade", "NIGHTSHADE", "JR.GARDENER", "gardener", [T("moonflower_vine", 23), T("ghostpipe_stalk", 23)], ch5Lines("jr_nightshade")),
-  trainer("jr_lantern", "LANTERN", "JR.GARDENER", "gardener", [T("foxglove", 24), T("ghostpipe_nodding", 24)], ch5Lines("jr_lantern")),
-  trainer("morrow", "MORROW", "WARDEN", "hollis", [
+  trainer("jr_nightshade", "VESPER", "NIGHT GARDENER", "night_gardener", [T("moonflower_vine", 23), T("ghostpipe_stalk", 23)], ch5Lines("jr_nightshade")),
+  trainer("jr_lantern", "LUMEN", "NIGHT GARDENER", "night_gardener", [T("foxglove", 24), T("ghostpipe_nodding", 24)], ch5Lines("jr_lantern")),
+  trainer("morrow", "MORROW", "WARDEN", "morrow", [
     T("ghostpipe_nodding", 24, ["pale_touch", "night_fold"]),
     T("moonflower", 26, ["pale_touch", "unfurl"]),
     T("ghost_pipe", 29, ["moonbeam", "rot_touch", "night_fold"]),
@@ -296,41 +356,45 @@ const ch5Trainers: TrainerDef[] = [
 // coverage for Reyes. balance.test.ts checks both mixed parties, every starter,
 // and the mean bands (80.6% / 69.8%, no player or foe items in the model).
 const ch6Trainers: TrainerDef[] = [
-  trainer("angler_reed", "REED", "HIKER", "hiker", [T("cattail", 25), T("sundew", 26)], ch5Lines("angler_reed")),
-  trainer("angler_moss", "MOSS", "HIKER", "hiker", [T("pitcher_plant", 26)], ch5Lines("angler_moss")),
-  trainer("birder_tern", "TERN", "BIRDWATCHER", "birdwatcher", [T("mangrove_propagule", 24), T("white_clover", 26)], ch5Lines("birder_tern")),
-  trainer("grunt_dock_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 27), T("fireweed", 27)], ch5Lines("grunt_dock_1"), { music: "battle_rootstock" }),
-  trainer("grunt_dock_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 27), T("sugar_maple", 28)], ch5Lines("grunt_dock_2"), { music: "battle_rootstock" }),
-  trainer("sailor_kelp", "KELP", "HIKER", "hiker", [T("seagrass_shoot", 27), T("lily_pad", 28)], ch5Lines("sailor_kelp")),
-  trainer("sailor_brine", "BRINE", "HIKER", "hiker", [T("eelgrass", 29)], ch5Lines("sailor_brine")),
-  trainer("diver_coral", "CORAL", "GARDENER", "gardener", [T("mangrove_sapling", 28), T("cattail", 28)], ch5Lines("diver_coral")),
-  trainer("diver_shoal", "SHOAL", "GARDENER", "gardener", [T("seagrass_shoot", 28), T("giant_water_lily", 29)], ch5Lines("diver_shoal")),
-  trainer("jr_spine", "SPINE", "JR.GARDENER", "gardener", [T("pear_pad", 28), T("padded_cactus", 29)], ch5Lines("jr_spine")),
-  trainer("jr_needle", "NEEDLE", "JR.GARDENER", "gardener", [T("stinging_nettle", 29), T("padded_cactus", 29)], ch5Lines("jr_needle")),
+  trainer("angler_reed", "REED", "HIKER", "hiker", [T("cattail", 25), T("sundew", 26)], ch6Lines("angler_reed")),
+  trainer("angler_moss", "MOSS", "HIKER", "hiker", [T("pitcher_plant", 26)], ch6Lines("angler_moss")),
+  trainer("birder_tern", "TERN", "BIRDWATCHER", "birdwatcher", [T("mangrove_propagule", 24), T("white_clover", 26)], ch6Lines("birder_tern")),
+  trainer("grunt_dock_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 27), T("fireweed", 27)], ch6Lines("grunt_dock_1"), { music: "battle_rootstock" }),
+  trainer("grunt_dock_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 27), T("sugar_maple", 28)], ch6Lines("grunt_dock_2"), { music: "battle_rootstock" }),
+  trainer("sailor_kelp", "KELP", "HIKER", "hiker", [T("seagrass_shoot", 27), T("lily_pad", 28)], ch6Lines("sailor_kelp")),
+  trainer("sailor_brine", "BRINE", "HIKER", "hiker", [T("eelgrass", 29)], ch6Lines("sailor_brine")),
+  trainer("diver_coral", "CORAL", "GARDENER", "gardener", [T("mangrove_sapling", 28), T("cattail", 28)], ch6Lines("diver_coral")),
+  trainer("diver_shoal", "SHOAL", "GARDENER", "gardener", [T("seagrass_shoot", 28), T("giant_water_lily", 29)], ch6Lines("diver_shoal")),
+  trainer("jr_spine", "SPINE", "JR.GARDENER", "gardener", [T("pear_pad", 28), T("padded_cactus", 29)], ch6Lines("jr_spine")),
+  trainer("jr_needle", "NEEDLE", "JR.GARDENER", "gardener", [T("stinging_nettle", 29), T("padded_cactus", 29)], ch6Lines("jr_needle")),
   trainer("saguaro", "SAGUARO", "WARDEN", "hollis", [
     T("padded_cactus", 34, ["glochid_spray", "vine_lash", "sun_track"]),
     T("prickly_pear", 35, ["pale_bloom", "sunbeam", "sun_track"]),
     T("saguaro_column", 37, ["thorn_lash", "root_tap", "water_store", "sun_track"]),
-  ], ch5Lines("saguaro"),
+  ], ch6Lines("saguaro"),
     { ai: "smart", music: "battle_leader", mark: "cactus_mark", items: [{ item: "spring_water", qty: 1 }] }),
-  trainer("jr_tide", "TIDE", "JR.GARDENER", "gardener", [T("seagrass_shoot", 30), T("lily_pad", 30)], ch5Lines("jr_tide")),
-  trainer("jr_current", "CURRENT", "JR.GARDENER", "gardener", [T("mangrove_sapling", 31), T("eelgrass", 31)], ch5Lines("jr_current")),
-  trainer("reyes", "REYES", "WARDEN", "nell_pitcher", [T("eelgrass", 32, ["dew_drop", "cold_mist", "sap_drain"]), T("mangrove_sapling", 32, ["undertow", "cold_mist", "stilt_roots"]), T("giant_water_lily", 33, ["undertow", "pad_slap", "sap_drain"]), T("red_mangrove", 35, ["dew_drop", "sap_spout", "cold_mist", "stilt_roots"])], ch5Lines("reyes"),
+  trainer("jr_tide", "TIDE", "JR.GARDENER", "gardener", [T("seagrass_shoot", 30), T("lily_pad", 30)], ch6Lines("jr_tide")),
+  trainer("jr_current", "CURRENT", "JR.GARDENER", "gardener", [T("mangrove_sapling", 31), T("eelgrass", 31)], ch6Lines("jr_current")),
+  trainer("reyes", "REYES", "WARDEN", "nell_pitcher", [T("eelgrass", 32, ["dew_drop", "cold_mist", "sap_drain"]), T("mangrove_sapling", 32, ["undertow", "cold_mist", "stilt_roots"]), T("giant_water_lily", 33, ["undertow", "pad_slap", "sap_drain"]), T("red_mangrove", 35, ["dew_drop", "sap_spout", "cold_mist", "stilt_roots"])], ch6Lines("reyes"),
     { ai: "smart", music: "battle_leader", mark: "mangrove_mark", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
 // Chapter 7 (CH7.md §5): preserve team identities and ±2 boss-level bounds.
+/** Chapter 7 lines are written in its writing pass. */
+const ch7Lines = (id: string) => ({
+  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
+});
 const ch7Trainers: TrainerDef[] = [
-  trainer("climber_ridge", "RIDGE", "HIKER", "hiker", [T("larch_seedling", 33), T("holly", 34)], ch5Lines("climber_ridge")),
-  trainer("climber_scree", "SCREE", "HIKER", "hiker", [T("campion_mound", 34)], ch5Lines("climber_scree")),
-  trainer("skier_frost", "FROST", "BIRDWATCHER", "birdwatcher", [T("peppermint", 34), T("edelweiss_bud", 33)], ch5Lines("skier_frost")),
-  trainer("skier_drift", "DRIFT", "BIRDWATCHER", "birdwatcher", [T("snowdrop_shoot", 34), T("larch", 35)], ch5Lines("skier_drift")),
-  trainer("grunt_lodge", "LODGE", "GRUNT", "grunt", [T("stinging_nettle", 35), T("venus_flytrap", 35)], ch5Lines("grunt_lodge"), { music: "battle_rootstock" }),
-  trainer("grunt_b1_1", "SIGNAL 1", "GRUNT", "grunt", [T("fireweed", 36), T("sugar_maple", 36)], ch5Lines("grunt_b1_1"), { music: "battle_rootstock" }),
-  trainer("grunt_b1_2", "SIGNAL 2", "GRUNT", "grunt", [T("red_mangrove", 36), T("bladderwort", 36)], ch5Lines("grunt_b1_2"), { music: "battle_rootstock" }),
-  trainer("grunt_b1_3", "SIGNAL 3", "GRUNT", "grunt", [T("prickly_pear", 37), T("foxglove", 36)], ch5Lines("grunt_b1_3"), { music: "battle_rootstock" }),
-  trainer("jr_flurry", "FLURRY", "JR.GARDENER", "gardener", [T("edelweiss", 38), T("snowdrop_shoot", 38)], ch5Lines("jr_flurry")),
-  trainer("jr_hoarfrost", "HOARFROST", "JR.GARDENER", "gardener", [T("campion_mound", 39), T("holly", 39)], ch5Lines("jr_hoarfrost")),
+  trainer("climber_ridge", "RIDGE", "HIKER", "hiker", [T("larch_seedling", 33), T("holly", 34)], ch7Lines("climber_ridge")),
+  trainer("climber_scree", "SCREE", "HIKER", "hiker", [T("campion_mound", 34)], ch7Lines("climber_scree")),
+  trainer("skier_frost", "FROST", "BIRDWATCHER", "birdwatcher", [T("peppermint", 34), T("edelweiss_bud", 33)], ch7Lines("skier_frost")),
+  trainer("skier_drift", "DRIFT", "BIRDWATCHER", "birdwatcher", [T("snowdrop_shoot", 34), T("larch", 35)], ch7Lines("skier_drift")),
+  trainer("grunt_lodge", "LODGE", "GRUNT", "grunt", [T("stinging_nettle", 35), T("venus_flytrap", 35)], ch7Lines("grunt_lodge"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_1", "SIGNAL 1", "GRUNT", "grunt", [T("fireweed", 36), T("sugar_maple", 36)], ch7Lines("grunt_b1_1"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_2", "SIGNAL 2", "GRUNT", "grunt", [T("red_mangrove", 36), T("bladderwort", 36)], ch7Lines("grunt_b1_2"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_3", "SIGNAL 3", "GRUNT", "grunt", [T("prickly_pear", 37), T("foxglove", 36)], ch7Lines("grunt_b1_3"), { music: "battle_rootstock" }),
+  trainer("jr_flurry", "FLURRY", "JR.GARDENER", "gardener", [T("edelweiss", 38), T("snowdrop_shoot", 38)], ch7Lines("jr_flurry")),
+  trainer("jr_hoarfrost", "HOARFROST", "JR.GARDENER", "gardener", [T("campion_mound", 39), T("holly", 39)], ch7Lines("jr_hoarfrost")),
   // Tuning: ghost_pipe 38→40 (+2), lodgepole_pine 39→40 (+1), red_mangrove 41→42 (+1).
   // Explicit moves below retain a special Ghost attack and a real fire attack on
   // the pine; the mangrove carries the coverage used by Reyes. Mean win: 75.1%.
@@ -338,7 +402,7 @@ const ch7Trainers: TrainerDef[] = [
     T("ghost_pipe", 40, ["pale_bloom", "root_siphon", "spore_cloud", "petal_storm"]),
     T("lodgepole_pine", 40, ["leaf_edge", "ember_seed", "serotiny"]),
     { ...T("red_mangrove", 42, ["flood", "sap_spout", "cold_mist", "stilt_roots"]), grafted: true },
-  ], ch5Lines("calloway"),
+  ], ch7Lines("calloway"),
     { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 1 }] }),
   // Tuning: every member is -1 from §5 (40/41/41/43 → 39/40/40/42).
   // Explicit moves soften repeated healing and Bloom coverage while preserving
@@ -348,7 +412,7 @@ const ch7Trainers: TrainerDef[] = [
     T("moss_campion", 40, ["cold_mist", "sap_drain", "cushion"]),
     T("larch", 40, ["needle_drop", "frost_needle", "evergreen"]),
     T("snowdrop", 42, ["thaw_bloom", "sap_drain", "sun_track"]),
-  ], ch5Lines("signe"),
+  ], ch7Lines("signe"),
     { ai: "smart", music: "battle_leader", mark: "snowdrop_mark", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 

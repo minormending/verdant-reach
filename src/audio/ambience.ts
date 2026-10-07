@@ -22,9 +22,12 @@ export function ambienceFor(music: MusicId | null, tod: TimeOfDay): AmbienceKind
     case "route_night": return "night";
     case "fallowfield":
     case "small_town":
-    case "glasshouse_city": return night ? "night" : "town";
+    case "glasshouse_city":
+    case "cedarhallow": return night ? "night" : "town";
     case "palm_house": return "forest";  // under glass: a still, close hush with the odd bird
     case "sugarbush_grove": return "forest";
+    case "burnt_stand": return "forest";  // a dead stand: wind in the snags, the odd far bird
+    // hollow: none. Inside the trunk the drips are the only sound.
     case "prologue_bloom": return "night";
     default: return "none";
   }
