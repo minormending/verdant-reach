@@ -66,6 +66,8 @@ export const AUTOTILE: Partial<Record<TileKey, string>> = {
   // Chapter 5
   oldgrowth_tree: "oldgrowth", canopy_boardwalk: "canopy_boardwalk", canopy_drop: "canopy_drop",
   rope_rail: "rope_rail", ash: "ash", hollow_wall: "hollow_wall",
+  // Chapter 6
+  seagrass_bed: "water", mangrove_roots: "mangrove", pier: "pier", volcanic_rock: "volcanic",
 };
 /** Ground variation: `${key}~1.png`..`${key}~3.png` (if present) are picked by a
  *  position hash so large fields never look stamped. Base tile = variant 0. */
@@ -110,5 +112,5 @@ export const itemIconPath = (id: string) => `assets/items/${id}.png`;
 
 /** 160x144 title screen art and other full-screen UI images. */
 export const uiPath = (name: "title" | "title_logo" | "pod" | "pod_open" | "mark_bramble" | "mark_sundew" | "mark_rose" | "battle_ground"
-  | "seed" | "seed__2" | "seed_big" | "mark_pipe") => // Round 4: Nursery seed — 16x16 party icon (2 frames) and 56x56 summary/sprouting art
+  | "seed" | "seed__2" | "seed_big" | "mark_pipe" | "raft") => // Round 4: Nursery seed — 16x16 party icon (2 frames) and 56x56 summary/sprouting art
   `assets/ui/${name}.png`;
