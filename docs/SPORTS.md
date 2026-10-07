@@ -150,3 +150,13 @@ Chapter 6 prickly pear line (set in `tools/art/crystal/prickly_pear.py`; palette
 | prickly_pear | Santa Rita purple prickly pear | The same purple prickly pear: violet pads with red-purple fruit. The four-colour interpretation retains plum-magenta tunas; the flower cups share the pad tone and white petal rims. | `#782850 #b088c0 #f8f8f8` |
 
 Botanical references: the [University of Arizona Campus Arboretum, Santa Rita prickly pear](https://apps.cals.arizona.edu/arboretum/taxon.aspx?id=893) describes violet-purple pads, yellow flowers along upper pad edges and red-purple fruits. The [University of Arizona Extension garden plant list](https://extension.arizona.edu/sites/extension.arizona.edu/files/programs/2022master-gardener-EG-plant-list.pdf) lists Opuntia violacea 'Santa Rita' and its purple colour in cold or dry weather. The sprite's exact two-tone palette is an artistic interpretation; yellow flowers share warm sage in the base art because a separate yellow hue would require a palette exception.
+
+Chapter 6 saguaro line (set in `tools/art/crystal/saguaro.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| saguaro_pup | blue-grey waxy bloom (unnamed colour interpretation) | Carnegiea gigantea: an artistic blue-grey interpretation of waxy bloom on drought-stressed stems, not a named cultivar or genetically stable colour sport. Only the two green slots change; white spine highlights stay white. | `#405c68 #98b0b8 #f8f8f8` |
+| saguaro_column | blue-grey waxy bloom (unnamed colour interpretation) | The same unnamed waxy-bloom interpretation on the unbranched stem. Cristate (crested) growth changes shape, so it cannot be represented by this palette sport. | `#405c68 #98b0b8 #f8f8f8` |
+| saguaro | blue-grey waxy bloom (unnamed colour interpretation) | The same unnamed blue-grey stem interpretation; white flowers and spine highlights remain white. No named cultivar or cristate shape is claimed. | `#405c68 #98b0b8 #f8f8f8` |
+
+Botanical references: [NPS, Saguaro Cactus](https://home.nps.gov/orpi/learn/nature/saguaro-cactus.htm) describes the protective waxy skin and nurse plants; [NPS, Saguaro Growth](https://home.nps.gov/sagu/learn/nature/saguaro-growth.htm) describes flower crowns on the stem and arms. These support the anatomy and waxy surface. The blue-grey palette and its drought-stressed appearance are an artistic interpretation: these references do not establish a named blue-grey form or a drought-induced colour change.
