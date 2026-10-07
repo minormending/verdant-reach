@@ -33,7 +33,7 @@ if (!Number.isInteger(speed) || speed < 1 || speed > 16) {
 }
 
 const started = performance.now();
-// The full suite grows each chapter (228 beats through the post-game), including
+// The full suite grows each chapter (229 beats through the post-game), including
 // real catches, field puzzles, the Elder retry and a Council whiteout/restart.
 // Allow room for alternate seeds, the legendary catch and thirteen Council battles, plus the Vault and Wanderer search.
 const timeoutMs = timeoutMin ? timeoutMin * 60_000 : Math.max(75 * 60_000, 360 * 60_000 / speed);
@@ -95,7 +95,7 @@ try {
     await sleep(1000, undefined, { signal: abort.signal });
   }
   const failures = report.beats.filter((b) => !b.ok).length;
-  if (report.beats.length !== 228) runnerIssues.push(`Expected all 228 beats; received ${report.beats.length}`);
+  if (report.beats.length !== 229) runnerIssues.push(`Expected all 229 beats; received ${report.beats.length}`);
   process.exitCode = failures === 0 && report.issues.length === 0 && runnerIssues.length === 0 ? 0 : 1;
 } catch (error) {
   runnerIssues.push(error.stack ?? String(error));

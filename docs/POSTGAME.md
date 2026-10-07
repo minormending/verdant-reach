@@ -26,6 +26,7 @@ and dialogue as `say("TODO(text): …")`.
      meeting the player in grass.
    - **COCONUT** roams the sea (Chapter 6's sea and island routes),
      meeting the player in water encounters.
+   - Driftseed Isle water (10%): SEAGRASS SHOOT 40% (26–27), MANGROVE PROPAGULE 30% (23), EELGRASS 30% (28–30); Chapter 6 levels capped below numeric growth triggers.
    - **BURR** hitches a ride.
      - Each time the player enters an outdoor route map, there's a 1-in-8
        chance it appears **on the tile behind the player** as an NPC

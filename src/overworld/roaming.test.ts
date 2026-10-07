@@ -4,9 +4,10 @@ import { DATA } from "../data";
 import { seeded } from "../battle/logic/rng";
 import { newGameState } from "../save";
 import { WORLD } from "../world";
-import { buildMap } from "./map";
+import { buildMap, refreshLegend, warpAt } from "./map";
+import { rollEncounter } from "./encounters";
 import {
-  burrPlacement, finishWandererBattle, meetingRoamer, moveRoamers, recoverWanderers,
+  burrPlacement, burrTileSafe, finishWandererBattle, meetingRoamer, moveRoamers, recoverWanderers,
   ROAMER_MAPS, wandererFlees, wandererFree, wandererHealth, wandererMaxHp, WANDERERS,
 } from "./roaming";
 
@@ -65,6 +66,15 @@ describe("roaming movement and release", () => {
 });
 
 describe("encounter replacement", () => {
+  it("can roll the required habitat on every roaming destination", () => {
+    for (const id of ["tumbleweed", "coconut"] as const) for (const destination of ROAMER_MAPS[id]) {
+      const state = free();
+      state.roamers[id].map = destination;
+      const encounter = rollEncounter(WORLD.maps[destination], id === "coconut" ? "water" : "tall_grass", "day", () => 0, true, state.flags);
+      expect(encounter, `${id} on ${destination}`).not.toBeNull();
+      expect(meetingRoamer(state, destination, encounter!.kind, () => 0)).toBe(id);
+    }
+  });
   it.each([
     ["tumbleweed", "route_10", "grass"], ["coconut", "route_8", "water"],
   ] as const)("replaces %s only below the 1/4 boundary", (id, location, kind) => {
@@ -131,6 +141,20 @@ describe("wanderer battle lifecycle", () => {
 });
 
 describe("BURR hitch placement", () => {
+  it("leaves the Seed Vault return warp free on the Route 9 arrival", () => {
+    const state = free(), runtime = buildMap(WORLD.maps.route_9);
+    refreshLegend(runtime, state.flags);
+    const arrival = WORLD.maps.seed_vault_entrance.warps.find((w) => w.to === "route_9")!;
+    expect(warpAt(runtime, 6, 0)?.to).toBe("seed_vault_entrance");
+    expect(burrPlacement(state, runtime, { x: arrival.toX, y: arrival.toY, facing: arrival.facing! }, () => false, () => 0)).toBeNull();
+  });
+  it("reserves shared exit mats and tiles whose only exit is a warp", () => {
+    const runtime = buildMap({ ...map().def, tiles: ["WWWW", "W..W", "WEEW", "WWWW"], legend: { W: "wall", ".": "grass", E: "mat_exit" },
+      warps: [{ x: 1, y: 2, to: "player_home", toX: 2, toY: 2 }] });
+    expect(burrTileSafe(runtime, 2, 2)).toBe(false); // shared mat has no own warp
+    runtime.def.tiles[1] = "W.WW";
+    expect(burrTileSafe(runtime, 1, 1)).toBe(false); // sole walkable exit is the mat
+  });
   it.each([
     ["up", 2, 3], ["down", 2, 1], ["left", 3, 2], ["right", 1, 2],
   ] as [Dir, number, number][])("appears exactly behind a player facing %s", (facing, x, y) => {

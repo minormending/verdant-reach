@@ -8,10 +8,11 @@ import { sendOutFoe, type BattleState } from "./logic/battle";
 import { createQuickened } from "./logic/stats";
 import { seeded } from "./logic/rng";
 import { createBattleScene } from "./scene";
-import { newGameState } from "../save";
+import { createSave, newGameState } from "../save";
+import { createOverworldScene } from "../overworld";
 import { WORLD } from "../world";
 import { type BattleEvent } from "./logic/battle";
-import { wandererHealth } from "../overworld/roaming";
+import { recoverWanderers, wandererHealth, wandererMaxHp } from "../overworld/roaming";
 
 vi.mock("./hud", async (original) => ({
   ...await original<typeof import("./hud")>(), drawGraftCollarPlaceholder: vi.fn(),
@@ -61,7 +62,7 @@ const trainer: TrainerDef = {
 };
 
 async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: boolean; fullParty?: boolean; wilted?: boolean;
-  prepare?: (ctx: GameContext) => void; choice?: (scene: SceneHarness) => ReturnType<SceneHarness["chooseAction"]> } = {}) {
+  prepare?: (ctx: GameContext) => void; expUi?: () => void; choice?: (scene: SceneHarness) => ReturnType<SceneHarness["chooseAction"]> } = {}) {
   vi.stubGlobal("window", {});
   const ctx = {
     data: DATA, rng: opts.rng ?? seeded(1), input: {}, timeOfDay: () => "day",
@@ -84,14 +85,17 @@ async function setup(req: BattleRequest, opts: { rng?: () => number; capture?: b
   scene.intro = vi.fn(async () => {});
   scene.ending = vi.fn(async () => {});
   scene.play = vi.fn(async () => {});
-  scene.awardExp = vi.fn(async () => {});
+  if (opts.expUi) vi.spyOn(scene, "awardExp");
+  else scene.awardExp = vi.fn(async () => {});
   scene.chooseAction = vi.fn(async () => {
     if (opts.choice) return opts.choice(scene);
     if (!opts.capture) return { kind: "fled" as const };
     ctx.rng = () => 0; // All capture wobble checks pass, independently of the sport roll.
     return await scene.throwPod("terrarium_pod") ?? { kind: "fled" as const };
   });
-  scene.say = vi.fn(async () => {});
+  scene.say = vi.fn(async (text) => {
+    if (text.includes("EXP. Points!")) opts.expUi?.();
+  });
   scene.lobPod = vi.fn(async () => {});
   scene.popOut = vi.fn(async () => {});
   scene.slideHud = vi.fn(async () => {});
@@ -263,6 +267,46 @@ describe("wanderer battle scene", () => {
     expect(scene.chooseAction).toHaveBeenCalledTimes(2);
     expect(scene.s.turn).toBe(1);
     expect(scene.say).not.toHaveBeenCalledWith("OAK ACORN fled!", "wait");
+  });
+
+  it.each(["tumbleweed", "coconut", "burr"] as const)("records %s wilting before midnight, even when EXP UI crosses into the next day", async (id) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 7, 23, 59, 59));
+    try {
+      const { ctx, scene, outcome } = await setup({ kind: "wild", wild: { species: id, level: 60 }, wanderer: id }, {
+        rng: () => 0.5,
+        prepare(ctx) {
+          ctx.world = WORLD;
+          ctx.assets = { exists: () => false, has: () => false, image: () => undefined, loadAll: async () => {} };
+          ctx.state.flags = { game_cleared: true, wanderers_free: true };
+          ctx.state.position = { map: "player_home", x: 2, y: 2, facing: "down" };
+          ctx.state.party = [createQuickened(DATA, "great_oak", 80, seeded(10))];
+          Object.assign(wandererHealth(ctx.state, id), { hp: 1, status: "blight" });
+        },
+        choice: async () => ({ kind: "pod_failed" }),
+        expUi: () => {
+          expect(new Date().getDate()).toBe(7);
+          vi.setSystemTime(new Date(2026, 9, 8, 0, 0, 1));
+        },
+      });
+      expect(outcome).toBe("won");
+      expect(scene.awardExp).toHaveBeenCalledOnce();
+      expect(ctx.state.wandererWilted?.[id]).toBe("2026-10-07");
+      const recovered = recoverWanderers(ctx.state, DATA, new Date());
+      expect(wandererHealth(recovered, id)).toMatchObject({ hp: wandererMaxHp(DATA, id), status: null });
+      const values = new Map<string, string>();
+      const save = createSave(() => ctx.state, {
+        getItem: (key) => values.get(key) ?? null,
+        setItem: (key, value) => { values.set(key, value); },
+        removeItem: (key) => { values.delete(key); },
+      });
+      save.write();
+      ctx.state = save.read()!;
+      expect(ctx.state.wandererWilted?.[id]).toBe("2026-10-07");
+      createOverworldScene(ctx, { mode: "continue" });
+      expect(wandererHealth(ctx.state, id)).toMatchObject({ hp: wandererMaxHp(DATA, id), status: null });
+      expect(ctx.state.wandererWilted?.[id]).toBeUndefined();
+    } finally { vi.useRealTimers(); }
   });
 
   it("wilting from end-of-turn status wins over fleeing and records the real date", async () => {

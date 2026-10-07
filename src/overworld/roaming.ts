@@ -4,7 +4,7 @@ import type {
 } from "../contracts";
 import { calcStat, trainerIvs } from "../battle/logic/stats";
 import type { EncounterKind } from "./encounters";
-import { DIRS, isWalkable, type MapRuntime } from "./map";
+import { DIRS, isWalkable, tryMove, warpAt, type MapRuntime } from "./map";
 import { todayISO } from "./progress";
 
 export const WANDERER_LEVEL = 60;
@@ -70,6 +70,15 @@ export function meetingRoamer(state: State, map: MapId, kind: EncounterKind, rng
   return id && wandererFree(state, id) && state.roamers[id].map === map && rng() < 1 / 4 ? id : null;
 }
 
+/** Reserve warps (including shared mats) and dead ends that lead only to a warp. */
+export function burrTileSafe(map: MapRuntime, x: number, y: number): boolean {
+  if (!isWalkable(map, x, y) || warpAt(map, x, y)) return false;
+  return (Object.keys(DIRS) as Dir[]).some((dir) => {
+    const move = tryMove(map, x, y, dir);
+    return move.kind !== "blocked" && !warpAt(map, move.x, move.y);
+  });
+}
+
 export function burrPlacement(
   state: State, map: MapRuntime, player: { x: number; y: number; facing: Dir },
   occupied: (x: number, y: number) => boolean, rng: () => number,
@@ -77,7 +86,7 @@ export function burrPlacement(
   if (!map.def.outdoor || !/^route_\d+$/.test(map.def.id) || !wandererFree(state, "burr") || rng() >= 1 / 8) return null;
   const { dx, dy } = DIRS[player.facing];
   const x = player.x - dx, y = player.y - dy;
-  if (!isWalkable(map, x, y) || occupied(x, y)) return null;
+  if (!burrTileSafe(map, x, y) || occupied(x, y)) return null;
   return { id: "burr", sprite: "item_pickup", x, y, facing: player.facing, movement: "static" };
 }
 

@@ -114,6 +114,22 @@ describe("roaming overworld wiring", () => {
     expect(scene.npcs.some((n) => n.id === "burr")).toBe(false);
     expect(ctx.state.burrHitch).toBeUndefined();
   });
+  it("keeps the Vault-to-Route-9 return warp free during placement and saved hitch restoration", () => {
+    const ctx = context(), scene = sceneFor(ctx);
+    scene.loadMap("seed_vault_entrance", 6, 10, "down");
+    const arrival = ctx.world.maps.seed_vault_entrance.warps.find((w) => w.to === "route_9")!;
+    scene.loadMap("route_9", arrival.toX, arrival.toY, arrival.facing!);
+    expect(scene.npcs.some((n) => n.id === "burr")).toBe(false);
+    expect(ctx.state.burrHitch).toBeUndefined();
+    const db = storage();
+    ctx.state.burrHitch = { map: "route_9", x: 6, y: 0, facing: "down" };
+    const save = createSave(() => ctx.state, db);
+    save.write();
+    ctx.state = save.read()!;
+    const resumed = sceneFor(ctx, "continue");
+    expect(resumed.npcs.some((n) => n.id === "burr")).toBe(false);
+    expect(ctx.state.burrHitch).toBeUndefined();
+  });
   it("does not put BURR on an authored visible NPC or on a solid tile", () => {
     const ctx = context(), scene = sceneFor(ctx);
     ctx.world.maps.route_10.npcs.push({ id: "occupant", sprite: "hiker", x: 2, y: 3, facing: "up" });

@@ -406,6 +406,7 @@ class BattleScene implements Scene {
     await this.intro();
 
     let outcome: BattleOutcome | null = null;
+    let wandererWiltedAt: Date | undefined;
     while (!outcome) {
       const choice = await this.chooseAction();
       if (choice.kind === "fled") { outcome = "fled"; break; }
@@ -414,11 +415,13 @@ class BattleScene implements Scene {
         : choice.kind === "switch" ? { kind: "switch", index: choice.index } : { kind: "none" };
       const fAction = chooseFoeAction(this.s, this.aiKind, ctx.rng);
       const events = resolveTurn(this.s, pAction, fAction, ctx.rng);
+      // Resolution mutates HP synchronously; playback and EXP can wait past midnight.
+      if (req.wanderer && this.foe().hp <= 0 && !wandererWiltedAt) wandererWiltedAt = new Date();
       await this.play(events);
       outcome = await this.afterTurn();
     }
     if (req.kind === "wild" && req.wanderer) {
-      Object.assign(ctx.state, finishWandererBattle(ctx.state, req.wanderer, this.foe(), outcome, new Date()));
+      Object.assign(ctx.state, finishWandererBattle(ctx.state, req.wanderer, this.foe(), outcome, wandererWiltedAt ?? new Date()));
     }
     await this.ending(outcome);
     return outcome;

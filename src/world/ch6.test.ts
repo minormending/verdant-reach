@@ -128,8 +128,11 @@ describe("Chapter 6 world", () => {
     };
     for (const id of Object.keys(expected) as (keyof typeof expected)[]) {
       const enc = WORLD.maps[id].encounters!;
-      expect((enc.water ?? enc.grass)!.slots.map((s) => [s.species, s.weight, s.minLevel, s.maxLevel])).toEqual(expected[id]);
+      expect((id === "driftseed_isle" ? enc.grass : enc.water ?? enc.grass)!.slots.map((s) => [s.species, s.weight, s.minLevel, s.maxLevel])).toEqual(expected[id]);
     }
+    expect(WORLD.maps.driftseed_isle.encounters!.water!.slots.map((s) => [s.species, s.weight, s.minLevel, s.maxLevel])).toEqual([
+      ["seagrass_shoot", 40, 26, 27], ["mangrove_propagule", 30, 23, 23], ["eelgrass", 30, 28, 30],
+    ]);
     for (const id of CH6) for (const enc of Object.values(WORLD.maps[id].encounters ?? {})) for (const s of enc.slots) {
       const t = DATA.species[s.species].growsInto?.trigger;
       if (t && "level" in t) expect(s.maxLevel, `${id} ${s.species}`).toBeLessThan(t.level);

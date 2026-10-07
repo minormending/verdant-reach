@@ -37,8 +37,9 @@ export const thistledown: MapDef = {
   ],
   warps: [
     { x: 0, y: 17, to: "route_10", toX: 48, toY: 10, facing: "left" },
-    { x: 14, y: 0, to: "route_11", toX: 13, toY: 54, facing: "up" },
-    { x: 15, y: 0, to: "route_11", toX: 14, toY: 54, facing: "up" },
+    // Leave a safe tile behind the arrival for BURR, clear of the return warp.
+    { x: 14, y: 0, to: "route_11", toX: 13, toY: 53, facing: "up" },
+    { x: 15, y: 0, to: "route_11", toX: 14, toY: 53, facing: "up" },
     { x: 6, y: 10, to: "thistledown_greenhouse", toX: 5, toY: 7, facing: "up" },
     { x: 21, y: 10, to: "thistledown_market", toX: 6, toY: 7, facing: "up" },
     { x: 5, y: 5, to: "thistledown_house", toX: 4, toY: 6, facing: "up" },

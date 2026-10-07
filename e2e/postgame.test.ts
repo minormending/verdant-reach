@@ -8,7 +8,7 @@ afterEach(() => {
 
 /** Drive the complete post-game with real field input, scripts and battles.
  * Only the previously earned Chapter 11 prerequisites are fixtures. */
-it.each([1, 42])("plays all 23 post-game milestones, including the five +8 rematches (seed %i)", async (seed) => {
+it.each([1, 42])("plays all 24 post-game milestones, including the five +8 rematches (seed %i)", async (seed) => {
   vi.useFakeTimers();
   vi.resetModules();
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -62,7 +62,7 @@ it.each([1, 42])("plays all 23 post-game milestones, including the five +8 remat
     Object.assign(createQuickened(ctx.data, "red_chili", 100, rng), { e2e: true }),
     createQuickened(ctx.data, "great_oak", 100, rng),
   ];
-  ctx.state.bag = { glider_seed: 1, foxfire_lantern: 1, saxifrage: 1, fig_root: 1 };
+  ctx.state.bag = { lily_raft: 1, glider_seed: 1, foxfire_lantern: 1, saxifrage: 1, fig_root: 1 };
   ctx.state.options.textSpeed = "fast";
   ctx.state.hallOfFame = [[{ ...ctx.state.party[0] }]];
   const { createOverworldScene } = await import("../src/overworld");
@@ -87,13 +87,19 @@ it.each([1, 42])("plays all 23 post-game milestones, including the five +8 remat
     await task;
     const diagnostic = JSON.stringify({ beats: e2e.report.beats, battles: e2e.report.battles, issues: e2e.report.issues });
     expect(e2e.report.issues, diagnostic).toEqual([]);
-    expect(e2e.report.beats, diagnostic).toHaveLength(23);
+    expect(e2e.report.beats, diagnostic).toHaveLength(24);
     expect(e2e.report.beats.filter((b) => !b.ok).map((b) => [b.name, b.note]), diagnostic).toEqual([]);
     expect(e2e.report.battles.filter((b) => b.request.trainer?.endsWith("_rematch"))
       .map((b) => [b.request.trainer, b.outcome])).toEqual([
       ["belladonna_rematch", "won"], ["mimi_osa_rematch", "won"], ["titus_arum_rematch", "won"],
       ["pyra_rematch", "won"], ["rowan_rematch", "won"],
     ]);
+    for (const id of ["tumbleweed", "coconut"] as const) {
+      expect(e2e.report.battles.filter((b) => b.request.wanderer === id), diagnostic).toEqual(expect.arrayContaining([
+        expect.objectContaining({ request: expect.objectContaining({ kind: "wild", wanderer: id,
+          wild: { species: id, level: 60 }, backdrop: id === "coconut" ? "water" : "grass" }), outcome: "fled", turns: 1 }),
+      ]));
+    }
     expect(ctx.state.hallOfFame).toHaveLength(2);
     expect(ctx.state.flags).toMatchObject({ got_centuryheart: true, wanderers_free: true, diary_read: true,
       filled_seed_vault_b2_8_10: true, filled_seed_vault_b2_16_10: true, bridged_seed_vault_b2_12_10: true,

@@ -55,5 +55,9 @@ export const driftseed_isle: MapDef = {
     { species: "saguaro_pup", minLevel: 26, maxLevel: 29, weight: 20 },
     { species: "fireweed_shoot", minLevel: 26, maxLevel: 29, weight: 10 },
     { species: "vanilla_vine", minLevel: 26, maxLevel: 30, weight: 10 },
+  ] }, water: { rate: 10, slots: [
+    { species: "seagrass_shoot", minLevel: 26, maxLevel: 27, weight: 40 },
+    { species: "mangrove_propagule", minLevel: 23, maxLevel: 23, weight: 30 },
+    { species: "eelgrass", minLevel: 28, maxLevel: 30, weight: 30 },
   ] } },
 };

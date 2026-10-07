@@ -91,7 +91,7 @@ const seed = devSeed();
 // Fixture IVs must not depend on how long pathfinding waited for an NPC.
 const fixtureRng = seed === null ? () => ctx().rng() : randomStream(seed, "e2e:fixtures");
 const stack = () => VR().scenes.all();
-type BattleView = Scene & { s: BattleState; req: { kind: string }; finished: boolean };
+type BattleView = Scene & { s: BattleState; req: BattleRequest; finished: boolean };
 function battleScene(): BattleView | null {
   const scene = stack().find((sc) => "req" in sc && "s" in sc && !(sc as BattleView).finished);
   return scene as BattleView | undefined ?? null;
@@ -171,7 +171,7 @@ export const report = {
   beats: [] as Beat[],
   issues: [] as Issue[],
   texts: [] as { t: number; map?: string; text: string; speaker?: string }[],
-  battles: [] as { request: BattleRequest; outcome?: BattleOutcome }[],
+  battles: [] as { request: BattleRequest; outcome?: BattleOutcome; turns?: number }[],
   frame: { samples: 0, total: 0, worst: 0, over8: 0, longTasks: 0 },
 };
 let lastFlags = new Set<string>();
@@ -220,8 +220,12 @@ const answers: [RegExp, boolean][] = [
 ];
 
 /** Battle (and other screen) scenes carry their own `ui` with say/yesNo: log and answer those too. */
+const battleStates = new WeakMap<BattleRequest, BattleState>();
+let switchAgainstWanderers = false;
+
 function hookScenes() {
   for (const sc of stack()) {
+    if (sc === battleScene()) battleStates.set((sc as BattleView).req, (sc as BattleView).s);
     const flow = (sc as unknown as { flow?: { run: (task: unknown) => Promise<void> } }).flow;
     if (flow && typeof flow.run === "function" && !observedFlows.has(flow)) {
       observedFlows.add(flow);
@@ -242,7 +246,7 @@ function hookScenes() {
           const item = !deliberatelyLosing && (report.suite === "full" || report.suite === "story")
             ? healingItem(ctx().data, ctx().state.bag, active(s, 0)) : null;
           medicine = item ? { item, active: s.sides[0].active } : null;
-          target = item || captureItem() ? 1 : 0;
+          target = switchAgainstWanderers && (sc as BattleView).req.wanderer ? 2 : item || captureItem() ? 1 : 0;
         } else if (menu.options[0] === ctx().data.moves[active(s, 0).moves[0]?.id]?.name.toUpperCase()) {
           target = strongestMove(s);
         }
@@ -289,6 +293,7 @@ export function instrument() {
     const entry: typeof report.battles[number] = { request };
     report.battles.push(entry);
     entry.outcome = await battle(request);
+    entry.turns = battleStates.get(request)?.turn;
     return entry.outcome;
   };
   const gameplayTasks = new GameplayTasks();
@@ -2356,11 +2361,9 @@ export async function postgame() {
   try {
     await nav("council_arboretum");
     await glideTo("thistledown");
-    let hitch = false, entries = 0, movement = false;
+    let hitch = false, entries = 0;
     for (; entries < 64 && !hitch; entries++) {
-      const before = { ...ctx().state.roamers.tumbleweed };
       if (!(await nav("route_11"))) break;
-      movement ||= before.map !== ctx().state.roamers.tumbleweed.map;
       const burr = ow()?.npcs.find((n) => n.id === "burr");
       if (burr && ow()!.visible(burr)) {
         const p = ow()!.player, [dx, dy] = DIRS[p.facing];
@@ -2373,35 +2376,47 @@ export async function postgame() {
         break;
       }
       if (!(await nav("thistledown"))) break;
-      movement ||= before.map !== ctx().state.roamers.tumbleweed.map;
     }
     beat("BURR: a seeded hitch behind the player and a real battle", hitch, `route entries=${entries + 1}`);
-    let meeting = report.battles.find((b) => b.request.wanderer === "tumbleweed" || b.request.wanderer === "coconut");
-    // One bounded search; unlucky seeds must still prove actual map movement.
-    for (let attempt = 0; attempt < 8 && !meeting; attempt++) {
-      if (ow()?.mapId !== "route_11") await nav("route_11");
-      if (ctx().state.roamers.tumbleweed.map === "route_11") {
-        for (let step = 0; step < 80 && !meeting; step++) {
-          if (!(await walkTo(...(onTile(3, 35) ? [4, 35] : [3, 35]) as [number, number]))) break;
+    // Fixed independent streams exercise real route entries and encounter rolls.
+    // A party switch spends a full turn without the level-100 helper wilting the roamer.
+    switchAgainstWanderers = true;
+    for (const id of ["tumbleweed", "coconut"] as const) {
+      ctx().rng = randomStream(1, `e2e:postgame:${id}`);
+      const before = report.battles.length;
+      const meeting = () => report.battles.slice(before).find((b) => b.request.wanderer === id);
+      let attempts = 0;
+      if (id === "coconut") {
+        await nav("thistledown");
+        await glideTo("driftseed_isle");
+      }
+      for (; attempts < 24 && !meeting(); attempts++) {
+        if (id === "tumbleweed") {
+          await nav("thistledown");
+          await nav("route_11");
+        } else {
+          await nav("route_8");
+          await nav("driftseed_isle");
+        }
+        const destination = id === "tumbleweed" ? "route_11" : "driftseed_isle";
+        if (ctx().state.roamers[id].map !== destination) continue;
+        for (let step = 0; step < 240 && !meeting(); step++) {
+          const a: [number, number] = id === "tumbleweed" ? [3, 35] : [16, 1];
+          const b: [number, number] = id === "tumbleweed" ? [4, 35] : [17, 1];
+          if (!(await walkTo(...(onTile(...a) ? b : a)))) break;
           await settle();
           refreshHelper();
-          meeting = report.battles.find((b) => b.request.wanderer === "tumbleweed" || b.request.wanderer === "coconut");
         }
       }
-      if (!meeting) {
-        const map = ctx().state.roamers.tumbleweed.map;
-        await nav("thistledown");
-        movement ||= map !== ctx().state.roamers.tumbleweed.map;
-        await nav("route_11");
-        movement ||= map !== ctx().state.roamers.tumbleweed.map;
-      }
+      const fight = meeting();
+      beat(`${id.toUpperCase()}: a real ${id === "tumbleweed" ? "grass" : "water"} meeting and first-turn flee`,
+        fight?.request.kind === "wild" && fight.request.wild?.species === id && fight.request.wild.level === 60
+          && fight.request.backdrop === (id === "tumbleweed" ? "grass" : "water") && fight.outcome === "fled" && fight.turns === 1,
+        `entries=${attempts}; outcome=${fight?.outcome}; turns=${fight?.turns}`);
     }
-    beat("WANDERERS: a roaming meeting or movement between player maps", meeting ? !!meeting.outcome
-      && meeting.request.wild?.level === 60 : movement,
-    meeting ? `${meeting.request.wanderer}: ${meeting.outcome}` : "no meeting in bounded search; TUMBLEWEED changed maps");
-  } finally { ctx().rng = worldRng; }
+  } finally { ctx().rng = worldRng; switchAgainstWanderers = false; }
 
-  await nav("thistledown");
+  await glideTo("thistledown");
   await glideTo("larchmere");
   await nav("route_9");
   const spur = ow()?.mapId === "route_9" && tileAt(ow()!.map as unknown as MapRuntime, 6, 0) === "stairs_down";
