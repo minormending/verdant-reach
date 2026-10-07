@@ -3,7 +3,7 @@
 //
 //   npm run e2e                                        headless full playthrough
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
-//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 10
+//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> post-game
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
 //
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
@@ -23,6 +23,8 @@
 // Chapter 10 bridges ROUTE 12's three gorges, fills its pits, joins BRAM,
 // listens through the shifting Grove, defeats the admins and MERCER, plants
 // the Centuryheart Seed and challenges the repeatable Elder before the card.
+// Chapter 11 loses midway through the Council to prove the run resets, then
+// defeats all four seats and ROWAN, skips the credits and wakes at home.
 //
 // `?timer` keeps the loop running in a hidden tab. Add `&boost=<level>` to set
 // the level of the over-levelled helper (default 48; `boost=0` plays it
@@ -91,6 +93,8 @@ function battleScene(): BattleView | null {
 }
 let battleMenu: { menu: Menu; target: number } | null = null;
 let medicine: { item: ItemId; active: number } | null = null;
+/** Let the exhausted Council fixture lose instead of rescuing it with BAG. */
+let deliberatelyLosing = false;
 /** Throw pods only at the requested line in real grass or water encounters. */
 let captureLine: string | null = null;
 let capturePod: "terrarium_pod" | "glass_pod" = "terrarium_pod";
@@ -230,7 +234,7 @@ function hookScenes() {
         if (menu.options.join("/") === "FIGHT/BAG/QUICKENED/RUN") {
           // Story battles may spend awarded medicine. Targeted checks (notably
           // deliberate whiteouts and pod throws) keep their existing policy.
-          const item = report.suite === "full" || report.suite === "story"
+          const item = !deliberatelyLosing && (report.suite === "full" || report.suite === "story")
             ? healingItem(ctx().data, ctx().state.bag, active(s, 0)) : null;
           medicine = item ? { item, active: s.sides[0].active } : null;
           target = item || captureItem() ? 1 : 0;
@@ -2091,6 +2095,154 @@ export async function chapter10() {
     && ctx().save.read()?.flags["ch10_done"] === true);
 }
 
+// ---------------------------------------------------------------------------
+// Chapter 11: the Council, fellowship, credits and the post-game
+// ---------------------------------------------------------------------------
+
+export async function chapter11() {
+  const saved = ctx().save.read();
+  if (!saved?.flags.ch10_done) {
+    beat("CONTINUE after Chapter 10", false, "no Chapter 10 save");
+    return;
+  }
+  await press("start");
+  await sleep(700);
+  await press("a");
+  await sleep(700);
+  await press("a");
+  const continued = await waitFor(() => !!ow(), 15000);
+  await sleep(1500);
+  if (!continued) { beat("CONTINUE after Chapter 10", false, "no overworld"); return; }
+  await settle();
+  beat("CONTINUE after Chapter 10", flag("ch10_done") && ow()?.mapId === saved.position.map);
+  ctx().state.options.textSpeed = "fast";
+
+  // Compress party training when the story helper is enabled, as earlier
+  // chapters compress healing. Retain the actual starter and caught species.
+  // The real trainer teams, seeded battle RNG, damage and outcomes remain in use.
+  const helper = ctx().state.party.find((q) => (q as { e2e?: boolean }).e2e);
+  if (helper) for (const q of ctx().state.party) {
+    if (!q.seed && q.level < 100) Object.assign(q, createQuickened(ctx().data, q.species, 100, fixtureRng));
+  }
+  const healed = () => ctx().state.party.every((q) => q.seed || q.hp === q.stats.hp
+    && q.status === null && q.moves.every((m) => m.pp === ctx().data.moves[m.id].pp));
+  const runFlags = ["council_run", "beat_council_1", "beat_council_2", "beat_council_3", "beat_council_4", "beat_keeper",
+    "beat_belladonna", "beat_mimi_osa", "beat_titus_arum", "beat_pyra", "beat_rowan"];
+  const seats = [
+    ["council_1", "belladonna", "beat_council_1", "APOTHECARY: BELLADONNA"],
+    ["council_2", "mimi_osa", "beat_council_2", "SLEEPER: MIMI OSA"],
+    ["council_3", "titus_arum", "beat_council_3", "ROTTER: TITUS ARUM"],
+    ["council_4", "pyra", "beat_council_4", "KINDLER: PYRA"],
+    ["keeper_hall", "rowan", "beat_keeper", "KEEPER: ROWAN VALE"],
+  ] as const;
+  // Test the live entrance and exit tiles, and actually try the closed return
+  // door before talking. talkTo finishes beside and facing the trainer.
+  const enter = async (map: MapId) => {
+    if (!(await nav(map))) return false;
+    const o = ow()!;
+    const x = map === "keeper_hall" ? 6 : 5, y = map === "keeper_hall" ? 14 : 10;
+    const locked = !isWalkable(o.map as unknown as MapRuntime, x, 0)
+      && !isWalkable(o.map as unknown as MapRuntime, x, y + 1);
+    if (!(await walkTo(x, y))) return false;
+    await T().step("down");
+    await settle();
+    return locked && flag("council_run") && ow()?.mapId === map && onTile(x, y);
+  };
+  const fightSeat = async (index: number, retry = false) => {
+    const [map, trainer, win, label] = seats[index];
+    const closed = await enter(map), before = report.battles.length;
+    const talked = await talkTo(trainer);
+    const battles = report.battles.slice(before);
+    const o = ow();
+    beat(`${retry ? "COUNCIL retry" : "COUNCIL"}: ${label}`, closed && talked
+      && battles.length === 1 && battles[0].request.trainer === trainer && battles[0].outcome === "won"
+      && flag(win) && !!o && o.mapId === map
+      && isWalkable(o.map as unknown as MapRuntime, map === "keeper_hall" ? 6 : 5, 0));
+  };
+
+  await nav("council_arboretum");
+  // Leave the trigger tile first if the continued save happens to occupy it.
+  await walkTo(15, 15);
+  const door = await trigger("ch11_hall_door");
+  beat("COUNCIL HALL: enter the reopened door", door && ow()?.mapId === "council_hall");
+  // Spend HP/PP after the previous beat, so automatic fixture healing cannot
+  // satisfy the counter assertion. The lobby also becomes the whiteout point.
+  const patient = ctx().state.party.find((q) => !q.seed)!;
+  patient.hp = Math.max(1, patient.hp - 1);
+  if (patient.moves[0]) patient.moves[0].pp = 0;
+  const tended = await talkTo("keeper");
+  beat("COUNCIL HALL: heal at the lobby counter", tended && healed() && ctx().state.heal.map === "council_hall");
+  beat("COUNCIL: the run starts and the door closes", await enter("council_1"));
+  await fightSeat(0);
+  await fightSeat(1);
+
+  const closed = await enter("council_3"), beforeLoss = report.battles.length;
+  const earnedSeats = flag("beat_council_1") && flag("beat_council_2");
+  const money = ctx().state.money, fameBefore = ctx().state.hallOfFame?.length ?? 0;
+  // Exhaust the party, leaving one HP and no PP on its lead. With medicine
+  // declined, an enemy hit or Struggle recoil ends a real battle turn in loss.
+  // No beat (which would refresh the helper) may occur before the interaction.
+  for (const q of ctx().state.party) q.hp = 0;
+  const lossLead = ctx().state.party.find((q) => !q.seed)!;
+  lossLead.hp = 1;
+  for (const move of lossLead.moves) move.pp = 0;
+  let lostTalk = false;
+  deliberatelyLosing = true;
+  try { lostTalk = await talkTo("titus_arum"); }
+  finally { deliberatelyLosing = false; }
+  const losses = report.battles.slice(beforeLoss);
+  // Capture recovery before beat() can refresh HP/PP.
+  const recovered = healed();
+  beat("COUNCIL: deliberately lose midway to TITUS ARUM", closed && earnedSeats && lostTalk
+    && losses.length === 1 && losses[0].request.trainer === "titus_arum" && losses[0].outcome === "lost");
+  beat("COUNCIL: whiteout resets every seat and returns to the lobby", recovered
+    && ow()?.mapId === "council_hall" && onTile(2, 4)
+    && ctx().state.money === money - Math.floor(money / 2)
+    && runFlags.every((f) => !flag(f)) && !flag("game_cleared")
+    && (ctx().state.hallOfFame?.length ?? 0) === fameBefore);
+
+  beat("COUNCIL retry: start again with every seat locked", await enter("council_1")
+    && runFlags.filter((f) => f !== "council_run").every((f) => !flag(f)));
+  for (let i = 0; i < seats.length; i++) await fightSeat(i, true);
+
+  const team = ctx().state.party.map((q) => ({ species: q.species, level: q.level }));
+  const endingTexts = report.texts.length;
+  // Credits have no exposed scene tag. Observe their actual title being drawn
+  // by the real renderer, and retain that scene to prove B dismissed it.
+  let credits: Scene | null = null;
+  const ui = ctx().ui, drawText = ui.drawText;
+  ui.drawText = (...args) => {
+    if (ow()?.mapId === "fellowship_hall" && args[1] === "VERDANT REACH" && stack().at(-1) !== stack()[0]) {
+      credits = stack().at(-1)!;
+    }
+    drawText.call(ui, ...args);
+  };
+  try {
+    // Avoid nav/settle: onEnter starts the ending immediately and credits need
+    // their own stop condition instead of waiting for an idle overworld.
+    await goto(6, 0, false);
+    const rolling = await advance(1000, () => credits !== null);
+    const ending = report.texts.slice(endingTexts).filter((t) => t.map === "fellowship_hall");
+    beat("THE HERBARIUM: reconciliation and fellowship", rolling
+      && ending.some((t) => t.text.includes("ROWAN and IMOGEN reconcile"))
+      && ending.some((t) => t.text.includes("Fellow of the Herbarium"))
+      && ending.some((t) => t.text.includes("record of a new world")));
+    await sleep(3000); // a few seconds of scrolling in game time, at any speed
+    const stillRolling = credits !== null && stack().at(-1) === credits && !flag("game_cleared");
+    await press("b");
+    const skipped = await waitFor(() => credits !== null && !stack().includes(credits), 15000);
+    beat("CREDITS: start scrolling, then skip with B", rolling && stillRolling && skipped);
+    const fame = ctx().state.hallOfFame ?? [], recorded = fame.at(-1);
+    beat("HALL OF FAME: record the winning team once", fame.length === fameBefore + 1
+      && JSON.stringify(recorded?.map((q) => ({ species: q.species, level: q.level }))) === JSON.stringify(team));
+    await settle();
+    beat("POST-GAME: wake in FALLOWFIELD with game_cleared", idle() && flag("game_cleared")
+      && !flag("council_run") && ow()?.mapId === "player_home" && onTile(2, 2)
+      && ctx().state.heal.map === "player_home" && healed()
+      && report.texts.slice(endingTexts).some((t) => t.map === "player_home" && t.text.includes("You wake at home")));
+  } finally { ui.drawText = drawText; }
+}
+
 /** Free a slot with real cabinet STORE input, keeping the helper in slot 0. */
 export async function makePartyRoom(): Promise<boolean> {
   if (ctx().state.party.length < 6) return true;
@@ -2530,6 +2682,7 @@ export async function run(suite: string) {
         await chapter8();
         await chapter9();
         await chapter10();
+        await chapter11();
       }
     } else if (suite === "story") {
       // From a ?dev=world&play=new jump-in.
