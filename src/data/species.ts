@@ -101,6 +101,12 @@ const POLLINATION: Record<string, PollinationGroup[]> = {
   prayer: ["woodland"],
   titan: ["carnivore"],              // CH11 fallback: no carrion-fly group exists
   flamelily: ["meadow"],
+  // POSTGAME.md §2: all five use the Elder's no-seed convention.
+  centuryheart: [],
+  tumbleweed: [],
+  coconut: [],
+  burr: [],
+  methuselah: [],
 };
 
 function sp(d: Def): Species {
@@ -746,6 +752,39 @@ const ALL: Species[] = [
   sp({ id: "flame_lily", name: "Flame Lily", line: "flamelily", stage: 2, types: ["fire", "bloom"],
     base: st(70, 110, 60, 95, 65, 90), rate: "medium", catchRate: 60, baseExp: 180, ev: { atk: 1, spe: 1 },
     activity: "day", learnset: learn(FLAMELILY) }),
+
+  // ============================================================== Post-game
+  // Centuryheart remains a rosette forever; catchRate is an internal value
+  // required by Species, while POSTGAME.md grants it only as a gift.
+  sp({ id: "centuryheart", name: "Centuryheart", line: "centuryheart", stage: 1, types: ["bloom", "dragon"],
+    base: st(110, 70, 110, 130, 130, 50), rate: "slow", catchRate: 3, baseExp: 255, ev: { spa: 1, spd: 2 },
+    learnset: learn([[1, "pollen_puff"], [1, "dragon_nip"], [10, "unfurl"], [20, "red_resin"],
+      [30, "long_bloom_2"], [40, "photosynthesise"], [50, "petal_storm"], [60, "old_growth"]]) }),
+
+  // A fast physical wanderer that rolls through the dry routes.
+  sp({ id: "tumbleweed", name: "Tumbleweed", line: "tumbleweed", stage: 1, types: ["thorn", "wood"],
+    base: st(90, 120, 90, 70, 80, 130), rate: "slow", catchRate: 3, baseExp: 255, ev: { atk: 1, spe: 2 },
+    learnset: learn([[1, "thorn_jab"], [1, "vine_lash"], [10, "bristle"], [20, "samara_spin"],
+      [30, "spine_volley"], [40, "leaf_edge"], [50, "hook_thorns"], [60, "roll_scatter"]]) }),
+
+  // A buoyant special attacker protected by a sturdy husk.
+  sp({ id: "coconut", name: "Coconut", line: "coconut", stage: 1, types: ["water", "wood"],
+    base: st(110, 80, 120, 110, 100, 60), rate: "slow", catchRate: 3, baseExp: 255, ev: { def: 2, spa: 1 },
+    learnset: learn([[1, "dew_drop"], [1, "vine_lash"], [10, "bark_skin"], [20, "undertow"],
+      [30, "sap_spout"], [40, "water_store"], [50, "leaf_gale"], [60, "drift_seed"]]) }),
+
+  // A hooked physical hitchhiker with balanced defences.
+  sp({ id: "burr", name: "Burr", line: "burr", stage: 1, types: ["thorn", "bug"],
+    base: st(90, 130, 100, 60, 100, 100), rate: "slow", catchRate: 3, baseExp: 255, ev: { atk: 2, spe: 1 },
+    learnset: learn([[1, "thorn_jab"], [1, "quick_snap"], [10, "bristle"], [20, "burr_hitch"],
+      [30, "sticky_dew"], [40, "thorn_lash"], [50, "snap_trap"], [60, "hook_cling"]]) }),
+
+  // The ancient bristlecone is slow, with HP and both defences to endure.
+  sp({ id: "methuselah", name: "Methuselah", line: "methuselah", stage: 1, types: ["wood", "frost"],
+    base: st(130, 90, 140, 80, 150, 30), rate: "slow", catchRate: 3, baseExp: 255, ev: { def: 1, spd: 2 },
+    activity: "night", learnset: learn([[1, "vine_lash"], [1, "hoarfrost"], [10, "bark_skin"],
+      [20, "frost_needle"], [30, "needle_drop"], [40, "frost_bloom"], [50, "timber"],
+      [60, "snowdrift"], [70, "old_rings"]]) }),
 ];
 
 export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;

@@ -38,7 +38,8 @@ const IDS = LINES.flatMap((line) => [...line.ids]);
 describe("Chapter 11 species", () => {
   it("appends exactly eleven ids after Chapter 10 in table order", () => {
     expect(IDS).toHaveLength(11);
-    expect(SPECIES_IDS.slice(SPECIES_IDS.indexOf("elder") + 1)).toEqual(IDS);
+    const start = SPECIES_IDS.indexOf("elder") + 1;
+    expect(SPECIES_IDS.slice(start, start + IDS.length)).toEqual(IDS);
   });
 
   for (const line of LINES) {

@@ -564,6 +564,28 @@ const LIST: HerbariumEntry[] = [
   // Source: https://en.wikipedia.org/wiki/Gloriosa_superba
   h("flame_lily", "Gloriosa superba", "Flame Lily", 3, 1,
     "It reaches out as if offering to lead the way. It climbs by tendrils at the tips of its leaves."),
+
+  // ---------------------------------------------------------------- Post-game
+  // Fact: It can grow for decades before flowering once, then dies.
+  // Source: https://en.wikipedia.org/wiki/Puya_raimondii
+  h("centuryheart", "Puya raimondii", "Century Rose", 0.5, 8,
+    "It settles beside you, in no hurry to bloom. It can grow for decades before flowering once, then dies."),
+  // Fact: When dry, it breaks off at the root and rolls in the wind, scattering seeds as it goes.
+  // Source: https://en.wikipedia.org/wiki/Salsola_tragus
+  h("tumbleweed", "Salsola tragus", "Rolling Bush", 0.8, 2,
+    "It always seems ready for another journey. When dry, it breaks off at the root and rolls in the wind, scattering seeds as it goes."),
+  // Fact: Its fruit can float and stay viable across long ocean crossings.
+  // Source: https://en.wikipedia.org/wiki/Coconut
+  h("coconut", "Cocos nucifera", "Drift Fruit", 0.3, 1.5,
+    "It bobs along as though the sea were home. Its fruit can float and stay viable across long ocean crossings."),
+  // Fact: Its hooked burrs inspired the invention of Velcro.
+  // Source: https://en.wikipedia.org/wiki/Arctium
+  h("burr", "Arctium", "Hitchhiker", 0.03, 0.005,
+    "It clings to you, ready to come along. Its hooked burrs inspired the invention of Velcro."),
+  // Fact: Some living bristlecone pines are more than 4,800 years old.
+  // Source: https://en.wikipedia.org/wiki/Pinus_longaeva
+  h("methuselah", "Pinus longaeva", "Old Pine", 8, 1500,
+    "It keeps quiet company beneath the stars. Some living bristlecone pines are more than 4,800 years old."),
 ];
 
 export const HERBARIUM = Object.fromEntries(LIST.map((e) => [e.species, e])) as Record<SpeciesId, HerbariumEntry>;

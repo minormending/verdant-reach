@@ -68,6 +68,8 @@ export const SPECIES_IDS = [
   "mimosa_sprout", "sensitive_plant", "prayer_plant",
   "corpse_corm", "corpse_leaf", "titan_arum",
   "flame_lily_tuber", "flame_lily",
+  // Post-game (POSTGAME.md §2 table order; single-stage gifts and legendaries)
+  "centuryheart", "tumbleweed", "coconut", "burr", "methuselah",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 

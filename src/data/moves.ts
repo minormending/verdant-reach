@@ -174,6 +174,15 @@ const LIST: Move[] = [
   m("leaf_fold", "Leaf Fold", "wood", "status", 0, null, 15, "Folds leaves. Sharply ups DEF.", [self("def", 2)]),
   m("carrion_bloom", "Corpse Bloom", "bug", "special", 90, 90, 10, "Carrion scent may cut SP.DEF.", [foe("spd", -1, 30)]),
   m("climbing_flame", "Climb Flame", "fire", "physical", 80, 100, 15, "Fiery tendrils. May scorch.", [inflict("scorch", 10)]),
+
+  // ------------------------------------------------------------- Post-game
+  m("long_bloom_2", "Century", "bloom", "special", 100, 90, 5, "Rare bloom hits. Lowers SP.ATK.", [self("spa", -1)]),
+  m("roll_scatter", "Roll Scatter", "thorn", "physical", 75, 100, 15, "Rolling seeds. Ups SPEED.", [self("spe", 1)]),
+  m("drift_seed", "Drift Seed", "water", "special", 80, 100, 10, "Drifting fruit heals 1/4 damage.", [{ kind: "drain", fraction: 0.25 }]),
+  m("hook_cling", "Hook Cling", "bug", "physical", 70, 100, 15, "Hooked burrs cling. Cuts SPEED.", [foe("spe", -1)]),
+  // The existing effect list supports boosts and healing together.
+  m("old_rings", "Old Rings", "wood", "status", 0, null, 10, "Ups DEF/SP.DEF. Heals 1/4 max HP.",
+    [self("def", 1), self("spd", 1), { kind: "heal", fraction: 0.25 }]),
 ];
 
 export const MOVES: Record<string, Move> = Object.fromEntries(LIST.map((mv) => [mv.id, mv]));

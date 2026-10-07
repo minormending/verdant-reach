@@ -189,6 +189,12 @@ export const MOVE_ANIMS: Record<string, AnimSpec> = {
   leaf_fold: S("harden", "night"),
   carrion_bloom: S("lure", "scent"),
   climbing_flame: S("blaze"),
+  // Post-game: a rare bloom, rolling seeds, drift, clinging hooks and rings
+  long_bloom_2: S("burst", "pale"),
+  roll_scatter: S("spin_seed"),
+  drift_seed: S("drain", "sap"),
+  hook_cling: S("slash", "hook"),
+  old_rings: S("harden", "bark"),
   // fallback move used with no PP left
   struggle: S("slam", "struggle"),
 };
