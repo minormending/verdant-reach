@@ -1,5 +1,5 @@
 import type { MapDef } from "../../contracts";
-import { OUTDOOR, ifFlags, ifNight, lockedDoor, say, type Scripts } from "../build";
+import { OUTDOOR, ifFlags, ifNight, lockedDoor, say, when, type Scripts } from "../build";
 
 // GLASSHOUSE CITY: a whole city under one glass dome. The dome's foot is a
 // ring of glass wall, planted inside with palms and evergreens.
@@ -88,6 +88,10 @@ export const glasshouse_city: MapDef = {
     { x: 24, y: 28, to: "glasshouse_house", toX: 4, toY: 6, facing: "up" },
   ],
   npcs: [
+    { id: "grunt_r0_1", sprite: "grunt", x: 4, y: 7, facing: "down", trainer: "grunt_r0_1", sight: 2,
+      visibleWhen: when({ ch8_started: true, beat_wren: false }) },
+    { id: "grunt_r0_2", sprite: "grunt", x: 6, y: 7, facing: "down", trainer: "grunt_r0_2", sight: 2,
+      visibleWhen: when({ ch8_started: true, beat_wren: false }) },
     // Story (docs/CH4_IDS.md). The grey coat at the mast, after the RELAY.
     { id: "watcher", sprite: "grunt", x: 11, y: 8, facing: "up", movement: "static", script: "ch4_watcher",
       visibleWhen: [{ flag: "relay_listened", is: true }, { flag: "ch4_grunt_seen", is: false }] },
@@ -124,6 +128,8 @@ export const glasshouse_city: MapDef = {
     { x: 36, y: 16, text: "Bananas from the PALM HOUSE. A banana plant is a giant herb, not a tree." },
   ],
   triggers: [
+    // The engine checks warps before triggers: guard the sole approach below the door.
+    { x: 5, y: 7, script: "ch8_relay_door", when: when({ ch8_started: true, got_keycard: false }) },
     // Closed until the RELAY's open day is over (the door has a real warp).
     { x: 20, y: 6, script: "ch4_conservatory_closed", when: [{ flag: "relay_listened", is: false }] },
     // LISTENING POSTS: post 2 stands on the square's north-west lawn (press A facing it).
@@ -140,6 +146,7 @@ export const scripts: Scripts = {
   // First arrival -> the grey coat at the mast (leaving the RELAY) -> the chapter end
   // (leaving the CONSERVATORY with the ROSE MARK). Narrative owns the called scripts.
   gc_enter: [
+    ifFlags({ ch7_done: true, ch8_started: false }, [call("ch8_arrival")]),
     ifFlags({ gc_arrival_seen: false }, [call("ch4_city_arrival")], [
       ifFlags({ relay_listened: true, ch4_grunt_seen: false }, [call("ch4_grunt_watch")], [
         ifFlags({ beat_flora: true, relay_listened: true, ch4_done: false }, [call("ch4_end")]),
@@ -172,12 +179,16 @@ export const scripts: Scripts = {
     say("When I grow up I want forty petals."),
   ],
   gc_researcher: [
-    ifFlags({ relay_listened: true }, [
-      say("The needles all swung at once. I've checked the wiring twice."),
-      say("The wiring is fine. That's what worries me."),
+    ifFlags({ ch8_started: true, beat_wren: false }, [
+      say("TODO(text): The sensor plants have stopped moving.", "RESEARCHER"),
     ], [
-      say("Open day at the RELAY! We bury sensors among the roots and listen."),
-      say("The valley's trees trade sugar and news underground. We eavesdrop."),
+      ifFlags({ relay_listened: true }, [
+        say("The needles all swung at once. I've checked the wiring twice."),
+        say("The wiring is fine. That's what worries me."),
+      ], [
+        say("Open day at the RELAY! We bury sensors among the roots and listen."),
+        say("The valley's trees trade sugar and news underground. We eavesdrop."),
+      ]),
     ]),
   ],
   gc_elder: [
@@ -192,14 +203,22 @@ export const scripts: Scripts = {
     say("So no squeezing them, please."),
   ],
   gc_gardener: [
-    say("No wind under the dome, so no seeds blow in. No weeds!"),
-    say("...Almost no weeds. Dandelions always find a way."),
+    ifFlags({ ch8_started: true, beat_wren: false }, [
+      say("TODO(text): My plant will not move.", "GARDENER"),
+    ], [
+      say("No wind under the dome, so no seeds blow in. No weeds!"),
+      say("...Almost no weeds. Dandelions always find a way."),
+    ]),
   ],
   gc_resident: [
-    ifNight(
-      [say("Hear that? The RELAY's mast hums at night. Louder since the bloom.")],
-      [say("I moved here for the weather. It's always June under the glass.")],
-    ),
+    ifFlags({ ch8_started: true, beat_wren: false }, [
+      say("TODO(text): Every plant on my sill stands frozen.", "RESIDENT"),
+    ], [
+      ifNight(
+        [say("Hear that? The RELAY's mast hums at night. Louder since the bloom.")],
+        [say("I moved here for the weather. It's always June under the glass.")],
+      ),
+    ]),
   ],
   gc_kid: [
     say("I threw a coin in the lily pool and wished for a QUICKENED. Nothing yet."),

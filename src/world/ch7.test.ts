@@ -15,7 +15,7 @@ const resolved = (id: MapId, flags: Record<string, boolean>) => {
 
 describe("Chapter 7 world", () => {
   it("appends all nine maps in order at their prescribed dimensions", () => {
-    expect(MAP_IDS.slice(-9)).toEqual(CH7);
+    expect(MAP_IDS.slice(MAP_IDS.indexOf("route_9"), MAP_IDS.indexOf("route_9") + 9)).toEqual(CH7);
     for (const [id, w, h] of [
       ["route_9", 30, 56], ["larchmere", 36, 30], ["bloom_lake", 36, 36],
       ["larchmere_lodge", 14, 12], ["rootstock_hideout_1", 24, 20], ["rootstock_hideout_2", 18, 16], ["larchmere_conservatory", 16, 20],

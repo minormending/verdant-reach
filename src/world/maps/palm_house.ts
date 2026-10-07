@@ -1,5 +1,5 @@
 import type { MapDef } from "../../contracts";
-import { LEGEND, ifNight, pickups, say, type Scripts } from "../build";
+import { LEGEND, ifNight, pickups, say, when, type Scripts } from "../build";
 
 // The PALM HOUSE: a tropical glasshouse inside the dome. Hot, wet and loud
 // with dripping. Undergrowth (tropical grass) fills every corner under the
@@ -41,7 +41,10 @@ export const palm_house: MapDef = {
   ],
   structures: [],
   warps: [{ x: 12, y: 19, to: "glasshouse_city", toX: 34, toY: 7, facing: "down" }],
+  encountersWhen: [{ when: when({ ch8_started: true, beat_wren: false }), encounters: {} }],
   npcs: [
+    { id: "director_hiding", sprite: "researcher", x: 10, y: 16, facing: "down", movement: "static", script: "ch8_director",
+      visibleWhen: when({ ch8_started: true, got_keycard: false }) },
     { id: "lin", sprite: "researcher", x: 9, y: 14, facing: "right", trainer: "researcher_lin", sight: 4 },
     { id: "amaryl", sprite: "florist", x: 20, y: 12, facing: "left", trainer: "florist_amaryl", sight: 2 },
     { id: "keeper", sprite: "gardener", x: 8, y: 2, facing: "down", movement: "look_around", script: "ph_keeper" },

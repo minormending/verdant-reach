@@ -96,6 +96,8 @@ export const MAP_IDS = [
   "route_7", "saltmarsh_harbour", "saltmarsh_greenhouse", "saltmarsh_market", "saltmarsh_conservatory", "route_8", "driftseed_isle", "driftseed_greenhouse", "driftseed_conservatory", "driftseed_vents",
   // Chapter 7 (CH7.md §4 order)
   "route_9", "larchmere", "larchmere_greenhouse", "larchmere_market", "bloom_lake", "larchmere_lodge", "rootstock_hideout_1", "rootstock_hideout_2", "larchmere_conservatory",
+  // Chapter 8 (CH8.md §2 order)
+  "relay_2f", "relay_3f", "relay_roof",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -317,6 +319,7 @@ export const REQUIRED_ITEMS = [
   "saxifrage",                                // key item: unlocks UPROOT boulder pushes
   "climber_pack",                             // key item: the LOST CLIMBER pack
   "cactus_sap",                               // key item: Saguaro's remedy for the Lantern Tree
+  "relay_keycard",                            // key item: access to every RELAY floor
   "fan_letter", "signed_photo",               // key items for the FAN MAIL quest
 ] as const;
 export type RequiredItemId = (typeof REQUIRED_ITEMS)[number];

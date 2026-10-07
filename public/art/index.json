@@ -185,7 +185,7 @@
     "wren": ["sheet.png"]
   },
   "sets": {
-    "items": ["aloe_gel.png","cactus_sap.png","centuryheart_seed.png","climber_pack.png","cloche.png","compost.png","fan_letter.png","fennimores_letter.png","field_herbarium.png","foxfire_lantern.png","glass_pod.png","lily_raft.png","neem_spray.png","plant_food.png","pruning_shears.png","rain_jar.png","rose_hip.png","saxifrage.png","signed_photo.png","spring_water.png","syrup_jar.png","terrarium_pod.png","water_flask.png","wild_berry.png"],
+    "items": ["aloe_gel.png","cactus_sap.png","centuryheart_seed.png","climber_pack.png","cloche.png","compost.png","fan_letter.png","fennimores_letter.png","field_herbarium.png","foxfire_lantern.png","glass_pod.png","lily_raft.png","neem_spray.png","plant_food.png","pruning_shears.png","rain_jar.png","relay_keycard.png","rose_hip.png","saxifrage.png","signed_photo.png","spring_water.png","syrup_jar.png","terrarium_pod.png","water_flask.png","wild_berry.png"],
     "portraits": ["arranger.png","beekeeper.png","birdwatcher.png","bram.png","flora_vance.png","florist.png","gardener.png","gentleman.png","grunt.png","hiker.png","hollis.png","nell_pitcher.png","orchardist.png","player_back.png","researcher.png","schoolkid.png","shears.png"],
     "stills": ["bloom.png","glasshouse_dome.png","graft_collar.png","greenhouse_morning.png","grove_taps.png","relay_pulse.png","theft.png","vale_call.png"],
     "ui": ["battle_ground.png","mark_bramble.png","mark_cactus.png","mark_mangrove.png","mark_pipe.png","mark_rose.png","mark_snowdrop.png","mark_sundew.png","pod.png","pod_open.png","seed.png","seed__2.png","seed_big.png","title.png","title_logo.png"]

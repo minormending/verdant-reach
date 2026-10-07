@@ -5,6 +5,7 @@ import type { Scripts } from "./build";
 import { TRAINERS } from "./trainers";
 import { storyScripts } from "./scripts/story";
 import { act1Scripts } from "./scripts/act1";
+import { ch8Scripts } from "./scripts/ch8";
 import { ch7Scripts } from "./scripts/ch7";
 import { ch6Scripts } from "./scripts/ch6";
 import { ch5Scripts } from "./scripts/ch5";
@@ -67,6 +68,10 @@ import * as rootstock_hideout_1 from "./maps/rootstock_hideout_1";
 import * as rootstock_hideout_2 from "./maps/rootstock_hideout_2";
 import * as larchmere_conservatory from "./maps/larchmere_conservatory";
 
+import * as relay_2f from "./maps/relay_2f";
+import * as relay_3f from "./maps/relay_3f";
+import * as relay_roof from "./maps/relay_roof";
+
 const maps: Record<MapId, MapDef> = {
   player_home: player_home.player_home,
   herbarium: herbarium.herbarium,
@@ -112,6 +117,9 @@ const maps: Record<MapId, MapDef> = {
   rootstock_hideout_1: rootstock_hideout_1.rootstock_hideout_1,
   rootstock_hideout_2: rootstock_hideout_2.rootstock_hideout_2,
   larchmere_conservatory: larchmere_conservatory.larchmere_conservatory,
+  relay_2f: relay_2f.relay_2f,
+  relay_3f: relay_3f.relay_3f,
+  relay_roof: relay_roof.relay_roof,
   // Chapter 4
   route_4: route_4.route_4,
   glasshouse_city: glasshouse_city.glasshouse_city,
@@ -148,7 +156,7 @@ function mergeScripts(...all: Scripts[]): Scripts {
 
 export const WORLD: WorldData = {
   maps,
-  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, questScripts, ...mapScripts),
+  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, ch8Scripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
   quests: QUESTS,
   glide: [

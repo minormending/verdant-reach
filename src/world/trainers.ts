@@ -352,6 +352,31 @@ const ch7Trainers: TrainerDef[] = [
     { ai: "smart", music: "battle_leader", mark: "snowdrop_mark", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
+// Chapter 8 (CH8.md §5). Dialogue is reserved for the writing pass.
+const ch8Lines = (id: string) => ({
+  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
+});
+const ch8Trainers: TrainerDef[] = [
+  trainer("grunt_r0_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 41), T("foxglove", 41)], ch8Lines("grunt_r0_1"), { music: "battle_rootstock" }),
+  trainer("grunt_r0_2", "GRUNT", "GRUNT", "grunt", [T("bramble_berry", 41), T("venus_flytrap", 42)], ch8Lines("grunt_r0_2"), { music: "battle_rootstock" }),
+  trainer("grunt_r1_1", "GRUNT", "GRUNT", "grunt", [T("fireweed", 42), T("holly", 42)], ch8Lines("grunt_r1_1"), { music: "battle_rootstock" }),
+  trainer("grunt_r1_2", "GRUNT", "GRUNT", "grunt", [T("sugar_maple", 42), T("lodgepole_pine", 43)], ch8Lines("grunt_r1_2"), { music: "battle_rootstock" }),
+  trainer("grunt_r2_1", "GRUNT", "GRUNT", "grunt", [T("pitcher_plant", 42), T("bladderwort", 43)], ch8Lines("grunt_r2_1"), { music: "battle_rootstock" }),
+  trainer("grunt_r2_2", "GRUNT", "GRUNT", "grunt", [T("prickly_pear", 43), T("sundew", 43)], ch8Lines("grunt_r2_2"), { music: "battle_rootstock" }),
+  trainer("grunt_r2_3", "GRUNT", "GRUNT", "grunt", [T("red_mangrove", 43), T("ghost_pipe", 43)], ch8Lines("grunt_r2_3"), { music: "battle_rootstock" }),
+  trainer("grunt_r3_1", "GRUNT", "GRUNT", "grunt", [T("saguaro", 44)], ch8Lines("grunt_r3_1"), { music: "battle_rootstock" }),
+  trainer("grunt_r3_2", "GRUNT", "GRUNT", "grunt", [T("moth_orchid", 43), T("larch", 44)], ch8Lines("grunt_r3_2"), { music: "battle_rootstock" }),
+  // Wren tuning from §5: every level -2 (44/45/45/48 → 42/43/43/46).
+  // Explicit learned moves below soften late-game damage while retaining orchid
+  // healing, fungal drain, maple sap and cedar defence. Mean: 75.5%; min: 38.0%.
+  trainer("wren", "WREN", "ADMIN", "researcher", [
+    T("moth_orchid", 42, ["wind_scatter", "moonbeam", "false_nectar", "long_bloom"]),
+    T("ghost_pipe", 43, ["moonbeam", "root_siphon", "spore_cloud"]),
+    T("sugar_maple", 43, ["samara_spin", "sap_spout", "hoarfrost", "sugar_rush"]),
+    T("red_cedar", 46, ["leaf_edge", "pale_touch", "heartwood", "sap_seal"]),
+  ], ch8Lines("wren"), { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 2 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers].map((t) => [t.id, t]),
 );

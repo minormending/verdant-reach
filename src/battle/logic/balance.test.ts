@@ -86,6 +86,11 @@ const MILESTONES_R7: Record<string, Milestone> = {
   signe: { trainer: () => "signe", starterLevel: 41, extras: [["fireweed", 39], ["bladderwort", 38], ["campion_mound", 38]] },
   signe_r7: { trainer: () => "signe", starterLevel: 41, extras: [["skunk_cabbage", 39], ["prickly_pear", 38], ["edelweiss", 38]] },
 };
+// Chapter 8: mixed Chapter 5–7 catches raised alongside the starter to ~44.
+const MILESTONES_R8: Record<string, Milestone> = {
+  wren: { trainer: () => "wren", starterLevel: 44, extras: [["fireweed", 43], ["bladderwort", 43], ["campion_mound", 43]] },
+  wren_r8: { trainer: () => "wren", starterLevel: 44, extras: [["skunk_cabbage", 43], ["prickly_pear", 43], ["edelweiss", 43]] },
+};
 const THIRD_STARTER: Record<Line, SpeciesId> = { oak: "great_oak", chili: "red_chili", lily: "giant_water_lily" };
 
 // Route 4, the Palm House, Route 5 and the Conservatory 3 juniors: ordinary
@@ -226,6 +231,16 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     expect(mean(signe)).toBeGreaterThanOrEqual(0.62);
     expect(mean(signe)).toBeLessThanOrEqual(0.72);
     expect(mean(signe)).toBeLessThan(mean(calloway));
+  });
+
+  it("Chapter 8: Wren occupies her prescribed band", () => {
+    const rates = Object.values(MILESTONES_R8).flatMap((m) =>
+      (["oak", "chili", "lily"] as Line[]).map((l) => winRate(l, m, 300)));
+    const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
+    console.log(`wren mean: ${(mean * 100).toFixed(1)}%; party rates (oak/chili/lily): ${rates.map((r) => (r * 100).toFixed(1)).join(", ")}`);
+    for (const rate of rates) expect(rate).toBeGreaterThan(0.25);
+    expect(mean).toBeGreaterThanOrEqual(0.68);
+    expect(mean).toBeLessThanOrEqual(0.80);
   });
 
   for (const [area, { ids, m }] of Object.entries(CH4_TRAINERS)) {
