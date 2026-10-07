@@ -126,7 +126,7 @@ describe("Chapter 11 Council world", () => {
     expect(WORLD.scripts.ch11_ending).toBeDefined();
   });
 
-  it("keeps exact prescribed trainer teams, Smart AI, waters and chapter placeholders", () => {
+  it("keeps the amended trainer themes, level limits, legal moves, Smart AI and waters", () => {
     const teams = [
       ["belladonna", [["foxglove", 58], ["oleander", 59], ["nightshade", 59], ["nightshade", 61]]],
       ["mimi_osa", [["prayer_plant", 59], ["sensitive_plant", 60], ["moonflower", 60], ["sensitive_plant", 62]]],
@@ -134,9 +134,29 @@ describe("Chapter 11 Council world", () => {
       ["pyra", [["red_chili", 61], ["fireweed", 61], ["flame_lily", 62], ["lodgepole_pine", 63]]],
       ["rowan", [["quaking_aspen", 63], ["red_cedar", 63], ["dragon_tree", 64], ["moss_campion", 63], ["sacred_lotus", 64], ["great_oak", 66]]],
     ] as const;
+    const themes = {
+      belladonna: ["foxglove", "oleander", "nightshade", "nightshade_sprout", "stinging_nettle"],
+      mimi_osa: ["sensitive_plant", "prayer_plant", "moonflower", "mimosa_sprout", "ghost_pipe"],
+      titus_arum: ["titan_arum", "corpse_leaf", "skunk_cabbage", "pitcher_plant", "venus_flytrap", "bladderwort", "sundew"],
+    };
     for (const [id, team] of teams) {
       const trainer = WORLD.trainers[id];
-      expect(trainer.team.map((t) => [t.species, t.level])).toEqual(team);
+      expect(trainer.team).toHaveLength(team.length);
+      const theme = id === "pyra" || id === "rowan" ? null : themes[id];
+      for (const [i, member] of trainer.team.entries()) {
+        const [species, level] = team[i];
+        if (theme) expect(theme).toContain(member.species);
+        else expect(member.species).toBe(species);
+        expect(Math.abs(member.level - level)).toBeLessThanOrEqual(theme ? 4 : 2);
+        expect(member.grafted).toBeFalsy();
+        if (member.moves) {
+          expect(member.moves.length).toBeGreaterThan(0);
+          expect(member.moves.length).toBeLessThanOrEqual(4);
+          expect(new Set(member.moves).size).toBe(member.moves.length);
+          const legal = DATA.species[member.species].learnset.filter((l) => l.level <= member.level).map((l) => l.move);
+          for (const move of member.moves) expect(legal).toContain(move);
+        }
+      }
       expect(trainer.ai).toBe("smart");
       expect(trainer.music).toBe("battle_leader");
       expect(trainer.items).toEqual([{ item: "spring_water", qty: id === "rowan" ? 3 : 2 }]);

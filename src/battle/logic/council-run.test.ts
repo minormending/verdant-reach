@@ -13,7 +13,7 @@ const trainer = (name: string): TrainerDef => ({
 });
 
 describe("back-to-back trainer simulation", () => {
-  it("carries damage, status, depleted PP and fainted members into the next fight", () => {
+  it("fully heals HP, status, PP and fainted members only between fights", () => {
     const rng = seeded(7);
     const fainted = createQuickened(DATA, "great_oak", 60, rng);
     fainted.hp = 0;
@@ -21,6 +21,7 @@ describe("back-to-back trainer simulation", () => {
     q.hp -= 30;
     q.status = "blight";
     q.moves = [{ id: "ember_seed", pp: 7 }];
+    fainted.moves = [{ id: "timber", pp: 0 }];
     const snapshots: { hp: number; pp: number; status: Quickened["status"]; active: number }[] = [];
     const fights: BattleState[] = [];
     const result = simulateTrainerRun({ data: DATA, party: [fainted, q], trainers: [trainer("ONE"), trainer("TWO")], rng,
@@ -36,16 +37,35 @@ describe("back-to-back trainer simulation", () => {
     expect(result.completed).toBe(2);
     expect(snapshots).toHaveLength(2);
     expect(snapshots[0].hp).toBe(q.stats.hp - 30);
-    expect(snapshots[1].hp).toBeLessThan(snapshots[0].hp);
-    expect(snapshots[1].hp).toBeLessThan(q.stats.hp);
-    expect(snapshots[1].pp).toBeLessThan(snapshots[0].pp);
-    expect(snapshots.map((s) => s.status)).toEqual(["blight", "blight"]);
-    expect(snapshots.map((s) => s.active)).toEqual([1, 1]);
-    expect(fainted.hp).toBe(0);
+    expect(snapshots[0].pp).toBe(7);
+    expect(snapshots[1].hp).toBe(fainted.stats.hp);
+    expect(snapshots[1].pp).toBe(DATA.moves.timber.pp);
+    expect(snapshots.map((s) => s.status)).toEqual(["blight", null]);
+    expect(snapshots.map((s) => s.active)).toEqual([1, 0]);
+    expect(q.hp).toBe(q.stats.hp);
+    expect(q.status).toBe(null);
+    expect(q.moves[0].pp).toBe(DATA.moves.ember_seed.pp);
+    // The final fight remains spent: healing is between rooms only.
+    expect(fainted.moves[0].pp).toBeLessThan(DATA.moves.timber.pp);
     expect(fights[0].sides[0].party[1]).toBe(q);
     expect(fights[1].sides[0].party[1]).toBe(q);
     expect(fights.map((s) => s.foeItems)).toEqual([{ spring_water: 2 }, { spring_water: 2 }]);
     expect(fights[0].sides[0].vol).not.toBe(fights[1].sides[0].vol);
+  });
+
+  it("leaves a single fight's damage, status and spent PP on the party", () => {
+    const rng = seeded(7), q = createQuickened(DATA, "red_chili", 60, rng);
+    q.hp -= 30;
+    const initialHp = q.hp;
+    q.status = "blight";
+    q.moves = [{ id: "ember_seed", pp: 7 }];
+    const result = simulateTrainerRun({ data: DATA, party: [q], trainers: [trainer("ONE")], rng,
+      playerAction: () => ({ kind: "move", slot: 0 }),
+    });
+    expect(result).toMatchObject({ won: true, completed: 1 });
+    expect(q.hp).toBeLessThan(initialHp);
+    expect(q.status).toBe("blight");
+    expect(q.moves[0].pp).toBe(6);
   });
 
   it("ends on whiteout without starting later fights", () => {

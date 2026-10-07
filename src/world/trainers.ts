@@ -464,11 +464,38 @@ const ch11Lines = (id: string) => ({
 });
 const council = { ai: "smart", music: "battle_leader", items: [{ item: "spring_water", qty: 2 }] } as const;
 const ch11Trainers: TrainerDef[] = [
-  trainer("belladonna", "BELLADONNA", "APOTHECARY", "florist", [T("foxglove", 58), T("oleander", 59), T("nightshade", 59), T("nightshade", 61)], ch11Lines("belladonna"), { ...council, items: [...council.items] }),
-  trainer("mimi_osa", "MIMI OSA", "SLEEPER", "researcher", [T("prayer_plant", 59), T("sensitive_plant", 60), T("moonflower", 60), T("sensitive_plant", 62)], ch11Lines("mimi_osa"), { ...council, items: [...council.items] }),
-  trainer("titus_arum", "TITUS ARUM", "ROTTER", "gentleman", [T("skunk_cabbage", 60), T("corpse_leaf", 60), T("pitcher_plant", 61), T("titan_arum", 63)], ch11Lines("titus_arum"), { ...council, items: [...council.items] }),
-  trainer("pyra", "PYRA", "KINDLER", "florist", [T("red_chili", 61), T("fireweed", 61), T("flame_lily", 62), T("lodgepole_pine", 63)], ch11Lines("pyra"), { ...council, items: [...council.items] }),
-  trainer("rowan", "ROWAN VALE", "KEEPER", "researcher", [T("quaking_aspen", 63), T("red_cedar", 63), T("dragon_tree", 64), T("moss_campion", 63), T("sacred_lotus", 64), T("great_oak", 66)], ch11Lines("rowan"), { ...council, items: [{ item: "spring_water", qty: 3 }] }),
+  trainer("belladonna", "BELLADONNA", "APOTHECARY", "florist", [
+    T("stinging_nettle", 61, ["pitfall", "hook_thorns", "sting_hairs", "allelopathy"]),
+    T("stinging_nettle", 62, ["pitfall", "thorn_lash", "spine_volley", "thorn_jab"]),
+    T("oleander", 56),
+    T("stinging_nettle", 62, ["allelopathy", "thorn_lash", "root_snare", "spine_volley"]),
+  ], ch11Lines("belladonna"), { ...council, items: [...council.items] }),
+  trainer("mimi_osa", "MIMI OSA", "SLEEPER", "researcher", [
+    T("moonflower", 58, ["sunbeam", "moonbeam", "pale_bloom", "spore_cloud"]),
+    T("ghost_pipe", 64, ["petal_storm", "perfume", "wither", "spore_cloud"]),
+    T("moonflower", 64, ["petal_storm", "pale_bloom", "pollen_puff", "wither"]),
+    T("sensitive_plant", 65, ["leaf_gale", "sunbeam", "sap_drain", "spore_cloud"]),
+  ], ch11Lines("mimi_osa"), { ...council, items: [...council.items] }),
+  trainer("titus_arum", "TITUS ARUM", "ROTTER", "gentleman", [
+    T("bladderwort", 62, ["digest", "pitfall", "dew_drop", "pad_slap"]),
+    T("pitcher_plant", 64),
+    T("corpse_leaf", 57),
+    T("titan_arum", 65),
+  ], ch11Lines("titus_arum"), { ...council, items: [...council.items] }),
+  trainer("pyra", "PYRA", "KINDLER", "florist", [
+    T("red_chili", 63, ["seed_burst", "petal_storm", "capsaicin", "leaf_edge"]),
+    T("fireweed", 61, ["unfurl", "pollen_puff", "wind_scatter", "ember_seed"]),
+    T("flame_lily", 62, ["petal_storm", "pollen_puff", "climbing_flame", "wildfire"]),
+    T("lodgepole_pine", 63, ["vine_lash", "sap_spout", "timber", "sap_seal"]),
+  ], ch11Lines("pyra"), { ...council, items: [...council.items] }),
+  trainer("rowan", "ROWAN VALE", "KEEPER", "researcher", [
+    T("quaking_aspen", 65, ["many_trunks", "root_tap", "sap_drain", "old_growth"]),
+    T("red_cedar", 63, ["vine_lash", "leaf_edge", "sap_seal", "timber"]),
+    T("dragon_tree", 65, ["old_growth", "vine_lash", "sap_seal", "leaf_gale"]),
+    T("moss_campion", 65, ["sunbeam", "vine_lash", "photosynthesise", "curl_up"]),
+    T("sacred_lotus", 66, ["perfume", "dew_drop", "petal_storm", "undertow"]),
+    T("great_oak", 65, ["acorn_drop", "photosynthesise", "leaf_edge", "root_snare"]),
+  ], ch11Lines("rowan"), { ...council, items: [{ item: "spring_water", qty: 3 }] }),
 ];
 
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(

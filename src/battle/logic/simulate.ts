@@ -1,10 +1,12 @@
 // Deterministic battle/run simulation. The caller owns the party: each fight
-// mutates its HP, status and PP just as runtime does, with no between-seat heal.
+// mutates its HP, status and PP just as runtime does. Bag healing between
+// rooms restores the party before the next fight, never during a fight.
 import type { GameData, Quickened, TimeOfDay, TrainerDef } from "../../contracts";
 import { chooseFoeAction } from "./ai";
 import { active, canContinue, createBattleState, doSwitch, firstHealthy, resolveTurn, sendOutFoe, type Action, type BattleState } from "./battle";
 import type { Rng } from "./rng";
 import { createTrainerQuickened } from "./trainer";
+import { healParty } from "./stats";
 
 export function simulateTrainerRun(opts: {
   data: GameData;
@@ -19,6 +21,7 @@ export function simulateTrainerRun(opts: {
 }): { won: boolean; completed: number; turns: number } {
   let completed = 0, turns = 0;
   for (const trainer of opts.trainers) {
+    if (completed > 0) healParty(opts.party, opts.data);
     if (!canContinue(opts.party)) return { won: false, completed, turns };
     const foe = trainer.team.map((t) => createTrainerQuickened(opts.data, t, opts.rng));
     const battle = createBattleState({

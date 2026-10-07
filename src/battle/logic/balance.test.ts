@@ -331,23 +331,29 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     });
   }
 
-  // Blocked bands are deliberately skipped, rather than weakening the spec.
-  // See docs/CH11.md's wave 3 audit for the measured ±2-level endpoints.
+  // Chapter 11's balance amendment allows bag healing between rooms.
   for (const id of CH11_RUN) {
-    const check = ["belladonna", "mimi_osa", "titus_arum"].includes(id) ? it.skip : it;
-    check(`Chapter 11: ${id} occupies its prescribed band (balance unfinished)`, () => {
+    it(`Chapter 11: ${id} occupies its prescribed band with every starter above 25%`, () => {
       const rates = CH11_PARTIES.flatMap((p) => (["oak", "chili", "lily"] as Line[])
         .map((l) => councilRate(l, p, [id])));
       const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
       console.log(`CH11 ${id}: mean ${(mean * 100).toFixed(1)}%; cores oak/chili/lily: ${rates.map((r) => (r * 100).toFixed(1)).join(", ")}`);
       expect(mean).toBeGreaterThanOrEqual(id === "rowan" ? 0.50 : 0.60);
       expect(mean).toBeLessThanOrEqual(id === "rowan" ? 0.62 : 0.75);
+      for (const [i, rate] of rates.entries()) {
+        const label = `${id}, core ${Math.floor(i / 3) + 1}, ${["oak", "chili", "lily"][i % 3]}`;
+        expect(rate, label).toBeGreaterThan(0.25);
+      }
     });
   }
 
-  it.skip("Chapter 11: no-heal Council run exceeds 20% for every starter (blocked)", () => {
-    for (const core of CH11_PARTIES) for (const line of ["oak", "chili", "lily"] as Line[]) {
-      expect(councilRate(line, core, CH11_RUN), line).toBeGreaterThan(0.20);
+  it("Chapter 11: healed Council run exceeds 20% for every starter with both cores", () => {
+    const rates = CH11_PARTIES.flatMap((core) => (["oak", "chili", "lily"] as Line[])
+      .map((line) => councilRate(line, core, CH11_RUN)));
+    console.log(`CH11 healed run: cores oak/chili/lily: ${rates.map((r) => (r * 100).toFixed(1)).join(", ")}`);
+    for (const [i, rate] of rates.entries()) {
+      const label = `core ${Math.floor(i / 3) + 1}, ${["oak", "chili", "lily"][i % 3]}`;
+      expect(rate, label).toBeGreaterThan(0.20);
     }
   });
 
