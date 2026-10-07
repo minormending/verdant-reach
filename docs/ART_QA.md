@@ -13,24 +13,39 @@ PY=/Users/kevinramdath/projects/research/creature-sprites/.venv/bin/python
 $PY tools/art/qa/qa.py oak_acorn oak_sapling great_oak
 $PY tools/art/qa/qa.py --line oak --json /tmp/oak-qa.json
 npm run qa:art -- --all --json /tmp/art-qa-report.json
+npm run qa:art -- --all --strict
 npm run qa:art -- --tiles terrain --json /tmp/tile-qa.json
 npm run qa:art -- --tiles --json /tmp/all-tile-qa.json
 npm run qa:art -- --all --changed HEAD --json /tmp/changed-art.json
+npm run qa:art:changed
 npm run qa:art -- --sheet /tmp/milestone.png --changed HEAD~1
 npm run qa:maps
 ART_QA_MAPS_JSON=/tmp/milestone-maps.json npm run qa:maps
 $PY -m unittest discover -s tools/art/qa -p 'test_*.py'
 ```
 
-Choose species ids, `--line`, `--all`, or `--tiles [tileset]`. `--changed`
-filters that selection to bundles different from the git ref; alone, it
-selects changed species. Clone comparisons and progression still use the
+Choose species ids, `--line`, `--all`, or `--tiles [tileset]`. `--all` audits
+all base species and tilesets. `--changed` filters that selection to bundles
+different from the git ref; alone, it selects changed species and tilesets.
+With ids or `--line`, it filters the species selection and also checks changed
+tilesets. Clone comparisons and progression still use the
 whole current roster. `--line` uses gameplay line names, including `orchid`
 and `ghostpipe`, rather than guessing from generator names. Unknown selectors
-and invalid git refs are usage errors (exit 2). A report exits 1 only when an
-error-class check FAILs; WARNs, including size-boundary warnings, exit 0.
+and invalid git refs are usage errors (exit 2).
+
+The shipped roster predates these checks: **errors gate changed art, not the
+existing audit baseline**. A successful `--all` audit always exits 0, even
+when its report contains errors; `--all --strict` exits 1 for any error-class
+FAIL. `--changed <git-ref>` (alone, with `--all`, ids, `--line`, or `--tiles`)
+exits 1 only for error-class FAILs in the selected changed species or tilesets.
+Unchanged art cannot fail that gate, even with `--strict`. WARNs exit 0.
+Targeted ids, `--line`, and `--tiles` without `--changed` continue to exit 1
+for errors in their selection. `npm run qa:art:changed` is the art-agent/CI
+gate, equivalent to `qa.py --all --changed origin/main`; the ref must exist.
 JSON includes statuses, severity, measured values, face coordinates and frames,
-per-frame size results, clone distances, and every autotile mismatch.
+per-frame size results, clone distances, every autotile mismatch, and the
+maximum shared-edge mean difference. `error_count` counts reported errors
+even when the audit exits 0.
 
 Art agents should run QA on their line after each generator iteration, inspect
 the numbers, and address errors and unintended warnings. At a milestone, use
@@ -51,7 +66,7 @@ checks that aggregate frames; face coordinates retain every hit.
 | Check | Severity | Measurement and threshold |
 |---|---|---|
 | `face_risk` | error | A compact 1–4px dark component (indexes 0/1, up to 2×2) with an index-3 pixel within Chebyshev distance 2; or two compact components with x separation 2–8 and y difference ≤1; or an isolated horizontal 3–8px dark component. Reports top-left coordinates and frame indexes. |
-| `size_class` | error / boundary warn | Baby: extent 38–44px, fill 22–38%; teen: 44–52px, 28–48%; adult: 52–56px, 38–62%, touches at least two actual canvas edges. All intervals are inclusive. WARN within 1px of an extent limit or 2 percentage points of a fill limit. |
+| `size_class` | error / warn | Baby: extent 38–44px, fill 22–38%; teen: 44–52px, 28–48%; adult: 52–56px, 38–62%. Extent or fill outside these inclusive bands is an error. Otherwise WARN if an adult touches fewer than two actual canvas edges, or within 1px of an extent limit or 2 percentage points of a fill limit. |
 | `grounding` | warn | Lowest opaque row must be 54 or 55; notes containing `float` exempt it. |
 | `centre_of_mass` | warn | Mean x of opaque pixels must be 28–34 inclusive. |
 | `stage_progression` | error | Rest-pose fill and largest bounding-box dimension must each be nondecreasing from the previous stage in the line. First stages pass as inapplicable. |
@@ -88,9 +103,12 @@ transparency is ignored. Results give horizontal and vertical numbers.
 `autotile_edges` checks all 16 masks for each key declaring masks. Missing
 variants fall back to base, following the runtime contract. For every
 reciprocal east/west or south/north neighbour pair, every animation frame's
-shared edge must agree exactly (difference 0); any mismatch is an error.
-North/east/south/west are bits 1/2/4/8. This intentionally exposes existing
-texture discontinuities rather than assuming today's tiles are seamless.
+shared-edge mean difference uses the same RGB/alpha measurement as `seam`.
+The check reports all nonzero mismatches and their maximum difference: PASS
+at 0, WARN for a nonzero difference up to 16 (including 1–16), and an error
+only above the shared `seam` threshold of 16. North/east/south/west are bits
+1/2/4/8. This exposes existing texture discontinuities without treating every
+small mismatch as an error.
 
 `qa:maps` uses Vitest already installed in the repository. It prints a table
 and writes `/tmp/art-qa-maps.json` (override with `ART_QA_MAPS_JSON`). Its five
@@ -132,17 +150,20 @@ strips without shrinking the pixels. An empty comparison produces a labelled
 
 ## Shipped-roster calibration (2026-10-07)
 
-Measured 78 base species. The existing kit reports no errors. New strict
-checks report 59 failing species/check combinations: 54 size failures,
-3 face candidates, and 2 progression failures. They are existing art issues,
-not tooling test failures. `--all` therefore exits 1; no art was changed to
-make this baseline pass.
+Measured 78 base species. The existing kit reports no errors. Under the new
+classification there are 50 failing species/check combinations across 49
+species: 45 size failures, 3 face candidates, and 2 progression failures.
+Nine edge-only size failures became warnings. Tiles add 32 error-class
+autotile checks, for 82 total reported errors. These existing art issues
+remain visible in the audit: `--all` exits 0, `--all --strict` exits 1, and
+`--all --changed HEAD` exits 0 when no art differs from HEAD. No art was
+changed to make this baseline pass.
 
 | Check | PASS | WARN | FAIL |
 |---|---:|---:|---:|
 | crystal | 61 | 17 | 0 |
 | face_risk | 75 | 0 | 3 |
-| size_class | 3 | 21 | 54 |
+| size_class | 3 | 30 | 45 |
 | grounding | 78 | 0 | 0 |
 | centre_of_mass | 25 | 53 | 0 |
 | back_fill | 21 | 57 | 0 |
@@ -150,6 +171,10 @@ make this baseline pass.
 | clone_risk | 76 | 2 | 0 |
 | silhouette_noise | 60 | 18 | 0 |
 | stage_progression | 76 | 0 | 2 |
+| autotile_edges (tile keys) | 1 | 1 | 32 |
+| seam (tile frames) | 24 | 7 | 0 |
+
+## Lead's review queue
 
 Face candidates for the lead's visual judgement (zero-based frames and x/y):
 
@@ -172,18 +197,29 @@ show the same pair warning; this is one pair, not two distinct clones.
 Progression failures: `sundew` extent 53→52px (fill 28.8→42.5%), and `holly`
 extent 52→51px (fill 38.4→51.6%).
 
+The species still reporting errors are the 45 `size_class FAIL` species
+listed below, plus `sugar_maple`, `pitcher_plant`, and `snapdragon` (face
+candidates), and `sundew` (progression). `holly` has both size and progression
+errors. These remain review work; they gate when their art changes.
+
+**Manual blind-ID notes from the lead:** the moonflower line
+(`moonflower_seed`, `moonflower_vine`, `moonflower`) reads as pitcher plants,
+and `wild_rose` reads as "open mouths". These are visual identity notes for
+human review, not automated checks or additional gate failures.
+
 All 15 outdoor maps pass: Cedarhallow 100%, Route 4 93.0% (lowest), Route 6
 98.6%, Burnt Stand 98.3%, Glasshouse City 99.6%, and the remaining ten 100%.
-Tile calibration reports 33 failing autotile-key checks and 7 seam warnings:
+Tile calibration reports 32 failing autotile-key checks, one autotile warning
+(`oldgrowth/canopy_drop`, maximum difference 9.17), and 7 seam warnings:
 paving base and all three alternates, tropical_grass base both animation
 frames, and stone_path base. See the reproducible JSON commands above for
 mask pairs, animation frames, measured sizes, and warning coordinates.
 
 ### Remaining baseline flag list
 
-**size_class FAIL (54):** `oak_acorn`, `oak_sapling`, `great_oak`, `chili_blossom`, `red_chili`, `lily_seedpod`, `dandelion_bud`, `bramble_blossom`, `bramble_berry`, `sunflower_seedling`, `sunflower`, `pumpkin_blossom`, `green_pumpkin`, `fern_fiddlehead`, `unfurling_fern`, `ostrich_fern`, `flytrap_seedling`, `young_flytrap`, `venus_flytrap`, `sundew_rosette`, `sundew`, `maple_samara`, `maple_sapling`, `sugar_maple`, `stinging_nettle`, `moonflower_seed`, `moonflower_vine`, `moonflower`, `clover_sprout`, `white_clover`, `cattail`, `foxglove`, `holly`, `peppermint`, `wild_rose`, `pitcher_sprout`, `pitcher_plant`, `apple_pip`, `orchid_keiki`, `orchid_spike`, `monstera_cutting`, `monstera`, `ghostpipe_stalk`, `ghostpipe_nodding`, `ghost_pipe`, `fireweed_fluff`, `fireweed_shoot`, `lodgepole_cone`, `lodgepole_seedling`, `lodgepole_pine`, `skunk_cabbage_shoot`, `skunk_cabbage`, `cedar_seedling`, `red_cedar`.
+**size_class FAIL (45):** `oak_acorn`, `oak_sapling`, `great_oak`, `chili_blossom`, `lily_seedpod`, `dandelion_bud`, `bramble_blossom`, `bramble_berry`, `sunflower_seedling`, `sunflower`, `pumpkin_blossom`, `green_pumpkin`, `fern_fiddlehead`, `unfurling_fern`, `flytrap_seedling`, `young_flytrap`, `venus_flytrap`, `sundew_rosette`, `maple_samara`, `maple_sapling`, `moonflower_seed`, `moonflower_vine`, `moonflower`, `clover_sprout`, `white_clover`, `foxglove`, `holly`, `wild_rose`, `pitcher_sprout`, `apple_pip`, `orchid_keiki`, `orchid_spike`, `monstera_cutting`, `monstera`, `ghostpipe_stalk`, `ghostpipe_nodding`, `ghost_pipe`, `fireweed_fluff`, `fireweed_shoot`, `lodgepole_cone`, `lodgepole_seedling`, `lodgepole_pine`, `skunk_cabbage_shoot`, `skunk_cabbage`, `cedar_seedling`.
 
-**size_class WARN (21):** `green_chili`, `lily_pad`, `giant_water_lily`, `dandelion`, `dandelion_clock`, `blackberry`, `sunflower_bud`, `pumpkin`, `nettle_sprout`, `cattail_shoot`, `holly_seedling`, `mint_sprig`, `rose_bud`, `snapdragon_sprout`, `snapdragon`, `apple_sapling`, `apple_tree`, `moth_orchid`, `sacred_lotus`, `bird_of_paradise`, `fireweed`.
+**size_class WARN (30):** `green_chili`, `red_chili`, `lily_pad`, `giant_water_lily`, `dandelion`, `dandelion_clock`, `blackberry`, `sunflower_bud`, `pumpkin`, `ostrich_fern`, `sundew`, `sugar_maple`, `nettle_sprout`, `stinging_nettle`, `cattail_shoot`, `cattail`, `holly_seedling`, `mint_sprig`, `peppermint`, `rose_bud`, `pitcher_plant`, `snapdragon_sprout`, `snapdragon`, `apple_sapling`, `apple_tree`, `moth_orchid`, `sacred_lotus`, `bird_of_paradise`, `fireweed`, `red_cedar`.
 
 **centre_of_mass WARN (53):** `oak_acorn`, `oak_sapling`, `great_oak`, `chili_blossom`, `green_chili`, `red_chili`, `lily_seedpod`, `lily_pad`, `giant_water_lily`, `dandelion_bud`, `dandelion`, `dandelion_clock`, `bramble_blossom`, `bramble_berry`, `blackberry`, `sunflower_seedling`, `sunflower_bud`, `sunflower`, `pumpkin_blossom`, `pumpkin`, `fern_fiddlehead`, `unfurling_fern`, `ostrich_fern`, `flytrap_seedling`, `venus_flytrap`, `sundew_rosette`, `maple_samara`, `maple_sapling`, `sugar_maple`, `stinging_nettle`, `moonflower_vine`, `moonflower`, `clover_sprout`, `white_clover`, `cattail_shoot`, `cattail`, `mint_sprig`, `rose_bud`, `wild_rose`, `pitcher_plant`, `apple_sapling`, `apple_tree`, `moth_orchid`, `sacred_lotus`, `ghostpipe_nodding`, `ghost_pipe`, `fireweed_shoot`, `lodgepole_cone`, `lodgepole_seedling`, `lodgepole_pine`, `skunk_cabbage_shoot`, `cedar_seedling`, `red_cedar`.
 
@@ -200,7 +236,7 @@ mask pairs, animation frames, measured sizes, and warning coordinates.
 - `hollow`: `hollow_wall`.
 - `interior`: `wall`, `glass_wall`.
 - `nature`: `tree`, `maple_tree`, `tapped_maple`, `hedge`.
-- `oldgrowth`: `oldgrowth_tree`, `canopy_boardwalk`, `canopy_drop`, `rope_rail`.
+- `oldgrowth`: `oldgrowth_tree`, `canopy_boardwalk`, `rope_rail` (`canopy_drop` is WARN).
 - `orchard`: `orchard_tree`, `stepping_stones`.
 - `palm_house`: `tropical_grass`.
 - `rose`: `rose_trellis`.

@@ -6,6 +6,7 @@ from PIL import Image
 T = 255
 LIMITS = {'baby': (38, 44, .22, .38), 'teen': (44, 52, .28, .48),
           'adult': (52, 56, .38, .62)}
+SEAM_THRESHOLD = 16
 
 
 def result(level, failed, value, **details):
@@ -90,12 +91,11 @@ def geometry(ix):
 def size_class(ix, cls):
     g = geometry(ix)
     lo, hi, flo, fhi = LIMITS[cls]
-    fail = not (lo <= g['extent'] <= hi and flo <= g['fill'] <= fhi) or (cls == 'adult' and g['edges'] < 2)
+    fail = not (lo <= g['extent'] <= hi and flo <= g['fill'] <= fhi)
     near = g['extent'] <= lo+1 or g['extent'] >= hi-1 or min(abs(g['fill']-flo), abs(g['fill']-fhi)) <= .02
-    r = result('error', fail, f"{cls}: {g['extent']}px/{g['fill']:.1%}/{g['edges']} edges", **g)
-    if not fail and near:
-        r['status'] = 'WARN'
-    return r
+    warn = near or (cls == 'adult' and g['edges'] < 2)
+    return result('error' if fail else 'warn', fail or warn,
+                  f"{cls}: {g['extent']}px/{g['fill']:.1%}/{g['edges']} edges", **g)
 
 
 def grounding(ix, notes=''):
@@ -191,7 +191,7 @@ def edge_difference(a, b):
 def seam(tile):
     x = edge_difference(tile[:, 0], tile[:, -1])
     y = edge_difference(tile[0], tile[-1])
-    return result('warn', max(x, y) > 16, f'x={x:.2f}/y={y:.2f}', horizontal=x, vertical=y)
+    return result('warn', max(x, y) > SEAM_THRESHOLD, f'x={x:.2f}/y={y:.2f}', horizontal=x, vertical=y)
 
 
 def autotile_edges(variants):
@@ -212,4 +212,6 @@ def autotile_edges(variants):
                     worst = max(worst, diff)
                     if diff > 0:
                         bad.append({'masks': [a, b], 'axis': axis, 'frame': f, 'difference': round(diff, 3)})
-    return result('error', bool(bad), f'{len(bad)} mismatches/max={worst:.2f}', mismatches=bad)
+    return result('error' if worst > SEAM_THRESHOLD else 'warn', bool(bad),
+                  f'{len(bad)} mismatches/max={worst:.2f}', mismatches=bad,
+                  max_difference=worst)

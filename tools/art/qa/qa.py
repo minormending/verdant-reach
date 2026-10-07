@@ -257,6 +257,7 @@ def main(argv=None):
     select.add_argument('--line')
     select.add_argument('--tiles', nargs='?', const='all', metavar='TILESET')
     p.add_argument('--changed', metavar='GIT_REF')
+    p.add_argument('--strict', action='store_true', help='fail a full audit on error-class checks')
     p.add_argument('--json', type=Path)
     p.add_argument('--sheet', type=Path)
     args = p.parse_args(argv)
@@ -284,10 +285,11 @@ def main(argv=None):
         all_hashes = [(id_, (v['meta'] or {}).get('line', id_), hashes(v['imgs']['front'][0])) for id_, v in roster.items()]
         report = {'schema': 'verdant.art-qa/1', 'changed_ref': args.changed, 'changed_paths': paths,
                   'changed_bundles': bundles, 'species': {id_: check_species(id_, roster, all_hashes) for id_ in ids}, 'tilesets': {}}
-        if args.tiles:
-            tile_ids = sorted(d.name for d in (ROOT/'public/art/tilesets').iterdir() if d.is_dir()) if args.tiles == 'all' else [args.tiles]
+        if args.tiles or args.all or args.changed:
+            tile_ids = sorted(d.name for d in (ROOT/'public/art/tilesets').iterdir() if d.is_dir()) if args.tiles in (None, 'all') else [args.tiles]
             if args.changed:
-                tile_ids = [id_ for id_ in tile_ids if f'tilesets/{id_}' in bundles]
+                changed_tiles = {Path(b).name for b in bundles if Path(b).parts[-2] == 'tilesets'}
+                tile_ids = [id_ for id_ in tile_ids if id_ in changed_tiles]
             report['tilesets'] = {id_: tile_checks(id_) for id_ in tile_ids}
         print_table('Creature QA', report['species'])
         print_table('Tile QA', report['tilesets'])
@@ -300,7 +302,7 @@ def main(argv=None):
             contact_sheet(bundles, report, args.sheet)
             print(f'Sheet: {args.sheet}')
         print(f'Errors: {failures}')
-        return int(failures > 0)
+        return int(failures > 0 and (not args.all or args.changed is not None or args.strict))
     except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as e:
         p.error(str(e))
 

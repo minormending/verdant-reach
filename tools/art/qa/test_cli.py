@@ -81,12 +81,53 @@ class IntegrationTests(unittest.TestCase):
 
     def test_exit_status_warnings_vs_errors_and_json(self):
         roster = {'test': {'meta': {'line': 'test'}, 'imgs': {'front': [np.zeros((56, 56, 4), np.uint8)]}}}
-        with tempfile.TemporaryDirectory() as temp, patch.object(qa, 'load_roster', return_value=roster), contextlib.redirect_stdout(io.StringIO()):
+        with tempfile.TemporaryDirectory() as temp, patch.object(qa, 'load_roster', return_value=roster), patch.object(qa, 'tile_checks', return_value={}), contextlib.redirect_stdout(io.StringIO()):
             output = Path(temp)/'out.json'
             for status, level, expected in [('WARN', 'warn', 0), ('FAIL', 'error', 1), ('PASS', 'error', 0)]:
                 with patch.object(qa, 'check_species', return_value={'check': {'status': status, 'level': level, 'value': 1}}):
-                    self.assertEqual(qa.main(['--all', '--json', str(output)]), expected)
-                self.assertEqual(json.loads(output.read_text())['error_count'], expected)
+                    for selection, exit_code in [(['--all'], 0), (['--all', '--strict'], expected),
+                                                 (['test'], expected), (['--line', 'test'], expected)]:
+                        with self.subTest(status=status, selection=selection):
+                            self.assertEqual(qa.main([*selection, '--json', str(output)]), exit_code)
+                            self.assertEqual(json.loads(output.read_text())['error_count'], expected)
+
+    def test_changed_gate_filters_species_and_includes_tiles(self):
+        roster = {id_: {'meta': {'line': 'test'}, 'imgs': {'front': [np.zeros((56, 56, 4), np.uint8)]}}
+                  for id_ in ('new', 'old')}
+        failure = {'check': {'status': 'FAIL', 'level': 'error', 'value': 1}}
+        warning = {'check': {'status': 'WARN', 'level': 'warn', 'value': 1}}
+        with tempfile.TemporaryDirectory() as temp, patch.object(qa, 'load_roster', return_value=roster), contextlib.redirect_stdout(io.StringIO()):
+            output = Path(temp)/'out.json'
+            for selection in ([], ['--all'], ['new', 'old'], ['--line', 'test'], ['--all', '--strict']):
+                for species_checks, tile_results, expected in [(failure, warning, 1), (warning, failure, 1), (warning, warning, 0)]:
+                    with self.subTest(selection=selection, expected=expected), patch.object(qa, 'changed_paths', return_value=[
+                        'public/art/species/new/front.png', 'public/art/tilesets/terrain/sheet.png']), patch.object(
+                        qa, 'check_species', side_effect=lambda id_, *_: species_checks if id_ == 'new' else failure), patch.object(
+                        qa, 'tile_checks', return_value=tile_results):
+                        self.assertEqual(qa.main([*selection, '--changed', 'HEAD', '--json', str(output)]), expected)
+                        report = json.loads(output.read_text())
+                        self.assertEqual(set(report['species']), {'new'})
+                        self.assertEqual(set(report['tilesets']), {'terrain'})
+                        self.assertEqual(report['error_count'], expected)
+
+    def test_no_changed_art_passes_despite_roster_errors(self):
+        roster = {'old': {'meta': {'line': 'test'}, 'imgs': {'front': [np.zeros((56, 56, 4), np.uint8)]}}}
+        with patch.object(qa, 'load_roster', return_value=roster), patch.object(qa, 'changed_paths', return_value=[]), patch.object(
+            qa, 'check_species') as species_check, patch.object(qa, 'tile_checks') as tile_check, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(qa.main(['--all', '--changed', 'HEAD']), 0)
+            species_check.assert_not_called()
+            tile_check.assert_not_called()
+
+    def test_tile_errors_gate_only_strict_audit_or_changed_tiles(self):
+        failure = {'check': {'status': 'FAIL', 'level': 'error', 'value': 1}}
+        with patch.object(qa, 'load_roster', return_value={}), patch.object(qa, 'tile_checks', return_value=failure), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(qa.main(['--all']), 0)
+            self.assertEqual(qa.main(['--all', '--strict']), 1)
+            self.assertEqual(qa.main(['--tiles', 'terrain']), 1)
+            for paths, expected in [([], 0), (['public/art/tilesets/terrain/sheet.png'], 1),
+                                    (['public/art/packs/test/tilesets/terrain/sheet.png'], 1)]:
+                with self.subTest(paths=paths), patch.object(qa, 'changed_paths', return_value=paths):
+                    self.assertEqual(qa.main(['--tiles', 'terrain', '--changed', 'HEAD']), expected)
 
     def test_deleted_manifest_and_missing_images_get_labelled(self):
         with tempfile.TemporaryDirectory() as temp:

@@ -79,6 +79,19 @@ class GeometryTests(unittest.TestCase):
         ix = np.full((56, 56), T, np.uint8); ix[18:56, 20:45] = 2
         self.assertEqual(size_class(ix, 'baby')['status'], 'WARN')
 
+    def test_adult_edges_warn_but_extent_and_fill_still_fail(self):
+        ix = np.full((56, 56), T, np.uint8); ix[1:55, 13:43] = 2
+        r = size_class(ix, 'adult')
+        self.assertEqual((r['status'], r['level'], r['edges']), ('WARN', 'warn', 0))
+        ix = np.full((56, 56), T, np.uint8); ix[:54, 13:43] = 2
+        r = size_class(ix, 'adult')
+        self.assertEqual((r['status'], r['level'], r['edges']), ('WARN', 'warn', 1))
+        for extent, width in [(51, 30), (54, 20), (54, 40)]:
+            with self.subTest(extent=extent, width=width):
+                ix = np.full((56, 56), T, np.uint8); ix[:extent, :width] = 2
+                r = size_class(ix, 'adult')
+                self.assertEqual((r['status'], r['level']), ('FAIL', 'error'))
+
     def test_empty(self):
         self.assertEqual(geometry(np.full((56, 56), T))['extent'], 0)
 
@@ -163,6 +176,27 @@ class TileTests(unittest.TestCase):
         r = autotile_edges(variants)
         self.assertEqual(r['status'], 'FAIL')
         self.assertTrue(any(m['masks'] == [2, 8] and m['frame'] == 1 for m in r['mismatches']))
+
+    def test_autotile_thresholds_and_reported_difference(self):
+        for difference, status, level in [(0, 'PASS', 'warn'), (1, 'WARN', 'warn'),
+                                           (16, 'WARN', 'warn'), (17, 'FAIL', 'error')]:
+            with self.subTest(difference=difference):
+                variants = {mask: [tile()] for mask in range(16)}
+                variants[2][0][:, -1, :3] += difference
+                r = autotile_edges(variants)
+                self.assertEqual((r['status'], r['level']), (status, level))
+                self.assertEqual(r['max_difference'], difference)
+                self.assertIn(f'max={difference:.2f}', r['value'])
+                if difference:
+                    self.assertTrue(all(m['difference'] == difference for m in r['mismatches']))
+
+    def test_autotile_fractional_mismatch_warns(self):
+        variants = {mask: [tile()] for mask in range(16)}
+        variants[2][0][0, -1, :3] += 1
+        r = autotile_edges(variants)
+        self.assertEqual(r['status'], 'WARN')
+        self.assertGreater(r['max_difference'], 0)
+        self.assertLess(r['max_difference'], 1)
 
 
 if __name__ == '__main__':
