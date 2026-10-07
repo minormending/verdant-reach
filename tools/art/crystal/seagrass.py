@@ -1,8 +1,8 @@
 """Crystal-rule Zostera marina: seagrass_shoot -> eelgrass.
 
-Shoot: BOBBING, five short, flat ribbons bending left from a creeping node.
+Shoot: BOBBING, eight short, flat ribbons bending left from a creeping node.
 Adult: LOOMING, a dense meadow of ribbons, folded over by the current.
-Sea green faces / deep teal-green shade, black outlines, white wet-leaf rims.
+Sea green faces / deep teal-green shade, black outlines, white lengthwise midrib highlights.
 The small basal flowering spathe is a sheath, never a showy flower or face.
 Only the ribbons move: a travelling wave grows from the rooted base to tip;
 the rhizome, sand contact and spathe remain fixed through the 64-tick intro.
@@ -16,8 +16,8 @@ import math
 
 import numpy as np
 
-from _d_kit import (BLACK, WHITE, T, Spr, bez, tones, rim_white, moving_boxes,
-                    icon_arr, hop, preview, stats)
+from _d_kit import (BLACK, WHITE, T, Spr, bez, tones, moving_boxes,
+                    hop, preview, stats)
 
 TOOL = "tools/art/crystal/seagrass.py"
 IDS = ["seagrass_shoot", "eelgrass"]
@@ -25,88 +25,135 @@ PAL = [BLACK, "#185850", "#58b890", WHITE]
 SPORT = [BLACK, "#286048", "#80b868", WHITE]
 SPAL = tuple(PAL[1:])
 
-# Back-to-front ribbons: base, curved body, and rounded, current-bent tip.
+# Back-to-front flat blades: control points, coloured width (2px plus the outline),
+# visible face tone, and optional twist centre along the blade.
+# Tips continue the blade's direction; none turn back into a closed curl.
 SHOOT = [
-    ([(35, 49), (44, 40), (50, 27), (44, 23)], 6.5),
-    ([(31, 48), (35, 32), (42, 18), (37, 12)], 7.0),
-    ([(27, 49), (18, 41), (11, 32), (8, 33)], 7.5),
-    ([(32, 49), (30, 31), (30, 12), (20, 11)], 8.0),
-    ([(34, 49), (39, 35), (21, 22), (11, 23)], 8.0),
+    ([(25, 49), (24, 33), (22, 19), (15, 14)], 2.2, 1, None),
+    ([(33, 49), (37, 32), (45, 25), (45, 17)], 2.2, 1, 0.58),
+    ([(29, 49), (25, 35), (13, 30), (8, 27)], 2.2, 1, None),
+    ([(37, 49), (44, 38), (47, 32), (50, 24)], 2.2, 1, None),
+    ([(30, 49), (34, 30), (34, 16), (27, 9)], 2.2, 2, 0.62),
+    ([(24, 49), (18, 39), (10, 36), (7, 32)], 2.2, 2, None),
+    ([(35, 49), (36, 31), (20, 18), (12, 18)], 2.2, 2, None),
+    ([(32, 49), (34, 40), (22, 31), (15, 30)], 2.2, 2, 0.55),
 ]
 ADULT = [
-    ([(40, 50), (47, 32), (51, 12), (47, 8)], 7.0),
-    ([(35, 50), (33, 27), (39, 6), (34, 2.8)], 6.0),
-    ([(24, 50), (18, 33), (8, 19), (6, 23)], 7.0),
-    ([(31, 50), (25, 26), (28, 4), (19, 5)], 8.0),
-    ([(29, 50), (29, 24), (8, 9), (7, 15)], 8.0),
-    ([(37, 50), (42, 29), (26, 9), (15, 12)], 8.0),
-    ([(34, 50), (31, 37), (10, 31), (6, 37)], 8.5),
+    ([(19, 50), (21, 28), (17, 14), (11, 6)], 2.2, 1, None),
+    ([(28, 50), (30, 27), (36, 12), (33, -1)], 2.2, 1, 0.56),
+    ([(37, 50), (45, 31), (49, 15), (50, 5)], 2.2, 1, None),
+    ([(42, 50), (48, 37), (50, 28), (54, 19)], 2.2, 1, 0.64),
+    ([(22, 50), (22, 30), (11, 16), (3, 13)], 2.2, 2, None),
+    ([(31, 50), (30, 23), (23, 9), (16, 4)], 2.2, 2, 0.63),
+    ([(39, 50), (41, 31), (44, 19), (42, 10)], 2.2, 2, None),
+    ([(29, 50), (26, 31), (13, 24), (6, 24)], 2.2, 2, None),
+    ([(36, 50), (39, 30), (29, 18), (18, 13)], 2.2, 2, 0.53),
+    ([(24, 50), (18, 43), (9, 38), (4, 32)], 2.2, 2, None),
+    ([(34, 50), (33, 39), (19, 34), (12, 30)], 2.2, 2, None),
 ]
 
 # Anticipation, wave at the lower blades, wave arriving at tips, rebound.
 WAVES = [(0.0, 0.0), (-1.2, 0.4), (1.8, 1.6), (1.5, 2.8), (-0.8, 3.8)]
 
 
-def ribbon(s, ctrl, width, wave=(0.0, 0.0), lag=0.0, rim=0.72):
-    """Parallel-edged strap leaf, tapering only at its rounded last fifth.
+def ribbon(s, ctrl, width, face=2, twist=None, wave=(0.0, 0.0), lag=0.0):
+    """Flat, uncapped strap with a fine point and a lengthwise midrib.
 
-    A smooth phase-shifted lateral displacement avoids translating rigid
-    blocks. The bottom twelve pixels stay rooted; successive leaves lag.
+    A twist pinches the face to a one-pixel edge for several pixels before
+    widening again. Flat colour, rather than a shaded cylindrical band,
+    keeps the broad face distinct from that narrow edge. The current wave
+    grows above the rooted basal twelve pixels and lags between blades.
     """
     amp, phase = wave
-    path = bez(ctrl, 90)
+    path = bez(ctrl, 100)
     path = [(x + amp * min(1.0, max(0.0, (47 - y) / 32))
              * math.sin(phase - 3.0 * t + lag), y)
             for t, (x, y) in zip(np.linspace(0, 1, len(path)), path)]
-    m = s.stroke(path, lambda t: width * (1 - 0.48 * max(0, (t - 0.78) / 0.22)))
-    pid = s.part(m, base=2, k=2, sh_tone=1, line=0)
-    rim_white(s, m, pid, rim)
+
+    def blade_width(t):
+        taper = min(1.0, max(0.0, (1.0 - t) / 0.20))
+        edge = 1.0
+        if twist is not None:
+            edge = 1 - 0.73 * max(0.0, 1 - abs(t - twist) / 0.10)
+        return width * taper * edge
+
+    m = s.stroke(path, blade_width, cap=False)
+    pid = s.part(m, base=face, k=0, line=0)
+    # Short, straight midrib highlights run within the flat face. The rib
+    # stops before both the twist and the fine tip: no ring or tube opening.
+    for start, end in ((0.13, 0.49), (0.66, 0.85)):
+        segment = [p for t, p in zip(np.linspace(0, 1, len(path)), path)
+                   if start <= t <= end and
+                   (twist is None or abs(t - twist) > 0.12)]
+        if len(segment) > 1:
+            s.decal(s.line1(segment), 3 if face == 2 else 2, on=[pid])
     return pid
 
 
 def node(s, adult=False):
-    """A creeping rhizome lying on a shallow mound of green-lit sand.
+    """A short horizontal rhizome with two collars resting on flat sand.
 
-    No separate sand hue is available: the dark tone carries the substrate,
-    with a few connected white grain rims rather than scattered dot noise.
+    The palette's dark tone carries sand; connected white grain highlights
+    and an irregular shallow edge separate it from the mid-tone rhizome.
+    Node collars meet its outline, never making enclosed dark spots.
     """
     left, right = (12, 49) if adult else (17, 46)
     bottom = 55 if adult else 54
-    m = s.poly([(left, bottom), (left + 4, 51), (24, 50), (32, 49),
-                (right - 3, 51), (right, bottom)])
-    pid = s.part(m, base=1, k=1, sh_tone=0, line=0)
-    s.decal(s.line1([(left + 4, 52), (left + 8, 52)]), 3, on=[pid])
-    m = s.stroke(bez([(left + 5, 51), (29, 48), (right - 4, 51)], 40), 4)
-    pid = s.part(m, base=2, k=1, sh_tone=1, line=0)
-    rim_white(s, m, pid, 0.6)
-    # Vertical node collars follow the rhizome; no horizontal mouth seam.
-    for x in (26, 36) if adult else (29,):
-        s.decal(s.line1([(x, 49), (x + 1, 51)]), 1, on=[pid])
+    m = s.poly([(left, bottom), (left + 3, 52), (left + 9, 51),
+                (right - 6, 51), (right - 2, 52), (right, bottom)])
+    pid = s.part(m, base=1, k=0, line=0)
+    s.decal(s.line1([(left + 4, 53), (left + 8, 53)]), 3, on=[pid])
+    s.decal(s.line1([(right - 7, 53), (right - 4, 53)]), 2, on=[pid])
+    m = s.poly([(left + 5, 49), (right - 5, 49),
+                (right - 4, 51), (left + 4, 51)])
+    pid = s.part(m, base=2, k=0, line=0)
+    s.decal(s.line1([(left + 6, 49), (right - 6, 49)]), 3, on=[pid])
+    for x in (25, 36) if adult else (26, 36):
+        m = s.poly([(x, 47), (x + 2, 47), (x + 2, 52), (x, 52)])
+        collar = s.part(m, base=2, k=0, line=1)
+        s.decal(s.line1([(x, 48), (x, 51)]), 3, on=[collar])
 
 
 def spathe(s):
-    m = s.stroke(bez([(40, 49), (42, 44), (40, 39)], 30), (4.0, 2.6))
-    pid = s.part(m, base=2, k=1, sh_tone=1, line=0)
-    rim_white(s, m, pid, 0.55)
-    # Pale lengthwise rim of the enclosed flowering sheath.
-    s.decal(s.line1([(40, 40), (41, 43)]), 3, on=[pid])
+    """A pointed pale sheath set apart on a short basal flowering stalk."""
+    stem = s.stroke([(44, 50), (47, 47)], 1.5, cap=False)
+    s.part(stem, base=2, k=0, line=0)
+    m = s.poly([(46, 47), (45, 42), (46, 35), (48, 39),
+                (49, 43), (48, 47)])
+    pid = s.part(m, base=2, k=0, line=0)
+    highlight = s.poly([(46, 39), (47, 40), (48, 44), (47, 46), (46, 43)])
+    s.decal(highlight, 3, on=[pid])
+
+
+def ribbon_tones(s, **kwargs):
+    """Close single-pixel pinholes where outlined ribbons cross."""
+    arr = tones(s, **kwargs)
+    opaque = arr != T
+    enclosed = np.ones((arr.shape[0] - 2, arr.shape[1] - 2), bool)
+    for dy in range(3):
+        for dx in range(3):
+            if (dx, dy) != (1, 1):
+                enclosed &= opaque[dy:dy + enclosed.shape[0], dx:dx + enclosed.shape[1]]
+    middle = arr[1:-1, 1:-1]
+    middle[(middle == T) & enclosed] = 0
+    return arr
 
 
 def front(sid, frame=0):
     s = Spr(56, 56, SPAL)
     adult = sid == "eelgrass"
     leaves = ADULT if adult else SHOOT
-    for i, (ctrl, width) in enumerate(leaves):
-        ribbon(s, ctrl, width * (0.54 if adult else 0.76), WAVES[frame], lag=i * 0.18)
+    for i, (ctrl, width, face, twist) in enumerate(leaves):
+        ribbon(s, ctrl, width, face, twist, WAVES[frame], lag=i * 0.18)
     node(s, adult)
     if adult:
         spathe(s)
         # Two tiny oxygen bubbles, attached to different leaf edges; neither
         # has a dark centre or a paired eye-like placement.
-        for x, y in ((47, 20), (19, 29)):
+        for x, y in ((49, 12), (9, 20)):
             m = s.ellipse(x, y, 1.2, 1.6)
             s.part(m, base=3, k=0, line=0)
-    return tones(s)
+    return ribbon_tones(s)
 
 
 def front_frames(sid):
@@ -115,43 +162,61 @@ def front_frames(sid):
     for f in fs[1:]:
         f[47:] = fs[0][47:]
         if sid == "eelgrass":
-            f[38:47, 38:45] = fs[0][38:47, 38:45]
+            f[34:47, 44:51] = fs[0][34:47, 44:51]
     return fs
 
 
 def back(sid):
-    """Close view into the meadow: wide straps cropped through their bases."""
+    """Overlapping thin ribbon faces viewed from behind, cropped at the base."""
     s = Spr(48, 48, SPAL)
     paths = [
-        ([(8, 56), (5, 29), (9, 6), (3, 8)], 9),
-        ([(35, 56), (42, 32), (40, 8), (45, 11)], 10),
-        ([(23, 56), (20, 28), (27, 3), (19, 4)], 11),
-        ([(18, 56), (21, 31), (4, 17), (3, 22)], 11),
-        ([(31, 56), (36, 28), (25, 11), (13, 13)], 12),
+        ([(27, 55), (20, 34), (29, 16), (34, 9)], 2.2, 1, None),
+        ([(3, 55), (3, 42), (6, 34), (7, 29)], 2.2, 1, None),
+        ([(7, 55), (9, 28), (12, 12), (17, 6)], 2.2, 1, None),
+        ([(36, 55), (39, 30), (36, 14), (31, 4)], 2.2, 1, None),
+        ([(18, 55), (14, 32), (18, 13), (23, 1)], 2.2, 1, 0.64),
+        ([(28, 55), (31, 30), (37, 21), (43, 18)], 2.2, 1, None),
+        ([(13, 55), (9, 34), (5, 25), (2, 18)], 2.2, 1, None),
+        ([(40, 55), (43, 36), (44, 19), (46, 10)], 2.2, 2, 0.57),
+        ([(24, 55), (26, 27), (24, 11), (28, 3)], 2.2, 2, None),
+        ([(10, 55), (16, 34), (13, 20), (8, 11)], 2.2, 2, 0.64),
+        ([(34, 55), (31, 30), (22, 20), (16, 15)], 2.2, 2, None),
+        ([(20, 55), (17, 39), (8, 30), (3, 25)], 2.2, 2, None),
     ]
     if sid == "eelgrass":
-        paths.insert(1, ([(39, 56), (35, 38), (46, 27), (43, 22)], 10))
-    for ctrl, w in paths:
-        ribbon(s, ctrl, w * (0.76 if sid == "eelgrass" else 0.68), rim=0.64)
-    return tones(s, open_bottom=True)
+        paths.insert(3, ([(33, 55), (25, 35), (30, 17), (37, 9)], 2.2, 1, None))
+        paths.append(([(29, 55), (33, 41), (40, 34), (43, 27)], 2.2, 2, 0.56))
+    for ctrl, width, face, twist in paths:
+        ribbon(s, ctrl, width, face, twist)
+    return ribbon_tones(s, open_bottom=True)
 
 
-ICONS = {
-    "seagrass_shoot": [
-        "......kkk.......", ".....k232k.kk...", ".....k22k.k22k..",
-        "..kk.k22kk22k...", ".k23kk22k22k....", ".k22k.k2222k....",
-        "..k22kk2232k....", "...k22k232k.....", "....k22222k.....",
-        ".....k2222k.....", "...kkk2112kkk...", "..k1122222111k..",
-        "...kkkkkkkkkk...",
-    ],
-    "eelgrass": [
-        ".....kkk........", "....k232k.kkk...", "..kkk22k.k232k..",
-        ".k23k22kk22k2k..", ".k22k222k22k2k..", "..k22223k22k2k..",
-        ".kkk2223k22k2k..", "k232k222k2222k..", "k22k2222k2222k..",
-        ".k22k222k2232k..", "..k22222k232k...", "...k2222222k....",
-        "..kkk211122kkk..", ".k111222222111k.", "..kkkkkkkkkkkk..",
-    ],
-}
+def icon(sid):
+    """Miniature pointed ribbons with a basal rhizome and pale adult sheath."""
+    s = Spr(16, 16, SPAL)
+    adult = sid == "eelgrass"
+    paths = [
+        ([(6, 13), (5, 8), (5, 4), (3, 2)], 1.4, 1, None),
+        ([(10, 13), (12, 8), (12, 5), (13, 3)], 1.3, 1, None),
+        ([(8, 13), (9, 7), (9, 3), (7, 0 if adult else 2)], 1.7, 2, None),
+        ([(7, 13), (5, 9), (3, 8), (1, 6)], 1.7, 2, None),
+        ([(9, 13), (10, 9), (7, 6), (5, 5)], 1.6, 2, None),
+    ]
+    if adult:
+        paths.insert(1, ([(7, 13), (6, 8), (3, 6), (1, 4)], 1.5, 1, None))
+    for ctrl, width, face, twist in paths:
+        ribbon(s, ctrl, width, face, twist)
+    sand = s.poly([(2, 14), (4, 13), (12, 13), (14, 14)])
+    s.part(sand, base=1, k=0, line=0)
+    root = s.stroke([(4, 13), (12, 13)], 1.5, cap=False)
+    pid = s.part(root, base=2, k=0, line=0)
+    s.decal(s.line1([(5, 13), (7, 13)]), 3, on=[pid])
+    if adult:
+        sheath = s.stroke([(12, 12), (12, 10), (11, 8)], (1.6, 0.0), cap=False)
+        pid = s.part(sheath, base=2, k=0, line=0)
+        s.decal(s.line1([(12, 10), (12, 11)]), 3, on=[pid])
+    return tones(s)
+
 
 ANIM = {"intro": [[0, 8], [1, 12], [2, 8], [3, 16], [4, 12], [0, 8]],
         "idle": [[0, 140], [1, 12], [0, 8]]}
@@ -160,17 +225,38 @@ ANIM = {"intro": [[0, 8], [1, 12], [2, 8], [3, 16], [4, 12], [0, 8]],
 def render():
     out = {}
     for sid in IDS:
-        icon = icon_arr(ICONS[sid])
-        out[sid] = (front_frames(sid), back(sid), [icon, hop(icon)])
+        small = icon(sid)
+        out[sid] = (front_frames(sid), back(sid), [small, hop(small)])
     return out
+
+
+def review_layout(art):
+    """The lead's compact front/back/icon arrangement at native size and 3x."""
+    from pathlib import Path
+    from PIL import Image
+    from kit import to_rgba
+
+    folder = Path(__file__).resolve().parent.parent / "review"
+    folder.mkdir(exist_ok=True)
+    for scale, filename in ((1, "seagrass_1x.png"), (3, "seagrass_lead_layout.png")):
+        sheet = Image.new("RGB", (256 * scale, 56 * scale), (200, 208, 200))
+        for n, sid in enumerate(IDS):
+            fs, b, icons = art[sid]
+            for x, arr in ((0, fs[0]), (56, b), (104, icons[0])):
+                im = Image.fromarray(to_rgba(arr, PAL), "RGBA")
+                im = im.resize((im.width * scale, im.height * scale), Image.Resampling.NEAREST)
+                sheet.paste(im, ((128 * n + x) * scale, 0), im)
+        sheet.save(folder / filename)
 
 
 def build():
     from kit import write_species, intro_strip
-    for sid, (fs, b, icons) in render().items():
-        pose = ("BOBBING: five short ribbons, their tips bent toward the foe, "
+    art = render()
+    review_layout(art)
+    for sid, (fs, b, icons) in art.items():
+        pose = ("BOBBING: eight thin tapered ribbons, their tips bent toward the foe, "
                 "rising from a creeping rhizome node on sand." if sid == IDS[0] else
-                "LOOMING: a dense meadow clump of long flat ribbons arching left, "
+                "LOOMING: a dense meadow clump of thin twisting flat ribbons arching left, "
                 "a small basal flowering spathe and two tiny oxygen bubbles.")
         write_species(sid, palette=PAL, sport=SPORT, front=fs, back=[b], icon=icons,
                       anim=ANIM, moving=moving_boxes(fs), tool=TOOL,
