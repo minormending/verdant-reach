@@ -741,7 +741,9 @@ def _leafy(seed_off=0):
     return a
 
 
-TRELLIS_TOP = _leafy()
+TRELLIS_TOP = np.roll(reduce_quads(_leafy(), [("RO2", "RO1")]), (6, 1), axis=(0, 1))
+# Continue this leaf shadow through the wrap; do not add a lattice border.
+TRELLIS_TOP[15, 0] = TRELLIS_TOP[0, 0]
 TRELLIS_FACE = fill("L3", 16, 8)
 for y in range(8):
     for x in range(16):
