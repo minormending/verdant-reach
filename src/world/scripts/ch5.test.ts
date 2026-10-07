@@ -98,6 +98,27 @@ describe("Chapter 5 scripts", () => {
     expect(events.filter((e) => e === "show:morrow_bs")).toHaveLength(1);
   });
 
+  it("hides Morrow at the Burnt Stand after his defeat even if he was skipped", () => {
+    const { state } = setup();
+    state.flags.burnt_vision_seen = true;
+    const npc = WORLD.maps.burnt_stand.npcs.find((n) => n.id === "morrow_bs")!;
+    const visible = () => npc.visibleWhen!.every((v) => (state.flags[v.flag] ?? false) === v.is);
+    expect(visible()).toBe(true);
+    state.flags.beat_morrow = true;
+    expect(visible()).toBe(false);
+  });
+
+  it.each([false, true])("respects lantern ownership (%s) in Morrow's Burnt Stand scene", async (lantern) => {
+    const { run, state, host } = setup();
+    Object.assign(state.flags, { burnt_vision_seen: true, got_lantern: lantern });
+    await run("ch5_morrow_burnt");
+    const dialogue = vi.mocked(host.ctx.ui.say).mock.calls.map(([text]) => text).join(" ");
+    expect(dialogue.includes("Ask the keeper")).toBe(!lantern);
+    expect(dialogue.includes("You carry FOXFIRE already")).toBe(lantern);
+    expect(state.flags.morrow_returned).toBe(true);
+    expect(host.setNpcVisible).toHaveBeenCalledWith("morrow_bs", false);
+  });
+
   it.each([
     ["oak", "chili"], ["chili", "lily"], ["lily", "oak"],
   ])("counters the %s starter with %s after either battle result", async (starter, counter) => {

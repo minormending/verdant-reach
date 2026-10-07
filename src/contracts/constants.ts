@@ -66,6 +66,8 @@ export const AUTOTILE: Partial<Record<TileKey, string>> = {
   // Chapter 5
   oldgrowth_tree: "oldgrowth", canopy_boardwalk: "canopy_boardwalk", canopy_drop: "canopy_drop",
   rope_rail: "rope_rail", ash: "ash", hollow_wall: "hollow_wall",
+  // Frontier: frosted edges surround the sliding surface.
+  ice: "ice",
 };
 /** Ground variation: `${key}~1.png`..`${key}~3.png` (if present) are picked by a
  *  position hash so large fields never look stamped. Base tile = variant 0. */

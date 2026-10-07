@@ -10,7 +10,10 @@
     "test": "vitest run",
     "release-check": "node tools/release-check.mjs",
     "art:index": "node tools/art/index.mjs",
-    "e2e": "node e2e/run.mjs"
+    "e2e": "node e2e/run.mjs",
+    "qa:art": "python3 tools/art/qa/qa.py",
+    "qa:art:changed": "python3 tools/art/qa/qa.py --all --changed origin/main",
+    "qa:maps": "vitest run --config tools/art/qa/vitest.config.ts"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

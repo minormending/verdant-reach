@@ -643,16 +643,17 @@ for m in MASKS:
                                          out_rim=None, reduce=[("G0", "G1"), ("R0", "R1")]))
 
 
-# --- boardwalk: planks run across the direction of travel ---------------
+# --- boardwalk: continuous horizontal plank courses --------------------
 def boardwalk(mask: int) -> np.ndarray:
     n, e, s, w = sides(mask)
-    horiz = (e or w) and not (n or s)
+    # One course direction across junctions; rotating individual cells breaks
+    # the planks into a visible 16px lattice.
     a = np.zeros((16, 16), np.int16)
     for y in range(16):
         for x in range(16):
-            u = x if horiz else y                 # across-plank coordinate
-            v = y if horiz else x                 # along-plank coordinate
-            k = u % 4
+            u, v = y, x                           # across / along plank
+            # Put the tile boundary inside a plank, not at its dark/light lip.
+            k = (u + 2) % 4
             col = ("O0", "O1", "O1", "O3")[k]
             if k == 1 and v % 8 == (5 if (u // 4) % 2 else 1):
                 col = "O2"                         # nail / knot
@@ -857,6 +858,7 @@ emit("fence", fence(10))
 CAP = stones([(0, 0, 6, 4), (6, 0, 5, 4), (11, 0, 5, 4), (2, 4, 6, 4), (8, 4, 6, 4),
               (14, 4, 4, 4), (0, 8, 5, 4), (5, 8, 6, 4), (11, 8, 5, 4), (3, 12, 5, 4),
               (8, 12, 6, 4), (14, 12, 5, 4)], gap="R2", lit="R0", face="R1", shade="R1")
+CAP = np.roll(CAP, 2, axis=0)  # cut inside a stone course, not across its lip
 FACE = A([
     "....:.....:.....",
     "....:.....:.....",
@@ -1047,9 +1049,17 @@ def wall(mask: int) -> np.ndarray:
     n, e, s, w = sides(mask)
     if not s:
         a = PAPER.copy()
+        # The cap is E3, so its underside continues into the papered face's
+        # ceiling trim. Side ends use that shade too, without adding trim to
+        # the four-way-connected cap itself.
+        a[0, :] = c("E3")
+        a[:, 0] = c("E3")
+        a[:, 15] = c("E3")
+        a[a == c("O2")] = c("E3")
         if not n:
-            a[0, :] = c("E3")
-            a[1, :] = c("E2")
+            # Keep the lit rim in the existing paper tone, leaving one
+            # quadrant slot for the shared wood trim at connected sides.
+            a[1, :] = c("E1")
         return reduce_quads(a, [("E2", "E1")])
     a = fill("E3")
     if not n:
@@ -2183,11 +2193,19 @@ def check():
 
 
 def build() -> None:
-    bad = check()
+    from tile_edges import join_edges
     from artkit import emit
+    # Phase-preserving textures retain courses and crown shapes at joins.
+    # Walls have an authored continuous cap and ceiling trim, rather than
+    # the same border stamped around every cell.
+    authored = {s: a for s, a in OUT.items() if s.split('@')[0].split('~')[0] != 'wall'}
+    out = join_edges(authored, repeat=("stone_path",), palette=RGBA,
+                     texture=("boardwalk", "tree", "maple_tree", "tapped_maple", "stone_wall"))
+    out.update({s: a.copy() for s, a in OUT.items() if s.split('@')[0].split('~')[0] == 'wall'})
+    bad = {k: quad_counts(a) for k, a in out.items() if quad_counts(a) > 4}
     # one bundle per themed tileset (artkit/tilegroups.py); STALE stems simply
     # aren't in OUT any more, so they drop out of the sheets
-    emit.legacy_tiles({stem: to_img(a) for stem, a in OUT.items()}, "tools/art/tiles.py")
+    emit.legacy_tiles({stem: to_img(a) for stem, a in out.items()}, "tools/art/tiles.py")
     review()
     if bad:
         print("over 4 colours/quadrant:", bad)
