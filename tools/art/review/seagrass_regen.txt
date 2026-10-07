@@ -1,0 +1,2 @@
+Full build_all.py --regen passed: 0 validation errors and 0 missing required paths.
+SHA-256 comparison of 1691 pre-existing art, moving-box and review files: 0 changed, 0 removed.

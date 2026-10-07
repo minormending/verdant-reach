@@ -199,5 +199,41 @@ class TileTests(unittest.TestCase):
         self.assertLess(r['max_difference'], 1)
 
 
+class GridArtifactTests(unittest.TestCase):
+    def test_stamped_border_warns_even_though_edges_match(self):
+        before = tile(180)
+        after = before.copy()
+        after[[0, -1], :, :3] = 40
+        after[:, [0, -1], :3] = 40
+        self.assertEqual(seam(after)['status'], 'PASS')
+        r = grid_artifact(before, after)
+        self.assertEqual(r['status'], 'WARN')
+        self.assertEqual(r['level'], 'warn')
+        self.assertEqual(r['before_energy'], 0)
+        self.assertGreater(r['after_energy'], 16)
+
+    def test_existing_pattern_and_continuous_four_pixel_courses_pass(self):
+        a = tile(180); a[1::4, :, :3] = 40
+        self.assertEqual(grid_artifact(tile(180), a)['status'], 'PASS')
+        self.assertEqual(grid_artifact(a, a)['status'], 'PASS')
+        b = tile(180); b[[0, -1], :, :3] = 40
+        self.assertEqual(grid_artifact(b, b)['status'], 'PASS')
+        self.assertEqual(grid_artifact(b, tile(180))['status'], 'PASS')
+
+    def test_brown_trim_on_flat_wall_also_warns(self):
+        before = np.full((16, 16, 4), (128, 96, 72, 255), np.uint8)
+        after = before.copy()
+        after[[0, -1], :, :3] = (152, 80, 40)
+        after[:, [0, -1], :3] = (152, 80, 40)
+        self.assertEqual(grid_artifact(before, after)['status'], 'WARN')
+
+    def test_hidden_rgb_is_ignored_and_alpha_grid_is_detected(self):
+        a = tile(180); a[..., 3] = 0
+        b = a.copy(); b[:, 0, :3] = 20
+        self.assertEqual(grid_artifact(a, b)['status'], 'PASS')
+        b[:, 0, 3] = 255
+        self.assertEqual(grid_artifact(a, b)['status'], 'WARN')
+
+
 if __name__ == '__main__':
     unittest.main()

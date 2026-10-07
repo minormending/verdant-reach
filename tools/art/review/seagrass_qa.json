@@ -1,0 +1,289 @@
+{
+  "schema": "verdant.art-qa/1",
+  "changed_ref": "ch6",
+  "changed_paths": [
+    "public/art/index.json",
+    "public/art/species/eelgrass/back.png",
+    "public/art/species/eelgrass/front.png",
+    "public/art/species/eelgrass/front__2.png",
+    "public/art/species/eelgrass/front__3.png",
+    "public/art/species/eelgrass/front__4.png",
+    "public/art/species/eelgrass/front__5.png",
+    "public/art/species/eelgrass/icon.png",
+    "public/art/species/eelgrass/icon__2.png",
+    "public/art/species/eelgrass/species.json",
+    "public/art/species/seagrass_shoot/back.png",
+    "public/art/species/seagrass_shoot/front.png",
+    "public/art/species/seagrass_shoot/front__2.png",
+    "public/art/species/seagrass_shoot/front__3.png",
+    "public/art/species/seagrass_shoot/front__4.png",
+    "public/art/species/seagrass_shoot/front__5.png",
+    "public/art/species/seagrass_shoot/icon.png",
+    "public/art/species/seagrass_shoot/icon__2.png",
+    "public/art/species/seagrass_shoot/species.json"
+  ],
+  "changed_bundles": [
+    "species/eelgrass",
+    "species/seagrass_shoot"
+  ],
+  "species": {
+    "seagrass_shoot": {
+      "crystal": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 errors/0 warnings",
+        "messages": []
+      },
+      "face_risk": {
+        "status": "PASS",
+        "level": "error",
+        "value": 0,
+        "coordinates": []
+      },
+      "size_class": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "teen: 49px/42.9%/0 edges",
+        "extent": 49,
+        "fill": 0.4292091836734694,
+        "edges": 0,
+        "bottom": 54,
+        "com_x": 30.667161961367015,
+        "frame": 0,
+        "frames": [
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 49px/42.9%/0 edges",
+            "extent": 49,
+            "fill": 0.4292091836734694,
+            "edges": 0,
+            "bottom": 54,
+            "com_x": 30.667161961367015,
+            "frame": 0
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 49px/43.0%/0 edges",
+            "extent": 49,
+            "fill": 0.4298469387755102,
+            "edges": 0,
+            "bottom": 54,
+            "com_x": 31.13872403560831,
+            "frame": 1
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 49px/43.2%/0 edges",
+            "extent": 49,
+            "fill": 0.43239795918367346,
+            "edges": 0,
+            "bottom": 54,
+            "com_x": 30.44395280235988,
+            "frame": 2
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 49px/43.0%/0 edges",
+            "extent": 49,
+            "fill": 0.430484693877551,
+            "edges": 0,
+            "bottom": 54,
+            "com_x": 31.17185185185185,
+            "frame": 3
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 48px/42.7%/0 edges",
+            "extent": 48,
+            "fill": 0.42665816326530615,
+            "edges": 0,
+            "bottom": 54,
+            "com_x": 30.37742899850523,
+            "frame": 4
+          }
+        ]
+      },
+      "grounding": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 54,
+        "frame": 0
+      },
+      "centre_of_mass": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 30.67,
+        "frame": 0
+      },
+      "back_fill": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "76.1%",
+        "fill": 0.7608506944444444
+      },
+      "anim_signature": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "40.3% changed/100.0% inside",
+        "changed": 543,
+        "change_share": 0.4034175334323923,
+        "inside_share": 1.0,
+        "boxes_missing": false
+      },
+      "clone_risk": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 pairs; nearest a/d=9/16",
+        "pairs": []
+      },
+      "silhouette_noise": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "3 tips/1 holes",
+        "protrusions": 3,
+        "holes": 1,
+        "frame": 0
+      },
+      "stage_progression": {
+        "status": "PASS",
+        "level": "error",
+        "value": "first stage"
+      }
+    },
+    "eelgrass": {
+      "crystal": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 errors/0 warnings",
+        "messages": []
+      },
+      "face_risk": {
+        "status": "PASS",
+        "level": "error",
+        "value": 0,
+        "coordinates": []
+      },
+      "size_class": {
+        "status": "WARN",
+        "level": "warn",
+        "value": "adult: 56px/58.6%/2 edges",
+        "extent": 56,
+        "fill": 0.5857780612244898,
+        "edges": 2,
+        "bottom": 55,
+        "com_x": 28.75449101796407,
+        "frame": 0,
+        "frames": [
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/58.6%/2 edges",
+            "extent": 56,
+            "fill": 0.5857780612244898,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 28.75449101796407,
+            "frame": 0
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/58.7%/2 edges",
+            "extent": 56,
+            "fill": 0.5870535714285714,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 29.237370994024985,
+            "frame": 1
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/59.6%/2 edges",
+            "extent": 56,
+            "fill": 0.5963010204081632,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 28.86898395721925,
+            "frame": 2
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/59.8%/2 edges",
+            "extent": 56,
+            "fill": 0.5975765306122449,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 29.435965848452508,
+            "frame": 3
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/58.7%/2 edges",
+            "extent": 56,
+            "fill": 0.5873724489795918,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 28.420738327904452,
+            "frame": 4
+          }
+        ]
+      },
+      "grounding": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 55,
+        "frame": 0
+      },
+      "centre_of_mass": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 28.75,
+        "frame": 0
+      },
+      "back_fill": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "81.3%",
+        "fill": 0.8133680555555556
+      },
+      "anim_signature": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "53.3% changed/100.0% inside",
+        "changed": 980,
+        "change_share": 0.5334784975503538,
+        "inside_share": 1.0,
+        "boxes_missing": false
+      },
+      "clone_risk": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 pairs; nearest a/d=12/18",
+        "pairs": []
+      },
+      "silhouette_noise": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "4 tips/0 holes",
+        "protrusions": 4,
+        "holes": 0,
+        "frame": 0
+      },
+      "stage_progression": {
+        "status": "PASS",
+        "level": "error",
+        "value": "49->56px/42.9%->58.6%"
+      }
+    }
+  },
+  "tilesets": {},
+  "error_count": 0
+}

@@ -2,6 +2,7 @@
 """Read-only art QA and changed-bundle contact sheets; see docs/ART_QA.md."""
 from __future__ import annotations
 import argparse
+import io
 import json
 import re
 import subprocess
@@ -17,7 +18,10 @@ sys.path.insert(0, str(HERE.parent))
 from crystal import kit
 from checks import (result, face_risk, size_class, grounding, centre_of_mass,
                     back_fill, stage_progression, anim_signature, clone_risk,
-                    silhouette_noise, hashes, seam, autotile_edges)
+                    silhouette_noise, hashes, seam, autotile_edges, grid_artifact)
+
+GROUND_KEYS = {'grass', 'path', 'stone_path', 'dirt', 'sand', 'moss', 'ash',
+               'tropical_grass', 'paving'}
 
 
 def species_metadata():
@@ -116,7 +120,106 @@ def changed_bundles(paths):
     return sorted(bundles)
 
 
-def tile_checks(id_):
+def load_tiles(relative, ref=None):
+    """Resolve cells independently of sheet layout, including pack fallbacks."""
+    folder = Path('public/art')/relative
+    def read(path):
+        if ref is None:
+            return (ROOT/path).read_bytes() if (ROOT/path).exists() else None
+        proc = subprocess.run(['git', '-C', str(ROOT), 'show', f'{ref}:{path.as_posix()}'],
+                              capture_output=True)
+        return proc.stdout if proc.returncode == 0 else None
+    raw = read(folder/'tileset.json')
+    if raw is None:
+        return {}
+    base = Path('public/art/tilesets')/folder.name
+    js = json.loads(read(base/'tileset.json') or b'{}') if relative.startswith('packs/') else {}
+    js.update(json.loads(raw))
+    png = read(folder/js['sheet'])
+    if png is None and folder != base:
+        png = read(base/js['sheet'])
+    if png is None:
+        raise ValueError(f'missing tileset sheet: {relative} ({ref or "worktree"})')
+    sheet = np.asarray(Image.open(io.BytesIO(png)).convert('RGBA'))
+    size, columns = js['tileSize'], js['columns']
+    def cells(ref):
+        return [sheet[(n//columns)*size:(n//columns+1)*size,
+                      (n%columns)*size:(n%columns+1)*size].copy()
+                for n in (ref if isinstance(ref, list) else [ref])]
+    return {key: {'base': cells(spec['base']),
+                  'alts': [cells(r) for r in spec.get('alts', [])],
+                  'masks': {int(m): cells(r) for m, r in spec.get('masks', {}).items()}}
+            for key, spec in js['tiles'].items()}
+
+
+def same_tile(a, b):
+    if a is None or b is None or a['masks'].keys() != b['masks'].keys():
+        return False
+    left = a['base'] + [f for alt in a['alts'] for f in alt] + [f for m in sorted(a['masks']) for f in a['masks'][m]]
+    right = b['base'] + [f for alt in b['alts'] for f in alt] + [f for m in sorted(b['masks']) for f in b['masks'][m]]
+    return (len(a['base']) == len(b['base']) and
+            [len(v) for v in a['alts']] == [len(v) for v in b['alts']] and
+            [len(a['masks'][m]) for m in sorted(a['masks'])] == [len(b['masks'][m]) for m in sorted(b['masks'])] and
+            len(left) == len(right) and all(np.array_equal(x, y) for x, y in zip(left, right)))
+
+
+def cross_patch(tile, frame=0, alt=None):
+    """Lead's 5-row x 9-column cross; out-of-bounds joins as in the game."""
+    occupied = lambda x, y: not (0 <= x < 9 and 0 <= y < 5) or 2 <= x <= 6 or 2 <= y <= 3
+    patch = Image.new('RGBA', (144, 80), (120, 160, 90, 255))
+    for y in range(5):
+        for x in range(9):
+            if not occupied(x, y):
+                continue
+            mask = sum(bit for dx, dy, bit in ((0, -1, 1), (1, 0, 2), (0, 1, 4), (-1, 0, 8))
+                       if occupied(x+dx, y+dy))
+            frames = tile['masks'].get(mask, tile['base']) if alt is None else tile['alts'][alt]
+            cell = Image.fromarray(frames[frame % len(frames)], 'RGBA')
+            patch.alpha_composite(cell, (x*16, y*16))
+    return patch.resize((288, 160), Image.Resampling.NEAREST)
+
+
+def patch_sheet(bundles, ref, output):
+    """One labelled before/after row per changed autotile or ground key."""
+    rows = []
+    for relative in bundles:
+        if Path(relative).parts[-2] != 'tilesets':
+            continue
+        before, after = load_tiles(relative, ref), load_tiles(relative)
+        for key in sorted(before.keys() | after.keys()):
+            old, new = before.get(key), after.get(key)
+            if same_tile(old, new) or not (key in GROUND_KEYS or (old or {}).get('masks') or (new or {}).get('masks')):
+                continue
+            # Include every animation frame and ground alternate in the key's row.
+            count = max(len(t['base']) for t in (old, new) if t)
+            views = [(f'frame {f}', f, None) for f in range(count)]
+            if key in GROUND_KEYS or not any(t and t['masks'] for t in (old, new)):
+                views += [(f'alt {a+1}', 0, a) for a in range(max(len(t['alts']) for t in (old, new) if t))]
+            row = Image.new('RGB', (len(views)*600+16, 200), kit.BG)
+            draw = ImageDraw.Draw(row)
+            draw.text((8, 4), f'{relative}/{key}', fill=kit.INK)
+            for n, (label, frame, alt) in enumerate(views):
+                for side, tile in enumerate((old, new)):
+                    x = 8+n*600+side*300
+                    draw.text((x, 20), f'{ref if side == 0 else "after"} / {label}', fill=kit.INK)
+                    if tile is None or (alt is not None and alt >= len(tile['alts'])):
+                        draw.text((x, 90), '[ADDED]' if side == 0 else '[REMOVED]', fill=kit.INK)
+                    else:
+                        row.paste(cross_patch(tile, frame, alt), (x, 36))
+            rows.append(row)
+    if not rows:
+        row = Image.new('RGB', (616, 40), kit.BG)
+        ImageDraw.Draw(row).text((8, 12), 'No changed autotile or ground keys.', fill=kit.INK)
+        rows.append(row)
+    sheet = Image.new('RGB', (max(r.width for r in rows), sum(r.height+8 for r in rows)+8), kit.BG)
+    y = 8
+    for row in rows:
+        sheet.paste(row, (0, y)); y += row.height+8
+    output.parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(output)
+
+
+def tile_checks(id_, before_ref='HEAD'):
     folder = ROOT/'public/art/tilesets'/id_
     js = kit.load_json(folder/'tileset.json')
     sheet = kit.load_rgba(folder/js['sheet'])
@@ -125,7 +228,8 @@ def tile_checks(id_):
         return [sheet[(n//columns)*size:(n//columns+1)*size, (n%columns)*size:(n%columns+1)*size]
                 for n in (ref if isinstance(ref, list) else [ref])]
     checks = {}
-    repeat = {'grass', 'path', 'stone_path', 'dirt', 'sand', 'moss', 'ash', 'tropical_grass', 'paving'}
+    before = load_tiles(f'tilesets/{id_}', before_ref)
+    repeat = GROUND_KEYS
     for key, spec in js['tiles'].items():
         if key in repeat:
             for group, refs in [('base', [spec['base']]), ('alt', spec.get('alts', []))]:
@@ -135,6 +239,14 @@ def tile_checks(id_):
         if spec.get('masks'):
             variants = {mask: cells(spec['masks'].get(str(mask), spec['base'])) for mask in range(16)}
             checks[f'autotile_edges:{key}'] = autotile_edges(variants)
+        if key in before and (spec.get('masks') or key in repeat):
+            old = before[key]
+            refs = [('mask15', spec['masks'].get('15', spec['base']), old['masks'].get(15, old['base']))] if spec.get('masks') else [
+                ('base', spec['base'], old['base'])] + [(f'alt{n+1}', ref, old['alts'][n])
+                for n, ref in enumerate(spec.get('alts', [])) if n < len(old['alts'])]
+            for label, ref, previous in refs:
+                for frame, cell in enumerate(cells(ref)):
+                    checks[f'grid_artifact:{key}:{label}:f{frame}'] = grid_artifact(previous[frame % len(previous)], cell)
     return checks
 
 
@@ -260,11 +372,14 @@ def main(argv=None):
     p.add_argument('--strict', action='store_true', help='fail a full audit on error-class checks')
     p.add_argument('--json', type=Path)
     p.add_argument('--sheet', type=Path)
+    p.add_argument('--patch', type=Path, help='changed tile cross patches, before/after at 2x (default ref: HEAD)')
     args = p.parse_args(argv)
     if args.ids and (args.all or args.line or args.tiles):
         p.error('use species ids OR --all OR --line OR --tiles')
     if args.sheet and not args.changed:
         p.error('--sheet requires --changed GIT_REF')
+    if args.patch and args.tiles is None:
+        p.error('--patch requires --tiles [TILESET]')
     if not (args.ids or args.all or args.line or args.tiles or args.changed):
         p.error('select ids, --line, --all, --tiles or --changed')
     try:
@@ -290,7 +405,7 @@ def main(argv=None):
             if args.changed:
                 changed_tiles = {Path(b).name for b in bundles if Path(b).parts[-2] == 'tilesets'}
                 tile_ids = [id_ for id_ in tile_ids if id_ in changed_tiles]
-            report['tilesets'] = {id_: tile_checks(id_) for id_ in tile_ids}
+            report['tilesets'] = {id_: tile_checks(id_, args.changed or 'HEAD') for id_ in tile_ids}
         print_table('Creature QA', report['species'])
         print_table('Tile QA', report['tilesets'])
         failures = sum(r['status'] == 'FAIL' and r['level'] == 'error' for group in ('species', 'tilesets') for row in report[group].values() for r in row.values())
@@ -301,6 +416,11 @@ def main(argv=None):
         if args.sheet:
             contact_sheet(bundles, report, args.sheet)
             print(f'Sheet: {args.sheet}')
+        if args.patch:
+            patch_bundles = changed_bundles(changed_paths(args.changed or 'HEAD'))
+            patch_bundles = [b for b in patch_bundles if args.tiles == 'all' or Path(b).name == args.tiles]
+            patch_sheet(patch_bundles, args.changed or 'HEAD', args.patch)
+            print(f'Patch: {args.patch}')
         print(f'Errors: {failures}')
         return int(failures > 0 and (not args.all or args.changed is not None or args.strict))
     except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as e:
