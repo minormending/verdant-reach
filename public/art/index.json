@@ -96,8 +96,10 @@
   "tilesets": {
     "burnt": ["sheet.png"],
     "city": ["sheet.png"],
+    "coast": ["sheet.png"],
     "hollow": ["sheet.png"],
     "interior": ["sheet.png"],
+    "island": ["sheet.png"],
     "nature": ["sheet.png"],
     "nursery": ["sheet.png"],
     "oldgrowth": ["sheet.png"],
@@ -110,6 +112,7 @@
     "water": ["sheet.png"]
   },
   "structures": {
+    "adobe_conservatory": ["structure.png"],
     "barn": ["structure.png"],
     "big_maple": ["structure.png"],
     "big_oak": ["structure.png"],
@@ -117,13 +120,16 @@
     "cedar_house": ["structure.png"],
     "city_house": ["structure.png"],
     "conservatory": ["structure.png"],
+    "driftwood_hut": ["structure.png"],
     "fountain": ["structure.png"],
     "giant_cedar": ["structure.png"],
     "greenhouse": ["structure.png"],
+    "harbour_house": ["structure.png"],
     "herbarium": ["structure.png"],
     "hollow_trunk": ["structure.png"],
     "house_large": ["structure.png"],
     "house_small": ["structure.png"],
+    "lantern_tree": ["structure.png"],
     "lodge": ["structure.png"],
     "market": ["structure.png"],
     "market_large": ["structure.png"],
@@ -133,6 +139,7 @@
     "relay_mast": ["structure.png"],
     "relay_station": ["structure.png"],
     "rose_conservatory": ["structure.png"],
+    "tide_conservatory": ["structure.png"],
     "well": ["structure.png"],
     "windmill": ["structure.png"]
   },

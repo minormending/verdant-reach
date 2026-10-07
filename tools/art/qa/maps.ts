@@ -9,6 +9,7 @@ const GROUND = new Set([
   'dirt', 'sand', 'bog', 'boardwalk', 'water', 'stone_path', 'bridge',
   'paving', 'tropical_grass', 'stepping_stones', 'floor_wood', 'floor_tile',
   'floor_greenhouse', 'floor_marble', 'stage_floor', 'cable_floor', 'moss',
+  'salt_flat', 'cactus_scrub', 'basalt_floor', 'pier', 'seagrass_bed',
   'ash', 'burnt_grass', 'void', 'mat_exit', 'rug', 'water_channel', 'pond_lily',
 ]);
 
