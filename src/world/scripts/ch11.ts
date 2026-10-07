@@ -2,10 +2,11 @@
 import type { ScriptCmd } from "../../contracts";
 import { face, flag, ifFlags, movePlayer, say, type Scripts } from "../build";
 
-export const COUNCIL_RUN_FLAGS = ["council_run", "beat_council_1", "beat_council_2", "beat_council_3", "beat_council_4", "beat_keeper",
+export const COUNCIL_RUN_FLAGS = ["council_run", "council_rematch", "beat_council_1", "beat_council_2", "beat_council_3", "beat_council_4", "beat_keeper",
   // The battle interpreter also records these trainer ids. Clear them so a
   // later script/interaction cannot skip a seat after losing the run.
-  "beat_belladonna", "beat_mimi_osa", "beat_titus_arum", "beat_pyra", "beat_rowan"];
+  "beat_belladonna", "beat_mimi_osa", "beat_titus_arum", "beat_pyra", "beat_rowan",
+  "beat_belladonna_rematch", "beat_mimi_osa_rematch", "beat_titus_arum_rematch", "beat_pyra_rematch", "beat_rowan_rematch"];
 const reset = () => COUNCIL_RUN_FLAGS.map((f) => flag(f, false));
 const call = (script: string): ScriptCmd => ({ op: "call", script });
 
@@ -26,7 +27,7 @@ function seat(id: string, name: string, win: string, previous: string, intro: st
   };
 }
 
-export const ch11Scripts: Scripts = {
+const firstRunScripts: Scripts = {
   ch11_hall_door: [ifFlags({ ch10_done: true }, [
     { op: "warp", to: "council_hall", x: 7, y: 10, facing: "up" },
   ], [say("TODO(text): The Council Hall is closed.", "NARRATOR"), movePlayer("down")])],
@@ -76,3 +77,15 @@ export const ch11Scripts: Scripts = {
     say("TODO(text): You wake at home in FALLOWFIELD. A new day awaits.", "NARRATOR"),
   ])],
 };
+
+// Keep the same map/NPC hooks while selecting the post-game trainer set.
+const rematchRoutes: Record<string, string> = {
+  ch11_run_start: "pg_council_rematch", ch11_ending: "pg_rematch_ending",
+};
+for (const id of ["belladonna", "mimi_osa", "titus_arum", "pyra", "rowan"]) {
+  rematchRoutes[id] = `${id}_rematch`;
+  rematchRoutes[`${id}_after`] = `${id}_rematch_after`;
+}
+export const ch11Scripts: Scripts = Object.fromEntries(Object.entries(firstRunScripts).map(([id, cmds]) => [id,
+  rematchRoutes[id] ? [ifFlags({ game_cleared: true }, [call(rematchRoutes[id])], cmds)] : cmds,
+]));

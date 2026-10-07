@@ -240,20 +240,22 @@ describe("Chapter 11 scripts", () => {
     expect(state.position.map).toBe("player_home");
   });
 
-  it("appends exactly once on a subsequent clear without repeating the reconciliation", async () => {
+  it("routes subsequent clears to rematches without credits or reconciliation", async () => {
     const { state, host, run, clearRun } = setup();
     await clearRun();
     state.party[0].level = 67;
     await clearRun();
     await run("ch11_ending");
     await run("rowan_after");
-    expect(host.credits).toHaveBeenCalledTimes(2);
+    expect(host.credits).toHaveBeenCalledOnce();
     expect(state.hallOfFame).toHaveLength(2);
     expect(state.hallOfFame?.map((team) => team[0].level)).toEqual([66, 67]);
     expect(host.battle).toHaveBeenCalledTimes(10);
+    expect(vi.mocked(host.battle).mock.calls.slice(5).map(([req]) => req.trainer)).toEqual(TRAINERS.map((id) => `${id}_rematch`));
+    expect(state.bag.rain_jar).toBe(3);
     expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([t]) => t.includes("ROWAN and IMOGEN reconcile"))).toHaveLength(1);
     expect(state.flags.game_cleared).toBe(true);
     expect(state.flags.council_run).toBe(false);
-    expect(state.position.map).toBe("player_home");
+    expect(state.position.map).toBe("fellowship_hall");
   });
 });
