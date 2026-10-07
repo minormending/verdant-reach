@@ -22,13 +22,16 @@ export const rootstock_hideout_2: MapDef = {
     "WtUttttttttttttttW",
     "WWWWWWWWWWWWWWWWWW",
   ],
-  legendWhen: [{ when: when({ beat_calloway: false }), legend: { E: "wall" } }],
+  legendWhen: [
+    { when: when({ beat_calloway: false }), legend: { E: "wall" } },
+    { when: when({ files_read: false }), legend: { E: "wall" } },
+  ],
   structures: [],
   warps: [
     { x: 2, y: 14, to: "rootstock_hideout_1", toX: 21, toY: 3, facing: "down" },
     // No reverse town warp: Calloway's escape tunnel is one-way.
     { x: 15, y: 2, to: "larchmere", toX: 30, toY: 23, facing: "down" },
   ],
-  npcs: [{ id: "calloway", sprite: "researcher", x: 8, y: 5, facing: "down", script: "calloway" }],
+  npcs: [{ id: "calloway", sprite: "researcher", x: 8, y: 5, facing: "down", script: "calloway", visibleWhen: when({ calloway_escaped: false }) }],
   signs: [], triggers: [{ x: 11, y: 4, script: "ch7_files" }],
 };

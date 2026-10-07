@@ -700,7 +700,41 @@ export const handPollinatorOffer: ScriptCmd[] = [
   ]),
 ];
 
+// --- LOST CLIMBER: MOUNTAINEER, ROUTE 9 ---------------------------------------
+// Finding the hidden pack can precede the offer; only its return consumes it.
+const lostClimberCheck: ScriptCmd[] = [
+  hasItem("climber_pack", [
+    say("TODO(text): The mountaineer recognises her missing pack.", "MOUNTAINEER"),
+    { op: "takeItem", item: "climber_pack" },
+    say("TODO(text): She thanks the player with rain jars and a Cold Snap.", "MOUNTAINEER"),
+    give("rain_jar", 2),
+    give("cold_snap"),
+    completeQuest("lost_climber"),
+    say("TODO(text): The mountaineer can safely continue her climb.", "MOUNTAINEER"),
+  ], [
+    say("TODO(text): Search the snow higher up Route 9 for the lost pack.", "MOUNTAINEER"),
+    say("TODO(text): Bring the pack back to the mountaineer here.", "MOUNTAINEER"),
+  ]),
+];
+const lostClimber: ScriptCmd[] = [
+  byQuest("lost_climber", {
+    fresh: [
+      say("TODO(text): The mountaineer lost her pack on the snowy slope.", "MOUNTAINEER"),
+      say("TODO(text): Her supplies are buried somewhere farther up Route 9.", "MOUNTAINEER"),
+      say("TODO(text): She asks the player to find and return the pack.", "MOUNTAINEER"),
+      startQuest("lost_climber"),
+      ...lostClimberCheck,
+    ],
+    going: lostClimberCheck,
+    finished: [
+      say("TODO(text): The mountaineer thanks the player for finding her supplies.", "MOUNTAINEER"),
+      say("TODO(text): She will fasten the pack securely on her next climb.", "MOUNTAINEER"),
+    ],
+  }),
+];
+
 export const questScripts: Scripts = {
+  q_lost_climber: lostClimber,
   q_hand_pollinator: handPollinatorOffer,
   q_fire_followers: fireFollowers,
   q_shrine_offerings: shrineOfferings,
@@ -729,6 +763,14 @@ const isStarted = (q: string) => [{ flag: started(q), is: true }];
 const isDone = (q: string) => [{ flag: done(q), is: true }];
 
 export const QUESTS: Record<string, QuestDef> = {
+  lost_climber: {
+    id: "lost_climber", title: "LOST CLIMBER", giver: "MOUNTAINEER, ROUTE 9", area: "route_9",
+    steps: [
+      { text: "Find the lost CLIMBER PACK.", doneWhen: [{ flag: "hidden_route_9_8_8", is: true }] },
+      { text: "Return it to the MOUNTAINEER.", doneWhen: isDone("lost_climber") },
+    ],
+    reward: "2 RAIN JARS + COLD SNAP",
+  },
   seagrass_survey: {
     id: "seagrass_survey", title: "SEAGRASS SURVEY", giver: "REYES'S ASSISTANT, ROUTE 8", area: "route_8",
     steps: [

@@ -43,8 +43,12 @@ describe("Chapter 7 world", () => {
       const b1 = buildMap(resolved("rootstock_hideout_1", { emitters_off: open }));
       expect(tileAt(b1, 21, 2)).toBe(open ? "stairs_down" : "wall");
       expect(tryMove(b1, 21, 3, "up").kind === "walk").toBe(open);
-      const b2 = buildMap(resolved("rootstock_hideout_2", { beat_calloway: open }));
+      const b2 = buildMap(resolved("rootstock_hideout_2", { beat_calloway: open, files_read: open }));
       expect(tryMove(b2, 15, 3, "up").kind === "walk").toBe(open);
+    }
+    for (const flags of [{ beat_calloway: true, files_read: false }, { beat_calloway: false, files_read: true }]) {
+      const b2 = buildMap(resolved("rootstock_hideout_2", flags));
+      expect(tryMove(b2, 15, 3, "up").kind).toBe("blocked");
     }
     expect(WORLD.maps.rootstock_hideout_2.warps.some((w) => w.to === "larchmere")).toBe(true);
     expect(WORLD.maps.larchmere.warps.some((w) => w.to === "rootstock_hideout_2")).toBe(false);
