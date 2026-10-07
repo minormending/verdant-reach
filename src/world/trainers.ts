@@ -466,12 +466,13 @@ const ch9Trainers: TrainerDef[] = [
   ], ch9Lines(`rival_5_${line}`), { ai: "smart", prize: 4900 })),
   trainer("jr_ember", "EMBER", "JR.GARDENER", "gardener", [T("snapdragon_sprout", 47), T("dragon_sapling", 47)], ch9Lines("jr_ember")),
   trainer("jr_scale", "SCALE", "JR.GARDENER", "gardener", [T("pitaya_cutting", 47), T("lithops_pair", 48)], ch9Lines("jr_scale")),
-  // Rook: all levels -2 (49/50/50/53 → 47/48/48/51). Explicit learned moves
-  // keep Dragon Snap, Night Bloom, Stone Window and Dragon Resin, while
-  // removing repeated healing and broad late-game coverage. Mean win 63.8%,
-  // minimum 32.3%; final leader is harder than Rival 5 (balance.test.ts).
+  // Rook: levels -1/-2/-2/-2 (49/50/50/53 → 48/48/48/51). Explicit learned
+  // moves keep Dragon Snap, Night Bloom, Stone Window and Dragon Resin, while
+  // removing repeated healing and broad late-game coverage. Raising only
+  // snapdragon from 47 to 48 gives mean win 58.6%, minimum 30.7%; harder than
+  // Signe (62.8%) and Flora (61.2%) under balance.test.ts's milestone model.
   trainer("rook", "ROOK", "WARDEN", "hollis", [
-    T("snapdragon", 47, ["dragon_snap", "red_resin", "perfume"]),
+    T("snapdragon", 48, ["dragon_snap", "red_resin", "perfume"]),
     T("dragon_fruit", 48, ["night_bloom", "spine_volley", "nectar_lure"]),
     T("lithops_bloom", 48, ["thorn_lash", "stone_window", "bristle"]),
     T("dragon_tree", 51, ["dragon_resin", "sap_seal", "bark_skin"]),

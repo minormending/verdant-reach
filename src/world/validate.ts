@@ -693,9 +693,13 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     if (map.ambient === "fireflies" && !map.outdoor) errs.push(`${where} fireflies indoors never show (night tint is outdoor only)`);
 
     // legendWhen: every override maps a character the map uses to a real tile,
-    // and the swapped-in tiles are checked for reachability like the base map.
+    // but field-move terrain and pits must stay in the base legend so their
+    // progression and persistent cell state cannot depend on story flags.
     for (const [i, lw] of (map.legendWhen ?? []).entries()) {
       for (const [ch, t] of Object.entries(lw.legend)) {
+        if (t === "pit" || (TILES[t] as TileProps | undefined)?.fieldMove) {
+          errs.push(`${where} legendWhen must not introduce field-move or pit tiles (${t})`);
+        }
         if (!(t in TILES)) errs.push(`${where} legendWhen[${i}] '${ch}' -> unknown tile ${t}`);
         if (!(ch in map.legend)) errs.push(`${where} legendWhen[${i}] '${ch}' is not in the base legend`);
         if (!map.tiles.some((row) => row.includes(ch))) errs.push(`${where} legendWhen[${i}] '${ch}' is never used in the tiles`);

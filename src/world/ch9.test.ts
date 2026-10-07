@@ -160,7 +160,7 @@ describe("Chapter 9 world", () => {
     }
     const t = WORLD.trainers.rook;
     expect(t).toMatchObject({ portrait: "hollis", className: "WARDEN", ai: "smart", music: "battle_leader", mark: "resin_mark", items: [{ item: "spring_water", qty: 2 }] });
-    expect(t.team.map((q) => [q.species, q.level])).toEqual([["snapdragon", 47], ["dragon_fruit", 48], ["lithops_bloom", 48], ["dragon_tree", 51]]);
+    expect(t.team.map((q) => [q.species, q.level])).toEqual([["snapdragon", 48], ["dragon_fruit", 48], ["lithops_bloom", 48], ["dragon_tree", 51]]);
     t.team.forEach((q, i) => expect(Math.abs(q.level - [49, 50, 50, 53][i])).toBeLessThanOrEqual(2));
     expect(t.team.map((q) => q.moves)).toEqual([
       ["dragon_snap", "red_resin", "perfume"], ["night_bloom", "spine_volley", "nectar_lure"],
