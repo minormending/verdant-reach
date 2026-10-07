@@ -1965,10 +1965,11 @@ export async function challengeElder(): Promise<boolean> {
       const before = report.battles.length, texts = report.texts.length, pods = st.bag.glass_pod;
       const money = st.money, heal = { ...st.heal };
       if (!(await talkTo("the_elder"))) return false;
-      const battles = report.battles.slice(before);
+      // Walking back after a whiteout can cross grass: count only the Elder's battle.
+      const battles = report.battles.slice(before).filter((b) => b.request.wild?.species === "elder");
       const battle = battles[0];
-      if (battles.length !== 1 || battle?.request.kind !== "wild" || battle.request.wild?.species !== "elder"
-        || battle.request.wild.level !== 60 || battle.request.canLose !== true || !battle.outcome
+      if (battles.length !== 1 || battle?.request.kind !== "wild"
+        || battle.request.wild?.level !== 60 || battle.request.canLose !== true || !battle.outcome
         || (st.bag.glass_pod ?? 0) >= pods
         || !report.texts.slice(texts).some((t) => t.text.toUpperCase().includes("USED GLASS POD"))) return false;
       if (battle.outcome === "caught") return caught();
