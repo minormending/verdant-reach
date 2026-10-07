@@ -178,14 +178,14 @@ describe("Chapter 6 world", () => {
       expect(t.intro).toContain("TODO(text)");
       expect(t.defeat).toContain("TODO(text)");
       expect(t.after).toContain("TODO(text)");
-      const portrait = id.startsWith("angler") || id.startsWith("sailor") ? "hiker" : id.startsWith("birder") ? "birdwatcher" : id.startsWith("grunt") ? "grunt" : "gardener";
+      const portrait = id.startsWith("angler") ? "angler" : id.startsWith("sailor") ? "sailor" : id.startsWith("diver") ? "diver" : id.startsWith("birder") ? "birdwatcher" : id.startsWith("grunt") ? "grunt" : "gardener";
       expect(t.portrait).toBe(portrait);
       expect(t.music).toBe(id.startsWith("grunt") ? "battle_rootstock" : "battle_trainer");
     }
     // Only levels and moves change during balance tuning; preserve team identity/order.
     for (const [id, species, mark, portrait, waters] of [
-      ["saguaro", ["padded_cactus", "prickly_pear", "saguaro_column"], "cactus_mark", "hollis", 1],
-      ["reyes", ["eelgrass", "mangrove_sapling", "giant_water_lily", "red_mangrove"], "mangrove_mark", "nell_pitcher", 2],
+      ["saguaro", ["padded_cactus", "prickly_pear", "saguaro_column"], "cactus_mark", "brother_saguaro", 1],
+      ["reyes", ["eelgrass", "mangrove_sapling", "giant_water_lily", "red_mangrove"], "mangrove_mark", "reyes", 2],
     ] as const) {
       const t = WORLD.trainers[id];
       expect(t.team.map((q) => q.species)).toEqual(species);
