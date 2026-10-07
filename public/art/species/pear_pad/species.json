@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "pear_pad",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#983058", "#98b088", "#f8f8f8"],
+  "sport": ["#181818", "#782850", "#b088c0", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release.",
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  }
+  "anim": { "intro": [[0, 8], [1, 12], [2, 16], [3, 8], [4, 12], [0, 8]], "idle": [[0, 140], [4, 12], [0, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/prickly_pear.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/prickly_pear.py" },
+  "notes": "Crystal rule. BOBBING: one flat oval paddle tilted left on soil. Regular diagonal white glochid tufts, no dark areole dots. Grey-green pad faces; magenta fruit in the dark slot. Yellow-tinged flower cups use warm sage with white petal-edge highlights within four colours. Gesture: pads rock and glochids fan, rebound and settle; soil and basal joint stay fixed. Sport: Santa Rita purple prickly pear, purple-violet pads and plum-magenta fruit."
 }
