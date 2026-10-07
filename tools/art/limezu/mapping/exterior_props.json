@@ -53,6 +53,16 @@
   ],
   "picked_by": "codex lz-pick, checked by the lead"
  },
+ "cedar_house": {
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/7_Villas_16x16.png",
+  "box": [
+   128,
+   740,
+   264,
+   907
+  ],
+  "picked_by": "a treehouse: the lead assigned it to Cedarhallow's cedar_house"
+ },
  "city_house": {
   "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/4_Generic_Buildings_16x16.png",
   "box": [
@@ -65,7 +75,7 @@
  },
  "conservatory": {
   "source": null,
-  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+  "note": "COMPOSE: a large glass hall from the garden greenhouse kit (17_Garden frame, roof and door pieces, catalogue B5 items B513-B536) (R2b)"
  },
  "crate_out": {
   "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/11_Camping_16x16.png",
@@ -96,8 +106,14 @@
   "note": "no fitting single piece found; source elsewhere or draw our own"
  },
  "greenhouse": {
-  "source": null,
-  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",
+  "box": [
+   7,
+   1013,
+   121,
+   1135
+  ],
+  "picked_by": "the see-through glass greenhouse (garden kit), chosen by the lead"
  },
  "harbour_house": {
   "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/24_Additional_Houses_16x16.png",
@@ -118,8 +134,14 @@
   "note": "no fitting single piece found; source elsewhere or draw our own"
  },
  "herbarium": {
-  "source": null,
-  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/24_Additional_Houses_16x16.png",
+  "box": [
+   0,
+   3701,
+   283,
+   3952
+  ],
+  "picked_by": "codex lz-pick (merged-parts catalogue), checked by the lead"
  },
  "house_large": {
   "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/7_Villas_16x16.png",
@@ -133,7 +155,7 @@
  },
  "house_small": {
   "source": null,
-  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+  "note": "COMPOSE: no complete small cottage exists as one object; assemble from LimeZu modular building parts (R2b)"
  },
  "lamp_street": {
   "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/11_Camping_16x16.png",
@@ -176,8 +198,14 @@
   "picked_by": "codex lz-pick, checked by the lead"
  },
  "market": {
-  "source": null,
-  "note": "COMPOSE: assemble a complete building from LimeZu modular building parts (R3)"
+  "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/4_Generic_Buildings_16x16.png",
+  "box": [
+   0,
+   2562,
+   128,
+   2704
+  ],
+  "picked_by": "codex lz-pick (merged-parts catalogue), checked by the lead"
  },
  "market_large": {
   "source": "exteriors:Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/9_Shopping_Center_and_Markets_16x16.png",
