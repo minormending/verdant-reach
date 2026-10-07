@@ -148,16 +148,99 @@ def steam(frame):
     return a
 
 
+
+def driftwood():
+    a = salt(2)
+    # Diagonal bleached log, with a fork, broken end and weathered grain.
+    line(a, [(2, 12), (4, 9), (11, 6), (14, 6), (13, 9), (5, 13), (2, 12)], 3, 2)
+    line(a, [(3, 11), (10, 7), (13, 7)], 2, 3)
+    line(a, [(3, 10), (9, 7), (13, 7)], 0)
+    line(a, [(8, 8), (8, 5), (6, 3)], 3, 2)
+    line(a, [(7, 8), (7, 5), (5, 3)], 0)
+    line(a, [(5, 11), (8, 10), (11, 8)], 3)
+    a[10, 3] = 3; a[12, 4] = 0
+    return a
+
+
+def beach_rock():
+    a = np.full((16, 16), 1, np.uint8)
+    # Three rounded pebbles of different sizes, resting on sand.
+    from PIL import Image, ImageDraw
+    im = Image.fromarray(a, "L"); d = ImageDraw.Draw(im)
+    for box in ((2, 6, 9, 12), (9, 3, 14, 7), (10, 11, 13, 13)):
+        d.ellipse(box, fill=3)
+        x, y, xx, yy = box
+        d.ellipse((x, y, xx-1, yy-1), fill=2)
+        d.line([(x+1, y+1), (xx-2, y+1)], fill=0)
+    return np.asarray(im).copy()
+
+
+def fishing_net():
+    a = np.full((16, 16), 1, np.uint8)
+    # Upright posts, sagging rope and open diamond mesh; sand shows through.
+    for x in (2, 13):
+        a[2:14, x:x+2] = 3; a[2:12, x] = 2; a[2, x:x+2] = 0
+    line(a, [(3, 4), (6, 5), (9, 5), (13, 4)], 3)
+    for pts in ([(4, 5), (9, 10), (12, 7)], [(4, 9), (7, 12), (12, 7)],
+                [(5, 6), (4, 7), (8, 11), (12, 9)], [(9, 5), (5, 9)],
+                [(12, 5), (6, 11)]):
+        line(a, pts, 2)
+    line(a, [(4, 10), (6, 12), (9, 12), (12, 10)], 0)
+    return a
+
+
+def dry_grass(alt):
+    a = np.full((16, 16), 1, np.uint8)
+    tufts = [((3, 10), (11, 13)), ((5, 6), (12, 12)),
+             ((3, 13), (10, 7)), ((6, 11), (13, 5))][alt]
+    for x, y in tufts:
+        line(a, [(x-2, y), (x+2, y)], 2)
+        line(a, [(x, y), (x-2, y-3)], 2)
+        line(a, [(x, y), (x, y-4)], 3)
+        line(a, [(x+1, y), (x+3, y-3)], 0)
+    return a
+
+
+def shell_scatter(alt):
+    a = salt(alt)
+    for x, y in [((3, 5), (11, 11)), ((10, 4), (4, 12)),
+                 ((5, 8), (12, 3)), ((3, 11), (11, 7))][alt]:
+        line(a, [(x-1, y+2), (x+2, y+2)], 2)
+        line(a, [(x-1, y+1), (x-1, y), (x, y-1), (x+1, y-1), (x+2, y+1)], 0)
+        a[y+1, x:x+2] = 0; a[y, x] = 2
+    return a
+
+
+def vent_moss(frame):
+    a = np.full((16, 16), 2, np.uint8)
+    # Exposed basalt facets support low, irregular sulphurous moss cushions.
+    line(a, [(0, 4), (3, 1), (8, 1), (10, 4), (8, 7)], 3)
+    line(a, [(5, 15), (3, 12), (5, 9), (11, 9), (14, 12), (12, 15)], 3)
+    for x, y, w in ((2, 6, 4), (9, 3, 4), (6, 10, 5), (1, 13, 3), (12, 13, 3)):
+        line(a, [(x, y+1), (x+1, y-1), (x+w-2, y-1), (x+w, y+1)], 3, 3)
+        line(a, [(x, y), (x+1, y-1), (x+w-2, y-1), (x+w-1, y)], 1, 2)
+        line(a, [(x+1, y-2), (x+w-2, y-2)], 0)
+        # A few shifting mineral highlights give a shimmer, not a walking plant.
+        a[y, x+frame-1] = 0
+    return a
+
+
 def build():
     for alt in range(4):
         suffix = f"~{alt}" if alt else ""
         put("coast", "salt_flat"+suffix, salt(alt), kit.SALT)
         put("island", "basalt_floor"+suffix, basalt(alt), kit.BASALT)
+        put("coast", "dry_grass"+suffix, dry_grass(alt), kit.DUNE)
+        put("coast", "shell_scatter"+suffix, shell_scatter(alt), kit.SALT)
     put("coast", "tide_pool", pool(), kit.POOL)
+    put("coast", "driftwood", driftwood(), kit.DRIFTWOOD)
+    put("coast", "beach_rock", beach_rock(), kit.SHORE_ROCK)
+    put("coast", "fishing_net", fishing_net(), kit.DRIFTWOOD)
     for frame in (1, 2):
         suffix = "__2" if frame == 2 else ""
         put("island", "cactus_scrub"+suffix, cactus(frame), kit.SCRUB)
         put("island", "vent_steam"+suffix, steam(frame), kit.STEAM)
+        put("island", "vent_moss"+suffix, vent_moss(frame), kit.VENT_MOSS)
         put("coast", "seagrass_bed"+suffix, seagrass(frame, 15), kit.WATER)
         for mask in range(16):
             put("coast", f"seagrass_bed@{mask}"+suffix, seagrass(frame, mask), kit.WATER)

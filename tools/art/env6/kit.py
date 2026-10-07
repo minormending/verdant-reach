@@ -24,6 +24,10 @@ SALT = ("#f0e8c8", "#d8d0b0", "#b8b098", "#888878")
 SCRUB = ("#706860", "#789858", "#487048", "#384838")
 BASALT = ("#988878", "#706860", "#504850", "#303038")
 STEAM = ("#d8e0d0", "#a0b0a8", "#706860", "#303038")
+DUNE = ("#f0e8c8", "#d8d0b0", "#a09860", "#707848")
+DRIFTWOOD = ("#f0e8c8", "#d8d0b0", "#a08868", "#685850")
+SHORE_ROCK = ("#f0e8c8", "#d8d0b0", "#a0a8a0", "#606870")
+VENT_MOSS = ("#d8d080", "#789858", "#504850", "#303038")
 CREDITS = "Original hand-pixelled Chapter 6 environment for Verdant Reach; no copied or traced game art."
 
 

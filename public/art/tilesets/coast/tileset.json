@@ -6,8 +6,13 @@
   "sheet": "sheet.png",
   "columns": 16,
   "tiles": {
-    "salt_flat": { "base": 0, "alts": [1, 2, 3] },
-    "tide_pool": { "base": 4 },
+    "beach_rock": { "base": 0 },
+    "driftwood": { "base": 1 },
+    "dry_grass": { "base": 2, "alts": [3, 4, 5] },
+    "fishing_net": { "base": 6 },
+    "salt_flat": { "base": 7, "alts": [8, 9, 10] },
+    "shell_scatter": { "base": 11, "alts": [12, 13, 14] },
+    "tide_pool": { "base": 15 },
     "mangrove_roots": {
       "base": 16,
       "masks": {

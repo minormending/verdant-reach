@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { type MapId } from "../contracts";
+import { type MapId, type TileKey } from "../contracts";
 import { buildMap, isWalkable, refreshLegend, tileAt, tileProps } from "../overworld/map";
 import { WORLD } from "./index";
 
 // Frozen movement/RAFT/encounter/ledge geometry from the Chapter 6 stand-ins.
-// Art may change names and masks, but every gameplay terrain cell stays put.
+// Art may change names and masks; the dressing exception is listed below.
 const BEFORE: [MapId, boolean, string][] = [
   ["route_7", false, "563f598ff9ff02fc614c77fab2cd1eadf58b4d1b55da79adb0531ccdb92754d2"],
   ["saltmarsh_harbour", false, "d1ab0ff86ad051176c76d953f812cd416817df902686c303509a31ebf4878287"],
@@ -15,6 +15,64 @@ const BEFORE: [MapId, boolean, string][] = [
   ["driftseed_conservatory", false, "a4a0722de881dd7048dd3e1b206cf3c4946b47913c03535d91f2a4e0efd765c7"],
   ["driftseed_vents", false, "d61c3b4962df2b565f1205200b18c8f581c9ac83720ef0019760fbc758e50fd0"],
 ];
+
+// Isolated town props may occupy sand; the frozen digest below still protects
+// every other movement cell, and all RAFT, encounter and ledge geometry.
+// Coordinates are explicit so a new obstacle cannot silently expand this exception.
+const DRESSING: Partial<Record<MapId, [number, number, TileKey][]>> = {
+  saltmarsh_harbour: [
+    [3, 5, "driftwood"],
+    [6, 3, "beach_rock"],
+    [10, 5, "palm_tree"],
+    [15, 3, "beach_rock"],
+    [17, 3, "sign"],
+    [30, 4, "palm_tree"],
+    [36, 5, "beach_rock"],
+    [31, 7, "driftwood"],
+    [36, 9, "beach_rock"],
+    [10, 10, "crate"],
+    [10, 11, "barrel"],
+    [9, 12, "lamp_post"],
+    [29, 11, "bench"],
+    [36, 12, "palm_tree"],
+    [3, 17, "driftwood"],
+    [6, 16, "beach_rock"],
+    [8, 18, "fishing_net"],
+    [8, 19, "crate"],
+    [9, 19, "barrel"],
+    [15, 16, "fishing_net"],
+    [16, 16, "barrel"],
+    [23, 19, "fishing_net"],
+    [24, 19, "crate"],
+    [25, 19, "barrel"],
+    [30, 18, "driftwood"],
+    [34, 19, "beach_rock"],
+    [22, 15, "lamp_post"],
+    [28, 15, "bench"],
+    [21, 12, "bench"],
+  ],
+  driftseed_isle: [
+    [3, 6, "driftwood"],
+    [13, 5, "beach_rock"],
+    [10, 8, "palm_tree"],
+    [21, 5, "beach_rock"],
+    [30, 7, "palm_tree"],
+    [20, 11, "beach_rock"],
+    [19, 13, "bench"],
+    [11, 13, "lamp_post"],
+    [4, 13, "beach_rock"],
+    [9, 17, "driftwood"],
+    [4, 17, "palm_tree"],
+    [14, 18, "beach_rock"],
+    [20, 21, "driftwood"],
+    [13, 24, "beach_rock"],
+    [29, 18, "beach_rock"],
+    [28, 25, "driftwood"],
+    [5, 25, "beach_rock"],
+    [10, 11, "barrel"],
+    [29, 12, "sign"],
+  ],
+};
 
 describe("Chapter 6 environment geometry", () => {
   for (const [id, gate, expected] of BEFORE) {
@@ -30,7 +88,16 @@ describe("Chapter 6 environment geometry", () => {
         // Its approach, scripts, shoreline and every warp remain unchanged.
         const treeCanopy = id === "saltmarsh_harbour" && y === 7 && x >= 33 && x <= 35;
         if (treeCanopy) expect(walk).toBe(false);
-        layout += treeCanopy ? "." : props.water ? "~" : props.ledge ? "v" :
+        const prop = DRESSING[id]?.find(([px, py]) => px === x && py === y);
+        if (prop) {
+          expect(tileAt(m, x, y)).toBe(prop[2]);
+          expect(walk).toBe(false);
+          expect(props.water).toBeUndefined();
+          expect(props.encounter).toBeUndefined();
+          expect(props.ledge).toBeUndefined();
+          expect(m.solid.has(`${x},${y}`)).toBe(false);
+        }
+        layout += treeCanopy || prop ? "." : props.water ? "~" : props.ledge ? "v" :
           walk ? props.encounter === "grass" ? "g" : props.encounter === "bog" ? "b" : "." : "#";
       }
       const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(layout));

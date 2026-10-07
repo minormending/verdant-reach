@@ -2,7 +2,7 @@
 
 The current map modules use literal rows, legends, structures and NPCs. Parse
 those only; fail loudly on unknown tiles/assets rather than inventing scenery.
-The five review spots include the indoor Vents alongside all four outdoor maps.
+The eight review spots include the Vents and both towns alongside the sea routes.
 """
 import re
 from PIL import Image, ImageDraw
@@ -69,8 +69,10 @@ def review_maps():
              ('saltmarsh_harbour', (32,10), 'Lantern point'),
              ('route_8', (23,5), 'Sea and seagrass'),
              ('driftseed_isle', (23,9), 'Island town'),
-             ('driftseed_vents', (14,9), 'Basalt and steam')]
-    sheet = Image.new('RGBA', (1020,660), '#202830')
+             ('driftseed_vents', (14,9), 'Basalt and steam'),
+             ('saltmarsh_harbour', (20,13), 'Harbour town square'),
+             ('driftseed_isle', (18,18), 'Island town south')]
+    sheet = Image.new('RGBA', (1020,990), '#202830')
     d = ImageDraw.Draw(sheet)
     for i, (name, centre, label) in enumerate(spots):
         x, y = 10+(i%3)*340, 10+(i//3)*330

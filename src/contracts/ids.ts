@@ -205,6 +205,12 @@ export const TILES = {
   tide_pool:      { walk: false, water: true },
   pier:           { walk: true },
   salt_flat:      { walk: true },
+  driftwood:      { walk: false },
+  beach_rock:     { walk: false },
+  fishing_net:    { walk: false },
+  dry_grass:      { walk: true },               // sparse dune tufts, no encounters
+  shell_scatter:  { walk: true },
+  vent_moss:      { walk: true, encounter: "grass" },
   cactus_scrub:   { walk: true, encounter: "grass" },
   volcanic_rock:  { walk: false },
   basalt_floor:   { walk: true },

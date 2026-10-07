@@ -21,7 +21,8 @@ from checks import (result, face_risk, size_class, grounding, centre_of_mass,
                     silhouette_noise, hashes, seam, autotile_edges, grid_artifact)
 
 GROUND_KEYS = {'grass', 'path', 'stone_path', 'dirt', 'sand', 'moss', 'ash',
-               'tropical_grass', 'paving', 'salt_flat', 'basalt_floor'}
+               'tropical_grass', 'paving', 'salt_flat', 'basalt_floor',
+               'dry_grass', 'shell_scatter', 'vent_moss'}
 
 
 def species_metadata():
