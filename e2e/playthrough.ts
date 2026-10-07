@@ -25,6 +25,9 @@
 // the Centuryheart Seed and challenges the repeatable Elder before the card.
 // Chapter 11 loses midway through the Council to prove the run resets, then
 // defeats all four seats and ROWAN, skips the credits and wakes at home.
+// Post-game earns the Centuryheart, releases and meets Wanderers, explores
+// the Seed Vault, reads the diary, visits Methuselah at night and rematches
+// all five Council seats at +8. Only that ridge visit overrides the day clock.
 //
 // `?timer` keeps the loop running in a hidden tab. Add `&boost=<level>` to set
 // the level of the over-levelled helper (default 48; `boost=0` plays it
@@ -40,6 +43,8 @@ import { createQuickened, healParty } from "../src/battle";
 import { active, type BattleState } from "../src/battle/logic/battle";
 import { devSeed, randomStream } from "../src/engine/random";
 import { Menu, TextBox } from "../src/screens/kit/widgets";
+import { Menu as FieldMenu } from "../src/ui/kit";
+import { glowField } from "../src/overworld/glow";
 import { partyScreen } from "../src/screens/party";
 import { rollEncounter } from "../src/overworld/encounters";
 import { inBounds, isWalkable, tileAt, triggerAt, tryMove, warpAt, type MapRuntime } from "../src/overworld/map";
@@ -2243,6 +2248,240 @@ export async function chapter11() {
   } finally { ui.drawText = drawText; }
 }
 
+// ---------------------------------------------------------------------------
+// Post-game: gifts, Wanderers, the frozen archive and the Council rematch
+// ---------------------------------------------------------------------------
+
+/** Observe the remembered START cursor, then navigate GLIDE with real keys.
+ * Destinations are the game's visited-town menu, never direct map loads. */
+export async function glideTo(map: MapId): Promise<boolean> {
+  await settle();
+  const destination = ctx().world.glide?.find((d) => d.map === map);
+  if (!destination) return false;
+  let menu: FieldMenu | null = null;
+  const update = FieldMenu.prototype.update, previousPlan = menuPlan;
+  FieldMenu.prototype.update = function (input) {
+    if (this.options.includes("GLIDE")) menu = this;
+    return update.call(this, input);
+  };
+  menuPlan = (options, prompt) => prompt === "Where shall we go?"
+    ? options.indexOf(destination.name) : previousPlan?.(options, prompt);
+  try {
+    await press("start");
+    if (!(await waitFor(() => menu !== null, 5000))) return false;
+    const cursor = menu as unknown as FieldMenu;
+    for (let i = 0; i < cursor.options.length && cursor.options[cursor.index] !== "GLIDE"; i++) {
+      await press("down", 60);
+    }
+    if (cursor.options[cursor.index] !== "GLIDE") return false;
+    await press("a");
+    await sleep(250);
+    await advance();
+    return idle() && ow()?.mapId === map;
+  } finally { FieldMenu.prototype.update = update; menuPlan = previousPlan; }
+}
+
+/** The URL ?time override is captured at boot. The e2e module is dev-only:
+ * temporarily use the same GameContext clock seam for one event, restoring
+ * it even on failure. Night affects the real ifTime interpreter, encounters,
+ * lighting and map music; no story flag or map definition is changed. */
+export async function atNight<T>(visit: () => Promise<T>): Promise<T> {
+  if (!import.meta.env.DEV) throw new Error("The night beat requires a dev build");
+  const game = ctx(), clock = game.timeOfDay;
+  game.timeOfDay = () => "night";
+  try { return await visit(); }
+  finally { game.timeOfDay = clock; }
+}
+
+/** Carry the already-earned lantern through three real, full-length slides.
+ * GLOW is passive in this game: possession expands the renderer's light. */
+export async function slideSeedVault(): Promise<boolean> {
+  if (ow()?.mapId !== "seed_vault_b1") return false;
+  for (const [x, y, dir, stop] of [[20, 14, "left", 3], [3, 10, "right", 20], [20, 6, "left", 3]] as const) {
+    if (!(await walkTo(x, y)) || !onTile(x, y)) return false;
+    await T().step(dir);
+    await settle();
+    if (!onTile(stop, y)) return false;
+  }
+  return await walkTo(11, 3) && onTile(11, 3);
+}
+
+async function vaultPush(x: number, y: number, dir: Dir): Promise<boolean> {
+  if (!(await walkTo(x, y)) || !onTile(x, y)) return false;
+  const texts = report.texts.length;
+  await face(dir);
+  await press("a");
+  await sleep(250);
+  await settle();
+  return report.texts.slice(texts).some((t) => t.text === "[?] UPROOT it?");
+}
+
+/** Returning from B3 resets stones, while the filled pits persist. Push each
+ * reset stone left, then north into its retreat pocket to reopen the corridor. */
+export async function leaveSeedVault(): Promise<boolean> {
+  if (!(await nav("seed_vault_b2"))) return false;
+  for (const x of [15, 7]) {
+    if (!(await vaultPush(x + 1, 10, "left")) || !(await vaultPush(x - 1, 11, "up"))) return false;
+  }
+  return await nav("seed_vault_b1") && await nav("seed_vault_entrance") && await nav("route_9");
+}
+
+export async function postgame() {
+  if (!flag("game_cleared") || !idle()) throw new Error("Post-game requires the real wake-up");
+  const bag = (id: ItemId) => ctx().state.bag[id] ?? 0;
+  const specimens = () => [...ctx().state.party, ...ctx().state.box];
+
+  // The nearest GLIDE landing is ARBORETUM; the Grove remains a real walk.
+  const glided = await nav("fallowfield") && await glideTo("council_arboretum");
+  const heart = glided && await nav("elder_grove_1") && await nav("elder_grove_2")
+    && await solveGroveLanes() && await nav("elder_grove_3") && await nav("elder_grove_heart");
+  beat("POST-GAME: GLIDE to ARBORETUM and walk to the Elder's heart", heart && ow()?.mapId === "elder_grove_heart");
+  const count = specimens().length;
+  const gift = await talkTo("centuryheart_sprout");
+  const sprout = ow()?.npcs.find((n) => n.id === "centuryheart_sprout");
+  beat("CENTURYHEART: receive the second sprout", gift && flag("got_centuryheart")
+    && specimens().length === count + 1 && specimens().some((q) => q.species === "centuryheart" && q.level === 30)
+    && !!sprout && !ow()!.visible(sprout));
+
+  await glideTo("council_arboretum");
+  await trigger("ch11_hall_door");
+  const released = await talkTo("rowan");
+  beat("ROWAN: release the three Wanderers", released && flag("wanderers_free"));
+
+  // A separate seeded world stream makes this search independent of the long
+  // pre-credits walk. All 1/8 hitch and 1/4 encounter rolls remain unmodified.
+  // Retry actual route entries, never inject a hitch, roamer map or outcome.
+  const worldRng = ctx().rng;
+  ctx().rng = randomStream(seed ?? 1, "e2e:postgame:wanderers");
+  try {
+    await nav("council_arboretum");
+    await glideTo("thistledown");
+    let hitch = false, entries = 0, movement = false;
+    for (; entries < 64 && !hitch; entries++) {
+      const before = { ...ctx().state.roamers.tumbleweed };
+      if (!(await nav("route_11"))) break;
+      movement ||= before.map !== ctx().state.roamers.tumbleweed.map;
+      const burr = ow()?.npcs.find((n) => n.id === "burr");
+      if (burr && ow()!.visible(burr)) {
+        const p = ow()!.player, [dx, dy] = DIRS[p.facing];
+        const behind = burr.x === p.x - dx && burr.y === p.y - dy;
+        const battles = report.battles.length;
+        const talked = await talkTo("burr");
+        const fight = report.battles.slice(battles).find((b) => b.request.wanderer === "burr");
+        hitch = behind && talked && fight?.request.wild?.species === "burr"
+          && fight.request.wild.level === 60 && !!fight.outcome && !ctx().state.burrHitch;
+        break;
+      }
+      if (!(await nav("thistledown"))) break;
+      movement ||= before.map !== ctx().state.roamers.tumbleweed.map;
+    }
+    beat("BURR: a seeded hitch behind the player and a real battle", hitch, `route entries=${entries + 1}`);
+    let meeting = report.battles.find((b) => b.request.wanderer === "tumbleweed" || b.request.wanderer === "coconut");
+    // One bounded search; unlucky seeds must still prove actual map movement.
+    for (let attempt = 0; attempt < 8 && !meeting; attempt++) {
+      if (ow()?.mapId !== "route_11") await nav("route_11");
+      if (ctx().state.roamers.tumbleweed.map === "route_11") {
+        for (let step = 0; step < 80 && !meeting; step++) {
+          if (!(await walkTo(...(onTile(3, 35) ? [4, 35] : [3, 35]) as [number, number]))) break;
+          await settle();
+          refreshHelper();
+          meeting = report.battles.find((b) => b.request.wanderer === "tumbleweed" || b.request.wanderer === "coconut");
+        }
+      }
+      if (!meeting) {
+        const map = ctx().state.roamers.tumbleweed.map;
+        await nav("thistledown");
+        movement ||= map !== ctx().state.roamers.tumbleweed.map;
+        await nav("route_11");
+        movement ||= map !== ctx().state.roamers.tumbleweed.map;
+      }
+    }
+    beat("WANDERERS: a roaming meeting or movement between player maps", meeting ? !!meeting.outcome
+      && meeting.request.wild?.level === 60 : movement,
+    meeting ? `${meeting.request.wanderer}: ${meeting.outcome}` : "no meeting in bounded search; TUMBLEWEED changed maps");
+  } finally { ctx().rng = worldRng; }
+
+  await nav("thistledown");
+  await glideTo("larchmere");
+  await nav("route_9");
+  const spur = ow()?.mapId === "route_9" && tileAt(ow()!.map as unknown as MapRuntime, 6, 0) === "stairs_down";
+  beat("ROUTE 9: take the new northern spur", spur && await nav("seed_vault_entrance") && ow()?.mapId === "seed_vault_entrance");
+  await nav("seed_vault_b1");
+  const b1 = ow();
+  beat("SEED VAULT B1: GLOW with the earned FOXFIRE JAR", b1?.mapId === "seed_vault_b1"
+    && ctx().world.maps.seed_vault_b1.dark === true && bag("foxfire_lantern") > 0
+    && glowField(b1.player, [], true)(b1.player.x + 2, b1.player.y) !== "dark"
+    && glowField(b1.player, [], false)(b1.player.x + 2, b1.player.y) === "dark");
+  beat("SEED VAULT B1: slide all three ice crossings", await slideSeedVault());
+  await nav("seed_vault_b2");
+  const pit = (x: number) => flag(`filled_seed_vault_b2_${x}_10`)
+    && ow()?.mapId === "seed_vault_b2" && tileAt(ow()!.map as unknown as MapRuntime, x, 10) === "filled_pit";
+  beat("SEED VAULT B2: UPROOT the first stone into its pit", await vaultPush(6, 10, "right")
+    && pit(8) && await walkTo(9, 10) && onTile(9, 10));
+  await walkTo(11, 10);
+  const rootTexts = report.texts.length;
+  await face("right");
+  await press("a");
+  await sleep(250);
+  await settle();
+  beat("SEED VAULT B2: grow and cross the ROOT BRIDGE", flag("bridged_seed_vault_b2_12_10")
+    && report.texts.slice(rootTexts).some((t) => t.text === "[?] A narrow gap. ROOT BRIDGE it?")
+    && await walkTo(14, 10) && onTile(14, 10));
+  beat("SEED VAULT B2: UPROOT the second stone into its pit", await vaultPush(14, 10, "right")
+    && pit(16) && await walkTo(17, 10) && onTile(17, 10));
+  beat("SEED VAULT B3: enter the frozen archive", await nav("seed_vault_b3") && ow()?.mapId === "seed_vault_b3");
+  const diary = bag("old_diary");
+  const found = await talkTo("old_diary");
+  beat("FROZEN ARCHIVE: recover FENNIMORE's diary", found && bag("old_diary") === diary + 1
+    && flag("picked_seed_vault_b3_old_diary"));
+  const left = await leaveSeedVault();
+  await glideTo("fallowfield");
+  await nav("fennimore_house");
+  const read = await talkTo("fennimore");
+  beat("FENNIMORE: read the song and unlock the ridge", left && read && flag("diary_read") && bag("old_diary") === 0);
+
+  await nav("fallowfield");
+  await glideTo("larchmere");
+  await nav("route_9");
+  await nav("seed_vault_entrance");
+  await atNight(async () => {
+    beat("METHUSELAH RIDGE: climb under the night clock", await nav("methuselah_ridge")
+      && ow()?.mapId === "methuselah_ridge" && ctx().timeOfDay() === "night" && ctx().audio.current() === "route_night");
+    const before = report.battles.length;
+    const talked = await talkTo("methuselah");
+    const fight = report.battles.slice(before).find((b) => b.request.wild?.species === "methuselah");
+    beat("METHUSELAH: a real level-70 battle", talked && fight?.request.kind === "wild"
+      && fight.request.wild?.level === 70 && fight.request.canLose === true && !!fight.outcome, fight?.outcome);
+  });
+
+  await glideTo("council_arboretum");
+  await trigger("ch11_hall_door");
+  await talkTo("keeper");
+  const fame = ctx().state.hallOfFame?.length ?? 0;
+  beat("COUNCIL REMATCH: start a new run with the door closed", await nav("council_1")
+    && flag("council_run") && flag("council_rematch") && !flag("beat_council_1")
+    && !isWalkable(ow()!.map as unknown as MapRuntime, 5, 11));
+  for (const [map, id, win] of [["council_1", "belladonna", "beat_council_1"],
+    ["council_2", "mimi_osa", "beat_council_2"], ["council_3", "titus_arum", "beat_council_3"],
+    ["council_4", "pyra", "beat_council_4"], ["keeper_hall", "rowan", "beat_keeper"]] as const) {
+    await nav(map);
+    const before = report.battles.length, money = ctx().state.money, jars = bag("rain_jar");
+    const talked = await talkTo(id);
+    const fights = report.battles.slice(before), rematch = ctx().world.trainers[`${id}_rematch`];
+    const original = ctx().world.trainers[id];
+    beat(`COUNCIL REMATCH: ${id.toUpperCase()} at +8`, talked && fights.length === 1
+      && fights[0].request.trainer === `${id}_rematch` && fights[0].outcome === "won"
+      && flag(win) && flag(`beat_${id}_rematch`)
+      && rematch.team.every((q, i) => q.level === original.team[i].level + 8)
+      && (id !== "rowan" || ctx().state.money === money + 5000 && bag("rain_jar") === jars + 3));
+  }
+  const ending = report.texts.length;
+  await nav("fellowship_hall");
+  beat("COUNCIL REMATCH: record a second team without credits", idle() && ow()?.mapId === "fellowship_hall"
+    && (ctx().state.hallOfFame?.length ?? 0) === fame + 1 && !flag("council_run") && !flag("council_rematch")
+    && !report.texts.slice(ending).some((t) => /reconcile|Fellow of the Herbarium|You wake at home/.test(t.text)));
+}
+
 /** Free a slot with real cabinet STORE input, keeping the helper in slot 0. */
 export async function makePartyRoom(): Promise<boolean> {
   if (ctx().state.party.length < 6) return true;
@@ -2683,6 +2922,7 @@ export async function run(suite: string) {
         await chapter9();
         await chapter10();
         await chapter11();
+        await postgame();
       }
     } else if (suite === "story") {
       // From a ?dev=world&play=new jump-in.
