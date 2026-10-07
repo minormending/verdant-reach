@@ -449,3 +449,81 @@ it("searches ROUTE 9's snow and returns the real hidden pack for LOST CLIMBER's 
     expect(e2e.report.issues).toEqual([]);
   } finally { stop(); }
 });
+
+it("walks Chapter 8's keycard gate, Relay floors and C/A/B talks through WREN and MERCER", async () => {
+  const fixture = await setup("glasshouse_greenhouse", 5, 7);
+  const { ctx, e2e, drive, field, stop } = fixture;
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  Object.assign(ctx.state.flags, { ch7_done: true, ch4_done: true, gc_arrival_seen: true,
+    relay_listened: true, ch4_grunt_seen: true });
+  // Exercise real field routing and scripts; seeded battles run in the full
+  // browser suite. These fixtures do not grant any Chapter 8 progression.
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  vi.spyOn(ctx.assets, "image").mockReturnValue({} as HTMLImageElement);
+  try {
+    expect(await drive(() => e2e.nav("glasshouse_city"))).toBe(true);
+    expect(ctx.state.flags.ch8_started).toBe(true);
+    expect(await drive(() => e2e.trigger("ch8_relay_door"))).toBe(true);
+    expect(ctx.state.position).toMatchObject({ map: "glasshouse_city", x: 5, y: 8 });
+    expect(ctx.state.bag.relay_keycard).toBeUndefined();
+    expect(await drive(() => e2e.nav("palm_house"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("director_hiding"))).toBe(true);
+    expect(ctx.state.flags.got_keycard).toBe(true);
+    expect(ctx.state.bag.relay_keycard).toBe(1);
+    expect(await drive(() => e2e.nav("glasshouse_city"))).toBe(true);
+    for (const id of ["grunt_r0_1", "grunt_r0_2"]) {
+      if (!ctx.state.flags[`beat_${id}`]) expect(await drive(() => e2e.talkTo(id))).toBe(true);
+      expect(ctx.state.flags[`beat_${id}`]).toBe(true);
+    }
+    expect(await drive(() => e2e.nav("glasshouse_relay"))).toBe(true);
+    for (const id of ["grunt_r1_1", "grunt_r1_2"]) {
+      if (!ctx.state.flags[`beat_${id}`]) expect(await drive(() => e2e.talkTo(id))).toBe(true);
+      expect(ctx.state.flags[`beat_${id}`]).toBe(true);
+    }
+    expect(await drive(() => e2e.nav("relay_2f"))).toBe(true);
+    for (const id of ["grunt_r2_1", "grunt_r2_2", "grunt_r2_3"]) {
+      if (!ctx.state.flags[`beat_${id}`]) expect(await drive(() => e2e.talkTo(id))).toBe(true);
+      expect(ctx.state.flags[`beat_${id}`]).toBe(true);
+    }
+    expect(await drive(() => e2e.trigger("ch8_patch_note"))).toBe(true);
+    expect(ctx.state.flags.patch_note_read).toBe(true);
+    expect(await drive(() => e2e.nav("relay_3f"))).toBe(true);
+    expect(ctx.state.flags.ch8_bram_met).toBe(true);
+    for (const id of ["grunt_r3_1", "grunt_r3_2"]) {
+      if (!ctx.state.flags[`beat_${id}`]) expect(await drive(() => e2e.talkTo(id))).toBe(true);
+      expect(ctx.state.flags[`beat_${id}`]).toBe(true);
+    }
+    const taps = fieldTaps(fixture);
+    for (const id of ["c", "a", "b"]) {
+      expect(await drive(() => e2e.trigger(`ch8_console_${id}`))).toBe(true);
+      expect(ctx.state.flags.relay_patched ?? false).toBe(id === "b");
+    }
+    expect(taps).toEqual([
+      { x: 11, y: 2, facing: "up", facingFollower: false },
+      { x: 5, y: 2, facing: "up", facingFollower: false },
+      { x: 8, y: 2, facing: "up", facingFollower: false },
+    ]);
+    expect(await drive(() => e2e.nav("relay_roof"))).toBe(true);
+    expect(await drive(() => e2e.trigger("ch8_wren"))).toBe(true);
+    expect(ctx.battle).toHaveBeenCalledWith(expect.objectContaining({ kind: "trainer", trainer: "wren" }));
+    expect(ctx.state.flags).toMatchObject({ beat_wren: true, broadcast_off: true,
+      mercer_seen: true, mercer_left: true, ch8_takeover: false });
+    // NPC overrides and persistent conditions agree after the roof cutscene.
+    expect(field.npcs.filter((n) => ["wren", "mercer"].includes(n.id)).every((n) =>
+      !(field as typeof field & { visible(n: (typeof field.npcs)[number]): boolean }).visible(n))).toBe(true);
+    expect(await drive(() => e2e.nav("relay_2f"))).toBe(true);
+    expect(await drive(() => e2e.walkTo(2, 11))).toBe(true);
+    const money = ctx.state.money, rain = ctx.state.bag.rain_jar ?? 0;
+    await drive(async () => {
+      await e2e.press("down"); // downstairs warp; lobby onEnter starts the reward/end chain
+      expect(await e2e.advance(400, () => !!ctx.state.flags.relay_reward)).toBe(true);
+    });
+    expect(ctx.state.position.map).toBe("glasshouse_relay");
+    expect(ctx.state.money).toBe(money + 3000);
+    expect(ctx.state.bag.rain_jar).toBe(rain + 2);
+    // The reward beat can be recorded before continuing VALE's call/card.
+    expect(ctx.state.flags.ch8_done).not.toBe(true);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
