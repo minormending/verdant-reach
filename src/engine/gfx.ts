@@ -1,7 +1,13 @@
 // Small drawing helpers shared by the engine's scenes: images with a
 // missing-art fallback, fades, shake, and frame-based waiting.
 
-import type { Assets } from "../contracts";
+import { DEFAULT_CHARACTER_FRAME } from "../contracts";
+import type { Assets, CharacterKey } from "../contracts";
+
+/** Frame metadata, with the original GBC size for legacy asset stores. */
+export function characterFrame(assets: Assets, sprite: CharacterKey) {
+  return assets.characterFrame?.(sprite) ?? DEFAULT_CHARACTER_FRAME;
+}
 
 const loggedMissing = new Set<string>();
 

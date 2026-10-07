@@ -5,6 +5,7 @@
 //  - Tiles in an AUTOTILE group look at their 4 neighbours. Bit N=1, E=2,
 //    S=4, W=8 is set when that neighbour is in the SAME group; out-of-bounds
 //    counts as same. `${key}@${mask}.png` is drawn when it exists.
+//    wall_face uses only N: mask 0 is upper, mask 1 is lower.
 //  - Ground variation: `${key}~1..3.png` are picked by a stable position hash.
 //    Alts apply only when the cell would otherwise draw the plain base tile
 //    (an edge variant always wins). Animated tiles only use an alt if the alt
@@ -27,7 +28,10 @@ export function autotileGroup(t: TileKey): string | undefined {
  * edge too (they show the border tile). Returns -1 for non-autotiled tiles.
  */
 export function autotileMask(m: MapRuntime, x: number, y: number): number {
-  const group = autotileGroup(tileAt(m, x, y));
+  const tile = tileAt(m, x, y);
+  // Wall faces have just two rows, selected solely by the north neighbour.
+  if (tile === "wall_face") return tileAt(m, x, y - 1) === "wall_face" ? MASK.N : 0;
+  const group = autotileGroup(tile);
   if (!group) return -1;
   const same = (nx: number, ny: number) => !inBounds(m, nx, ny) || autotileGroup(tileAt(m, nx, ny)) === group;
   return (same(x, y - 1) ? MASK.N : 0)

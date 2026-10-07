@@ -133,7 +133,8 @@ Until then, `main` ships the GBC fallback. The release horizon
 
 | Phase | What | Who |
 |---|---|---|
-| R1 | Engine: tall characters, props (footprint, floor layer), `wall_face`, local-pack plumbing, tests | Codex |
+| R1a ✓ | Engine: tall characters, props (footprint, floor layer), `wall_face`, tests (§2.1–2.3, §2.5); procedural GBC wall-face fallback | Codex |
+| R1b | Local-pack plumbing and index tests (§2.4–2.5) | Codex |
 | R2 | Importer + mapping tables + the local pack | lead (mappings) + Codex (code) |
 | R3 | Map re-layouts: interiors, then exteriors, chapter by chapter | Codex, QA-gated, with the lead reviewing one render sheet each |
 | R4 | Characters for every NPC key; portraits (LimeZu UI portrait generator, if usable) | Codex + lead review |

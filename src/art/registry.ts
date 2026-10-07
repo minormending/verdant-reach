@@ -7,7 +7,8 @@
 // packs, patch bundle JSON in memory, replace any file in memory, read
 // pixels, and validate (see the Art Lab in src/art/lab/).
 
-import type { ArtImage, Assets, SpeciesAnim, SpeciesId } from "../contracts";
+import { DEFAULT_CHARACTER_FRAME, parseCharacterFrame } from "../contracts";
+import type { ArtImage, Assets, CharacterKey, SpeciesAnim, SpeciesId } from "../contracts";
 import { parseSpeciesAnim } from "./anim";
 import { ArtCatalog, LAB_LAYER, type BundleView, type Resolution } from "./catalog";
 import {
@@ -185,6 +186,10 @@ export class ArtRegistry implements Assets {
     const a = parseSpeciesAnim(this.catalog.bundle("species", id)?.merged.anim);
     this.anims.set(id, a);
     return a;
+  }
+
+  characterFrame(id: CharacterKey) {
+    return parseCharacterFrame(this.catalog.bundle("characters", id)?.merged.frame) ?? DEFAULT_CHARACTER_FRAME;
   }
 
   /** How many front frames the species bundle lists (0 when no bundle owns it). */

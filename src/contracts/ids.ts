@@ -156,6 +156,7 @@ export const TILES = {
   rug:          { walk: true },
   mat_exit:     { walk: true },                 // warp tile at interior exits
   wall:         { walk: false },
+  wall_face:    { walk: false },              // upper wall face / lower baseboard
   window:       { walk: false },
   counter:      { walk: false, interact: true },  // talk across it
   table:        { walk: false },
@@ -275,8 +276,8 @@ export const FIELD_MOVES = {
 } as const;
 export type FieldMove = keyof typeof FIELD_MOVES;
 
-/** Multi-tile buildings drawn from one image; footprint is solid except the
- *  door. Structures without a door are scenery (barn doors are painted shut). */
+/** Buildings and furniture props drawn from one image; the footprint is
+ *  solid except the door. Floor-layer props are never solid. */
 const STRUCTURE_SPECS = {
   house_small:  { w: 4, h: 3, door: { x: 1, y: 2 } },
   house_large:  { w: 5, h: 4, door: { x: 2, y: 3 } },
@@ -312,7 +313,20 @@ const STRUCTURE_SPECS = {
   adobe_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } },
   driftwood_hut:      { w: 4, h: 3, door: { x: 1, y: 2 } },
 } as const satisfies Record<string, StructureSpec>;
-export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
+export interface StructureSpec {
+  w: number;
+  h: number;
+  door?: { x: number; y: number };
+  /** Solid rectangle in tiles, relative to the image top-left; defaults to the whole image. */
+  footprint?: { x: number; y: number; w: number; h: number };
+  /** Floor props draw beneath every actor and are never solid. */
+  layer?: "floor";
+}
+
+/** Shared collision and sorting bounds for buildings and furniture props. */
+export function structureFootprint(spec: StructureSpec) {
+  return spec.footprint ?? { x: 0, y: 0, w: spec.w, h: spec.h };
+}
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
 export type StructureKey = keyof typeof STRUCTURE_SPECS;
 

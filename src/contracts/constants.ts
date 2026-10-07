@@ -56,7 +56,7 @@ export const AUTOTILE: Partial<Record<TileKey, string>> = {
   path: "path", stone_path: "stone_path", dirt: "dirt", sand: "sand",
   bog: "bog", boardwalk: "boardwalk", tall_grass: "tall_grass",
   hedge: "hedge", fence: "fence", stone_wall: "stone_wall", cliff: "cliff",
-  glass_wall: "glass_wall", wall: "wall",
+  glass_wall: "glass_wall", wall: "wall", wall_face: "wall_face",
   // forests join into one canopy mass with edges on the open sides
   tree: "tree", maple_tree: "maple", tapped_maple: "maple",
   // Round 4
@@ -81,10 +81,16 @@ export const tileVariantPath = (key: TileKey, mask: number, frame: 1 | 2 = 1) =>
 export const structurePath = (key: StructureKey) => `assets/structures/${key}.png`;
 
 /**
- * Overworld sheet, 48x64 PNG: 4 rows (down, up, left, right) x 3 columns
- * (stand, step A, step B), each frame 16x16, transparent background.
+ * Overworld sheet: 4 rows (down, up, left, right) x 3 columns
+ * (stand, step A, step B). Bundle frames are 16x16 or 16x32, transparent.
  */
 export const characterPath = (key: CharacterKey) => `assets/characters/${key}.png`;
+export type CharacterFrame = readonly [16, 16 | 32];
+export const DEFAULT_CHARACTER_FRAME: CharacterFrame = [16, 16];
+export function parseCharacterFrame(value: unknown): CharacterFrame | undefined {
+  return Array.isArray(value) && value.length === 2 && value[0] === 16 && (value[1] === 16 || value[1] === 32)
+    ? [16, value[1]] : undefined;
+}
 export const CHAR_ROWS = { down: 0, up: 1, left: 2, right: 3 } as const;
 
 /** Trainer battle picture: 56x56 PNG (player_back is 48x48). */

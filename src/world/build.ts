@@ -33,6 +33,7 @@ export const LEGEND: Record<string, TileKey> = {
   "r": "rug",
   "E": "mat_exit",
   "W": "wall",
+  "¤": "wall_face",
   "O": "window",
   "C": "counter",
   "D": "table",

@@ -5,7 +5,7 @@
 //
 // Unknown or optional JSON fields are ignored everywhere.
 
-import { CHARACTERS, STRUCTURES, TILES } from "../contracts";
+import { CHARACTERS, STRUCTURES, TILES, parseCharacterFrame } from "../contracts";
 import { checkSpeciesAnim, MAX_FRONT_FRAMES } from "./anim";
 import { ArtCatalog, isRef, type BundleView } from "./catalog";
 import { BUNDLE_JSON, PACK_FORMAT, refCells, type RawBundle } from "./format";
@@ -233,12 +233,13 @@ function checkBundle(cat: ArtCatalog, v: BundleView, add: Add, img: Img, prefix:
     }
     case "characters": {
       if (!(CHARACTERS as readonly string[]).includes(v.id)) add(where, "is not a CharacterKey in src/contracts/ids.ts");
-      if (JSON.stringify(m.frame) !== "[16,16]") add(where, "frame must be [16, 16]");
+      const frame = parseCharacterFrame(m.frame);
+      if (!frame) add(where, "frame must be [16, 16] or [16, 32]");
       if (JSON.stringify(m.rows) !== JSON.stringify(["down", "up", "left", "right"])) add(where, 'rows must be ["down", "up", "left", "right"]');
       if (JSON.stringify(m.columns) !== JSON.stringify(["stand", "stepA", "stepB"])) add(where, 'columns must be ["stand", "stepA", "stepB"]');
       if (typeof m.sheet !== "string") { add(where, "sheet must name a PNG"); return; }
       const i = need(m.sheet, "sheet");
-      if (i && (i.width !== 48 || i.height !== 64)) add(where, `${m.sheet} is ${i.width}x${i.height}, want 48x64`);
+      if (i && frame && (i.width !== frame[0] * 3 || i.height !== frame[1] * 4)) add(where, `${m.sheet} is ${i.width}x${i.height}, want ${frame[0] * 3}x${frame[1] * 4}`);
       return;
     }
     case "sets": {

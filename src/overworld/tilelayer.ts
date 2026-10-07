@@ -9,7 +9,7 @@ import { SCREEN_H, SCREEN_W, TILE, tilePath } from "../contracts";
 import { TileCatalog, autotileMask, type CellArt } from "./autotile";
 import { LIGHT_TILES } from "./glow";
 import { tileAt, type MapRuntime } from "./map";
-import { drawFallbackTile, drawStumpFallback } from "./render";
+import { drawFallbackTile, drawStumpFallback, drawWallFace } from "./render";
 
 const MARGIN = 7;
 
@@ -52,6 +52,11 @@ export function drawCell(
     const ok = drawCell(g, assets, { key: "grass", mask: -1, alt: 0, path: tilePath("grass"), path2: null }, x, y, false);
     drawStumpFallback(g, x, y);
     return ok && !pending;
+  }
+  if (art.key === "wall_face") {
+    drawWallFace(g, x, y, art.mask);
+    // With no bundle, this procedural tile is complete; retry only real files still loading.
+    return chain.every((p) => !assets.exists(p)) || !pending;
   }
   drawFallbackTile(g, art.key, x, y, second);
   return !pending;

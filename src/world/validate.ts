@@ -2,7 +2,7 @@
 // Used by world.test.ts and by the ?dev=world overview.
 
 import {
-  FIELD_MOVES, JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX,
+  FIELD_MOVES, JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX, structureFootprint,
 } from "../contracts";
 import type { Ambient, Cond, Dir, MapDef, MapId, NpcDef, ScriptCmd, TileKey, TileProps, WorldData } from "../contracts";
 import { POSTGAME_MAPS } from "./maps/seed_vault";
@@ -98,13 +98,16 @@ export function grid(map: MapDef, opts: { pruned?: boolean; bridged?: boolean; r
   const warps = new Set(map.warps.map((w) => `${w.x},${w.y}`));
   for (const s of map.structures) {
     const def = STRUCTURES[s.key];
-    for (let dy = 0; dy < def.h; dy++) {
-      for (let dx = 0; dx < def.w; dx++) {
+    if (!def) continue;
+    if (def.door) doors.push({ x: s.x + def.door.x, y: s.y + def.door.y, key: s.key });
+    if (def.layer === "floor") continue;
+    const fp = structureFootprint(def);
+    for (let dy = fp.y; dy < fp.y + fp.h; dy++) {
+      for (let dx = fp.x; dx < fp.x + fp.w; dx++) {
         if (def.door && dx === def.door.x && dy === def.door.y) continue;
         solid.add(`${s.x + dx},${s.y + dy}`);
       }
     }
-    if (def.door) doors.push({ x: s.x + def.door.x, y: s.y + def.door.y, key: s.key });
   }
   return {
     w, h, doors, rafting: opts.rafting,
@@ -128,6 +131,7 @@ const raftTile = (g: Grid, x: number, y: number): boolean =>
 export function walkable(g: Grid, x: number, y: number): boolean {
   const t = g.tile(x, y);
   if (!t) return false;
+  if (g.doors.some((d) => d.x === x && d.y === y)) return true;
   return (TILES[t].walk || (!!g.rafting && waterTile(t))) && !g.structureSolid(x, y);
 }
 
@@ -782,10 +786,17 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     for (const s of map.structures) {
       const def = STRUCTURES[s.key];
       if (!def) { errs.push(`${where} bad structure ${s.key}`); continue; }
+      const fp = structureFootprint(def);
+      if (![fp.x, fp.y, fp.w, fp.h].every(Number.isInteger) || fp.x < 0 || fp.y < 0 || fp.w < 1 || fp.h < 1 || fp.x + fp.w > def.w || fp.y + fp.h > def.h) {
+        errs.push(`${where} ${s.key} has an invalid footprint`);
+      }
       for (let dy = 0; dy < def.h; dy++) for (let dx = 0; dx < def.w; dx++) {
         const x = s.x + dx, y = s.y + dy;
         covered.add(`${x},${y}`);
-        if (map.tiles[y]?.[x] !== "@") errs.push(`${where} ${s.key} at ${s.x},${s.y} covers non-@ cell ${x},${y}`);
+        // Legacy buildings retain the @-image convention. Props with an
+        // explicit footprint (and floor decals) can overlay ordinary terrain.
+        if (!g.tile(x, y)) errs.push(`${where} ${s.key} at ${s.x},${s.y} covers off-map cell ${x},${y}`);
+        else if (!def.footprint && def.layer !== "floor" && map.tiles[y]?.[x] !== "@") errs.push(`${where} ${s.key} at ${s.x},${s.y} covers non-@ cell ${x},${y}`);
       }
     }
     map.tiles.forEach((row, y) => [...row].forEach((ch, x) => {
@@ -925,7 +936,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     }
     // Scenery (doorless structures) must not cut the map: everything reachable
     // without them must stay reachable with them.
-    const scenery = map.structures.filter((s) => STRUCTURES[s.key] && !STRUCTURES[s.key].door);
+    const scenery = map.structures.filter((s) => STRUCTURES[s.key] && !STRUCTURES[s.key].door && STRUCTURES[s.key].layer !== "floor");
     if (scenery.length) {
       const open = grid({ ...map, structures: map.structures.filter((s) => STRUCTURES[s.key]?.door) }, { bridged, rafting });
       // Treat the scenery footprint itself as solid in the open grid, so we only
@@ -933,7 +944,8 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       const covers = new Set<string>();
       for (const s of scenery) {
         const def = STRUCTURES[s.key];
-        for (let dy = 0; dy < def.h; dy++) for (let dx = 0; dx < def.w; dx++) covers.add(`${s.x + dx},${s.y + dy}`);
+        const fp = structureFootprint(def);
+        for (let dy = fp.y; dy < fp.y + fp.h; dy++) for (let dx = fp.x; dx < fp.x + fp.w; dx++) covers.add(`${s.x + dx},${s.y + dy}`);
       }
       const solidScenery: Grid = { ...open, structureSolid: (x, y) => open.structureSolid(x, y) || covers.has(`${x},${y}`) };
       // Per entry point, so a second way in can't mask a cut path.

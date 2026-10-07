@@ -1,7 +1,7 @@
 // Art Lab views: one renderer per tab. Each draws into `el` from the registry
 // and registers animations through `env.animate`.
 
-import type { ArtImage, SpeciesId } from "../../contracts";
+import type { ArtImage, CharacterKey, SpeciesId } from "../../contracts";
 import { AUTOTILE, STRUCTURES, tileAltPath, tilePath, tileVariantPath } from "../../contracts";
 import type { StructureKey, TileKey } from "../../contracts";
 import type { BundleView, Layer } from "../catalog";
@@ -525,42 +525,44 @@ const characterView: View = (env, el) => {
   el.append(...nn(header(env, v, v.id, "overworld sheet · 4 rows × 3 frames")));
   if (!img || !res) { el.append(h("div", { class: "al-empty" }, "Sheet missing.")); return; }
   const z = state.zoom * 2;
+  const [fw, fh] = reg.characterFrame(v.id as CharacterKey);
+  const sheetW = fw * 3, sheetH = fh * 4;
   el.append(h("h2", null, "Walk cycle"));
   const rows = ["down", "up", "left", "right"];
   const walk = h("div", { class: "al-row" });
   rows.forEach((r, ri) => {
-    const c = pixelCanvas(16, 16, z);
+    const c = pixelCanvas(fw, fh, z);
     const g = ctx2d(c);
     let last = -1;
     env.animate((f) => {
       const col = [0, 1, 0, 2][Math.floor(f / 10) % 4];
       if (col === last) return;
       last = col;
-      g.clearRect(0, 0, 16, 16);
+      g.clearRect(0, 0, fw, fh);
       const im = reg.image(path);
-      if (im) g.drawImage(im, col * 16, ri * 16, 16, 16, 0, 0, 16, 16);
+      if (im) g.drawImage(im, col * fw, ri * fh, fw, fh, 0, 0, fw, fh);
     });
     walk.append(h("div", { class: "al-card" }, h("div", { class: `al-stage ${env.bgClass()}` }, c), h("div", { class: "cap" }, h("b", null, r))));
   });
   el.append(walk, h("h2", null, "Sheet"));
   const c = document.createElement("canvas");
-  c.width = 48 * z; c.height = 64 * z; c.className = "px";
+  c.width = sheetW * z; c.height = sheetH * z; c.className = "px";
   const g = ctx2d(c);
   g.drawImage(img, 0, 0, img.width, img.height, 0, 0, img.width * z, img.height * z);
   g.fillStyle = "rgba(255,255,255,0.15)";
-  for (let x = 0; x <= 48; x += 16) g.fillRect(x * z, 0, 1, c.height);
-  for (let y = 0; y <= 64; y += 16) g.fillRect(0, y * z, c.width, 1);
-  const labels = h("div", { style: `display: grid; grid-template-rows: repeat(4, ${16 * z}px); align-items: center; color: var(--dim); font-size: 11px; margin-right: 6px` }, rows.map((r) => h("div", null, r)));
+  for (let x = 0; x <= sheetW; x += fw) g.fillRect(x * z, 0, 1, c.height);
+  for (let y = 0; y <= sheetH; y += fh) g.fillRect(0, y * z, c.width, 1);
+  const labels = h("div", { style: `display: grid; grid-template-rows: repeat(4, ${fh * z}px); align-items: center; color: var(--dim); font-size: 11px; margin-right: 6px` }, rows.map((r) => h("div", null, r)));
   const card = h("div", { class: "al-card", style: "display: inline-block" },
     h("div", { style: "display: flex" }, labels, h("div", null,
-      h("div", { style: `display: grid; grid-template-columns: repeat(3, ${16 * z}px); color: var(--dim); font-size: 11px; text-align: center` }, ["stand", "stepA", "stepB"].map((x) => h("div", null, x))),
+      h("div", { style: `display: grid; grid-template-columns: repeat(3, ${fw * z}px); color: var(--dim); font-size: 11px; text-align: center` }, ["stand", "stepA", "stepB"].map((x) => h("div", null, x))),
       h("div", { class: `al-stage ${env.bgClass()}` }, c))),
     h("div", { class: "cap" }, h("b", null, `${img.width}x${img.height}`), h("code", null, fileName(res.url)), layerChip(v.layers.find((l) => l.pack === res.layer)),
-      img.width === 48 && img.height === 64 ? h("span", { class: "al-chip ok" }, "size ✓") : h("span", { class: "al-chip bad" }, "want 48x64")),
+      img.width === sheetW && img.height === sheetH ? h("span", { class: "al-chip ok" }, "size ✓") : h("span", { class: "al-chip bad" }, `want ${sheetW}x${sheetH}`)),
     h("div", { class: "cap" },
       h("button", { class: "al-btn small", onclick: () => downloadPng(reg.fileNow(res.url)!, fileName(res.url)) }, "↓ PNG"),
       reg.overrides().files.includes(res.url) ? h("button", { class: "al-btn small", onclick: () => reg.overrideFile(res.url, null) }, "Revert") : null));
-  dropTarget(card, (d) => swapFile(env, res.url, d, [48, 64], `character ${v.id}`), env.toast);
+  dropTarget(card, (d) => swapFile(env, res.url, d, [sheetW, sheetH], `character ${v.id}`), env.toast);
   el.append(card, ...jsonPanel(env, v));
 };
 

@@ -61,7 +61,8 @@ the art registry (`src/art/`) resolves each one:
 
 Sheet cells come back as cut-out canvases, cached. A logical path that no
 bundle provides is **missing**: the game draws its placeholder and the bundle
-test fails.
+test fails. `wall_face` is a deliberate exception: the engine supplies a
+procedural GBC fallback when its bundle images are absent.
 
 ## 3. Species bundle: `species.json`
 
@@ -169,9 +170,17 @@ cell numbers (animation frames 1 and 2).
   - Which tiles join which group is gameplay-shared, so it stays in
     `AUTOTILE` in the contracts. A tileset only supplies the images.
 - If `base` is animated, give each mask the same number of frames.
+- `wall_face` is a non-walkable back-wall tile in its own `wall_face`
+  autotile group. It uses only the N bit: mask `0` is the upper row (north
+  neighbour is not `wall_face`), mask `1` is the lower row/baseboard (north
+  neighbour is `wall_face`). Author two rows below the room's top `wall`
+  border; the shared legend uses `¤`. A tileset can supply `base` and these
+  two masks. Until that art exists, the engine draws plaster and a baseboard
+  procedurally; no generated or committed PNGs change.
 
-**Ownership.** Each `TileKey` is defined by **exactly one** tileset; the test
-enforces this. A tileset may define any subset of keys. Group tiles by
+**Ownership.** Each image-backed `TileKey` is defined by **exactly one**
+tileset; the test enforces this. `wall_face` may use its procedural fallback
+without a tileset owner. A tileset may define any subset of keys. Group tiles by
 theme, such as terrain, nature, town, interior, city or orchard, so that a
 whole look can be swapped at once.
 
@@ -185,6 +194,20 @@ whole look can be swapped at once.
 - `size` is in tiles and must equal `STRUCTURES[id]` w×h.
 - The image is `(w*16) x (h*16)`.
 - Lit windows at night are found automatically, as before.
+- Buildings and furniture props both use `StructureSpec` in
+  `src/contracts/ids.ts`. `w` and `h` describe the image area; optional
+  `footprint: { x, y, w, h }` describes the solid rectangle in tiles,
+  relative to that area's top-left. It defaults to the whole image. For a
+  1×2 plant with a walkable canopy, use `{ x: 0, y: 1, w: 1, h: 1 }`.
+  Rendering sorts by the footprint's bottom edge; the image stays aligned
+  to its declared image area. Door coordinates remain relative to the
+  image and always override blocking, including outside the footprint.
+- Optional `layer: "floor"` draws the prop after tiles and before every
+  y-sorted structure or actor, and never adds collision. The underlying
+  terrain still controls walking. With no layer, the prop is y-sorted.
+- Footprint and layer are gameplay contracts, not art-pack metadata.
+  Explicit-footprint and floor props may overlay ordinary map terrain;
+  legacy structures still use `@` cells across their image area.
 
 ## 6. Character bundle: `character.json`
 
@@ -194,7 +217,17 @@ whole look can be swapped at once.
   "credits": "…", "source": { "kind": "generated", "tool": "tools/art/characters.py" } }
 ```
 
-- The sheet is 48x64 as in `CHAR_ROWS`.
+- `frame` is `[16, 16]` (GBC) or `[16, 32]` (tall). The sheet is three
+  frame-width columns by four frame-height rows: 48×64 or 48×128.
+  Frame metadata is read after pack overrides and Art Lab edits.
+- Tall frames place their feet on the occupied tile's bottom edge and rise
+  one tile above it. Sorting and ground shadows remain anchored to the
+  occupied tile; hop and fly lift move the full frame. Emotes sit above
+  its head and the light layer erases its full silhouette. Battle
+  transitions use the same overworld draw. The existing 16×16 GBC sheets
+  keep their original 4px elevation for visual compatibility.
+- Sheets narrower than 48px remain static objects; their rows are states,
+  cropped at the declared frame height.
 - `rows` and `columns` are fixed in v1. They're documented here so tools
   don't have to guess.
 
@@ -254,7 +287,7 @@ becomes pack `palette[i]`). A recolour pack therefore needs no images at all.
 - Image sizes, frame counts and ref cell bounds are all correct.
 - **Species colours:** every opaque pixel is one of the 4 palette colours,
   `sport` is present and the right length, and alpha is binary.
-- Every `TileKey` is in exactly one tileset.
+- Every image-backed `TileKey` is in exactly one tileset (`wall_face` may use its procedural fallback).
 - Every logical path the contracts require resolves: species, tiles,
   structures, characters, portraits, required UI, marks and stills.
 - `index.json` matches the folders.

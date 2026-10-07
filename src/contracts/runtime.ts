@@ -132,6 +132,8 @@ export interface Assets {
   loadAll(paths?: string[], onProgress?: (done: number, total: number) => void): Promise<void>;
   /** The species bundle's `anim` (after art packs are applied), if it has one. */
   speciesAnim?(id: import("./ids").SpeciesId): SpeciesAnim | undefined;
+  /** Character frame size after art packs and live bundle edits are applied. */
+  characterFrame?(id: import("./ids").CharacterKey): import("./constants").CharacterFrame;
 }
 
 export interface AudioService {

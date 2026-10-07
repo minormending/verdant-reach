@@ -29,13 +29,17 @@ export function requiredPaths(): RequiredPath[] {
     out.push({ path: speciesPath(id, "back"), group: "species", size: [48, 48] });
     out.push({ path: speciesPath(id, "icon"), group: "species", size: [16, 16] });
   }
-  for (const key of Object.keys(TILES) as TileKey[]) out.push({ path: tilePath(key), group: "tiles", size: [16, 16] });
+  for (const key of Object.keys(TILES) as TileKey[]) {
+    // wall_face has a supported procedural base/upper/lower fallback.
+    if (key !== "wall_face") out.push({ path: tilePath(key), group: "tiles", size: [16, 16] });
+  }
   for (const key of ANIMATED_TILES) out.push({ path: tilePath(key, 2), group: "tiles", size: [16, 16] });
   for (const key of Object.keys(STRUCTURES) as StructureKey[]) {
     const s = STRUCTURES[key];
     out.push({ path: structurePath(key), group: "structures", size: [s.w * 16, s.h * 16] });
   }
-  for (const key of CHARACTERS) out.push({ path: characterPath(key), group: "characters", size: [48, 64] });
+  // Character sheet dimensions are validated against each bundle's frame metadata.
+  for (const key of CHARACTERS) out.push({ path: characterPath(key), group: "characters" });
   for (const key of TRAINER_PORTRAITS) {
     out.push({ path: portraitPath(key), group: "portraits", size: key === "player_back" ? [48, 48] : [56, 56] });
   }

@@ -4,7 +4,7 @@
 
 import type { Assets, CharacterKey, Dir, StructureKey, TileKey } from "../contracts";
 import { CHAR_ROWS, SCREEN_H, SCREEN_W, STRUCTURES, TILE, UI, characterPath, structurePath, tilePath, uiPath } from "../contracts";
-import { drawImagePath, drawMissing, imageMissing } from "../engine/gfx";
+import { characterFrame, drawImagePath, drawMissing, imageMissing } from "../engine/gfx";
 import { drawText, drawWindow } from "../ui/kit";
 import { drawTiny } from "../screens/kit/draw";
 import type { CellArt } from "./autotile";
@@ -41,6 +41,7 @@ const FALLBACK: Partial<Record<TileKey, [string, string]>> = {
 };
 
 export function drawFallbackTile(g: CanvasRenderingContext2D, t: TileKey, x: number, y: number, frame2: boolean) {
+  if (t === "wall_face") { drawWallFace(g, x, y); return; }
   const [a, b] = FALLBACK[t] ?? ["#f800f8", "#780078"];
   g.fillStyle = a;
   g.fillRect(x, y, TILE, TILE);
@@ -85,6 +86,22 @@ export function drawFallbackTile(g: CanvasRenderingContext2D, t: TileKey, x: num
   g.fillRect(x, y, 2, 2);
 }
 
+/** GBC wall face: plain plaster above, a shaded baseboard below (N=1). */
+export function drawWallFace(g: CanvasRenderingContext2D, x: number, y: number, mask = 0) {
+  g.fillStyle = "#e8e0c8";
+  g.fillRect(x, y, TILE, TILE);
+  g.fillStyle = "#c8c0a0";
+  if (mask & 1) {
+    g.fillRect(x, y + 12, TILE, 4);
+    g.fillStyle = "#a89880";
+    g.fillRect(x, y + 15, TILE, 1);
+  } else {
+    g.fillRect(x, y, TILE, 2);
+    g.fillRect(x + 3, y + 5, 1, 7);
+    g.fillRect(x + 11, y + 4, 1, 8);
+  }
+}
+
 /**
  * A pruned bramble (stand-in until the bramble_stump tile lands): a low cut crown
  * of canes with pale cut ends, lit from the top-left, shadow to the bottom-right.
@@ -124,7 +141,7 @@ export function drawGrassOverlay(
   g.restore();
 }
 
-/** A structure image, bottom-aligned on its footprint (art may rise above it). */
+/** A structure image, bottom-aligned on its declared image area (art may rise above it). */
 export function drawStructure(g: CanvasRenderingContext2D, assets: Assets, key: StructureKey, x: number, y: number) {
   const spec = STRUCTURES[key];
   const w = spec.w * TILE;
@@ -178,19 +195,31 @@ export function rowFor(
   return facing;
 }
 
-/** Draw one character frame. Sheets narrower than 48px are static objects (16px rows = states). */
+/** Preserve the GBC sheets' 4px elevation; tall sheets put their feet on the tile edge. */
+export function characterTileY(assets: Assets, sprite: CharacterKey, groundY: number): number {
+  return groundY - (characterFrame(assets, sprite)[1] === TILE ? 4 : 0);
+}
+
+/** Top of a feet-anchored frame, given the occupied tile's top edge. */
+export function characterTop(assets: Assets, sprite: CharacterKey, tileY: number): number {
+  return tileY + TILE - characterFrame(assets, sprite)[1];
+}
+
+/** Draw one feet-anchored character frame. Sheets narrower than 48px remain static objects. */
 export function drawCharacter(
   g: CanvasRenderingContext2D, assets: Assets, sprite: CharacterKey, col: number, facing: Dir, x: number, y: number,
 ) {
   const path = characterPath(sprite);
   const img = assets.image(path);
+  const [w, h] = characterFrame(assets, sprite);
+  const top = y + TILE - h;
   if (img && img.width < 48) {
-    const rows = Math.floor(img.height / TILE);
+    const rows = Math.floor(img.height / h);
     const row = rows > 1 ? Math.min(rows - 1, CHAR_ROWS[facing]) : 0;
-    g.drawImage(img, 0, row * TILE, TILE, TILE, x, y, TILE, TILE);
+    g.drawImage(img, 0, row * h, w, h, x, top, w, h);
     return;
   }
-  drawImagePath(g, assets, path, col * TILE, CHAR_ROWS[facing] * TILE, TILE, TILE, x, y, TILE, TILE);
+  drawImagePath(g, assets, path, col * w, CHAR_ROWS[facing] * h, w, h, x, top, w, h);
 }
 
 /** Erase a character frame's silhouette from a layer (used on the light layer). */

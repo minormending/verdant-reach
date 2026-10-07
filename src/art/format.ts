@@ -69,6 +69,7 @@ export interface CharacterBundle {
   format: "verdant.character/1";
   id: string;
   sheet: string;
+  /** 16x16 GBC or 16x32 tall frames; sheets are three columns by four rows. */
   frame: [number, number];
   rows: string[];
   columns: string[];

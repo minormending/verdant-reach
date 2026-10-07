@@ -6,7 +6,7 @@ import type { ArtImage,
   Ambient, BattleOutcome, BattleRequest, Dir, GameContext, MapDef, MapId, Quickened, Scene, ScriptCmd, ScriptId,
   SpeciesId, StillKey,
 } from "../contracts";
-import { FIELD_MOVES, SCREEN_H, SCREEN_W, STRUCTURES, TILE, speciesPath, stillPath, tilePath } from "../contracts";
+import { FIELD_MOVES, SCREEN_H, SCREEN_W, STRUCTURES, TILE, structureFootprint, speciesPath, stillPath, tilePath } from "../contracts";
 import type { FieldMove } from "../contracts";
 import { followerOn } from "../save";
 import { createQuickened, healParty } from "../battle";
@@ -28,7 +28,7 @@ import {
   triggerAt, warpAt, type MapRuntime,
 } from "./map";
 import {
-  BattleTransition, TOAST_MS, drawCharacter, drawEmote, drawGrassOverlay, drawMapName, drawShadow, drawStructure,
+  BattleTransition, TOAST_MS, characterTileY, characterTop, drawCharacter, drawEmote, drawGrassOverlay, drawMapName, drawShadow, drawStructure,
   drawToast, drawLilyRaft, eraseCharacter, isStaticObject, rowFor, structureImage,
 } from "./render";
 import { AmbientFx, effectiveAmbient } from "./ambient";
@@ -1379,17 +1379,19 @@ class Overworld implements Scene {
       const sx = s.x * TILE - camX;
       const sy = s.y * TILE - camY;
       if (sx > SCREEN_W || sy > SCREEN_H || sx + spec.w * TILE < 0 || sy + spec.h * TILE < -64) continue;
-      items.push({
-        base: (s.y + spec.h) * TILE, order: 0,
-        draw: () => {
-          drawStructure(g, assets, s.key, sx, sy);
-          if (lg) {
-            const si = structureImage(assets, s.key, sx, sy);
-            const glow = si && windowGlow(si.img);
-            if (glow && si) lg.drawImage(glow, si.x, si.y);
-          }
-        },
-      });
+      const draw = () => {
+        drawStructure(g, assets, s.key, sx, sy);
+        if (lg) {
+          const si = structureImage(assets, s.key, sx, sy);
+          const glow = si && windowGlow(si.img);
+          if (glow && si) lg.drawImage(glow, si.x, si.y);
+        }
+      };
+      if (spec.layer === "floor") draw();
+      else {
+        const fp = structureFootprint(spec);
+        items.push({ base: (s.y + fp.y + fp.h) * TILE, order: 0, draw });
+      }
     }
     const actors = [this.player, ...this.npcs.filter((n) => this.visible(n) || n.fly)];
     for (const a of actors) {
@@ -1404,8 +1406,9 @@ class Overworld implements Scene {
         col = 1 + (Math.floor(t / 3) % 2);
       }
       const groundY = py - camY;
-      const sy = groundY - 4;
-      if (sx < -16 || sx > SCREEN_W || sy - lift < -24 || sy - lift > SCREEN_H) continue;
+      const sy = characterTileY(assets, a.sprite, groundY);
+      const top = characterTop(assets, a.sprite, sy - lift);
+      if (sx < -TILE || sx > SCREEN_W || sy + TILE - lift < -8 || top > SCREEN_H) continue;
       const row = rowFor(a.id, a.sprite, a.facing, flags, this.pickedToday, a.def?.stateFlag);
       if (a.wobble > 0) sx += [0, 1, 1, 0, -1, -1][a.wobble % 6];
       if (a.lastRow !== null && a.lastRow !== row) a.clunk = 8;
@@ -1506,7 +1509,7 @@ class Overworld implements Scene {
     for (const a of actors) {
       if (!a.emote) continue;
       const { px, py } = a.pixel();
-      drawEmote(g, a.emote.kind, px - camX, py - camY - 4, a.emote.t);
+      drawEmote(g, a.emote.kind, px - camX, characterTop(assets, a.sprite, characterTileY(assets, a.sprite, py - camY)), a.emote.t);
     }
     if (this.followerEmote && mon) {
       {
