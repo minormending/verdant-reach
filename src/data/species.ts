@@ -93,6 +93,8 @@ const POLLINATION: Record<string, PollinationGroup[]> = {
   dragontree: ["woodland"],
   pitaya: ["garden", "tropical"],    // no moth group: use moonflower's night-garden groups
   lithops: ["meadow"],
+  aspen: ["woodland"],
+  elder: [],                         // legendary: the existing no-seed convention
 };
 
 function sp(d: Def): Species {
@@ -213,6 +215,15 @@ const PITAYA: L = [[1, "dragon_nip"], [1, "perfume"], [5, "thorn_jab"], [9, "sap
   [17, "red_resin"], [22, "thorn_lash"], [26, "spine_volley"], [30, "night_bloom"], [36, "moonbeam"], [42, "photosynthesise"], [48, "hook_thorns"]];
 const LITHOPS: L = [[1, "thorn_jab"], [1, "curl_up"], [5, "sap_seal"], [9, "burr_hitch"], [13, "bristle"],
   [17, "spine_volley"], [21, "sap_drain"], [24, "stone_window"], [30, "thorn_lash"], [38, "hook_thorns"], [46, "photosynthesise"]];
+
+// Chapter 10: balanced aspen; the Elder shares the woodland's moves, but
+// starts with its signature. Late attacks keep both types in battle sets.
+const ASPEN: L = [[1, "vine_lash"], [1, "sap_seal"], [7, "pale_touch"], [12, "root_tap"], [17, "sap_drain"],
+  [22, "leaf_edge"], [27, "mist_veil"], [32, "bark_skin"], [37, "photosynthesise"], [42, "pale_bloom"],
+  [46, "leaf_gale"], [54, "old_growth"]];
+// Four starting moves keep Many Trunks in the legendary's level-60 encounter.
+const ELDER: L = [[1, "many_trunks"], [1, "root_tap"], [1, "pale_bloom"], [1, "bark_skin"],
+  [65, "old_growth"], [70, "photosynthesise"]];
 
 const ALL: Species[] = [
   // ------------------------------------------------------------- starters
@@ -648,6 +659,20 @@ const ALL: Species[] = [
   sp({ id: "lithops_bloom", name: "Living Stone", line: "lithops", stage: 3, types: ["thorn", "bloom"],
     base: st(75, 65, 140, 55, 135, 20), rate: "medium", catchRate: 45, baseExp: 196, ev: { def: 2, spd: 1 },
     activity: "day", learnset: learn(LITHOPS, [[1, "pollen_puff"], [34, "sunbeam"]]) }),
+
+  // ============================================================== Chapter 10
+  // ------------------------------------------------------------- aspen (balanced, slightly higher special defence)
+  sp({ id: "aspen_sucker", name: "Aspen Sucker", line: "aspen", stage: 1, types: ["wood", "ghost"],
+    base: st(55, 55, 50, 55, 65, 50), rate: "medium", catchRate: 120, baseExp: 72, ev: { spd: 1 },
+    grows: ["quaking_aspen", vigor(42)], learnset: learn(ASPEN) }),
+  sp({ id: "quaking_aspen", name: "Aspen", line: "aspen", stage: 2, types: ["wood", "ghost"],
+    base: st(85, 80, 80, 80, 95, 80), rate: "medium", catchRate: 45, baseExp: 190, ev: { spd: 2 },
+    learnset: learn(ASPEN, [[50, "many_trunks"]]) }),
+
+  // ------------------------------------------------------------- the Elder (legendary HP/special-defence wall, low speed)
+  sp({ id: "elder", name: "The Elder", line: "elder", stage: 1, types: ["wood", "ghost"],
+    base: st(160, 100, 100, 90, 160, 30), rate: "slow", catchRate: 3, baseExp: 255, ev: { hp: 1, spd: 2 },
+    learnset: learn(ELDER) }),
 ];
 
 export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;

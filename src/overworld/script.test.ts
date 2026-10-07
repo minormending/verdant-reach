@@ -3,6 +3,8 @@ import type {
   BattleOutcome, GameContext, GameData, GameState, Quickened, ScriptCmd, SpeciesId, WorldData,
 } from "../contracts";
 import { newGameState } from "../save";
+import { MARKS } from "../contracts";
+import { ifMarks } from "../world/build";
 import { runScript, scriptsAwardMark, type ScriptHost } from "./script";
 
 const world: WorldData = {
@@ -429,6 +431,43 @@ describe("round-3 script ops", () => {
     };
     expect(scriptsAwardMark(s, "sundew_mark")).toBe(true);
     expect(scriptsAwardMark(s, "bramble_mark")).toBe(false);
+  });
+
+  it("ifMarks opens the eight-mark gate only with every mark, regardless of order", async () => {
+    const { host, state, said } = setup();
+    const gate = ifMarks(MARKS, [{ op: "say", text: "open" }], [
+      { op: "say", text: "closed" }, { op: "movePlayer", path: ["right"] },
+    ]);
+    // Leader flags do not substitute for marks that were never awarded.
+    for (const leader of ["hollis", "nell", "flora", "morrow", "saguaro", "reyes", "signe", "rook"]) {
+      state.flags[`beat_${leader}`] = true;
+    }
+    for (const missing of MARKS) {
+      state.marks = MARKS.filter((m) => m !== missing);
+      await runScript(host, [gate]);
+      expect(said.at(-1), missing).toBe("closed");
+    }
+    expect(host.movePlayer).toHaveBeenCalledTimes(8);
+    state.marks = [...MARKS].reverse();
+    await runScript(host, [gate]);
+    expect(said.at(-1)).toBe("open");
+    expect(host.movePlayer).toHaveBeenCalledTimes(8);
+  });
+
+  it("duplicate marks cannot open the gate, and a missing else is a no-op", async () => {
+    const { host, state, said } = setup();
+    state.marks = Array.from({ length: 8 }, () => MARKS[0]);
+    await runScript(host, [ifMarks(MARKS, [{ op: "say", text: "open" }]), { op: "say", text: "after" }]);
+    expect(said).toEqual(["after"]);
+  });
+
+  it("ifMarks supports a smaller required set and static scans of either branch", async () => {
+    const { host, state, said } = setup();
+    const condition = ifMarks(["bramble_mark"], [{ op: "say", text: "yes" }], [{ op: "giveMark", mark: "sundew_mark" }]);
+    expect(scriptsAwardMark({ test: [condition] }, "sundew_mark")).toBe(true);
+    state.marks = ["bramble_mark"];
+    await runScript(host, [condition]);
+    expect(said).toEqual(["yes"]);
   });
 
   it("gives items with natural plurals", async () => {

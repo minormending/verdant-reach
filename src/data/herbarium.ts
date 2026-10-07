@@ -502,6 +502,19 @@ const LIST: HerbariumEntry[] = [
   // Source: https://en.wikipedia.org/wiki/Lithops
   h("lithops_bloom", "Lithops", "Living Stone", 0.05, 0.1,
     "It offers a quiet welcome home. Almost buried as it grows, it receives light through the translucent windows on its leaf tips."),
+  // ---------------------------------------------------------------- Chapter 10
+  // Fact: An aspen clone can have thousands of trunks on one shared root system.
+  // Source: https://en.wikipedia.org/wiki/Pando_(tree)
+  h("aspen_sucker", "Populus tremuloides", "Root Sucker", 0.5, 1,
+    "It reaches out as though an old friend is nearby. A single aspen clone can grow thousands of trunks from one shared root system."),
+  // Fact: An aspen clone can have thousands of trunks on one shared root system.
+  // Source: https://en.wikipedia.org/wiki/Pando_(tree)
+  h("quaking_aspen", "Populus tremuloides", "Quaking Aspen", 12, 450,
+    "Its leaves tremble when you come close. A single aspen clone can grow thousands of trunks from one shared root system."),
+  // Fact: An aspen clone can have thousands of trunks on one shared root system.
+  // Source: https://en.wikipedia.org/wiki/Pando_(tree)
+  h("elder", "Populus tremuloides", "Elder Clone", 24, 6000000,
+    "Every trunk turns toward you in welcome. A single aspen clone can grow thousands of trunks from one shared root system."),
 ];
 
 export const HERBARIUM = Object.fromEntries(LIST.map((e) => [e.species, e])) as Record<SpeciesId, HerbariumEntry>;

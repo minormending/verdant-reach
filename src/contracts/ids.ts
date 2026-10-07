@@ -61,6 +61,8 @@ export const SPECIES_IDS = [
   "dragon_seedling", "dragon_sapling", "dragon_tree",
   "pitaya_cutting", "dragon_fruit",
   "lithops_pebble", "lithops_pair", "lithops_bloom",
+  // Chapter 10
+  "aspen_sucker", "quaking_aspen", "elder",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 

@@ -29,6 +29,7 @@ const LIST: Move[] = [
   m("leaf_edge", "Leaf Edge", "wood", "physical", 70, 100, 15, "A razor leaf edge. High crit rate.", [{ kind: "high_crit" }]),
   m("gourd_slam", "Gourd Slam", "wood", "physical", 85, 90, 10, "Heavy gourd slam. May flinch.", [{ kind: "flinch", chance: 10 }]),
   m("seed_burst", "Seed Burst", "wood", "physical", 20, 100, 20, "Squirting-cucumber seeds. 2-5x.", [{ kind: "multi_hit", min: 2, max: 5 }]),
+  m("many_trunks", "Many Trunks", "wood", "physical", 25, 90, 10, "Shared roots strike 2-5 times.", [{ kind: "multi_hit", min: 2, max: 5 }]),
   m("timber", "Timber", "wood", "physical", 120, 100, 5, "Crashes down like a tree. Recoil.", [{ kind: "recoil", fraction: 1 / 3 }]),
   m("sap_drain", "Sap Drain", "wood", "special", 40, 100, 15, "Drinks sap. Heals half the damage.", [{ kind: "drain", fraction: 0.5 }]),
   m("sap_spout", "Sap Spout", "wood", "special", 75, 100, 15, "Sticky sap spouts. May slow foe.", [foe("spe", -1, 30)]),

@@ -1,7 +1,7 @@
 // Shared helpers for authoring world data: the tile legend, script shorthands
 // and small builders (item pickups, locked doors, signs).
 
-import type { Cond, Dir, ItemId, NpcDef, ScriptCmd, TileKey } from "../contracts";
+import type { Cond, Dir, ItemId, MarkId, NpcDef, ScriptCmd, TileKey } from "../contracts";
 
 /**
  * One legend for every map. `@` marks a structure footprint (the structure
@@ -119,6 +119,8 @@ export const ifFlags = (spec: Record<string, boolean>, then: ScriptCmd[], els?: 
   els ? { op: "if", when: when(spec), then, else: els } : { op: "if", when: when(spec), then };
 export const ifNight = (then: ScriptCmd[], els: ScriptCmd[]): ScriptCmd =>
   ({ op: "ifTime", time: ["night"], then, else: els });
+export const ifMarks = (marks: readonly MarkId[], then: ScriptCmd[], els?: ScriptCmd[]): ScriptCmd =>
+  els ? { op: "ifMarks", marks: [...marks], then, else: els } : { op: "ifMarks", marks: [...marks], then };
 export const moveNpc = (npc: string, ...path: Dir[]): ScriptCmd => ({ op: "moveNpc", npc, path });
 export const movePlayer = (...path: Dir[]): ScriptCmd => ({ op: "movePlayer", path });
 export const face = (who: string, dir: Dir | "toPlayer"): ScriptCmd => ({ op: "face", who, dir });

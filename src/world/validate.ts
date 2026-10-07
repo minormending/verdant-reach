@@ -429,7 +429,7 @@ function progress(world: WorldData) {
           case "trade": branch(c.then ?? []); branch(c.else ?? []); break;
           case "choice": c.branches.forEach((b) => branch(b)); break;
           case "yesno": branch(c.yes); branch(c.no); break;
-          case "ifTime": case "ifLastBattle": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed":
+          case "ifTime": case "ifLastBattle": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed": case "ifMarks":
             branch(c.then); branch(c.else ?? []); break;
         }
       }
@@ -588,7 +588,7 @@ export function eachCmd(cmds: ScriptCmd[], fn: (c: ScriptCmd) => void) {
       case "trade":
         if (c.then) eachCmd(c.then, fn); if (c.else) eachCmd(c.else, fn); break;
       case "if": case "ifTime": case "ifLastBattle":
-      case "ifHasItem": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed":
+      case "ifHasItem": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed": case "ifMarks":
         eachCmd(c.then, fn); if (c.else) eachCmd(c.else, fn); break;
     }
   }
@@ -957,6 +957,9 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
         }
         break;
       case "giveMark": if (!marks.has(c.mark)) errs.push(`${at} unknown mark ${c.mark}`); break;
+      case "ifMarks":
+        for (const mark of c.marks) if (!marks.has(mark)) errs.push(`${at} unknown mark ${mark}`);
+        break;
       case "battle": if (!world.trainers[c.trainer]) errs.push(`${at} unknown trainer ${c.trainer}`); break;
       case "music": if (!music.has(c.id)) errs.push(`${at} unknown music ${c.id}`); break;
       case "sfx": if (!sfx.has(c.id)) errs.push(`${at} unknown sfx ${c.id}`); break;

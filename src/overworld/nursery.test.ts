@@ -32,6 +32,20 @@ function stateWith(...party: Quickened[]): GameState {
 }
 
 describe("nursery: boarding", () => {
+  it("the Elder cannot breed with another Elder or a woodland partner using its real groups", () => {
+    const elder = createQuickened(DATA, "elder", 60, seq(0.5));
+    const other = createQuickened(DATA, "elder", 60, seq(0.5));
+    const aspen = createQuickened(DATA, "quaking_aspen", 50, seq(0.5));
+    const sucker = createQuickened(DATA, "aspen_sucker", 30, seq(0.5));
+    expect(compatibility(DATA, sucker, aspen)).toBe(0.5);
+    for (const pair of [[elder, other], [elder, aspen], [aspen, elder]]) {
+      expect(compatibility(DATA, pair[0], pair[1])).toBe(0);
+      const state = stateWith();
+      state.nursery = { slots: pair, steps: SEED_CHECK_STEPS - 1, seedReady: false };
+      expect(nurseryStep(state, DATA, () => 0)).toBe(false);
+      expect(state.nursery.seedReady).toBe(false);
+    }
+  });
   it("boards a plant, remembers its level and charges $100 + $100 per level gained", () => {
     const st = stateWith(mk("oak_acorn", 10), mk("maple_samara", 12));
     expect(boardBlock(st, 1)).toBeNull();

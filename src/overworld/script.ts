@@ -399,6 +399,8 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       return host.stillClear?.();
     case "ifHasItem":
       return exec(host, hasItem(ctx.state, cmd.item, cmd.qty ?? 1) ? cmd.then : cmd.else, st);
+    case "ifMarks":
+      return exec(host, cmd.marks.every((mark) => ctx.state.marks.includes(mark)) ? cmd.then : cmd.else, st);
     case "ifPartyHas":
       return exec(host, partyHas(ctx.state, cmd.species) ? cmd.then : cmd.else, st);
     case "ifCaught":

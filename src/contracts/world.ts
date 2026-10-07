@@ -93,6 +93,8 @@ export type ScriptCmd =
   | { op: "showSpecies"; species: SpeciesId }             // big sprite pop-up (starter choice)
   | { op: "hideSpecies" }
   | { op: "giveMark"; mark: MarkId }
+  /** True only when every listed mark has been earned (Chapter 10 requires all eight). */
+  | { op: "ifMarks"; marks: MarkId[]; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "battle"; trainer: TrainerId; canLose?: boolean } // sets flag `beat_<trainer>` on win
   | { op: "wildBattle"; species: SpeciesId; level: number; sport?: boolean; canLose?: boolean }
   | { op: "ifLastBattle"; result: "won" | "lost"; then: ScriptCmd[]; else?: ScriptCmd[] }
