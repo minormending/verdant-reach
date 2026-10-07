@@ -31,7 +31,7 @@ if (!Number.isInteger(speed) || speed < 1 || speed > 16) {
 }
 
 const started = performance.now();
-// The full suite grows each chapter (99 beats through Chapter 6), including
+// The full suite grows each chapter (126 beats through Chapter 7), including
 // real grass/water catches and raft crossings. Allow room for alternate seeds.
 const timeoutMs = timeoutMin ? timeoutMin * 60_000 : Math.max(30 * 60_000, 150 * 60_000 / speed);
 const reportPath = new URL("./last-report.json", import.meta.url);
@@ -92,7 +92,7 @@ try {
     await sleep(1000, undefined, { signal: abort.signal });
   }
   const failures = report.beats.filter((b) => !b.ok).length;
-  if (report.beats.length !== 99) runnerIssues.push(`Expected all 99 beats; received ${report.beats.length}`);
+  if (report.beats.length !== 126) runnerIssues.push(`Expected all 126 beats; received ${report.beats.length}`);
   process.exitCode = failures === 0 && report.issues.length === 0 && runnerIssues.length === 0 ? 0 : 1;
 } catch (error) {
   runnerIssues.push(error.stack ?? String(error));
