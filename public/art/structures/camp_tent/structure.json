@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "camp_tent",
+  "image": "structure.png",
+  "size": [3, 2],
+  "credits": "Generated pixel art for Verdant Reach (Chapter 5 environment).",
+  "source": { "kind": "generated", "tool": "tools/art/env5/buildings.py" }
+}

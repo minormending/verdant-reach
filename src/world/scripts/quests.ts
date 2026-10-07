@@ -542,35 +542,35 @@ const fireFollowersCheck: ScriptCmd[] = [
   caught(FIREWEEDS, [flag("fire_followers_fireweed")]),
   caught(LODGEPOLES, [flag("fire_followers_lodgepole")]),
   ifFlags({ fire_followers_fireweed: true, fire_followers_lodgepole: true }, [
-    say("TODO(text): Both fire-following plant lines are recorded.", "RANGER"),
-    say("TODO(text): The ranger gives pods and Ember Ash.", "RANGER"),
+    say("FIREWEED and LODGEPOLE! The record's complete. The stand's coming back.", "RANGER"),
+    say("Here. Pods for the next ones, and a pinch of EMBER ASH.", "RANGER"),
     give("glass_pod", 3),
     give("ember_ash"),
     completeQuest("fire_followers"),
-    say("TODO(text): Fireweed returns first; heat opens sealed pine cones.", "RANGER"),
+    say("A fire isn't only an ending. Some plants wait their whole lives for one.", "RANGER"),
   ], [
     ifFlags({ fire_followers_fireweed: false }, [
-      say("TODO(text): Catch any stage of the fireweed line.", "RANGER"),
+      say("Still need a FIREWEED. Any stage. Try the fresh shoots.", "RANGER"),
     ]),
     ifFlags({ fire_followers_lodgepole: false }, [
-      say("TODO(text): Catch any stage of the lodgepole line.", "RANGER"),
+      say("Still need a LODGEPOLE. Even a sealed cone counts.", "RANGER"),
     ]),
   ]),
 ];
 const fireFollowers: ScriptCmd[] = [
   byQuest("fire_followers", {
     fresh: [
-      say("TODO(text): The ranger records plants returning after a fire.", "RANGER"),
-      say("TODO(text): Fireweed and lodgepole each recover differently.", "RANGER"),
-      say("TODO(text): Catch one from each line for the forest record.", "RANGER"),
-      say("TODO(text): Any growth stage counts; return for the reward.", "RANGER"),
+      say("I'm keeping a record of what comes back after a fire. FIRE FOLLOWERS, we call them.", "RANGER"),
+      say("FIREWEED blows in on the wind. LODGEPOLE waits in its cones all along.", "RANGER"),
+      say("Catch me one of each out at the BURNT STAND, would you?", "RANGER"),
+      say("Any stage will do. Seedling or full-grown, it all goes in the record.", "RANGER"),
       startQuest("fire_followers"),
       ...fireFollowersCheck,
     ],
     going: fireFollowersCheck,
     finished: [
-      say("TODO(text): The record shows life returning to the ash.", "RANGER"),
-      say("TODO(text): Ember Ash can open a sealed lodgepole cone.", "RANGER"),
+      say("Every week, a bit more green in the ash. It all goes in the book.", "RANGER"),
+      say("Got a sealed cone? Give it EMBER ASH. Heat's what it's been waiting for.", "RANGER"),
     ],
   }),
 ];
@@ -579,53 +579,54 @@ const fireFollowers: ScriptCmd[] = [
 // The offering is a visit to each shrine; §F specifies no item consumption.
 const shrineOfferingsCheck: ScriptCmd[] = [
   ifFlags({ shrine_1_offered: true, shrine_2_offered: true, shrine_3_offered: true }, [
-    say("TODO(text): The keeper thanks the player for all three visits.", "KEEPER"),
-    say("TODO(text): The keeper gives rain jars and a travel fund.", "KEEPER"),
+    say("All three tended. The old tree breathes easier for it.", "KEEPER"),
+    say("Take these. Rain off the cedar, and a little for the road.", "KEEPER"),
     give("rain_jar", 2),
     { op: "giveMoney", amount: 1500 },
     { op: "jingle", id: "item_get" },
-    say("TODO(text): The player receives fifteen hundred dollars.", "NARRATOR"),
+    say("<PLAYER> received $1500!"),
     completeQuest("shrine_offerings"),
-    say("TODO(text): The cedar's old rooms remember gentle visitors.", "KEEPER"),
+    say("Old trees remember who's gentle with them. So do old women.", "KEEPER"),
   ], [
-    say("TODO(text): Visit the three side-shrines using GLOW.", "KEEPER"),
-    say("TODO(text): Return to the keeper after visiting them all.", "KEEPER"),
+    say("Three shrines, back in the dark rooms. Your FOXFIRE will show the way.", "KEEPER"),
+    say("Come back once you've sat with all three.", "KEEPER"),
   ]),
 ];
 const shrineOfferings: ScriptCmd[] = [
   ifFlags({ got_lantern: true }, [
     byQuest("shrine_offerings", {
       fresh: [
-        say("TODO(text): Three shrines wait in the cedar's dark rooms.", "KEEPER"),
-        say("TODO(text): Carry the lantern to each and pay respects.", "KEEPER"),
-        say("TODO(text): The keeper offers a reward for all three visits.", "KEEPER"),
+        say("There are three little shrines in the dark rooms past this hall.", "KEEPER"),
+        say("Take your FOXFIRE to each one, and sit with it a while.", "KEEPER"),
+        say("My knees won't manage those steps any more. I'd be grateful.", "KEEPER"),
         startQuest("shrine_offerings"),
         ...shrineOfferingsCheck,
       ],
       going: shrineOfferingsCheck,
       finished: [
-        say("TODO(text): The keeper thanks the player for tending the shrines.", "KEEPER"),
-        say("TODO(text): The lantern still lights the old forest roads.", "KEEPER"),
+        say("The shrines are tended. I can hear the tree settle at night.", "KEEPER"),
+        say("Keep your FOXFIRE close. The old roads run further than you'd think.", "KEEPER"),
       ],
     }),
   ], [
-    say("TODO(text): A light is needed before tending the shrines.", "KEEPER"),
+    say("The shrines are back in the dark. You'd need a light first.", "KEEPER"),
   ]),
 ];
+const SHRINE_CARVINGS = ["a pine cone, its scales spread open", "a fern, still curled tight", "a flower, nodding low"];
 const shrineOffering = (n: number): ScriptCmd[] => [
   ifFlags({ got_lantern: true, quest_shrine_offerings_started: true }, [
     ifFlags({ [`shrine_${n}_offered`]: false }, [
-      say(`TODO(text): The lantern lights shrine ${n}'s old carving.`, "NARRATOR"),
+      say(`The FOXFIRE lights a carved post. Its carving: ${SHRINE_CARVINGS[n - 1]}.`),
       wait(20),
-      say(`TODO(text): The player pays respects at shrine ${n}.`, "NARRATOR"),
+      say("<PLAYER> sits quietly by the shrine for a while."),
       { op: "sfx", id: "pulse" },
       flag(`shrine_${n}_offered`),
-      say("TODO(text): A quiet pulse answers through the roots.", "NARRATOR"),
+      say("Far below, something in the roots hums back. Softly."),
     ], [
-      say("TODO(text): This shrine has already been tended.", "NARRATOR"),
+      say("This shrine's been tended. The moss on its ledge looks greener."),
     ]),
   ], [
-    say("TODO(text): Ask the keeper about the dark side-shrines.", "NARRATOR"),
+    say("A carved cedar post with a small ledge. The keeper might know of it."),
   ]),
 ];
 

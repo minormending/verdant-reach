@@ -214,7 +214,7 @@ describe("CEDARHALLOW: the lantern path", () => {
     expect(e.m.legend._).toBe("void");
     for (const a of [false, true]) for (const b of [false, true]) {
       const m = mapUnder(e.m, { cons4_lever_a: a, cons4_lever_b: b });
-      for (const sw of e.switches) expect(grid(m).tile(sw.x, sw.y)).toBe("floor_greenhouse");
+      for (const sw of e.switches) expect(grid(m).tile(sw.x, sw.y)).toBe("night_floor");
     }
   });
 });

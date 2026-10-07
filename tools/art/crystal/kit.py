@@ -77,6 +77,9 @@ WHITE_PARTS: dict[str, str] = {
     "dandelion_clock": "the seed clock is a white pappus sphere",
     "chili_blossom": "chili (Capsicum) flowers are white",
     "giant_water_lily": "Victoria water lilies open white on the first night",
+    "ghostpipe_stalk": "ghost pipe (Monotropa uniflora) has no chlorophyll: the whole plant is waxy white",
+    "ghostpipe_nodding": "ghost pipe (Monotropa uniflora) has no chlorophyll: the whole plant is waxy white",
+    "ghost_pipe": "ghost pipe (Monotropa uniflora) has no chlorophyll: the whole plant is waxy white",
 }
 
 SIZES = {"front": 56, "back": 48, "icon": 16}

@@ -26,6 +26,13 @@ export interface Arrangement {
   drumTone?: string;
   /** Drum fill on every Nth bar (default 8; 0 = none). */
   fillEvery?: number;
+  // Hand-written parts (full MML with their own tone headers) that replace the
+  // generated one, for textures the styles can't voice: bells between pad
+  // chords, water drips, a heartbeat, a tied drone. Each must fill exactly the
+  // same bars as the melody (the music tests check every bar).
+  harmonyLine?: string;
+  bassLine?: string;
+  drumLine?: string;
 }
 
 const ROOTS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
@@ -155,9 +162,9 @@ export function arrange(a: Arrangement): SongDef {
     bpm: a.bpm,
     loop: true,
     p1: a.melody,
-    p2: a.harmony === "none" ? undefined : `${a.harmonyTone ?? "v6 @1 q6"} ${harm.join(" ")}`,
-    wave: `${a.bassTone ?? "v15 q6"} ${bass.join(" ")}`,
-    noise: a.drums === "none" ? undefined : `${a.drumTone ?? "v9"} ${drums.join(" ")}`,
+    p2: a.harmonyLine ?? (a.harmony === "none" ? undefined : `${a.harmonyTone ?? "v6 @1 q6"} ${harm.join(" ")}`),
+    wave: a.bassLine ?? `${a.bassTone ?? "v15 q6"} ${bass.join(" ")}`,
+    noise: a.drumLine ?? (a.drums === "none" ? undefined : `${a.drumTone ?? "v9"} ${drums.join(" ")}`),
   };
   return def;
 }
