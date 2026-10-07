@@ -102,6 +102,9 @@ export const MAP_IDS = [
   "route_9", "larchmere", "larchmere_greenhouse", "larchmere_market", "bloom_lake", "larchmere_lodge", "rootstock_hideout_1", "rootstock_hideout_2", "larchmere_conservatory",
   // Chapter 8 (CH8.md §2 order)
   "relay_2f", "relay_3f", "relay_roof",
+  // Chapter 9 (CH9.md §4 order; the extra healing interior follows Route 11).
+  "route_10", "thistledown", "thistledown_greenhouse", "thistledown_market",
+  "thistledown_house", "route_11", "sanguine_greenhouse", "sanguine_ridge", "sanguine_conservatory",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -341,7 +344,7 @@ export type TrainerId = string;
 export type ScriptId = string;
 
 /** Pressed Marks (badges) available so far. */
-export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark", "cactus_mark", "mangrove_mark", "snowdrop_mark"] as const;
+export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark", "cactus_mark", "mangrove_mark", "snowdrop_mark", "resin_mark"] as const;
 export type MarkId = (typeof MARKS)[number];
 
 /** Full-screen 160x144 illustrations shown during key story beats. */

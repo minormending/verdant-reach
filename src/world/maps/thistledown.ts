@@ -1,0 +1,48 @@
+import type { MapDef } from "../../contracts";
+import { OUTDOOR, when } from "../build";
+
+export const thistledown: MapDef = {
+  id: "thistledown", name: "THISTLEDOWN", outdoor: true, music: "small_town", ambient: "leaves",
+  border: "cliff", legend: OUTDOOR,
+  tiles: [
+    "AAAAAAAAAAAAAA::AAAAAAAAAAAAAA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asss@@@@ssssss::sssssssssssssA",
+    "Asss@@@@ssssss::sssssssssssssA",
+    "Asss@@@@ssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asss@@@@ssssss::ssss@@@@sssssA",
+    "Asss@@@@ssssss::ssss@@@@sssssA",
+    "Asss@@@@ssssss::ssss@@@@sssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    ":::::::::::::::::::::::::::::A",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "Asssssssssssss::sssssssssssssA",
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  ],
+  structures: [
+    { key: "greenhouse", x: 4, y: 8 }, { key: "market", x: 20, y: 8 }, { key: "house_small", x: 4, y: 3 },
+  ],
+  warps: [
+    { x: 0, y: 17, to: "route_10", toX: 48, toY: 10, facing: "left" },
+    { x: 14, y: 0, to: "route_11", toX: 13, toY: 54, facing: "up" },
+    { x: 15, y: 0, to: "route_11", toX: 14, toY: 54, facing: "up" },
+    { x: 6, y: 10, to: "thistledown_greenhouse", toX: 5, toY: 7, facing: "up" },
+    { x: 21, y: 10, to: "thistledown_market", toX: 6, toY: 7, facing: "up" },
+    { x: 5, y: 5, to: "thistledown_house", toX: 4, toY: 6, facing: "up" },
+  ],
+  npcs: [{ id: "tumbleweed_sighting", sprite: "item_pickup", x: 3, y: 17, facing: "right", script: "ch9_tumbleweed", visibleWhen: when({ tumbleweed_seen: false }) }],
+  signs: [], triggers: [], onEnter: "ch9_arrival",
+};

@@ -5,6 +5,7 @@ import type { Scripts } from "./build";
 import { TRAINERS } from "./trainers";
 import { storyScripts } from "./scripts/story";
 import { act1Scripts } from "./scripts/act1";
+import { ch9Scripts } from "./scripts/ch9";
 import { ch8Scripts } from "./scripts/ch8";
 import { ch7Scripts } from "./scripts/ch7";
 import { ch6Scripts } from "./scripts/ch6";
@@ -72,6 +73,16 @@ import * as relay_2f from "./maps/relay_2f";
 import * as relay_3f from "./maps/relay_3f";
 import * as relay_roof from "./maps/relay_roof";
 
+import { route_10 } from "./maps/route_10";
+import { thistledown } from "./maps/thistledown";
+import { thistledown_greenhouse } from "./maps/thistledown_greenhouse";
+import { thistledown_market } from "./maps/thistledown_market";
+import { thistledown_house } from "./maps/thistledown_house";
+import { route_11 } from "./maps/route_11";
+import { sanguine_greenhouse } from "./maps/sanguine_greenhouse";
+import { sanguine_ridge } from "./maps/sanguine_ridge";
+import { sanguine_conservatory } from "./maps/sanguine_conservatory";
+
 const maps: Record<MapId, MapDef> = {
   player_home: player_home.player_home,
   herbarium: herbarium.herbarium,
@@ -131,6 +142,16 @@ const maps: Record<MapId, MapDef> = {
   glasshouse_conservatory: glasshouse_conservatory.glasshouse_conservatory,
   glasshouse_house: glasshouse_house.glasshouse_house,
   route_5: route_5.route_5,
+  // Chapter 9
+  route_10,
+  thistledown,
+  thistledown_greenhouse,
+  thistledown_market,
+  thistledown_house,
+  route_11,
+  sanguine_greenhouse,
+  sanguine_ridge,
+  sanguine_conservatory,
 };
 
 const mapScripts: Scripts[] = [
@@ -156,7 +177,7 @@ function mergeScripts(...all: Scripts[]): Scripts {
 
 export const WORLD: WorldData = {
   maps,
-  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, ch8Scripts, questScripts, ...mapScripts),
+  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, ch8Scripts, ch9Scripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
   quests: QUESTS,
   glide: [
@@ -168,6 +189,8 @@ export const WORLD: WorldData = {
     { map: "saltmarsh_harbour", x: 6, y: 12, facing: "down", name: "SALTMARSH HARBOUR" },
     { map: "driftseed_isle", x: 14, y: 13, facing: "down", name: "DRIFTSEED ISLE" },
     { map: "larchmere", x: 6, y: 12, facing: "down", name: "LARCHMERE" },
+    { map: "thistledown", x: 6, y: 11, facing: "down", name: "THISTLEDOWN" },
+    { map: "sanguine_ridge", x: 6, y: 12, facing: "down", name: "SANGUINE RIDGE" },
   ],
   // Prologue: the observation deck at night, beside DR. VALE.
   newGame: { map: "herbarium_roof", x: 5, y: 6, facing: "up", script: "prologue" },

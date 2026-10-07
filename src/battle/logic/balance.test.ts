@@ -91,6 +91,13 @@ const MILESTONES_R8: Record<string, Milestone> = {
   wren: { trainer: () => "wren", starterLevel: 44, extras: [["fireweed", 43], ["bladderwort", 43], ["campion_mound", 43]] },
   wren_r8: { trainer: () => "wren", starterLevel: 44, extras: [["skunk_cabbage", 43], ["prickly_pear", 43], ["edelweiss", 43]] },
 };
+// Chapter 9: two ordinary mixed parties of Chapter 5–9 catches at ~49.
+const MILESTONES_R9: Record<string, Milestone> = {
+  rook: { trainer: () => "rook", starterLevel: 49, extras: [["fireweed", 49], ["bladderwort", 48], ["dragon_tree", 48]] },
+  rook_r9: { trainer: () => "rook", starterLevel: 49, extras: [["skunk_cabbage", 49], ["larch", 48], ["lithops_bloom", 48]] },
+  rival_5: { trainer: (l) => `rival_5_${COUNTER[l]}`, starterLevel: 49, extras: [["fireweed", 49], ["bladderwort", 48], ["dragon_tree", 48]] },
+  rival_5_r9: { trainer: (l) => `rival_5_${COUNTER[l]}`, starterLevel: 49, extras: [["skunk_cabbage", 49], ["larch", 48], ["lithops_bloom", 48]] },
+};
 const THIRD_STARTER: Record<Line, SpeciesId> = { oak: "great_oak", chili: "red_chili", lily: "giant_water_lily" };
 
 // Route 4, the Palm House, Route 5 and the Conservatory 3 juniors: ordinary
@@ -241,6 +248,23 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
     for (const rate of rates) expect(rate).toBeGreaterThan(0.25);
     expect(mean).toBeGreaterThanOrEqual(0.68);
     expect(mean).toBeLessThanOrEqual(0.80);
+  });
+
+  it("Chapter 9: Rook and Rival 5 occupy their prescribed bands", () => {
+    const rates = (id: string) => [id, `${id}_r9`].flatMap((k) =>
+      (["oak", "chili", "lily"] as Line[]).map((l) => winRate(l, MILESTONES_R9[k], 300)));
+    const rook = rates("rook"), rival = rates("rival_5");
+    const mean = (r: number[]) => r.reduce((a, b) => a + b, 0) / r.length;
+    console.log(`rook mean: ${(mean(rook) * 100).toFixed(1)}%; rival_5 mean: ${(mean(rival) * 100).toFixed(1)}%`);
+    for (const r of [rook, rival]) {
+      console.log("Chapter 9 party rates (oak/chili/lily):", r.map((x) => (x * 100).toFixed(1)));
+      for (const rate of r) expect(rate).toBeGreaterThan(0.25);
+    }
+    expect(mean(rook)).toBeGreaterThanOrEqual(0.58);
+    expect(mean(rook)).toBeLessThanOrEqual(0.70);
+    expect(mean(rival)).toBeGreaterThanOrEqual(0.70);
+    expect(mean(rival)).toBeLessThanOrEqual(0.85);
+    expect(mean(rook)).toBeLessThan(mean(rival));
   });
 
   for (const [area, { ids, m }] of Object.entries(CH4_TRAINERS)) {

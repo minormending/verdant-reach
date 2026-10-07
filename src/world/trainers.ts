@@ -377,6 +377,43 @@ const ch8Trainers: TrainerDef[] = [
   ], ch8Lines("wren"), { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
+// Chapter 9 (CH9.md §5). Dialogue awaits the writing pass.
+const ch9Lines = (id: string) => ({
+  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
+});
+const ch9Trainers: TrainerDef[] = [
+  trainer("drifter_dune", "DUNE", "HIKER", "hiker", [T("prickly_pear", 43), T("lithops_pair", 42)], ch9Lines("drifter_dune")),
+  trainer("drifter_mesa", "MESA", "HIKER", "hiker", [T("saguaro", 44)], ch9Lines("drifter_mesa")),
+  trainer("botanist_sage2", "SAGE", "GARDENER", "gardener", [T("pitaya_cutting", 43), T("foxglove", 43)], ch9Lines("botanist_sage2")),
+  trainer("botanist_rue", "RUE", "GARDENER", "gardener", [T("lithops_pair", 43), T("dandelion_clock", 43)], ch9Lines("botanist_rue")),
+  trainer("climber_red", "RED", "HIKER", "hiker", [T("snapdragon_sprout", 44), T("larch", 45)], ch9Lines("climber_red")),
+  trainer("climber_ochre", "OCHRE", "HIKER", "hiker", [T("dragon_sapling", 45)], ch9Lines("climber_ochre")),
+  trainer("ranger_flint", "FLINT", "BIRDWATCHER", "birdwatcher", [T("dragon_fruit", 45), T("saguaro", 45)], ch9Lines("ranger_flint")),
+  trainer("ranger_shale", "SHALE", "BIRDWATCHER", "birdwatcher", [T("lithops_bloom", 46)], ch9Lines("ranger_shale")),
+  // Rival 5: all levels unchanged. Explicit learned moves replace late-game
+  // coverage and healing on the clock/maple/cedar, and reuse Rival 4's starter
+  // moves without its collar. Mean win 81.3%, minimum 41.7% (balance.test.ts).
+  ...STARTER_LINES.map((line) => trainer(`rival_5_${line}`, "BRAM", "RIVAL", "bram", [
+    T("blackberry", 46),
+    T("dandelion_clock", 46, ["wind_scatter", "sunbeam", "perfume"]),
+    T("sugar_maple", 47, ["samara_spin", "sap_spout", "sugar_rush", "hoarfrost"]),
+    T("red_cedar", 47, ["leaf_edge", "pale_touch", "sap_seal", "heartwood"]),
+    T(STARTER_SPECIES[line][2], 49, RIVAL_3_MOVES[line]),
+  ], ch9Lines(`rival_5_${line}`), { ai: "smart", prize: 4900 })),
+  trainer("jr_ember", "EMBER", "JR.GARDENER", "gardener", [T("snapdragon_sprout", 47), T("dragon_sapling", 47)], ch9Lines("jr_ember")),
+  trainer("jr_scale", "SCALE", "JR.GARDENER", "gardener", [T("pitaya_cutting", 47), T("lithops_pair", 48)], ch9Lines("jr_scale")),
+  // Rook: all levels -2 (49/50/50/53 → 47/48/48/51). Explicit learned moves
+  // keep Dragon Snap, Night Bloom, Stone Window and Dragon Resin, while
+  // removing repeated healing and broad late-game coverage. Mean win 63.8%,
+  // minimum 32.3%; final leader is harder than Rival 5 (balance.test.ts).
+  trainer("rook", "ROOK", "WARDEN", "hollis", [
+    T("snapdragon", 47, ["dragon_snap", "red_resin", "perfume"]),
+    T("dragon_fruit", 48, ["night_bloom", "spine_volley", "nectar_lure"]),
+    T("lithops_bloom", 48, ["thorn_lash", "stone_window", "bristle"]),
+    T("dragon_tree", 51, ["dragon_resin", "sap_seal", "bark_skin"]),
+  ], ch9Lines("rook"), { ai: "smart", music: "battle_leader", mark: "resin_mark", items: [{ item: "spring_water", qty: 2 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers, ...ch9Trainers].map((t) => [t.id, t]),
 );

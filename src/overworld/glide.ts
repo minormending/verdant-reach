@@ -2,7 +2,7 @@
 // Pure: callers persist the inferred visits when the overworld loads a map.
 import type { GameState, GlideDestination, MapDef, MapId, WorldData } from "../contracts";
 
-const TOWNS = ["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle", "larchmere"] as const;
+const TOWNS = ["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle", "larchmere", "thistledown", "sanguine_ridge"] as const;
 type TravelState = Pick<GameState, "flags" | "marks" | "position" | "heal" | "bag">;
 
 export const visitedTownFlag = (map: MapId): string => `visited_${map}`;
@@ -13,6 +13,9 @@ export const visitedTownFlag = (map: MapId): string => `visited_${map}`;
 export function visitedGlideMaps(state: TravelState): MapId[] {
   let furthest = 0; // Fallowfield is home, including the prologue on its roof.
   const fromMap = (map: MapId): number => {
+    if (map === "sanguine_ridge" || map.startsWith("sanguine_")) return 9;
+    if (map === "thistledown" || map.startsWith("thistledown_") || map === "route_11") return 8;
+    if (map === "route_10" || map.startsWith("relay_")) return 7;
     if (map === "larchmere" || map.startsWith("larchmere_") || map === "bloom_lake" || map.startsWith("rootstock_hideout_")) return 7;
     if (map === "route_9") return 6; // the cleared pass proves Chapter 6, not Larchmere arrival
     if (map === "driftseed_isle" || map.startsWith("driftseed_")) return 6;
@@ -35,6 +38,8 @@ export function visitedGlideMaps(state: TravelState): MapId[] {
     ["ch6_arrived", "ch6_doctor_met", "got_raft"],
     ["got_saxifrage", "beat_saguaro", "got_sap", "lantern_healed", "beat_reyes", "ch6_done"],
     ["ch7_arrived", "lodge_grunt_seen", "beat_calloway", "lake_calmed", "beat_signe", "ch7_done"],
+    ["ch9_arrived", "tumbleweed_seen", "rival_5_done"],
+    ["beat_rook", "got_fig_root", "ch9_done"],
   ];
   TOWNS.forEach((map, i) => {
     if (state.flags[visitedTownFlag(map)] || evidence[i].some((flag) => state.flags[flag])) furthest = Math.max(furthest, i);
@@ -42,6 +47,7 @@ export function visitedGlideMaps(state: TravelState): MapId[] {
   for (const [i, mark] of ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark"].entries()) {
     if (state.marks.some((m) => m === mark)) furthest = Math.max(furthest, i + 1);
   }
+  if (state.marks.includes("resin_mark")) furthest = Math.max(furthest, 9);
   if (state.marks.includes("snowdrop_mark")) furthest = Math.max(furthest, 7);
   if (state.marks.includes("mangrove_mark")) furthest = Math.max(furthest, 6);
   if (state.marks.includes("cactus_mark")) furthest = Math.max(furthest, 6);

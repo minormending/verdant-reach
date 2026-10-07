@@ -91,7 +91,7 @@ export async function saveDialog(ctx: GameContext, prompt = "Would you like to s
 // Pressed Mark emblem (art if present, else a drawn pressed-leaf card)
 // ---------------------------------------------------------------------------
 
-const MARK_ART: Record<MarkId, "mark_bramble" | "mark_sundew" | "mark_rose" | "mark_pipe" | "mark_cactus" | "mark_mangrove" | "mark_snowdrop"> = { bramble_mark: "mark_bramble", sundew_mark: "mark_sundew", rose_mark: "mark_rose", pipe_mark: "mark_pipe", cactus_mark: "mark_cactus", mangrove_mark: "mark_mangrove", snowdrop_mark: "mark_snowdrop" };
+const MARK_ART: Record<MarkId, "mark_bramble" | "mark_sundew" | "mark_rose" | "mark_pipe" | "mark_cactus" | "mark_mangrove" | "mark_snowdrop" | "mark_resin"> = { bramble_mark: "mark_bramble", sundew_mark: "mark_sundew", rose_mark: "mark_rose", pipe_mark: "mark_pipe", cactus_mark: "mark_cactus", mangrove_mark: "mark_mangrove", snowdrop_mark: "mark_snowdrop", resin_mark: "mark_resin" };
 
 /** One Pressed Mark slot (18x18): the mark's art when owned, else an empty card. */
 export function drawMarkSlot(g: CanvasRenderingContext2D, ctx: GameContext, mark: MarkId | null, x: number, y: number) {
