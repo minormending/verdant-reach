@@ -1949,44 +1949,48 @@ export async function solveGroveLanes(north = true): Promise<boolean> {
  * outcome. Pods compress resupply only; catch rolls use the game's seeded RNG.
  * If the first attempt fails, prove it remains and talk again exactly once. */
 export async function challengeElder(): Promise<boolean> {
-  const st = ctx().state;
+  // A whiteout replaces the state object: always read it fresh.
+  let st = ctx().state;
+  const fail = (why: string) => { issue("elder", `${why}: map=${ow()?.mapId} visible=${visible()} caught=${flag("elder_caught")} pos=${JSON.stringify(st.position)} heal=${JSON.stringify(st.heal)}`); return false; };
   const visible = () => {
     const o = ow(), elder = o?.npcs.find((n) => n.id === "the_elder");
     return o?.mapId === "elder_grove_heart" && !!elder && o.visible(elder);
   };
   const caught = () => flag("elder_caught") && st.herbarium.caught.includes("elder")
     && [...st.party, ...st.box].some((q) => q.species === "elder") && !visible();
-  if (!visible() || flag("elder_caught")) return false;
+  if (!visible() || flag("elder_caught")) return fail("check 1");
   captureLine = "elder";
   capturePod = "glass_pod";
   try {
     for (let attempt = 0; attempt < 2; attempt++) {
+      st = ctx().state;
       st.bag.glass_pod = Math.max(st.bag.glass_pod ?? 0, 30);
       const before = report.battles.length, texts = report.texts.length, pods = st.bag.glass_pod;
       const money = st.money, heal = { ...st.heal };
-      if (!(await talkTo("the_elder"))) return false;
+      if (!(await talkTo("the_elder"))) return fail("check 2");
       // Walking back after a whiteout can cross grass: count only the Elder's battle.
       const battles = report.battles.slice(before).filter((b) => b.request.wild?.species === "elder");
       const battle = battles[0];
       if (battles.length !== 1 || battle?.request.kind !== "wild"
         || battle.request.wild?.level !== 60 || battle.request.canLose !== true || !battle.outcome
         || (st.bag.glass_pod ?? 0) >= pods
-        || !report.texts.slice(texts).some((t) => t.text.toUpperCase().includes("USED GLASS POD"))) return false;
+        || !report.texts.slice(texts).some((t) => t.text.toUpperCase().includes("USED GLASS POD"))) return fail("check 3");
       if (battle.outcome === "caught") return caught();
+      st = ctx().state;
       if (battle.outcome === "lost") {
         if (st.position.map !== heal.map || st.position.x !== heal.x || st.position.y !== heal.y
           || st.money !== money - Math.floor(money / 2)
-          || !st.party.every((q) => q.seed || q.hp === q.stats.hp && q.status === null)) return false;
+          || !st.party.every((q) => q.seed || q.hp === q.stats.hp && q.status === null)) return fail("check 4");
         if (ow()?.mapId !== "elder_grove_3") {
           await nav("elder_grove_2");
-          if (!(await solveGroveLanes())) return false;
+          if (!(await solveGroveLanes())) return fail("check 5");
         }
         await nav("elder_grove_heart");
       }
-      if (flag("elder_caught") || !visible() || st.herbarium.caught.includes("elder")) return false;
+      if (flag("elder_caught") || !visible() || st.herbarium.caught.includes("elder")) return fail("check 6");
       refreshHelper();
     }
-    return visible() && !flag("elder_caught");
+    return visible() && !flag("elder_caught") ? true : fail("check 7 (after retries)");
   } finally { captureLine = null; capturePod = "terrarium_pod"; }
 }
 
