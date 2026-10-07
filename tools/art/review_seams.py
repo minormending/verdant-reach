@@ -63,8 +63,9 @@ def main():
     REVIEW.mkdir(parents=True, exist_ok=True)
     report = ['# Tile seam review', '', f'Baseline: `{args.ref}`. Every changed cell appears in a 3×3 repeat at 4×, before/after.',
               'Mixed cards additionally show reciprocal masks in a 3×3 patch.', '',
-              'Only boundary pixels changed, plus the wall face’s open-north rim (row 1, E2 → E1) to fit shared wood trim.',
-              'All other interior pixels and all tileset palettes are unchanged.',
+              'Connected textures continue their courses and motifs; some authored textures shift phase so tile boundaries lie inside a course.',
+              'Silhouette quadrants may fold interior hues to retain four colours while preserving the connected texture.',
+              'See [the QA cross-patch sheet](seams_patch.png) for the final main/after review and [revision measurements](seams_revision.md) for every key revised after the lead review.',
               'Every generated 8×8 quadrant retains at most four colours.', '']
     overview = []
     for path in sorted((ROOT / 'public/art/tilesets').glob('*/tileset.json')):
@@ -80,10 +81,6 @@ def main():
             continue
         assert set(map(tuple, old_sheet.reshape(-1, 4))) == set(map(tuple, new_sheet.reshape(-1, 4))), tid
         for s, a in after.items():
-            interior = before[s][1:15, 1:15].copy()
-            if tid == 'interior' and s in ('wall@0', 'wall@2', 'wall@8', 'wall@10'):
-                interior[0] = (232, 216, 176, 255)  # existing E1, the lit wallpaper rim
-            assert np.array_equal(interior, a[1:15, 1:15]), (tid, s)
             for y in (0, 8):
                 for x in (0, 8):
                     assert len(np.unique(a[y:y+8, x:x+8].reshape(-1, 4), axis=0)) <= 4, (tid, s)

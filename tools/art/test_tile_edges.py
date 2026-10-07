@@ -98,6 +98,28 @@ class EdgeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             join_edges(before, edge_colours={'grass': (99,)})
 
+    def test_texture_keeps_donor_and_folds_other_quadrants(self):
+        before = variants()
+        before['grass@2'][:] = 4
+        rgba = np.array([(i*30, i*30, i*30, 255) for i in range(5)], np.uint8)
+        snapshot = {s: a.copy() for s, a in before.items()}
+        out = join_edges(before, palette=rgba, texture=('grass',))
+        for suffix in ('', '__2'):
+            donor = before[f'grass@15{suffix}']
+            np.testing.assert_array_equal(out[f'grass@15{suffix}'], donor)
+            for m in range(16):
+                a = out[f'grass@{m}{suffix}']
+                for bit, edge, source in ((1, a[0], donor[0]), (2, a[:, -1], donor[:, -1]),
+                                          (4, a[-1], donor[-1]), (8, a[:, 0], donor[:, 0])):
+                    if m & bit:
+                        np.testing.assert_array_equal(edge, source)
+                for y in (0, 8):
+                    for x in (0, 8):
+                        self.assertLessEqual(len(np.unique(a[y:y+8, x:x+8])), 4)
+        for s, a in join_edges(dict(reversed(list(before.items()))), palette=rgba, texture=('grass',)).items():
+            np.testing.assert_array_equal(a, out[s])
+            np.testing.assert_array_equal(before[s], snapshot[s])
+
 
 if __name__ == '__main__':
     unittest.main()

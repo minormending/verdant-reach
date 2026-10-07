@@ -194,6 +194,27 @@ def seam(tile):
     return result('warn', max(x, y) > SEAM_THRESHOLD, f'x={x:.2f}/y={y:.2f}', horizontal=x, vertical=y)
 
 
+def grid_artifact(before, after):
+    """Warn when a 4x4 repeat gains strong tile-size Fourier components.
+
+    Absolute (not variance-normalized) RGB/alpha energy avoids flagging a
+    quieter texture merely because its remaining detail is more periodic.
+    Include diagonal components to catch repeated dots as well as borders.
+    """
+    def energy(tile):
+        block = np.tile(tile, (4, 4, 1)).astype(float)
+        signal = np.concatenate((block[..., :3] * block[..., 3:4]/255.,
+                                 block[..., 3:4]), axis=-1)
+        spectrum = np.fft.fft2(signal, axes=(0, 1))/(block.shape[0]*block.shape[1])
+        return float(sum(np.abs(spectrum[y, x])**2 for y in (0, 4, -4)
+                         for x in (0, 4, -4) if x or y).mean())
+    old, new = energy(before), energy(after)
+    return result('warn', new > old*1.75 and new-old > 4,
+                  f'16px energy={old:.2f}->{new:.2f}', before_energy=old,
+                  after_energy=new, ratio=new/old if old else None,
+                  delta=new-old)
+
+
 def autotile_edges(variants):
     """Compare every reciprocal N/E/S/W neighbour, including corner bits.
 

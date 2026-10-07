@@ -146,6 +146,49 @@ class IntegrationTests(unittest.TestCase):
             with Image.open(out) as image:
                 self.assertEqual(image.size, (396, 56))
 
+    def test_cross_uses_runtime_masks_and_base_fallback_at_two_times(self):
+        def cell(c):
+            return np.full((16, 16, 4), (*c, 255), np.uint8)
+        t = {'base': [cell((0, 0, 255))], 'alts': [],
+             'masks': {15: [cell((255, 0, 0))], 13: [cell((0, 255, 0))]}}
+        im = qa.cross_patch(t)
+        self.assertEqual(im.size, (288, 160))
+        # Top joins out of bounds (mask 13 at the eastern edge of the stem).
+        self.assertEqual(im.getpixel((6*32+16, 16)), (0, 255, 0, 255))
+        self.assertEqual(im.getpixel((4*32+16, 16)), (255, 0, 0, 255))
+        self.assertEqual(im.getpixel((2*32+16, 16)), (0, 0, 255, 255))
+        self.assertEqual(im.getpixel((16, 16)), (120, 160, 90, 255))
+
+    def test_patch_filters_unchanged_keys_not_just_changed_sheets(self):
+        def tile(c):
+            return {'base': [np.full((16, 16, 4), (*c, 255), np.uint8)],
+                    'alts': [], 'masks': {}}
+        before = {'grass': tile((0, 180, 0)), 'path': tile((180, 180, 0)),
+                  'sign': tile((0, 0, 255))}
+        after = {**before, 'grass': tile((255, 0, 0)), 'sign': tile((255, 0, 255))}
+        with tempfile.TemporaryDirectory() as temp, patch.object(qa, 'load_tiles', side_effect=[before, after]):
+            out = Path(temp)/'patch.png'
+            qa.patch_sheet(['tilesets/terrain'], 'main', out)
+            im = Image.open(out)
+            self.assertEqual(im.size, (616, 216))  # one row, grass only
+            a = np.asarray(im)
+            self.assertTrue(np.any(np.all(a == (255, 0, 0), axis=-1)))
+            self.assertFalse(np.any(np.all(a == (180, 180, 0), axis=-1)))
+            self.assertFalse(np.any(np.all(a == (255, 0, 255), axis=-1)))
+
+    def test_patch_handles_added_removed_and_no_changed_keys(self):
+        t = {'base': [np.full((16, 16, 4), 255, np.uint8)], 'alts': [], 'masks': {}}
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp)/'patch.png'
+            with patch.object(qa, 'load_tiles', side_effect=[{'grass': t}, {'path': t}]):
+                qa.patch_sheet(['tilesets/terrain'], 'HEAD', out)
+            with Image.open(out) as im:
+                self.assertEqual(im.height, 424)
+            with patch.object(qa, 'load_tiles', side_effect=[{'grass': t}, {'grass': t}]):
+                qa.patch_sheet(['tilesets/terrain'], 'HEAD', out)
+            with Image.open(out) as im:
+                self.assertEqual(im.height, 56)
+
 
 if __name__ == '__main__':
     unittest.main()

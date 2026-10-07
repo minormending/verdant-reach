@@ -202,7 +202,11 @@ def tiers() -> np.ndarray:
     return a[16:32].copy()
 
 
-TIERS = tiers()
+TIERS = tiers()  # shared structure texture keeps its original registration
+JOINED_TIERS = np.roll(TIERS, (2, 1), axis=(0, 1))
+# Choose a cut through the overlapping sprays, then continue the two matching
+# 8px boughs through it. This retains their smaller repeat, not a 16px border.
+JOINED_TIERS[2::8, 0::8] = c("FR1")
 # fir-tip silhouette along an open north edge (inset per column, 16 wide)
 TIPS_N = [3, 2, 1, 2, 3, 3, 2, 0, 1, 2, 3, 2, 1, 2, 3, 3]
 SIDE_W = [2, 1, 1, 2, 2, 1, 0, 1, 2, 2, 1, 1, 2, 1, 1, 2]
@@ -255,7 +259,7 @@ def oldgrowth(mask: int) -> np.ndarray:
                     cy = 3.5 if y < 8 else (HEM_S[x] - 4.5)
                     if (x - cx) ** 2 + (y - cy) ** 2 > 16 and ((x < 4) == (cx < 8)):
                         ins[y, x] = False
-    a = np.where(ins, TIERS, MOSS)
+    a = np.where(ins, JOINED_TIERS, MOSS)
     o_rim, i_nw, i_se = rims(ins, mask)
     a[i_se] = c("FR3")
     a[i_nw & (a == c("FR2"))] = c("FR3")
@@ -329,14 +333,14 @@ for m in MASKS:
 emit("canopy_drop", DROP)
 
 
-# --- canopy walkway: weathered silver planks across the line of travel ----
+# --- canopy walkway: continuous weathered silver plank courses ------------
 def deck(horiz: bool) -> np.ndarray:
     a = np.zeros((16, 16), np.int16)
     for y in range(16):
         for x in range(16):
             u = x if horiz else y               # across-plank coordinate
             v = y if horiz else x               # along-plank coordinate
-            k = u % 4
+            k = (u + 2) % 4  # shared boundary falls within a plank
             col = ("WP0", "WP1", "WP1", "WP3")[k]
             if k == 2 and v % 8 == (6 if (u // 4) % 2 else 2):
                 col = "WP2"                     # a nail head / weathered split
@@ -351,8 +355,7 @@ DECK_V, DECK_H = deck(False), deck(True)
 
 def canopy_boardwalk(mask: int) -> np.ndarray:
     n, e, s_, w = sides(mask)
-    horiz = (e or w) and not (n or s_)
-    a = (DECK_H if horiz else DECK_V).copy()
+    a = DECK_V.copy()  # continuous courses through corners and junctions
     # the deck's edge beams on open sides; the south beam shows its depth
     if not n:
         a[0, :] = c("WP3")

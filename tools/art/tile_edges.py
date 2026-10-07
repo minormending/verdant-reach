@@ -2,9 +2,10 @@
 
 A connected boundary must not depend on perpendicular mask bits. Equalities
 include corners and missing-mask base fallbacks. Joined edges take their
-colours from the fully connected mask,
-subject to the four-colour quadrant budget. No interior pixel or
-palette colour is created. This is generator plumbing, not a PNG repair pass.
+colours from the fully connected mask, subject to the four-colour quadrant
+budget. The exact matcher only changes edges; the phase-preserving texture
+mode can fold silhouette-quadrant interior hues to retain the donor's joins.
+No palette colour is created. This is generator plumbing, not a PNG repair pass.
 """
 
 from collections import Counter, defaultdict
@@ -14,17 +15,23 @@ import numpy as np
 from artkit.sheets import group_stems
 
 
-def join_edges(images: dict[str, np.ndarray], repeat=(), palette=None, edge_colours=None) -> dict[str, np.ndarray]:
+def join_edges(images: dict[str, np.ndarray], repeat=(), palette=None, edge_colours=None, texture=()) -> dict[str, np.ndarray]:
     """Return copies with reciprocal connected edges and ground wraps equal.
 
     `repeat` explicitly lists repeatable ground keys. Open autotile sides are
     retained, except for corner pixels also belonging to a connected side.
     `palette` supplies RGBA colours for nearest-hue matching when a quadrant
     is full. `edge_colours` can restrict a key to an authored join/trim ramp.
+    `texture` preserves the fully connected texture's phase: each side uses
+    its corresponding donor side instead of forcing opposite sides equal.
+    Small residual differences are preferable to a stamped tile-size grid.
     """
     out = {stem: a.copy() for stem, a in images.items()}
     for key, group in group_stems(sorted(images)).items():
         if not group['mask'] and key not in repeat:
+            continue
+        if key in texture:
+            _continue_texture(images, out, group, palette)
             continue
         parent = {}
 
@@ -68,6 +75,47 @@ def join_edges(images: dict[str, np.ndarray], repeat=(), palette=None, edge_colo
         _colour_edges(images, out, list(classes.values()), donors, palette,
                       (edge_colours or {}).get(key))
     return out
+
+
+def _continue_texture(images, out, group, rgba):
+    """Keep the donor intact; extend each of its sides into joined variants.
+
+    On silhouette/trunk quadrants, fold interior hues only when necessary to
+    keep four colours. Never sacrifice the shared texture to a global border
+    palette constraint, which otherwise imprints those folds on mask 15.
+    """
+    for frame, base in group['base'].items():
+        donor = images[group['mask'].get(15, {}).get(frame, base)]
+        targets = defaultdict(set)
+        for mask in range(16):
+            stem = group['mask'].get(mask, {}).get(frame, base)
+            for bit in (1, 2, 4, 8):
+                if mask & bit:
+                    targets[stem].update((0, p) if bit == 1 else (p, 15) if bit == 2 else
+                                         (15, p) if bit == 4 else (p, 0) for p in range(16))
+        for stem in list(targets):
+            if stem != base and np.array_equal(images[stem], images[base]):
+                targets[base].update(targets[stem])
+        for stem, fixed in targets.items():
+            a = out[stem]
+            for y, x in fixed:
+                a[y, x] = donor[y, x]
+            for qy in (0, 8):
+                for qx in (0, 8):
+                    q = a[qy:qy+8, qx:qx+8]
+                    if len(np.unique(q)) <= 4:
+                        continue
+                    required = {int(a[y, x]) for y, x in fixed if qy <= y < qy+8 and qx <= x < qx+8}
+                    counts = Counter(map(int, q.flat))
+                    allowed = sorted(required)
+                    allowed += [c for c, _ in sorted(counts.items(), key=lambda p: (-p[1], p[0]))
+                                if c not in required][:4-len(required)]
+                    if len(allowed) > 4:
+                        raise ValueError('texture boundary exceeds four colours')
+                    for col in counts.keys() - set(allowed):
+                        match = min(allowed, key=lambda c: (abs(c-col) if rgba is None else
+                                    float(np.square(rgba[c, :3].astype(float)-rgba[col, :3]).sum()), c))
+                        q[q == col] = match
 
 
 def _colour_edges(images, out, classes, donors, rgba, allowed):
