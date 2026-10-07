@@ -95,7 +95,7 @@ try {
     await sleep(1000, undefined, { signal: abort.signal });
   }
   const failures = report.beats.filter((b) => !b.ok).length;
-  if (report.beats.length !== 183) runnerIssues.push(`Expected all 183 beats; received ${report.beats.length}`);
+  if (report.beats.length !== 184) runnerIssues.push(`Expected all 184 beats; received ${report.beats.length}`);
   process.exitCode = failures === 0 && report.issues.length === 0 && runnerIssues.length === 0 ? 0 : 1;
 } catch (error) {
   runnerIssues.push(error.stack ?? String(error));

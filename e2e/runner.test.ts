@@ -21,7 +21,7 @@ afterEach(() => {
 async function runMocked(options: { failBeat?: boolean; issue?: boolean; beats?: number; startupError?: boolean; headed?: boolean; seed?: number } = {}) {
   const report = {
     suite: "full", finished: true,
-    beats: Array.from({ length: options.beats ?? 183 }, (_, i) => ({ name: `beat ${i}`, t: i, ok: !(options.failBeat && i === 0) })),
+    beats: Array.from({ length: options.beats ?? 184 }, (_, i) => ({ name: `beat ${i}`, t: i, ok: !(options.failBeat && i === 0) })),
     issues: options.issue ? [{ kind: "test", msg: "problem", t: 1 }] : [],
     texts: [],
   };
@@ -54,11 +54,11 @@ async function runMocked(options: { failBeat?: boolean; issue?: boolean; beats?:
   return { saved, launch };
 }
 
-it("saves the full report and succeeds only for all 183 passing beats", async () => {
+it("saves the full report and succeeds only for all 184 passing beats", async () => {
   const { saved, launch } = await runMocked();
   expect(process.exitCode).toBe(0);
   expect(saved.finished).toBe(true);
-  expect(saved.beats).toHaveLength(183);
+  expect(saved.beats).toHaveLength(184);
   expect(saved.runner.issues).toEqual([]);
   expect(saved.seed).toBe(1);
   expect(saved.runner.seed).toBe(1);
