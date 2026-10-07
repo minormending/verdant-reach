@@ -73,7 +73,7 @@ it.each([0, 42, 4294967295])("records override seed %i for replay", async (seed)
   expect(saved.runner.time).toBe("day");
 });
 
-it.each([{ failBeat: true }, { issue: true }, { beats: 46 }, { beats: 73 }, { beats: 99 }, { beats: 125 }, { beats: 126 }, { beats: 143 }, { beats: 161 }, { beats: 162 }, { beats: 182 }, { beats: 184 }])("fails an unsuccessful or incomplete report: %j", async (options) => {
+it.each([{ failBeat: true }, { issue: true }, { beats: 46 }, { beats: 73 }, { beats: 99 }, { beats: 125 }, { beats: 126 }, { beats: 143 }, { beats: 161 }, { beats: 162 }, { beats: 182 }, { beats: 183 }, { beats: 185 }])("fails an unsuccessful or incomplete report: %j", async (options) => {
   await runMocked(options);
   expect(process.exitCode).toBe(1);
 });
