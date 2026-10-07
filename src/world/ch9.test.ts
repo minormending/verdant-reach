@@ -76,12 +76,11 @@ describe("Chapter 9 world", () => {
     expect(tryMove(runtime, 18, 35, "right").kind).toBe("walk");
   });
 
-  it("validates the root-gap stash once the next story wave wires the Fig Root reward", () => {
-    // Story scripts remain stubs in this wave. Model their promised reward to
-    // verify geometry and acquisition without weakening production validation.
+  it("validates the root-gap stash through Rook's actual Fig Root reward", () => {
+    // Chapter 8 remains staged with stub scripts. Model that prerequisite's
+    // completion while exercising Chapter 9's actual gated reward chain.
     const world = structuredClone(WORLD);
-    world.scripts.rook = [{ op: "call", script: "ch9_rook_after" }];
-    world.scripts.ch9_rook_after = [{ op: "giveItem", item: "fig_root" }, { op: "setFlag", flag: "got_fig_root" }];
+    world.scripts.ch8_arrival = [{ op: "setFlag", flag: "ch8_done" }];
     expect(checkProgressWithoutFigRoot(world)).toEqual([]);
     expect(validateWorld(world)).toEqual([]);
   });

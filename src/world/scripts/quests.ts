@@ -733,7 +733,44 @@ const lostClimber: ScriptCmd[] = [
   }),
 ];
 
+// --- WINDOW PANES: BOTANIST, THISTLEDOWN --------------------------------------
+const windowPanesCheck: ScriptCmd[] = [
+  caught(["lithops_pebble", "lithops_pair", "lithops_bloom"], [flag("window_panes_lithops")]),
+  caught(["lithops_bloom"], [flag("window_panes_bloom")]),
+  ifFlags({ window_panes_lithops: true, window_panes_bloom: true }, [
+    say("TODO(text): The botanist copies the living stones' records.", "BOTANIST"),
+    say("TODO(text): The botanist gives two rain jars and five glass pods.", "BOTANIST"),
+    give("rain_jar", 2),
+    give("glass_pod", 5),
+    completeQuest("window_panes"),
+    say("TODO(text): The botanist thanks the player for the survey.", "BOTANIST"),
+  ], [
+    ifFlags({ window_panes_lithops: false }, [
+      say("TODO(text): Catch any stage of the living stone line.", "BOTANIST"),
+    ]),
+    ifFlags({ window_panes_bloom: false }, [
+      say("TODO(text): Record a flowering Living Stone, LITHOPS BLOOM.", "BOTANIST"),
+    ]),
+  ]),
+];
+const windowPanes: ScriptCmd[] = [
+  byQuest("window_panes", {
+    fresh: [
+      say("TODO(text): The botanist studies three stages of living stones.", "BOTANIST"),
+      say("TODO(text): Record any living stone and a LITHOPS BLOOM.", "BOTANIST"),
+      say("TODO(text): Return with the records for rain jars and glass pods.", "BOTANIST"),
+      startQuest("window_panes"),
+      ...windowPanesCheck,
+    ],
+    going: windowPanesCheck,
+    finished: [
+      say("TODO(text): The botanist thanks the player for the living stone records.", "BOTANIST"),
+    ],
+  }),
+];
+
 export const questScripts: Scripts = {
+  q_window_panes: windowPanes,
   q_lost_climber: lostClimber,
   q_hand_pollinator: handPollinatorOffer,
   q_fire_followers: fireFollowers,
@@ -763,6 +800,14 @@ const isStarted = (q: string) => [{ flag: started(q), is: true }];
 const isDone = (q: string) => [{ flag: done(q), is: true }];
 
 export const QUESTS: Record<string, QuestDef> = {
+  window_panes: {
+    id: "window_panes", title: "WINDOW PANES", giver: "BOTANIST, THISTLEDOWN", area: "thistledown_house",
+    steps: [
+      { text: "Catch any LITHOPS stage.", doneWhen: [{ flag: "window_panes_lithops", is: true }] },
+      { text: "Catch a LITHOPS BLOOM.", doneWhen: [{ flag: "window_panes_bloom", is: true }] },
+    ],
+    reward: "2 RAIN JARS + 5 GLASS PODS",
+  },
   lost_climber: {
     id: "lost_climber", title: "LOST CLIMBER", giver: "MOUNTAINEER, ROUTE 9", area: "route_9",
     steps: [
