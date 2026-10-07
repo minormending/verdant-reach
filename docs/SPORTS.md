@@ -160,3 +160,12 @@ Chapter 6 saguaro line (set in `tools/art/crystal/saguaro.py`; palettes are dark
 | saguaro | blue-grey waxy bloom (unnamed colour interpretation) | The same unnamed blue-grey stem interpretation; white flowers and spine highlights remain white. No named cultivar or cristate shape is claimed. | `#405c68 #98b0b8 #f8f8f8` |
 
 Botanical references: [NPS, Saguaro Cactus](https://home.nps.gov/orpi/learn/nature/saguaro-cactus.htm) describes the protective waxy skin and nurse plants; [NPS, Saguaro Growth](https://home.nps.gov/sagu/learn/nature/saguaro-growth.htm) describes flower crowns on the stem and arms. These support the anatomy and waxy surface. The blue-grey palette and its drought-stressed appearance are an artistic interpretation: these references do not establish a named blue-grey form or a drought-induced colour change.
+
+Chapter 6 vanilla line (set in `tools/art/crystal/vanilla.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| vanilla_vine | 'Variegata' | Vanilla planifolia 'Variegata': fleshy green leaves striped creamy white. Crystal: a pale cream-green leaf face over olive-green shade and a green-brown stake; the existing longitudinal highlights suggest the striping. Palette swap only. | `#586040 #d0d8a0 #f8f8f8` |
+| vanilla_orchid | 'Variegata' | The same cream-striped Vanilla planifolia form as vanilla_vine. Leaf faces and orchid segments take pale cream-green; the stake and long green capsules retain an olive dark tone. Shared white stays reserved for rims and gloss, with identical geometry. | `#586040 #d0d8a0 #f8f8f8` |
+
+Botanical references: [University of California Riverside Botanic Gardens, Fall 2021 plant list](https://gardens.ucr.edu/sites/g/files/rcwecm4706/files/2021-09/Online%20Fall%202021%20Plant%20List%209.21.2021.pdf) lists Vanilla planifolia 'Variegata' with succulent leaves striped creamy white and pale yellow-green flowers. [UF/IFAS, Vanilla Growing in South Florida (HS1348)](https://ask.ifas.ufl.edu/publication/HS1348) describes the fleshy climbing vine, oval pointed leaves, aerial roots, cream-green flowers with a modified lip, and elongated green capsules. The exact cream-green palette is an artistic interpretation of variegation within two colour slots.
