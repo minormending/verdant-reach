@@ -50,7 +50,7 @@ function search(edges: Map<string, string[]>, starts: string[]) {
 
 describe("Chapter 10 world", () => {
   it("appends eight maps in the prescribed order and sizes", () => {
-    expect(MAP_IDS.slice(MAP_IDS.indexOf("route_12"))).toEqual(CH10);
+    expect(MAP_IDS.slice(MAP_IDS.indexOf("route_12"), MAP_IDS.indexOf("council_1"))).toEqual(CH10);
     const sizes = [[40, 36], [34, 28], [11, 9], [30, 30], [30, 30], [26, 26], [20, 20], [16, 12]];
     CH10.forEach((id, i) => {
       const m = WORLD.maps[id];

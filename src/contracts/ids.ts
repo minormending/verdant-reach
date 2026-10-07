@@ -115,6 +115,8 @@ export const MAP_IDS = [
   // Chapter 10 (CH10.md §4 order).
   "route_12", "council_arboretum", "arboretum_greenhouse", "elder_grove_1",
   "elder_grove_2", "elder_grove_3", "elder_grove_heart", "council_hall",
+  // Chapter 11 (CH11.md §3).
+  "council_1", "council_2", "council_3", "council_4", "keeper_hall", "fellowship_hall",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 

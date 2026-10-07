@@ -458,6 +458,19 @@ const ch10Trainers: TrainerDef[] = [
   ], ch10Lines("mercer"), { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 3 }] }),
 ];
 
+// Chapter 11 (CH11.md §4). Narrative is supplied by the next wave.
+const ch11Lines = (id: string) => ({
+  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
+});
+const council = { ai: "smart", music: "battle_leader", items: [{ item: "spring_water", qty: 2 }] } as const;
+const ch11Trainers: TrainerDef[] = [
+  trainer("belladonna", "BELLADONNA", "APOTHECARY", "florist", [T("foxglove", 58), T("oleander", 59), T("nightshade", 59), T("nightshade", 61)], ch11Lines("belladonna"), { ...council, items: [...council.items] }),
+  trainer("mimi_osa", "MIMI OSA", "SLEEPER", "researcher", [T("prayer_plant", 59), T("sensitive_plant", 60), T("moonflower", 60), T("sensitive_plant", 62)], ch11Lines("mimi_osa"), { ...council, items: [...council.items] }),
+  trainer("titus_arum", "TITUS ARUM", "ROTTER", "gentleman", [T("skunk_cabbage", 60), T("corpse_leaf", 60), T("pitcher_plant", 61), T("titan_arum", 63)], ch11Lines("titus_arum"), { ...council, items: [...council.items] }),
+  trainer("pyra", "PYRA", "KINDLER", "florist", [T("red_chili", 61), T("fireweed", 61), T("flame_lily", 62), T("lodgepole_pine", 63)], ch11Lines("pyra"), { ...council, items: [...council.items] }),
+  trainer("rowan", "ROWAN VALE", "KEEPER", "researcher", [T("quaking_aspen", 63), T("red_cedar", 63), T("dragon_tree", 64), T("moss_campion", 63), T("sacred_lotus", 64), T("great_oak", 66)], ch11Lines("rowan"), { ...council, items: [{ item: "spring_water", qty: 3 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers, ...ch9Trainers, ...ch10Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers, ...ch9Trainers, ...ch10Trainers, ...ch11Trainers].map((t) => [t.id, t]),
 );

@@ -5,6 +5,7 @@ import type { Scripts } from "./build";
 import { TRAINERS } from "./trainers";
 import { storyScripts } from "./scripts/story";
 import { act1Scripts } from "./scripts/act1";
+import { ch11Scripts } from "./scripts/ch11";
 import { ch10Scripts } from "./scripts/ch10";
 import { ch9Scripts } from "./scripts/ch9";
 import { ch8Scripts } from "./scripts/ch8";
@@ -93,6 +94,8 @@ import { elder_grove_3 } from "./maps/elder_grove_3";
 import { elder_grove_heart } from "./maps/elder_grove_heart";
 import { council_hall } from "./maps/council_hall";
 
+import { council_1, council_2, council_3, council_4, keeper_hall, fellowship_hall } from "./maps/council_seats";
+
 const maps: Record<MapId, MapDef> = {
   player_home: player_home.player_home,
   herbarium: herbarium.herbarium,
@@ -171,6 +174,7 @@ const maps: Record<MapId, MapDef> = {
   elder_grove_3,
   elder_grove_heart,
   council_hall,
+  council_1, council_2, council_3, council_4, keeper_hall, fellowship_hall,
 
 };
 
@@ -197,7 +201,7 @@ function mergeScripts(...all: Scripts[]): Scripts {
 
 export const WORLD: WorldData = {
   maps,
-  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, ch8Scripts, ch9Scripts, ch10Scripts, questScripts, ...mapScripts),
+  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, ch7Scripts, ch8Scripts, ch9Scripts, ch10Scripts, ch11Scripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
   quests: QUESTS,
   glide: [
