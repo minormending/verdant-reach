@@ -2,25 +2,10 @@
   "format": "verdant.character/1",
   "id": "boulder",
   "sheet": "sheet.png",
-  "frame": [
-    16,
-    16
-  ],
-  "rows": [
-    "down",
-    "up",
-    "left",
-    "right"
-  ],
-  "columns": [
-    "stand",
-    "stepA",
-    "stepB"
-  ],
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real character art before release."
+  "frame": [16, 16],
+  "rows": ["down", "up", "left", "right"],
+  "columns": ["stand", "stepA", "stepB"],
+  "credits": "Hand-authored original pixel art for Verdant Reach (Chapter 6 cast generator).",
+  "source": { "kind": "generated", "tool": "tools/art/cast6/chars6.py" },
+  "notes": "Static mossy grey pushable boulder, with a crack and top-left highlight; identical in every sheet cell."
 }
