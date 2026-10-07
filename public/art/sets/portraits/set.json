@@ -3,10 +3,14 @@
   "id": "portraits",
   "logicalDir": "assets/trainers",
   "images": {
+    "angler": { "file": "angler.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
     "arranger": { "file": "arranger.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
     "beekeeper": { "file": "beekeeper.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "birdwatcher": { "file": "birdwatcher.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "bram": { "file": "bram.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "brother_saguaro": { "file": "brother_saguaro.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
+    "calloway": { "file": "calloway.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
+    "diver": { "file": "diver.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
     "flora_vance": { "file": "flora_vance.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
     "florist": { "file": "florist.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "forager": { "file": "forager.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast5/portraits5.py" } },
@@ -22,6 +26,8 @@
     "orchardist": { "file": "orchardist.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
     "player_back": { "file": "player_back.png", "size": [48, 48], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "researcher": { "file": "researcher.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
+    "reyes": { "file": "reyes.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
+    "sailor": { "file": "sailor.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
     "schoolkid": { "file": "schoolkid.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "shears": { "file": "shears.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } }
   },

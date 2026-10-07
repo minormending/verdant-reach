@@ -1,0 +1,82 @@
+{
+  "format": "verdant.tileset/1",
+  "id": "coast",
+  "name": "Tidal Coast",
+  "tileSize": 16,
+  "sheet": "sheet.png",
+  "columns": 16,
+  "tiles": {
+    "beach_rock": { "base": 0 },
+    "driftwood": { "base": 1 },
+    "dry_grass": { "base": 2, "alts": [3, 4, 5] },
+    "fishing_net": { "base": 6 },
+    "salt_flat": { "base": 7, "alts": [8, 9, 10] },
+    "shell_scatter": { "base": 11, "alts": [12, 13, 14] },
+    "tide_pool": { "base": 15 },
+    "mangrove_roots": {
+      "base": 16,
+      "masks": {
+        "0": 32,
+        "1": 33,
+        "2": 34,
+        "3": 35,
+        "4": 36,
+        "5": 37,
+        "6": 38,
+        "7": 39,
+        "8": 40,
+        "9": 41,
+        "10": 42,
+        "11": 43,
+        "12": 44,
+        "13": 45,
+        "14": 46,
+        "15": 47
+      }
+    },
+    "pier": {
+      "base": 48,
+      "masks": {
+        "0": 64,
+        "1": 65,
+        "2": 66,
+        "3": 67,
+        "4": 68,
+        "5": 69,
+        "6": 70,
+        "7": 71,
+        "8": 72,
+        "9": 73,
+        "10": 74,
+        "11": 75,
+        "12": 76,
+        "13": 77,
+        "14": 78,
+        "15": 79
+      }
+    },
+    "seagrass_bed": {
+      "base": [80, 81],
+      "masks": {
+        "0": [96, 112],
+        "1": [97, 113],
+        "2": [98, 114],
+        "3": [99, 115],
+        "4": [100, 116],
+        "5": [101, 117],
+        "6": [102, 118],
+        "7": [103, 119],
+        "8": [104, 120],
+        "9": [105, 121],
+        "10": [106, 122],
+        "11": [107, 123],
+        "12": [108, 124],
+        "13": [109, 125],
+        "14": [110, 126],
+        "15": [111, 127]
+      }
+    }
+  },
+  "credits": "Original hand-pixelled Chapter 6 environment for Verdant Reach; no copied or traced game art.",
+  "source": { "kind": "generated", "tool": "tools/art/env6/tilesets.py" }
+}
