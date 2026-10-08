@@ -16,3 +16,4 @@ __pycache__/
 # LimeZu art (licensed, no redistribution): built locally, never committed (docs/RESTYLE.md §1)
 public/art/packs/limezu/
 tools/art/limezu/local.json
+tools/art/limezu/review/
