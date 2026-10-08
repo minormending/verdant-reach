@@ -1,3 +1,4 @@
+import * as skin from "../ui/skin";
 // Bag: ITEMS / PODS / KEY ITEMS pockets with USE / TOSS / CANCEL.
 // In battle it resolves with the chosen item (the battle applies it).
 
@@ -48,7 +49,7 @@ export function bagScreen(ctx: GameContext, opts: BagOpts): Promise<ItemId | nul
     clearScreen(g, "#e8f0d8");
     // Pocket label + vasculum (the botanist's collecting tin)
     g.fillStyle = UI.dark;
-    g.fillRect(0, 0, SIDE, 22);
+    skin.surface(g, "plain", 0, 0, SIDE, 22);
     POCKETS[pocket].name.forEach((n, i, a) => ctx.ui.drawText(g, n, SIDE / 2 - n.length * 4, (a.length > 1 ? 3 : 7) + i * 9, UI.white));
     drawVasculum(g, (SIDE - 40) / 2, 22 + slide, pocket);
     // the selected item, held up on a little tag
@@ -78,6 +79,8 @@ export function bagScreen(ctx: GameContext, opts: BagOpts): Promise<ItemId | nul
       for (const [i, r] of list.visibleRows()) {
         const y = 8 + r * 16;
         const id = ents[i];
+        skin.panel(g, "slot", { x: SIDE + 4, y: y - 3, w: SCREEN_W - SIDE - 8, h: 16 });
+        if (i === list.index) skin.focus(g, { x: SIDE + 4, y: y - 3, w: SCREEN_W - SIDE - 8, h: 16 });
         if (id === "__cancel") {
           ctx.ui.drawText(g, "CANCEL", SIDE + 16, y);
         } else {
@@ -87,7 +90,7 @@ export function bagScreen(ctx: GameContext, opts: BagOpts): Promise<ItemId | nul
           if (getItem(ctx.data, id).pocket !== "key") drawTextRight(ctx, g, `×${pad2(ctx.state.bag[id] ?? 0)}`, RIGHT, y);
         }
       }
-      drawCursor(ctx, g, SIDE + 8, 8 + (list.index - list.scroll) * 16, !!ui && ui.overlays.length > 0, list.frame);
+      if (!skin.skinOn()) drawCursor(ctx, g, SIDE + 8, 8 + (list.index - list.scroll) * 16, !!ui && ui.overlays.length > 0, list.frame);
       if (list.canScrollDown()) drawMoreArrow(ctx, g, RIGHT - 8, CONTENT_H - 12, frame);
       if (list.canScrollUp()) drawMoreArrow(ctx, g, RIGHT - 8, 2, frame, "up");
     }

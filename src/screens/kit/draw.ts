@@ -2,6 +2,7 @@
 // HP/EXP bars, species sprites (with a neat placeholder while art lands),
 // sport recolouring, silhouettes, pods and small icons.
 
+import * as skin from "../../ui/skin";
 import { SCREEN_W, SCREEN_H } from "../../contracts";
 
 import type { GameContext, SpeciesId, SpeciesSpriteKind, StatusId, TypeId } from "../../contracts";
@@ -47,7 +48,7 @@ const TINY: Record<string, string> = {
 
 /** Draw tiny 3x5 text; each glyph advances 4px. */
 export function drawTiny(g: CanvasRenderingContext2D, text: string, x: number, y: number, color: string = UI.black): number {
-  g.fillStyle = color;
+  g.fillStyle = skin.textColor(g, x, y, color);
   let cx = Math.round(x);
   for (const ch of text.toUpperCase()) {
     const bits = TINY[ch] ?? TINY[" "];
@@ -90,6 +91,7 @@ export function hpColor(frac: number): string {
 
 /** HP bar: "HP" tab then a framed bar `w` px wide (fill area). */
 export function drawHpBar(g: CanvasRenderingContext2D, x: number, y: number, hp: number, max: number, w = 48) {
+  if (skin.bar(g, "hp", { x: x + 8, y, w: w + 2, h: 7 }, max > 0 ? hp / max : 0)) { drawTiny(g, "HP", x, y + 1); return; }
   drawHpLabel(g, x, y);
   const bx = x + 8;
   g.fillStyle = UI.black;
@@ -107,6 +109,7 @@ export function drawHpBar(g: CanvasRenderingContext2D, x: number, y: number, hp:
 
 /** EXP bar, filling right to left as in Crystal. */
 export function drawExpBar(g: CanvasRenderingContext2D, x: number, y: number, frac: number, w = 64, top = true) {
+  if (skin.bar(g, "exp", { x: x + 13, y, w: w - 13, h: 7 }, frac)) { drawTiny(g, "EXP", x, y + 1); return; }
   drawTiny(g, "EXP", x, y + 1);
   const bx = x + 13;
   const bw = w - 13;
@@ -133,11 +136,12 @@ export function cursorBob(frame: number): number {
 
 export function drawCursor(ctx: GameContext, g: CanvasRenderingContext2D, x: number, y: number, hollow = false, frame?: number) {
   const bob = hollow || frame === undefined ? 0 : cursorBob(frame);
+  if (skin.cursor(g, "arrow", x + bob, y)) return;
   ctx.ui.drawText(g, hollow ? "▷" : "▶", x + bob, y);
 }
 
 export function drawMoreArrow(ctx: GameContext, g: CanvasRenderingContext2D, x: number, y: number, frame: number, dir: "down" | "up" = "down") {
-  if (Math.floor(frame / 16) % 2 === 0) ctx.ui.drawText(g, dir === "down" ? "▼" : "▲", x, y);
+  if (Math.floor(frame / 16) % 2 === 0 && !skin.cursor(g, dir, x, y)) ctx.ui.drawText(g, dir === "down" ? "▼" : "▲", x, y);
 }
 
 /**
@@ -146,6 +150,7 @@ export function drawMoreArrow(ctx: GameContext, g: CanvasRenderingContext2D, x: 
  */
 const paperCache = new Map<string, HTMLCanvasElement>();
 export function drawPaper(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, tone: "cream" | "white" | "kraft" = "cream") {
+  if (skin.panel(g, "plain", { x, y, w, h })) return;
   const key = `${w}x${h}:${tone}`;
   let c = paperCache.get(key);
   if (!c) {
@@ -212,8 +217,9 @@ export function drawItemIcon(ctx: GameContext, g: CanvasRenderingContext2D, id: 
 
 /** Fill the whole screen with the menu background. */
 export function clearScreen(g: CanvasRenderingContext2D, color: string = UI.white) {
+  skin.beginSkinFrame(g);
   g.fillStyle = color;
-  g.fillRect(0, 0, SCREEN_W, SCREEN_H);
+  skin.surface(g, "plain", 0, 0, SCREEN_W, SCREEN_H);
 }
 
 /** Right-align text so it ends at `right`. */

@@ -1,3 +1,4 @@
+import * as skin from "../ui/skin";
 // NOTES: the quest log, styled as a pocket field notebook. The index is a
 // ruled page listing started quests (ticked when done); each note shows who
 // asked, where, the steps (ticked as their `doneWhen` holds) and the reward.
@@ -96,7 +97,7 @@ export function notesScreen(ctx: GameContext): Promise<void> {
       const sel = i === list.index;
       if (sel) {
         g.fillStyle = "#f8e898";
-        g.fillRect(23, y - 1, SCREEN_W - 23, 12);
+        skin.surface(g, "selection", 23, y - 1, SCREEN_W - 23, 12);
         g.fillStyle = "#f0d870";
         g.fillRect(23, y + 10, SCREEN_W - 23, 1);
       }
@@ -194,7 +195,7 @@ function noteDetail(ctx: GameContext, e: NoteEntry): Promise<void> {
 function header(g: CanvasRenderingContext2D, title: string, right?: string) {
   // green cloth spine with a stitched edge
   g.fillStyle = "#4a6a48";
-  g.fillRect(0, 0, SCREEN_W, 11);
+  skin.surface(g, "plain", 0, 0, SCREEN_W, 11);
   g.fillStyle = "#6a8a60";
   for (let x = 2; x < SCREEN_W; x += 4) g.fillRect(x, 9, 2, 1);
   drawTiny(g, title, 4, 3, "#f0e8c8");
@@ -203,6 +204,7 @@ function header(g: CanvasRenderingContext2D, title: string, right?: string) {
 
 /** A hand-drawn 7x7 box, ticked in green when done. */
 function checkbox(g: CanvasRenderingContext2D, x: number, y: number, done: boolean) {
+  if (done && skin.icon(g, "check_on", x, y, 7)) return;
   g.fillStyle = INK;
   g.fillRect(x, y, 7, 1); g.fillRect(x, y + 6, 7, 1); g.fillRect(x, y, 1, 7); g.fillRect(x + 6, y, 1, 7);
   g.fillStyle = UI.white;
@@ -215,6 +217,7 @@ function checkbox(g: CanvasRenderingContext2D, x: number, y: number, done: boole
 }
 
 function ribbon(g: CanvasRenderingContext2D, x: number, y: number) {
+  if (skin.cursor(g, "arrow", x, y)) return;
   g.fillStyle = "#c03838";
   g.fillRect(x, y - 1, 6, 9);
   g.fillStyle = "#e86060";

@@ -1,3 +1,4 @@
+import * as skin from "../ui/skin";
 // Field Herbarium (the Pokédex), styled as a botanist's pressed-specimen book:
 // the index is a ruled page with leaf markers for caught entries; each entry
 // is a mounted specimen sheet (pinned and taped, with a Latin-name label),
@@ -44,7 +45,7 @@ export function herbariumScreen(ctx: GameContext): Promise<void> {
     g.fillRect(0, FOOTER_Y - 1, SCREEN_W, 1);
     // header strip
     g.fillStyle = "#4a6a48";
-    g.fillRect(0, 0, SCREEN_W, 9);
+    skin.surface(g, "plain", 0, 0, SCREEN_W, 9);
     drawTiny(g, "FIELD HERBARIUM", 4, 2, "#f0e8c8");
     drawTiny(g, "INDEX", RIGHT - 16, 2, "#c8e0a8");
     if (!list) return;
@@ -62,7 +63,7 @@ export function herbariumScreen(ctx: GameContext): Promise<void> {
       if (sel) {
         // a highlighter stroke across the selected line
         g.fillStyle = "#f8e898";
-        g.fillRect(35, y - 1, SCREEN_W - 35, 12);
+        skin.surface(g, "selection", 35, y - 1, SCREEN_W - 35, 12);
         g.fillStyle = "#f0d870";
         g.fillRect(35, y + 10, SCREEN_W - 35, 1);
       }
@@ -80,13 +81,15 @@ export function herbariumScreen(ctx: GameContext): Promise<void> {
     // ribbon bookmark beside the selected line, bobbing
     const ry = 14 + (list.index - list.scroll) * ROW_H;
     const bob = cursorBob(frame);
-    g.fillStyle = "#c03838";
-    g.fillRect(SCREEN_W - 8, ry - 1 + bob, 6, 9);
-    g.fillStyle = "#e86060";
-    g.fillRect(SCREEN_W - 8, ry - 1 + bob, 2, 9);
-    g.fillStyle = "#c03838";
-    g.fillRect(SCREEN_W - 8, ry + 8 + bob, 2, 2);
-    g.fillRect(SCREEN_W - 4, ry + 8 + bob, 2, 2);
+    if (!skin.cursor(g, "arrow", SCREEN_W - 8, ry + bob)) {
+      g.fillStyle = "#c03838";
+      g.fillRect(SCREEN_W - 8, ry - 1 + bob, 6, 9);
+      g.fillStyle = "#e86060";
+      g.fillRect(SCREEN_W - 8, ry - 1 + bob, 2, 9);
+      g.fillStyle = "#c03838";
+      g.fillRect(SCREEN_W - 8, ry + 8 + bob, 2, 2);
+      g.fillRect(SCREEN_W - 4, ry + 8 + bob, 2, 2);
+    }
     if (list.canScrollDown()) drawMoreArrow(ctx, g, SCREEN_W - 16, FOOTER_Y - 9, frame);
     if (list.canScrollUp()) drawMoreArrow(ctx, g, SCREEN_W - 16, 9, frame, "up");
     // the count label, like a specimen label
@@ -169,7 +172,7 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
     g.fillStyle = "#c8b890";
     g.fillRect(lx + 2, ly + 2, lw, lh);
     g.fillStyle = "#fbf8ee";
-    g.fillRect(lx, ly, lw, lh);
+    skin.surface(g, "plain", lx, ly, lw, lh);
     g.fillStyle = INK;
     g.fillRect(lx, ly, lw, 1); g.fillRect(lx, ly + lh - 1, lw, 1); g.fillRect(lx, ly, 1, lh); g.fillRect(lx + lw - 1, ly, 1, lh);
     g.fillRect(lx + 2, ly + 11, lw - 4, 1);
@@ -203,7 +206,7 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
     g.fillStyle = "#c8b890";
     g.fillRect(bx + 2, by + 2, bw, bh);
     g.fillStyle = "#fbf8ee";
-    g.fillRect(bx, by, bw, bh);
+    skin.surface(g, "inset", bx, by, bw, bh);
     g.fillStyle = "#4a6a48";
     g.fillRect(bx, by, bw, 1); g.fillRect(bx, by + bh - 1, bw, 1); g.fillRect(bx, by, 1, bh); g.fillRect(bx + bw - 1, by, 1, bh);
     g.fillRect(bx + 2, by + 2, bw - 4, 1);

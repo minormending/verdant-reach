@@ -79,7 +79,14 @@ export interface CharacterBundle {
   source?: SourceInfo;
 }
 
-export interface ImageSetEntry { file: string; size?: [number, number]; source?: SourceInfo; credits?: string }
+export interface ImageSetEntry {
+  file: string; size?: [number, number]; source?: SourceInfo; credits?: string;
+  /** Measured left/top/right/bottom fixed caps, in source pixels. */
+  insets?: [number, number, number, number];
+  slice?: "nine" | "horizontal";
+  ink?: string;
+  fill?: string;
+}
 export interface ImageSetBundle {
   format: "verdant.imageset/1";
   id: string;

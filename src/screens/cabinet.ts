@@ -1,3 +1,4 @@
+import * as skin from "../ui/skin";
 // Specimen Cabinet (PC storage): move Quickened between party and box.
 
 import type { GameContext, Quickened } from "../contracts";
@@ -32,13 +33,14 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
     } else if (list) {
       const src = source();
       g.fillStyle = UI.dark;
-      g.fillRect(0, 0, SCREEN_W, 9);
+      skin.surface(g, "plain", 0, 0, SCREEN_W, 9);
       drawTiny(g, mode === "withdraw" ? `CABINET  ${src.length}` : `PARTY  ${src.length}/6`, 4, 2, UI.white);
       for (const [i, r] of list.visibleRows()) {
         const y = 14 + r * 16;
         const q = src[i];
         g.fillStyle = i === list.index ? "#f8f0b8" : r % 2 ? "#e4efe8" : "#d8e8e0";
-        g.fillRect(0, y - 4, HALF, 16);
+        skin.surface(g, "slot", 0, y - 4, HALF, 16);
+        if (i === list.index) skin.focus(g, { x: 0, y: y - 4, w: HALF, h: 16 });
         if (!q) {
           ctx.ui.drawText(g, "CANCEL", 24, y);
           continue;
@@ -50,7 +52,7 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
         if (!q.seed) drawLevel(ctx, g, q.level, HALF - 36, y);
       }
       const sy = 14 + (list.index - list.scroll) * 16;
-      drawCursor(ctx, g, 0, sy, ui.overlays.length > 0, list.frame);
+      if (!skin.skinOn()) drawCursor(ctx, g, 0, sy, ui.overlays.length > 0, list.frame);
       if (list.canScrollDown()) drawMoreArrow(ctx, g, HALF - 12, CONTENT_H - 12, frame);
       if (list.canScrollUp()) drawMoreArrow(ctx, g, HALF - 12, 10, frame, "up");
     }

@@ -3,6 +3,7 @@
 // interfaces it implements live in src/contracts/runtime.ts.
 
 import { FPS, SCREEN_H, SCREEN_W } from "../contracts";
+import { beginSkinFrame } from "../ui/skin";
 import type { Assets, Button, Input, Scene, SceneStack } from "../contracts";
 import { fitScreen } from "./screen";
 import { createArtAssets } from "../art";
@@ -147,6 +148,7 @@ export function runLoop(
     while (from > 0 && all[from].transparent) from--;
     g.fillStyle = "#000";
     g.fillRect(0, 0, SCREEN_W, SCREEN_H);
+    beginSkinFrame(g);
     for (let i = Math.max(0, from); i < all.length; i++) all[i].draw(g);
     schedule(frame);
   };

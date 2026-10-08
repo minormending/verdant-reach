@@ -1,3 +1,4 @@
+import * as skin from "../ui/skin";
 // Party menu: six rows (icon, name, level, HP bar, status), SUMMARY / SWITCH
 // / ITEM / CANCEL submenu, and a pick mode for battle and items.
 
@@ -54,7 +55,7 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
     // soft zebra rows; empty slots show as pale dashed plots
     for (let i = 0; i < 6; i++) {
       g.fillStyle = i % 2 ? "#eef4e2" : "#f8f8f0";
-      g.fillRect(0, partyRowY(i), SCREEN_W, ROW_H);
+      skin.surface(g, "slot", 0, partyRowY(i) - (skin.skinOn() ? 2 : 0), SCREEN_W, ROW_H);
     }
     for (let i = party().length; i < 6; i++) {
       g.fillStyle = "#d8e0c8";
@@ -62,14 +63,14 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
     }
     if (swapFrom >= 0) {
       g.fillStyle = "#d8e8f8";
-      g.fillRect(0, partyRowY(swapFrom), SCREEN_W, ROW_H);
+      skin.surface(g, "selection", 0, partyRowY(swapFrom), SCREEN_W, ROW_H);
     }
     if (!hideCursor) {
       g.fillStyle = "#f8f0b8";
-      g.fillRect(0, partyRowY(index), SCREEN_W, ROW_H);
+      skin.surface(g, "selection", 0, partyRowY(index) - (skin.skinOn() ? 2 : 0), SCREEN_W, ROW_H);
       g.fillStyle = UI.dark;
-      g.fillRect(0, partyRowY(index), SCREEN_W, 1);
-      g.fillRect(0, partyRowY(index) + ROW_H - 1, SCREEN_W, 1);
+      if (!skin.skinOn()) g.fillRect(0, partyRowY(index), SCREEN_W, 1);
+      if (!skin.skinOn()) g.fillRect(0, partyRowY(index) + ROW_H - 1, SCREEN_W, 1);
     }
     party().forEach((q, i) => {
       // rows slide in from the right as the menu opens
@@ -79,7 +80,7 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
     });
     if (!hideCursor) {
       if (swapFrom >= 0) drawCursor(ctx, g, 0, partyRowY(swapFrom) + 4, true);
-      drawCursor(ctx, g, 0, partyRowY(index) + 4, false, frame);
+      if (!skin.focus(g, { x: 0, y: partyRowY(index) - 2, w: SCREEN_W, h: ROW_H })) drawCursor(ctx, g, 0, partyRowY(index) + 4, false, frame);
     }
     ui?.draw(g);
   };

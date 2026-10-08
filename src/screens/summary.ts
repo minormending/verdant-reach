@@ -1,3 +1,4 @@
+import * as skin from "../ui/skin";
 // Summary: three pages (INFO / STATS / MOVES). Up/down changes Quickened,
 // left/right changes page (with a short slide). On MOVES, A enters the move
 // list (details for the move under the cursor); A or SELECT there picks a
@@ -142,12 +143,12 @@ function drawHeader(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened,
   PAGE_NAMES.forEach((label, i) => {
     const x = DETAIL_X + i * Math.floor(DETAIL_W / 3);
     g.fillStyle = i === page ? PAGE_COLORS[i] : "#d8d8d0";
-    g.fillRect(x, 4, Math.floor(DETAIL_W / 3) - 4, 16);
+    skin.surface(g, i === page ? "selection" : "button_round", x, 4, Math.floor(DETAIL_W / 3) - 4, 16);
     drawTiny(g, label, x + 8, 9, i === page ? PAGE_DARK[i] : UI.dark);
   });
   drawTiny(g, `NO. ${String(herbariumNumber(q.species)).padStart(3, "0")}`, 8, 10);
   g.fillStyle = "#e8e4d4";
-  g.fillRect(24, 32, 58, 58);
+  if (!skin.panel(g, "slot", { x: 22, y: 30, w: 62, h: 62 })) g.fillRect(24, 32, 58, 58);
   const lively = q.hp > 0 && q.status !== "dormant" && q.status !== "frostbite";
   const animated = idleFrameCount(q.species) > 1;
   const bob = lively && !animated ? cursorBob(frame + 10) : 0;
@@ -211,8 +212,10 @@ function drawStats(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened) 
     if (i % 2 === 0) { g.fillStyle = "#eef4e6"; g.fillRect(DETAIL_X - 4, y - 2, DETAIL_W + 4, 16); }
     ctx.ui.drawText(g, label, DETAIL_X, y);
     const barX = DETAIL_X + 80, barW = DETAIL_W - 120;
-    g.fillStyle = "#c8dcb8"; g.fillRect(barX, y + 2, barW, 4);
-    g.fillStyle = "#58a040"; g.fillRect(barX, y + 2, Math.max(1, Math.round(q.stats[k] / Math.max(1, best) * barW)), 4);
+    if (!skin.bar(g, "exp", { x: barX, y: y + 2, w: barW, h: 4 }, q.stats[k] / Math.max(1, best))) {
+      g.fillStyle = "#c8dcb8"; g.fillRect(barX, y + 2, barW, 4);
+      g.fillStyle = "#58a040"; g.fillRect(barX, y + 2, Math.max(1, Math.round(q.stats[k] / Math.max(1, best) * barW)), 4);
+    }
     drawTextRight(ctx, g, String(q.stats[k]), RIGHT, y);
   });
   ctx.ui.drawText(g, "BOND", DETAIL_X, SCREEN_H - 20);
@@ -223,7 +226,7 @@ function drawStats(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened) 
 function drawMoves(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, cursor: number, swapFrom: number, frame: number) {
   q.moves.forEach((m, i) => {
     const mv = getMove(ctx.data, m.id), y = 28 + i * 22;
-    if (i === swapFrom || i === cursor) { g.fillStyle = i === swapFrom ? "#d8e8f8" : "#f8f0b8"; g.fillRect(DETAIL_X, y - 2, DETAIL_W, 22); }
+    if (i === swapFrom || i === cursor) { g.fillStyle = i === swapFrom ? "#d8e8f8" : "#f8f0b8"; skin.surface(g, "selection", DETAIL_X, y - 2, DETAIL_W, 22); }
     ctx.ui.drawText(g, mv.name.toUpperCase(), DETAIL_X + 12, y);
     const label = TYPE_NAMES[mv.type] ?? "";
     g.fillStyle = TYPE_COLORS[mv.type]?.mid ?? UI.dark;

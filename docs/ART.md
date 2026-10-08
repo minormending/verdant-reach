@@ -548,3 +548,18 @@ of its classic folder into `species/` with `source.kind` set to `edited`.
   - `"anim": null` on the traced species, which have a single front frame;
   - credits in `packs/traced/CREDITS.md`.
 - Try it with `?art=traced`.
+
+### Optional image-set UI slices
+
+An image-set entry can declare `insets: [left, top, right, bottom]` in source
+pixels and `slice: "nine" | "horizontal"`. Horizontal slices keep the entire
+source height in their middle strip. UI panels may also declare `ink` and
+`fill` hex colours. These optional fields do not affect ordinary image-set
+resolution or the Art Lab.
+
+The local LimeZu importer writes the Modern UI Style 1 elements into the
+private `sets/ui_limezu` bundle, under the existing `assets/ui` logical
+directory. No base crops are needed: `src/ui/skin.ts` uses the original GBC
+primitives whenever the active catalogue does not provide the skin. Generated
+crops, metadata, indexes and review captures remain in the gitignored pack or
+`tools/art/limezu/review/`; none are committed.

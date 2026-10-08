@@ -1,3 +1,4 @@
+import * as skin from "../ui/skin";
 // Options: text speed, music/sfx volume, the walking follower and battle
 // move animations. Volumes are a per-browser
 // setting (GameState has no field for them), kept in localStorage.
@@ -53,6 +54,7 @@ export function optionsScreen(ctx: GameContext): Promise<void> {
 
   let frame = 0;
   const bar = (g: CanvasRenderingContext2D, x: number, y: number, n: number) => {
+    if (skin.bar(g, "hp", { x, y: y + 1, w: 60, h: 8 }, n / 10)) return;
     // ten little seedlings that grow taller with the volume
     for (let i = 0; i < 10; i++) {
       const on = i < n;
@@ -70,19 +72,19 @@ export function optionsScreen(ctx: GameContext): Promise<void> {
     frame = f;
     drawPaper(g, 0, 0, SCREEN_W, SCREEN_H, "cream");
     g.fillStyle = "#4a6a48";
-    g.fillRect(0, 0, SCREEN_W, 12);
+    skin.surface(g, "plain", 0, 0, SCREEN_W, 12);
     ctx.ui.drawText(g, "OPTIONS", 8, 2, "#f0e8c8");
     const ys = Array.from({ length: ROWS }, (_, i) => 24 + i * Math.floor((SCREEN_H - 48) / ROWS));
     // row highlight
     g.fillStyle = "#f8e898";
-    g.fillRect(4, ys[row] - 3, SCREEN_W - 8, 18);
+    skin.surface(g, "selection", 4, ys[row] - 3, SCREEN_W - 8, 18);
     const speed = ctx.state?.options?.textSpeed ?? "mid";
     ctx.ui.drawText(g, "TEXT SPEED", 16, ys[0]);
     SPEEDS.forEach((sp, i) => {
       const x = HALF + 8 + i * 48;
       const on = sp === speed;
       g.fillStyle = on ? "#4a6a48" : "#e4dcc4";
-      g.fillRect(x - 3, ys[0] - 1, 40, 10);
+      skin.surface(g, on ? "selection" : "button_round", x - 3, ys[0] - 1, 40, 10);
       ctx.ui.drawText(g, sp.toUpperCase(), x + (sp === "mid" ? 4 : 0), ys[0], on ? "#f8f8f0" : "#8a8068");
     });
     ctx.ui.drawText(g, "MUSIC", 16, ys[1]);
@@ -92,6 +94,7 @@ export function optionsScreen(ctx: GameContext): Promise<void> {
     bar(g, HALF + 8, ys[2] - 2, vol.sfx);
     drawTiny(g, String(vol.sfx).padStart(2, " "), RIGHT - 8, ys[2] + 1, "#6a5a40");
     const toggle = (y: number, on: boolean) => {
+      if (skin.toggle(g, on, HALF + 8, y - 3)) return;
       for (const [label, x, w, val] of [["ON", HALF + 8, 32, true], ["OFF", HALF + 48, 40, false]] as const) {
         const sel = on === val;
         g.fillStyle = sel ? "#4a6a48" : "#e4dcc4";

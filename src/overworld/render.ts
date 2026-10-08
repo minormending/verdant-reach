@@ -303,7 +303,7 @@ export function drawMapName(g: CanvasRenderingContext2D, name: string, t: number
   } else off = 0;
   const w = Math.max(88, Array.from(name).length * 8 + 30);
   const y = 2 - off;
-  drawWindow(g, 2, y, w, h, { shadow: true });
+  drawWindow(g, 2, y, w, h, { shadow: true, kind: "plain" });
   drawLeaf(g, 9, y + 9);
   drawText(g, name, 20, y + 9);
 }
@@ -345,7 +345,7 @@ export function drawToast(g: CanvasRenderingContext2D, kind: "new_note" | "note_
   const w = Math.max(96, Math.max(Array.from(text).length * 8, label.length * 4 + 12) + 30);
   const x = Math.round((SCREEN_W - w) / 2);
   const y = 2 - off;
-  drawWindow(g, x, y, w, h, { shadow: true });
+  drawWindow(g, x, y, w, h, { shadow: true, kind: "plain" });
   drawNotebook(g, x + 8, y + 8, kind === "note_done");
   drawTiny(g, label, x + 21, y + 6, kind === "note_done" ? "#3870e8" : UI.dark);
   drawText(g, text, x + 21, y + 13);
