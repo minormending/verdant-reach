@@ -550,6 +550,81 @@ const ch7Trainers: TrainerDef[] = [
     { ai: "smart", music: "battle_leader", mark: "snowdrop_mark", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
+// Chapter 8 (CH8.md §5): one set per trainer.
+const CH8_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  grunt_r0_1: {
+    intro: "The RELAY's closed. For maintenance. Forever!",
+    defeat: "Stung by my own NETTLES.",
+    after: "NETTLE hairs have glassy tips. Brush one and it snaps off in your skin.",
+  },
+  grunt_r0_2: {
+    intro: "Shoo. The boss wants quiet, and you're LOUD.",
+    defeat: "...That was loud.",
+    after: "A FLYTRAP only shuts if its trigger hairs are touched twice. It counts!",
+  },
+  grunt_r1_1: {
+    intro: "Visiting hours are over. Open day's cancelled!",
+    defeat: "Fine. Visiting hours are back on.",
+    after: "FIREWEED seeds ride the wind on silky hairs. They find every burnt patch.",
+  },
+  grunt_r1_2: {
+    intro: "The plants are finally quiet. Don't you dare wake them!",
+    defeat: "Now you've done it.",
+    after: "It takes about forty buckets of MAPLE sap to boil down one of syrup.",
+  },
+  grunt_r2_1: {
+    intro: "These racks run hot. So do I!",
+    defeat: "Overheated...",
+    after: "A PITCHER PLANT's rim is slippery when wet. Insects slide straight in.",
+  },
+  grunt_r2_2: {
+    intro: "Off the cables! Admin's orders!",
+    defeat: "Tripped on a cable.",
+    after: "A SUNDEW's sticky tentacles bend in over a fly, slowly, one by one.",
+  },
+  grunt_r2_3: {
+    intro: "The admin says the network needs rest. Doesn't it look restful?",
+    defeat: "Not very restful, that.",
+    after: "GHOST PIPES have no green at all. They feed through fungi in the soil.",
+  },
+  grunt_r3_1: {
+    intro: "Hands off the consoles! One wrong patch and it's all static!",
+    defeat: "Prickled.",
+    after: "A SAGUARO can wait fifty years or more before it grows its first arm.",
+  },
+  grunt_r3_2: {
+    intro: "The admin's on the roof. You're not going up there!",
+    defeat: "...You're going up there, aren't you.",
+    after: "Wild MOTH ORCHIDS don't grow in soil. They cling to tree bark.",
+  },
+  wren: {
+    intro: "Please. Just let it stay quiet.",
+    defeat: "...It's going to be so loud again.",
+    after: "Orchid seeds are dust. They can't sprout without a fungus. Nothing grows alone.",
+  },
+};
+const ch8Lines = (id: string) => CH8_LINES[id];
+const ch8Trainers: TrainerDef[] = [
+  trainer("grunt_r0_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 41), T("foxglove", 41)], ch8Lines("grunt_r0_1"), { music: "battle_rootstock" }),
+  trainer("grunt_r0_2", "GRUNT", "ROOTSTOCK", "grunt", [T("bramble_berry", 41), T("venus_flytrap", 42)], ch8Lines("grunt_r0_2"), { music: "battle_rootstock" }),
+  trainer("grunt_r1_1", "GRUNT", "ROOTSTOCK", "grunt", [T("fireweed", 42), T("holly", 42)], ch8Lines("grunt_r1_1"), { music: "battle_rootstock" }),
+  trainer("grunt_r1_2", "GRUNT", "ROOTSTOCK", "grunt", [T("sugar_maple", 42), T("lodgepole_pine", 43)], ch8Lines("grunt_r1_2"), { music: "battle_rootstock" }),
+  trainer("grunt_r2_1", "GRUNT", "ROOTSTOCK", "grunt", [T("pitcher_plant", 42), T("bladderwort", 43)], ch8Lines("grunt_r2_1"), { music: "battle_rootstock" }),
+  trainer("grunt_r2_2", "GRUNT", "ROOTSTOCK", "grunt", [T("prickly_pear", 43), T("sundew", 43)], ch8Lines("grunt_r2_2"), { music: "battle_rootstock" }),
+  trainer("grunt_r2_3", "GRUNT", "ROOTSTOCK", "grunt", [T("red_mangrove", 43), T("ghost_pipe", 43)], ch8Lines("grunt_r2_3"), { music: "battle_rootstock" }),
+  trainer("grunt_r3_1", "GRUNT", "ROOTSTOCK", "grunt", [T("saguaro", 44)], ch8Lines("grunt_r3_1"), { music: "battle_rootstock" }),
+  trainer("grunt_r3_2", "GRUNT", "ROOTSTOCK", "grunt", [T("moth_orchid", 43), T("larch", 44)], ch8Lines("grunt_r3_2"), { music: "battle_rootstock" }),
+  // Wren tuning from §5: every level -2 (44/45/45/48 → 42/43/43/46).
+  // Explicit learned moves below soften late-game damage while retaining orchid
+  // healing, fungal drain, maple sap and cedar defence. Mean: 75.5%; min: 38.0%.
+  trainer("wren", "WREN", "ADMIN", "wren", [
+    T("moth_orchid", 42, ["wind_scatter", "moonbeam", "false_nectar", "long_bloom"]),
+    T("ghost_pipe", 43, ["moonbeam", "root_siphon", "spore_cloud"]),
+    T("sugar_maple", 43, ["samara_spin", "sap_spout", "hoarfrost", "sugar_rush"]),
+    T("red_cedar", 46, ["leaf_edge", "pale_touch", "heartwood", "sap_seal"]),
+  ], ch8Lines("wren"), { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 2 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers].map((t) => [t.id, t]),
 );

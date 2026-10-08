@@ -242,7 +242,7 @@ class Overworld implements Scene {
   }
 
   musicFor(def: MapDef) {
-    const music = def.musicWhen?.find((o) => checkCond(o.when, this.ctx.state.flags))?.music ?? def.music;
+    const music = def.musicWhen?.find((entry) => checkCond(entry.when, this.ctx.state.flags))?.music ?? def.music;
     if (def.outdoor && music === "route" && mapTime(def, this.ctx.timeOfDay) === "night") return "route_night" as const;
     return music;
   }

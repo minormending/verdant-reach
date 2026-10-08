@@ -205,6 +205,15 @@ describe("moves", () => {
 });
 
 describe("items", () => {
+  it("requires ODELL's Relay keycard with its exact key-item data", () => {
+    expect(REQUIRED_ITEMS).toContain("relay_keycard");
+    expect(DATA.items.relay_keycard).toEqual({
+      id: "relay_keycard", name: "Keycard", pocket: "key", price: 0,
+      description: "ODELL's pass to every RELAY floor.", effect: { kind: "none" },
+      usableInBattle: false, usableInField: false,
+    });
+    expect(wrapText(DATA.items.relay_keycard.description, 18)).toHaveLength(2);
+  });
   it("keeps found growth items field-only; ash opens lodgepole cones and cold opens snowdrop bulbs", () => {
     for (const [id, name] of [["ember_ash", "Ember Ash"], ["cold_snap", "Cold Snap"]]) {
       expect(DATA.items[id]).toMatchObject({

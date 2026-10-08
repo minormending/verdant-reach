@@ -658,7 +658,9 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const where = `[${id}]`;
     if (map.id !== id) errs.push(`${where} id mismatch ${map.id}`);
     if (!music.has(map.music)) errs.push(`${where} bad music ${map.music}`);
-    for (const o of map.musicWhen ?? []) if (!music.has(o.music)) errs.push(`${where} bad musicWhen music ${o.music}`);
+    for (const [i, entry] of (map.musicWhen ?? []).entries()) {
+      if (!music.has(entry.music)) errs.push(`${where} musicWhen[${i}] bad music ${entry.music}`);
+    }
     if (!(map.border in TILES)) errs.push(`${where} bad border ${map.border}`);
 
     // rows + legend

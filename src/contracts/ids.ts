@@ -96,6 +96,8 @@ export const MAP_IDS = [
   "route_7", "saltmarsh_harbour", "saltmarsh_greenhouse", "saltmarsh_market", "saltmarsh_conservatory", "route_8", "driftseed_isle", "driftseed_greenhouse", "driftseed_conservatory", "driftseed_vents",
   // Chapter 7 (CH7.md §4 order)
   "route_9", "larchmere", "larchmere_greenhouse", "larchmere_market", "bloom_lake", "larchmere_lodge", "rootstock_hideout_1", "rootstock_hideout_2", "larchmere_conservatory",
+  // Chapter 8 (CH8.md §2 order)
+  "relay_2f", "relay_3f", "relay_roof",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -233,6 +235,12 @@ export const TILES = {
   red_water:      { walk: false, water: true },  // Bloom Lake while forced awake (legendWhen only)
   hideout_floor:  { walk: true },                // dark steel grate
   hideout_wall:   { walk: false },               // riveted panels and pipes
+  // Chapter 8: the Root Relay's upper floors under Rootstock
+  cable_trunk:    { walk: false },               // a root-like cable bundle in a floor channel (group "cable_trunk")
+  relay_terminal: { walk: false },               // a waist-high monitoring desk
+  roof_vent:      { walk: false },               // a louvred vent box on the roof, steaming
+  roof_glass:     { walk: false },               // the Glasshouse dome's top panes (the roof's border)
+  rootstock_banner: { walk: false },             // hung on an interior wall during the takeover
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -326,6 +334,8 @@ export const CHARACTERS = [
   "signe", "skier", "lodge_keeper",
   "signal_emitter",              // Rootstock broadcast cabinet: DOWN row on, UP row switched off
   "crimson_lily",                // the CRIMSON LILY on its islet (static object)
+  // Chapter 8
+  "mercer",
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -337,6 +347,7 @@ export const TRAINER_PORTRAITS = [
   "morrow", "lumberjack", "forager", "night_gardener", // Chapter 5
   "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", // Chapter 6
   "signe", "skier", // Chapter 7
+  "mercer", "wren", // Chapter 8
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -350,6 +361,7 @@ export const MUSIC = [
   "glasshouse_city", "palm_house", "root_relay", // Round 4
   "cedarhallow", "burnt_stand", "hollow", // Chapter 5
   "alpine", "red_lake", "hideout", // Chapter 7
+  "relay_seized", // Chapter 8
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 
@@ -389,6 +401,7 @@ export const REQUIRED_ITEMS = [
   "saxifrage",                                // key item: unlocks UPROOT boulder pushes
   "climber_pack",                             // key item: the LOST CLIMBER pack
   "cactus_sap",                               // key item: Saguaro's remedy for the Lantern Tree
+  "relay_keycard",                            // key item: access to every RELAY floor
   "fan_letter", "signed_photo",               // key items for the FAN MAIL quest
 ] as const;
 export type RequiredItemId = (typeof REQUIRED_ITEMS)[number];
@@ -408,6 +421,7 @@ export const STILLS = [
   "fire_cone_vision", "morrow_listening", // Chapter 5
   "lantern_tree_healed", // Chapter 6
   "rootstock_files", "crimson_lily", // Chapter 7
+  "mercer_hub_map", // Chapter 8
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

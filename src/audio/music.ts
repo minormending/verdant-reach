@@ -324,6 +324,23 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
       e-4. f8 g4 o6c4 | f2 e-4 c4 | o5d2 c2 | o4b2. r4 |`,
   },
 
+  // ------------------------------------------------------------------ relay seized
+  // The Root Relay under Rootstock: the network's own pulse (the root_relay
+  // bass throb and rootless pad), but the questioning lead has been silenced.
+  // Every other bar is the broadcast's command, one note struck twice ("be
+  // still"), and between them the old curious figure (g, a-flat, g) now
+  // droops and stops. The command climbs C, E-flat, D-flat as the tension
+  // grows, and it ends on G with B natural, never resting.
+  relay_seized: {
+    bpm: 90, harmony: "pad", harmonyTone: "v4 @0 q8 ~6", bass: "pulse", bassTone: "v14 q4", drums: "tense", drumTone: "v5", fillEvery: 0,
+    chords: "Cm | Cm | Abmaj7 | Abmaj7 | Fm | Fm | Gsus4 | G | Cm | Cm | Dbmaj7 | Dbmaj7 | Fm | Abmaj7 | Gsus4 | G",
+    melody: `v10 @1 q5 ~4
+      o6c4 r4 o6c4 r4 | o5g4 a-8g8 e-2 | o6c4 r4 o6c4 r4 | o5a-4 g8f8 e-2 |
+      o6c4 r4 o6c4 r4 | o5a-4 g8f8 c2 | o5c4 d4 g4 r4 | o5b2. r4 |
+      o6e-4 r4 o6e-4 r4 | o6d4 c8 o5b8 g2 | o6d-4 r4 o6d-4 r4 | o6c4 o5a-8f8 c2 |
+      o5f4 a-4 o6c4 f4 | o6e-2 c2 | o6d2. r4 | o5b4 o6d4 o5g4 d4 |`,
+  },
+
   // ------------------------------------------------------------------ slice end
   // Bittersweet, hopeful: F major with a borrowed B-flat minor sigh.
   slice_end: {

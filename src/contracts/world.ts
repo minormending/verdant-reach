@@ -27,14 +27,14 @@ export interface MapDef {
   /** Black outside player/lamppost light; the bag's FOXFIRE LANTERN expands player light. */
   dark?: boolean;
   music: MusicId;
+  /** Conditional map tracks. First match wins; otherwise use `music`. */
+  musicWhen?: { when: Cond; music: MusicId }[];
   /** Rows of single characters; `legend` maps each character to a tile. */
   tiles: string[];
   legend: Record<string, TileKey>;
   /** Legend overrides applied while their condition holds (e.g. the grove's
    *  tapped maples become plain maples once `grove_cleared`). First match wins. */
   legendWhen?: { when: Cond; legend: Record<string, TileKey> }[];
-  /** Conditional music: the first entry whose `when` holds replaces `music` (e.g. the red lake until it is calmed). */
-  musicWhen?: { when: Cond; music: MusicId }[];
   /** Tile used beyond the map edge (e.g. "tree" outdoors, "void" indoors). */
   border: TileKey;
   structures: { key: StructureKey; x: number; y: number }[];

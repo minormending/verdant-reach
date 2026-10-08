@@ -3,7 +3,7 @@
 //
 //   npm run e2e                                        headless full playthrough
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
-//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 7's TO BE CONTINUED
+//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 8's TO BE CONTINUED
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
 //
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
@@ -16,6 +16,8 @@
 // Lantern Tree, completes both coastal quests and beats REYES in the pools.
 // Chapter 7 rafts to the CRIMSON LILY, silences the hideout, slides through
 // SIGNE's ice floor, grows a caught snowdrop and completes LOST CLIMBER.
+// Chapter 8 returns to GLASSHOUSE CITY, takes ODELL's keycard, clears the
+// seized RELAY, patches C/A/B from the work note and stops WREN's broadcast.
 //
 // `?timer` keeps the loop running in a hidden tab. Add `&boost=<level>` to set
 // the level of the over-levelled helper (default 48; `boost=0` plays it
@@ -1593,6 +1595,116 @@ async function chapter7() {
     && ctx().save.read()?.flags["ch7_done"] === true);
 }
 
+// ---------------------------------------------------------------------------
+// Chapter 8: the seized ROOT RELAY
+// ---------------------------------------------------------------------------
+
+async function chapter8() {
+  const saved = ctx().save.read();
+  if (!saved?.flags["ch7_done"]) {
+    beat("CONTINUE after Chapter 7", false, "no Chapter 7 save");
+    return;
+  }
+  await press("start");
+  await sleep(700);
+  await press("a");
+  await sleep(700);
+  await press("a");
+  const continued = await waitFor(() => !!ow(), 15000);
+  await sleep(1500);
+  if (!continued) { beat("CONTINUE after Chapter 7", false, "no overworld"); return; }
+  await settle();
+  beat("CONTINUE after Chapter 7", flag("ch7_done") && ow()?.mapId === saved.position.map);
+  ctx().state.options.textSpeed = "fast";
+  const st = () => ctx().state;
+  const bag = (item: ItemId) => st().bag[item] ?? 0;
+
+  // Walk the existing routes back; nav fights trainers that spot us mid-walk.
+  await nav("glasshouse_city");
+  beat("GLASSHOUSE CITY: the plants fall still", ow()?.mapId === "glasshouse_city"
+    && flag("ch8_started") && flag("ch8_takeover") && !flag("beat_wren"));
+  let before = report.texts.length;
+  const refused = await trigger("ch8_relay_door");
+  beat("ROOT RELAY: the door needs a KEYCARD", refused && ow()?.mapId === "glasshouse_city"
+    && onTile(5, 8) && !flag("got_keycard") && bag("relay_keycard") === 0
+    && report.texts.slice(before).some((t) => /RELAY KEYCARD/.test(t.text)));
+
+  await nav("palm_house");
+  await talkTo("director_hiding");
+  beat("PALM HOUSE: ODELL's RELAY KEYCARD", flag("got_keycard") && bag("relay_keycard") === 1);
+  await nav("glasshouse_city");
+  for (const id of ["grunt_r0_1", "grunt_r0_2"]) {
+    if (!flag(`beat_${id}`)) await talkTo(id);
+  }
+  beat("ROOT RELAY: the door grunts", flag("beat_grunt_r0_1") && flag("beat_grunt_r0_2"));
+
+  await nav("glasshouse_relay");
+  for (const id of ["grunt_r1_1", "grunt_r1_2"]) {
+    if (!flag(`beat_${id}`)) await talkTo(id);
+  }
+  beat("ROOT RELAY 1F: the lobby grunts", ow()?.mapId === "glasshouse_relay"
+    && flag("beat_grunt_r1_1") && flag("beat_grunt_r1_2"));
+  await nav("relay_2f");
+  for (const id of ["grunt_r2_1", "grunt_r2_2", "grunt_r2_3"]) {
+    if (!flag(`beat_${id}`)) await talkTo(id);
+  }
+  beat("SERVER HALL 2F: the three grunts", ow()?.mapId === "relay_2f"
+    && [1, 2, 3].every((n) => flag(`beat_grunt_r2_${n}`)));
+  before = report.texts.length;
+  const read = await trigger("ch8_patch_note");
+  beat("SERVER HALL: the pinned work note", read && flag("patch_note_read")
+    && report.texts.slice(before).some((t) => /C, then A, then B/.test(t.text)));
+
+  // BRAM meets us on arrival, before the patch consoles can be used.
+  before = report.battles.length;
+  await nav("relay_3f");
+  beat("PATCH BAY: BRAM holds the stairwell", flag("ch8_bram_met") && !flag("relay_patched")
+    && report.battles.length === before);
+  for (const id of ["grunt_r3_1", "grunt_r3_2"]) {
+    if (!flag(`beat_${id}`)) await talkTo(id);
+  }
+  beat("PATCH BAY 3F: the two grunts", flag("beat_grunt_r3_1") && flag("beat_grunt_r3_2"));
+  // Each trigger faces the actual solid console and presses A. Check every
+  // intermediate step so a stray follower talk or reset cannot pass silently.
+  const c = await trigger("ch8_console_c");
+  const first = c && flag("patch_1") && !flag("patch_2") && !flag("relay_patched");
+  const a = await trigger("ch8_console_a");
+  const second = a && flag("patch_1") && flag("patch_2") && !flag("relay_patched");
+  const b = await trigger("ch8_console_b");
+  beat("PATCH BAY: C, then A, then B opens the roof", flag("patch_note_read")
+    && first && second && b && flag("relay_patched")
+    && !!ow() && tileAt(ow()!.map as unknown as MapRuntime, 15, 2) === "stairs_up");
+
+  await nav("relay_roof");
+  before = report.battles.length;
+  await trigger("ch8_wren");
+  const wren = report.battles.slice(before).find((battle) => battle.request.trainer === "wren");
+  beat("RELAY ROOF: WREN cuts the broadcast", wren?.outcome === "won"
+    && flag("beat_wren") && flag("broadcast_off") && !flag("ch8_takeover"));
+  const roof = ow();
+  beat("MERCER THORNE leaves with the hub map", flag("mercer_seen") && flag("mercer_left")
+    && !!roof && ["wren", "mercer"].every((id) => {
+      const npc = roof.npcs.find((n) => n.id === id);
+      return !!npc && !roof.visible(npc);
+    }));
+
+  await nav("relay_2f");
+  const money = st().money, rain = bag("rain_jar");
+  const exit = ow()?.map.def.warps.find((w) => w.to === "glasshouse_relay");
+  if (!exit) { beat("chapter 8 done", false, "no SERVER HALL exit"); return; }
+  // Lobby onEnter awards the reward and immediately calls ch8_end. Avoid
+  // nav/settle here: they would mash past the card while waiting for idle.
+  await untilEndCard(async () => {
+    await walkToQuiet(exit.x, exit.y - 1);
+    await goto(exit.x, exit.y, false);
+    await advance(400, () => flag("relay_reward"));
+    beat("ROOT RELAY: ODELL's thanks and reward", flag("relay_reward")
+      && st().money === money + 3000 && bag("rain_jar") === rain + 2);
+  }, "Chapter 8");
+  beat("chapter 8 done: VALE's call to SANGUINE RIDGE", flag("ch8_done") && flag("slice_done")
+    && ctx().save.read()?.flags["ch8_done"] === true);
+}
+
 /** Free a slot with real cabinet STORE input, keeping the helper in slot 0. */
 export async function makePartyRoom(): Promise<boolean> {
   if (ctx().state.party.length < 6) return true;
@@ -2027,6 +2139,7 @@ export async function run(suite: string) {
         await chapter5();
         await chapter6();
         await chapter7();
+        await chapter8();
       }
     } else if (suite === "story") {
       // From a ?dev=world&play=new jump-in.
