@@ -225,6 +225,14 @@ export const TILES = {
   volcanic_rock:  { walk: false },
   basalt_floor:   { walk: true },
   vent_steam:     { walk: false },
+  // Chapter 7: the alpine pass, Larchmere, Bloom Lake and the Rootstock hideout
+  larch_tree:     { walk: false },               // narrow golden-green conifer; also a map border
+  scree:          { walk: true },                // loose stone chips on the slope
+  snow_grass:     { walk: true, encounter: "grass" }, // alpine tufts poking through snow
+  frozen_shore:   { walk: true },                // pebbled lake edge with thin ice
+  red_water:      { walk: false, water: true },  // Bloom Lake while forced awake (legendWhen only)
+  hideout_floor:  { walk: true },                // dark steel grate
+  hideout_wall:   { walk: false },               // riveted panels and pipes
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -279,6 +287,11 @@ const STRUCTURE_SPECS = {
   tide_conservatory:  { w: 6, h: 4, door: { x: 3, y: 3 } },
   adobe_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } },
   driftwood_hut:      { w: 4, h: 3, door: { x: 1, y: 2 } },
+  // Chapter 7: Larchmere
+  alpine_lodge:       { w: 5, h: 3, door: { x: 2, y: 2 } }, // the Lakeside Lodge
+  chalet:             { w: 4, h: 3, door: { x: 1, y: 2 } },
+  frost_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 7
+  boathouse:          { w: 4, h: 3 },                       // lakeside scenery
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
