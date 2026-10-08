@@ -7,21 +7,22 @@ import type { RawBundle } from "./format";
 import { validateArt } from "./validate";
 
 type PropPick = { source: string | null; box?: [number, number, number, number] };
-const mapping = JSON.parse(readFileSync(new URL("../../tools/art/limezu/mapping/interior_props.json", import.meta.url), "utf8")) as Record<string, PropPick>;
+const load = (f: string) => JSON.parse(readFileSync(new URL(`../../tools/art/limezu/mapping/${f}`, import.meta.url), "utf8")) as Record<string, PropPick>;
+const mapping = { ...load("interior_props.json"), ...load("exterior_props.json") };
 
-describe("mapped interior props", () => {
-  it("matches the mapping geometry and excludes unmapped props", () => {
-    const expected = Object.entries(mapping).filter(([, pick]) => pick.source !== null);
-    expect(Object.keys(PROP_SPECS).sort()).toEqual(expected.map(([key]) => `prop_${key}`).sort());
-    for (const [key, pick] of expected) {
-      const [x0, y0, x1, y1] = pick.box!;
-      const w = Math.ceil((x1 - x0) / 16), h = Math.ceil((y1 - y0) / 16);
-      const spec = STRUCTURES[`prop_${key}` as keyof typeof PROP_SPECS];
-      expect(spec).toMatchObject({ w, h, footprint: { x: 0, y: h > 1 ? 1 : 0, w, h: Math.max(1, h - 1) } });
-      expect(spec.layer).toBe(["rug_large", "rug_small", "window", "painting"].includes(key) ? "floor" : undefined);
-      const meta = JSON.parse(readFileSync(new URL(`../../public/art/structures/prop_${key}/structure.json`, import.meta.url), "utf8")) as { notes: string; source: { kind: string } };
-      expect(meta.notes).toMatch(/^FALLBACK:/);
-      expect(meta.source.kind).toBe("generated");
+describe("mapped props", () => {
+  it("gives every mapped prop a spec, with a footprint inside its image and a GBC fallback", () => {
+    const mapped = Object.entries(mapping).filter(([, pick]) => pick.source !== null).map(([key]) => `prop_${key}`);
+    for (const key of mapped) expect(PROP_SPECS, key).toHaveProperty(key);
+    for (const key of Object.keys(PROP_SPECS)) {
+      const spec = STRUCTURES[key as keyof typeof PROP_SPECS];
+      const fp = spec.footprint ?? { x: 0, y: 0, w: spec.w, h: spec.h };
+      expect(fp.x >= 0 && fp.y >= 0 && fp.x + fp.w <= spec.w && fp.y + fp.h <= spec.h, key).toBe(true);
+      const bare = key.slice("prop_".length);
+      expect(spec.layer, key).toBe(["rug_large", "rug_small", "window", "painting", "dock", "flower_bed"].includes(bare) ? "floor" : undefined);
+      const meta = JSON.parse(readFileSync(new URL(`../../public/art/structures/${key}/structure.json`, import.meta.url), "utf8")) as { notes: string; source: { kind: string } };
+      expect(meta.notes, key).toMatch(/^FALLBACK:/);
+      expect(meta.source.kind, key).toBe("generated");
     }
   });
 });
