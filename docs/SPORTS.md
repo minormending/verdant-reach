@@ -204,3 +204,11 @@ Chapter 7 snowdrop line (set in `tools/art/crystal/snowdrop.py`; palettes are da
 | snowdrop | Sandersii Group | The same yellow-marked snowdrop: the ovary and the inverted-V marks on the inner tepals turn yellow-olive (the dark slot, which the scape shares); the white tepals and grey-green leaves are unchanged. | `#988830 #98b098 #f8f8f8` |
 
 Botanical reference: [Wikipedia, Galanthus nivalis](https://en.wikipedia.org/wiki/Galanthus_nivalis) describes the green V- or U-shaped mark over the notch at each inner segment's tip, the papery spathe at the top of the scape, and the Sandersii Group, whose ovary and inner-segment marks are yellow instead of green. The yellow-olive shade, and its spread to the scape and leaf shading that share the dark slot, are an artistic interpretation within two colour slots.
+Chapter 7 larch line (set in `tools/art/crystal/larch.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| larch_seedling | Japanese larch blue-green | The soft blue-green needles of Larix kaempferi, the Japanese larch, a close relative of the European larch (Larix decidua) and a natural colour of the genus rather than a named cultivar. Crystal: the fresh-green rosettes turn blue-green; the dark slot (bark, larch rose) shifts from rosy red-brown to a cooler plum-brown, an artistic choice. White stays white. | `#804858 #80b0a0 #f8f8f8` |
+| larch | Japanese larch blue-green | The same Larix kaempferi blue-green as larch_seedling: the autumn-gold curtains, rosettes and fallen needles take the blue-green of its summer foliage; bark, cones and the larch rose take the cooler plum-brown. Palette swap only. | `#804858 #80b0a0 #f8f8f8` |
+
+Botanical references: [Wikipedia, Larix decidua](https://en.wikipedia.org/wiki/Larix_decidua) describes the needles in rosettes on short shoots, the red young female cones and the golden autumn needle drop; [Wikipedia, Larix kaempferi](https://en.wikipedia.org/wiki/Larix_kaempferi) describes the Japanese larch's glaucous blue-green needles. The exact two-tone palettes, and the plum-brown dark slot of the sport, are an artistic interpretation.
