@@ -175,7 +175,8 @@ describe("Chapter 8 world", () => {
         await s.run(id);
         const text = vi.mocked(s.host.ctx.ui.say).mock.calls.map(([line]) => line).join(" ");
         expect(text.length).toBeGreaterThan(0);
-        expect(text.includes("TODO(text)")).toBe(started && !beaten);
+        expect(text).not.toContain("TODO");
+        expect(/frozen|won't move|stopped moving/.test(text)).toBe(started && !beaten);
       }
     }
   });
@@ -224,8 +225,8 @@ describe("Chapter 8 world", () => {
     for (const [id, team] of Object.entries(teams)) {
       const t = WORLD.trainers[id];
       expect(t.team.map((q) => [q.species, q.level])).toEqual(team);
-      expect(t).toMatchObject({ portrait: id === "wren" ? "wren" : "grunt", className: id === "wren" ? "ADMIN" : "GRUNT", music: "battle_rootstock" });
-      for (const text of [t.intro, t.defeat, t.after]) expect(text).toContain("TODO(text)");
+      expect(t).toMatchObject({ portrait: id === "wren" ? "wren" : "grunt", className: id === "wren" ? "ADMIN" : "ROOTSTOCK", music: "battle_rootstock" });
+      for (const text of [t.intro, t.defeat, t.after]) expect(text).toMatch(/^(?!.*TODO)\S.*\S$/);
       for (const q of t.team) for (const move of q.moves ?? []) expect(DATA.species[q.species].learnset.some((l) => l.move === move && l.level <= q.level)).toBe(true);
     }
     expect(WORLD.trainers.wren).toMatchObject({ ai: "smart", items: [{ item: "spring_water", qty: 2 }] });
