@@ -6,7 +6,7 @@ import type {
   BattleOutcome, BattleRequest, GameContext, ItemId, MoveId, Quickened, Scene, SpeciesId, StatusId, TrainerDef,
   TrainerPortraitKey, TypeId, Weather,
 } from "../contracts";
-import { portraitPath, speciesPath, TEXTBOX, UI, uiPath } from "../contracts";
+import { portraitPath, speciesPath, SCREEN_W, SCREEN_H, TEXTBOX, UI, uiPath } from "../contracts";
 import { chooseFoeAction, type AiKind } from "./logic/ai";
 import {
   active, canContinue, canFight, createBattleState, doSwitch, firstHealthy, hasUsableMove, resolveTurn, sendOutFoe, targetsFoe,
@@ -44,8 +44,7 @@ import { askNickname } from "../screens/flows/nickname";
 import { showHerbariumEntry } from "../screens/herbarium";
 import { partyScreen } from "../screens/party";
 
-const ENEMY_HOME = { x: 96, y: 0 };
-const PLAYER_HOME = { x: 8, y: 40 };
+import { ENEMY_HOME, PLAYER_HOME, COMMAND_AREA, MOVE_AREA, MOVE_INFO_AREA } from "./layout";
 /** Where a thrown pod comes to rest on the foe's battle ground. */
 const POD_REST = { x: ENEMY_CENTER.x - 6, y: ENEMY_GROUND.y - 12 };
 
@@ -176,12 +175,12 @@ class BattleScene implements Scene {
     if (this.enemyTrainer.visible) {
       drawTrainer(this.ctx, g, this.enemyTrainer.key, ENEMY_HOME.x + this.enemyTrainer.dx, ENEMY_HOME.y);
     }
-    this.drawSprite(g, this.enemy, "front", ENEMY_HOME, 56, 1);
+    this.drawSprite(g, this.enemy, "front", ENEMY_HOME, ENEMY_HOME.y + 56, 1);
     // Player side
     if (this.playerTrainer.visible) {
       drawTrainer(this.ctx, g, "player_back", PLAYER_HOME.x + this.playerTrainer.dx, PLAYER_HOME.y);
     }
-    this.drawSprite(g, this.player, "back", PLAYER_HOME, 88, 0);
+    this.drawSprite(g, this.player, "back", PLAYER_HOME, PLAYER_HOME.y + 48, 0);
 
     if (this.podRows.enemy && this.trainer) drawPodRow(g, this.s.sides[1].party, 1, this.podRows.enemyDx, this.podRows.t);
     if (this.podRows.player) drawPodRow(g, this.ctx.state.party, 0, this.podRows.playerDx, this.podRows.t);
@@ -207,7 +206,7 @@ class BattleScene implements Scene {
     if (this.fade > 0) {
       const step = Math.ceil(this.fade * 4) / 4;
       g.fillStyle = `rgba(0,0,0,${step})`;
-      g.fillRect(0, 0, 160, 144);
+      g.fillRect(0, 0, SCREEN_W, SCREEN_H);
     }
   }
 
@@ -321,7 +320,7 @@ class BattleScene implements Scene {
   private async slideHud(side: Side) {
     const h = this.hudOf(side);
     h.visible = true;
-    const from = side === 0 ? 96 : -96;
+    const from = side === 0 ? SCREEN_W : -SCREEN_W;
     await this.flow.animate(10, (_i, t) => { h.dx = Math.round(from * (1 - t) * (1 - t)); });
     h.dx = 0;
   }
@@ -454,22 +453,22 @@ class BattleScene implements Scene {
       this.fade = 1;
     }
     this.playerTrainer.visible = true;
-    this.playerTrainer.dx = 152;
+    this.playerTrainer.dx = SCREEN_W;
     if (this.trainer) {
       this.enemyTrainer.visible = true;
-      this.enemyTrainer.dx = -152;
+      this.enemyTrainer.dx = -SCREEN_W;
     } else {
       this.enemy.species = foe.species;
       this.enemy.sport = foe.sport;
       this.enemy.visible = true;
-      this.enemy.dx = -152;
+      this.enemy.dx = -SCREEN_W;
       this.playback[1].hold(foe.species); // rest pose while it slides in; the intro plays with its cry
     }
     await f.animate(10, (_i, t) => { this.fade = 1 - t; });
     this.fade = 0;
     // Both sides glide in (eased, whole pixels).
     await f.animate(44, (_i, t) => {
-      const k = Math.round((1 - t) * (1 - t) * 152);
+      const k = Math.round((1 - t) * (1 - t) * SCREEN_W);
       this.playerTrainer.dx = k;
       if (this.trainer) this.enemyTrainer.dx = -k; else this.enemy.dx = -k;
     });
@@ -600,9 +599,9 @@ class BattleScene implements Scene {
 
   private async chooseAction(): Promise<Choice> {
     for (;;) {
-      this.ui.tb.clear();
+      this.ui.tb.show(`What will ${qName(this.data, this.me())} do?`, "instant");
       const cmd = new Menu(this.ctx, ["FIGHT", "BAG", "QUICKENED", "RUN"], {
-        x: 0, y: TEXTBOX.y, w: 160, h: 48, cols: 2, colW: 88, spacing: 16, cancel: false, start: this.lastCmd,
+        ...COMMAND_AREA, cols: 2, colW: (COMMAND_AREA.w - 16) / 2, spacing: 16, cancel: false, start: this.lastCmd,
       });
       this.idle = true;
       const c = await this.ui.choose(cmd, (g) => {
@@ -640,14 +639,19 @@ class BattleScene implements Scene {
     const labels = me.moves.map((m) => getMove(this.data, m.id).name.toUpperCase());
     while (labels.length < 4) labels.push("-");
     const hints = this.moveHints();
+    const describe = (index: number) => {
+      const move = me.moves[index];
+      this.ui.tb.show(move ? getMove(this.data, move.id).description : "Choose a move.", "instant");
+    };
     for (;;) {
       const menu = new Menu(this.ctx, labels, {
-        x: 8, y: TEXTBOX.y, w: 152, h: 48, spacing: 8, start: Math.min(this.lastMove, me.moves.length - 1),
+        ...MOVE_AREA, spacing: 8, start: Math.min(this.lastMove, me.moves.length - 1), onMove: describe,
       });
+      describe(menu.index);
       this.idle = true;
       const r = await this.ui.choose(menu, (g) => {
         menu.draw(g);
-        hints.forEach((h, i) => { if (h) drawHintTag(g, h, 130, TEXTBOX.y + 8 + i * 8 + 1); });
+        hints.forEach((h, i) => { if (h) drawHintTag(g, h, SCREEN_W - 30, MOVE_AREA.y + 8 + i * 8 + 1); });
         this.drawMoveInfo(g, menu.index);
       });
       this.idle = false;
@@ -665,19 +669,20 @@ class BattleScene implements Scene {
 
   private drawMoveInfo(g: CanvasRenderingContext2D, index: number) {
     const m = this.me().moves[index];
-    this.ctx.ui.drawWindow(g, 0, 56, 80, 40);
+    const { x, y, w, h } = MOVE_INFO_AREA;
+    this.ctx.ui.drawWindow(g, x, y, w, h);
     if (!m) return;
     const mv = getMove(this.data, m.id);
     const c = TYPE_COLORS[mv.type];
-    this.ctx.ui.drawText(g, "TYPE/", 8, 64);
+    this.ctx.ui.drawText(g, "TYPE/", x + 8, y + 8);
     const cat = mv.category === "physical" ? "PHY" : mv.category === "special" ? "SPC" : "STA";
-    drawTiny(g, cat, 58, 65, UI.dark);
+    drawTiny(g, cat, x + 58, y + 9, UI.dark);
     g.fillStyle = c?.mid ?? UI.dark;
-    g.fillRect(8, 73, 3, 6);
-    this.ctx.ui.drawText(g, TYPE_NAMES[mv.type] ?? String(mv.type).toUpperCase(), 14, 72);
-    drawTiny(g, "PP", 8, 82);
+    g.fillRect(x + 8, y + 17, 3, 6);
+    this.ctx.ui.drawText(g, TYPE_NAMES[mv.type] ?? String(mv.type).toUpperCase(), x + 14, y + 16);
+    drawTiny(g, "PP", x + 8, y + 26);
     const low = m.pp <= Math.max(1, Math.floor(mv.pp / 4));
-    this.ctx.ui.drawText(g, `${pad(m.pp, 2)}/${pad(mv.pp, 2)}`, 24, 80, m.pp === 0 ? UI.hpRed : low ? "#c07010" : undefined);
+    this.ctx.ui.drawText(g, `${pad(m.pp, 2)}/${pad(mv.pp, 2)}`, x + 24, y + 24, m.pp === 0 ? UI.hpRed : low ? "#c07010" : undefined);
   }
 
   /** Party pick for a switch. Returns an index or -1. */
@@ -789,7 +794,7 @@ class BattleScene implements Scene {
     ctx.audio.playSfx("pod_throw");
     const hit = { x: ENEMY_CENTER.x - 6, y: ENEMY_CENTER.y - 10 };
     if (r.critical) this.fx.flashScreen("#f8e070", 2);
-    await this.lobPod({ x: 20, y: 80 }, hit, 26, 40);
+    await this.lobPod({ x: PLAYER_HOME.x + 12, y: PLAYER_HOME.y + 36 }, hit, 26, 40);
     // 2. Bounce off, open, beam the foe in.
     await this.flow.animate(6, (_i, t) => { p.y = Math.round(hit.y - Math.sin(t * Math.PI) * 6); p.x = hit.x + Math.round(t * 2); });
     p.open = true;

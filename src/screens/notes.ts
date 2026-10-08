@@ -4,10 +4,12 @@
 // Quests come from WORLD.quests; flags are quest_<id>_started / _done.
 
 import type { Cond, GameContext, Input, QuestDef, WorldData } from "../contracts";
-import { UI } from "../contracts";
+import { SCREEN_W, SCREEN_H, UI } from "../contracts";
 import { runFlowScene, type Flow } from "./kit/flow";
 import { cursorBob, drawMoreArrow, drawPaper, drawTiny } from "./kit/draw";
 import { ListView } from "./kit/widgets";
+
+import { BOOK_ROWS, FOOTER_Y, HALF, RIGHT, textCols } from "./kit/layout";
 
 const INK = "#2c3c30";
 const FADED = "#8a8068";
@@ -43,7 +45,7 @@ export type NoteRow =
   | { kind: "step"; text: string; first: boolean; done: boolean }
   | { kind: "gap" };
 
-/** The detail page as rows of text (each fits 16 columns), ready to draw and scroll. */
+/** The detail page as rows of text (each fits the notebook width), ready to draw and scroll. */
 export function noteRows(
   world: Pick<WorldData, "maps">, flags: Record<string, boolean>, e: NoteEntry, wrap: (t: string, cols: number) => string[],
 ): NoteRow[] {
@@ -52,7 +54,7 @@ export function noteRows(
   // Margin labels (FROM / WHERE / REWARD) sit beside the first line of each block.
   const block = (label: string, text: string) => {
     if (!text) return;
-    wrap(text, 16).forEach((l, i) => rows.push(i === 0 ? { kind: "text", text: l, label } : { kind: "text", text: l }));
+    wrap(text, textCols(SCREEN_W - 38)).forEach((l, i) => rows.push(i === 0 ? { kind: "text", text: l, label } : { kind: "text", text: l }));
   };
   block("FROM", q.giver);
   const area = world.maps?.[q.area]?.name;
@@ -61,7 +63,7 @@ export function noteRows(
     if (rows.length) rows.push({ kind: "gap" });
     for (const s of q.steps) {
       const done = e.status === "done" || holds(s.doneWhen, flags);
-      wrap(s.text, 16).forEach((l, i) => rows.push({ kind: "step", text: l, first: i === 0, done }));
+      wrap(s.text, textCols(SCREEN_W - 38)).forEach((l, i) => rows.push({ kind: "step", text: l, first: i === 0, done }));
     }
   }
   if (q.reward && rows.length) rows.push({ kind: "gap" });
@@ -70,7 +72,7 @@ export function noteRows(
 }
 
 const ROW_H = 16;
-const ROWS = 6;
+const ROWS = BOOK_ROWS;
 let lastIndex = 0;
 
 export function notesScreen(ctx: GameContext): Promise<void> {
@@ -81,11 +83,11 @@ export function notesScreen(ctx: GameContext): Promise<void> {
   const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
     frame = f;
     const all = entries();
-    drawPaper(g, 0, 0, 160, 112, "cream");
+    drawPaper(g, 0, 0, SCREEN_W, FOOTER_Y, "cream");
     header(g, "FIELD NOTES", `${all.filter((e) => e.status === "done").length}/${all.length}`);
-    for (let r = 0; r <= ROWS; r++) { g.fillStyle = RULE; g.fillRect(0, 12 + r * ROW_H + 15, 160, 1); }
+    for (let r = 0; r <= ROWS; r++) { g.fillStyle = RULE; g.fillRect(0, 12 + r * ROW_H + 15, SCREEN_W, 1); }
     g.fillStyle = MARGIN;
-    g.fillRect(22, 9, 1, 103);
+    g.fillRect(22, 9, 1, FOOTER_Y - 9);
     if (!list) return;
     if (all.length === 0) ctx.ui.drawText(g, "No notes yet.", 30, 30, FADED);
     for (const [i, r] of list.visibleRows()) {
@@ -94,29 +96,31 @@ export function notesScreen(ctx: GameContext): Promise<void> {
       const sel = i === list.index;
       if (sel) {
         g.fillStyle = "#f8e898";
-        g.fillRect(23, y - 1, 137, 12);
+        g.fillRect(23, y - 1, SCREEN_W - 23, 12);
         g.fillStyle = "#f0d870";
-        g.fillRect(23, y + 10, 137, 1);
+        g.fillRect(23, y + 10, SCREEN_W - 23, 1);
       }
       checkbox(g, 8, y + 1, e.status === "done");
       const done = e.status === "done";
-      ctx.ui.drawText(g, e.quest.title.slice(0, 16), 28, y, done ? FADED : INK);
+      ctx.ui.drawText(g, e.quest.title.slice(0, textCols(HALF - 24)), 28, y, done ? FADED : INK);
+      const area = ctx.world.maps?.[e.quest.area]?.name?.toUpperCase() ?? "";
+      drawTiny(g, area.slice(0, Math.floor((HALF - 24) / 4)), HALF + 8, y + 2, FADED);
     }
     if (list.count() > 0) {
       const ry = 14 + (list.index - list.scroll) * ROW_H;
-      ribbon(g, 152, ry + cursorBob(frame));
+      ribbon(g, SCREEN_W - 8, ry + cursorBob(frame));
     }
-    if (list.canScrollDown()) drawMoreArrow(ctx, g, 140, 103, frame);
-    if (list.canScrollUp()) drawMoreArrow(ctx, g, 140, 9, frame, "up");
+    if (list.canScrollDown()) drawMoreArrow(ctx, g, SCREEN_W - 16, FOOTER_Y - 9, frame);
+    if (list.canScrollUp()) drawMoreArrow(ctx, g, SCREEN_W - 16, 9, frame, "up");
     // the selected note's status and area on a kraft label
-    drawPaper(g, 0, 112, 160, 32, "kraft");
+    drawPaper(g, 0, FOOTER_Y, SCREEN_W, 32, "kraft");
     g.fillStyle = "#6a4a28";
-    g.fillRect(4, 115, 152, 1); g.fillRect(4, 140, 152, 1); g.fillRect(4, 115, 1, 26); g.fillRect(155, 115, 1, 26);
+    g.fillRect(4, FOOTER_Y + 3, SCREEN_W - 8, 1); g.fillRect(4, SCREEN_H - 4, SCREEN_W - 8, 1); g.fillRect(4, FOOTER_Y + 3, 1, 26); g.fillRect(SCREEN_W - 5, FOOTER_Y + 3, 1, 26);
     const cur = all[list.index];
     if (cur) {
-      drawTiny(g, cur.status === "done" ? "DONE" : "IN PROGRESS", 10, 119, cur.status === "done" ? STAMP : "#6a4a28");
+      drawTiny(g, cur.status === "done" ? "DONE" : "IN PROGRESS", 10, FOOTER_Y + 7, cur.status === "done" ? STAMP : "#6a4a28");
       const where = ctx.world.maps?.[cur.quest.area]?.name?.toUpperCase() ?? "";
-      ctx.ui.drawText(g, where.slice(0, 17), 10, 127, "#3a2814");
+      ctx.ui.drawText(g, where.slice(0, textCols(SCREEN_W - 20)), 10, FOOTER_Y + 15, "#3a2814");
     }
   };
 
@@ -140,18 +144,18 @@ function noteDetail(ctx: GameContext, e: NoteEntry): Promise<void> {
   const rows = noteRows(ctx.world, ctx.state.flags, e, (t, c) => ctx.ui.wrap(t, c));
   const LINE = 10;
   const TOP = 16;
-  const VISIBLE = Math.floor((144 - TOP - 4) / LINE);
+  const VISIBLE = Math.floor((SCREEN_H - TOP - 4) / LINE);
   let scroll = 0;
   let frame = 0;
   const maxScroll = Math.max(0, rows.length - VISIBLE);
 
   const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
     frame = f;
-    drawPaper(g, 0, 0, 160, 144, "cream");
-    for (let y = TOP + 9; y < 144; y += LINE) { g.fillStyle = RULE; g.fillRect(0, y, 160, 1); }
+    drawPaper(g, 0, 0, SCREEN_W, SCREEN_H, "cream");
+    for (let y = TOP + 9; y < SCREEN_H; y += LINE) { g.fillStyle = RULE; g.fillRect(0, y, SCREEN_W, 1); }
     g.fillStyle = MARGIN;
-    g.fillRect(27, 12, 1, 132);
-    header(g, e.quest.title.slice(0, 16));
+    g.fillRect(27, 12, 1, SCREEN_H - 12);
+    header(g, e.quest.title.slice(0, textCols(SCREEN_W - 8)));
     rows.slice(scroll, scroll + VISIBLE).forEach((r, i) => {
       const y = TOP + i * LINE;
       switch (r.kind) {
@@ -165,9 +169,9 @@ function noteDetail(ctx: GameContext, e: NoteEntry): Promise<void> {
           break;
       }
     });
-    if (e.status === "done") stamp(g, 104, 112);
-    if (scroll < maxScroll) drawMoreArrow(ctx, g, 148, 134, frame);
-    if (scroll > 0) drawMoreArrow(ctx, g, 148, 13, frame, "up");
+    if (e.status === "done") stamp(g, SCREEN_W - 56, SCREEN_H - 24);
+    if (scroll < maxScroll) drawMoreArrow(ctx, g, SCREEN_W - 12, SCREEN_H - 10, frame);
+    if (scroll > 0) drawMoreArrow(ctx, g, SCREEN_W - 12, 13, frame, "up");
   };
 
   const main = async (flow: Flow) => {
@@ -190,11 +194,11 @@ function noteDetail(ctx: GameContext, e: NoteEntry): Promise<void> {
 function header(g: CanvasRenderingContext2D, title: string, right?: string) {
   // green cloth spine with a stitched edge
   g.fillStyle = "#4a6a48";
-  g.fillRect(0, 0, 160, 11);
+  g.fillRect(0, 0, SCREEN_W, 11);
   g.fillStyle = "#6a8a60";
-  for (let x = 2; x < 160; x += 4) g.fillRect(x, 9, 2, 1);
+  for (let x = 2; x < SCREEN_W; x += 4) g.fillRect(x, 9, 2, 1);
   drawTiny(g, title, 4, 3, "#f0e8c8");
-  if (right) drawTiny(g, right, 156 - right.length * 4, 3, "#c8e0a8");
+  if (right) drawTiny(g, right, RIGHT + 4 - right.length * 4, 3, "#c8e0a8");
 }
 
 /** A hand-drawn 7x7 box, ticked in green when done. */

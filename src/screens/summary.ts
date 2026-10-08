@@ -4,20 +4,24 @@
 // move up, and A / SELECT on another swaps the two (an updated mechanic).
 
 import type { GameContext, Input, Quickened, SpeciesId, TypeId } from "../contracts";
-import { SPECIES_IDS, speciesPath, UI } from "../contracts";
+import { SPECIES_IDS, speciesPath, SCREEN_W, SCREEN_H, UI } from "../contracts";
 import { expProgress, expToLevel } from "../battle/logic/exp";
 import { getMove, getSpecies, qName, speciesName, STATUS_ABBR, TYPE_NAMES } from "../battle/logic/lookup";
 import { MAX_LEVEL } from "../battle/logic/stats";
 import { runFlowScene, type Flow } from "./kit/flow";
 import {
   cursorBob, drawCursor, drawExpBar, drawHpBar, drawLeaf, drawLevel, drawPaper, drawSpecies, drawStatusBadge,
-  drawTextRight, drawTiny, drawTypeTag, drawWiltBadge, hline, pad, TYPE_COLORS, preload,
+  drawTextRight, drawTiny, drawTypeTag, drawWiltBadge, pad, TYPE_COLORS, preload,
 } from "./kit/draw";
 import { playerName } from "./kit/text";
 import { idleFrameCount, idleKind } from "./kit/idle";
 import { drawSeedBig } from "../ui/seedArt";
 import { seedHint } from "../overworld/nursery";
 
+import { RIGHT, textCols } from "./kit/layout";
+
+const DETAIL_X = 112;
+const DETAIL_W = SCREEN_W - DETAIL_X - 8;
 const PAGE_COLORS = ["#e070a8", "#58a040", "#3888e0"];
 const PAGE_DARK = ["#883060", "#285820", "#183888"];
 const PAGE_NAMES = ["INFO", "STATS", "MOVES"];
@@ -48,7 +52,7 @@ export function summaryScreen(ctx: GameContext, list: Quickened[], start: number
     frame = f;
     const slide = slideDir * Math.max(0, 24 - (frame - slideAt) * 6);
     const q = list[idx];
-    drawPaper(g, 0, 0, 160, 144, "white");
+    drawPaper(g, 0, 0, SCREEN_W, SCREEN_H, "white");
     if (!q) return;
     if (q.seed) {
       drawSeedPage(ctx, g, q, frame);
@@ -56,6 +60,9 @@ export function summaryScreen(ctx: GameContext, list: Quickened[], start: number
     }
     drawHeader(ctx, g, q, page, frame);
     g.save();
+    g.beginPath();
+    g.rect(DETAIL_X, 24, SCREEN_W - DETAIL_X, SCREEN_H - 24);
+    g.clip();
     g.translate(slide, 0);
     if (page === 0) drawInfo(ctx, g, q);
     else if (page === 1) drawStats(ctx, g, q);
@@ -130,155 +137,111 @@ export function summaryScreen(ctx: GameContext, list: Quickened[], start: number
 }
 
 function drawHeader(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, page: number, frame: number) {
-  // a coloured band with the page tabs (Crystal's coloured squares)
   g.fillStyle = PAGE_COLORS[page];
-  g.fillRect(0, 0, 160, 2);
-  for (let i = 0; i < 3; i++) {
-    const x = 112 + i * 16;
-    const on = i === page;
-    g.fillStyle = on ? PAGE_COLORS[i] : "#d8d8d0";
-    g.fillRect(x, 2, 14, on ? 7 : 5);
-    if (on) { g.fillStyle = PAGE_DARK[i]; g.fillRect(x, 9, 14, 1); }
-  }
-  drawTiny(g, PAGE_NAMES[page], 112, 11, PAGE_DARK[page]);
-  if (page === 2) {
-    // compact header on the moves page: icon-sized portrait strip
-    ctx.ui.drawText(g, qName(ctx.data, q), 8, 8);
-    drawLevel(ctx, g, q.level, 8, 18);
-    if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 40, 19, frame);
-    hline(g, 0, 30, 160, PAGE_DARK[page]);
-    hline(g, 0, 31, 160, PAGE_COLORS[page]);
-    return;
-  }
-  // the specimen: on a little mount with a soft shadow
+  g.fillRect(0, 0, SCREEN_W, 2);
+  PAGE_NAMES.forEach((label, i) => {
+    const x = DETAIL_X + i * Math.floor(DETAIL_W / 3);
+    g.fillStyle = i === page ? PAGE_COLORS[i] : "#d8d8d0";
+    g.fillRect(x, 4, Math.floor(DETAIL_W / 3) - 4, 16);
+    drawTiny(g, label, x + 8, 9, i === page ? PAGE_DARK[i] : UI.dark);
+  });
+  drawTiny(g, `NO. ${String(herbariumNumber(q.species)).padStart(3, "0")}`, 8, 10);
   g.fillStyle = "#e8e4d4";
-  g.fillRect(2, 6, 58, 54);
-  g.fillStyle = "#d0c8b0";
-  g.fillRect(2, 59, 58, 1);
-  g.fillRect(59, 6, 1, 54);
-  // Idle poses when the art has them (a 1px bob otherwise); wilted, dormant or frozen plants hold still.
+  g.fillRect(24, 32, 58, 58);
   const lively = q.hp > 0 && q.status !== "dormant" && q.status !== "frostbite";
   const animated = idleFrameCount(q.species) > 1;
   const bob = lively && !animated ? cursorBob(frame + 10) : 0;
   const pose = lively && animated ? idleKind(q.species, frame, `:summary:${q.uid}`) : "front";
-  drawSpecies(ctx, g, q.species, pose, 2, 4 - bob, { sport: q.sport });
-  drawTiny(g, "NO.", 64, 18);
-  ctx.ui.drawText(g, String(herbariumNumber(q.species)).padStart(3, "0"), 76, 16);
-  if (ctx.state.herbarium.caught.includes(q.species)) drawLeaf(g, 102, 17);
-  ctx.ui.drawText(g, qName(ctx.data, q), 64, 26);
-  if (q.nickname) ctx.ui.drawText(g, `/${speciesName(ctx.data, q.species)}`.slice(0, 12), 64, 35, "#506050");
-  drawLevel(ctx, g, q.level, 64, 46);
-  if (q.hp <= 0) drawWiltBadge(g, 96, 47);
-  else if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 96, 47, frame);
-  if (q.sport) ctx.ui.drawText(g, "♥", 150, 46, "#c08020");
-  hline(g, 0, 62, 160, PAGE_DARK[page]);
-  hline(g, 0, 63, 160, PAGE_COLORS[page]);
+  drawSpecies(ctx, g, q.species, pose, 24, 32 - bob, { sport: q.sport });
+  ctx.ui.wrap(qName(ctx.data, q), 12).forEach((l, i) => ctx.ui.drawText(g, l, 8, 100 + i * 10));
+  drawLevel(ctx, g, q.level, 8, 124);
+  if (q.hp <= 0) drawWiltBadge(g, 48, 125);
+  else if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 48, 125, frame);
+  if (q.sport) ctx.ui.drawText(g, "♥", 88, 124, "#c08020");
+  if (ctx.state.herbarium.caught.includes(q.species)) drawLeaf(g, 88, 142);
+  if (q.nickname) ctx.ui.wrap(speciesName(ctx.data, q.species), 12).forEach((l, i) => drawTiny(g, l, 8, 142 + i * 8, UI.dark));
+  g.fillStyle = PAGE_DARK[page];
+  g.fillRect(DETAIL_X - 8, 24, 1, SCREEN_H - 32);
 }
 
-/** A seed's only page: the seed on its mount, and a hint at how close it is to sprouting. */
 function drawSeedPage(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, frame: number) {
-  g.fillStyle = "#c8a070";
-  g.fillRect(0, 0, 160, 2);
-  g.fillStyle = "#e8e4d4";
-  g.fillRect(2, 6, 58, 54);
-  g.fillStyle = "#d0c8b0";
-  g.fillRect(2, 59, 58, 1);
-  g.fillRect(59, 6, 1, 54);
-  // close to sprouting, it gives the odd wiggle
   const steps = q.seed?.steps ?? 0;
   const wob = steps <= 150 && frame % 90 < 12 ? [0, 1, 0, -1][Math.floor(frame / 3) % 4] : 0;
-  drawSeedBig(g, ctx.assets, 3 + wob, 4, 0);
-  ctx.ui.drawText(g, "SEED", 64, 16);
-  drawTiny(g, "FROM THE NURSERY GARDEN", 64, 28, "#506050");
-  hline(g, 0, 62, 160, "#8a5030");
-  hline(g, 0, 63, 160, "#c8a070");
-  ctx.ui.drawText(g, "STATE", 8, 72, "#8a5030");
-  ctx.ui.wrap(seedHint(steps), 18).slice(0, 3).forEach((l, i) => ctx.ui.drawText(g, l, 8, 86 + i * 10));
-  drawTiny(g, "KEEP WALKING TO WARM IT.", 8, 128, "#8a9a88");
+  drawSeedBig(g, ctx.assets, 24 + wob, 48, 0);
+  ctx.ui.drawText(g, "SEED", DETAIL_X, 32);
+  drawTiny(g, "FROM THE NURSERY GARDEN", DETAIL_X, 48, UI.dark);
+  ctx.ui.wrap(seedHint(steps), textCols(DETAIL_W)).forEach((l, i) => ctx.ui.drawText(g, l, DETAIL_X, 72 + i * 16));
+  drawTiny(g, "KEEP WALKING TO WARM IT.", DETAIL_X, SCREEN_H - 24, "#8a9a88");
 }
 
 function drawInfo(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened) {
   const sp = getSpecies(ctx.data, q.species);
-  ctx.ui.drawText(g, "TYPE/", 8, 68);
-  let x = 56;
+  ctx.ui.drawText(g, "TYPE/", DETAIL_X, 32);
+  let x = DETAIL_X + 48;
   for (const t of sp.types as readonly TypeId[]) {
-    drawTypeTag(ctx, g, t, TYPE_NAMES[t], x, 68);
+    drawTypeTag(ctx, g, t, TYPE_NAMES[t], x, 32);
     x += ctx.ui.measure(TYPE_NAMES[t]) + 8;
   }
-  ctx.ui.drawText(g, `TENDED BY ${playerName(ctx)}`.slice(0, 19), 8, 80);
+  const lines = [`TENDED BY ${playerName(ctx)}`];
   const met = q.metAt ? ctx.world.maps?.[q.metAt.map]?.name : undefined;
-  if (met) ctx.ui.drawText(g, `MET ${met.toUpperCase()}`.slice(0, 19), 8, 90);
-  ctx.ui.drawText(g, "EXP POINTS", 8, 104);
-  drawTextRight(ctx, g, String(q.exp), 152, 112);
+  if (met) lines.push(`MET ${met.toUpperCase()}`);
+  let y = 56;
+  for (const text of lines) for (const l of ctx.ui.wrap(text, textCols(DETAIL_W))) {
+    ctx.ui.drawText(g, l, DETAIL_X, y); y += 12;
+  }
+  ctx.ui.drawText(g, "EXP POINTS", DETAIL_X, 108);
+  drawTextRight(ctx, g, String(q.exp), RIGHT, 120);
   if (q.level < MAX_LEVEL) {
     const need = expToLevel(ctx.data, q, q.level + 1) - q.exp;
-    ctx.ui.drawText(g, `${need} to`, 8, 122);
-    drawLevel(ctx, g, q.level + 1, 8 + ctx.ui.measure(`${need} to `), 122);
+    ctx.ui.drawText(g, `${need} to`, DETAIL_X, 140);
+    drawLevel(ctx, g, q.level + 1, DETAIL_X + ctx.ui.measure(`${need} to `), 140);
   }
-  drawExpBar(g, 88, 132, expProgress(ctx.data, q), 64);
+  drawExpBar(g, DETAIL_X, SCREEN_H - 20, expProgress(ctx.data, q), DETAIL_W);
 }
 
 function drawStats(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened) {
-  drawHpBar(g, 8, 69, q.hp, q.stats.hp, 48);
-  drawTextRight(ctx, g, `${pad(Math.max(0, q.hp), 3)}/${pad(q.stats.hp, 3)}`, 152, 68);
+  drawHpBar(g, DETAIL_X, 33, q.hp, q.stats.hp, 64);
+  drawTextRight(ctx, g, `${pad(Math.max(0, q.hp), 3)}/${pad(q.stats.hp, 3)}`, RIGHT, 32);
   const rows: [string, keyof Quickened["stats"]][] = [
     ["ATTACK", "atk"], ["DEFENCE", "def"], ["SPCL.ATK", "spa"], ["SPCL.DEF", "spd"], ["SPEED", "spe"],
   ];
   const best = Math.max(...rows.map(([, k]) => q.stats[k]));
   rows.forEach(([label, k], i) => {
-    const y = 80 + i * 10;
-    if (i % 2 === 0) { g.fillStyle = "#eef4e6"; g.fillRect(4, y - 1, 152, 10); }
-    ctx.ui.drawText(g, label, 8, y);
-    // a small bar shows each stat relative to the strongest
-    const w = Math.max(1, Math.round((q.stats[k] / Math.max(1, best)) * 32));
-    g.fillStyle = "#c8dcb8";
-    g.fillRect(84, y + 2, 32, 4);
-    g.fillStyle = "#58a040";
-    g.fillRect(84, y + 2, w, 4);
-    drawTextRight(ctx, g, String(q.stats[k]), 152, y);
+    const y = 56 + i * 18;
+    if (i % 2 === 0) { g.fillStyle = "#eef4e6"; g.fillRect(DETAIL_X - 4, y - 2, DETAIL_W + 4, 16); }
+    ctx.ui.drawText(g, label, DETAIL_X, y);
+    const barX = DETAIL_X + 80, barW = DETAIL_W - 120;
+    g.fillStyle = "#c8dcb8"; g.fillRect(barX, y + 2, barW, 4);
+    g.fillStyle = "#58a040"; g.fillRect(barX, y + 2, Math.max(1, Math.round(q.stats[k] / Math.max(1, best) * barW)), 4);
+    drawTextRight(ctx, g, String(q.stats[k]), RIGHT, y);
   });
-  // Bond: friendship as leaves (0..5)
-  ctx.ui.drawText(g, "BOND", 8, 132);
-  const leaves = Math.round((q.friendship / 255) * 5);
-  for (let i = 0; i < 5; i++) drawLeaf(g, 56 + i * 10, 132, i < leaves ? "#48a040" : "#d0d0c8");
+  ctx.ui.drawText(g, "BOND", DETAIL_X, SCREEN_H - 20);
+  const leaves = Math.round(q.friendship / 255 * 5);
+  for (let i = 0; i < 5; i++) drawLeaf(g, DETAIL_X + 48 + i * 16, SCREEN_H - 20, i < leaves ? "#48a040" : "#d0d0c8");
 }
 
 function drawMoves(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, cursor: number, swapFrom: number, frame: number) {
   q.moves.forEach((m, i) => {
-    const mv = getMove(ctx.data, m.id);
-    const y = 36 + i * 16;
-    if (i === swapFrom) { g.fillStyle = "#d8e8f8"; g.fillRect(0, y - 2, 160, 16); }
-    else if (i === cursor) { g.fillStyle = "#f8f0b8"; g.fillRect(0, y - 2, 160, 16); }
-    ctx.ui.drawText(g, mv.name.toUpperCase(), 16, y);
-    const c = TYPE_COLORS[mv.type];
+    const mv = getMove(ctx.data, m.id), y = 28 + i * 22;
+    if (i === swapFrom || i === cursor) { g.fillStyle = i === swapFrom ? "#d8e8f8" : "#f8f0b8"; g.fillRect(DETAIL_X, y - 2, DETAIL_W, 22); }
+    ctx.ui.drawText(g, mv.name.toUpperCase(), DETAIL_X + 12, y);
     const label = TYPE_NAMES[mv.type] ?? "";
-    g.fillStyle = c?.mid ?? "#808080";
-    g.fillRect(16, y + 8, label.length * 4 + 3, 7);
-    drawTiny(g, label, 18, y + 9, UI.white);
-    drawTiny(g, "PP", 104, y + 9);
-    const low = m.pp <= Math.max(1, Math.floor(mv.pp / 4));
-    ctx.ui.drawText(g, `${pad(m.pp, 2)}/${pad(mv.pp, 2)}`, 116, y + 8, m.pp === 0 ? UI.hpRed : low ? "#c07010" : undefined);
+    g.fillStyle = TYPE_COLORS[mv.type]?.mid ?? UI.dark;
+    g.fillRect(DETAIL_X + 12, y + 9, label.length * 4 + 4, 7);
+    drawTiny(g, label, DETAIL_X + 14, y + 10, UI.white);
+    drawTextRight(ctx, g, `PP ${pad(m.pp, 2)}/${pad(mv.pp, 2)}`, RIGHT, y + 9, m.pp === 0 ? UI.hpRed : undefined);
   });
-  for (let i = q.moves.length; i < 4; i++) ctx.ui.drawText(g, "-", 16, 36 + i * 16);
-  if (swapFrom >= 0) drawCursor(ctx, g, 6, 36 + swapFrom * 16, true);
+  for (let i = q.moves.length; i < 4; i++) ctx.ui.drawText(g, "-", DETAIL_X + 12, 28 + i * 22);
+  if (swapFrom >= 0) drawCursor(ctx, g, DETAIL_X + 2, 28 + swapFrom * 22, true);
   if (cursor >= 0) {
-    drawCursor(ctx, g, 6, 36 + cursor * 16, false, frame);
-    const m = q.moves[cursor];
-    const mv = getMove(ctx.data, m.id);
-    ctx.ui.drawWindow(g, 0, 100, 160, 44);
+    drawCursor(ctx, g, DETAIL_X + 2, 28 + cursor * 22, false, frame);
+    const mv = getMove(ctx.data, q.moves[cursor].id);
     const cat = mv.category === "physical" ? "PHYSICAL" : mv.category === "special" ? "SPECIAL" : "STATUS";
-    if (swapFrom >= 0) {
-      drawTiny(g, "SWAP WITH WHICH MOVE?", 8, 106, UI.dark);
-    } else {
-      drawTiny(g, `POW ${mv.power > 0 ? mv.power : "--"}`, 8, 106);
-      drawTiny(g, `ACC ${mv.accuracy === null ? "--" : mv.accuracy}`, 48, 106);
-      drawTiny(g, cat, 92, 106, UI.dark);
-    }
-    const lines = ctx.ui.wrap(mv.description || "", 18).slice(0, 2);
-    lines.forEach((l, i) => ctx.ui.drawText(g, l, 8, 116 + i * 10));
+    ctx.ui.drawWindow(g, DETAIL_X, 120, SCREEN_W - DETAIL_X, SCREEN_H - 120);
+    drawTiny(g, swapFrom >= 0 ? "SWAP WITH WHICH MOVE?" : `POW ${mv.power || "--"}  ACC ${mv.accuracy ?? "--"}  ${cat}`, DETAIL_X + 8, 128);
+    ctx.ui.wrap(mv.description || "", textCols(DETAIL_W - 8)).slice(0, 3).forEach((l, i) => ctx.ui.drawText(g, l, DETAIL_X + 8, 138 + i * 12));
   } else {
-    drawTiny(g, "A: DETAILS  SELECT: SWAP", 8, 104, UI.dark);
-    const hint = "PICK A MOVE, THEN ITS NEW SLOT";
-    drawTiny(g, hint, 8, 112, "#8a9a88");
+    drawTiny(g, "A: DETAILS  SELECT: SWAP", DETAIL_X, 128, UI.dark);
+    drawTiny(g, "PICK A MOVE, THEN ITS NEW SLOT", DETAIL_X, 140, "#8a9a88");
   }
 }

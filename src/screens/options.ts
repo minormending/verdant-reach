@@ -3,10 +3,12 @@
 // setting (GameState has no field for them), kept in localStorage.
 
 import type { GameContext, Input } from "../contracts";
-import { UI } from "../contracts";
+import { SCREEN_W, SCREEN_H, UI } from "../contracts";
 import { runFlowScene, type Flow } from "./kit/flow";
 import { drawCursor, drawPaper, drawTiny } from "./kit/draw";
 import { battleAnimsOn, followerOn } from "../save";
+
+import { HALF, RIGHT } from "./kit/layout";
 
 const KEY = "verdant-reach-volume";
 const SPEEDS = ["slow", "mid", "fast"] as const;
@@ -66,31 +68,31 @@ export function optionsScreen(ctx: GameContext): Promise<void> {
 
   const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
     frame = f;
-    drawPaper(g, 0, 0, 160, 144, "cream");
+    drawPaper(g, 0, 0, SCREEN_W, SCREEN_H, "cream");
     g.fillStyle = "#4a6a48";
-    g.fillRect(0, 0, 160, 12);
+    g.fillRect(0, 0, SCREEN_W, 12);
     ctx.ui.drawText(g, "OPTIONS", 8, 2, "#f0e8c8");
-    const ys = [17, 45, 59, 73, 87, 104];
+    const ys = Array.from({ length: ROWS }, (_, i) => 24 + i * Math.floor((SCREEN_H - 48) / ROWS));
     // row highlight
     g.fillStyle = "#f8e898";
-    g.fillRect(4, ys[row] - 3, 152, row === 0 ? 26 : 14);
+    g.fillRect(4, ys[row] - 3, SCREEN_W - 8, 18);
     const speed = ctx.state?.options?.textSpeed ?? "mid";
     ctx.ui.drawText(g, "TEXT SPEED", 16, ys[0]);
     SPEEDS.forEach((sp, i) => {
-      const x = 24 + i * 44;
+      const x = HALF + 8 + i * 48;
       const on = sp === speed;
       g.fillStyle = on ? "#4a6a48" : "#e4dcc4";
-      g.fillRect(x - 3, ys[0] + 10, 40, 10);
-      ctx.ui.drawText(g, sp.toUpperCase(), x + (sp === "mid" ? 4 : 0), ys[0] + 11, on ? "#f8f8f0" : "#8a8068");
+      g.fillRect(x - 3, ys[0] - 1, 40, 10);
+      ctx.ui.drawText(g, sp.toUpperCase(), x + (sp === "mid" ? 4 : 0), ys[0], on ? "#f8f8f0" : "#8a8068");
     });
     ctx.ui.drawText(g, "MUSIC", 16, ys[1]);
-    bar(g, 80, ys[1] - 2, vol.music);
-    drawTiny(g, String(vol.music).padStart(2, " "), 144, ys[1] + 1, "#6a5a40");
+    bar(g, HALF + 8, ys[1] - 2, vol.music);
+    drawTiny(g, String(vol.music).padStart(2, " "), RIGHT - 8, ys[1] + 1, "#6a5a40");
     ctx.ui.drawText(g, "SOUND", 16, ys[2]);
-    bar(g, 80, ys[2] - 2, vol.sfx);
-    drawTiny(g, String(vol.sfx).padStart(2, " "), 144, ys[2] + 1, "#6a5a40");
+    bar(g, HALF + 8, ys[2] - 2, vol.sfx);
+    drawTiny(g, String(vol.sfx).padStart(2, " "), RIGHT - 8, ys[2] + 1, "#6a5a40");
     const toggle = (y: number, on: boolean) => {
-      for (const [label, x, w, val] of [["ON", 106, 20, true], ["OFF", 128, 26, false]] as const) {
+      for (const [label, x, w, val] of [["ON", HALF + 8, 32, true], ["OFF", HALF + 48, 40, false]] as const) {
         const sel = on === val;
         g.fillStyle = sel ? "#4a6a48" : "#e4dcc4";
         g.fillRect(x, y - 1, w, 10);
@@ -103,9 +105,9 @@ export function optionsScreen(ctx: GameContext): Promise<void> {
     toggle(ys[4], battleAnimsOn(ctx.state?.options));
     ctx.ui.drawText(g, "DONE", 16, ys[5]);
     drawCursor(ctx, g, 6, ys[row], false, frame);
-    ctx.ui.drawWindow(g, 0, 120, 160, 24);
+    ctx.ui.drawWindow(g, 0, SCREEN_H - 24, SCREEN_W, 24);
     const help = ["◀▶ text speed", "◀▶ volume", "◀▶ volume", "Lead plant follows", "Move animations", "A: back"][row];
-    ctx.ui.drawText(g, help, 8, 128, UI.dark);
+    ctx.ui.drawText(g, help, 8, SCREEN_H - 16, UI.dark);
   };
 
   const main = async (flow: Flow) => {

@@ -1,13 +1,15 @@
 // Specimen Cabinet (PC storage): move Quickened between party and box.
 
 import type { GameContext, Quickened } from "../contracts";
-import { speciesPath, TEXTBOX, UI } from "../contracts";
+import { speciesPath, SCREEN_W, UI } from "../contracts";
 import { qName } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
-import { clearScreen, drawCursor, drawIcon, drawLevel, drawMoreArrow, drawTiny, preload } from "./kit/draw";
+import { clearScreen, drawCursor, drawIcon, drawLevel, drawMoreArrow, drawSpecies, drawTiny, preload } from "./kit/draw";
 import { ListView, Menu, ScreenUi } from "./kit/widgets";
 import { summaryScreen } from "./summary";
 import { drawSeedIcon } from "../ui/seedArt";
+
+import { aboveText, CONTENT_H, HALF, LIST_ROWS } from "./kit/layout";
 
 type Mode = "menu" | "deposit" | "withdraw";
 
@@ -24,19 +26,19 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
     frame = f;
     clearScreen(g, "#d8e8e0");
     if (mode === "menu") {
-      drawCabinetArt(g, 96, 8);
-      ctx.ui.drawText(g, "SPECIMEN", 96, 64, UI.dark);
-      ctx.ui.drawText(g, "CABINET", 100, 74, UI.dark);
+      drawCabinetArt(g, HALF + (HALF - 56) / 2, 16);
+      ctx.ui.drawText(g, "SPECIMEN", HALF + (HALF - 64) / 2, 80, UI.dark);
+      ctx.ui.drawText(g, "CABINET", HALF + (HALF - 56) / 2, 92, UI.dark);
     } else if (list) {
       const src = source();
       g.fillStyle = UI.dark;
-      g.fillRect(0, 0, 160, 9);
+      g.fillRect(0, 0, SCREEN_W, 9);
       drawTiny(g, mode === "withdraw" ? `CABINET  ${src.length}` : `PARTY  ${src.length}/6`, 4, 2, UI.white);
       for (const [i, r] of list.visibleRows()) {
         const y = 14 + r * 16;
         const q = src[i];
         g.fillStyle = i === list.index ? "#f8f0b8" : r % 2 ? "#e4efe8" : "#d8e8e0";
-        g.fillRect(0, y - 4, 160, 16);
+        g.fillRect(0, y - 4, HALF, 16);
         if (!q) {
           ctx.ui.drawText(g, "CANCEL", 24, y);
           continue;
@@ -45,12 +47,21 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
         if (q.seed) drawSeedIcon(g, ctx.assets, 8, y - 4, f as 0 | 1);
         else drawIcon(ctx, g, q.species, 8, y - 4, f, q.sport);
         ctx.ui.drawText(g, qName(ctx.data, q).slice(0, 12), 24, y);
-        if (!q.seed) drawLevel(ctx, g, q.level, 124, y);
+        if (!q.seed) drawLevel(ctx, g, q.level, HALF - 36, y);
       }
       const sy = 14 + (list.index - list.scroll) * 16;
       drawCursor(ctx, g, 0, sy, ui.overlays.length > 0, list.frame);
-      if (list.canScrollDown()) drawMoreArrow(ctx, g, 148, 88, frame);
-      if (list.canScrollUp()) drawMoreArrow(ctx, g, 148, 10, frame, "up");
+      if (list.canScrollDown()) drawMoreArrow(ctx, g, HALF - 12, CONTENT_H - 12, frame);
+      if (list.canScrollUp()) drawMoreArrow(ctx, g, HALF - 12, 10, frame, "up");
+    }
+    if (list && mode !== "menu") {
+      const q = source()[list.index];
+      if (q) {
+        const x = HALF + Math.floor((HALF - 56) / 2);
+        if (q.seed) drawSeedIcon(g, ctx.assets, x + 20, 40, 0);
+        else drawSpecies(ctx, g, q.species, "front", x, 24, { sport: q.sport });
+        ctx.ui.drawText(g, qName(ctx.data, q), HALF + 16, 92);
+      }
     }
     ui?.draw(g);
   };
@@ -63,8 +74,8 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
       mode = "menu";
       return;
     }
-    await preload(ctx, src.map((q) => speciesPath(q.species, "icon")));
-    list = new ListView(ctx, () => source().length + 1, { rows: 5, rowH: 16 });
+    await preload(ctx, src.flatMap((q) => [speciesPath(q.species, "icon"), speciesPath(q.species, "front")]));
+    list = new ListView(ctx, () => source().length + 1, { rows: LIST_ROWS, rowH: 16 });
     for (;;) {
       ui.tb.show(m === "withdraw" ? "Take out which QUICKENED?" : "Store which QUICKENED?", "instant");
       await flow.run(list);
@@ -73,7 +84,7 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
       const q = source()[i];
       const verb = m === "withdraw" ? "WITHDRAW" : "STORE";
       ui.tb.show(`Do what with ${qName(ctx.data, q)}?`, "instant");
-      const c = await ui.choose(new Menu(ctx, [verb, "SUMMARY", "CANCEL"], { x: 72, y: TEXTBOX.y - 56, w: 88 }));
+      const c = await ui.choose(new Menu(ctx, [verb, "SUMMARY", "CANCEL"], aboveText(88, 56)));
       if (c === 1) {
         await summaryScreen(ctx, source(), i);
       } else if (c === 0) {
@@ -119,7 +130,7 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
     let start = 0;
     for (;;) {
       ui.tb.show("What do you want to do?", "instant");
-      const menu = new Menu(ctx, ["STORE", "WITHDRAW", "CANCEL"], { x: 0, y: 0, w: 88, start });
+      const menu = new Menu(ctx, ["STORE", "WITHDRAW", "CANCEL"], { x: 16, y: 24, w: HALF - 32, start });
       const c = await ui.choose(menu);
       if (c < 0 || c === 2) return;
       start = c;

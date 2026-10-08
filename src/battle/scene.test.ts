@@ -1,3 +1,4 @@
+import { ENEMY_HOME, PLAYER_HOME } from "./layout";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BattleOutcome, BattleRequest, GameContext, Quickened, SpeciesId, TrainerDef } from "../contracts";
 import { DATA } from "../data";
@@ -134,9 +135,9 @@ describe("static sport wild battles", () => {
     const foe = scene.s.sides[1].party[0];
     expect(foe.sport).toBe(true);
     await scene.sendOutFoeAnim("Appeared!");
-    scene.drawSprite({} as CanvasRenderingContext2D, sprite(foe), "front", { x: 96, y: 0 }, 56, 1);
+    scene.drawSprite({} as CanvasRenderingContext2D, sprite(foe), "front", ENEMY_HOME, ENEMY_HOME.y + 56, 1);
     expect(drawSpecies).toHaveBeenCalledWith(
-      expect.anything(), expect.anything(), "giant_water_lily", "front", 96, 0,
+      expect.anything(), expect.anything(), "giant_water_lily", "front", ENEMY_HOME.x, ENEMY_HOME.y,
       expect.objectContaining({ sport: true }),
     );
   });
@@ -346,13 +347,13 @@ describe("graft collar scene wiring", () => {
     const { scene } = await setup({ kind: "trainer", trainer: trainer.id });
     const g = {} as CanvasRenderingContext2D;
     const v = { ...sprite(scene.s.sides[1].party[0]), dx: 3, dy: 2, drop: 4, scale: 0.5 };
-    scene.drawSprite(g, v, "front", { x: 96, y: 0 }, 56, 1);
+    scene.drawSprite(g, v, "front", ENEMY_HOME, ENEMY_HOME.y + 56, 1);
     expect(drawSpecies).toHaveBeenCalled();
-    expect(drawGraftCollarPlaceholder).toHaveBeenCalledWith(g, 99, 2, { scale: 0.5, drop: 4, clipBottom: 56, silhouette: undefined });
+    expect(drawGraftCollarPlaceholder).toHaveBeenCalledWith(g, ENEMY_HOME.x + 3, ENEMY_HOME.y + 2, { scale: 0.5, drop: 4, clipBottom: ENEMY_HOME.y + 56, silhouette: undefined });
     vi.mocked(drawGraftCollarPlaceholder).mockClear();
-    scene.drawSprite(g, sprite(scene.s.sides[0].party[0]), "back", { x: 8, y: 40 }, 88, 0);
+    scene.drawSprite(g, sprite(scene.s.sides[0].party[0]), "back", PLAYER_HOME, PLAYER_HOME.y + 48, 0);
     sendOutFoe(scene.s, 1);
-    scene.drawSprite(g, sprite(scene.s.sides[1].party[1]), "front", { x: 96, y: 0 }, 56, 1);
+    scene.drawSprite(g, sprite(scene.s.sides[1].party[1]), "front", ENEMY_HOME, ENEMY_HOME.y + 56, 1);
     expect(drawGraftCollarPlaceholder).not.toHaveBeenCalled();
   });
 
@@ -370,7 +371,7 @@ describe("graft collar scene wiring", () => {
     const foe = scene.s.sides[1].party[0];
     await scene.sendOutFoeAnim("Appeared!");
     expect(scene.say).toHaveBeenCalledExactlyOnceWith("Appeared!", "hold");
-    scene.drawSprite({} as CanvasRenderingContext2D, sprite(foe), "front", { x: 96, y: 0 }, 56, 1);
+    scene.drawSprite({} as CanvasRenderingContext2D, sprite(foe), "front", ENEMY_HOME, ENEMY_HOME.y + 56, 1);
     expect(drawGraftCollarPlaceholder).not.toHaveBeenCalled();
     expect(foe.stats).toEqual(createQuickened(DATA, "great_oak", 27, seeded(1)).stats);
     expect(foe).not.toHaveProperty("grafted");

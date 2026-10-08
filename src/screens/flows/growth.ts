@@ -5,7 +5,7 @@
 // learned at this level are offered.
 
 import type { GameContext, Quickened, SpeciesId } from "../../contracts";
-import { speciesPath, UI } from "../../contracts";
+import { speciesPath, SCREEN_W, SCREEN_H, TEXTBOX, UI } from "../../contracts";
 import { applyGrowth } from "../../battle/logic/exp";
 import { qName, speciesName } from "../../battle/logic/lookup";
 import { checker, ellipse, Fx } from "../../battle/fx";
@@ -15,8 +15,9 @@ import { fmt, markCaught } from "../kit/text";
 import { ScreenUi } from "../kit/widgets";
 import { learnMoveFlow } from "./learn";
 
-const SPRITE_X = 52;
-const SPRITE_Y = 24;
+import { centered } from "../kit/layout";
+
+const { x: SPRITE_X, y: SPRITE_Y } = centered(56, 56);
 const CX = SPRITE_X + 28;
 const CY = SPRITE_Y + 30;
 
@@ -42,9 +43,9 @@ export function runGrowth(ctx: GameContext, q: Quickened, to: SpeciesId, opts: {
     draw(g, frame) {
       // greenhouse light: a pale wash, then rays turning behind the plant
       g.fillStyle = "#f4f4e8";
-      g.fillRect(0, 0, 160, 96);
+      g.fillRect(0, 0, SCREEN_W, TEXTBOX.y);
       g.fillStyle = "#e8ecd8";
-      g.fillRect(0, 80, 160, 16);
+      g.fillRect(0, TEXTBOX.y - 16, SCREEN_W, 16);
       if (view.rays > 0) {
         const n = 12;
         for (let i = 0; i < n; i++) {
@@ -52,7 +53,7 @@ export function runGrowth(ctx: GameContext, q: Quickened, to: SpeciesId, opts: {
           const len = Math.round(30 + view.rays * 60);
           for (let r = 10; r < len; r += 2) {
             const x = Math.round(CX + Math.cos(a) * r), y = Math.round(CY + Math.sin(a) * r * 0.8);
-            if (y < 0 || y >= 96) continue;
+            if (y < 0 || y >= TEXTBOX.y) continue;
             g.fillStyle = i % 2 ? "#f0d878" : "#c8e098";
             g.fillRect(x, y, 2, 2);
           }
@@ -72,9 +73,9 @@ export function runGrowth(ctx: GameContext, q: Quickened, to: SpeciesId, opts: {
       if (view.white > 0) {
         const step = Math.ceil(view.white * 4) / 4;
         g.fillStyle = `rgba(248,248,248,${step})`;
-        g.fillRect(0, 0, 160, 144);
+        g.fillRect(0, 0, SCREEN_W, SCREEN_H);
       }
-      if (!ui?.tb.visible) ctx.ui.drawWindow(g, 0, 96, 160, 48);
+      if (!ui?.tb.visible) ctx.ui.drawWindow(g, TEXTBOX.x, TEXTBOX.y, TEXTBOX.w, TEXTBOX.h);
       ui?.draw(g);
       void UI;
     },

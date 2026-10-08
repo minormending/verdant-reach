@@ -1,3 +1,5 @@
+import { SCREEN_W } from "../contracts";
+import { partyRowY, RIGHT } from "./kit/layout";
 import { describe, expect, it, vi } from "vitest";
 import type { Button, GameContext, GameData, ItemId, Quickened, SpeciesId } from "../contracts";
 import { createQuickened } from "../battle/logic/stats";
@@ -212,12 +214,12 @@ describe("growth item party labels", () => {
     for (let i = 0; i < 20; i++) await h.tick();
     const labels = h.drawParty().filter(([, text]) => text === "ABLE" || text === "NOT ABLE");
     expect(labels.map(([, text, x, y]) => [text, x, y])).toEqual([
-      ["ABLE", 125, 8], ["NOT ABLE", 93, 24], ["NOT ABLE", 93, 40],
+      ["ABLE", RIGHT - 4 * 8, partyRowY(0) + 4], ["NOT ABLE", RIGHT - 8 * 8, partyRowY(1) + 4], ["NOT ABLE", RIGHT - 8 * 8, partyRowY(2) + 4],
     ]);
-    // HP tab + framed 48px bar ends at x=82. All labels start beyond it.
+    // Growth eligibility occupies the right column beyond the HP tab.
     for (const [, text, x] of labels) {
-      expect(x).toBeGreaterThanOrEqual(82);
-      expect(x + text.length * 8).toBeLessThanOrEqual(160);
+      expect(x).toBeGreaterThanOrEqual(SCREEN_W - 120 + 10);
+      expect(x + text.length * 8).toBeLessThanOrEqual(SCREEN_W);
     }
     await h.tick("b");
     await expect(result).resolves.toBe(-1);

@@ -52,7 +52,7 @@ import { tryRaftMove } from "../src/overworld/raft";
 import { slidePath } from "../src/overworld/ice";
 import { SEED_CHECK_STEPS } from "../src/overworld/nursery";
 import { AdvanceBudget, dialogueProgress, GameplayTasks, NO_PROGRESS_MS, ProgressWatchdog } from "./detectors";
-import { healingItem, strongestMove } from "./battle-driver";
+import { healingItem, menuDirection, strongestMove } from "./battle-driver";
 
 // ---------------------------------------------------------------------------
 // Handles on the running game
@@ -511,9 +511,7 @@ export async function advance(maxPresses = 400, done: () => boolean = idle): Pro
     if (bagKey) key = bagKey;
     else if (battleMenu) {
       const { menu, target } = battleMenu;
-      const cols = menu.opts.cols ?? 1;
-      if (Math.floor(menu.index / cols) !== Math.floor(target / cols)) key = menu.index < target ? "down" : "up";
-      else if (menu.index !== target) key = menu.index < target ? "right" : "left";
+      key = menuDirection(menu, target);
     }
     await press(key);
     // An empty pocket has only CANCEL, so UP cannot change its description.

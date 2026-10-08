@@ -2,12 +2,12 @@
 // / ITEM / CANCEL submenu, and a pick mode for battle and items.
 
 import type { GameContext, ItemId, Quickened } from "../contracts";
-import { speciesPath, TEXTBOX, UI } from "../contracts";
+import { speciesPath, SCREEN_W, UI } from "../contracts";
 import { applyItem, consumeItem, isMedicine } from "../battle/logic/items";
 import { canGrowWith, isGrowthItem, itemGrowthTarget } from "../battle/logic/exp";
 import { qName, STATUS_ABBR } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
-import { drawCursor, drawHpBar, drawIcon, drawLevel, drawStatusBadge, drawTextRight, drawWiltBadge, pad, preload } from "./kit/draw";
+import { clearScreen, drawCursor, drawHpBar, drawIcon, drawLevel, drawStatusBadge, drawTextRight, drawWiltBadge, pad, preload } from "./kit/draw";
 import { fmt } from "./kit/text";
 import { Menu, ScreenUi } from "./kit/widgets";
 import { runGrowth } from "./flows/growth";
@@ -15,6 +15,7 @@ import { summaryScreen } from "./summary";
 // Bag and party call each other only after initialization, so the static cycle is safe.
 import { bagScreen } from "./bag";
 import { drawSeedIcon } from "../ui/seedArt";
+import { aboveText, HALF, PARTY_ROW_H as ROW_H, partyRowY, RIGHT } from "./kit/layout";
 
 export interface PartyOpts {
   mode: "view" | "pick";
@@ -28,8 +29,6 @@ export interface PartyOpts {
   /** Initial cursor row. */
   start?: number;
 }
-
-const ROW_H = 16;
 
 export function preloadPartyArt(ctx: GameContext, party: Quickened[]) {
   const paths: string[] = [];
@@ -51,25 +50,26 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
 
   const draw = (g: CanvasRenderingContext2D, f = frame + 1) => {
     frame = f;
+    clearScreen(g, "#f8f8f0");
     // soft zebra rows; empty slots show as pale dashed plots
     for (let i = 0; i < 6; i++) {
       g.fillStyle = i % 2 ? "#eef4e2" : "#f8f8f0";
-      g.fillRect(0, i * ROW_H, 160, ROW_H);
+      g.fillRect(0, partyRowY(i), SCREEN_W, ROW_H);
     }
     for (let i = party().length; i < 6; i++) {
       g.fillStyle = "#d8e0c8";
-      for (let x = 10; x < 150; x += 4) g.fillRect(x, i * ROW_H + 8, 2, 1);
+      for (let x = 10; x < RIGHT; x += 4) g.fillRect(x, partyRowY(i) + 8, 2, 1);
     }
     if (swapFrom >= 0) {
       g.fillStyle = "#d8e8f8";
-      g.fillRect(0, swapFrom * ROW_H, 160, ROW_H);
+      g.fillRect(0, partyRowY(swapFrom), SCREEN_W, ROW_H);
     }
     if (!hideCursor) {
       g.fillStyle = "#f8f0b8";
-      g.fillRect(0, index * ROW_H, 160, ROW_H);
+      g.fillRect(0, partyRowY(index), SCREEN_W, ROW_H);
       g.fillStyle = UI.dark;
-      g.fillRect(0, index * ROW_H, 160, 1);
-      g.fillRect(0, index * ROW_H + ROW_H - 1, 160, 1);
+      g.fillRect(0, partyRowY(index), SCREEN_W, 1);
+      g.fillRect(0, partyRowY(index) + ROW_H - 1, SCREEN_W, 1);
     }
     party().forEach((q, i) => {
       // rows slide in from the right as the menu opens
@@ -78,8 +78,8 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
       drawRow(ctx, g, q, i, i === index && !hideCursor, frame, shownHp.get(q.uid) ?? q.hp, off, growthItem);
     });
     if (!hideCursor) {
-      if (swapFrom >= 0) drawCursor(ctx, g, 0, swapFrom * ROW_H + 4, true);
-      drawCursor(ctx, g, 0, index * ROW_H + 4, false, frame);
+      if (swapFrom >= 0) drawCursor(ctx, g, 0, partyRowY(swapFrom) + 4, true);
+      drawCursor(ctx, g, 0, partyRowY(index) + 4, false, frame);
     }
     ui?.draw(g);
   };
@@ -113,7 +113,7 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
       if (opts.mode === "pick") {
         const originalIndex = ctx.state.party.indexOf(party()[pick]);
         if (opts.verb) {
-          const sub = new Menu(ctx, [opts.verb, "SUMMARY", "CANCEL"], { x: 88, y: TEXTBOX.y - 56, w: 72 });
+          const sub = new Menu(ctx, [opts.verb, "SUMMARY", "CANCEL"], aboveText(88, 56));
           const c = await ui.choose(sub);
           if (c === 0) return originalIndex;
           if (c === 1) index = await summaryScreen(ctx, party(), pick);
@@ -129,7 +129,7 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
       // View mode submenu
       const q = party()[pick];
       ui.tb.show(fmt(ctx, `Do what with ${qName(ctx.data, q)}?`), "instant");
-      const sub = new Menu(ctx, ["SUMMARY", "SWITCH", "ITEM", "CANCEL"], { x: 88, y: TEXTBOX.y - 72, w: 72 });
+      const sub = new Menu(ctx, ["SUMMARY", "SWITCH", "ITEM", "CANCEL"], aboveText(88, 72));
       const c = await ui.choose(sub);
       if (c === 0) {
         index = await summaryScreen(ctx, party(), pick);
@@ -204,7 +204,7 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
 }
 
 function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i: number, selected: boolean, frame: number, hp: number, off = 0, growthItem?: ItemId) {
-  const y = i * ROW_H;
+  const y = partyRowY(i);
   const x = off;
   const ability = growthItem ? (canGrowWith(ctx.data, q, growthItem) ? "ABLE" : "NOT ABLE") : null;
   if (q.seed) {
@@ -212,7 +212,7 @@ function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i:
     const f = Math.floor(frame / (selected ? 12 : 28)) % 2 as 0 | 1;
     drawSeedIcon(g, ctx.assets, 8 + x, y, f);
     ctx.ui.drawText(g, "SEED", 24 + x, y);
-    if (ability) drawTextRight(ctx, g, ability, 157 + x, y + 8);
+    if (ability) drawTextRight(ctx, g, ability, RIGHT + x, y + 4);
     return;
   }
   // icons bob faster the healthier they are (and fastest when selected), as in Crystal
@@ -222,14 +222,14 @@ function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i:
   drawIcon(ctx, g, q.species, 8 + x, y + hop, f, q.sport);
   const name = qName(ctx.data, q);
   ctx.ui.drawText(g, name.slice(0, 12), 24 + x, y, hp <= 0 ? "#707070" : undefined);
-  drawLevel(ctx, g, q.level, 124 + x, y);
-  drawHpBar(g, 24 + x, y + 9, Math.max(0, hp), q.stats.hp, 48);
-  // The label replaces HP numbers/status; its left edge is 93, past the bar at 82.
+  drawLevel(ctx, g, q.level, HALF - 32 + x, y);
+  drawHpBar(g, SCREEN_W - 120 + x, y + 5, Math.max(0, hp), q.stats.hp, 36);
+  // Growth eligibility replaces HP numbers and status in the right column.
   if (ability) {
-    drawTextRight(ctx, g, ability, 157 + x, y + 8);
+    drawTextRight(ctx, g, ability, RIGHT + x, y + 4);
     return;
   }
-  if (q.hp <= 0) drawWiltBadge(g, 83 + x, y + 9);
-  else if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 83 + x, y + 9, frame);
-  drawTextRight(ctx, g, `${pad(Math.max(0, Math.round(hp)), 3)}/${pad(q.stats.hp, 3)}`, 157 + x, y + 8);
+  if (q.hp <= 0) drawWiltBadge(g, SCREEN_W / 2 + x, y + 5);
+  else if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], SCREEN_W / 2 + x, y + 5, frame);
+  drawTextRight(ctx, g, `${pad(Math.max(0, Math.round(hp)), 3)}/${pad(q.stats.hp, 3)}`, RIGHT + x, y + 4);
 }

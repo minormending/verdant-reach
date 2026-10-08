@@ -3,7 +3,7 @@ import { DATA } from "../src/data";
 import { createBattleState } from "../src/battle/logic/battle";
 import { createQuickened } from "../src/battle/logic/stats";
 import { seeded } from "../src/battle/logic/rng";
-import { healingItem, strongestMove } from "./battle-driver";
+import { healingItem, menuDirection, strongestMove } from "./battle-driver";
 
 function battle() {
   const rng = seeded(1);
@@ -51,4 +51,23 @@ describe("battle driver", () => {
     expect(healingItem(DATA, { rain_jar: 1, water_flask: 2 }, q)).toBe("rain_jar");
     expect(healingItem(DATA, {}, q)).toBeNull();
   });
+});
+
+import type { GameContext } from "../src/contracts";
+import { Menu } from "../src/screens/kit/widgets";
+import { COMMAND_AREA, MOVE_AREA } from "../src/battle/layout";
+
+it("navigates relocated command and move menus by their rendered positions", () => {
+  const ctx = { audio: { playSfx() {} } } as unknown as GameContext;
+  const command = new Menu(ctx, ["FIGHT", "BAG", "QUICKENED", "RUN"], { ...COMMAND_AREA, cols: 2 });
+  expect(menuDirection(command, 3)).toBe("down");
+  command.index = 2;
+  expect(menuDirection(command, 3)).toBe("right");
+  command.index = 3;
+  expect(menuDirection(command, 0)).toBe("up");
+  expect(menuDirection(command, 3)).toBe("a");
+  const moves = new Menu(ctx, ["VINE LASH", "ROOT TAP", "SAP SEAL", "ACORN DROP"], { ...MOVE_AREA, spacing: 8 });
+  expect(menuDirection(moves, 2)).toBe("down");
+  moves.index = 3;
+  expect(menuDirection(moves, 2)).toBe("up");
 });

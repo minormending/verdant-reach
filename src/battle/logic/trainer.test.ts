@@ -1,3 +1,4 @@
+import { TEXTBOX } from "../../contracts";
 import { describe, expect, it } from "vitest";
 import type { GameContext, SpeciesId, Stats, TrainerDef } from "../../contracts";
 import { DATA } from "../../data";
@@ -83,7 +84,7 @@ describe("trainer graft collars", () => {
     }
   });
 
-  it("shows the exact sentence within the scrolling 18 by 2 battle text box", () => {
+  it("shows the exact sentence within the scrolling TEXTBOX battle text box", () => {
     const drawn: string[] = [];
     const seen = new Set<string>();
     const ctx = {
@@ -103,11 +104,11 @@ describe("trainer graft collars", () => {
         drawn.length = 0;
         tb.draw({} as CanvasRenderingContext2D);
         const rows = drawn.filter((s) => s !== "▼");
-        expect(rows.length).toBeLessThanOrEqual(2);
-        for (const row of rows) { expect(row.length).toBeLessThanOrEqual(18); seen.add(row); }
+        expect(rows.length).toBeLessThanOrEqual(TEXTBOX.lines);
+        for (const row of rows) { expect(row.length).toBeLessThanOrEqual(TEXTBOX.cols); seen.add(row); }
       }
       expect(tb.finished).toBe(true);
-      for (const line of wrapText(text, 18)) expect(seen.has(line), text).toBe(true);
+      for (const line of wrapText(text, TEXTBOX.cols)) expect(seen.has(line), text).toBe(true);
     }
   });
 

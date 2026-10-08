@@ -9,6 +9,8 @@ import { createQuickened } from "../battle/logic/stats";
 import { Flow } from "./kit/flow";
 import { clearScreen } from "./kit/draw";
 import { Menu, ScreenUi } from "./kit/widgets";
+import { notesScreen } from "./notes";
+import { centered } from "./kit/layout";
 import { runGrowth } from "./flows/growth";
 import { askNickname } from "./flows/nickname";
 
@@ -49,6 +51,7 @@ export default function devScreens(ctx: GameContext): Scene {
       case "cabinet": return ctx.screens.cabinet();
       case "shop": return ctx.screens.shop(["terrarium_pod", "water_flask", "neem_spray", "spring_water"]);
       case "options": return ctx.screens.options();
+      case "notes": return notesScreen(ctx);
       case "nickname": {
         const q = st.party[0];
         if (q) {
@@ -66,14 +69,14 @@ export default function devScreens(ctx: GameContext): Scene {
       }
     }
   };
-  const names = ["party", "pick", "bag", "battlebag", "herbarium", "summary", "cabinet", "shop", "options", "growth", "nickname"];
+  const names = ["party", "pick", "bag", "battlebag", "herbarium", "summary", "cabinet", "shop", "options", "notes", "growth", "nickname"];
   const main = async () => {
     const first = new URLSearchParams(location.search).get("open");
     if (first) await open(first);
     let start = 0;
     for (;;) {
       ui.tb.show("Screens dev route.", "instant");
-      const m = new Menu(ctx, names.map((n) => n.toUpperCase()), { x: 0, y: 0, w: 112, spacing: 8, start, cancel: false });
+      const m = new Menu(ctx, names.map((n) => n.toUpperCase()), { ...centered(224, 104), w: 224, cols: 2, colW: 104, spacing: 16, start, cancel: false });
       start = await ui.choose(m);
       await open(names[start]);
     }

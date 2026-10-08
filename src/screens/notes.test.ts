@@ -1,3 +1,5 @@
+import { SCREEN_W } from "../contracts";
+import { textCols } from "./kit/layout";
 import { describe, expect, it } from "vitest";
 import type { QuestDef, WorldData } from "../contracts";
 import { wrapText } from "../ui/font";
@@ -40,18 +42,18 @@ describe("NOTES", () => {
     expect(steps().filter((r) => r.kind === "step" && r.first).map((r) => r.kind === "step" && r.done)).toEqual([true, false]);
     const rows = noteRows(world, flags, notesList(world, flags)[0], wrap);
     expect(rows.map((r) => (r.kind === "text" ? r.label : null)).filter(Boolean)).toEqual(["FROM", "WHERE", "REWARD"]);
-    for (const r of rows) if (r.kind !== "gap") expect(r.text.length).toBeLessThanOrEqual(16);
+    for (const r of rows) if (r.kind !== "gap") expect(r.text.length).toBeLessThanOrEqual(textCols(SCREEN_W - 38));
     // a finished quest shows every step ticked
     flags.quest_sap_run_done = true;
     expect(steps().every((r) => r.kind === "step" && r.done)).toBe(true);
   });
 
-  it("the real quests fit the notebook (titles <= 16, giver on the index label <= 17)", () => {
+  it("the real quest titles, giver labels and detail rows fit the widescreen notebook", () => {
     for (const quest of Object.values(WORLD.quests ?? {})) {
-      expect(quest.title.length, quest.id).toBeLessThanOrEqual(16);
-      expect(quest.giver.length, `${quest.id} giver`).toBeLessThanOrEqual(17 * 2);
+      expect(quest.title.length, quest.id).toBeLessThanOrEqual(textCols(SCREEN_W - 38));
+      expect(quest.giver.length, `${quest.id} giver`).toBeLessThanOrEqual(textCols(SCREEN_W - 20) * 2);
       const rows = noteRows(WORLD, {}, { quest, status: "active" }, (t, c) => wrapText(t, c));
-      for (const r of rows) if (r.kind === "text" || r.kind === "step") expect(r.text.length, quest.id).toBeLessThanOrEqual(16);
+      for (const r of rows) if (r.kind === "text" || r.kind === "step") expect(r.text.length, quest.id).toBeLessThanOrEqual(textCols(SCREEN_W - 38));
     }
   });
 });

@@ -2,6 +2,8 @@
 // Each spawns particles / layers on the shared Fx and returns its length in
 // frames. All drawing is whole-pixel, small palettes, light from top-left.
 
+import { SCREEN_W, TEXTBOX } from "../contracts";
+
 import type { TypeId } from "../contracts";
 import type { AnimSpec } from "./anims";
 import {
@@ -242,7 +244,7 @@ function spinSeed(fx: Fx, s: MoveStage): number {
 function windSeeds(fx: Fx, s: MoveStage, fluff = false): number {
   const d = dirOf(s);
   const N = 44;
-  windLines(fx, N, d, 0, 96);
+  windLines(fx, N, d, 0, TEXTBOX.y);
   // Cattail fluff: a denser drift of buff-brown down instead of white parachutes.
   for (let i = 0; i < (fluff ? 11 : 7); i++) {
     fx.add({
@@ -256,10 +258,10 @@ function windSeeds(fx: Fx, s: MoveStage, fluff = false): number {
 }
 
 function windLines(fx: Fx, frames: number, d: number, y0: number, y1: number, color = "#98b0c0", color2 = "#c0d0d8") {
-  const lines = Array.from({ length: 9 }, (_, i) => ({ y: Math.round(lerp(y0 + 4, y1 - 6, i / 8) + R(-3, 3)), len: RI(8, 18), off: RI(0, 160), sp: R(4, 7) }));
+  const lines = Array.from({ length: 9 }, (_, i) => ({ y: Math.round(lerp(y0 + 4, y1 - 6, i / 8) + R(-3, 3)), len: RI(8, 18), off: RI(0, SCREEN_W), sp: R(4, 7) }));
   fx.layer(frames, (g, f) => {
     for (const l of lines) {
-      const x = d > 0 ? ((l.off + f * l.sp) % 200) - 20 : 180 - ((l.off + f * l.sp) % 200);
+      const x = d > 0 ? ((l.off + f * l.sp) % (SCREEN_W + 40)) - 20 : SCREEN_W + 20 - ((l.off + f * l.sp) % (SCREEN_W + 40));
       rect(g, x, l.y, l.len, 1, l.len > 13 ? color : color2);
     }
   });
@@ -383,7 +385,7 @@ function gale(fx: Fx, s: MoveStage, petal: boolean): number {
   const p = petal ? PAL.petal : PAL.leaf;
   const N = 52;
   if (petal) fx.tintScreen("#f8c8e0", N);
-  windLines(fx, N, dirOf(s), 0, 96, petal ? "#d890b0" : "#88b070", petal ? "#f0c0d8" : "#b8d8a0");
+  windLines(fx, N, dirOf(s), 0, TEXTBOX.y, petal ? "#d890b0" : "#88b070", petal ? "#f0c0d8" : "#b8d8a0");
   for (let i = 0; i < 26; i++) {
     fx.add({
       x: s.to.x, y: s.to.y, shape: petal ? "petal" : "leaf", color: i % 3 ? p.a : p.c, color2: p.b, color3: p.c, flip: i % 2 === 0,
@@ -1169,7 +1171,7 @@ function blizzard(fx: Fx, s: MoveStage): number {
   const N = 56;
   fx.tintScreen("#e0f0f8", N);
   for (let i = 0; i < 40; i++) fx.add({
-    x: d > 0 ? R(-20, 0) : R(160, 180), y: R(0, 92), vx: d * R(3, 5), vy: R(0.2, 0.8), shape: i % 3 ? "px1" : "flake", color: "#ffffff", color2: "#a8d0e8",
+    x: d > 0 ? R(-20, 0) : R(SCREEN_W, SCREEN_W + 20), y: R(0, TEXTBOX.y - 4), vx: d * R(3, 5), vy: R(0.2, 0.8), shape: i % 3 ? "px1" : "flake", color: "#ffffff", color2: "#a8d0e8",
     max: 40, delay: i,
   });
   const g0 = s.toGround;
@@ -1179,7 +1181,7 @@ function blizzard(fx: Fx, s: MoveStage): number {
     // the drift piles up over the foe's feet; it never covers the HUD below
     g.save();
     g.beginPath();
-    g.rect(0, 0, 160, 55);
+    g.rect(0, 0, SCREEN_W, s.toGround.y + 6);
     g.clip();
     ellipse(g, g0.x, g0.y + 2, 30, h, "#88b8d8");
     ellipse(g, g0.x - 2, g0.y + 1, 27, Math.max(1, h - 2), "#f8f8f8");
@@ -1199,7 +1201,7 @@ function weatherSun(fx: Fx, s: MoveStage): number {
   const N = 50;
   fx.layer(N, (g, f) => {
     const r = Math.min(14, 2 + f);
-    const cx = 132, cy = 14;
+    const cx = SCREEN_W - 28, cy = 14;
     for (let i = 0; i < 12; i++) {
       const a = (i / 12) * Math.PI * 2 + f * 0.04;
       const r0 = r + 3, r1 = r + 6 + ((i + (f >> 2)) % 2) * 4;
@@ -1218,7 +1220,7 @@ function weatherSun(fx: Fx, s: MoveStage): number {
 function weatherRain(fx: Fx, s: MoveStage): number {
   const N = 50;
   fx.tintScreen("#98a8c8", N);
-  const clouds = [{ x: 20, w: 18 }, { x: 70, w: 22 }, { x: 122, w: 20 }];
+  const clouds = Array.from({ length: Math.ceil(SCREEN_W / 52) }, (_, i) => ({ x: 20 + i * 52, w: i % 2 ? 22 : 18 }));
   fx.layer(N, (g, f) => {
     const drop = Math.min(10, f);
     for (const c of clouds) {
@@ -1227,7 +1229,7 @@ function weatherRain(fx: Fx, s: MoveStage): number {
       checker(g, c.x - c.w, drop - 4, c.w * 2, 6, "#f8f8f8", 0);
     }
   }, { back: true });
-  for (let i = 0; i < 40; i++) fx.add({ x: R(0, 170), y: R(-10, 6), vx: -0.6, vy: R(5, 7), shape: "streak", color: "#5878c8", color2: "#a0d8f8", max: 14, delay: 12 + i });
+  for (let i = 0; i < 40; i++) fx.add({ x: R(0, SCREEN_W + 10), y: R(-10, 6), vx: -0.6, vy: R(5, 7), shape: "streak", color: "#5878c8", color2: "#a0d8f8", max: 14, delay: 12 + i });
   void s;
   return N + 6;
 }
@@ -1237,19 +1239,19 @@ function weatherFrost(fx: Fx, s: MoveStage): number {
   fx.tintScreen("#d8f0f8", N);
   fx.layer(N, (g, f) => {
     const L = Math.min(18, f);
-    for (let i = 0; i < 160; i += 4) {
+    for (let i = 0; i < SCREEN_W; i += 4) {
       const h = Math.max(0, L - ((i * 7) % 9));
       rect(g, i, 0, 3, Math.floor(h / 2), "#f8f8f8");
       px(g, i + 1, Math.floor(h / 2), "#a8d8f0");
-      rect(g, i, 96 - Math.floor(h / 3), 3, Math.floor(h / 3), "#e8f4f8");
+      rect(g, i, TEXTBOX.y - Math.floor(h / 3), 3, Math.floor(h / 3), "#e8f4f8");
     }
-    for (let j = 0; j < 96; j += 4) {
+    for (let j = 0; j < TEXTBOX.y; j += 4) {
       const h = Math.max(0, L - ((j * 5) % 7));
       rect(g, 0, j, Math.floor(h / 2), 3, "#f8f8f8");
-      rect(g, 160 - Math.floor(h / 2), j, Math.floor(h / 2), 3, "#f8f8f8");
+      rect(g, SCREEN_W - Math.floor(h / 2), j, Math.floor(h / 2), 3, "#f8f8f8");
     }
   }, { back: true });
-  for (let i = 0; i < 16; i++) fx.add({ x: R(4, 156), y: R(4, 90), shape: "twinkle", color: "#ffffff", color2: "#88c8e8", max: 12, delay: 10 + i * 2 });
+  for (let i = 0; i < 16; i++) fx.add({ x: R(4, SCREEN_W - 4), y: R(4, TEXTBOX.y - 6), shape: "twinkle", color: "#ffffff", color2: "#88c8e8", max: 12, delay: 10 + i * 2 });
   fx.at(16, () => fx.flashScreen("#f0f8ff", 2));
   void s;
   return N;

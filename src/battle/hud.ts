@@ -3,12 +3,15 @@
 // stat window.
 
 import type { BattleRequest, GameContext, Quickened, StatusId, Stats, TrainerPortraitKey } from "../contracts";
-import { portraitPath, UI } from "../contracts";
+import { portraitPath, SCREEN_W, SCREEN_H, TEXTBOX, UI } from "../contracts";
 import { getSpecies, qName, STATUS_ABBR } from "./logic/lookup";
 import {
   drawExpBar, drawHpBar, drawImageOpts, drawLeaf, drawLevel, drawPod, drawStatusBadge, drawTextRight, drawTiny, pad,
   silhouette, type SpriteDrawOpts,
 } from "../screens/kit/draw";
+import { ENEMY_GROUND, PLAYER_GROUND, PLAYER_HUD_AREA } from "./layout";
+import { HALF } from "../screens/kit/layout";
+export { PLAYER_HUD_AREA } from "./layout";
 import { checker, ellipse } from "./fx";
 
 export interface HudView {
@@ -61,7 +64,7 @@ export function drawGraftCollarPlaceholder(g: CanvasRenderingContext2D, x: numbe
   g.save();
   if (opts.clipBottom !== undefined) {
     g.beginPath();
-    g.rect(0, 0, 160, opts.clipBottom);
+    g.rect(0, 0, SCREEN_W, opts.clipBottom);
     g.clip();
   }
   g.translate(dx, dy);
@@ -81,57 +84,43 @@ export function drawGraftCollarPlaceholder(g: CanvasRenderingContext2D, x: numbe
   g.restore();
 }
 
-/** Enemy box, top-left: name, (leaf if caught), status, level, HP bar, L-frame. */
+/** Enemy HUD in the upper-left, clear of the foe's native-size sprite. */
 export function drawEnemyHud(ctx: GameContext, g: CanvasRenderingContext2D, h: HudView, caught: boolean, frame = 0) {
   if (!h.visible || !h.q) return;
-  const ox = Math.round(h.dx);
-  const name = qName(ctx.data, h.q);
-  ctx.ui.drawText(g, name.slice(0, 12), 8 + ox, 0);
-  if (caught) drawLeaf(g, 8 + ox, 9);
-  if (h.status) drawStatusBadge(g, h.status, STATUS_ABBR[h.status], 18 + ox, 9, frame);
-  drawLevel(ctx, g, h.level, 48 + ox, 8);
-  drawHpBar(g, 16 + ox, 17, h.hp, h.q.stats.hp, 48);
-  // L-shaped frame: left rule and bottom rule with a pointed end
+  const x = 8 + Math.round(h.dx), y = 8;
+  ctx.ui.drawText(g, qName(ctx.data, h.q), x, y);
+  if (caught) drawLeaf(g, x, y + 10);
+  if (h.status) drawStatusBadge(g, h.status, STATUS_ABBR[h.status], x + 12, y + 10, frame);
+  drawLevel(ctx, g, h.level, x + 96, y + 8);
+  drawHpBar(g, x + 8, y + 21, h.hp, h.q.stats.hp, 88);
   g.fillStyle = UI.black;
-  g.fillRect(8 + ox, 19, 1, 6);
-  g.fillRect(8 + ox, 25, 72, 1);
-  g.fillRect(80 + ox, 24, 1, 1);
-  g.fillRect(81 + ox, 23, 1, 1);
+  g.fillRect(x, y + 23, 1, 6);
+  g.fillRect(x, y + 29, 112, 1);
+  g.fillRect(x + 112, y + 28, 1, 1);
+  g.fillRect(x + 113, y + 27, 1, 1);
 }
 
-/** Player box, bottom-right: name, status, level, HP bar + numbers, frame, EXP bar. */
+/** Player HUD between the two creatures, above the command rail. */
 export function drawPlayerHud(ctx: GameContext, g: CanvasRenderingContext2D, h: HudView, frame = 0) {
   if (!h.visible || !h.q) return;
-  const ox = Math.round(h.dx);
-  const name = qName(ctx.data, h.q);
-  const nx = Math.max(56, Math.min(80, 152 - 8 * name.length)); // keep an 8px right margin for 12-char names
-  ctx.ui.drawText(g, name, nx + ox, 56);
-  if (h.status) drawStatusBadge(g, h.status, STATUS_ABBR[h.status], 88 + ox, 65, frame);
+  const a = PLAYER_HUD_AREA, x = a.x + 8 + Math.round(h.dx), y = a.y;
+  const right = x + a.w - 16;
+  ctx.ui.drawText(g, qName(ctx.data, h.q), x, y);
+  if (h.status) drawStatusBadge(g, h.status, STATUS_ABBR[h.status], x, y + 10, frame);
   const flashOn = h.flash > 0 && (h.flash >> 2) % 2 === 0;
   if (flashOn) {
-    // level-up: the level tag lights up
-    g.fillStyle = UI.black;
-    g.fillRect(118 + ox, 63, 34, 10);
-    drawTiny(g, ":L", 120 + ox, 66, "#f8e070");
-    ctx.ui.drawText(g, String(h.level), 128 + ox, 64, "#f8f8f8");
-  } else {
-    drawLevel(ctx, g, h.level, 120 + ox, 64);
-  }
-  drawHpBar(g, 88 + ox, 73, h.hp, h.q.stats.hp, 48);
-  const hp = Math.max(0, Math.round(h.hp));
-  drawTextRight(ctx, g, `${pad(hp, 3)}/${pad(h.q.stats.hp, 3)}`, 152 + ox, 80);
-  // frame: right rule + bottom rule ending in an arrowhead at the left
+    g.fillStyle = UI.black; g.fillRect(right - 34, y + 7, 34, 10);
+    drawTiny(g, ":L", right - 32, y + 10, "#f8e070");
+    ctx.ui.drawText(g, String(h.level), right - 24, y + 8, UI.white);
+  } else drawLevel(ctx, g, h.level, right - 32, y + 8);
+  drawHpBar(g, x, y + 18, h.hp, h.q.stats.hp, a.w - 34);
+  drawTextRight(ctx, g, `${pad(Math.max(0, Math.round(h.hp)), 3)}/${pad(h.q.stats.hp, 3)}`, right, y + 26);
   g.fillStyle = UI.black;
-  g.fillRect(153 + ox, 68, 1, 20);
-  g.fillRect(76 + ox, 88, 78, 1);
-  g.fillRect(75 + ox, 87, 1, 3);
-  g.fillRect(74 + ox, 86, 1, 1);
-  g.fillRect(74 + ox, 90, 1, 1);
-  drawExpBar(g, 88 + ox, 88, h.exp, 64, false);
-  if (flashOn) {
-    g.fillStyle = "#f8f8f8";
-    g.fillRect(102 + ox, 90, 48, 3);
-  }
+  g.fillRect(right + 1, y + 12, 1, 26);
+  g.fillRect(x - 4, y + 38, a.w - 11, 1);
+  g.fillRect(x - 5, y + 37, 1, 3);
+  drawExpBar(g, x, y + 38, h.exp, a.w - 16, false);
+  if (flashOn) { g.fillStyle = UI.white; g.fillRect(x + 14, y + 40, a.w - 32, 3); }
 }
 
 /**
@@ -151,11 +140,11 @@ export function drawPodRow(g: CanvasRenderingContext2D, party: Quickened[], side
   };
   g.fillStyle = UI.black;
   if (side === 0) {
-    const x0 = 88 + offset;
-    states.forEach((s, i) => drawPod(g, x0 + i * 10 + podOff(i), 74 - (podOff(i) > 0 && podOff(i) < 8 ? 1 : 0), s));
+    const x0 = PLAYER_HUD_AREA.x + 16 + offset;
+    states.forEach((s, i) => drawPod(g, x0 + i * 10 + podOff(i), PLAYER_HUD_AREA.y + 18 - (podOff(i) > 0 && podOff(i) < 8 ? 1 : 0), s));
     g.fillStyle = UI.black;
-    g.fillRect(x0 - 4, 86, 66, 1);
-    g.fillRect(x0 + 62, 78, 1, 8);
+    g.fillRect(x0 - 4, PLAYER_HUD_AREA.y + 30, 66, 1);
+    g.fillRect(x0 + 62, PLAYER_HUD_AREA.y + 22, 1, 8);
   } else {
     const x0 = 16 + offset;
     states.forEach((s, i) => drawPod(g, x0 + (5 - i) * 10 - podOff(i), 10 - (podOff(i) > 0 && podOff(i) < 8 ? 1 : 0), s));
@@ -216,7 +205,7 @@ export function backdropBg(kind: Backdrop): string {
 /**
  * A battle-ground pad centred on (cx, cy), rx x ry: dark rim, body, lit top
  * (light from the top-left) and a little texture. It never extends below
- * cy + ry, so the foe's pad stays clear of the player HUD (y >= 56).
+ * cy + ry, so the foe's pad stays clear of the player HUD.
  */
 function drawPad(g: CanvasRenderingContext2D, kind: Backdrop, cx: number, cy: number, rx: number, ry: number) {
   const p = BACKDROPS[kind];
@@ -234,10 +223,10 @@ function drawPad(g: CanvasRenderingContext2D, kind: Backdrop, cx: number, cy: nu
   }
 }
 
-/** Where the foe's pad sits: everything of the foe's stays above y = 56. */
-export const FOE_PAD = { x: 124, y: 49, rx: 36, ry: 6 } as const;
+/** Where the foe's native-size sprite meets its battle ground. */
+export const FOE_PAD = { x: ENEMY_GROUND.x, y: ENEMY_GROUND.y - 1, rx: 36, ry: 6 } as const;
 /** The player HUD block; the backdrop is kept plain behind it, as in Crystal. */
-export const PLAYER_HUD_AREA = { x: 72, y: 56, w: 88, h: 40 } as const;
+
 
 /** Repaint the plain field behind the player HUD (after weather overlays). */
 export function drawHudBacking(g: CanvasRenderingContext2D, kind: Backdrop) {
@@ -250,22 +239,22 @@ export function drawHudBacking(g: CanvasRenderingContext2D, kind: Backdrop) {
 export function drawBackdrop(ctx: GameContext, g: CanvasRenderingContext2D, kind: Backdrop, frame: number) {
   const p = BACKDROPS[kind];
   // sky bands (stepped, no gradients)
-  const bandH = Math.ceil(40 / p.sky.length);
-  p.sky.forEach((c, i) => { g.fillStyle = c; g.fillRect(0, i * bandH, 160, bandH); });
+  const bandH = Math.ceil((TEXTBOX.y / 3) / p.sky.length);
+  p.sky.forEach((c, i) => { g.fillStyle = c; g.fillRect(0, i * bandH, SCREEN_W, bandH); });
   g.fillStyle = p.sky[p.sky.length - 1];
-  g.fillRect(0, p.sky.length * bandH, 160, 144);
+  g.fillRect(0, p.sky.length * bandH, SCREEN_W, SCREEN_H - p.sky.length * bandH);
 
-  const horizon = 42;
+  const horizon = Math.floor(TEXTBOX.y / 3);
   if (kind === "night") {
-    const stars: [number, number][] = [[92, 4], [104, 16], [148, 26], [138, 6], [70, 32], [116, 34], [154, 40], [86, 22], [60, 8], [124, 2]];
+    const stars: [number, number][] = Array.from({ length: 18 }, (_, i) => [8 + (i * 37) % (SCREEN_W - 16), 2 + (i * 13) % (horizon - 4)]);
     stars.forEach(([x, y], i) => {
       const tw = ((frame >> 4) + i) % 6;
       g.fillStyle = "#ffffff";
       g.fillRect(x, y, 1, 1);
       if (tw === 0) { g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3); }
     });
-    ellipse(g, 150, 10, 6, 6, "#f8f0c8");
-    ellipse(g, 147, 8, 5, 5, p.sky[0]);
+    ellipse(g, SCREEN_W - 10, 10, 6, 6, "#f8f0c8");
+    ellipse(g, SCREEN_W - 13, 8, 5, 5, p.sky[0]);
   }
 
   // distant scenery band
@@ -275,29 +264,29 @@ export function drawBackdrop(ctx: GameContext, g: CanvasRenderingContext2D, kind
   } else if (kind === "indoor") {
     // panelled wall with a rail, and a greenhouse window
     g.fillStyle = p.farLight;
-    for (let x = 4; x < 160; x += 20) g.fillRect(x, 6, 1, horizon - 6);
+    for (let x = 4; x < SCREEN_W; x += 20) g.fillRect(x, 6, 1, horizon - 6);
     g.fillStyle = p.far;
-    g.fillRect(0, horizon - 4, 160, 2);
+    g.fillRect(0, horizon - 4, SCREEN_W, 2);
     g.fillStyle = "#f8f4ec";
-    g.fillRect(0, horizon - 2, 160, 1);
+    g.fillRect(0, horizon - 2, SCREEN_W, 1);
     // window panes behind the foe
     g.fillStyle = "#d8ecf0";
-    g.fillRect(100, 4, 44, 26);
-    checker(g, 100, 4, 44, 26, "#c0dce4", 0);
+    g.fillRect(SCREEN_W - 60, 4, 44, 26);
+    checker(g, SCREEN_W - 60, 4, 44, 26, "#c0dce4", 0);
     g.fillStyle = p.far;
-    g.fillRect(99, 3, 46, 1); g.fillRect(99, 30, 46, 1); g.fillRect(99, 3, 1, 28); g.fillRect(144, 3, 1, 28); g.fillRect(121, 3, 1, 28); g.fillRect(99, 16, 46, 1);
+    g.fillRect(SCREEN_W - 61, 3, 46, 1); g.fillRect(SCREEN_W - 61, 30, 46, 1); g.fillRect(SCREEN_W - 61, 3, 1, 28); g.fillRect(SCREEN_W - 16, 3, 1, 28); g.fillRect(SCREEN_W - 39, 3, 1, 28); g.fillRect(SCREEN_W - 61, 16, 46, 1);
   } else if (kind === "water") {
     // far shore with a reed line
-    for (let x = 0; x < 160; x++) {
+    for (let x = 0; x < SCREEN_W; x++) {
       const h = 3 + Math.round(2 * Math.sin(x / 9) + Math.sin(x / 3.7));
       g.fillStyle = p.far;
       g.fillRect(x, horizon - h, 1, h);
     }
     g.fillStyle = p.farLight;
-    g.fillRect(0, horizon - 1, 160, 1);
+    g.fillRect(0, horizon - 1, SCREEN_W, 1);
   } else {
     // tree / reed line: bumpy canopy silhouettes in two tones
-    for (let x = 0; x < 160; x++) {
+    for (let x = 0; x < SCREEN_W; x++) {
       const bump = kind === "bog"
         ? (x % 7 === 0 ? 10 : x % 7 === 1 ? 7 : 3 + ((x * 13) % 3))
         : Math.round(6 + 3 * Math.abs(Math.sin(x / 7)) + 2 * Math.abs(Math.sin(x / 3.1)));
@@ -309,37 +298,37 @@ export function drawBackdrop(ctx: GameContext, g: CanvasRenderingContext2D, kind
     if (kind === "bog") {
       // cattail heads on the tall reeds
       g.fillStyle = "#806040";
-      for (let x = 0; x < 160; x += 7) g.fillRect(x, horizon - 13, 1, 3);
+      for (let x = 0; x < SCREEN_W; x += 7) g.fillRect(x, horizon - 13, 1, 3);
     }
   }
 
   // the field
   g.fillStyle = p.ground;
-  g.fillRect(0, horizon, 160, 144 - horizon);
+  g.fillRect(0, horizon, SCREEN_W, SCREEN_H - horizon);
   if (kind === "water") {
     const s = (frame >> 4) % 4;
     g.fillStyle = p.groundAlt;
-    for (let y = horizon + 3; y < 96; y += 5) for (let x = ((y * 7) % 13) - s * 2; x < 160; x += 18) g.fillRect(x, y, 6, 1);
+    for (let y = horizon + 3; y < TEXTBOX.y; y += 5) for (let x = ((y * 7) % 13) - s * 2; x < SCREEN_W; x += 18) g.fillRect(x, y, 6, 1);
     g.fillStyle = "#f4fafc";
-    for (let y = horizon + 6; y < 96; y += 10) for (let x = ((y * 5) % 17) + s; x < 160; x += 31) g.fillRect(x, y, 3, 1);
+    for (let y = horizon + 6; y < TEXTBOX.y; y += 10) for (let x = ((y * 5) % 17) + s; x < SCREEN_W; x += 31) g.fillRect(x, y, 3, 1);
   } else if (kind === "bog") {
     g.fillStyle = p.groundAlt;
-    for (let y = horizon + 4; y < 96; y += 6) for (let x = (y * 3) % 11; x < 160; x += 14) g.fillRect(x, y, 5, 1);
+    for (let y = horizon + 4; y < TEXTBOX.y; y += 6) for (let x = (y * 3) % 11; x < SCREEN_W; x += 14) g.fillRect(x, y, 5, 1);
     // drifting mist
-    const m = (frame >> 3) % 160;
-    checker(g, (m % 160) - 40, horizon + 2, 60, 4, "#f4f4ec", 0);
-    checker(g, ((m + 90) % 200) - 40, horizon + 22, 50, 3, "#f4f4ec", 1);
+    const m = (frame >> 3) % SCREEN_W;
+    checker(g, (m % SCREEN_W) - 40, horizon + 2, 60, 4, "#f4f4ec", 0);
+    checker(g, ((m + 90) % (SCREEN_W + 40)) - 40, horizon + 22, 50, 3, "#f4f4ec", 1);
   } else if (kind === "glasshouse") {
     drawLeafShadows(g, p, horizon, frame);
     drawLightShafts(g, horizon, frame);
   } else if (kind === "indoor") {
     g.fillStyle = p.groundAlt;
-    for (let y = horizon + 6; y < 96; y += 8) g.fillRect(0, y, 160, 1);
-    for (let y = horizon; y < 96; y += 8) for (let x = ((y >> 3) % 2) * 20; x < 160; x += 40) g.fillRect(x, y + 1, 1, 7);
+    for (let y = horizon + 6; y < TEXTBOX.y; y += 8) g.fillRect(0, y, SCREEN_W, 1);
+    for (let y = horizon; y < TEXTBOX.y; y += 8) for (let x = ((y >> 3) % 2) * 20; x < SCREEN_W; x += 40) g.fillRect(x, y + 1, 1, 7);
   } else {
     // mown stripes and tufts
     g.fillStyle = p.groundAlt;
-    for (let y = horizon + 3; y < 96; y += 7) g.fillRect(0, y, 160, 1);
+    for (let y = horizon + 3; y < TEXTBOX.y; y += 7) g.fillRect(0, y, SCREEN_W, 1);
     g.fillStyle = kind === "night" ? "#9ca8c0" : "#b8dc90";
     for (const [x, y] of [[20, 50], [64, 47], [8, 62], [62, 60], [76, 47]]) {
       g.fillRect(x, y - 2, 1, 2); g.fillRect(x + 2, y - 3, 1, 3); g.fillRect(x + 4, y - 2, 1, 2);
@@ -348,7 +337,7 @@ export function drawBackdrop(ctx: GameContext, g: CanvasRenderingContext2D, kind
 
   // battle grounds: enemy (smaller, further) then player
   drawPad(g, kind, FOE_PAD.x, FOE_PAD.y, FOE_PAD.rx, FOE_PAD.ry);
-  drawPad(g, kind, 32, 92, 40, 7);
+  drawPad(g, kind, PLAYER_GROUND.x, PLAYER_GROUND.y + 4, 40, 4);
   void ctx;
 }
 
@@ -360,8 +349,8 @@ function drawGlazing(g: CanvasRenderingContext2D, horizon: number, frame: number
   const barDark = "#8ca078";
   // two dome ribs sweeping down to the sides
   for (const off of [2, 18]) {
-    for (let x = 0; x < 160; x++) {
-      const k = (x - 80) / 80;
+    for (let x = 0; x < SCREEN_W; x++) {
+      const k = (x - HALF) / HALF;
       const y = Math.round(off + k * k * 16);
       g.fillStyle = bar;
       g.fillRect(x, y, 1, 1);
@@ -371,10 +360,10 @@ function drawGlazing(g: CanvasRenderingContext2D, horizon: number, frame: number
   }
   // glazing bars between the ribs, fanning out from the crown
   for (let i = -4; i <= 4; i++) {
-    const xTop = 80 + i * 17;
+    const xTop = HALF + i * Math.floor(SCREEN_W / 10);
     for (let y = 0; y < horizon - 10; y++) {
       const x = Math.round(xTop + i * y * 0.35);
-      if (x < 0 || x >= 160) continue;
+      if (x < 0 || x >= SCREEN_W) continue;
       g.fillStyle = bar;
       g.fillRect(x, y, 1, 1);
     }
@@ -391,7 +380,7 @@ function drawGlazing(g: CanvasRenderingContext2D, horizon: number, frame: number
 /** Palms and broad tropical leaves along the horizon. */
 function drawPalmLine(g: CanvasRenderingContext2D, p: BackdropDef, horizon: number) {
   // the leafy mass: broad, rounded bumps
-  for (let x = 0; x < 160; x++) {
+  for (let x = 0; x < SCREEN_W; x++) {
     const bump = Math.round(5 + 4 * Math.abs(Math.sin(x / 11)) + 2 * Math.abs(Math.sin(x / 4.3)));
     g.fillStyle = p.farLight;
     g.fillRect(x, horizon - bump - 1, 1, 1);
@@ -399,7 +388,7 @@ function drawPalmLine(g: CanvasRenderingContext2D, p: BackdropDef, horizon: numb
     g.fillRect(x, horizon - bump, 1, bump);
   }
   // two palms rising above it: a leaning trunk and drooping fronds
-  for (const [tx, h, lean] of [[22, 26, 1], [153, 24, -1]] as const) {
+  for (const [tx, h, lean] of [[22, 26, 1], [SCREEN_W - 22, 24, -1]] as const) {
     const top = horizon - h;
     g.fillStyle = "#7a6038";
     for (let y = top; y < horizon - 6; y++) g.fillRect(tx + Math.round(((y - top) / h) * -lean * 3), y, 2, 1);
@@ -421,7 +410,7 @@ function drawPalmLine(g: CanvasRenderingContext2D, p: BackdropDef, horizon: numb
 
 /** Leaf shadows on the floor: soft-edged clusters that sway a pixel now and then. */
 function drawLeafShadows(g: CanvasRenderingContext2D, p: BackdropDef, horizon: number, frame: number) {
-  const blobs: [number, number, number][] = [[14, 52, 7], [46, 47, 5], [98, 50, 6], [8, 72, 6], [58, 66, 7], [30, 86, 5], [148, 62, 5]];
+  const blobs: [number, number, number][] = Array.from({ length: 12 }, (_, i) => [8 + (i * 43) % (SCREEN_W - 16), horizon + 6 + (i * 17) % (TEXTBOX.y - horizon - 12), 5 + i % 3]);
   blobs.forEach(([x, y, r], i) => {
     if (y < horizon + 3) return;
     const sway = Math.round(Math.sin(frame / 90 + i * 1.7));
@@ -434,8 +423,8 @@ function drawLeafShadows(g: CanvasRenderingContext2D, p: BackdropDef, horizon: n
 /** Slanting shafts of warm light (a deliberate 2-colour dither), falling from the top-left. */
 function drawLightShafts(g: CanvasRenderingContext2D, horizon: number, frame: number) {
   const breathe = (frame >> 5) % 8 === 0 ? 1 : 0;
-  for (const [x0, w] of [[18, 6], [66, 9], [118, 5]] as const) {
-    for (let y = horizon - 30; y < 96; y += 1) {
+  for (const [x0, w] of Array.from({ length: Math.ceil(SCREEN_W / 52) }, (_, i) => [18 + i * 52, 5 + i % 3] as const)) {
+    for (let y = horizon - 30; y < TEXTBOX.y; y += 1) {
       const x = Math.round(x0 + (y - horizon) * 0.55);
       checker(g, x, y, w + breathe, 1, "#f8f0c0", 0);
     }
@@ -522,43 +511,43 @@ export function drawVersusBanner(
   const open = Math.min(1, f / 8) * Math.min(1, (len - f) / 8);
   const half = Math.round(36 * open);
   if (half <= 0) return;
-  const mid = 72;
+  const mid = Math.floor(SCREEN_H / 2);
   const top = mid - half;
   g.fillStyle = UI.black;
-  g.fillRect(0, 0, 160, top);
-  g.fillRect(0, mid + half, 160, 144);
+  g.fillRect(0, 0, SCREEN_W, top);
+  g.fillRect(0, mid + half, SCREEN_W, SCREEN_H - mid - half);
   g.fillStyle = bg;
-  g.fillRect(0, top, 160, half * 2);
+  g.fillRect(0, top, SCREEN_W, half * 2);
   // speed lines
   for (let i = 0; i < 14; i++) {
     const y = top + 2 + ((i * 11) % Math.max(1, half * 2 - 4));
     const w = 10 + ((i * 7) % 18);
-    const x = 160 - ((f * (6 + (i % 4) * 2) + i * 37) % 200);
+    const x = SCREEN_W - ((f * (6 + (i % 4) * 2) + i * 37) % (SCREEN_W + 40));
     g.fillStyle = i % 3 === 0 ? accent : stripe;
     g.fillRect(x, y, w, 1);
   }
   // edge trims
   g.fillStyle = accent;
-  g.fillRect(0, top, 160, 1);
-  g.fillRect(0, mid + half - 1, 160, 1);
+  g.fillRect(0, top, SCREEN_W, 1);
+  g.fillRect(0, mid + half - 1, SCREEN_W, 1);
   if (half < 30) return;
   // the trainer slides in from the left as a silhouette, then lights up
   const slide = Math.min(1, Math.max(0, (f - 8) / 12));
-  const px = Math.round(-56 + slide * 64);
+  const px = Math.round(-56 + slide * (HALF / 2 + 28));
   const lit = f > 24;
   g.save();
   g.beginPath();
-  g.rect(0, top + 1, 160, half * 2 - 2);
+  g.rect(0, top + 1, SCREEN_W, half * 2 - 2);
   g.clip();
   drawTrainer(ctx, g, key, px, mid - 26, lit ? {} : { silhouette: leader ? "#102414" : "#200c0c" });
   g.restore();
   // name card slides in from the right
   const card = Math.min(1, Math.max(0, (f - 14) / 10));
-  const cx = Math.round(168 - card * 92);
+  const cx = Math.round(SCREEN_W + 8 - card * (HALF + 24));
   ctx.ui.drawText(g, title, cx, mid - 14, accent);
   ctx.ui.drawText(g, name, cx, mid - 2, UI.white);
   drawTiny(g, leader ? "CONSERVATORY" : "ROOTSTOCK", cx, mid + 10, leader ? "#90c890" : "#e07070");
-  if (f >= 24 && f < 27) { g.fillStyle = "#f8f8f8"; g.fillRect(0, top, 160, half * 2); }
+  if (f >= 24 && f < 27) { g.fillStyle = "#f8f8f8"; g.fillRect(0, top, SCREEN_W, half * 2); }
 }
 
 // ---------------------------------------------------------------------------
@@ -566,13 +555,14 @@ export function drawVersusBanner(
 // ---------------------------------------------------------------------------
 
 export function drawStatWindow(ctx: GameContext, g: CanvasRenderingContext2D, stats: Stats, gains?: Stats) {
-  ctx.ui.drawWindow(g, 72, 0, 88, 96);
+  const x = SCREEN_W - 136;
+  ctx.ui.drawWindow(g, x, 8, 136, TEXTBOX.y - 8);
   const rows: [string, keyof Stats][] = [["ATTACK", "atk"], ["DEFENCE", "def"], ["SPCL.ATK", "spa"], ["SPCL.DEF", "spd"], ["SPEED", "spe"]];
   rows.forEach(([label, k], i) => {
-    const y = 8 + i * 16;
-    ctx.ui.drawText(g, label, 80, y);
-    if (gains) ctx.ui.drawText(g, `+${gains[k]}`, 88, y + 8, "#306850");
-    drawTextRight(ctx, g, String(stats[k]), 152, y + 8);
+    const y = 16 + i * 20;
+    ctx.ui.drawText(g, label, x + 8, y);
+    if (gains) ctx.ui.drawText(g, `+${gains[k]}`, x + 16, y + 8, "#306850");
+    drawTextRight(ctx, g, String(stats[k]), SCREEN_W - 8, y + 8);
   });
 }
 
