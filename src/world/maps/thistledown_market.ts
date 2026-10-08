@@ -37,7 +37,7 @@ export const thistledown_market: MapDef = {
   ],
   signs: [
     { x: 4, y: 2, text: "TERRARIUM PODS and GLASS PODS, stacked like teacups." },
-    { x: 9, y: 2, text: "ALOE GEL in tubs. Break an aloe leaf and the gel inside soothes burns." },
+    { x: 9, y: 2, text: "ALOE GEL in tubs. Aloe stores water in its thick, fleshy leaves." },
   ],
   triggers: [],
 };

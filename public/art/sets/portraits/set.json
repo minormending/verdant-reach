@@ -20,6 +20,7 @@
     "hiker": { "file": "hiker.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "hollis": { "file": "hollis.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "lumberjack": { "file": "lumberjack.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast5/portraits5.py" } },
+    "mercer": { "file": "mercer.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast8/portraits8.py" } },
     "morrow": { "file": "morrow.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast5/portraits5.py" } },
     "nell_pitcher": { "file": "nell_pitcher.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "night_gardener": { "file": "night_gardener.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast5/portraits5.py" } },
@@ -27,9 +28,13 @@
     "player_back": { "file": "player_back.png", "size": [48, 48], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "researcher": { "file": "researcher.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
     "reyes": { "file": "reyes.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
+    "rook": { "file": "rook.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast9/portraits9.py" } },
     "sailor": { "file": "sailor.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
     "schoolkid": { "file": "schoolkid.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
-    "shears": { "file": "shears.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } }
+    "shears": { "file": "shears.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "signe": { "file": "signe.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast7/portraits7.py" } },
+    "skier": { "file": "skier.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast7/portraits7.py" } },
+    "wren": { "file": "wren.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast8/portraits8.py" } }
   },
   "credits": "Original pixel art for Verdant Reach."
 }

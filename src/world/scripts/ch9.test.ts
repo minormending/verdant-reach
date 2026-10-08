@@ -59,13 +59,28 @@ function ops(cmds: ScriptCmd[]) {
 }
 
 describe("Chapter 9 scripts", () => {
-  it("wires every scene and gives all spoken placeholders a speaker", () => {
+  it("wires every scene, with finished dialogue, one name per speaker and speaker-less narration", () => {
     for (const id of ["ch9_east_gate", "ch9_arrival", "ch9_tumbleweed", "rival_5", "ch9_cons8_door", "rook", "ch9_rook_after", "ch9_end", "q_window_panes"]) {
       expect(WORLD.scripts[id], id).toBeDefined();
     }
-    for (const c of ops([...Object.values(ch9Scripts).flat(), ...questScripts.q_window_panes])) if (c.op === "say") {
-      expect(c.text).toMatch(/^TODO\(text\): /);
-      expect(c.speaker).toBeTruthy();
+    const speakers = new Set<string>();
+    let narration = 0;
+    for (const [id, cmds] of Object.entries(ch9Scripts)) {
+      expect(WORLD.scripts[id], id).toBe(cmds);
+      for (const c of ops(cmds)) if (c.op === "say") {
+        expect(c.text).not.toMatch(/TODO/);
+        // Narration has no speaker, as in Chapters 5–8: "NARRATOR" would print "NARRATOR:".
+        if (c.speaker === undefined) { narration++; continue; }
+        speakers.add(c.speaker);
+        if (id === "rook" || id === "ch9_rook_after") expect(c.speaker).toBe("ROOK");
+        if (id === "ch9_end") expect(c.speaker).toBe("VALE");
+      }
+    }
+    expect(narration).toBeGreaterThan(0);
+    expect([...speakers].sort()).toEqual(["BRAM", "CLERK", "GUARD", "KID", "RESIDENT", "ROOK", "TRADER", "VALE", "VISITOR"]);
+    for (const c of ops(questScripts.q_window_panes)) if (c.op === "say") {
+      expect(c.text).not.toMatch(/TODO/);
+      expect(c.speaker).toBe("BOTANIST");
     }
   });
 
@@ -73,7 +88,7 @@ describe("Chapter 9 scripts", () => {
     const { run, enter, state, host, events } = setup("glasshouse_city");
     state.flags.got_starter_oak = true;
     await run("ch9_east_gate");
-    expect(host.ctx.ui.say).toHaveBeenCalledWith("TODO(text): The east road is closed.", { speaker: "GUARD" });
+    expect(host.ctx.ui.say).toHaveBeenCalledWith(expect.stringMatching(/^The east road's closed\./), { speaker: "GUARD" });
     await enter("thistledown");
     expect(state.flags.ch9_arrived).not.toBe(true);
     state.flags.ch8_done = true;
@@ -187,8 +202,9 @@ describe("Chapter 9 scripts", () => {
     expect(host.healParty).toHaveBeenCalledOnce();
     expect(events[0]).toMatch(/^move:bram:up/);
     expect(events[1]).toBe("hide:bram");
-    for (const text of ["He is going after his father.", "He will find the player when it is time."]) {
-      expect(host.ctx.ui.say).toHaveBeenCalledWith(`TODO(text): ${text}`, { speaker: "BRAM" });
+    // Win or lose, BRAM says he's going after his father and will find the player.
+    for (const text of [/^I'm going after my father\./, /I'll find you when it's time\.$/]) {
+      expect(host.ctx.ui.say).toHaveBeenCalledWith(expect.stringMatching(text), { speaker: "BRAM" });
     }
     const npc = WORLD.maps.route_11.npcs.find((n) => n.id === "bram")!;
     let y = npc.y;
@@ -230,7 +246,7 @@ describe("WINDOW PANES quest", () => {
       [{ flag: "window_panes_lithops", is: true }], [{ flag: "window_panes_bloom", is: true }],
     ]);
     expect(ops(questScripts.q_window_panes).filter((c) => c.op === "ifCaught").map((c) => c.species)).toContainEqual(["lithops_pebble", "lithops_pair", "lithops_bloom"]);
-    expect(WORLD.maps.thistledown_house.npcs.find((n) => n.id === "stone_botanist")).toMatchObject({ sprite: "researcher", script: "q_window_panes" });
+    expect(WORLD.maps.thistledown_house.npcs.find((n) => n.id === "stone_botanist")).toMatchObject({ sprite: "stone_botanist", script: "q_window_panes" });
   });
 
   it.each(["lithops_pebble", "lithops_pair"] as const)("records %s first, then the bloom, with one reward", async (first) => {

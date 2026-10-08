@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "dragon_seedling",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#883038", "#5898a0", "#f8f8f8"],
+  "sport": ["#181818", "#884038", "#a0b898", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release."
+  "anim": { "intro": [[0, 8], [1, 12], [2, 6], [3, 16], [4, 12], [0, 8]], "idle": [[0, 140], [1, 10], [0, 8]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Dracaena cinnabari, https://en.wikipedia.org/wiki/Dracaena_cinnabari . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/dragontree.py" },
+  "notes": "Crystal rule. Dracaena cinnabari. BRACED: a stiff, low, wide rosette of thick sword-shaped blue-green leaves on a stubby grey stem, the big lead sword held forward-left like a shield, one bead of red resin (dragon's blood) oozing at the foot. Gesture: the outer swords flex out and up while the resin bead swells and sags, then it settles; the stem and the central swords stay fixed. Blue-green leaf over a deep resin red-brown that is the resin, the bark shading and the crown's underside (dark slot); white ridges on the lit side make the bark grey. Sport: the paler grey-green foliage of the related Canary Islands dragon tree (Dracaena draco)."
 }

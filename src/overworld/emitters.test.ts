@@ -67,7 +67,7 @@ describe("Flag-driven puzzle object rows", () => {
     expectRow(resumed, "up");
     expect(resumed.interact()).toBe(true);
     for (let tick = 0; tick < 10; tick++) await Promise.resolve();
-    expect(ctx.ui.say).toHaveBeenLastCalledWith(expect.stringContaining("already silent"), { speaker: "NARRATOR" });
+    expect(ctx.ui.say).toHaveBeenLastCalledWith(expect.stringContaining("EMITTER is silent"), undefined);
     expect(loaded.flags[`${id}_off`]).toBe(true);
     expectRow(resumed, "up");
     expect(ctx.audio.playSfx).toHaveBeenCalledExactlyOnceWith("select");
