@@ -3,6 +3,7 @@ import { LEGEND, when } from "../build";
 
 export const relay_3f: MapDef = {
   id: "relay_3f", name: "PATCH BAY", outdoor: false, music: "root_relay",
+  musicWhen: [{ when: when({ ch8_started: true, beat_wren: false }), music: "relay_seized" }],
   border: "void", legend: LEGEND,
   tiles: [
     "WWWWWWWWWWWWWWWWWW",

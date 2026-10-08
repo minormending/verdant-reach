@@ -217,6 +217,18 @@ describe("music", () => {
     expect(pcs.has(6) && pcs.has(11)).toBe(true);                // the chromatic neighbours F-sharp and B
   });
 
+  // Chapter 8.
+  it("relay_seized: the relay's pulse under a two-hit command that keeps silencing the old tune", () => {
+    const a = ARRANGEMENTS.relay_seized;
+    expect(a.bass).toBe(ARRANGEMENTS.root_relay.bass);                      // the same network throb
+    const p1 = parseSong(MUSIC_DEFS.relay_seized).channels.p1!;
+    const barTicks = 192;
+    const commands = p1.bars.map((_, b) => p1.events.filter((e) => e.tick >= b * barTicks && e.tick < (b + 1) * barTicks))
+      .filter((n) => n.length === 2 && n[0].midi === n[1].midi && n[1].tick - n[0].tick === 96).length;
+    expect(commands).toBeGreaterThanOrEqual(5);                               // "be still", struck twice
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("G");                     // never rests on C minor
+  });
+
   it("arranges a 3/4 chart correctly", () => {
     const def = arrange({ bpm: 100, meter: 3, chords: "C | G", melody: "c2. | d2. |", harmony: "waltz", bass: "half", drums: "soft" });
     const song = parseSong(def);

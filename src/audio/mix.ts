@@ -45,6 +45,7 @@ export const MUSIC_TRIM: Partial<Record<MusicId, number>> = {
   alpine: 1.16,            // -18.3 -> -17.0 (a soft waltz, no drums)
   red_lake: 1.30,          // -20.1 -> -17.8 (thin wails over a shimmer: kept under, like burnt_stand)
   // hideout: -16.9 untrimmed (the industrial groove carries it).
+  relay_seized: 1.14,      // -18.8 -> -17.7 (level with root_relay, whose pulse it shares)
 };
 
 /** Per-effect gain: quiet UI blips up, the long hot ones down. */
