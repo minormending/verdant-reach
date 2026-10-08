@@ -1,10 +1,10 @@
 import type { CharacterKey, MapDef, MapId } from "../../contracts";
 import { LEGEND, ifFlags, ifNight, say, type Scripts } from "../build";
 
-// The healing centre interior. Every town's GREENHOUSE shares the iconic
-// shape: glass roof, a long counter with the keeper behind it under the grow
-// beds, the SPECIMEN CABINET in the corner, a red runner to the door. Each
-// town dresses its waiting nook differently.
+// Every town's GREENHOUSE shares a two-row back wall, a long counter,
+// the SPECIMEN CABINET and a rug by the door. Legacy town floor plans below
+// supply the waiting-nook flooring and the stove/newspaper-rack variant;
+// greenhouseMap replaces their furniture with props.
 const ROWS = {
   // BRAMBLEGATE: a reading corner with a bookshelf and a tea table.
   bramblegate: [
@@ -54,6 +54,33 @@ export function greenhouseMap(
   visitor: { script: string; sprite: CharacterKey; x: number; y: number },
   signs: MapDef["signs"] = [],
 ): MapDef {
+  // The keeper stays at 5,2, with the original counter between them and
+  // the heal point at 5,4. The cabinet tile at 1,3 keeps its storage action.
+  const tiles = rows.map((row, y) => {
+    if (y < 2) return "W" + "¤".repeat(row.length - 2) + "W";
+    return [...row].map((ch, x) => {
+      if (y === 3 && x === 9) return "C";
+      if ("cCWE".includes(ch)) return ch;
+      if ("wihD".includes(ch)) return id === "glasshouse_greenhouse" ? "t" : "w";
+      if ("PYprKVO9".includes(ch)) return x <= 3 && y === 5 ? "w" : "g";
+      return ch;
+    }).join("");
+  });
+  const structures: MapDef["structures"] = [
+    { key: "prop_window", x: 2, y: 0 },
+    { key: "prop_window", x: 7, y: 0 },
+    { key: "prop_cabinet_glass", x: 1, y: 2 },
+    // No prop_counter exists. One-tile tables exactly cover the counter row.
+    ...[3, 4, 5, 6, 7].map((x) => ({ key: "prop_table_small" as const, x, y: 3 })),
+    { key: rows[3][9] === "V" ? "prop_stove" : "prop_bookcase", x: rows[3][9] === "V" ? 9 : 8, y: 2 },
+    { key: "prop_table_small", x: 2, y: 5 },
+    { key: "prop_chair", x: 1, y: 4 },
+    { key: "prop_rug_small", x: 4, y: 6 },
+    { key: "prop_plant_small", x: 1, y: 7 },
+    { key: "prop_plant_small", x: 2, y: 7 },
+    { key: "prop_plant_small", x: 8, y: 7 },
+    { key: "prop_plant_small", x: 9, y: 7 },
+  ];
   return {
     id,
     name,
@@ -61,8 +88,8 @@ export function greenhouseMap(
     music: "greenhouse",
     border: "void",
     legend: LEGEND,
-    tiles: rows,
-    structures: [],
+    tiles,
+    structures,
     warps: [{ x: 5, y: 8, to: exit.to, toX: exit.x, toY: exit.y, facing: "down" }],
     npcs: [
       { id: "keeper", sprite: "greenhouse_keeper", x: 5, y: 2, facing: "down", movement: "static", script: "greenhouse_heal" },

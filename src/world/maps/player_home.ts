@@ -1,11 +1,10 @@
 import type { MapDef } from "../../contracts";
 import { LEGEND, ifFlags, ifNight, say, type Scripts } from "../build";
 
-// The cottage <PLAYER> shares with JUNE. Bed and bookshelves by the west wall,
-// the hearth in the middle of the back wall with the rug in front of it, and
-// JUNE's kitchen corner: stove, worktop and the long table under the window.
-//
-//            0123456789
+// JUNE's cottage: books, a window and the hearth against the back wall,
+// the bed in the west corner, a central rug and a tea table beside it.
+// Two extra columns on the east leave room for the hearth without changing
+// the morning scene's row-2 path, JUNE at 7,4, or the heal point at 6,4.
 export const player_home: MapDef = {
   id: "player_home",
   name: "HOME",
@@ -14,16 +13,27 @@ export const player_home: MapDef = {
   border: "void",
   legend: LEGEND,
   tiles: [
-    "WWOOWWWOOW", // 0
-    "WKKKwFwVCW", // 1
-    "WZwwwwwwwW", // 2
-    "WhwrrrwwDW", // 3
-    "WwwrrrwwDW", // 4
-    "WDwrrrwhDW", // 5
-    "WwwwwwwwKW", // 6
-    "WWWWEWWWWW", // 7
+    "W¤¤¤¤¤¤¤¤¤¤W",
+    "W¤¤¤¤¤¤¤¤¤¤W",
+    "WwwwwwwwwwwW",
+    "WwwwwwwwwwwW",
+    "WwwwwwwwwwwW",
+    "WwwwwwwwwwwW",
+    "WwwwwwwwwwwW",
+    "WWWWEWWWWWWW",
   ],
-  structures: [],
+  structures: [
+    { key: "prop_bookcase", x: 2, y: 0 },
+    { key: "prop_window", x: 6, y: 0 },
+    { key: "prop_painting", x: 4, y: 0 },
+    { key: "prop_bed_single", x: 1, y: 3 },
+    { key: "prop_rug_large", x: 3, y: 3 },
+    { key: "prop_fireplace", x: 9, y: 0 },
+    { key: "prop_bookcase", x: 8, y: 5 },
+    { key: "prop_table_small", x: 8, y: 4 },
+    { key: "prop_chair", x: 9, y: 3 },
+    { key: "prop_plant_small", x: 10, y: 6 },
+  ],
   warps: [{ x: 4, y: 7, to: "fallowfield", toX: 3, toY: 7, facing: "down" }],
   npcs: [
     // The morning scene walks JUNE up 2, left 4 to stand beside the bed (3,2).

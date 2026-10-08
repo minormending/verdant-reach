@@ -27,14 +27,20 @@ export const herbarium_roof: MapDef = {
     "TTTAAA:AAATT", // 3  the path up the far slope
     "q~~~~~2~~~~q", // 4  the river and its footbridge
     "############", // 5  railing
-    "#PwwwwwwwwP#", // 6  new game: <PLAYER> 5,6 beside VALE 6,6
-    "#Pwwwwwwwwh#", // 7
-    "#hwwwwwwwwP#", // 8
-    "#PwwwwwwwwP#", // 9
-    "#PPwwwwwwwu#", // 10
+    "#wwwwwwwwww#", // 6  new game: <PLAYER> 5,6 beside VALE 6,6
+    "#wwwwwwwwww#", // 7
+    "#wwwwwwwwww#", // 8
+    "#wwwwwwwwww#", // 9
+    "#wwwwwwwwwu#", // 10
     "############", // 11
   ],
-  structures: [],
+  structures: [
+    { key: "prop_bench_park", x: 1, y: 6 },
+    { key: "prop_bench_park", x: 9, y: 6 },
+
+    { key: "prop_planter_box", x: 1, y: 8 },
+    { key: "prop_planter_box", x: 7, y: 8 },
+  ],
   warps: [{ x: 10, y: 10, to: "herbarium", toX: 2, toY: 1, facing: "down" }],
   npcs: [
     { id: "vale", sprite: "vale", x: 6, y: 6, facing: "up", movement: "static", script: "roof_vale",

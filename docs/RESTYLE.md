@@ -137,8 +137,29 @@ Until then, `main` ships the GBC fallback. The release horizon
 | R1b ✓ | Local-pack plumbing and index tests (§2.4–2.5) | Codex |
 | R2a ✓ | Interior importer, prop geometry contracts and original GBC fallback props (§1, §3) | lead (mappings) + Codex (code) |
 | R2b ✓ | Outdoor importer, pixel footprints, prop signs, building doors, ground blob masks + local review (character/UI work remains R4/R6) | lead (mappings) + Codex (code) |
+| R3a ✓ | Prologue/Chapter 1 interiors: `player_home`, `herbarium`, `herbarium_roof` (outdoor deck), `fennimore_house`, `bramblegate_conservatory`; shared `greenhouseMap()` (all ten healing centres) and narrow/wide market layouts (all six markets). Local 2× review: `tools/art/limezu/review/r3a.png`. | Codex; lead review pending |
 | R3 | Map re-layouts: interiors, then exteriors, chapter by chapter | Codex, QA-gated, with the lead reviewing one render sheet each |
 | R4 | Characters for every NPC key; portraits (LimeZu UI portrait generator, if usable) | Codex + lead review |
 | R5 | Creature style v2 and a pilot, then the roster | lead (rules) + Codex loop |
 | R6 | UI pass (text box, menus) from Modern UI, if it earns its place | later |
 | R7 | Shipping and the release horizon | the owner + both leads |
+
+
+### R3a layout notes
+
+- HOME extends two columns east so the back-wall hearth fits without touching
+  JUNE's morning route or any gameplay coordinate. The Herbarium preserves its
+  stair and arrival opening at 1,1 / 2,1; FENNIMORE has a reading alcove at 7,1
+  to keep the seed-packet sign at 8,1 reachable. The outdoor observation deck
+  keeps its railing, valley, camera target and prologue positions.
+- Counter tiles remain beneath `prop_table_small` (and the cabinet/bookcase at
+  the greenhouse counter ends). There is no `prop_counter`. The large markets
+  retain counter end caps beneath the signed shelves, separating both clerks
+  from customers. The greenhouse storage tile at 1,3 remains beneath
+  `prop_cabinet_glass`, since the storage action is still tile-based.
+- Signs, dialogue, warps, NPCs, triggers, heal points, pickups and script paths
+  keep their existing coordinates and text. The Conservatory's hedge barriers,
+  gate openings, levers and puzzle scripts are unchanged.
+- Local render contains the LimeZu pack, with NPC staging at their authored
+  positions (both story appearances shown; hedge gates use initial flags).
+  It is licensed review material and remains gitignored.

@@ -29,27 +29,50 @@ export const bramblegate_conservatory: MapDef = {
   legend: LEGEND,
   ambient: "pollen",
   tiles: [
-    // x: 0123456789012345
-    "WOOOOOOOOOOOOOOW", // 0
-    "WPPYyf*r*fyYPPPW", // 1  HOLLIS's hall
-    "WPpgggrrrgggpPPW", // 2
-    "WYgggggrggggggYW", // 3
-    "WHHHHHHgHHHHHHHW", // 4  gate C at 7,4
-    "WgggggggHYgggggW", // 5  west lane | east lane (lever 2 at 14,5)
-    "WgHHHHHHHHHHgHHW", // 6
-    "WgggggggggggggYW", // 7  gate D at 8,7
-    "WgHgHHHHHHHPgggW", // 8  LINDEN at 14,8
-    "WgggpPPHHHPPggpW", // 9
-    "WHHgHHHHHHHHgHHW", // 10 gate A at 3,10, gate B at 12,10
-    "WYgggHHHHHHgggYW", // 11 entrance terrace
-    "WggggHPPPPHggggW", // 12 lever 1 at 1,12
-    "WggggHHHHHHggggW", // 13 HAZEL at 14,13
-    "WggggggggggggggW", // 14
-    "WPpggggggggggpPW", // 15
-    "WPPYggggggggYPPW", // 16
-    "WWWWWWWEWWWWWWWW", // 17
+    "W¤¤¤¤¤¤¤¤¤¤¤¤¤¤W",
+    "W¤¤¤¤¤¤¤¤¤¤¤¤¤¤W",
+    "WggggggggggggggW",
+    "WggggggggggggggW",
+    "WHHHHHHgHHHHHHHW",
+    "WgggggggHggggggW",
+    "WgHHHHHHHHHHgHHW",
+    "WggggggggggggggW",
+    "WgHgHHHHHHHggggW",
+    "WggggggHHHgggggW",
+    "WHHgHHHHHHHHgHHW",
+    "WggggHHHHHHggggW",
+    "WggggHggggHggggW",
+    "WggggHHHHHHggggW",
+    "WggggggggggggggW",
+    "WggggggggggggggW",
+    "WggggggggggggggW",
+    "WWWWWWWEWWWWWWWW",
   ],
-  structures: [],
+  structures: [
+    { key: "prop_window", x: 6, y: 0 },
+    { key: "prop_plant_tree", x: 1, y: 1 },
+    { key: "prop_planter_box", x: 3, y: 1 },
+    { key: "prop_planter_box", x: 9, y: 1 },
+    { key: "prop_plant_tall", x: 13, y: 1 },
+    { key: "prop_rug_small", x: 6, y: 2 },
+    { key: "prop_plant_small", x: 14, y: 3 },
+    { key: "prop_plant_small", x: 9, y: 5 },
+    { key: "prop_plant_small", x: 14, y: 7 },
+    { key: "prop_plant_small", x: 11, y: 8 },
+    { key: "prop_plant_small", x: 4, y: 9 },
+    { key: "prop_plant_small", x: 5, y: 9 },
+    { key: "prop_plant_small", x: 6, y: 9 },
+    { key: "prop_plant_small", x: 10, y: 9 },
+    { key: "prop_plant_small", x: 11, y: 9 },
+    { key: "prop_plant_small", x: 14, y: 9 },
+    { key: "prop_plant_small", x: 1, y: 11 },
+    { key: "prop_plant_small", x: 14, y: 11 },
+    { key: "prop_planter_box", x: 6, y: 11 },
+    { key: "prop_planter_box", x: 1, y: 15 },
+    { key: "prop_planter_box", x: 11, y: 15 },
+    { key: "prop_plant_small", x: 1, y: 15 },
+    { key: "prop_plant_small", x: 14, y: 15 },
+  ],
   warps: [{ x: 7, y: 17, to: "bramblegate", toX: 7, toY: 7, facing: "down" }],
   npcs: [
     { id: "hollis", sprite: "hollis", x: 7, y: 2, facing: "down", movement: "static", script: "hollis" },
