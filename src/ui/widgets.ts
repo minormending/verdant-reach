@@ -133,10 +133,12 @@ export function trainerCard(ctx: GameContext): Promise<void> {
         g.fillRect(0, 0, SCREEN_W, SCREEN_H);
         g.fillStyle = "#98c088";
         for (let y = 0; y < SCREEN_H; y += 8) g.fillRect(0, y, SCREEN_W, 4);
+        g.save();
+        g.translate(Math.floor((SCREEN_W - 152) / 2) - 4, Math.floor((SCREEN_H - 136) / 2) - 4);
         drawWindow(g, 4, 4, 152, 136);
         drawText(g, "BOTANIST CARD", 12, 12, UI.dark);
         g.fillStyle = UI.light;
-        g.fillRect(8, 22, 144, 1);
+        g.fillRect(8, 22, 152 - 8, 1);
         const st = ctx.state;
         const rows: [string, string][] = [
           ["NAME", st.playerName],
@@ -160,6 +162,7 @@ export function trainerCard(ctx: GameContext): Promise<void> {
           132 - w * scale / 2, 62 - h * scale, w * scale, h * scale);
         drawText(g, "PRESSED MARKS", 12, 92, UI.dark);
         for (let i = 0; i < REGION_MARKS; i++) drawMarkSlot(g, ctx, MARKS[i] ?? null, 12 + i * 17, 106);
+        g.restore();
       },
     };
     return scene;

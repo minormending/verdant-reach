@@ -11,6 +11,17 @@ the page and it's in the game. This document is the **contract**. The
 pipeline owner (Round 4, agent 2) may add sections on tooling but must not
 change the format without main.
 
+The native game canvas is **320×180**, displayed at the largest integer pixel
+scale that fits the available window. World tiles remain 16×16: the view is
+20×11.25 tiles. Small maps are centred on each axis with their border tiles
+around them. Dialogue uses the existing 8×8 font in a full-width **36×3** box.
+
+Existing **160×144 story stills** are temporary legacy art. The `still` op
+clears a dark frame and draws the image **centred at 1×**, without stretching
+or cropping its aspect ratio. New full-screen art should target 320×180.
+Legacy title backdrops also stay at their native size, centred over the
+full-screen procedural scenery, until replacement art is available.
+
 ## 1. Layout
 
 ```

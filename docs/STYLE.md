@@ -6,7 +6,7 @@ nothing generic. When in doubt, look at Pokémon Crystal, then do better.
 
 ## 1. Pixel art rules (everyone)
 
-- **Resolution:** native 160x144. Never draw sub-pixel or scaled art. No
+- **Resolution:** native 320x180. Never draw sub-pixel or scaled art. No
   anti-aliasing, no gradients, no dithering noise. Dithering only as a
   deliberate 2-colour pattern.
 - **Light** comes from the **top-left** on every object, tile, sprite and
@@ -120,7 +120,7 @@ nothing generic. When in doubt, look at Pokémon Crystal, then do better.
 
 - **Tone:** warm, curious, a little wry. Crystal crossed with a nature
   documentary narrated by someone who loves you.
-- **Text boxes:** 18 columns x 2 lines. Write in short beats; one idea per
+- **Text boxes:** 36 columns x 3 lines. Write in short beats; one idea per
   box. Upper-case proper names (DR. VALE, BRAM, QUICKENED, ROOTSTOCK).
 - **Every NPC** has a reason to exist:
   - a real plant fact;

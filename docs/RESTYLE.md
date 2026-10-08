@@ -118,8 +118,9 @@ string literals in these files; restyle work re-reads before every edit.
 The creatures leave the 4-colour Crystal rule for a modern full-colour
 style that sits with LimeZu's world. CREATURES.md v2 (palette, outline,
 shading, size and animation rules), a pilot line, then the QA-gated Codex
-loop as in Chapter 6. **Battle-screen layout and sprite size are decided in
-R5**, not before.
+loop as in Chapter 6. **Creature sprite size is decided in R5**. R1e lays
+out the 320×180 battle screen using the current 56×56 fronts and 48×48 backs
+at 1× until then.
 
 ## 6. Shipping (R7), decided with the owner
 
@@ -135,6 +136,8 @@ Until then, `main` ships the GBC fallback. The release horizon
 |---|---|---|
 | R1a ✓ | Engine: tall characters, props (footprint, floor layer), `wall_face`, tests (§2.1–2.3, §2.5); procedural GBC wall-face fallback | Codex |
 | R1b ✓ | Local-pack plumbing and index tests (§2.4–2.5) | Codex |
+| R1d ✓ | Screen core: 320×180, integer scaling, clamped camera and centred small maps, 36×3 dialogue and validation, native-size framed stills, title/intro/card/start-menu layouts and full-screen effects | Codex |
+| R1e ✓ | Menu screens and battle laid out for 320×180; 36×3 battle dialogue, native-size creature sprites, full-width effects and layout checks | Codex |
 | R2a ✓ | Interior importer, prop geometry contracts and original GBC fallback props (§1, §3) | lead (mappings) + Codex (code) |
 | R2b ✓ | Outdoor importer, pixel footprints, prop signs, building doors, ground blob masks + local review (character/UI work remains R4/R6) | lead (mappings) + Codex (code) |
 | R3a ✓ | Prologue/Chapter 1 interiors: `player_home`, `herbarium`, `herbarium_roof` (outdoor deck), `fennimore_house`, `bramblegate_conservatory`; shared `greenhouseMap()` (all ten healing centres) and narrow/wide market layouts (all six markets). Local 2× review: `tools/art/limezu/review/r3a.png`. | Codex; lead review pending |
@@ -163,3 +166,35 @@ Until then, `main` ships the GBC fallback. The release horizon
 - Local render contains the LimeZu pack, with NPC staging at their authored
   positions (both story appearances shown; hedge gates use initial flags).
   It is licensed review material and remains gitignored.
+
+### R1d screen decision (2026-10-07)
+
+The owner chose **320×180** for LimeZu's art. R1d keeps 16×16 world tiles
+(20×11.25 visible), centres maps smaller than the view on each axis, and
+uses the existing 8×8 font and border in a bottom **36-column × 3-line**,
+56-pixel-high dialogue box. Legacy 160×144 story stills are centred at 1×
+on a dark frame until redrawn. Title, intro/name entry, ending card and START
+menu use the new canvas; fades, transitions, night tint, GLOW and weather
+cover it. The screen core adapts the existing page shell's canvas placement
+while preserving touch/fullscreen controls. Menu screens in `src/screens/`
+and the battle layout remain for **R1e**; neither is redesigned in R1d.
+
+### R1e menu and battle layout (2026-10-08)
+
+Menu screens now use canvas-derived margins, rows and columns from
+`src/screens/kit/layout.ts`. Party and item pickers have wider rows; summary
+and cabinet use specimen/detail columns; bag and shop pair a sidebar with a
+wide list. Herbarium and notes use the full notebook width and a bottom
+label, and options place controls beside their labels. Growth is centred;
+trade, nursery and sprouting share the updated pickers/dialogue or R1d's
+centred portrait window.
+
+Battle uses a top-right foe and bottom-left player at **56×56 / 48×48, 1×**.
+The HUD and command rail sit clear of the creatures; commands and moves are
+above the **36×3 TEXTBOX**, with move details alongside. Particle targets,
+weather, backgrounds, flashes and versus banners use the new canvas. The
+existing panel borders, bitmap fonts and cursors remain until R6.
+
+The R1e worker verified typecheck, unit/layout tests and the production build.
+The full browser playthrough still needs lead verification: this worker's
+sandbox rejects localhost server binding and Chromium startup.

@@ -2,6 +2,8 @@
 // HP/EXP bars, species sprites (with a neat placeholder while art lands),
 // sport recolouring, silhouettes, pods and small icons.
 
+import { SCREEN_W, SCREEN_H } from "../../contracts";
+
 import type { GameContext, SpeciesId, SpeciesSpriteKind, StatusId, TypeId } from "../../contracts";
 import { speciesPath, UI } from "../../contracts";
 
@@ -211,7 +213,7 @@ export function drawItemIcon(ctx: GameContext, g: CanvasRenderingContext2D, id: 
 /** Fill the whole screen with the menu background. */
 export function clearScreen(g: CanvasRenderingContext2D, color: string = UI.white) {
   g.fillStyle = color;
-  g.fillRect(0, 0, 160, 144);
+  g.fillRect(0, 0, SCREEN_W, SCREEN_H);
 }
 
 /** Right-align text so it ends at `right`. */
@@ -401,7 +403,7 @@ export function drawImageOpts(g: CanvasRenderingContext2D, img: Src, x: number, 
   if (opts.alpha !== undefined) g.globalAlpha = opts.alpha;
   if (opts.clipBottom !== undefined) {
     g.beginPath();
-    g.rect(0, 0, 160, opts.clipBottom);
+    g.rect(0, 0, SCREEN_W, opts.clipBottom);
     g.clip();
   }
   const dw = Math.max(1, Math.round(w * scale));

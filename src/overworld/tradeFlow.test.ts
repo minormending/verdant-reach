@@ -1,3 +1,4 @@
+import { TEXTBOX } from "../contracts";
 import { describe, expect, it, vi } from "vitest";
 import type { Button, GameContext, GameData, ScriptCmd, SpeciesId, WorldData } from "../contracts";
 import { DATA } from "../data";
@@ -207,12 +208,12 @@ describe("NPC trade script flow", () => {
     expect(h.jingles).toEqual([]);
   });
 
-  it("fits trade text in two 18-column lines for every species and a maximum nickname", () => {
+  it("fits trade text in the shared dialogue box for every species and a maximum nickname", () => {
     for (const species of Object.values(DATA.species)) {
       const name = species.name.toUpperCase();
       for (const text of ["Trade which one?", `For my ${name}.`, `Trade ${name}?`, `${name} joined you!`, "ABCDEFGHIJ joined you!"]) {
-        expect(wrapText(text, 18).length, text).toBeLessThanOrEqual(2);
-        expect(wrapText(text, 18).every((line) => line.length <= 18), text).toBe(true);
+        expect(wrapText(text, TEXTBOX.cols).length, text).toBeLessThanOrEqual(TEXTBOX.lines);
+        expect(wrapText(text, TEXTBOX.cols).every((line) => line.length <= TEXTBOX.cols), text).toBe(true);
       }
     }
   });

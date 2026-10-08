@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAP_IDS, SPECIES_IDS, STRUCTURES, TILES } from "../contracts";
+import { MAP_IDS, SPECIES_IDS, STRUCTURES, TEXTBOX, TILES } from "../contracts";
 import { WORLD } from "./index";
 import type { Cond, MapDef, TileKey } from "../contracts";
 import { checkProgressWithoutPrune, eachCmd, flood, grid, prunable, validateWorld, walkable, wrapText, expandTokens } from "./validate";
@@ -117,11 +117,11 @@ describe("world data", () => {
     expect(seen.size).toBeGreaterThanOrEqual(30);
   });
 
-  it("writes every line to fit the 18-column text box", () => {
+  it("writes every line to fit the 36-column text box", () => {
     for (const [id, cmds] of Object.entries(WORLD.scripts)) {
       eachCmd(cmds, (c) => {
         if (c.op !== "say") return;
-        for (const line of wrapText(expandTokens(c.text))) expect(line.length, `${id}: ${c.text}`).toBeLessThanOrEqual(18);
+        for (const line of wrapText(expandTokens(c.text))) expect(line.length, `${id}: ${c.text}`).toBeLessThanOrEqual(TEXTBOX.cols);
       });
     }
   });

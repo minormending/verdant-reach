@@ -3,6 +3,7 @@
 import type { GameContext, MoveId, Quickened } from "../../contracts";
 import { tryLearn, replaceMove } from "../../battle/logic/exp";
 import { moveName, qName } from "../../battle/logic/lookup";
+import { centered } from "../kit/layout";
 import type { Flow } from "../kit/flow";
 import { Menu, type ScreenUi } from "../kit/widgets";
 
@@ -24,7 +25,7 @@ export async function learnMoveFlow(ctx: GameContext, ui: ScreenUi, flow: Flow, 
     if (del) {
       await ui.say("Which move should be forgotten?", "hold");
       const labels = q.moves.map((m) => moveName(ctx.data, m.id));
-      const menu = new Menu(ctx, labels, { x: 40, y: 24, w: 120, spacing: 16 });
+      const menu = new Menu(ctx, labels, { ...centered(192, 72), w: 192, spacing: 16 });
       const idx = await ui.choose(menu);
       if (idx >= 0) {
         const old = moveName(ctx.data, q.moves[idx].id);

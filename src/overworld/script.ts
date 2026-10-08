@@ -52,7 +52,7 @@ export interface ScriptHost {
   ambient?(kind: Ambient): void;
   /** Full-screen flash; resolves when it has faded. */
   flash?(color: "white" | "gold"): Promise<void>;
-  /** Fade to a 160x144 story illustration (text boxes draw over it). */
+  /** Fade to a centred, native-size story illustration (text boxes draw over it). */
   still?(image: StillKey): Promise<void>;
   /** Fade back from the illustration to the map. */
   stillClear?(): Promise<void>;

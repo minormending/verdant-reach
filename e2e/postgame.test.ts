@@ -1,3 +1,4 @@
+import { SCREEN_H, SCREEN_W } from "../src/contracts";
 import { afterEach, expect, it, vi } from "vitest";
 
 afterEach(() => {
@@ -31,7 +32,7 @@ it.each([1, 42])("plays all 24 post-game milestones, including the five +8 remat
     removeItem: (key: string) => storage.delete(key),
   });
   const g = { fillRect() {}, drawImage() {} } as unknown as CanvasRenderingContext2D;
-  const canvas = () => ({ width: 160, height: 144, getContext: () => g });
+  const canvas = () => ({ width: SCREEN_W, height: SCREEN_H, getContext: () => g });
   vi.stubGlobal("document", { getElementById: canvas, createElement: canvas });
   const { createInput, createSceneStack } = await import("../src/engine/core");
   const { createGameContext } = await import("../src/engine/context");

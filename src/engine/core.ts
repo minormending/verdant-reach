@@ -4,6 +4,7 @@
 
 import { FPS, SCREEN_H, SCREEN_W } from "../contracts";
 import type { Assets, Button, Input, Scene, SceneStack } from "../contracts";
+import { fitScreen } from "./screen";
 import { createArtAssets } from "../art";
 
 export function createCanvas(): { canvas: HTMLCanvasElement; g: CanvasRenderingContext2D } {
@@ -13,9 +14,9 @@ export function createCanvas(): { canvas: HTMLCanvasElement; g: CanvasRenderingC
   const g = canvas.getContext("2d")!;
   g.imageSmoothingEnabled = false;
   const fit = () => {
-    const scale = Math.max(1, Math.floor(Math.min(innerWidth / SCREEN_W, innerHeight / SCREEN_H)));
-    canvas.style.width = `${SCREEN_W * scale}px`;
-    canvas.style.height = `${SCREEN_H * scale}px`;
+    const { screen } = fitScreen({ x: 0, y: 0, w: innerWidth, h: innerHeight }, devicePixelRatio || 1);
+    canvas.style.width = `${screen.w}px`;
+    canvas.style.height = `${screen.h}px`;
   };
   addEventListener("resize", fit);
   fit();

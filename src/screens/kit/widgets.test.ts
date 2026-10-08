@@ -1,3 +1,4 @@
+import { TEXTBOX } from "../../contracts";
 import { describe, expect, it } from "vitest";
 import type { Button, GameContext, Input } from "../../contracts";
 import { Flow } from "./flow";
@@ -28,10 +29,10 @@ function input(pressed: Button[] = []): Input {
 const idle = input();
 
 describe("TextBox", () => {
-  it("pages on blank lines and wraps to 18 columns", () => {
+  it("pages on blank lines and wraps to TEXTBOX.cols columns", () => {
     const ctx = fakeCtx();
     const pages = pagesOf(ctx, "Wild LION'S TOOTH appeared!\n\nGo! OAK ACORN!");
-    expect(pages).toEqual([["Wild LION'S TOOTH", "appeared!"], ["Go! OAK ACORN!"]]);
+    expect(pages).toEqual([["Wild LION'S TOOTH appeared!"], ["Go! OAK ACORN!"]]);
   });
   it("wait mode needs A on the last page; hold mode doesn't", () => {
     const ctx = fakeCtx();
@@ -57,7 +58,7 @@ describe("TextBox", () => {
 
 describe("Menu", () => {
   it("moves through a 2x2 grid and returns the index", () => {
-    const m = new Menu(fakeCtx(), ["FIGHT", "BAG", "QUICKENED", "RUN"], { x: 0, y: 96, cols: 2 });
+    const m = new Menu(fakeCtx(), ["FIGHT", "BAG", "QUICKENED", "RUN"], { x: 0, y: TEXTBOX.y, cols: 2 });
     m.update(input(["right"]));
     expect(m.index).toBe(1);
     m.update(input(["down"]));
@@ -124,5 +125,28 @@ describe("Flow", () => {
     f.tick();
     await null;
     expect(done).toBe(true);
+  });
+});
+
+describe("widescreen TextBox", () => {
+  it("shows all three instant rows and scrolls the whole paragraph", () => {
+    const ctx = fakeCtx();
+    const drawn: [string, number, number][] = [];
+    ctx.ui.drawWindow = () => {};
+    ctx.ui.drawText = (_g, text, x, y) => { drawn.push([text, x, y]); };
+    ctx.ui.wrap = (t) => t.split("\n");
+    const tb = new TextBox(ctx);
+    const g = {} as CanvasRenderingContext2D;
+    tb.show("FIRST\nSECOND\nTHIRD", "instant");
+    tb.draw(g);
+    expect(drawn.map(([text]) => text)).toEqual(["FIRST", "SECOND", "THIRD"]);
+    expect(drawn.map(([, , y]) => y)).toEqual([TEXTBOX.y + 8, TEXTBOX.y + 24, TEXTBOX.y + 40]);
+    drawn.length = 0;
+    tb.show("FIRST\nSECOND\nTHIRD\nFOURTH", "wait");
+    for (let i = 0; i < 24; i++) tb.update(idle);
+    tb.update(input(["a"]));
+    for (let i = 0; i < 24; i++) tb.update(idle);
+    tb.draw(g);
+    expect(drawn.filter(([text]) => text !== "▼").map(([text]) => text)).toEqual(["SECOND", "THIRD", "FOURTH"]);
   });
 });

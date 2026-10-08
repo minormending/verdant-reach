@@ -23,22 +23,22 @@ function setup() {
 }
 
 describe("credits", () => {
-  it("scrolls at one pixel every three fixed ticks and fills the 160x144 screen", () => {
+  it("scrolls at one pixel every three fixed ticks and fills the native screen", () => {
     const { scene, g, tick, drawText, press } = setup();
     scene.draw(g);
     expect(g.fillRect).toHaveBeenCalledWith(0, 0, SCREEN_W, SCREEN_H);
     expect(drawText).not.toHaveBeenCalled();
     tick(CREDITS_TICKS_PER_PIXEL);
     scene.draw(g);
-    expect(drawText).toHaveBeenLastCalledWith(g, "VERDANT REACH", 28, 143, expect.any(String));
+    expect(drawText).toHaveBeenLastCalledWith(g, "VERDANT REACH", (SCREEN_W - measureText("VERDANT REACH")) / 2, SCREEN_H - 1, expect.any(String));
     drawText.mockClear();
     tick(CREDITS_TICKS_PER_PIXEL - 1);
     scene.draw(g);
-    expect(drawText.mock.calls[0][3]).toBe(143);
+    expect(drawText.mock.calls[0][3]).toBe(SCREEN_H - 1);
     drawText.mockClear();
     tick();
     scene.draw(g);
-    expect(drawText.mock.calls[0][3]).toBe(142);
+    expect(drawText.mock.calls[0][3]).toBe(SCREEN_H - 2);
     press("b"); tick();
   });
 
@@ -58,7 +58,7 @@ describe("credits", () => {
     }
     expect(shown).toEqual(new Set([
       "VERDANT REACH", "BELLADONNA", "MIMI OSA", "TITUS ARUM", "PYRA", "ROWAN VALE",
-      "DR. VALE", "THANK YOU FOR", "PLAYING",
+      "DR. VALE", "THANK YOU FOR PLAYING",
     ]));
     expect(scenes.top()).toBe(scene);
     tick();

@@ -189,7 +189,7 @@ export function drawTint(g: CanvasRenderingContext2D, tod: TimeOfDay) {
   g.restore();
 }
 
-/** An offscreen 160x144 canvas for the occludable emissive layer. */
+/** An offscreen screen-size canvas for the occludable emissive layer. */
 export function makeScreenCanvas(): HTMLCanvasElement | null {
   if (typeof document === "undefined") return null;
   const c = document.createElement("canvas");

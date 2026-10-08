@@ -51,3 +51,11 @@ export function healingItem(data: GameData, bag: Record<string, number>, q: Quic
   }
   return best;
 }
+
+/** Navigate by the menu's actual on-screen rows and columns, at any canvas size. */
+export function menuDirection(menu: { index: number; itemPos(i: number): { x: number; y: number } }, target: number): "up" | "down" | "left" | "right" | "a" {
+  const current = menu.itemPos(menu.index), next = menu.itemPos(target);
+  if (current.y !== next.y) return current.y < next.y ? "down" : "up";
+  if (current.x !== next.x) return current.x < next.x ? "right" : "left";
+  return "a";
+}

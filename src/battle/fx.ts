@@ -6,6 +6,10 @@
 // Rules: integer pixels only, no alpha blending in art (translucency is a
 // deliberate 2-colour checker), light from the top-left.
 
+import { SCREEN_W, SCREEN_H, TEXTBOX } from "../contracts";
+import { ENEMY_CENTER, PLAYER_CENTER, ENEMY_GROUND, PLAYER_GROUND } from "./layout";
+export { ENEMY_CENTER, PLAYER_CENTER, ENEMY_GROUND, PLAYER_GROUND } from "./layout";
+
 import type { StatusId, Weather } from "../contracts";
 
 export interface Pt { x: number; y: number }
@@ -42,12 +46,6 @@ export interface Particle {
 
 export type DrawFn = (g: CanvasRenderingContext2D, f: number, t: number) => void;
 interface Layer { delay: number; life: number; max: number; back: boolean; draw: DrawFn }
-
-export const ENEMY_CENTER: Pt = { x: 124, y: 30 };
-export const PLAYER_CENTER: Pt = { x: 32, y: 66 };
-/** Ground line under each side (where feet / roots meet the battle ground). */
-export const ENEMY_GROUND: Pt = { x: 124, y: 50 };
-export const PLAYER_GROUND: Pt = { x: 32, y: 90 };
 
 export const R = (a: number, b: number) => a + Math.random() * (b - a);
 export const RI = (a: number, b: number) => Math.floor(R(a, b + 1));
@@ -162,8 +160,8 @@ export class Fx {
   /** Behind the sprites: tint + back layers. */
   drawBack(g: CanvasRenderingContext2D) {
     if (this.tint) {
-      if (this.tint.dither) checker(g, 0, 0, 160, 96, this.tint.color, this.frame >> 3);
-      else { g.fillStyle = this.tint.color; g.fillRect(0, 0, 160, 96); }
+      if (this.tint.dither) checker(g, 0, 0, SCREEN_W, TEXTBOX.y, this.tint.color, this.frame >> 3);
+      else { g.fillStyle = this.tint.color; g.fillRect(0, 0, SCREEN_W, TEXTBOX.y); }
     }
     for (const l of this.layers) if (l.back && l.delay <= 0 && l.life > 0) l.draw(g, l.life - 1, (l.life - 1) / Math.max(1, l.max - 1));
   }
@@ -181,7 +179,7 @@ export class Fx {
   drawFlash(g: CanvasRenderingContext2D) {
     if (!this.flash) return;
     g.fillStyle = this.flash.color;
-    g.fillRect(0, 0, 160, 144);
+    g.fillRect(0, 0, SCREEN_W, SCREEN_H);
   }
 
   // -------------------------------------------------------------------------
@@ -683,26 +681,26 @@ export function drawWeather(g: CanvasRenderingContext2D, weather: Weather | null
   if (!weather) return;
   if (weather === "sun") {
     // a warm checker wash on the sky and slow diagonal shafts of light
-    checker(g, 0, 0, 160, 96, "#f8e8a0", 0);
-    for (let i = 0; i < 4; i++) {
+    checker(g, 0, 0, SCREEN_W, TEXTBOX.y, "#f8e8a0", 0);
+    for (let i = 0; i < Math.ceil(SCREEN_W / 44); i++) {
       const drift = Math.floor(frame / 6) % 48;
       const x0 = 20 + i * 44 - drift + (i % 2) * 6;
-      for (let y = 0; y < 96; y += 1) {
+      for (let y = 0; y < TEXTBOX.y; y += 1) {
         const x = x0 + Math.floor(y / 2);
-        if (x < -8 || x > 168) continue;
+        if (x < -8 || x > SCREEN_W + 8) continue;
         const w = 3 + (i % 2) * 2;
         if ((x + y) % 2 === 0) { g.fillStyle = "#f8f0b8"; g.fillRect(x, y, w, 1); }
       }
     }
     // sun disc peeking from the top-right
     const pulse = (frame >> 4) % 2;
-    ellipse(g, 156, 2, 9 + pulse, 9 + pulse, "#f8d860");
-    ellipse(g, 156, 2, 6, 6, "#f8f0a8");
+    ellipse(g, SCREEN_W - 4, 2, 9 + pulse, 9 + pulse, "#f8d860");
+    ellipse(g, SCREEN_W - 4, 2, 6, 6, "#f8f0a8");
   } else if (weather === "rain") {
-    checker(g, 0, 0, 160, 96, "#98a8c8", 0);
+    checker(g, 0, 0, SCREEN_W, TEXTBOX.y, "#98a8c8", 0);
     for (let i = 0; i < 34; i++) {
-      const x = (i * 37 + frame * 2) % 176 - 8;
-      const y = (i * 23 + frame * 6) % 104 - 6;
+      const x = (i * 37 + frame * 2) % (SCREEN_W + 16) - 8;
+      const y = (i * 23 + frame * 6) % (TEXTBOX.y + 8) - 6;
       g.fillStyle = i % 3 === 0 ? "#f8f8f8" : "#5070b0";
       g.fillRect(x, y, 1, 3);
       g.fillRect(x - 1, y + 3, 1, 2);
@@ -711,14 +709,14 @@ export function drawWeather(g: CanvasRenderingContext2D, weather: Weather | null
     for (let i = 0; i < 6; i++) {
       const k = (frame + i * 11) % 24;
       if (k > 6) continue;
-      const sx = i < 3 ? 100 + i * 18 : 10 + (i - 3) * 18;
-      const sy = i < 3 ? 50 : 88;
+      const sx = i < 3 ? ENEMY_GROUND.x - 24 + i * 18 : PLAYER_GROUND.x - 24 + (i - 3) * 18;
+      const sy = i < 3 ? ENEMY_GROUND.y : PLAYER_GROUND.y;
       g.fillStyle = "#f8f8f8";
       g.fillRect(sx - (k >> 1), sy - 1, 1, 1);
       g.fillRect(sx + (k >> 1), sy - 1, 1, 1);
     }
   } else if (weather === "frost") {
-    checker(g, 0, 0, 160, 96, "#d8f0f8", 0);
+    checker(g, 0, 0, SCREEN_W, TEXTBOX.y, "#d8f0f8", 0);
     // frost creeping in from the corners
     const corner = (cx: number, cy: number, sx: number, sy: number) => {
       for (let i = 0; i < 9; i++) {
@@ -728,11 +726,11 @@ export function drawWeather(g: CanvasRenderingContext2D, weather: Weather | null
       }
     };
     corner(0, 0, 1, 1);
-    corner(160, 0, -1, 1);
+    corner(SCREEN_W, 0, -1, 1);
     // drifting flakes and twinkles
     for (let i = 0; i < 18; i++) {
-      const x = (i * 41 + Math.floor(frame / 3) + Math.round(Math.sin((frame + i * 10) / 14) * 3)) % 162;
-      const y = (i * 29 + Math.floor(frame / 2)) % 96;
+      const x = (i * 41 + Math.floor(frame / 3) + Math.round(Math.sin((frame + i * 10) / 14) * 3)) % (SCREEN_W + 2);
+      const y = (i * 29 + Math.floor(frame / 2)) % TEXTBOX.y;
       g.fillStyle = "#ffffff";
       g.fillRect(x, y, 1, 1);
       if (i % 3 === 0) { g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3); }
@@ -740,7 +738,8 @@ export function drawWeather(g: CanvasRenderingContext2D, weather: Weather | null
     for (let i = 0; i < 4; i++) {
       const k = (frame + i * 17) % 40;
       if (k > 8) continue;
-      const x = [104, 140, 20, 48][i], y = [12, 36, 60, 76][i];
+      const at = i < 2 ? ENEMY_CENTER : PLAYER_CENTER;
+      const x = at.x + (i % 2 ? 16 : -20), y = at.y + (i % 2 ? 6 : -18);
       g.fillStyle = "#ffffff";
       g.fillRect(x - (k < 4 ? 1 : 2), y, k < 4 ? 3 : 5, 1);
       g.fillRect(x, y - (k < 4 ? 1 : 2), 1, k < 4 ? 3 : 5);

@@ -1,7 +1,7 @@
 // Cutscene camera and screen flash. Pure state machines (unit-tested): the
 // overworld feeds the follow target each frame and reads back the position.
 
-import { TILE } from "../contracts";
+import { SCREEN_H, SCREEN_W, TILE } from "../contracts";
 
 /** Ease in and out (sine). */
 export function easeInOut(k: number): number {
@@ -11,7 +11,16 @@ export function easeInOut(k: number): number {
 
 /** Camera top-left that centres a tile the way the player is centred. */
 export function camForTile(x: number, y: number): { x: number; y: number } {
-  return { x: x * TILE - 64, y: y * TILE - 64 };
+  return { x: x * TILE + TILE / 2 - SCREEN_W / 2, y: y * TILE + TILE / 2 - SCREEN_H / 2 };
+}
+
+/** Clamp large maps to their edges; hold small maps at a centred, integer offset. */
+export function clampCamera(camera: { x: number; y: number }, map: { w: number; h: number }) {
+  const axis = (position: number, tiles: number, view: number) => {
+    const size = tiles * TILE;
+    return size < view ? Math.round((size - view) / 2) : Math.round(Math.max(0, Math.min(size - view, position)));
+  };
+  return { x: axis(camera.x, map.w, SCREEN_W), y: axis(camera.y, map.h, SCREEN_H) };
 }
 
 /** Default pan length: about 1.6 px per frame, clamped to a pleasant range. */

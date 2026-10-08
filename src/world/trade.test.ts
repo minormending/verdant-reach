@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ScriptCmd, SpeciesId } from "../contracts";
+import { TEXTBOX } from "../contracts";
 import { WORLD } from "./index";
 import { eachCmd, validateWorld } from "./validate";
 
@@ -35,12 +36,12 @@ describe("trade script validation", { timeout: 30_000 }, () => {
 
   it("runs text and reference checks through nested then and else, including else-only trades", () => {
     const cmd = trade();
-    cmd.then = [{ op: "say", text: "a".repeat(19) }];
-    cmd.else = [trade(), { ...trade(), else: [{ op: "say", text: "b".repeat(19) }] }];
+    cmd.then = [{ op: "say", text: "a".repeat(TEXTBOX.cols + 1) }];
+    cmd.else = [trade(), { ...trade(), else: [{ op: "say", text: "b".repeat(TEXTBOX.cols + 1) }] }];
     const found = errors(cmd);
     expect(found).toEqual([
-      `[script fixture_trade] word too long: "${"a".repeat(19)}"`,
-      `[script fixture_trade] word too long: "${"b".repeat(19)}"`,
+      `[script fixture_trade] word too long: "${"a".repeat(TEXTBOX.cols + 1)}"`,
+      `[script fixture_trade] word too long: "${"b".repeat(TEXTBOX.cols + 1)}"`,
     ]);
     const ops: string[] = [];
     eachCmd([cmd], (c) => ops.push(c.op));

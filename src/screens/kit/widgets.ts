@@ -1,14 +1,14 @@
 // Text box, cursor menus, scrolling lists, YES/NO and quantity pickers for
 // battle and menu screens. Geometry follows the engine's UiKit (8px grid,
-// text rows at TEXTBOX.y + 12 / + 28) so everything looks of a piece.
+// text rows derived from TEXTBOX) so everything looks of a piece.
 
 import type { Button, GameContext, Input } from "../../contracts";
-import { SCREEN_W, TEXTBOX } from "../../contracts";
+import { SCREEN_W, SCREEN_H, TEXTBOX } from "../../contracts";
 import type { Flow, Task } from "./flow";
 import { drawCursor, drawMoreArrow } from "./draw";
 
 export const TEXT_X = TEXTBOX.x + 8;
-export const LINE_Y = [TEXTBOX.y + 12, TEXTBOX.y + 28] as const;
+export const LINE_Y = Array.from({ length: TEXTBOX.lines }, (_, i) => TEXTBOX.y + 8 + i * 16);
 
 const SPEED = { slow: 1 / 4, mid: 1 / 2, fast: 1 } as const;
 
@@ -69,7 +69,7 @@ export class TextBox implements Task {
     this.visible = true;
     if (mode === "instant") {
       const ls = this.pages[0];
-      this.line = Math.min(2, ls.length);
+      this.line = Math.min(TEXTBOX.lines, ls.length);
       this.done = true;
     }
     return this;
@@ -130,7 +130,7 @@ export class TextBox implements Task {
     const fast = input.held("a") || input.held("b");
     const speed = this.ctx.state?.options?.textSpeed ?? "mid";
     let budget = fast ? 2 : SPEED[speed];
-    while (budget > 0 && this.line < lines.length && this.line < this.top + 2) {
+    while (budget > 0 && this.line < lines.length && this.line < this.top + TEXTBOX.lines) {
       const chars = Array.from(lines[this.line]);
       const before = Math.floor(this.chars);
       this.chars = Math.min(chars.length, this.chars + Math.min(budget, 1));
@@ -143,10 +143,10 @@ export class TextBox implements Task {
       if (this.chars >= chars.length) {
         this.line++;
         this.chars = 0;
-        if (this.line === this.top + 2 && this.line < lines.length) break;
+        if (this.line === this.top + TEXTBOX.lines && this.line < lines.length) break;
       }
     }
-    if (this.line >= lines.length || this.line >= this.top + 2) {
+    if (this.line >= lines.length || this.line >= this.top + TEXTBOX.lines) {
       const pageDone = this.line >= lines.length;
       if (pageDone && lastPage && this.mode === "hold") {
         this.done = true;
@@ -162,7 +162,7 @@ export class TextBox implements Task {
     if (!this.visible) return;
     if (opts.window !== false) this.ctx.ui.drawWindow(g, TEXTBOX.x, TEXTBOX.y, TEXTBOX.w, TEXTBOX.h);
     const lines = this.lines;
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < TEXTBOX.lines; i++) {
       const idx = this.top + i;
       let text = "";
       if (idx < this.line) text = lines[idx] ?? "";
@@ -170,14 +170,14 @@ export class TextBox implements Task {
       if (!text) continue;
       if (this.scroll > 0) {
         if (i === 0) continue;
-        const y = this.scroll > 2 ? LINE_Y[1] - 8 : LINE_Y[0];
+        const y = this.scroll > 2 ? LINE_Y[i] - 8 : LINE_Y[i] - 16;
         this.ctx.ui.drawText(g, text, TEXT_X, y);
       } else {
         this.ctx.ui.drawText(g, text, TEXT_X, LINE_Y[i]);
       }
     }
     const showArrow = this.waiting && !(this.mode === "auto" && this.page === this.pages.length - 1 && this.line >= lines.length);
-    if (showArrow) drawMoreArrow(this.ctx, g, TEXTBOX.x + TEXTBOX.w - 16, LINE_Y[1] + 7, this.frame);
+    if (showArrow) drawMoreArrow(this.ctx, g, TEXTBOX.x + TEXTBOX.w - 16, LINE_Y[TEXTBOX.lines - 1], this.frame);
   }
 }
 
@@ -223,6 +223,8 @@ export class Menu implements Task {
     const longest = Math.max(1, ...options.map((o) => Array.from(o).length));
     this.w = opts.w ?? Math.min(SCREEN_W, cols * (opts.colW ?? 8 * (longest + 1)) + 16);
     this.h = opts.h ?? (this.spacing === 16 ? rows * 16 + 8 : rows * 8 + 16);
+    this.opts.x = Math.max(0, Math.min(this.opts.x, SCREEN_W - this.w));
+    this.opts.y = Math.max(0, Math.min(this.opts.y, SCREEN_H - this.h));
   }
 
   update(input: Input): boolean {

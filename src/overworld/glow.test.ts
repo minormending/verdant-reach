@@ -96,7 +96,7 @@ describe("GLOW drawing", () => {
     expect(pixels.has(`${4 * TILE + 8},${4 * TILE + 8}`)).toBe(false);
     expect(new Set(styles.map((s) => JSON.stringify(s)))).toEqual(new Set(['["#000000",1,"source-over"]']));
     // Outside the maximum radius no visible pixel leaks through the mask.
-    for (let y = 0; y < SCREEN_H; y++) expect(pixels.has(`159,${y}`)).toBe(true);
+    for (let y = 0; y < SCREEN_H; y++) expect(pixels.has(`${SCREEN_W - 1},${y}`)).toBe(true);
   });
 
   it("anchors the dither in world pixels as the camera moves", () => {

@@ -4,6 +4,8 @@
 // valid during the frame). Async code never reads input directly: it awaits
 // Tasks, which are ticked from the scene's update and resolve their promises.
 
+import { SCREEN_W, SCREEN_H } from "../../contracts";
+
 import type { Button, GameContext, Input, Scene } from "../../contracts";
 
 export interface Task {
@@ -141,7 +143,7 @@ export function runFlowScene<T>(
         if (fade && age < 6) {
           // palette-style fade: three flat steps, no gradients
           g.fillStyle = ["rgba(248,248,248,0.75)", "rgba(248,248,248,0.5)", "rgba(248,248,248,0.25)"][age >> 1];
-          g.fillRect(0, 0, 160, 144);
+          g.fillRect(0, 0, SCREEN_W, SCREEN_H);
         }
       },
     };

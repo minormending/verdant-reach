@@ -610,7 +610,7 @@ export function eachCmd(cmds: ScriptCmd[], fn: (c: ScriptCmd) => void) {
 }
 
 /** Word-wrap like the text box: returns lines of at most `cols`. */
-export function wrapText(text: string, cols = TEXTBOX.cols): string[] {
+export function wrapText(text: string, cols: number = TEXTBOX.cols): string[] {
   const out: string[] = [];
   for (const para of text.split("\n")) {
     let line = "";
@@ -623,8 +623,24 @@ export function wrapText(text: string, cols = TEXTBOX.cols): string[] {
   return out;
 }
 
+/** The shared box budget, including forced paragraph/page breaks. */
+export function textPages(text: string): number {
+  return text.replace(/\r/g, "").split(/\f|\n{2,}/).reduce((pages, paragraph) =>
+    pages + Math.ceil(wrapText(paragraph.trim()).length / TEXTBOX.lines), 0);
+}
+
 /** Names can be up to 7 characters; measure tokens at that width. */
 export const expandTokens = (t: string) => t.replace(/<PLAYER>/g, "WWWWWWW").replace(/<RIVAL>/g, "WWWWWWW");
+
+/** Text used by the shared box: unbroken words must fit, and prose stays brief. */
+export function textFitErrors(text: string, at: string, maxPages = 3): string[] {
+  const shown = expandTokens(text);
+  const errors = wrapText(shown.replace(/\f/g, "\n")).filter((line) => line.length > TEXTBOX.cols)
+    .map((line) => `${at} word too long: "${line}"`);
+  const pages = textPages(shown);
+  if (pages > maxPages) errors.push(`${at} ${pages} pages: "${text}"`);
+  return errors;
+}
 
 /** Post-game access with every field crossing optimistically opened. This
  * checks story gates independently of puzzle solvability and earlier chapters.
@@ -705,6 +721,9 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
   const species = new Set<string>(SPECIES_IDS);
   // Story items (the contract) plus everything the data owner defines (PLANT FOOD, ...).
   const items = new Set<string>([...REQUIRED_ITEMS, ...Object.keys(DATA.items ?? {})]);
+  for (const [id, item] of Object.entries(DATA.items ?? {})) {
+    errs.push(...textFitErrors(item.description, `[item ${id}]`, 1));
+  }
   const music = new Set<string>(MUSIC);
   const marks = new Set<string>(MARKS);
   const sfx = new Set<string>(SFX);
@@ -849,6 +868,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     // Signs sit on sign posts and mailboxes, or give flavour text to any other
     // interactable tile or a structure footprint (shelves of field notes).
     for (const s of map.signs) {
+      errs.push(...textFitErrors(s.text, `${where} sign at ${s.x},${s.y}`));
       const t = g.tile(s.x, s.y);
       const onProp = map.structures.some((prop) => STRUCTURES[prop.key] && structureFootprintContains(STRUCTURES[prop.key], s.x - prop.x, s.y - prop.y));
       if (!t || (!("interact" in TILES[t]) && !onProp)) errs.push(`${where} sign at ${s.x},${s.y} is on ${t}`);
@@ -1028,12 +1048,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const at = `[script ${sid}]`;
     switch (c.op) {
       case "say": {
-        for (const line of wrapText(expandTokens(c.text))) {
-          if (line.length > TEXTBOX.cols) errs.push(`${at} word too long: "${line}"`);
-        }
-        const shown = (c.speaker ? `${c.speaker}: ` : "") + expandTokens(c.text);
-        const pages = Math.ceil(wrapText(shown).length / TEXTBOX.lines);
-        if (pages > 3) errs.push(`${at} ${pages} pages: "${c.text}"`);
+        errs.push(...textFitErrors((c.speaker ? `${c.speaker}: ` : "") + c.text, at));
         break;
       }
       case "giveItem": case "takeItem":
@@ -1132,6 +1147,8 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     if (t.mark && !marks.has(t.mark)) errs.push(`[trainer ${tid}] mark ${t.mark}`);
     for (const line of [t.intro, t.defeat, t.after]) {
       for (const l of wrapText(expandTokens(line))) if (l.length > TEXTBOX.cols) errs.push(`[trainer ${tid}] word too long "${l}"`);
+      const pages = textPages(expandTokens(line));
+      if (pages > 3) errs.push(`[trainer ${tid}] ${pages} pages: "${line}"`);
     }
   }
   return errs;

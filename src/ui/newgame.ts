@@ -2,7 +2,7 @@
 // script on the new-game map.
 
 import type { CharacterKey, GameContext, Scene, SpeciesId } from "../contracts";
-import { SCREEN_H, SCREEN_W, UI, characterPath, speciesPath } from "../contracts";
+import { SCREEN_H, SCREEN_W, TEXTBOX, UI, characterPath, speciesPath } from "../contracts";
 import { clearScenes } from "../engine/core";
 import { Fader, Timers, characterFrame, drawImagePath } from "../engine/gfx";
 import { DEFAULT_PLAYER_NAME, beginNewGameSession, loadOptions, newGameState } from "../save";
@@ -33,25 +33,28 @@ export async function runNewGame(ctx: GameContext): Promise<void> {
     draw(g) {
       g.fillStyle = UI.white;
       g.fillRect(0, 0, SCREEN_W, SCREEN_H);
+      const portraitX = Math.floor((SCREEN_W - 64) / 2);
+      const portraitY = Math.floor((TEXTBOX.y - 64) / 2);
+      const floorY = portraitY + 52;
       // soft floor band
       g.fillStyle = "#e0ecd8";
-      g.fillRect(0, 64, SCREEN_W, 32);
+      g.fillRect(0, floorY, SCREEN_W, TEXTBOX.y - floorY);
       g.fillStyle = UI.light;
-      for (let x = 0; x < SCREEN_W; x += 4) g.fillRect(x + ((x / 4) % 2) * 2, 64, 2, 1);
+      for (let x = 0; x < SCREEN_W; x += 4) g.fillRect(x + ((x / 4) % 2) * 2, floorY, 2, 1);
       if (portrait) {
         g.globalAlpha = Math.round(portraitAlpha * 4) / 4;
-        drawWindow(g, 48, 12, 64, 64);
+        drawWindow(g, portraitX, portraitY, 64, 64);
         g.fillStyle = "#e8f0e0";
-        g.fillRect(53, 17, 54, 54);
+        g.fillRect(portraitX + 5, portraitY + 5, 54, 54);
         if (portrait.kind === "char") {
           const sheet = characterPath(portrait.key);
           const [w, h] = characterFrame(ctx.assets, portrait.key);
-          // Fit at an integer scale (3x GBC, 1x tall), feet still at y=68.
+          // Fit at an integer scale (3x GBC, 1x tall), feet on the portrait baseline.
           const scale = Math.min(3, Math.floor(48 / w), Math.floor(48 / h));
           drawImagePath(g, ctx.assets, sheet, 0, 0, w, h,
-            80 - w * scale / 2, 68 - h * scale, w * scale, h * scale);
+            portraitX + 32 - w * scale / 2, portraitY + 56 - h * scale, w * scale, h * scale);
         } else {
-          drawImagePath(g, ctx.assets, speciesPath(portrait.id, "front"), 0, 0, 56, 56, 52, 16);
+          drawImagePath(g, ctx.assets, speciesPath(portrait.id, "front"), 0, 0, 56, 56, portraitX + 4, portraitY + 4);
         }
         g.globalAlpha = 1;
       }
