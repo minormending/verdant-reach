@@ -1,5 +1,6 @@
 // Chapter 8's takeover, patch bay and progression (docs/CH8.md §1, §4 and §6).
-// Spoken placeholders retain their speakers for the later writing pass.
+// Voice: docs/STYLE.md §5. One idea per box; text boxes are 18 columns x 2 lines.
+// Narration has no speaker (as in ch5–ch7).
 import type { ScriptCmd } from "../../contracts";
 import { face, flag, give, ifFlags, moveNpc, movePlayer, say, steps, wait, type Scripts } from "../build";
 
@@ -11,12 +12,12 @@ const cameraReset = (): ScriptCmd => ({ op: "cameraReset", frames: 30 });
 const staticReset: ScriptCmd[] = [
   flag("patch_1", false), flag("patch_2", false),
   { op: "sfx", id: "bump" },
-  say("TODO(text): Static interrupts the patch; the sequence resets.", "NARRATOR"),
+  say("STATIC! Every patch light flickers out. The sequence has reset."),
 ];
 
 const console = (id: "a" | "b" | "c"): ScriptCmd[] => [
   ifFlags({ relay_patched: true }, [
-    say("TODO(text): The signal is already routed to the roof stair.", "NARRATOR"),
+    say("The patch holds. The signal runs clean up to the roof."),
   ], [
     ifFlags(id === "c" ? { patch_1: false, patch_2: false }
       : id === "a" ? { patch_1: true, patch_2: false }
@@ -25,12 +26,12 @@ const console = (id: "a" | "b" | "c"): ScriptCmd[] => [
       flag("relay_patched"),
       { op: "sfx", id: "door" },
       camera(15, 2),
-      say("TODO(text): The patch is complete; the roof stair opens.", "NARRATOR"),
+      say("The last lead clicks home. Across the bay, the roof stair grinds open."),
       cameraReset(),
     ] : [
       flag(id === "c" ? "patch_1" : "patch_2"),
       { op: "sfx", id: "select" },
-      say(`TODO(text): Console ${id.toUpperCase()} accepts the patch.`, "NARRATOR"),
+      say(`CONSOLE ${id.toUpperCase()} takes the lead. A small light glows green.`),
     ], staticReset),
   ]),
 ];
@@ -39,10 +40,10 @@ export const ch8Scripts: Scripts = {
   ch8_arrival: [
     ifFlags({ ch7_done: true, ch8_started: false }, [
       camera(5, 6, 60),
-      say("TODO(text): Glasshouse City has gone still; its Quickened plants are frozen.", "NARRATOR"),
-      say("TODO(text): Rootstock has seized the ROOT RELAY.", "NARRATOR"),
-      say("TODO(text): WREN has reversed the sensors to broadcast MERCER's command.", "NARRATOR"),
-      say("TODO(text): Across the region, every Quickened hears a voice ordering it to be still.", "NARRATOR"),
+      say("GLASSHOUSE CITY has gone still. Every QUICKENED under the dome stands frozen."),
+      say("Grey coats crowd the ROOT RELAY's door. ROOTSTOCK has seized it."),
+      say("Someone has turned the sensors round. They don't listen now. They carry MERCER's command."),
+      say("Down every root in the region, each QUICKENED hears one voice: BE STILL."),
       flag("ch8_started"),
       flag("ch8_takeover"),
       cameraReset(),
@@ -50,7 +51,7 @@ export const ch8Scripts: Scripts = {
   ],
   ch8_relay_door: [
     ifFlags({ ch8_started: true, got_keycard: false }, [
-      say("TODO(text): A RELAY KEYCARD is needed to enter.", "NARRATOR"),
+      say("Locked tight. The panel by the door blinks: RELAY KEYCARD REQUIRED."),
       movePlayer("down"),
     ]),
   ],
@@ -65,15 +66,15 @@ export const ch8Scripts: Scripts = {
   ch8_director: [
     ifFlags({ ch8_started: true, got_keycard: false }, [
       face("director_hiding", "toPlayer"),
-      say("TODO(text): I am ODELL, the Relay director; Rootstock threw me out.", "ODELL"),
-      say("TODO(text): I hid here when the broadcast froze the plants.", "ODELL"),
-      say("TODO(text): Take my RELAY KEYCARD; it opens every Relay floor.", "ODELL"),
+      say("<PLAYER>! Shh. It's ODELL, from the RELAY. They threw me out!", "ODELL"),
+      say("I've hidden behind this palm since the broadcast. Not one frond has stirred.", "ODELL"),
+      say("Here, my RELAY KEYCARD. It opens every floor. Do mind it. It's my only one.", "ODELL"),
       give("relay_keycard"),
       flag("got_keycard"),
     ]),
   ],
   ch8_patch_note: [
-    say("TODO(text): The pinned work note gives the patch order: C, then A, then B.", "NARRATOR"),
+    say("A work note, pinned up: \"PATCH BAY. NOT left to right! C, then A, then B.\""),
     flag("patch_note_read"),
   ],
   ch8_console_a: console("a"),
@@ -84,25 +85,28 @@ export const ch8Scripts: Scripts = {
     ifFlags({ ch8_started: true, got_keycard: true, ch8_bram_met: false, beat_wren: false }, [
       { op: "showNpc", npc: "bram_r3" },
       face("bram_r3", "toPlayer"),
-      say("TODO(text): I read the Bloom Lake files too.", "BRAM"),
-      say("TODO(text): My father, MERCER THORNE, started the Quickening on purpose.", "BRAM"),
-      say("TODO(text): I took the graft collar off my partner, and it is healing.", "BRAM"),
-      say("TODO(text): Go on; I will hold the stairwell so no more grunts come up.", "BRAM"),
+      say("It's me. I'm not here to fight. I read the BLOOM LAKE files too.", "BRAM"),
+      say("My father. MERCER THORNE. He started the QUICKENING. On purpose.", "BRAM"),
+      say("Behind him, his partner stands straight. A pale scar rings its stem."),
+      say("I cut the collar off. The wound's callusing over. It's healing.", "BRAM"),
+      say("Go on. I'll hold the stairs. No more grey coats come up past me.", "BRAM"),
       flag("ch8_bram_met"),
     ]),
   ],
   ch8_bram_after: [
     ifFlags({ ch8_bram_met: true, beat_wren: false }, [
       face("bram_r3", "toPlayer"),
-      say("TODO(text): My partner is healing; I will keep the grunts downstairs.", "BRAM"),
+      say("It's healing. Slowly. Plants don't hurry. ...I'm learning that.", "BRAM"),
+      say("Nobody gets up these stairs. Go.", "BRAM"),
     ]),
   ],
   ch8_wren: [
     ifFlags({ relay_patched: true, ch8_bram_met: true, beat_wren: false }, [
       face("wren", "toPlayer"),
-      say("TODO(text): You remember me as the friendly sensor engineer.", "WREN"),
-      say("TODO(text): I am a ROOTSTOCK admin now; the network carries our command.", "WREN"),
-      say("TODO(text): I will defend the mast and its broadcast.", "WREN"),
+      say("Hi, <PLAYER>. You came to tell me first. Like I asked.", "WREN"),
+      say("Still WREN. Still keeping the sensors talking. Only now I'm a ROOTSTOCK admin.", "WREN"),
+      say("Since the bloom, the whole network has been screaming. Now it hears one voice.", "WREN"),
+      say("Nothing's fighting. Nothing's scared. It's still. I won't let you undo that.", "WREN"),
       { op: "battle", trainer: "wren" },
       { op: "ifLastBattle", result: "won", then: [call("ch8_wren_after")] },
     ]),
@@ -112,11 +116,11 @@ export const ch8Scripts: Scripts = {
       // Winning the battle sets beat_wren immediately; keep her visible for
       // the cutscene before her final hide and the persistent map condition.
       { op: "showNpc", npc: "wren" },
-      say("TODO(text): You have won; I will cut the broadcast.", "WREN"),
+      say("...Okay. You win. I'll cut the broadcast myself. I owe you that.", "WREN"),
       { op: "sfx", id: "pulse" },
       { op: "flash", color: "white" },
       { op: "still", image: "relay_pulse" },
-      say("TODO(text): The command fades, and the region's Quickened begin to move.", "NARRATOR"),
+      say("The command fades. All across the region, the QUICKENED begin to stir."),
       wait(30),
       { op: "stillClear" },
       flag("beat_wren"),
@@ -126,12 +130,15 @@ export const ch8Scripts: Scripts = {
     ifFlags({ beat_wren: true, broadcast_off: true, mercer_seen: false }, [
       { op: "showNpc", npc: "mercer" },
       camera(8, 5),
-      say("TODO(text): MERCER THORNE stands behind WREN, holding the Relay's hub map.", "NARRATOR"),
+      say("A man steps out from behind the mast. Under his arm: the RELAY's hub map."),
       { op: "still", image: "mercer_hub_map" },
-      say("TODO(text): I am MERCER THORNE; the Quickening began with my work.", "MERCER THORNE"),
-      say("TODO(text): This map shows the network's hubs; I have what I came for.", "MERCER THORNE"),
-      say("TODO(text): We are leaving, WREN.", "MERCER THORNE"),
-      say("TODO(text): The mast is silent. I am coming with you.", "WREN"),
+      say("You did well, WREN. Better than I asked.", "MERCER"),
+      say("I'm MERCER THORNE. The QUICKENING began with my work.", "MERCER"),
+      say("My family grew one kind of potato. Every field. One blight took the lot.", "MERCER"),
+      say("Wild things answer to no one. So I'll give them someone to answer to.", "MERCER"),
+      say("This map marks every hub in the network. It's all I came for.", "MERCER"),
+      say("Come, WREN. We're leaving.", "MERCER"),
+      say("The mast's gone silent anyway. ...I'm coming.", "WREN"),
       { op: "stillClear" },
       // (8,5) and (7,6) -> beyond the far right edge (x=16).
       moveNpc("mercer", ...steps("right", 8)),
@@ -147,8 +154,8 @@ export const ch8Scripts: Scripts = {
   ch8_reward: [
     ifFlags({ beat_wren: true, broadcast_off: true, mercer_seen: true, relay_reward: false }, [
       face("relay_director", "toPlayer"),
-      say("TODO(text): Thank you for saving the Relay and freeing the plants.", "ODELL"),
-      say("TODO(text): Please accept two RAIN JARS and $3000.", "ODELL"),
+      say("<PLAYER>! The RELAY is ours again, and every plant in the city is moving!", "ODELL"),
+      say("Please, take two RAIN JARS and $3000. From the research budget. Don't tell the dean.", "ODELL"),
       give("rain_jar", 2),
       pay(3000),
       flag("relay_reward"),
@@ -157,10 +164,10 @@ export const ch8Scripts: Scripts = {
   ch8_end: [
     ifFlags({ beat_wren: true, broadcast_off: true, mercer_seen: true, relay_reward: true, ch8_done: false }, [
       { op: "sfx", id: "text_blip" }, wait(8),
-      say("TODO(text): DR. VALE calls as ODELL finishes thanking the player.", "NARRATOR"),
-      say("TODO(text): MERCER has the map of the network's hubs.", "DR. VALE"),
-      say("TODO(text): VALERIAN ROOK at SANGUINE RIDGE wants to see you.", "DR. VALE"),
-      say("TODO(text): He says the Centuryheart is dying, as it must.", "DR. VALE"),
+      say("The RELAY's telephone rings. ODELL answers, then holds it out. It's VALE."),
+      say("<PLAYER>! You're safe? Good. But MERCER has the RELAY's map of the hubs.", "VALE"),
+      say("And a letter came. VALERIAN ROOK, at SANGUINE RIDGE. He wants to see you.", "VALE"),
+      say("He says the CENTURYHEART is dying. \"As it must,\" he writes. Go and hear him out.", "VALE"),
       flag("ch8_done"),
       flag("slice_done"),
       wait(60),
