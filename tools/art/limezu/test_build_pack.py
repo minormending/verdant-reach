@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
+from types import SimpleNamespace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -14,6 +15,7 @@ from geometry import measure, door_column, trim, measured_props
 from terrain import pick_masks, classify
 import numpy as np
 from gen_props import contract_text, prop_specs, OUTPUT
+from limezu import characters
 
 
 class PropTests(unittest.TestCase):
@@ -151,7 +153,7 @@ class OutdoorBundleTests(unittest.TestCase):
         for key in list(outdoor):
             if key != "grass":
                 outdoor.update({f"{key}@{mask}": tile for mask in range(16)})
-        with patch.object(pack, "mappings", return_value={}), patch.object(pack, "prop_specs", return_value={}), patch.object(pack, "measured_props", return_value=({}, {})), patch.object(pack, "interior_images", return_value={"floor_wood": tile}), patch.object(pack, "outdoor_images", return_value=(outdoor, [], [])):
+        with patch.object(pack, "mappings", return_value={}), patch.object(pack, "prop_specs", return_value={}), patch.object(pack, "measured_props", return_value=({}, {})), patch.object(pack, "interior_images", return_value={"floor_wood": tile}), patch.object(pack, "outdoor_images", return_value=(outdoor, [], [])), patch.object(pack, "character_images", return_value={}):
             outputs = pack.outputs(None)
         import json
         expected = {"terrain": {"grass", "path", "dirt", "sand", "stone_path"}, "water": {"water"}, "city": {"paving"}}
@@ -163,6 +165,71 @@ class OutdoorBundleTests(unittest.TestCase):
                 if key != "grass":
                     self.assertEqual(set(value["masks"]), {str(m) for m in range(16)})
         self.assertNotIn("tilesets/outdoor/tileset.json", outputs)
+
+
+class CharacterTests(unittest.TestCase):
+    def sheets(self):
+        body = Image.new("RGBA", (927, 96))
+        eyes = Image.new("RGBA", (896, 96))
+        outfit = Image.new("RGBA", (896, 96))
+        for direction in range(4):
+            for row, columns in ((0, (0,)), (1, range(6)), (2, range(6))):
+                for column in columns:
+                    x = (direction if row == 0 else direction * 6 + column) * 16
+                    body.paste((20, 40, 60, 255), (x + 2, row * 32 + 10, x + 14, row * 32 + 32))
+                    if direction != 1:
+                        for ex in ([11] if direction == 0 else [4] if direction == 2 else [5, 10]):
+                            eyes.paste((0, 0, 0, 255), (x + ex, row * 32 + 20, x + ex + 1, row * 32 + 22))
+                    outfit.putpixel((x + 8, row * 32 + 25), (row, direction, column, 255))
+        return {"body": body, "eyes": eyes, "outfit": outfit}
+
+    def test_composites_layers_and_reorders_idle_and_walk_without_wide_body_tail(self):
+        sheets = self.sheets()
+        calls = []
+        class SyntheticSources:
+            def crop(self, path, box):
+                calls.append((path, box))
+                key = next(k for k, folder in characters.LAYERS.items() if f"/{folder}/" in path)
+                return sheets[key].crop(box)
+        image, paths = characters.compose(SyntheticSources(), {
+            "body": "body.png", "eyes": "eyes.png", "outfit": "outfit.png", "hair": None, "accessory": None})
+        self.assertEqual(image.size, (48, 128))
+        self.assertEqual(len(paths), 3)
+        self.assertTrue(all(box == (0, 0, 896, 96) for _, box in calls))
+        for y, direction in enumerate((3, 1, 2, 0)):
+            for x, (row, column) in enumerate(((1, 0), (2, 1), (2, 4))):
+                self.assertEqual(image.getpixel((x * 16 + 8, y * 32 + 25)), (row, direction, column, 255))
+                self.assertEqual(image.getpixel((x * 16 + 2, y * 32 + 31)), (20, 40, 60, 255))
+
+    def test_detects_incorrect_direction_layout(self):
+        sheets = self.sheets()
+        characters.verify_layout(sheets["body"], sheets["eyes"])
+        sheets["eyes"].paste((0, 0, 0, 0), (288, 64, 384, 96))
+        with self.assertRaisesRegex(ValueError, "eye direction differs"):
+            characters.verify_layout(sheets["body"], sheets["eyes"])
+
+    def test_character_mapping_covers_cast_but_excludes_objects(self):
+        from artkit.core import contracts
+        ids = contracts()["characters"]
+        self.assertEqual(set(characters.mappings()), set(ids) - characters.OBJECTS)
+
+    def test_art_validator_accepts_tall_frames_and_rejects_mismatched_sheets(self):
+        from artkit.validate import check_simple
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "sheet.png"
+            path.write_bytes(b"synthetic placeholder; pixel loader is mocked")
+            bundle = SimpleNamespace(kind="character", id="synthetic", file=lambda _: path,
+                data={"sheet": "sheet.png", "rows": list(characters.ROWS), "columns": ["stand", "stepA", "stepB"]})
+            for height in (16, 32):
+                bundle.data["frame"] = [16, height]
+                with patch("artkit.validate.load_rgba", return_value=np.zeros((height * 4, 48, 4), dtype=np.uint8)):
+                    problems = []
+                    check_simple(bundle, problems, {})
+                    self.assertEqual(problems, [])
+            with patch("artkit.validate.load_rgba", return_value=np.zeros((64, 48, 4), dtype=np.uint8)):
+                problems = []
+                check_simple(bundle, problems, {})
+                self.assertEqual(problems, [("error", "characters/synthetic", "sheet is 48x64, want 48x128")])
 
 
 class GuardTests(unittest.TestCase):

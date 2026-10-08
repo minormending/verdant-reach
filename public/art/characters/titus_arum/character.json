@@ -1,0 +1,26 @@
+{
+  "format": "verdant.character/1",
+  "id": "titus_arum",
+  "sheet": "sheet.png",
+  "frame": [
+    16,
+    16
+  ],
+  "rows": [
+    "down",
+    "up",
+    "left",
+    "right"
+  ],
+  "columns": [
+    "stand",
+    "stepA",
+    "stepB"
+  ],
+  "credits": "Hand-authored pixel art for Verdant Reach (Round 4 cast generator).",
+  "source": {
+    "kind": "imported",
+    "from": "Original GBC character bundle: gentleman"
+  },
+  "notes": "FALLBACK: Original GBC gentleman stand-in for titus_arum; retained for play without the private LimeZu pack."
+}

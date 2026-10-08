@@ -364,6 +364,8 @@ export const CHARACTERS = [
   "cone_sack",                   // a Rootstock sack of sealed cones (static object)
   // Chapter 6
   "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", "island_elder",
+  // Later cast: distinct pack identities with original GBC stand-in fallbacks.
+  "mercer", "rowan", "signe", "rook", "belladonna", "mimi_osa", "titus_arum", "pyra",
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 

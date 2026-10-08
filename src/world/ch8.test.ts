@@ -194,7 +194,7 @@ describe("Chapter 8 world", () => {
     expect(WORLD.maps.relay_roof.npcs.find((n) => n.id === "wren")).toMatchObject({ script: "ch8_wren" });
     expect(WORLD.maps.relay_roof.triggers.some((t) => t.script === "ch8_wren")).toBe(true);
     expect(WORLD.maps.relay_roof.npcs.find((n) => n.id === "mercer")).toMatchObject({
-      sprite: "gentleman", visibleWhen: [{ flag: "mercer_seen", is: true }, { flag: "mercer_left", is: false }],
+      sprite: "mercer", visibleWhen: [{ flag: "mercer_seen", is: true }, { flag: "mercer_left", is: false }],
     });
     const called: string[] = [];
     eachCmd(WORLD.scripts.gc_enter, (c) => { if (c.op === "call") called.push(c.script); });

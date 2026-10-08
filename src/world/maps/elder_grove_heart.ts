@@ -32,8 +32,8 @@ export const elder_grove_heart: MapDef = {
   npcs: [
     { id: "centuryheart_sprout", sprite: "potted_plant", x: 11, y: 10, facing: "down",
       script: "pg_centuryheart", visibleWhen: when({ game_cleared: true, got_centuryheart: false }) },
-    { id: "mercer", sprite: "gentleman", x: 10, y: 11, facing: "down", script: "mercer", visibleWhen: when({ centuryheart_planted: false }) },
-    { id: "rowan", sprite: "vale", x: 4, y: 8, facing: "right", script: "ch10_rowan", visibleWhen: when({ centuryheart_planted: false }) },
+    { id: "mercer", sprite: "mercer", x: 10, y: 11, facing: "down", script: "mercer", visibleWhen: when({ centuryheart_planted: false }) },
+    { id: "rowan", sprite: "rowan", x: 4, y: 8, facing: "right", script: "ch10_rowan", visibleWhen: when({ centuryheart_planted: false }) },
     { id: "grunt_heart_1", sprite: "grunt", x: 3, y: 8, facing: "right", trainer: "grunt_heart_1", sight: 1, visibleWhen: when({ centuryheart_planted: false }) },
     { id: "grunt_heart_2", sprite: "grunt", x: 4, y: 6, facing: "down", trainer: "grunt_heart_2", sight: 1, visibleWhen: when({ centuryheart_planted: false }) },
     { id: "the_elder", sprite: "potted_plant", x: 9, y: 10, facing: "down", script: "ch10_elder", visibleWhen: when({ centuryheart_planted: true, elder_caught: false }) },
