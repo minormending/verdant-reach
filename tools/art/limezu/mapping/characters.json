@@ -1,5 +1,5 @@
 {
- "_note": "LimeZu Character Generator layers (interiors:2_Characters/Character_Generator/<Layer>/16x16/<file>), composited in the order body, eyes, outfit, hair, accessory. Picked by Codex (delegate/lz-chars.mjs) from numbered sheets, reviewed by the lead. File names only, no pixels.",
+ "_note": "LimeZu Character Generator layers (interiors:2_Characters/Character_Generator/<Layer>/16x16/<file>), composited in the order body, eyes, outfit, hair, accessory. Picked by Codex (delegate/lz-chars.mjs) from numbered sheets, reviewed by the lead. File names only, no pixels. Bodies 05/06/08/09 (olive-yellow, grey, pink, lavender) are not used: they read as non-human on Portrait Generator faces.",
  "characters": {
   "angler": {
    "body": "Body_01.png",
@@ -9,7 +9,7 @@
    "accessory": "Accessory_11_Beanie_01.png"
   },
   "arranger": {
-   "body": "Body_09.png",
+   "body": "Body_01.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_24_04.png",
    "hair": "Hairstyle_10_03.png",
@@ -23,7 +23,7 @@
    "accessory": null
   },
   "belladonna": {
-   "body": "Body_06.png",
+   "body": "Body_02.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_28_01.png",
    "hair": "Hairstyle_04_04.png",
@@ -44,14 +44,14 @@
    "accessory": null
   },
   "brother_saguaro": {
-   "body": "Body_05.png",
+   "body": "Body_04.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_25_03.png",
    "hair": "Hairstyle_14_05.png",
    "accessory": "Accessory_11_Beanie_02.png"
   },
   "calloway": {
-   "body": "Body_06.png",
+   "body": "Body_02.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_09_01.png",
    "hair": "Hairstyle_11_04.png",
@@ -65,28 +65,28 @@
    "accessory": null
   },
   "elder": {
-   "body": "Body_06.png",
+   "body": "Body_02.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_22_03.png",
    "hair": "Hairstyle_06_05.png",
    "accessory": "Accessory_15_Glasses_01.png"
   },
   "fennimore": {
-   "body": "Body_06.png",
+   "body": "Body_02.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_14_02.png",
    "hair": "Hairstyle_12_05.png",
    "accessory": "Accessory_15_Glasses_06.png"
   },
   "flora_vance": {
-   "body": "Body_05.png",
+   "body": "Body_04.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_28_02.png",
    "hair": "Hairstyle_18_01.png",
    "accessory": null
   },
   "florist": {
-   "body": "Body_08.png",
+   "body": "Body_03.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_25_05.png",
    "hair": "Hairstyle_18_01.png",
@@ -100,7 +100,7 @@
    "accessory": "Accessory_11_Beanie_04.png"
   },
   "gardener": {
-   "body": "Body_05.png",
+   "body": "Body_04.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_10_05.png",
    "hair": "Hairstyle_09_01.png",
@@ -121,7 +121,7 @@
    "accessory": null
   },
   "grunt": {
-   "body": "Body_05.png",
+   "body": "Body_04.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_08_02.png",
    "hair": "Hairstyle_06_05.png",
@@ -142,14 +142,14 @@
    "accessory": "Accessory_11_Beanie_01.png"
   },
   "island_elder": {
-   "body": "Body_05.png",
+   "body": "Body_04.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_28_04.png",
    "hair": "Hairstyle_22_05.png",
    "accessory": null
   },
   "kid": {
-   "body": "Body_09.png",
+   "body": "Body_01.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_16_01.png",
    "hair": "Hairstyle_14_02.png",
@@ -170,14 +170,14 @@
    "accessory": null
   },
   "mimi_osa": {
-   "body": "Body_08.png",
+   "body": "Body_03.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_33_02.png",
    "hair": "Hairstyle_27_01.png",
    "accessory": null
   },
   "morrow": {
-   "body": "Body_06.png",
+   "body": "Body_02.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_27_01.png",
    "hair": "Hairstyle_11_05.png",
@@ -191,14 +191,14 @@
    "accessory": null
   },
   "night_gardener": {
-   "body": "Body_09.png",
+   "body": "Body_01.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_19_01.png",
    "hair": "Hairstyle_14_03.png",
    "accessory": null
   },
   "nursery_keeper": {
-   "body": "Body_05.png",
+   "body": "Body_04.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_11_02.png",
    "hair": "Hairstyle_09_05.png",
@@ -254,7 +254,7 @@
    "accessory": null
   },
   "researcher": {
-   "body": "Body_06.png",
+   "body": "Body_02.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_29_03.png",
    "hair": "Hairstyle_02_05.png",
@@ -275,7 +275,7 @@
    "accessory": null
   },
   "rowan": {
-   "body": "Body_05.png",
+   "body": "Body_04.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_10_01.png",
    "hair": "Hairstyle_14_06.png",
@@ -324,7 +324,7 @@
    "accessory": "Accessory_11_Beanie_05.png"
   },
   "titus_arum": {
-   "body": "Body_06.png",
+   "body": "Body_02.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_32_03.png",
    "hair": "Hairstyle_24_04.png",
@@ -352,7 +352,7 @@
    "accessory": null
   },
   "wren": {
-   "body": "Body_08.png",
+   "body": "Body_03.png",
    "eyes": "Eyes_01.png",
    "outfit": "Outfit_24_01.png",
    "hair": "Hairstyle_27_03.png",

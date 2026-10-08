@@ -148,8 +148,10 @@ def check_simple(b: B.Bundle, out: list[Problem], req: dict) -> None:
                 out.append(("error", w, f"images.{k}: file {e.get('file')} missing"))
                 continue
             a = load_rgba(p)
-            if e.get("size") and list(e["size"]) != [a.shape[1], a.shape[0]]:
-                out.append(("error", w, f"images.{k}: size {e['size']} but image is {a.shape[1]}x{a.shape[0]}"))
+            # Animated images (portrait blinks) stack `frames` cells of `size` horizontally.
+            n = int(e.get("frames", 1))
+            if e.get("size") and [e["size"][0] * n, e["size"][1]] != [a.shape[1], a.shape[0]]:
+                out.append(("error", w, f"images.{k}: size {e['size']} x {n} frame(s) but image is {a.shape[1]}x{a.shape[0]}"))
 
 
 def _check_bundle(kind: str, id_: str, root: Path, packs: tuple, out: list[Problem], req: dict, where: Path) -> B.Bundle | None:
