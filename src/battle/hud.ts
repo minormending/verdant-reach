@@ -1,4 +1,5 @@
 import * as skin from "../ui/skin";
+import { blinkFrame } from "../ui/portraits";
 // Crystal-layout battle HUD boxes, backdrops with layered battle grounds,
 // trainer pictures, the leader / Rootstock versus banner and the level-up
 // stat window.
@@ -488,10 +489,12 @@ export function trainerImage(ctx: GameContext, key: TrainerPortraitKey): HTMLIma
   return trainerPlaceholder(key, back);
 }
 
-export function drawTrainer(ctx: GameContext, g: CanvasRenderingContext2D, key: TrainerPortraitKey, x: number, y: number, opts: SpriteDrawOpts = {}) {
+export function drawTrainer(ctx: GameContext, g: CanvasRenderingContext2D, key: TrainerPortraitKey, x: number, y: number, opts: SpriteDrawOpts = {}, tick = 0) {
   const back = key === "player_back";
-  let img = trainerImage(ctx, key);
-  if (opts.silhouette) img = silhouette(`trainer:${key}`, img, opts.silhouette);
+  const path = portraitPath(key);
+  const frame = blinkFrame(tick, ctx.assets.imageFrames?.(path) ?? 1);
+  let img = ctx.assets.imageFrame?.(path, frame) ?? trainerImage(ctx, key);
+  if (opts.silhouette) img = silhouette(`trainer:${key}:${frame}`, img, opts.silhouette);
   const size = back ? 48 : 56;
   drawImageOpts(g, img, x, y, size, size, opts);
 }
@@ -508,7 +511,7 @@ export type BannerKind = "leader" | "rootstock";
  * `f` is the frame within the banner's run, `len` its length.
  */
 export function drawVersusBanner(
-  ctx: GameContext, g: CanvasRenderingContext2D, kind: BannerKind, key: TrainerPortraitKey, title: string, name: string, f: number, len: number,
+  ctx: GameContext, g: CanvasRenderingContext2D, kind: BannerKind, key: TrainerPortraitKey, title: string, name: string, f: number, len: number, tick = f,
 ) {
   const leader = kind === "leader";
   const bg = leader ? "#204828" : "#381818";
@@ -546,7 +549,7 @@ export function drawVersusBanner(
   g.beginPath();
   g.rect(0, top + 1, SCREEN_W, half * 2 - 2);
   g.clip();
-  drawTrainer(ctx, g, key, px, mid - 26, lit ? {} : { silhouette: leader ? "#102414" : "#200c0c" });
+  drawTrainer(ctx, g, key, px, mid - 26, lit ? {} : { silhouette: leader ? "#102414" : "#200c0c" }, tick);
   g.restore();
   // name card slides in from the right
   const card = Math.min(1, Math.max(0, (f - 14) / 10));

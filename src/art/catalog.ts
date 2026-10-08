@@ -60,6 +60,9 @@ export interface Resolution {
   rect?: [number, number, number, number];
   /** Exact palette swap applied after cutting. */
   recolor?: Recolor;
+  /** Horizontal image-set frames, with the size of a single frame. */
+  frames?: number;
+  frameSize?: [number, number];
   /** False when no layer's file list has the file (it will probably 404). */
   listed: boolean;
   legacy: boolean;
@@ -224,7 +227,9 @@ export class ArtCatalog {
         const entry = (v.merged.images as Record<string, unknown>)[ref.key];
         if (!isObj(entry) || typeof entry.file !== "string") return null;
         const f = this.findFile(v, entry.file);
-        return { path, url: f.url, listed: f.listed, legacy: false, bundle: { kind: "sets", id: v.id }, layer: v.layers[f.layer].pack };
+        const frames = typeof entry.frames === "number" && Number.isInteger(entry.frames) && entry.frames > 0 ? entry.frames : 1;
+        const size = Array.isArray(entry.size) && entry.size.length === 2 && entry.size.every(n => typeof n === "number" && Number.isInteger(n) && n > 0) ? entry.size as [number, number] : undefined;
+        return { path, url: f.url, listed: f.listed, legacy: false, bundle: { kind: "sets", id: v.id }, layer: v.layers[f.layer].pack, frames, frameSize: size };
       }
     }
   }

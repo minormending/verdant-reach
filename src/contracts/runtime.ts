@@ -130,6 +130,10 @@ export interface Assets {
   exists(path: string): boolean;
   /** Preload. With no `paths`, loads the whole art registry (every bundle). */
   loadAll(paths?: string[], onProgress?: (done: number, total: number) => void): Promise<void>;
+  /** Image-set frame count; omitted metadata means one static frame. */
+  imageFrames?(path: string): number;
+  /** Loaded horizontal image-set frame; single-frame images are returned unchanged. */
+  imageFrame?(path: string, frame: number): ArtImage | undefined;
   /** The species bundle's `anim` (after art packs are applied), if it has one. */
   speciesAnim?(id: import("./ids").SpeciesId): SpeciesAnim | undefined;
   /** Character frame size after art packs and live bundle edits are applied. */
@@ -148,13 +152,22 @@ export interface AudioService {
   setVolume(music: number, sfx: number): void;
 }
 
+/** Faces are supplied only by the world script runner, never signs or battle text. */
+export interface SayOptions {
+  speaker?: string;
+  autoClose?: boolean;
+  face?: import("./ids").CharacterKey | null;
+  /** The running script scene's deterministic tick, shared across its lines. */
+  faceClock?: { tick: number };
+}
+
 export interface UiKit {
   drawText(g: CanvasRenderingContext2D, text: string, x: number, y: number, color?: string): void;
   drawWindow(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void;
   measure(text: string): number;
   wrap(text: string, maxCols: number): string[];
   /** Text box at the bottom of the screen; resolves after the last page. */
-  say(text: string, opts?: { speaker?: string; autoClose?: boolean }): Promise<void>;
+  say(text: string, opts?: SayOptions): Promise<void>;
   /** Menu of options; resolves with the chosen index, or -1 if cancelled (B). */
   choose(options: string[], opts?: { prompt?: string; x?: number; y?: number; cancel?: boolean }): Promise<number>;
   yesNo(prompt: string): Promise<boolean>;

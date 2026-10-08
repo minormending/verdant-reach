@@ -9,8 +9,8 @@ from build_pack import HERE
 from review_render import guarded_review
 
 
-def render():
-    source = HERE / 'review/r6-commands.json'
+def render(stem="r6"):
+    source = HERE / f'review/{stem}-commands.json'
     guarded_review(source)
     data = json.loads(source.read_text())
     memo, pngs = {}, {}
@@ -79,10 +79,17 @@ def render():
             else:out.alpha_composite(image,(crop[0],crop[1]))
         memo[index]=out
         return out
-    path = HERE / 'review/r6.png'
+    path = HERE / f'review/{stem}-captures.png' if stem == 'r6b' else HERE / f'review/{stem}.png'
     guarded_review(path)
-    canvas(data['sheet']).convert('RGB').save(path)
+    rendered = canvas(data['sheet']).convert('RGB')
+    rendered.save(path)
+    if stem == 'r6b':
+        for name, box in [('intro', (0,0,320,180)), ('dialogue', (320,0,640,180))]:
+            capture = HERE / f'review/r6b-{name}.png'
+            guarded_review(capture)
+            rendered.crop(box).save(capture)
     print(path)
 
 if __name__ == '__main__':
-    render()
+    import sys
+    render(sys.argv[1] if len(sys.argv) > 1 else "r6")

@@ -27,3 +27,7 @@ declare module "node:path" {
 declare module "node:os" {
   export function tmpdir(): string;
 }
+
+declare module "node:child_process" {
+  export function execFileSync(file: string, args: string[], options: { encoding: "utf8"; stdio?: "pipe" }): string;
+}

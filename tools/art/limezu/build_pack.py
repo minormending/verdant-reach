@@ -24,6 +24,7 @@ from limezu.terrain import outdoor_images
 from limezu.characters import character_images, ROWS
 from PIL import Image
 from limezu.ui import ui_outputs
+from limezu.portraits import portrait_outputs
 
 PACK = ROOT / "public" / "art" / "packs" / "limezu"
 CREDITS = "LimeZu — Modern Interiors / Modern Exteriors / Modern UI, https://limezu.itch.io/. Licensed local use only; no redistribution."
@@ -211,6 +212,7 @@ def outputs(sources: Sources) -> dict[str, bytes]:
             "columns": ["stand", "stepA", "stepB"], "credits": CREDITS,
             "source": {"kind": "imported", "tool": TOOL, "layers": layers},
             "notes": "Character Generator: body, eyes, outfit, hair, accessory; common 896px region. Idle 0; walk 1 and 4."})
+    result.update(portrait_outputs(sources, json_bytes, png_bytes, to_rgba, CREDITS, TOOL))
     return result
 
 
@@ -242,7 +244,7 @@ def build(check: bool = False) -> int:
         if not (PACK / "index.json").exists() or (PACK / "index.json").read_bytes() != local_index_bytes():
             print("LimeZu local index is stale: run tools/art/limezu/build_pack.py")
             return 1
-        print("LimeZu interiors, exteriors, UI, characters and local index are up to date")
+        print("LimeZu interiors, exteriors, UI, characters, portraits, faces and local index are up to date")
         return 0
     for path in stale:
         if path.exists():
@@ -257,7 +259,7 @@ def build(check: bool = False) -> int:
     index = local_index_bytes()
     if not (PACK / "index.json").exists() or (PACK / "index.json").read_bytes() != index:
         (PACK / "index.json").write_bytes(index)
-    print(f"LimeZu: {len(prop_specs())} props; interior shell, outdoor ground and Modern UI and characters; local index ({len(changed)} changed files)")
+    print(f"LimeZu: {len(prop_specs())} props; interior shell, outdoor ground, Modern UI, characters, portraits and faces; local index ({len(changed)} changed files)")
     return 0
 
 

@@ -97,8 +97,10 @@ export function parseCharacterFrame(value: unknown): CharacterFrame | undefined 
 }
 export const CHAR_ROWS = { down: 0, up: 1, left: 2, right: 3 } as const;
 
-/** Trainer battle picture: 56x56 PNG (player_back is 48x48). */
+/** Trainer battle picture: 56x56 frames (player_back is 48x48). */
 export const portraitPath = (key: TrainerPortraitKey) => `assets/trainers/${key}.png`;
+/** Optional dialogue card. The base art deliberately has no faces. */
+export const facePath = (key: CharacterKey) => `assets/faces/${key}.png`;
 
 /**
  * Species sprites:

@@ -173,12 +173,12 @@ class BattleScene implements Scene {
 
     // Enemy side
     if (this.enemyTrainer.visible) {
-      drawTrainer(this.ctx, g, this.enemyTrainer.key, ENEMY_HOME.x + this.enemyTrainer.dx, ENEMY_HOME.y);
+      drawTrainer(this.ctx, g, this.enemyTrainer.key, ENEMY_HOME.x + this.enemyTrainer.dx, ENEMY_HOME.y, {}, this.frame);
     }
     this.drawSprite(g, this.enemy, "front", ENEMY_HOME, ENEMY_HOME.y + 56, 1);
     // Player side
     if (this.playerTrainer.visible) {
-      drawTrainer(this.ctx, g, "player_back", PLAYER_HOME.x + this.playerTrainer.dx, PLAYER_HOME.y);
+      drawTrainer(this.ctx, g, "player_back", PLAYER_HOME.x + this.playerTrainer.dx, PLAYER_HOME.y, {}, this.frame);
     }
     this.drawSprite(g, this.player, "back", PLAYER_HOME, PLAYER_HOME.y + 48, 0);
 
@@ -200,7 +200,7 @@ class BattleScene implements Scene {
     this.overlayDraw?.(g);
     if (this.banner && this.trainer) {
       const t = this.trainer;
-      drawVersusBanner(this.ctx, g, this.banner.kind, t.portrait, fmt(this.ctx, t.className).toUpperCase(), fmt(this.ctx, t.name).toUpperCase(), this.banner.f, this.banner.len);
+      drawVersusBanner(this.ctx, g, this.banner.kind, t.portrait, fmt(this.ctx, t.className).toUpperCase(), fmt(this.ctx, t.name).toUpperCase(), this.banner.f, this.banner.len, this.frame);
     }
     this.fx.drawFlash(g);
     if (this.fade > 0) {

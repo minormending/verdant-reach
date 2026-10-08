@@ -81,6 +81,8 @@ export interface CharacterBundle {
 
 export interface ImageSetEntry {
   file: string; size?: [number, number]; source?: SourceInfo; credits?: string;
+  /** Horizontal frames; size describes ONE frame. Default 1 (static). */
+  frames?: number;
   /** Measured left/top/right/bottom fixed caps, in source pixels. */
   insets?: [number, number, number, number];
   slice?: "nine" | "horizontal";

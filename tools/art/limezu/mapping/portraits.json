@@ -1,0 +1,9 @@
+{
+  "sheet": [960, 288],
+  "cell": [96, 96],
+  "neutral": [0, 0],
+  "blink": [2, 0],
+  "back": [4, 2],
+  "chin_gap": 4,
+  "no_accessory": [2, 3, 14, 18]
+}
