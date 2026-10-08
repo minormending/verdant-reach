@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "sunflower",
+  "palette": ["#181818", "#583018", "#609838", "#f8c020"],
+  "sport": ["#181818", "#402028", "#589840", "#f8f0c8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png", "front__6.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 12], [2, 6], [3, 5], [4, 14], [5, 8], [0, 1]], "idle": [[0, 150], [5, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/sunflower.py. Reference photo sunflower/adult_alt.jpg by Renee Grayson (CC BY 2.0), https://commons.wikimedia.org/wiki/File:Nuwu_Pahsats_garden_sunflower.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/sunflower.py" },
+  "notes": "EXCEPTION to the Crystal rule (approved by the Director): index 3 is the line's own gold, not the shared white, because a sunflower's identity is three hues (green leaves, gold rays, the brown seed disc) and the two-tone pilot lost the disc. Everything else follows the rule: full black outline, flat crescent shading, gold only on the rays, hull stripes, lit rims and glints. LOOMING, the base art re-rendered: the brown seed disc with its black Fibonacci spiral. Intro: the head starts nodding and turned away, lifts and turns to face the foe, the rays flare past rest and the disc GLEAMS (a gold 4-point star), then settles. Only the head and neck move. Idle: the gleam twinkles every ~2.5 s. Sport: 'Italian White'. Helianthus annuus 'Italian White': cream-white rays round a near-black disc."
+}

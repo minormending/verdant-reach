@@ -1433,8 +1433,8 @@ class Overworld implements Scene {
             if (!img) return;
             const by = groundY - 3 - lift - (a.bob > 4 ? 1 : 0);
             g.save();
-            if (a.facing === "right") { g.translate(sx + TILE, by); g.scale(-1, 1); g.drawImage(img, 0, 0); }
-            else g.drawImage(img, sx, by);
+            if (a.facing === "right") { g.translate(sx + TILE/2 + img.width/2, by + TILE - img.height); g.scale(-1, 1); g.drawImage(img, 0, 0); }
+            else g.drawImage(img, sx + (TILE - img.width)/2, by + TILE - img.height);
             g.restore();
           },
         });
@@ -1479,8 +1479,8 @@ class Overworld implements Scene {
               for (const layer of lg ? [g, lg] : [g]) {
                 layer.save();
                 if (layer === lg) layer.globalCompositeOperation = "destination-out";
-                if (f.flip) { layer.translate(sx + TILE, dy); layer.scale(-1, 1); layer.drawImage(img, 0, 0); }
-                else layer.drawImage(img, sx, dy);
+                if (f.flip) { layer.translate(sx + TILE/2 + img.width/2, dy + TILE - img.height); layer.scale(-1, 1); layer.drawImage(img, 0, 0); }
+                else layer.drawImage(img, sx + (TILE - img.width)/2, dy + TILE - img.height);
                 layer.restore();
               }
             }

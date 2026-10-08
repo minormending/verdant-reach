@@ -48,6 +48,7 @@ BUILDERS: list[tuple[str, str]] = [
     # that defines build(). The old species_a-f generators stay as reference only; they
     # are NOT run, so a --regen never reverts the redraw (the old look is the `classic` pack).
     ("crystal", "crystal/build.py"),
+    ("creatures2", "creatures2/build.py"), # v2 lines, none until R5b
     ("env4", "env4/build.py"),            # Chapter 4 tilesets + structures
     ("cast4", "cast4/build.py"),          # Chapter 4 characters, portraits, items, UI, stills
     ("cast5", "cast5/build.py"),          # Chapter 5 characters, portraits, stills, PIPE MARK, item icons

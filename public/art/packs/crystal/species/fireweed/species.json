@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "fireweed",
+  "palette": ["#181818", "#882050", "#e058a0", "#f8f8f8"],
+  "sport": ["#181818", "#487838", "#d0d0c0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 4], [1, 14], [2, 8], [3, 12], [4, 14], [0, 1]], "idle": [[0, 130], [1, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/fireweed.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/fireweed.py" },
+  "notes": "Crystal rule. LOOMING: a tall spike on willow-leaf arms; the magenta flowers open bottom-up (open below, closed buds nodding at the tip, as on the real raceme), and under them the oldest pods have split into two plumes of white seed fluff. Gesture: the plumes swell, then release a volley of seeds that drifts up past the flowers. Sport: f. albiflorum (white flowers, green stems)."
+}

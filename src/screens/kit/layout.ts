@@ -13,5 +13,7 @@ export const centered = (w: number, h: number, areaH = CONTENT_H) => ({
   x: Math.floor((SCREEN_W - w) / 2), y: Math.floor((areaH - h) / 2),
 });
 export const aboveText = (w: number, h: number) => ({ x: SCREEN_W - w, y: CONTENT_H - h, w, h });
-export const PARTY_ROW_H = Math.floor((CONTENT_H - 8) / 6);
-export const partyRowY = (i: number) => 4 + i * PARTY_ROW_H;
+export const PARTY_ROW_H = Math.floor((CONTENT_H - 8) / 3);
+export const partyRowY = (i: number) => 4 + Math.floor(i / 2) * PARTY_ROW_H;
+
+export const partyRowX = (i: number) => (i % 2) * HALF;

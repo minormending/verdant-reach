@@ -7,7 +7,7 @@ import type { StructureKey, TileKey } from "../../contracts";
 import type { BundleView, Layer } from "../catalog";
 import { LAB_LAYER } from "../catalog";
 import { BUNDLE_JSON, refCells, type BundleKind } from "../format";
-import { colorStats, isPalette } from "../palette";
+import { colorStats, isPalette, isSportMap } from "../palette";
 import { logicalPath, SPECIES_FRAME_KINDS, speciesFrameSlot, type SpeciesFrameKind } from "../paths";
 import type { ArtRegistry } from "../registry";
 import { requiredPaths } from "../required";
@@ -154,6 +154,14 @@ const speciesView: View = (env, el) => {
   const palRow = (label: string, field: "palette" | "sport") => {
     const pal = m[field];
     const row = h("div", { class: "al-swatches" }, h("span", { class: "al-hint", style: "width: 56px" }, label));
+    if (field === "sport" && isSportMap(pal)) {
+      for (const [from, to] of Object.entries(pal)) {
+        const input = h("input", { type: "color", value: to, title: `${from} → ${to}` });
+        input.addEventListener("change", () => reg.patchBundle("species", id, { ...(reg.bundlePatch("species", id) ?? {}), sport: { ...pal, [from]: input.value } }));
+        row.append(h("label", { class: "al-swatch" }, h("div", { class: "c", style: `background: ${to}` }), h("div", { class: "t" }, from), input));
+      }
+      return row;
+    }
     if (!isPalette(pal)) { row.append(h("span", { class: "al-chip bad" }, `no ${field}`)); return row; }
     pal.forEach((c, i) => {
       const input = h("input", { type: "color", value: c.toLowerCase(), title: `${field}[${i}] ${c} — click to edit (in memory)` });
@@ -168,7 +176,7 @@ const speciesView: View = (env, el) => {
     return row;
   };
   el.append(h("div", { style: "display: grid; gap: 8px" }, palRow("palette", "palette"), palRow("sport", "sport")),
-    h("div", { class: "al-hint", style: "margin-top: 6px" }, "Sport = exact swap palette[i] → sport[i]. Editing a colour recolours every frame live; download the JSON to keep it."));
+    h("div", { class: "al-hint", style: "margin-top: 6px" }, "Sports swap palette indexes (v1) or named material colours (v2). Download the JSON to keep edits."));
 
   // Animated previews
   el.append(h("h2", null, "Preview"));
@@ -176,14 +184,16 @@ const speciesView: View = (env, el) => {
   for (const sport of [false, true]) {
     if (sport && !reg.resolve(sp("front", true))) continue;
     const idle = animPlayer(env, { reg, id, sport, zooms: [z], intro: false });
-    const back = pathCanvas(env, sp("back", sport), 48, 48);
-    const icon = pixelCanvas(16, 16, z);
+    const backSize = m.format === "verdant.species/2" ? 64 : 48;
+    const iconSize = m.format === "verdant.species/2" ? 32 : 16;
+    const back = pathCanvas(env, sp("back", sport), backSize, backSize);
+    const icon = pixelCanvas(iconSize, iconSize, z);
     const gc = ctx2d(icon);
     const iconKinds = kinds.filter((k) => k.startsWith("icon"));
     let lastIcon = -1;
     env.animate((f) => {
       const ic = iconKinds.length > 1 ? Math.floor(f / 16) % 2 : 0;
-      if (ic !== lastIcon) { lastIcon = ic; gc.clearRect(0, 0, 16, 16); paint(reg, gc, sp(iconKinds[ic] ?? "icon", sport)); }
+      if (ic !== lastIcon) { lastIcon = ic; gc.clearRect(0, 0, iconSize, iconSize); paint(reg, gc, sp(iconKinds[ic] ?? "icon", sport)); }
     });
     const card = (c: HTMLElement, cap: string) => h("div", { class: "al-card" }, c instanceof HTMLCanvasElement ? h("div", { class: `al-stage ${env.bgClass()}` }, c) : c, h("div", { class: "cap" }, h("b", null, cap)));
     row.append(card(idle.el, `${sport ? "SPORT " : ""}idle · ${fronts.length} frame${fronts.length > 1 ? "s" : ""}`), card(back, `${sport ? "SPORT " : ""}back`), card(icon, `${sport ? "SPORT " : ""}icon`));
@@ -196,7 +206,7 @@ const speciesView: View = (env, el) => {
   const frames = h("div", { class: "al-row" });
   const lists = isObj(m.frames) ? m.frames : {};
   for (const kind of SPECIES_FRAME_KINDS) {
-    const size = FRAME_SIZE(kind);
+    const size = m.format === "verdant.species/2" ? (kind.startsWith("icon") ? 32 : 64) : FRAME_SIZE(kind);
     const res = reg.resolve(sp(kind, false));
     const slot = kind.startsWith("front") ? "front" : kind.startsWith("icon") ? "icon" : "back";
     if (!res) {
@@ -227,10 +237,10 @@ const speciesView: View = (env, el) => {
       const pal = reg.catalog.paletteAt(v, Math.max(0, layerIdx));
       const { colors, partialAlpha } = colorStats(px.data);
       const allowed = new Set((pal ?? []).map((x) => x.toLowerCase()));
-      const stray = [...colors].filter((x) => !allowed.has(x));
-      check = stray.length || partialAlpha
+      const stray = pal ? [...colors].filter((x) => !allowed.has(x)) : [];
+      check = stray.length || partialAlpha || (m.format === "verdant.species/2" && colors.size > 16)
         ? h("span", { class: "al-chip bad", title: stray.join(" ") }, `${stray.length} stray colour${stray.length === 1 ? "" : "s"}${partialAlpha ? ", partial alpha" : ""}`)
-        : h("span", { class: "al-chip ok" }, "4-colour ✓");
+        : h("span", { class: "al-chip ok" }, `${colors.size}-colour ✓`);
       if (px.width !== size || px.height !== size) check = h("span", { class: "al-chip bad" }, `${px.width}x${px.height}`);
     }
     const overridden = reg.overrides().files.includes(res.url);

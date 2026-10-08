@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "maple_sapling",
+  "palette": ["#181818", "#a83820", "#a8d040", "#f8f8f8"],
+  "sport": ["#181818", "#481838", "#a85070", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 14], [2, 4], [3, 16], [4, 8], [0, 1]], "idle": [[0, 120], [4, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/maple.py. Reference photo maple/teen.jpg by Nicholas_T (Flickr) (CC0 1.0), https://www.flickr.com/photos/14922165@N00/50092006661: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/maple.py" },
+  "notes": "Crystal rule. LUNGING. Gesture: the lead leaf-hand cocks back, THRUSTS out at the foe and slaps down while the crown leaf ducks, then recoils. Green leaves with the rust red in the dark slot as twigs, veins and shade. Sport: 'Crimson King'."
+}

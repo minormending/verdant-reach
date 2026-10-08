@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "monstera_cutting",
+  "palette": ["#181818", "#1c4c40", "#68b448", "#f8f8f8"],
+  "sport": ["#181818", "#485828", "#c0c840", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 14], [2, 5], [3, 16], [2, 4], [0, 3]], "idle": [[0, 150], [2, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/monstera.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/monstera.py" },
+  "notes": "BRACED: a propagation cutting turned critter, the stout node braced on two aerial-root legs, the young split leaf held up on its petiole like a shield. Intro: the shield leaf is still rolled; it unfurls, FANS OPEN past rest with its splits gaping, and settles. Crystal rule: deep blue-green dark (roots, stem, leaf shade), leaf green light, white rims. Sport: Monstera deliciosa 'Aurea' (lime-gold)."
+}

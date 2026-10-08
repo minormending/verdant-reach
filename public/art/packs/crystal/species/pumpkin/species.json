@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "pumpkin",
+  "palette": ["#181818", "#903018", "#f08020", "#f8f8f8"],
+  "sport": ["#181818", "#384858", "#90a0b0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 14], [2, 5], [3, 18], [4, 8], [0, 1]], "idle": [[0, 150], [4, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/pumpkin.py. Reference photo pumpkin/adult_alt.jpg by hello-julie (CC BY 2.0), https://www.flickr.com/photos/71443175@N00/1445655616: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/pumpkin.py" },
+  "notes": "Crystal rule. BRACED (heavy). Gesture: the great gourd rocks back, LURCHES at the foe and lands with a THUD (squashed), then settles; the gourd is most of the body, so it moves whole while the feet, vines and leaves stay put. Sport: 'Jarrahdale' blue-grey."
+}

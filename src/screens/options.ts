@@ -72,9 +72,9 @@ export function optionsScreen(ctx: GameContext): Promise<void> {
     frame = f;
     drawPaper(g, 0, 0, SCREEN_W, SCREEN_H, "cream");
     g.fillStyle = "#4a6a48";
-    skin.surface(g, "plain", 0, 0, SCREEN_W, 12);
-    ctx.ui.drawText(g, "OPTIONS", 8, 2, "#f0e8c8");
-    const ys = Array.from({ length: ROWS }, (_, i) => 24 + i * Math.floor((SCREEN_H - 48) / ROWS));
+    skin.surface(g, "plain", 0, 0, SCREEN_W, 22);
+    ctx.ui.drawText(g, "OPTIONS", 8, 8, "#f0e8c8");
+    const ys = Array.from({ length: ROWS }, (_, i) => 30 + i * Math.floor((SCREEN_H - 54) / ROWS));
     // row highlight
     g.fillStyle = "#f8e898";
     skin.surface(g, "selection", 4, ys[row] - 3, SCREEN_W - 8, 18);

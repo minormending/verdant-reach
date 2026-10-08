@@ -57,6 +57,9 @@ def worst(results):
 def check_species(id_, roster, all_hashes):
     entry = roster[id_]
     js, imgs, meta = entry['js'], entry['imgs'], entry['meta']
+    if js.get('format') == 'verdant.species/2':
+        from checks2 import check_species as check_v2
+        return check_v2(id_,entry,roster,all_hashes)
     probs = kit.check(id_)
     levels = [level for level, _ in probs]
     checks = {'crystal': result('error' if 'error' in levels else 'warn', bool(probs),
@@ -96,7 +99,8 @@ def check_species(id_, roster, all_hashes):
         if previous:
             prev = max(previous, key=lambda v: v['meta']['stage'])
             # Compare rest poses; motion extremes should not change a line's scale.
-            checks['stage_progression'] = stage_progression(kit.to_index(prev['imgs']['front'][0], prev['js']['palette']), fronts[0])
+            if prev['js'].get('format') != 'verdant.species/2':
+                checks['stage_progression'] = stage_progression(kit.to_index(prev['imgs']['front'][0], prev['js']['palette']), fronts[0])
     return checks
 
 

@@ -17,7 +17,7 @@ import { learnMoveFlow } from "./learn";
 
 import { centered } from "../kit/layout";
 
-const { x: SPRITE_X, y: SPRITE_Y } = centered(56, 56);
+const { x: SPRITE_X, y: SPRITE_Y } = centered(64, 64);
 const CX = SPRITE_X + 28;
 const CY = SPRITE_Y + 30;
 
@@ -65,7 +65,7 @@ export function runGrowth(ctx: GameContext, q: Quickened, to: SpeciesId, opts: {
         checker(g, CX - r - 4, CY - r, r * 2 + 8, r * 2, "#f8f0c0", frame >> 3);
       }
       // the soil the plant stands in
-      ellipse(g, CX, SPRITE_Y + 56, 24, 4, "#c8b890");
+      ellipse(g, CX, SPRITE_Y + 64, 24, 4, "#c8b890");
       ellipse(g, CX, SPRITE_Y + 55, 21, 3, "#e0d4b0");
       drawSpecies(ctx, g, view.species, "front", SPRITE_X, SPRITE_Y + view.dy, { sport: q.sport, silhouette: view.silhouette ?? undefined });
       fx.drawBack(g);

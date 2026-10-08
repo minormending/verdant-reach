@@ -39,16 +39,32 @@ def check_species(b: B.Bundle, out: list[Problem]) -> None:
     w = f"species/{b.id}"
     d = b.data
     pal, sport = d.get("palette"), d.get("sport")
-    if not (isinstance(pal, list) and len(pal) == 4 and all(isinstance(h, str) and HEX.match(h) for h in pal)):
-        out.append(("error", w, f"palette must be 4 '#rrggbb' colours, got {pal!r}"))
-        return
-    if not (isinstance(sport, list) and len(sport) == len(pal) and all(isinstance(h, str) and HEX.match(h) for h in sport)):
-        out.append(("error", w, "sport missing or not the same length as palette"))
-    if len({h.lower() for h in pal}) != 4:
+    v2 = d.get("format") == "verdant.species/2"
+    valid_hex = lambda h: isinstance(h, str) and HEX.fullmatch(h)
+    valid_pal = isinstance(pal, list) and all(valid_hex(h) for h in pal)
+    if v2:
+        if d.get("size") != {"front": 64, "back": 64, "icon": 32}:
+            out.append(("error", w, "v2 size must be front/back 64 and icon 32"))
+        if pal is not None and not (valid_pal and len(pal) <= 16):
+            out.append(("error", w, "v2 palette must have at most 16 colours, or be omitted"))
+            return
+        if not isinstance(sport, dict) or not all(valid_hex(k) and valid_hex(v) for k,v in sport.items()):
+            out.append(("error", w, "v2 sport must map #rrggbb colours to #rrggbb colours"))
+    else:
+        if not valid_pal or len(pal) != 4:
+            out.append(("error", w, f"palette must be 4 '#rrggbb' colours, got {pal!r}"))
+            return
+        if not (isinstance(sport, list) and len(sport) == len(pal) and all(valid_hex(h) for h in sport)):
+            out.append(("error", w, "sport missing or not the same length as palette"))
+    if pal is not None and len({h.lower() for h in pal}) != len(pal):
         out.append(("error", w, "palette has duplicate colours"))
-    allowed = np.array([rgb_of(h) for h in pal], np.uint8)
+    allowed = np.array([rgb_of(h) for h in pal], np.uint8) if pal is not None else None
+    all_colours = set()
     frames = d.get("frames") or {}
     for g, (size, lo, hi, _) in B.SPECIES_FRAMES.items():
+        if v2:
+            size = 32 if g == "icon" else 64
+            lo = 2 if g == "icon" else lo
         names = frames.get(g) or []
         if not lo <= len(names) <= hi:
             out.append(("error", w, f"frames.{g}: {len(names)} frame(s), want {lo}-{hi}"))
@@ -64,10 +80,14 @@ def check_species(b: B.Bundle, out: list[Problem]) -> None:
             if not al <= {0, 255}:
                 out.append(("error", w, f"{n}: alpha must be 0 or 255"))
             px = a[a[..., 3] > 0][:, :3]
-            ok = (px[:, None, :] == allowed[None, :, :]).all(-1).any(-1)
-            if not ok.all():
-                stray = {"#%02x%02x%02x" % tuple(p) for p in px[~ok][:4]}
-                out.append(("error", w, f"{n}: {int((~ok).sum())} pixel(s) off-palette, e.g. {sorted(stray)}"))
+            all_colours.update(tuple(c) for c in px)
+            if allowed is not None:
+                ok = (px[:, None, :] == allowed[None, :, :]).all(-1).any(-1)
+                if not ok.all():
+                    stray = {"#%02x%02x%02x" % tuple(p) for p in px[~ok][:4]}
+                    out.append(("error", w, f"{n}: {int((~ok).sum())} pixel(s) off-palette, e.g. {sorted(stray)}"))
+    if v2 and len(all_colours) > 16:
+        out.append(("error", w, f"v2 frames use {len(all_colours)} colours, maximum 16"))
 
 
 def check_tileset(b: B.Bundle, out: list[Problem]) -> None:
@@ -132,9 +152,11 @@ def check_simple(b: B.Bundle, out: list[Problem], req: dict) -> None:
             out.append(("error", w, "sheet missing"))
             return
         a = load_rgba(p)
-        if a.shape[:2] != (64, 48):
-            out.append(("error", w, f"sheet is {a.shape[1]}x{a.shape[0]}, want 48x64"))
-        if d.get("frame") != B.CHAR_FRAME or d.get("rows") != B.CHAR_ROWS or d.get("columns") != B.CHAR_COLUMNS:
+        frame = d.get("frame", B.CHAR_FRAME)
+        valid_frame = frame in ([16, 16], [16, 32])
+        if not valid_frame or a.shape[:2] != (frame[1]*4, frame[0]*3):
+            out.append(("error", w, f"sheet is {a.shape[1]}x{a.shape[0]}, want three columns by four frame rows"))
+        if not valid_frame or d.get("rows") != B.CHAR_ROWS or d.get("columns") != B.CHAR_COLUMNS:
             out.append(("error", w, "frame/rows/columns must be the v1 values"))
     elif b.kind == "set":
         if not isinstance(d.get("logicalDir"), str) or not d["logicalDir"].startswith("assets/"):
@@ -145,7 +167,7 @@ def check_simple(b: B.Bundle, out: list[Problem], req: dict) -> None:
                 out.append(("error", w, f"images.{k}: file {e.get('file')} missing"))
                 continue
             a = load_rgba(p)
-            if e.get("size") and list(e["size"]) != [a.shape[1], a.shape[0]]:
+            if e.get("size") and [e["size"][0] * e.get("frames", 1), e["size"][1]] != [a.shape[1], a.shape[0]]:
                 out.append(("error", w, f"images.{k}: size {e['size']} but image is {a.shape[1]}x{a.shape[0]}"))
 
 
@@ -154,10 +176,10 @@ def _check_bundle(kind: str, id_: str, root: Path, packs: tuple, out: list[Probl
     try:
         raw = load_json(jp)
     except Exception as e:  # noqa: BLE001
-        out.append(("error", str(jp.relative_to(ART)), f"bad JSON: {e}"))
+        out.append(("error", str(jp.relative_to(root)), f"bad JSON: {e}"))
         return None
-    w = str(jp.parent.relative_to(ART))
-    if raw.get("format", FORMATS[kind]) != FORMATS[kind] or ("format" not in raw and where == root):
+    w = str(jp.parent.relative_to(root))
+    if raw.get("format", FORMATS[kind]) not in ({FORMATS[kind], "verdant.species/2"} if kind == "species" else {FORMATS[kind]}) or ("format" not in raw and where == root):
         out.append(("error", w, f"format must be {FORMATS[kind]!r}"))
     if raw.get("id", id_) != id_:
         out.append(("error", w, f"id {raw.get('id')!r} doesn't match folder"))
@@ -213,6 +235,6 @@ def validate(root: Path = ART, coverage: bool = True) -> list[Problem]:
                 out.append(("missing", p, "no bundle provides it"))
         for sid in req["species"]:
             b = r.bundle("species", sid)
-            if b and not b.data.get("sport"):
+            if b and "sport" not in b.data:
                 out.append(("missing", f"species/{sid}", "no sport palette"))
     return out

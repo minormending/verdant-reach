@@ -143,6 +143,7 @@ Until then, `main` ships the GBC fallback. The release horizon
 | R3a ✓ | Prologue/Chapter 1 interiors: `player_home`, `herbarium`, `herbarium_roof` (outdoor deck), `fennimore_house`, `bramblegate_conservatory`; shared `greenhouseMap()` (all ten healing centres) and narrow/wide market layouts (all six markets). Local 2× review: `tools/art/limezu/review/r3a.png`. | Codex; lead review pending |
 | R3 | Map re-layouts: interiors, then exteriors, chapter by chapter | Codex, QA-gated, with the lead reviewing one render sheet each |
 | R4 | Characters for every NPC key; portraits (LimeZu UI portrait generator, if usable) | Codex + lead review |
+| R5a ✓ | Creature v2 engine: 64×64 / 32×32 slots, v1 compatibility at centred 1×, material sport maps, original Crystal snapshot pack, kit2 and synthetic QA v2; no new creature art | Codex; browser e2e pending (sandbox denies localhost binding) |
 | R5 | Creature style v2 and a pilot, then the roster | lead (rules) + Codex loop |
 | R6 ✓ | Modern UI Style 1: measured slices, shared skin, cursors, bars, slots, toggles and unchanged GBC fallback; local render `tools/art/limezu/review/r6.png` | Codex; browser playthrough and lead review pending |
 | R6b ✓ | Trainer portraits from the Portrait Generator, derived from mapping/characters.json; dialogue speaker faces via src/world/speakers.ts | Codex; lead review pending |
@@ -270,10 +271,26 @@ injected only into the review build. Browser capture and full e2e verification
 remain pending: this worker's sandbox denies localhost binding, and no browser
 is available through the UI tool.
 
-The broader `build_all.py --regen` check reproduces the base art but its Python
-validator (`tools/art/artkit/validate.py`, outside this worker's allowed edit
-scope) still treats an image-set `size` as the whole file size. It reports 77
-size errors for these horizontal strips. The TypeScript validator and local
-importer freshness check support the frame metadata and pass. The lead needs
-to add the same frame-aware size handling to the Python validator before the
-broader regeneration check can pass with the local pack installed.
+R5a updates the shared Python validator to support 16×32 character frames
+and horizontal image-set frame metadata, matching the TypeScript validator.
+The earlier size-validation limitation is resolved.
+
+### R5a creature engine (2026-10-08)
+
+Both species bundle versions render at native pixel size in 64×64 front/back
+and 32×32 icon slots. Legacy icons deliberately stay **1×**, centred; the
+party uses six slots in two columns, and cabinet/Herbarium lists scroll with
+taller rows. `?art=crystal` selects the indexed snapshot of all 130 current
+original species. Base creature pixels are unchanged.
+
+Move/type panels occupy the dialogue rail; both creatures and both HP boxes
+remain clear. The move description uses the empty field above that rail.
+OPTIONS sits inside the header with an eight-pixel inset. Software rendering
+of the real scenes was inspected through the existing R6 review tooling.
+
+The new kit has no species generators until R5b. QA detects v2 metadata,
+checks the new geometry and material palette, and tests synthetic fixtures.
+Palette harmony reads local exteriors Palette.png only, skipping with info
+when absent. `build_all.py --regen` includes the empty creatures2 builder.
+The headless e2e command was attempted but could not start its local server:
+`listen EPERM 127.0.0.1`; browser playthrough remains for lead verification.

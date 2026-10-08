@@ -26,10 +26,11 @@ export type SourceInfo =
   | { kind: "imported"; from: string };
 
 export interface SpeciesBundle {
-  format: "verdant.species/1";
+  format: "verdant.species/1" | "verdant.species/2";
   id: string;
-  palette: string[];
-  sport?: string[];
+  palette?: string[];
+  sport?: string[] | Record<string, string>;
+  size?: { front: 64; back: 64; icon: 32 };
   /** front: 1–8 files (front … front__8); back: 1; icon: 1–2. */
   frames: { front: string[]; back: string[]; icon: string[] };
   /** Optional Crystal-style animation (front frame indexes, 60 fps ticks). null: none (a pack drops a lower layer's). */

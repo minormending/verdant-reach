@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "moonflower",
+  "palette": ["#181818", "#383870", "#80c098", "#f8f8f8"],
+  "sport": ["#181818", "#502860", "#b898d0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 12], [2, 8], [3, 16], [0, 6], [3, 4], [0, 8]], "idle": [[0, 150], [3, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/moonflower.py. Reference photo moonflower/adult.jpg by Epibase (CC BY 3.0), https://commons.wikimedia.org/wiki/File:Ipomoea.alba.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/moonflower.py" },
+  "notes": "WHITE: the trumpet is really white (a white part); lit like a cup, the white is the limb and the funnel, with sage and violet inside. Crystal rule. REARING. Gesture: the trumpet unfurls (a furled spindle twists open into a cupped trumpet, flares wide, held, and settles). The petals are the real white, so the white cap is kept by lighting the trumpet like a cup: the lit limb white, the inside wall and the star sage, the throat violet and black. Sport: the lilac moonflower Ipomoea muricata (the star and the cup turn lilac)."
+}

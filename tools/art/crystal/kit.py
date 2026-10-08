@@ -172,6 +172,9 @@ def write_species(id_: str, *, palette: list[str], sport: list[str], front: list
     """Write one BASE species bundle and return check(id_)."""
     d = SPECIES_DIR / id_
     js = d / "species.json"
+    if js.exists() and load_json(js).get("format") == "verdant.species/2":
+        print(f"  skip {id_}: v2 art belongs to creatures2 (never replaced by Crystal)")
+        return []
     if js.exists() and ((load_json(js).get("source") or {}).get("kind")) in LOCKED:
         print(f"  skip {id_}: its source is {load_json(js)['source']['kind']} (never overwritten)")
         return check(id_)

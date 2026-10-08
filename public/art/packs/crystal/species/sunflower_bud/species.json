@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "sunflower_bud",
+  "palette": ["#181818", "#305030", "#70b040", "#f8c830"],
+  "sport": ["#181818", "#284838", "#68a848", "#f8f0c8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 14], [2, 10], [1, 4], [2, 6], [3, 16], [4, 6], [0, 1]], "idle": [[0, 130], [4, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/sunflower.py. Reference photo sunflower/teen_alt.jpg by Loïc Mathieu (frontyardscientist, iNaturalist) (CC BY 4.0), https://www.inaturalist.org/observations/333769628: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/sunflower.py" },
+  "notes": "EXCEPTION to the Crystal rule (approved by the Director): index 3 is the line's own gold, not the shared white, because a sunflower's identity is three hues (green leaves, gold rays, the brown seed disc) and the two-tone pilot lost the disc. Everything else follows the rule: full black outline, flat crescent shading, gold only on the rays, hull stripes, lit rims and glints. LUNGING, the base art re-rendered. Intro: the bud squeezes shut, swells, squeezes, swells and CRACKS: gold rays burst out of the foe-side seam with a glint, then ease back to the peeking tips. Only the head moves. Idle: the tips ease open. Sport: 'Italian White'. Helianthus annuus 'Italian White': cream-white rays round a near-black disc."
+}

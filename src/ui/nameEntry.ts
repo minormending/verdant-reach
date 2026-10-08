@@ -124,7 +124,8 @@ export function nameEntry(ctx: GameContext, opts: NameEntryOpts): Promise<string
         skin.surface(g, "slot", HEADER_X, 8, 32, 32);
         if (opts.species) {
           const icon = speciesPath(opts.species, Math.floor(frame / 16) % 2 && ctx.assets.image(speciesPath(opts.species, "icon__2")) ? "icon__2" : "icon");
-          drawImagePath(g, ctx.assets, icon, 0, 0, 16, 16, HEADER_X, 8, 32, 32);
+          const img = ctx.assets.image(icon);
+          if (img) g.drawImage(img, HEADER_X + Math.floor((32 - img.width) / 2), 8 + Math.floor((32 - img.height) / 2));
         } else {
           const sprite = opts.sprite ?? "player";
           const sheet = characterPath(sprite);

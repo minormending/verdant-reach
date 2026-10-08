@@ -35,7 +35,7 @@ import { battleAnimsOn } from "../save";
 import { worldTime } from "../engine/time";
 import { effectivenessHint, FoeKnowledge, type EffHint } from "./hints";
 import { Flow } from "../screens/kit/flow";
-import { drawPod, drawSpecies, drawTiny, pad, preload, silhouette, speciesImage, TYPE_COLORS } from "../screens/kit/draw";
+import { drawPod, drawSpecies, drawTiny, pad, preload, silhouette, speciesImage, drawSpeciesImage, TYPE_COLORS } from "../screens/kit/draw";
 import { fmt, hasHerbarium, markCaught, markSeen, playerName } from "../screens/kit/text";
 import { Menu, ScreenUi } from "../screens/kit/widgets";
 import { learnMoveFlow } from "../screens/flows/learn";
@@ -175,12 +175,12 @@ class BattleScene implements Scene {
     if (this.enemyTrainer.visible) {
       drawTrainer(this.ctx, g, this.enemyTrainer.key, ENEMY_HOME.x + this.enemyTrainer.dx, ENEMY_HOME.y, {}, this.frame);
     }
-    this.drawSprite(g, this.enemy, "front", ENEMY_HOME, ENEMY_HOME.y + 56, 1);
+    this.drawSprite(g, this.enemy, "front", ENEMY_HOME, ENEMY_HOME.y + 64, 1);
     // Player side
     if (this.playerTrainer.visible) {
       drawTrainer(this.ctx, g, "player_back", PLAYER_HOME.x + this.playerTrainer.dx, PLAYER_HOME.y, {}, this.frame);
     }
-    this.drawSprite(g, this.player, "back", PLAYER_HOME, PLAYER_HOME.y + 48, 0);
+    this.drawSprite(g, this.player, "back", PLAYER_HOME, PLAYER_HOME.y + 64, 0);
 
     if (this.podRows.enemy && this.trainer) drawPodRow(g, this.s.sides[1].party, 1, this.podRows.enemyDx, this.podRows.t);
     if (this.podRows.player) drawPodRow(g, this.ctx.state.party, 0, this.podRows.playerDx, this.podRows.t);
@@ -254,7 +254,7 @@ class BattleScene implements Scene {
   /** A diagonal white glint sweeping across a sprite (masked to its shape). */
   private drawShine(g: CanvasRenderingContext2D, v: SpriteView, kind: FrontKind | "back", x: number, y: number, t: number, clipBottom: number) {
     if (!v.species) return;
-    const size = kind === "back" ? 48 : 56;
+    const size = 64;
     const img = speciesImage(this.ctx, v.species, kind, { sport: v.sport });
     const white = silhouette(`${v.species}:${kind}:${v.sport ? "s" : ""}`, img, "#f8f8f8");
     const c = Math.round(-8 + t * (size * 2 + 8));
@@ -266,7 +266,7 @@ class BattleScene implements Scene {
       g.rect(x + c - r + 8, y + r, 2, 1);
     }
     g.clip();
-    g.drawImage(white, 0, 0, white.width, white.height, x, y, size, size);
+    drawSpeciesImage(g, white, kind, x, y);
     g.restore();
   }
 
@@ -639,20 +639,24 @@ class BattleScene implements Scene {
     const labels = me.moves.map((m) => getMove(this.data, m.id).name.toUpperCase());
     while (labels.length < 4) labels.push("-");
     const hints = this.moveHints();
-    const describe = (index: number) => {
-      const move = me.moves[index];
-      this.ui.tb.show(move ? getMove(this.data, move.id).description : "Choose a move.", "instant");
+    const describe = () => {
+      this.ui.tb.clear();
     };
     for (;;) {
       const menu = new Menu(this.ctx, labels, {
         ...MOVE_AREA, spacing: 8, start: Math.min(this.lastMove, me.moves.length - 1), onMove: describe,
       });
-      describe(menu.index);
+      describe();
       this.idle = true;
       const r = await this.ui.choose(menu, (g) => {
         menu.draw(g);
         hints.forEach((h, i) => { if (h) drawHintTag(g, h, SCREEN_W - 30, MOVE_AREA.y + 8 + i * 8 + 1); });
         this.drawMoveInfo(g, menu.index);
+        // Description sits in the empty field, above the dialogue control rail.
+        const move = me.moves[menu.index];
+        const text = move ? getMove(this.data, move.id).description : "Choose a move.";
+        this.ctx.ui.drawWindow(g, 88, 98, SCREEN_W - 88, 26);
+        this.ctx.ui.wrap(text, 54).slice(0, 3).forEach((line, i) => drawTiny(g, line, 96, 102 + i * 7));
       });
       this.idle = false;
       if (r < 0) return null;
@@ -1060,7 +1064,7 @@ class BattleScene implements Scene {
     this.ctx.audio.playSfx("wilt");
     this.fx.dust(this.groundOf(side), 6);
     // slides down into its battle ground, accelerating
-    await this.flow.animate(16, (_i, t) => { v.drop = Math.round(t * t * 56); });
+    await this.flow.animate(16, (_i, t) => { v.drop = Math.round(t * t * 64); });
     v.visible = false;
     v.drop = 0;
     const h = this.hudOf(side);
