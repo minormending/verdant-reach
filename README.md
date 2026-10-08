@@ -9,8 +9,8 @@ plant. You're a junior botanist. The night a once-a-century flower blooms,
 certain plants across the valley wake up, and your job is to catalogue the
 QUICKENED. Then you find out who woke them, and why.
 
-This is a **vertical slice**: the Prologue through Chapter 5 (Cedarhallow and
-the Burnt Stand), ending at Conservatory 4, a few hours of play. The story bible lives in
+This is a **vertical slice**: the Prologue through Chapter 6 (Saltmarsh
+Harbour and Driftseed Isle), ending at Conservatories 5 and 6, a few hours of play. The story bible lives in
 [docs/story/](docs/story/).
 
 ## Play
@@ -38,28 +38,29 @@ night. Add `?time=morning|day|night` to the URL to override it.
 
 ## What's in the slice
 
-- **35 hand-composed maps.**
+- **45 hand-composed maps.**
   - Fallowfield's farms and windmill, Hedgerow's lanes, brick-and-bramble Bramblegate, and autumnal Sugarbush.
   - The Night Meadow, and the Sugarbush Grove dungeon.
   - **Glasshouse City** under its vast glass dome: the Root Relay, the Nursery Garden, the tropical Palm House, the big market, and the Route 4 orchard on the way in.
   - **Chapter 5:** Route 6's misty old-growth canopy walkway, Cedarhallow (a town among living cedars), the fire-scarred Burnt Stand and the Hollow shrine inside the oldest cedar.
-  - Four Conservatory puzzles: Hollis's lever-gated hedge maze, Nell's bog valves, Flora's rose-trellis maze and Morrow's dark Conservatory, where the safe path shows only in the lantern's light.
-- **52 trainers.** Leaders HOLLIS (Wood), NELL PITCHER (Bug), FLORA VANCE (Bloom, the difficulty spike) and MORROW (Ghost), rival BRAM ×4 (the fourth time with a graft-collared partner), and ROOTSTOCK grunts with their admin SHEARS. Staged cutscenes use camera pans, flashes and ambience.
-- **78 species, 97 moves and 9 types.** Every species is a real plant that grows through its real life stages, poses as a creature in battle and has an idle animation. Every Herbarium entry contains a fact-checked true fact and shows where the species is FOUND.
+  - **Chapter 6:** the salt-marsh estuary of Route 7, the port of Saltmarsh Harbour with its sick Lantern Tree on the point, the open sea of Route 8, and volcanic Driftseed Isle with its optional Vents cave.
+  - Six Conservatory puzzles: Hollis's lever-gated hedge maze, Nell's bog valves, Flora's rose-trellis maze, Morrow's dark Conservatory (the safe path shows only in the lantern's light), Brother Saguaro's boulder puzzle and Captain Reyes's raft-and-lever pools.
+- **67 trainers.** Leaders HOLLIS (Wood), NELL PITCHER (Bug), FLORA VANCE (Bloom, the difficulty spike), MORROW (Ghost), BROTHER SAGUARO (Thorn) and CAPTAIN REYES (Water), rival BRAM ×4 (the fourth time with a graft-collared partner), and ROOTSTOCK grunts with their admin SHEARS. Staged cutscenes use camera pans, flashes and ambience.
+- **91 species, 102 moves and 9 types.** Every species is a real plant that grows through its real life stages, poses as a creature in battle and has an idle animation. Every Herbarium entry contains a fact-checked true fact and shows where the species is FOUND.
 - **Systems:**
   - Crystal-style battles with a modern feel: the physical/special split, statuses, weather, critical captures, SUPER/WEAK hints, and 40 move-animation families.
   - Catching with nicknames, and growth (evolution) by level, by time of day and by friendship.
   - **The Nursery Garden:** board two plants that share a pollination group and they set a SEED, which sprouts in your party as you walk.
-  - **Field moves:** PRUNE clears brambles, opening shortcuts and hidden stashes across the old routes.
+  - **Field moves:** PRUNE clears brambles, opening shortcuts and hidden stashes across the old routes. RAFT rides a giant lily pad across water, and UPROOT pushes boulders with a Quickened's roots.
   - **Item growth:** EMBER ASH opens a sealed lodgepole cone, the way real fire-cones need fire to release their seed. The FOXFIRE LANTERN lights dark maps.
   - Party (with move reordering), bag, a pressed-specimen Field Herbarium, storage cabinet, shop and options.
   - Saving, whiteout, real-time day and night with lamp-lit nights, and ambient particles (pollen, leaves, fireflies, mist).
-  - **Side content:** eleven side quests tracked in a NOTES log, 26 hidden items, and berry and rose-hip bushes that regrow each real day.
+  - **Side content:** thirteen side quests tracked in a NOTES log, a market trade (swap a vanilla vine for the trader's POLLY, which blooms into a vanilla orchid on arrival), 30 hidden items, and berry and rose-hip bushes that regrow each real day.
   - **Your lead Quickened follows you** around the overworld (toggle in OPTIONS).
-  - **Ten illustrated stills** at key story moments.
+  - **Eleven illustrated stills** at key story moments.
 - **An original chiptune soundtrack:** 27 tracks, jingles, sound effects, a cry per species, and ambient wind, bird and cricket beds, all synthesised live with WebAudio.
 - **Art:** all hand-built pixel art, stored as swappable bundles in `public/art/` (a folder of PNGs plus JSON per creature, tileset, structure and character; format in [docs/ART.md](docs/ART.md)). Every species follows the Crystal rule (shared black outline and white highlights, two species tones, a per-species entrance animation; [docs/CREATURES.md](docs/CREATURES.md)). Art packs override any subset: try `?art=classic` for the pre-Crystal sprites or `?art=traced` for the original photo-traced ones.
-  - 78 species with idle animations, true back views and a real-cultivar shiny ("sport") palette each ([docs/SPORTS.md](docs/SPORTS.md)), to the creature design guide in `docs/CREATURES.md`.
+  - 91 species with idle animations, true back views and a real-cultivar shiny ("sport") palette each ([docs/SPORTS.md](docs/SPORTS.md)), to the creature design guide in `docs/CREATURES.md`.
   - Autotiled environments with ground variation.
   - Unique characters with weighted walk cycles, and trainer portraits.
   - Title art.
@@ -70,10 +71,10 @@ night. Add `?time=morning|day|night` to the URL to override it.
 | | |
 |---|---|
 | `npm run typecheck` | strict TypeScript |
-| `npm test` | vitest: 691 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
+| `npm test` | vitest: 866 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
 | `?dev=<module>` | isolated dev scenes: `battle`, `screens`, `audio` (jukebox), `ui`, `overworld`, `world`, and `art` (the **Art Lab**: browse and live-swap every art bundle) |
 | `?dev=world&play=1&map=<id>&flags=a,b&species=<id>&level=<n>` | drop into any story state |
-| `npm run e2e` | headless full playthrough (73 beats through Chapter 5, about 11 minutes; first use: `npx playwright install chromium`). CI runs it before every deploy. |
+| `npm run e2e` | headless full playthrough (99 beats through Chapter 6, about 17 minutes; first use: `npx playwright install chromium`). CI runs it before every deploy. |
 
 The art lives in `public/art/` and the game reads it directly: edit a PNG,
 reload, and it's in the game. The Python tools in `tools/art/` (Pillow +
@@ -95,4 +96,4 @@ Contracts shared by all modules: `src/contracts/`.
 
 - **The audio was mixed by measurement only.** Levels were set with offline renders; a human listening pass is still worthwhile.
 - **Balance comes from simulation and automated play** (`src/battle/logic/balance.test.ts`, `e2e/`). Human play-testing should still tune feel.
-- **Scope:** Chapters 6–11 of the story bible (Conservatories 5–8, the Council) and the post-game are built on feature branches and land here as each chapter's dialogue is written. A modern restyle (a wider 320×180 screen with new art) is in progress on the `restyle` branch.
+- **Scope:** Chapters 7–11 of the story bible (Conservatories 7–8, the Council) and the post-game are built on feature branches and land here as each chapter's art and dialogue are finished. A modern restyle (a wider 320×180 screen with new art) is in progress on the `restyle` branch.

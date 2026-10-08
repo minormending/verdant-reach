@@ -14,9 +14,10 @@ it for fun, to practise engineering management and planning.
 - **Live site:** https://minormending.github.io/verdant-reach/. It deploys
   automatically on every push to `main` (`.github/workflows/pages.yml` runs the
   tests, the build and the headless playthrough, and deploys only if all pass).
-- **Scope so far:** the Prologue through Chapter 4 (Glasshouse City,
-  Conservatory 3). The story bible is in `docs/story/` (chapters 5–11 aren't
-  built yet).
+- **Scope so far:** the Prologue through Chapter 6 (Saltmarsh Harbour and
+  Driftseed Isle, Conservatories 5 and 6). The story bible is in `docs/story/`;
+  Chapters 7–11 and the post-game live on feature branches until their art and
+  dialogue are finished.
 
 ## Commands
 
@@ -27,7 +28,7 @@ npm run typecheck           # strict tsc
 npm test                    # vitest, about 420 tests: data, world validation, puzzles, balance, art bundles
 npm run build               # typecheck + production bundle (relative base, for GitHub Pages)
 npx playwright install chromium # first use: install the e2e browser
-npm run e2e                 # headless full playthrough, 46 beats, speed 8, seed 1, daytime
+npm run e2e                 # headless full playthrough, 99 beats, speed 8, seed 1, daytime
 npm run e2e -- --seed 42    # replay another RNG seed (unsigned 32-bit integer)
 npm run art:index           # REQUIRED after adding, removing or renaming any file under public/art/
 
@@ -59,7 +60,7 @@ leave `git status` clean (the generators are deterministic).
 | Art runtime (resolves logical asset paths to bundles), the Art Lab | `src/art/` |
 | **All art, as swappable bundles** | `public/art/` (format: **docs/ART.md**) |
 | Art generators and tools (Python) | `tools/art/` |
-| Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 46 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
+| Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 99 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
 
 The e2e runner fixes time to day and defaults to `--seed 1`. It prints the seed
 and records it in the report; use `--seed N` to reproduce another run. Dev URLs
