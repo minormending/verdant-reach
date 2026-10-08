@@ -169,3 +169,12 @@ Chapter 6 vanilla line (set in `tools/art/crystal/vanilla.py`; palettes are dark
 | vanilla_orchid | 'Variegata' | The same cream-striped Vanilla planifolia form as vanilla_vine. Leaf faces and orchid segments take pale cream-green; the stake and long green capsules retain an olive dark tone. Shared white stays reserved for rims and gloss, with identical geometry. | `#586040 #d0d8a0 #f8f8f8` |
 
 Botanical references: [University of California Riverside Botanic Gardens, Fall 2021 plant list](https://gardens.ucr.edu/sites/g/files/rcwecm4706/files/2021-09/Online%20Fall%202021%20Plant%20List%209.21.2021.pdf) lists Vanilla planifolia 'Variegata' with succulent leaves striped creamy white and pale yellow-green flowers. [UF/IFAS, Vanilla Growing in South Florida (HS1348)](https://ask.ifas.ufl.edu/publication/HS1348) describes the fleshy climbing vine, oval pointed leaves, aerial roots, cream-green flowers with a modified lip, and elongated green capsules. The exact cream-green palette is an artistic interpretation of variegation within two colour slots.
+
+Chapter 7 larch line (set in `tools/art/crystal/larch.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| larch_seedling | Japanese larch blue-green | The soft blue-green needles of Larix kaempferi, the Japanese larch, a close relative of the European larch (Larix decidua) and a natural colour of the genus rather than a named cultivar. Crystal: the fresh-green rosettes turn blue-green; the dark slot (bark, larch rose) shifts from rosy red-brown to a cooler plum-brown, an artistic choice. White stays white. | `#804858 #80b0a0 #f8f8f8` |
+| larch | Japanese larch blue-green | The same Larix kaempferi blue-green as larch_seedling: the autumn-gold curtains, rosettes and fallen needles take the blue-green of its summer foliage; bark, cones and the larch rose take the cooler plum-brown. Palette swap only. | `#804858 #80b0a0 #f8f8f8` |
+
+Botanical references: [Wikipedia, Larix decidua](https://en.wikipedia.org/wiki/Larix_decidua) describes the needles in rosettes on short shoots, the red young female cones and the golden autumn needle drop; [Wikipedia, Larix kaempferi](https://en.wikipedia.org/wiki/Larix_kaempferi) describes the Japanese larch's glaucous blue-green needles. The exact two-tone palettes, and the plum-brown dark slot of the sport, are an artistic interpretation.
