@@ -214,7 +214,7 @@ it.each([
     expect(ctx.state.rafting).toBeUndefined();
     expect(ctx.state.flags.lantern_healed).toBe(true);
     expect(ctx.state.bag.cactus_sap ?? 0).toBe(0);
-    expect(e2e.report.texts.some((t) => /Fireflies return/.test(t.text))).toBe(true);
+    expect(e2e.report.texts.some((t) => /the fireflies come back/.test(t.text))).toBe(true);
     expect(await drive(() => e2e.nav("saltmarsh_conservatory"))).toBe(true);
     expect(e2e.report.issues).toEqual([]);
   } finally { stop(); }

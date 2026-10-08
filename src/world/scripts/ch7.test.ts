@@ -56,15 +56,15 @@ const ops = (cmds: ScriptCmd[]) => {
 };
 
 describe("Chapter 7 scripts", () => {
-  it("wires every scene and gives all spoken placeholders a speaker", () => {
+  it("wires every scene, with finished dialogue and speaker-less narration", () => {
     for (const id of [
       "ch7_pass_ranger", "ch7_town_enter", "ch7_arrival", "ch7_cons7_door", "ch7_crimson_lily",
       "ch7_lodge_grunt", "ch7_bookcase", "ch7_emitter_1", "ch7_emitter_2", "ch7_emitter_3",
       "calloway", "ch7_calloway_after", "ch7_files", "signe", "ch7_signe_after", "ch7_end", "q_lost_climber",
     ]) expect(WORLD.scripts[id], id).toBeDefined();
     for (const c of ops([...Object.values(ch7Scripts).flat(), ...questScripts.q_lost_climber])) if (c.op === "say") {
-      expect(c.text).toMatch(/^TODO\(text\): /);
-      expect(c.speaker).toBeTruthy();
+      expect(c.text).not.toMatch(/TODO/);
+      expect([undefined, "RANGER", "GRUNT", "DR. CALLOWAY", "SIGNE", "VALE", "LODGE KEEPER", "VISITOR", "KID", "CLERK", "MOUNTAINEER"]).toContain(c.speaker);
     }
   });
 

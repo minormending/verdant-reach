@@ -322,10 +322,85 @@ const CH5_LINES: Record<string, { intro: string; defeat: string; after: string }
   },
 };
 const ch5Lines = (id: string) => CH5_LINES[id.startsWith("rival_4_") ? "rival_4" : id];
-/** Chapter 6 lines are written in its writing pass. */
-const ch6Lines = (id: string) => ({
-  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
-});
+// Chapter 6 lines: one set per trainer.
+const CH6_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  angler_reed: {
+    intro: "Fish aren't biting. Maybe you will!",
+    defeat: "Snapped my line!",
+    after: "CATTAIL fluff carries the seeds. The wind does the rest.",
+  },
+  angler_moss: {
+    intro: "Sit still long enough and something always bites.",
+    defeat: "Off the hook. Again.",
+    after: "PITCHER PLANTS fish too. Bugs slip in and can't climb out.",
+  },
+  birder_tern: {
+    intro: "Shh! You'll scare the herons. Battle quietly!",
+    defeat: "...That was not quiet.",
+    after: "Mangrove seedlings float off on the tide. Some sail for months.",
+  },
+  grunt_dock_1: {
+    intro: "The doctor said not yet. I say NOW!",
+    defeat: "Ow! Like grabbing a nettle!",
+    after: "She's off to the lake. Never you mind which lake.",
+  },
+  grunt_dock_2: {
+    intro: "Nobody leaves these docks with that seed but us!",
+    defeat: "Snapped shut. On me.",
+    after: "That grey boat's long gone. You'll never catch her now.",
+  },
+  sailor_kelp: {
+    intro: "Ahoy, raft rider! Prepare to be boarded!",
+    defeat: "Sunk without a trace!",
+    after: "Lily pads float on air. Their leaves are full of tiny air spaces.",
+  },
+  sailor_brine: {
+    intro: "One sailor. One QUICKENED. One salty battle!",
+    defeat: "Washed overboard...",
+    after: "EELGRASS meadows calm the waves. Little fish hide in them.",
+  },
+  diver_coral: {
+    intro: "Just came up for air. Battle me before I go back down!",
+    defeat: "Out of breath!",
+    after: "MANGROVE roots shelter whole schools of young fish.",
+  },
+  diver_shoal: {
+    intro: "Seen the seagrass from below? It's a meadow in the sea!",
+    defeat: "Beached!",
+    after: "SEAGRASS isn't seaweed. It's a real flowering plant.",
+  },
+  jr_spine: {
+    intro: "BROTHER SAGUARO says be patient. I'm working on it!",
+    defeat: "Ouch. A prickly loss.",
+    after: "Don't stroke a PRICKLY PEAR. Its bristles come off in your skin.",
+  },
+  jr_needle: {
+    intro: "Sharp! Needle-sharp! It's right there in my name!",
+    defeat: "Blunted...",
+    after: "Cactus spines are leaves, really. Very pointy leaves.",
+  },
+  saguaro: {
+    intro: "Slowly, now. There is no hurry here.",
+    defeat: "...Good. You waited for your moment.",
+    after: "Everything worth growing grows slowly.",
+  },
+  jr_tide: {
+    intro: "The tide's coming in. So am I!",
+    defeat: "Washed out...",
+    after: "SEAGRASS pollen drifts on the current. No bees required.",
+  },
+  jr_current: {
+    intro: "The current carried you this far. Can you swim?",
+    defeat: "Pulled under!",
+    after: "RED MANGROVE roots keep out most of the salt in seawater.",
+  },
+  reyes: {
+    intro: "Hold fast. The tide's turning!",
+    defeat: "Ha! Outsailed, fair and square.",
+    after: "Come back some evening and watch the LANTERN TREE light up.",
+  },
+};
+const ch6Lines = (id: string) => CH6_LINES[id];
 const ch5Trainers: TrainerDef[] = [
   trainer("lumberjack_hale", "HALE", "LUMBERJACK", "lumberjack", [T("maple_sapling", 21), T("holly", 22)], ch5Lines("lumberjack_hale")),
   trainer("lumberjack_birch", "BIRCH", "LUMBERJACK", "lumberjack", [T("pumpkin", 22)], ch5Lines("lumberjack_birch")),
@@ -349,7 +424,7 @@ const ch5Trainers: TrainerDef[] = [
   ], ch5Lines("morrow"), { ai: "smart", music: "battle_leader", mark: "pipe_mark", prize: 2800, items: [{ item: "spring_water", qty: 1 }] }),
 ];
 
-// Chapter 6 teams from CH6.md §5; dialogue stays with the narrative pass.
+// Chapter 6 teams from CH6.md §5.
 // Balance changes: Saguaro's prescribed 30/31/33 become 35/36/38; Reyes's
 // ace moves from 34 to 35. Explicit moves retain signature setup/healing,
 // with Ghost/Bloom coverage for Saguaro and gentler Water + Wood/Frost
@@ -359,8 +434,8 @@ const ch6Trainers: TrainerDef[] = [
   trainer("angler_reed", "REED", "HIKER", "angler", [T("cattail", 25), T("sundew", 26)], ch6Lines("angler_reed")),
   trainer("angler_moss", "MOSS", "HIKER", "angler", [T("pitcher_plant", 26)], ch6Lines("angler_moss")),
   trainer("birder_tern", "TERN", "BIRDWATCHER", "birdwatcher", [T("mangrove_propagule", 24), T("white_clover", 26)], ch6Lines("birder_tern")),
-  trainer("grunt_dock_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 27), T("fireweed", 27)], ch6Lines("grunt_dock_1"), { music: "battle_rootstock" }),
-  trainer("grunt_dock_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 27), T("sugar_maple", 28)], ch6Lines("grunt_dock_2"), { music: "battle_rootstock" }),
+  trainer("grunt_dock_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 27), T("fireweed", 27)], ch6Lines("grunt_dock_1"), { music: "battle_rootstock" }),
+  trainer("grunt_dock_2", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 27), T("sugar_maple", 28)], ch6Lines("grunt_dock_2"), { music: "battle_rootstock" }),
   trainer("sailor_kelp", "KELP", "HIKER", "sailor", [T("seagrass_shoot", 27), T("lily_pad", 28)], ch6Lines("sailor_kelp")),
   trainer("sailor_brine", "BRINE", "HIKER", "sailor", [T("eelgrass", 29)], ch6Lines("sailor_brine")),
   trainer("diver_coral", "CORAL", "GARDENER", "diver", [T("mangrove_sapling", 28), T("cattail", 28)], ch6Lines("diver_coral")),
@@ -380,19 +455,78 @@ const ch6Trainers: TrainerDef[] = [
 ];
 
 // Chapter 7 (CH7.md §5): preserve team identities and ±2 boss-level bounds.
-/** Chapter 7 lines are written in its writing pass. */
-const ch7Lines = (id: string) => ({
-  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
-});
+const CH7_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  climber_ridge: {
+    intro: "The air's thin up here. Let's see if you can keep up!",
+    defeat: "Out of breath. Out of luck.",
+    after: "LARCHES are conifers, but they drop every needle in autumn.",
+  },
+  climber_scree: {
+    intro: "Mind the scree! And mind my QUICKENED!",
+    defeat: "Slipped...",
+    after: "MOSS CAMPION grows in a tight cushion. It keeps its middle warm.",
+  },
+  skier_frost: {
+    intro: "Fresh powder, fresh challenger!",
+    defeat: "Wiped out!",
+    after: "EDELWEISS wears woolly hairs against the cold and the glare.",
+  },
+  skier_drift: {
+    intro: "I go downhill fast. You'll go down faster!",
+    defeat: "Straight into a drift...",
+    after: "SNOWDROPS flower at winter's end. Sometimes right through the snow.",
+  },
+  grunt_lodge: {
+    intro: "Nobody goes near that bookcase. Nobody!",
+    defeat: "Stung. The doctor won't like this.",
+    after: "There's nothing behind the bookcase. Nothing at all!",
+  },
+  grunt_b1_1: {
+    intro: "Hands off the emitter! The doctor needs that signal!",
+    defeat: "Switched off...",
+    after: "FIREWEED springs up after a fire. We just skip the fire.",
+  },
+  grunt_b1_2: {
+    intro: "This emitter's mine. So's my BLADDERWORT. Snap!",
+    defeat: "Sucked in and spat out.",
+    after: "A BLADDERWORT trap snaps in about a millisecond. Faster than you.",
+  },
+  grunt_b1_3: {
+    intro: "Last emitter. Last guard. Last chance to turn back!",
+    defeat: "That was the last one, wasn't it.",
+    after: "The doctor's downstairs. She won't go as easy as me.",
+  },
+  jr_flurry: {
+    intro: "Careful on the ice! Once you slide, you can't stop!",
+    defeat: "Slid right past me...",
+    after: "Plan every slide before you take it. SIGNE does.",
+  },
+  jr_hoarfrost: {
+    intro: "Frost forms overnight. So did my strategy!",
+    defeat: "Melted.",
+    after: "Only female HOLLY plants grow berries. Look for the red ones.",
+  },
+  calloway: {
+    intro: "Observe closely. You may learn something.",
+    defeat: "...Noted. A variable I failed to control.",
+    after: "Nature is slow. I am not.",
+  },
+  signe: {
+    intro: "Cold teaches patience. Let's see what you've learned.",
+    defeat: "...Good. You held steady in the cold.",
+    after: "Snow is a blanket. Under it, everything waits for spring.",
+  },
+};
+const ch7Lines = (id: string) => CH7_LINES[id];
 const ch7Trainers: TrainerDef[] = [
   trainer("climber_ridge", "RIDGE", "HIKER", "hiker", [T("larch_seedling", 33), T("holly", 34)], ch7Lines("climber_ridge")),
   trainer("climber_scree", "SCREE", "HIKER", "hiker", [T("campion_mound", 34)], ch7Lines("climber_scree")),
   trainer("skier_frost", "FROST", "BIRDWATCHER", "skier", [T("peppermint", 34), T("edelweiss_bud", 33)], ch7Lines("skier_frost")),
   trainer("skier_drift", "DRIFT", "BIRDWATCHER", "skier", [T("snowdrop_shoot", 34), T("larch", 35)], ch7Lines("skier_drift")),
-  trainer("grunt_lodge", "LODGE", "GRUNT", "grunt", [T("stinging_nettle", 35), T("venus_flytrap", 35)], ch7Lines("grunt_lodge"), { music: "battle_rootstock" }),
-  trainer("grunt_b1_1", "SIGNAL 1", "GRUNT", "grunt", [T("fireweed", 36), T("sugar_maple", 36)], ch7Lines("grunt_b1_1"), { music: "battle_rootstock" }),
-  trainer("grunt_b1_2", "SIGNAL 2", "GRUNT", "grunt", [T("red_mangrove", 36), T("bladderwort", 36)], ch7Lines("grunt_b1_2"), { music: "battle_rootstock" }),
-  trainer("grunt_b1_3", "SIGNAL 3", "GRUNT", "grunt", [T("prickly_pear", 37), T("foxglove", 36)], ch7Lines("grunt_b1_3"), { music: "battle_rootstock" }),
+  trainer("grunt_lodge", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 35), T("venus_flytrap", 35)], ch7Lines("grunt_lodge"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_1", "GRUNT", "ROOTSTOCK", "grunt", [T("fireweed", 36), T("sugar_maple", 36)], ch7Lines("grunt_b1_1"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_2", "GRUNT", "ROOTSTOCK", "grunt", [T("red_mangrove", 36), T("bladderwort", 36)], ch7Lines("grunt_b1_2"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_3", "GRUNT", "ROOTSTOCK", "grunt", [T("prickly_pear", 37), T("foxglove", 36)], ch7Lines("grunt_b1_3"), { music: "battle_rootstock" }),
   trainer("jr_flurry", "FLURRY", "JR.GARDENER", "gardener", [T("edelweiss", 38), T("snowdrop_shoot", 38)], ch7Lines("jr_flurry")),
   trainer("jr_hoarfrost", "HOARFROST", "JR.GARDENER", "gardener", [T("campion_mound", 39), T("holly", 39)], ch7Lines("jr_hoarfrost")),
   // Tuning: ghost_pipe 38→40 (+2), lodgepole_pine 39→40 (+1), red_mangrove 41→42 (+1).

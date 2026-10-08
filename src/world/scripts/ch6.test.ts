@@ -1,4 +1,4 @@
-// Run Chapter 6 through the real interpreter; placeholder dialogue is editable.
+// Run Chapter 6 through the real interpreter.
 import { describe, expect, it, vi } from "vitest";
 import type { BattleOutcome, Button, GameContext, MapId, ScriptCmd, SpeciesId } from "../../contracts";
 import { createQuickened } from "../../battle/logic/stats";
@@ -64,17 +64,28 @@ const ops = (cmds: ScriptCmd[]) => {
 };
 
 describe("Chapter 6 scripts", () => {
-  it("wires the scenes and quests and gives every spoken placeholder a speaker", () => {
+  it("wires the scenes and quests, with finished dialogue and one name per speaker", () => {
     for (const id of [
       "ch6_ford_keeper", "ch6_town_enter", "ch6_arrival", "ch6_doctor", "ch6_reyes_point",
       "ch6_lantern_tree", "ch6_cons5_door", "ch6_isle_enter", "ch6_elder", "saguaro",
       "ch6_saguaro_after", "reyes", "ch6_end", "q_seagrass_survey", "q_hand_pollinator", "cons5_gate",
     ]) expect(WORLD.scripts[id], id).toBeDefined();
     const commands = ops([...Object.values(ch6Scripts).flat(), ...questScripts.q_seagrass_survey, ...handPollinatorOffer]);
-    for (const c of commands) if (c.op === "say") {
-      expect(c.text).toMatch(/^TODO\(text\): /);
-      expect(c.speaker).toBeTruthy();
+    const speakers = new Set<string>();
+    let narration = 0;
+    for (const c of commands) {
+      if (c.op === "yesno") expect(c.prompt).not.toContain("TODO");
+      if (c.op !== "say") continue;
+      expect(c.text).not.toContain("TODO");
+      // Narration has no speaker, as in Chapter 5: a NARRATOR speaker would print "NARRATOR:".
+      if (c.speaker === undefined) { narration++; continue; }
+      expect(c.speaker).toBe(c.speaker.toUpperCase());
+      speakers.add(c.speaker);
     }
+    expect(narration).toBeGreaterThan(0);
+    expect([...speakers].sort()).toEqual([
+      "ASSISTANT", "CLERK", "FORD KEEPER", "GRUNT", "KID", "OPAL", "REYES", "SAGUARO", "THE DOCTOR", "TRADER", "VALE", "VISITOR",
+    ]);
   });
 
   it("runs the arrival once and records both glide destinations", async () => {
@@ -123,8 +134,8 @@ describe("Chapter 6 scripts", () => {
     expect(state.flags.got_raft ?? false).toBe(complete);
     expect(state.bag.lily_raft ?? 0).toBe(complete ? 1 : 0);
     if (!complete) {
-      expect(host.ctx.ui.say).toHaveBeenCalledWith("TODO(text): Something is wrong at the docks.", { speaker: "REYES" });
-      expect(host.ctx.ui.say).toHaveBeenCalledWith("TODO(text): Check the docks before sailing to Driftseed Isle.", { speaker: "REYES" });
+      expect(host.ctx.ui.say).toHaveBeenCalledWith("Trouble at the docks. I can hear it from here.", { speaker: "REYES" });
+      expect(host.ctx.ui.say).toHaveBeenCalledWith("See to the docks first. Then we'll talk about DRIFTSEED ISLE.", { speaker: "REYES" });
     }
   });
 

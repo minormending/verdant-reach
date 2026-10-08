@@ -24,8 +24,8 @@ const GAMEPLAY: [MapId, string][] = [
 ];
 
 // The Larchmere chalets are new private homes: each door bounces the player
-// with an existing locked-door script. Nothing else may be added.
-const CHALET_DOORS = [[3, 5, "bg_door_c"], [9, 5, "hh_door_east"], [4, 22, "gc_door_b"], [10, 22, "hh_door_nw"]] as const;
+// with its own locked-door script. Nothing else may be added.
+const CHALET_DOORS = [[3, 5, "lm_door_1"], [9, 5, "lm_door_2"], [4, 22, "lm_door_3"], [10, 22, "lm_door_4"]] as const;
 const isChaletDoor = (id: MapId, x: number, y: number) => id === "larchmere" && CHALET_DOORS.some(([cx, cy]) => cx === x && cy === y);
 
 // The lead's cast swap (after the cast7 wave): new Chapter 7 sprites replace
