@@ -34,9 +34,9 @@ table and is kept as reference only (its values are the `classic` pack's sports)
 | chili_blossom | 'Black Pearl' | Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers. | `#382048 #9878b8 #f8f8f8` |
 | green_chili | 'Black Pearl' | Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers. | `#201838 #605078 #f8f8f8` |
 | red_chili | 'Black Pearl' | Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers. | `#281828 #684878 #f8f8f8` |
-| lily_seedpod | 'Chromatella' yellow water lily | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads. | `#604018 #c09038 #f8f8f8` |
-| lily_pad | 'Chromatella' yellow water lily | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads. | `#684018 #98a038 #f8f8f8` |
-| giant_water_lily | 'Chromatella' yellow water lily | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads. | `#385020 #e8c040 #f8f8f8` |
+| lily_seedpod | 'Escarboucle' red water lily | Nymphaea 'Escarboucle' (Latour-Marliac, 1909): deep crimson flowers over darker, bronze-tinged pads. | `#401018 #a82030 #f8f8f8` |
+| lily_pad | 'Escarboucle' red water lily | Nymphaea 'Escarboucle' (Latour-Marliac, 1909): deep crimson flowers over darker, bronze-tinged pads. | `#681020 #587838 #f8f8f8` |
+| giant_water_lily | 'Escarboucle' red water lily | Nymphaea 'Escarboucle' (Latour-Marliac, 1909): deep crimson flowers over darker, bronze-tinged pads. The giant sport is the CRIMSON LILY of Bloom Lake (Chapter 7). | `#304028 #c02838 #f8f8f8` |
 | dandelion_bud | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#387838 #f0a0c0 #f8f8f8` |
 | dandelion | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#405028 #e888b0 #f8f8f8` |
 | dandelion_clock | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#305838 #d098b8 #f8f8f8` |
