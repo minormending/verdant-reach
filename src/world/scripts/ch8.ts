@@ -127,10 +127,12 @@ export const ch8Scripts: Scripts = {
       { op: "showNpc", npc: "mercer" },
       camera(8, 5),
       say("TODO(text): MERCER THORNE stands behind WREN, holding the Relay's hub map.", "NARRATOR"),
+      { op: "still", image: "mercer_hub_map" },
       say("TODO(text): I am MERCER THORNE; the Quickening began with my work.", "MERCER THORNE"),
       say("TODO(text): This map shows the network's hubs; I have what I came for.", "MERCER THORNE"),
       say("TODO(text): We are leaving, WREN.", "MERCER THORNE"),
       say("TODO(text): The mast is silent. I am coming with you.", "WREN"),
+      { op: "stillClear" },
       // (8,5) and (7,6) -> beyond the far right edge (x=16).
       moveNpc("mercer", ...steps("right", 8)),
       { op: "hideNpc", npc: "mercer" },

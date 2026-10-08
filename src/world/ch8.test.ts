@@ -194,7 +194,7 @@ describe("Chapter 8 world", () => {
     expect(WORLD.maps.relay_roof.npcs.find((n) => n.id === "wren")).toMatchObject({ script: "ch8_wren" });
     expect(WORLD.maps.relay_roof.triggers.some((t) => t.script === "ch8_wren")).toBe(true);
     expect(WORLD.maps.relay_roof.npcs.find((n) => n.id === "mercer")).toMatchObject({
-      sprite: "gentleman", visibleWhen: [{ flag: "mercer_seen", is: true }, { flag: "mercer_left", is: false }],
+      sprite: "mercer", visibleWhen: [{ flag: "mercer_seen", is: true }, { flag: "mercer_left", is: false }],
     });
     const called: string[] = [];
     eachCmd(WORLD.scripts.gc_enter, (c) => { if (c.op === "call") called.push(c.script); });
@@ -224,7 +224,7 @@ describe("Chapter 8 world", () => {
     for (const [id, team] of Object.entries(teams)) {
       const t = WORLD.trainers[id];
       expect(t.team.map((q) => [q.species, q.level])).toEqual(team);
-      expect(t).toMatchObject({ portrait: id === "wren" ? "researcher" : "grunt", className: id === "wren" ? "ADMIN" : "GRUNT", music: "battle_rootstock" });
+      expect(t).toMatchObject({ portrait: id === "wren" ? "wren" : "grunt", className: id === "wren" ? "ADMIN" : "GRUNT", music: "battle_rootstock" });
       for (const text of [t.intro, t.defeat, t.after]) expect(text).toContain("TODO(text)");
       for (const q of t.team) for (const move of q.moves ?? []) expect(DATA.species[q.species].learnset.some((l) => l.move === move && l.level <= q.level)).toBe(true);
     }

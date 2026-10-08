@@ -46,6 +46,10 @@ describe("ambience", () => {
     expect(ambienceFor("burnt_stand", "night")).toBe("forest");
     expect(ambienceFor("hollow", "day")).toBe("none");
     expect(ambienceFor("hollow", "night")).toBe("none");
+    expect(ambienceFor("alpine", "day")).toBe("meadow");
+    expect(ambienceFor("alpine", "night")).toBe("night");
+    expect(ambienceFor("red_lake", "day")).toBe("none");
+    expect(ambienceFor("hideout", "day")).toBe("none");
     for (const id of ["herbarium", "greenhouse", "market", "conservatory", "battle_wild", "battle_leader", "title", "slice_end", "victory_wild"] as const) {
       expect(ambienceFor(id, "day")).toBe("none");
       expect(ambienceFor(id, "night")).toBe("none");

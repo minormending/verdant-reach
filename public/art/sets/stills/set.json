@@ -4,14 +4,17 @@
   "logicalDir": "assets/stills",
   "images": {
     "bloom": { "file": "bloom.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
+    "crimson_lily": { "file": "crimson_lily.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast7/stills7.py" } },
     "fire_cone_vision": { "file": "fire_cone_vision.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast5/stills5.py" } },
     "glasshouse_dome": { "file": "glasshouse_dome.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast4/stills4.py" } },
     "graft_collar": { "file": "graft_collar.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
     "greenhouse_morning": { "file": "greenhouse_morning.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
     "grove_taps": { "file": "grove_taps.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
     "lantern_tree_healed": { "file": "lantern_tree_healed.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast6/stills6.py" } },
+    "mercer_hub_map": { "file": "mercer_hub_map.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast8/stills8.py" } },
     "morrow_listening": { "file": "morrow_listening.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast5/stills5.py" } },
     "relay_pulse": { "file": "relay_pulse.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast4/stills4.py" } },
+    "rootstock_files": { "file": "rootstock_files.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast7/stills7.py" } },
     "theft": { "file": "theft.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
     "vale_call": { "file": "vale_call.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } }
   },

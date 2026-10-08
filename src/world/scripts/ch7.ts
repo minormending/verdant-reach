@@ -1,7 +1,8 @@
 // Chapter 7's staging and progression (docs/CH7.md §1 and §6).
-// Dialogue placeholders preserve scene length and speakers for the writing pass.
+// Voice: docs/STYLE.md §5. One idea per box; text boxes are 18 columns x 2 lines.
+// Narration has no speaker (as in ch5 and ch6).
 import type { ScriptCmd } from "../../contracts";
-import { emote, face, flag, give, ifFlags, moveNpc, movePlayer, say, steps, wait, type Scripts } from "../build";
+import { emote, face, flag, give, ifFlags, lockedDoor, moveNpc, movePlayer, say, steps, wait, type Scripts } from "../build";
 
 const call = (script: string): ScriptCmd => ({ op: "call", script });
 const camera = (x: number, y: number, frames = 45): ScriptCmd => ({ op: "camera", x, y, frames });
@@ -10,23 +11,23 @@ const cameraReset = (): ScriptCmd => ({ op: "cameraReset", frames: 30 });
 const emitter = (n: number): ScriptCmd[] => [
   ifFlags({ lodge_stair_open: true }, [
     ifFlags({ [`emitter_${n}_off`]: true }, [
-      say("TODO(text): This signal emitter is already silent.", "NARRATOR"),
+      say("The EMITTER is silent. Its little lights have all gone dark."),
     ], [
       ifFlags({ [`beat_grunt_b1_${n}`]: true }, [
-        say("TODO(text): The emitter forces the lake's plants awake.", "NARRATOR"),
+        say("A SIGNAL EMITTER. It hums a pulse into the roots, forcing the lake awake."),
         { op: "sfx", id: "select" },
         wait(20),
         flag(`emitter_${n}_off`),
-        say("TODO(text): The broadcast weakens as the emitter switches off.", "NARRATOR"),
+        say("<PLAYER> throws the switch. The hum dies, and the broadcast weakens."),
       ], [
-        say("TODO(text): Defeat the guard before touching the emitter.", "NARRATOR"),
+        say("Not with its guard watching. Deal with the grunt first."),
       ]),
     ]),
     ifFlags({ emitter_1_off: true, emitter_2_off: true, emitter_3_off: true, emitters_off: false }, [
       flag("emitters_off"),
       { op: "sfx", id: "door" },
       camera(21, 2),
-      say("TODO(text): All three emitters are off; the lower stairs open.", "NARRATOR"),
+      say("All three EMITTERS are silent. With a grinding sound, the stairs down open."),
       cameraReset(),
     ]),
   ]),
@@ -35,19 +36,19 @@ const emitter = (n: number): ScriptCmd[] => [
 export const ch7Scripts: Scripts = {
   ch7_pass_ranger: [
     face("pass_ranger", "toPlayer"),
-    say("TODO(text): The north pass is snowed in.", "RANGER"),
-    say("TODO(text): Wait for the snow to clear before climbing to Larchmere.", "RANGER"),
+    say("The LARCH PASS is snowed in. Waist-deep, past the scree.", "RANGER"),
+    say("Wait for the thaw before you climb to LARCHMERE. It won't be long.", "RANGER"),
   ],
   ch7_town_enter: [call("ch7_arrival"), call("ch7_end")],
   ch7_arrival: [
     ifFlags({ ch6_done: true, ch7_arrived: false }, [
       camera(35, 17, 60),
-      say("TODO(text): Larchmere stands beside a red alpine lake.", "NARRATOR"),
-      say("TODO(text): Hundreds of Quickened churn the water.", "NARRATOR"),
+      say("LARCHMERE, high in the peaks. Below the town, BLOOM LAKE runs red."),
+      say("Hundreds of QUICKENED thrash in the water. The whole lake sounds furious."),
       camera(26, 9, 60),
-      say("TODO(text): Signe's Conservatory is shut while the lake screams.", "NARRATOR"),
+      say("SIGNE's CONSERVATORY is shuttered tight. She won't battle while the lake screams."),
       camera(26, 22, 60),
-      say("TODO(text): The Lakeside Lodge overlooks the restless shore.", "NARRATOR"),
+      say("On the shore, the LAKESIDE LODGE watches the water. Its curtains are drawn."),
       flag("ch7_arrived"),
       flag("visited_larchmere"),
       cameraReset(),
@@ -56,31 +57,33 @@ export const ch7Scripts: Scripts = {
   ch7_cons7_door: [
     ifFlags({ lake_calmed: false }, [
       { op: "sfx", id: "bump" },
-      say("TODO(text): Signe will not battle while the lake is screaming.", "NARRATOR"),
-      say("TODO(text): Calm Bloom Lake before entering the Conservatory.", "NARRATOR"),
+      say("Shut. A note: \"NO BATTLES WHILE THE LAKE IS SCREAMING. -SIGNE.\""),
+      say("Whatever's wrong with BLOOM LAKE, it needs putting right first."),
       movePlayer("down"),
     ]),
   ],
   ch7_crimson_lily: [
     ifFlags({ ch7_arrived: true, crimson_lily_done: false }, [
-      say("TODO(text): A crimson giant water lily waits on the islet.", "NARRATOR"),
-      say("TODO(text): Its unusual colour marks it as a sport.", "NARRATOR"),
-      say("TODO(text): The furious lily rises to challenge the player.", "NARRATOR"),
+      say("A GIANT WATER LILY rests by the islet. Its flower is red to the heart."),
+      { op: "still", image: "crimson_lily" },
+      say("These lilies open white, then turn pink. This one opened crimson: a SPORT."),
+      say("Its great pads heave. Forced awake and furious, the lily rears up!"),
+      { op: "stillClear" },
       { op: "wildBattle", species: "giant_water_lily", level: 40, sport: true, canLose: true },
       // Catch, wilt, flee and even a lost battle all consume the sole encounter.
       flag("crimson_lily_done"),
       { op: "hideNpc", npc: "crimson_lily" },
-      say("TODO(text): The crimson lily has left the islet for good.", "NARRATOR"),
+      say("Only ripples are left by the islet. The CRIMSON LILY won't be back."),
     ]),
   ],
   ch7_lodge_grunt: [
     ifFlags({ ch7_arrived: true, lodge_grunt_seen: false }, [
       face("grunt_lodge", "toPlayer"),
-      say("TODO(text): A Rootstock grunt watches the lodge door.", "NARRATOR"),
-      say("TODO(text): The grunt orders the player away from the bookcase.", "GRUNT"),
+      say("A grey coat by the door. ROOTSTOCK, standing guard in the lodge."),
+      say("Lodge is full. And keep away from that bookcase. Not that it matters!", "GRUNT"),
       { op: "battle", trainer: "grunt_lodge" },
       { op: "ifLastBattle", result: "won", then: [
-        say("TODO(text): The defeated grunt retreats from the lodge.", "GRUNT"),
+        say("Fine! I'm going. I was never here. Neither was the bookcase.", "GRUNT"),
         flag("lodge_grunt_seen"),
         { op: "hideNpc", npc: "grunt_lodge" },
       ] },
@@ -89,15 +92,15 @@ export const ch7Scripts: Scripts = {
   ch7_bookcase: [
     ifFlags({ lodge_grunt_seen: true }, [
       ifFlags({ lodge_stair_open: false }, [
-        say("TODO(text): Fresh scratches show where the bookcase slides.", "NARRATOR"),
+        say("Fresh scratches curve across the floor. This bookcase slides."),
         { op: "sfx", id: "door" },
         flag("lodge_stair_open"),
-        say("TODO(text): The bookcase reveals stairs into a Rootstock hideout.", "NARRATOR"),
+        say("It rolls aside. Stairs lead down under the lodge, to a ROOTSTOCK hideout."),
       ]),
       { op: "warp", to: "rootstock_hideout_1", x: 2, y: 17, facing: "up" },
     ], [
-      say("TODO(text): The shelf holds books about alpine plants.", "NARRATOR"),
-      say("TODO(text): Something has scuffed the floor beneath it.", "NARRATOR"),
+      say("ALPINE FLOWERS. ROCK GARDENS. A whole shelf of mountain plants."),
+      say("The floor in front of it is badly scuffed. Odd, for a bookcase."),
     ]),
   ],
   ch7_emitter_1: emitter(1),
@@ -107,84 +110,84 @@ export const ch7Scripts: Scripts = {
     ifFlags({ emitters_off: true }, [
       ifFlags({ beat_calloway: true }, [call("ch7_calloway_after")], [
         face("calloway", "toPlayer"),
-        say("TODO(text): The grey-coated doctor recognises the seed's keeper.", "DR. CALLOWAY"),
-        say("TODO(text): She names herself Dr. Calloway.", "DR. CALLOWAY"),
-        say("TODO(text): Forced growth is the purpose of her lake experiment.", "DR. CALLOWAY"),
-        say("TODO(text): Calloway challenges the player with her grafted plants.", "DR. CALLOWAY"),
+        say("The botanist with the seed. I did wonder.", "DR. CALLOWAY"),
+        say("We skipped introductions on the pier. I'm DR. CALLOWAY.", "DR. CALLOWAY"),
+        say("The lake is a trial. One signal, and every plant in it grows on my schedule.", "DR. CALLOWAY"),
+        say("Mine are grafted. They don't wait for spring. Shall we?", "DR. CALLOWAY"),
         { op: "battle", trainer: "calloway" },
         { op: "ifLastBattle", result: "won", then: [call("ch7_calloway_after")] },
       ]),
     ], [
-      say("TODO(text): Switch off all three emitters before confronting the doctor.", "NARRATOR"),
+      say("She doesn't look up. The EMITTERS upstairs still hum. Switch all three off first."),
     ]),
   ],
   ch7_calloway_after: [
     ifFlags({ beat_calloway: true, calloway_escaped: false }, [
-      say("TODO(text): Calloway insists that growth cannot wait for the seasons.", "DR. CALLOWAY"),
-      say("TODO(text): Her research belongs to Rootstock, and she will continue it.", "DR. CALLOWAY"),
+      say("Seasons are a delay. Nothing more. Growth shouldn't wait for them.", "DR. CALLOWAY"),
+      say("This work belongs to ROOTSTOCK. One lost battle doesn't end it.", "DR. CALLOWAY"),
       flag("beat_calloway"),
       camera(15, 3),
       // (8,5) -> (15,5) -> (15,3), just below the escape tunnel.
       moveNpc("calloway", ...steps("right", 7), ...steps("up", 2)),
       { op: "hideNpc", npc: "calloway" },
       flag("calloway_escaped"),
-      say("TODO(text): Calloway escapes through the back tunnel.", "NARRATOR"),
-      say("TODO(text): She has left her research files on the console.", "NARRATOR"),
+      say("DR. CALLOWAY steps into a tunnel at the back, and is gone."),
+      say("In her hurry, she's left her files on the console."),
       cameraReset(),
     ]),
   ],
   ch7_files: [
     ifFlags({ beat_calloway: true }, [
       ifFlags({ files_read: false }, [
-        { op: "still", image: "relay_pulse" },
-        say("TODO(text): Rootstock's files record its first forced Quickening.", "NARRATOR"),
-        say("TODO(text): That experiment was months before the Long Bloom.", "NARRATOR"),
+        { op: "still", image: "rootstock_files" },
+        say("CALLOWAY's files. TRIAL ONE: the first forced QUICKENING."),
+        say("The date on it is months BEFORE the LONG BLOOM."),
         wait(30),
-        say("TODO(text): Rootstock caused the Long Bloom; it was no natural awakening.", "NARRATOR"),
+        say("The plants didn't wake on their own. ROOTSTOCK started the QUICKENING."),
         emote("player", "!"),
-        say("TODO(text): The player sends the evidence to Dr. Vale.", "NARRATOR"),
+        say("<PLAYER> copies out the dates, to send to VALE at the HERBARIUM."),
         { op: "stillClear" },
         flag("files_read"),
         flag("lake_calmed"),
         { op: "sfx", id: "door" },
-        say("TODO(text): With the broadcast ended, Bloom Lake grows quiet.", "NARRATOR"),
-        say("TODO(text): The files reveal how to open the tunnel back to Larchmere.", "NARRATOR"),
+        say("Far above, the broadcast dies away. BLOOM LAKE falls quiet at last."),
+        say("Tucked in the files: a plan of the back tunnel. It comes out in LARCHMERE."),
       ], [
-        say("TODO(text): The files prove that Rootstock caused the Long Bloom.", "NARRATOR"),
+        say("The files are clear. ROOTSTOCK started the QUICKENING, months before the LONG BLOOM."),
       ]),
     ], [
-      say("TODO(text): Calloway guards the research files.", "NARRATOR"),
+      say("Files, stacked on the console. DR. CALLOWAY stands between you and them."),
     ]),
   ],
   signe: [
     face("signe", "toPlayer"),
     ifFlags({ beat_signe: true }, [
       call("ch7_signe_after"),
-      say("TODO(text): Signe thanks the player for restoring the lake's rest.", "SIGNE"),
+      say("The lake sleeps again. As it should. Thank you.", "SIGNE"),
     ], [
       ifFlags({ lake_calmed: true }, [
-        say("TODO(text): The lake is quiet, and Signe welcomes the player.", "SIGNE"),
-        say("TODO(text): Winter lets plants rest before their next growth.", "SIGNE"),
-        say("TODO(text): Signe challenges the player with her Frost team.", "SIGNE"),
+        say("Quiet out there now. Good. Come in.", "SIGNE"),
+        say("Up here, winter is rest. Plenty of plants need it before they grow again.", "SIGNE"),
+        say("Let's see how you do in the cold.", "SIGNE"),
         { op: "battle", trainer: "signe" },
         { op: "ifLastBattle", result: "won", then: [
-          say("TODO(text): Signe praises the player's patience and care.", "SIGNE"),
-          say("TODO(text): She presents the Snowdrop Mark.", "SIGNE"),
+          say("Patient. Careful. You'd do well on a mountain.", "SIGNE"),
+          say("The SNOWDROP MARK. It flowers while the snow's still down.", "SIGNE"),
           { op: "giveMark", mark: "snowdrop_mark" },
           call("ch7_signe_after"),
         ] },
       ], [
-        say("TODO(text): Signe refuses to battle while the lake is screaming.", "SIGNE"),
+        say("Not while the lake is screaming. Go and find out why.", "SIGNE"),
       ]),
     ]),
   ],
   ch7_signe_after: [
     ifFlags({ beat_signe: true, got_cold_snap_signe: false }, [
-      say("TODO(text): Signe offers a Cold Snap to help a bulb grow.", "SIGNE"),
+      say("Take this too. A COLD SNAP. Some bulbs won't grow without one.", "SIGNE"),
       give("cold_snap"),
       flag("got_cold_snap_signe"),
-      say("TODO(text): Use the Cold Snap on a Snow Bulb to open its shoot.", "SIGNE"),
-      say("TODO(text): A season of cold can be the start of new life.", "SIGNE"),
+      say("Use it on a SNOW BULB. A snowdrop needs a cold winter before it flowers.", "SIGNE"),
+      say("Cold first. Then growth. That's the order of things.", "SIGNE"),
     ]),
   ],
   ch7_end: [
@@ -192,17 +195,17 @@ export const ch7Scripts: Scripts = {
       wait(20),
       { op: "sfx", id: "text_blip" }, wait(8),
       { op: "sfx", id: "text_blip" }, wait(24),
-      say("TODO(text): Dr. Vale calls as the player returns to Larchmere.", "NARRATOR"),
-      say("TODO(text): Vale has read the files sent from the hideout.", "DR. VALE"),
+      say("A telephone rings in the LAKESIDE LODGE. The keeper waves. It's for <PLAYER>."),
+      say("<PLAYER>? I've read the files. Twice. Three times, actually.", "VALE"),
       { op: "music", id: "prologue_bloom" },
-      say("TODO(text): Vale admits she knew Mercer Thorne.", "DR. VALE"),
-      say("TODO(text): They studied together before he founded Rootstock.", "DR. VALE"),
+      say("There's something I should have told you. I knew MERCER THORNE.", "VALE"),
+      say("We studied together, long before ROOTSTOCK. He was brilliant.", "VALE"),
       wait(30),
-      say("TODO(text): Thorne offered Vale a place, and she turned him down.", "DR. VALE"),
-      say("TODO(text): She regrets keeping their history from the player.", "DR. VALE"),
-      say("TODO(text): The Root Relay in Glasshouse City has gone silent.", "DR. VALE"),
+      say("When he started ROOTSTOCK, he offered me a place. I said no.", "VALE"),
+      say("I should have told you sooner. I'm sorry. I hoped I was wrong about him.", "VALE"),
+      say("And now the ROOT RELAY in GLASSHOUSE CITY has gone silent. Not a sound.", "VALE"),
       emote("player", "!"),
-      say("TODO(text): Vale asks the player to investigate the Relay next.", "DR. VALE"),
+      say("Will you go and find out why? Carefully, <PLAYER>. Please.", "VALE"),
       flag("ch7_done"),
       flag("slice_done"),
       wait(60),
@@ -212,30 +215,35 @@ export const ch7Scripts: Scripts = {
   ch7_lodge_keeper: [
     face("lodge_keeper", "toPlayer"),
     ifFlags({ lake_calmed: true }, [
-      say("TODO(text): The keeper is relieved that the lake can rest again.", "LODGE KEEPER"),
-      say("TODO(text): The lodge feels like home with Rootstock gone.", "LODGE KEEPER"),
+      say("Hear that? Nothing. The lake's resting again. Thank you.", "LODGE KEEPER"),
+      say("No more grey coats on the stairs. It feels like my lodge again.", "LODGE KEEPER"),
     ], [
-      say("TODO(text): The nervous keeper says the rooms are occupied.", "LODGE KEEPER"),
-      say("TODO(text): Strange guests have been using the bookcase.", "LODGE KEEPER"),
+      say("R-rooms? No. All taken. Every one. Sorry.", "LODGE KEEPER"),
+      say("The guests keep borrowing the bookcase. Not the books. The bookcase.", "LODGE KEEPER"),
     ]),
   ],
   ch7_gh_visitor: [
-    say("TODO(text): The visitor shelters alpine plants from the lake's noise.", "VISITOR"),
-    say("TODO(text): Even mountain plants need a quiet season to rest.", "VISITOR"),
+    say("I've brought my alpines in here, away from that racket on the lake.", "VISITOR"),
+    say("Up here, plants sleep for months under the snow. They need the rest.", "VISITOR"),
   ],
   ch7_market_visitor: [
-    say("TODO(text): The visitor saw a crimson lily on the central islet.", "VISITOR"),
-    say("TODO(text): A raft can reach it across Bloom Lake.", "VISITOR"),
+    say("Out by the islet in the lake, there's a lily. CRIMSON! I've never seen one.", "VISITOR"),
+    say("You could reach it on a raft. If you're braver than me.", "VISITOR"),
   ],
   ch7_market_kid: [
-    say("TODO(text): The kid hopes the lake will be quiet enough to skate again.", "KID"),
+    say("When the lake calms down, I'm going skating. As soon as it freezes!", "KID"),
   ],
   ch7_market_pods: [
-    say("TODO(text): The clerk offers pods and water for the mountain journey.", "CLERK"),
+    say("Heading up the mountain? Pods, fresh water and compost. Pack warm.", "CLERK"),
     { op: "shop", stock: ["terrarium_pod", "glass_pod", "water_flask", "spring_water", "compost"] },
   ],
   ch7_market_care: [
-    say("TODO(text): The clerk offers plant care and rain jars.", "CLERK"),
+    say("Frost is hard on leaves. I've plant care, and RAIN JARS.", "CLERK"),
     { op: "shop", stock: ["neem_spray", "plant_food", "aloe_gel", "cloche", "rain_jar"] },
   ],
+  // The four LARCHMERE chalets are private homes.
+  lm_door_1: lockedDoor("Locked. Two pairs of skis lean by the door, freshly waxed."),
+  lm_door_2: lockedDoor("Locked. A window box of EDELWEISS sits under the sill, woolly and white."),
+  lm_door_3: lockedDoor("Locked. Firewood is stacked right up to the eaves."),
+  lm_door_4: lockedDoor("Locked. A note: \"Gone to watch the larches turn gold. Back for supper.\""),
 };

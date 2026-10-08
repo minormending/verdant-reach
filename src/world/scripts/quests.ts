@@ -635,35 +635,35 @@ const seagrassSurveyCheck: ScriptCmd[] = [
   caught(["seagrass_shoot", "eelgrass"], [flag("seagrass_survey_seagrass")]),
   caught(["mangrove_propagule", "mangrove_sapling", "red_mangrove"], [flag("seagrass_survey_mangrove")]),
   ifFlags({ seagrass_survey_seagrass: true, seagrass_survey_mangrove: true }, [
-    say("TODO(text): Both coastal plant lines are recorded.", "ASSISTANT"),
-    say("TODO(text): The assistant gives pods and a rain jar.", "ASSISTANT"),
+    say("A SEAGRASS and a MANGROVE! Both in the record.", "ASSISTANT"),
+    say("For the survey. Three GLASS PODS, and a RAIN JAR.", "ASSISTANT"),
     give("glass_pod", 3),
     give("rain_jar"),
     completeQuest("seagrass_survey"),
-    say("TODO(text): The survey helps Reyes care for the coast.", "ASSISTANT"),
+    say("The CAPTAIN uses these to look after the coast.", "ASSISTANT"),
   ], [
     ifFlags({ seagrass_survey_seagrass: false }, [
-      say("TODO(text): Catch any stage of the seagrass line.", "ASSISTANT"),
+      say("Still need a SEAGRASS. Any stage. The beds are full.", "ASSISTANT"),
     ]),
     ifFlags({ seagrass_survey_mangrove: false }, [
-      say("TODO(text): Catch any stage of the mangrove line.", "ASSISTANT"),
+      say("Still need a MANGROVE. Any stage. Try the marsh on ROUTE 7.", "ASSISTANT"),
     ]),
   ]),
 ];
 const seagrassSurvey: ScriptCmd[] = [
   byQuest("seagrass_survey", {
     fresh: [
-      say("TODO(text): Reyes's assistant surveys the sea's flowering plants.", "ASSISTANT"),
-      say("TODO(text): Seagrass pollen drifts through the water.", "ASSISTANT"),
-      say("TODO(text): Record a seagrass and a mangrove for the survey.", "ASSISTANT"),
-      say("TODO(text): Any stage counts; return here for a reward.", "ASSISTANT"),
+      say("I'm surveying sea flowers for CAPTAIN REYES.", "ASSISTANT"),
+      say("Even SEAGRASS flowers! Its pollen drifts through the sea.", "ASSISTANT"),
+      say("Could you catch me a SEAGRASS and a MANGROVE?", "ASSISTANT"),
+      say("Any stage counts. Come back here when you have both.", "ASSISTANT"),
       startQuest("seagrass_survey"),
       ...seagrassSurveyCheck,
     ],
     going: seagrassSurveyCheck,
     finished: [
-      say("TODO(text): The assistant thanks the player for the coastal record.", "ASSISTANT"),
-      say("TODO(text): Both sea and shore hold flowering plants.", "ASSISTANT"),
+      say("Thanks again. The coastal record's never been so complete.", "ASSISTANT"),
+      say("Shore or sea, flowers everywhere. Even underwater.", "ASSISTANT"),
     ],
   }),
 ];
@@ -673,29 +673,29 @@ const seagrassSurvey: ScriptCmd[] = [
 export const handPollinatorOffer: ScriptCmd[] = [
   byQuest("hand_pollinator", {
     fresh: [
-      say("TODO(text): The trader asks whether the player has found a vanilla vine.", "TRADER"),
-      say("TODO(text): Vanilla flowers can need pollination by hand.", "TRADER"),
-      say("TODO(text): Edmond Albius worked out the method on Reunion.", "TRADER"),
-      say("TODO(text): Trade a vanilla vine for the trader's POLLY.", "TRADER"),
+      say("Psst. You haven't found a VANILLA VINE, have you?", "TRADER"),
+      say("Outside Mexico, vanilla is pollinated by hand. Really!", "TRADER"),
+      say("EDMOND ALBIUS worked out how, on REUNION, in 1841.", "TRADER"),
+      say("Trade me a VANILLA VINE, and you can have my POLLY.", "TRADER"),
       startQuest("hand_pollinator"),
     ],
     going: [
-      say("TODO(text): Bring a vanilla vine in the party to trade.", "TRADER"),
+      say("Bring a VANILLA VINE in your party, and POLLY's yours.", "TRADER"),
     ],
     finished: [
-      say("TODO(text): The trader hopes POLLY is thriving.", "TRADER"),
-      say("TODO(text): Careful pollination helps vanilla grow.", "TRADER"),
+      say("How's POLLY? Thriving, I hope.", "TRADER"),
+      say("No pollen, no pod. Vanilla needs a careful hand.", "TRADER"),
     ],
   }),
   ifFlags({ quest_hand_pollinator_done: false }, [
     { op: "trade", wants: ["vanilla_vine"], gives: { species: "vanilla_vine", level: 30, nickname: "POLLY" },
       then: [
-        say("TODO(text): POLLY grows into a vanilla orchid at once.", "TRADER"),
+        say("Look at that! POLLY's grown into a VANILLA already.", "TRADER"),
         completeQuest("hand_pollinator"),
-        say("TODO(text): The trader thanks the player for the exchange.", "TRADER"),
+        say("Thanks for the swap. Look after POLLY for me.", "TRADER"),
       ],
       else: [
-        say("TODO(text): The trader will wait until the player is ready.", "TRADER"),
+        say("No? I'll be here when you're ready.", "TRADER"),
       ],
     },
   ]),
@@ -705,31 +705,31 @@ export const handPollinatorOffer: ScriptCmd[] = [
 // Finding the hidden pack can precede the offer; only its return consumes it.
 const lostClimberCheck: ScriptCmd[] = [
   hasItem("climber_pack", [
-    say("TODO(text): The mountaineer recognises her missing pack.", "MOUNTAINEER"),
+    say("My pack! Frozen stiff, but that's it. You found it!", "MOUNTAINEER"),
     { op: "takeItem", item: "climber_pack" },
-    say("TODO(text): She thanks the player with rain jars and a Cold Snap.", "MOUNTAINEER"),
+    say("Here. My spare RAIN JARS, and a COLD SNAP. You've earned them.", "MOUNTAINEER"),
     give("rain_jar", 2),
     give("cold_snap"),
     completeQuest("lost_climber"),
-    say("TODO(text): The mountaineer can safely continue her climb.", "MOUNTAINEER"),
+    say("Now I can finish the climb. Properly packed, this time.", "MOUNTAINEER"),
   ], [
-    say("TODO(text): Search the snow higher up Route 9 for the lost pack.", "MOUNTAINEER"),
-    say("TODO(text): Bring the pack back to the mountaineer here.", "MOUNTAINEER"),
+    say("It's up in the snow, farther along ROUTE 9. Look for a lump in a drift.", "MOUNTAINEER"),
+    say("Bring it back here. I'll be waiting. And stamping my feet.", "MOUNTAINEER"),
   ]),
 ];
 const lostClimber: ScriptCmd[] = [
   byQuest("lost_climber", {
     fresh: [
-      say("TODO(text): The mountaineer lost her pack on the snowy slope.", "MOUNTAINEER"),
-      say("TODO(text): Her supplies are buried somewhere farther up Route 9.", "MOUNTAINEER"),
-      say("TODO(text): She asks the player to find and return the pack.", "MOUNTAINEER"),
+      say("A gust tore my pack clean off my back, up on the snowy slope.", "MOUNTAINEER"),
+      say("Rope, flask, the lot. It's buried somewhere higher up ROUTE 9.", "MOUNTAINEER"),
+      say("Could you find it for me? My knees won't take that climb twice.", "MOUNTAINEER"),
       startQuest("lost_climber"),
       ...lostClimberCheck,
     ],
     going: lostClimberCheck,
     finished: [
-      say("TODO(text): The mountaineer thanks the player for finding her supplies.", "MOUNTAINEER"),
-      say("TODO(text): She will fasten the pack securely on her next climb.", "MOUNTAINEER"),
+      say("Thanks again. I'd still be up there digging without you.", "MOUNTAINEER"),
+      say("I've clipped the pack on twice over. No gust is getting it now.", "MOUNTAINEER"),
     ],
   }),
 ];

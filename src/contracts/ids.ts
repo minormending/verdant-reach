@@ -238,6 +238,20 @@ export const TILES = {
   volcanic_rock:  { walk: false },
   basalt_floor:   { walk: true },
   vent_steam:     { walk: false },
+  // Chapter 7: the alpine pass, Larchmere, Bloom Lake and the Rootstock hideout
+  larch_tree:     { walk: false },               // narrow golden-green conifer; also a map border
+  scree:          { walk: true },                // loose stone chips on the slope
+  snow_grass:     { walk: true, encounter: "grass" }, // alpine tufts poking through snow
+  frozen_shore:   { walk: true },                // pebbled lake edge with thin ice
+  red_water:      { walk: false, water: true },  // Bloom Lake while forced awake (legendWhen only)
+  hideout_floor:  { walk: true },                // dark steel grate
+  hideout_wall:   { walk: false },               // riveted panels and pipes
+  // Chapter 8: the Root Relay's upper floors under Rootstock
+  cable_trunk:    { walk: false },               // a root-like cable bundle in a floor channel (group "cable_trunk")
+  relay_terminal: { walk: false },               // a waist-high monitoring desk
+  roof_vent:      { walk: false },               // a louvred vent box on the roof, steaming
+  roof_glass:     { walk: false },               // the Glasshouse dome's top panes (the roof's border)
+  rootstock_banner: { walk: false },             // hung on an interior wall during the takeover
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -295,6 +309,11 @@ const STRUCTURE_SPECS = {
   tide_conservatory:  { w: 6, h: 4, door: { x: 3, y: 3 } },
   adobe_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } },
   driftwood_hut:      { w: 4, h: 3, door: { x: 1, y: 2 } },
+  // Chapter 7: Larchmere
+  alpine_lodge:       { w: 5, h: 3, door: { x: 2, y: 2 } }, // the Lakeside Lodge
+  chalet:             { w: 4, h: 3, door: { x: 1, y: 2 } },
+  frost_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 7
+  boathouse:          { w: 4, h: 3 },                       // lakeside scenery
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
@@ -325,6 +344,12 @@ export const CHARACTERS = [
   "cone_sack",                   // a Rootstock sack of sealed cones (static object)
   // Chapter 6
   "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", "island_elder",
+  // Chapter 7
+  "signe", "skier", "lodge_keeper",
+  "signal_emitter",              // Rootstock broadcast cabinet: DOWN row on, UP row switched off
+  "crimson_lily",                // the CRIMSON LILY on its islet (static object)
+  // Chapter 8
+  "mercer",
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -335,6 +360,8 @@ export const TRAINER_PORTRAITS = [
   "flora_vance", "orchardist", "arranger", "researcher", "gentleman", // Round 4
   "morrow", "lumberjack", "forager", "night_gardener", // Chapter 5
   "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", // Chapter 6
+  "signe", "skier", // Chapter 7
+  "mercer", "wren", // Chapter 8
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -347,6 +374,8 @@ export const MUSIC = [
   "victory_leader", "slice_end",
   "glasshouse_city", "palm_house", "root_relay", // Round 4
   "cedarhallow", "burnt_stand", "hollow", // Chapter 5
+  "alpine", "red_lake", "hideout", // Chapter 7
+  "relay_seized", // Chapter 8
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 
@@ -406,6 +435,8 @@ export const STILLS = [
   "glasshouse_dome", "relay_pulse", // Round 4
   "fire_cone_vision", "morrow_listening", // Chapter 5
   "lantern_tree_healed", // Chapter 6
+  "rootstock_files", "crimson_lily", // Chapter 7
+  "mercer_hub_map", // Chapter 8
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

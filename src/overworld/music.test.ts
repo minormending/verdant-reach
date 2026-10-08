@@ -61,8 +61,8 @@ describe("conditional map music", () => {
     ctx.state.flags.ch8_takeover = false;
     const scene = sceneFor(ctx);
     await enterLobby(scene);
-    expect(ctx.audio.playMusic).toHaveBeenCalledExactlyOnceWith("rootstock_appears");
-    expect(ctx.audio.current()).toBe("rootstock_appears");
+    expect(ctx.audio.playMusic).toHaveBeenCalledExactlyOnceWith("relay_seized");
+    expect(ctx.audio.current()).toBe("relay_seized");
     expect(ctx.state.flags.ch8_takeover).toBe(true);
   });
 
@@ -74,9 +74,9 @@ describe("conditional map music", () => {
     expect(ctx.battle).toHaveBeenCalledWith(expect.objectContaining({ kind: "trainer", trainer: "grunt_r1_1" }));
     expect(ctx.state.flags.beat_grunt_r1_1).toBe(true);
     expect(vi.mocked(ctx.audio.playMusic).mock.calls).toEqual([
-      ["rootstock_appears"], ["battle_rootstock"], ["rootstock_appears"],
+      ["relay_seized"], ["battle_rootstock"], ["relay_seized"],
     ]);
-    expect(ctx.audio.current()).toBe("rootstock_appears");
+    expect(ctx.audio.current()).toBe("relay_seized");
   });
 
   it("returns to ROOT RELAY music after WREN is beaten, despite a stale takeover flag", async () => {
@@ -106,7 +106,7 @@ describe("conditional map music", () => {
     scene.enter!();
     await vi.waitFor(() => expect(scene.busy).toBe(0));
     expect(ctx.state.position).toEqual({ map: "glasshouse_relay", x: 7, y: 11, facing: "left" });
-    expect(ctx.audio.playMusic).toHaveBeenCalledExactlyOnceWith("rootstock_appears");
+    expect(ctx.audio.playMusic).toHaveBeenCalledExactlyOnceWith("relay_seized");
     expect(ctx.state.flags.ch8_takeover).toBe(true);
   });
 
@@ -121,7 +121,7 @@ describe("conditional map music", () => {
     start = false;
     await vi.waitFor(() => expect(scene.busy).toBe(0));
     expect(ctx.audio.playSfx).toHaveBeenCalledWith("menu_open");
-    expect(ctx.audio.current()).toBe("rootstock_appears");
+    expect(ctx.audio.current()).toBe("relay_seized");
   });
 
   it("selects the first matching track, defaults missing flags to false, and falls back to base music", () => {
