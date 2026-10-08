@@ -1,0 +1,199 @@
+{
+ "_note": "LimeZu Modern UI, Style 1 (warm wood and parchment), chosen by the lead for the cosy botanical look. Boxes are pixel coordinates on the source sheet; no pixels.",
+ "elements": {
+  "bar_blue": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    332,
+    260,
+    355,
+    270
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "bar_frame": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    332,
+    308,
+    355,
+    318
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "bar_green": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    332,
+    116,
+    355,
+    126
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "bar_red": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    332,
+    212,
+    355,
+    222
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "bar_yellow": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    332,
+    164,
+    355,
+    174
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "button_round": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    276,
+    481,
+    300,
+    494
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "check_on": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    161,
+    371,
+    174,
+    382
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "coin": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    207,
+    385,
+    224,
+    400
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "cursor_arrow": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    161,
+    321,
+    175,
+    335
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "cursor_hand": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    192,
+    323,
+    209,
+    337
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "focus_corners": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    200,
+    295,
+    216,
+    313
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "heart": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    178,
+    163,
+    191,
+    175
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "highlight": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    267,
+    385,
+    294,
+    400
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "more_text": {
+   "source": null,
+   "note": "engine: cursor_arrow rotated 90 degrees to point down"
+  },
+  "panel_inset": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    57,
+    168,
+    87,
+    199
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "panel_plain": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    59,
+    12,
+    85,
+    36
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "panel_window": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    7,
+    7,
+    41,
+    40
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "slot": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    12,
+    299,
+    36,
+    325
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "toggle_off": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    307,
+    416,
+    332,
+    430
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  },
+  "toggle_on": {
+   "source": "ui:16x16/Modern_UI_Style_1.png",
+   "box": [
+    340,
+    432,
+    365,
+    446
+   ],
+   "picked_by": "codex lz-pick, checked by the lead"
+  }
+ }
+}
