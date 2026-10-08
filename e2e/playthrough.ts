@@ -1431,7 +1431,7 @@ async function chapter6() {
   const healing = report.texts.length;
   await trigger("ch6_lantern_tree");
   beat("the Lantern Tree: fireflies return", flag("lantern_healed") && bag("cactus_sap") === 0
-    && report.texts.slice(healing).some((t) => /fireflies return/i.test(t.text)));
+    && report.texts.slice(healing).some((t) => /fireflies come back/i.test(t.text)));
   // Complete the market trade before REYES: the next harbour entry after her
   // battle immediately runs Vale's call and the Chapter 6 end card.
   await nav("saltmarsh_market");
