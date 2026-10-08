@@ -150,7 +150,7 @@ describe("Chapter 7 world", () => {
       const t = WORLD.trainers[id];
       expect(t.team.map((q) => [q.species, q.level])).toEqual(team);
       for (const text of [t.intro, t.defeat, t.after]) expect(text).toContain("TODO(text)");
-      expect(t.portrait).toBe(id.startsWith("climber") ? "hiker" : id.startsWith("skier") ? "birdwatcher" : id.startsWith("grunt") ? "grunt" : "gardener");
+      expect(t.portrait).toBe(id.startsWith("climber") ? "hiker" : id.startsWith("skier") ? "skier" : id.startsWith("grunt") ? "grunt" : "gardener");
       expect(t.music).toBe(id.startsWith("grunt") ? "battle_rootstock" : "battle_trainer");
     }
     for (const [id, species, levels] of [
@@ -163,8 +163,8 @@ describe("Chapter 7 world", () => {
       expect(t.ai).toBe("smart");
     }
     expect(WORLD.trainers.calloway.team[2].grafted).toBe(true);
-    expect(WORLD.trainers.calloway).toMatchObject({ portrait: "shears", className: "ADMIN", music: "battle_rootstock", items: [{ item: "spring_water", qty: 1 }] });
-    expect(WORLD.trainers.signe).toMatchObject({ portrait: "nell_pitcher", className: "WARDEN", music: "battle_leader", mark: "snowdrop_mark", items: [{ item: "spring_water", qty: 2 }] });
+    expect(WORLD.trainers.calloway).toMatchObject({ portrait: "calloway", className: "ADMIN", music: "battle_rootstock", items: [{ item: "spring_water", qty: 1 }] });
+    expect(WORLD.trainers.signe).toMatchObject({ portrait: "signe", className: "WARDEN", music: "battle_leader", mark: "snowdrop_mark", items: [{ item: "spring_water", qty: 2 }] });
   });
 
   it("has a valid, unoccupied glide landing below the healing door", () => {
