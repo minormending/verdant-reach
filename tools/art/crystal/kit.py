@@ -80,6 +80,8 @@ WHITE_PARTS: dict[str, str] = {
     "ghostpipe_stalk": "ghost pipe (Monotropa uniflora) has no chlorophyll: the whole plant is waxy white",
     "ghostpipe_nodding": "ghost pipe (Monotropa uniflora) has no chlorophyll: the whole plant is waxy white",
     "ghost_pipe": "ghost pipe (Monotropa uniflora) has no chlorophyll: the whole plant is waxy white",
+    "snowdrop_shoot": "the snowdrop's closed bud is white, and it pushes up out of white snow",
+    "snowdrop": "the snowdrop (Galanthus nivalis) flower's tepals are pure white",
 }
 
 SIZES = {"front": 56, "back": 48, "icon": 16}

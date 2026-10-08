@@ -169,3 +169,13 @@ Chapter 6 vanilla line (set in `tools/art/crystal/vanilla.py`; palettes are dark
 | vanilla_orchid | 'Variegata' | The same cream-striped Vanilla planifolia form as vanilla_vine. Leaf faces and orchid segments take pale cream-green; the stake and long green capsules retain an olive dark tone. Shared white stays reserved for rims and gloss, with identical geometry. | `#586040 #d0d8a0 #f8f8f8` |
 
 Botanical references: [University of California Riverside Botanic Gardens, Fall 2021 plant list](https://gardens.ucr.edu/sites/g/files/rcwecm4706/files/2021-09/Online%20Fall%202021%20Plant%20List%209.21.2021.pdf) lists Vanilla planifolia 'Variegata' with succulent leaves striped creamy white and pale yellow-green flowers. [UF/IFAS, Vanilla Growing in South Florida (HS1348)](https://ask.ifas.ufl.edu/publication/HS1348) describes the fleshy climbing vine, oval pointed leaves, aerial roots, cream-green flowers with a modified lip, and elongated green capsules. The exact cream-green palette is an artistic interpretation of variegation within two colour slots.
+
+Chapter 7 snowdrop line (set in `tools/art/crystal/snowdrop.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| snowdrop_bulb | Sandersii Group | Galanthus nivalis Sandersii Group (including 'Sandersii', 'Flavescens' and 'Lutescens'): the ovary and inner-segment marks are yellow instead of green. The dormant bulb has neither, so its olive-brown dark slot (tunic lines, spear shade) becomes the same yellow-olive; the cream-sage body and the white snow stay. Palette swap only. | `#988830 #b8c0a0 #f8f8f8` |
+| snowdrop_shoot | Sandersii Group | The same yellow-marked snowdrop: the deep-green dark slot (scape, spathe, leaf shade) becomes yellow-olive; the grey-green leaves and the white bud stay. | `#988830 #98b098 #f8f8f8` |
+| snowdrop | Sandersii Group | The same yellow-marked snowdrop: the ovary and the inverted-V marks on the inner tepals turn yellow-olive (the dark slot, which the scape shares); the white tepals and grey-green leaves are unchanged. | `#988830 #98b098 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Galanthus nivalis](https://en.wikipedia.org/wiki/Galanthus_nivalis) describes the green V- or U-shaped mark over the notch at each inner segment's tip, the papery spathe at the top of the scape, and the Sandersii Group, whose ovary and inner-segment marks are yellow instead of green. The yellow-olive shade, and its spread to the scape and leaf shading that share the dark slot, are an artistic interpretation within two colour slots.
