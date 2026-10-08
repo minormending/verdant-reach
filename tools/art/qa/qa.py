@@ -22,7 +22,7 @@ from checks import (result, face_risk, size_class, grounding, centre_of_mass,
 
 GROUND_KEYS = {'grass', 'path', 'stone_path', 'dirt', 'sand', 'moss', 'ash',
                'tropical_grass', 'paving', 'salt_flat', 'basalt_floor',
-               'dry_grass', 'shell_scatter', 'vent_moss'}
+               'dry_grass', 'shell_scatter', 'vent_moss', 'scree', 'frozen_shore'}
 
 
 def species_metadata():

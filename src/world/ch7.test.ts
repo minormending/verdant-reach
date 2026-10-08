@@ -41,7 +41,7 @@ describe("Chapter 7 world", () => {
       expect(tileAt(lodge, 10, 2)).toBe(open ? "stairs_down" : "bookshelf");
       expect(tryMove(lodge, 10, 3, "up").kind === "walk").toBe(open);
       const b1 = buildMap(resolved("rootstock_hideout_1", { emitters_off: open }));
-      expect(tileAt(b1, 21, 2)).toBe(open ? "stairs_down" : "wall");
+      expect(tileAt(b1, 21, 2)).toBe(open ? "stairs_down" : "hideout_wall");
       expect(tryMove(b1, 21, 3, "up").kind === "walk").toBe(open);
       const b2 = buildMap(resolved("rootstock_hideout_2", { beat_calloway: open, files_read: open }));
       expect(tryMove(b2, 15, 3, "up").kind === "walk").toBe(open);
@@ -87,6 +87,17 @@ describe("Chapter 7 world", () => {
     }
   });
 
+  it("plays the Chapter 7 music: alpine on the pass and in town, the red lake until calmed, the hideout below", () => {
+    const musicAt = (id: MapId, flags: Record<string, boolean>) =>
+      WORLD.maps[id].musicWhen?.find((o) => holds(o.when, flags))?.music ?? WORLD.maps[id].music;
+    expect(musicAt("route_9", {})).toBe("alpine");
+    expect(musicAt("larchmere", {})).toBe("alpine");
+    expect(musicAt("bloom_lake", { lake_calmed: false })).toBe("red_lake");
+    expect(musicAt("bloom_lake", { lake_calmed: true })).toBe("route");
+    expect(musicAt("rootstock_hideout_1", {})).toBe("hideout");
+    expect(musicAt("rootstock_hideout_2", {})).toBe("hideout");
+  });
+
   it("uses the exact capped encounters before and after calming the lake", () => {
     const tuples = (slots: NonNullable<NonNullable<typeof WORLD.maps.route_9.encounters>["grass"]>["slots"]) => slots.map((s) => [s.species, s.weight, s.minLevel, s.maxLevel]);
     expect(tuples(WORLD.maps.route_9.encounters!.grass!.slots)).toEqual([
@@ -121,7 +132,7 @@ describe("Chapter 7 world", () => {
     expect(WORLD.maps.route_9.npcs.filter((n) => n.trainer)).toHaveLength(4);
     expect(WORLD.maps.route_9.hidden).toHaveLength(2);
     expect(WORLD.maps.route_9.hidden!.some((h) => h.item === "climber_pack" && WORLD.maps.route_9.legend[WORLD.maps.route_9.tiles[h.y][h.x]] === "snow")).toBe(true);
-    expect(WORLD.maps.bloom_lake.npcs[0]).toMatchObject({ id: "crimson_lily", sprite: "potted_plant", visibleWhen: [{ flag: "crimson_lily_done", is: false }] });
+    expect(WORLD.maps.bloom_lake.npcs[0]).toMatchObject({ id: "crimson_lily", sprite: "crimson_lily", visibleWhen: [{ flag: "crimson_lily_done", is: false }] });
     const stock: string[] = [];
     for (const id of ["ch7_market_pods", "ch7_market_care"]) eachCmd(WORLD.scripts[id], (c) => { if (c.op === "shop") stock.push(...c.stock); });
     expect(stock).toEqual(["terrarium_pod", "glass_pod", "water_flask", "spring_water", "compost", "neem_spray", "plant_food", "aloe_gel", "cloche", "rain_jar"]);
@@ -139,7 +150,7 @@ describe("Chapter 7 world", () => {
       const t = WORLD.trainers[id];
       expect(t.team.map((q) => [q.species, q.level])).toEqual(team);
       for (const text of [t.intro, t.defeat, t.after]) expect(text).toContain("TODO(text)");
-      expect(t.portrait).toBe(id.startsWith("climber") ? "hiker" : id.startsWith("skier") ? "birdwatcher" : id.startsWith("grunt") ? "grunt" : "gardener");
+      expect(t.portrait).toBe(id.startsWith("climber") ? "hiker" : id.startsWith("skier") ? "skier" : id.startsWith("grunt") ? "grunt" : "gardener");
       expect(t.music).toBe(id.startsWith("grunt") ? "battle_rootstock" : "battle_trainer");
     }
     for (const [id, species, levels] of [
@@ -152,8 +163,8 @@ describe("Chapter 7 world", () => {
       expect(t.ai).toBe("smart");
     }
     expect(WORLD.trainers.calloway.team[2].grafted).toBe(true);
-    expect(WORLD.trainers.calloway).toMatchObject({ portrait: "shears", className: "ADMIN", music: "battle_rootstock", items: [{ item: "spring_water", qty: 1 }] });
-    expect(WORLD.trainers.signe).toMatchObject({ portrait: "nell_pitcher", className: "WARDEN", music: "battle_leader", mark: "snowdrop_mark", items: [{ item: "spring_water", qty: 2 }] });
+    expect(WORLD.trainers.calloway).toMatchObject({ portrait: "calloway", className: "ADMIN", music: "battle_rootstock", items: [{ item: "spring_water", qty: 1 }] });
+    expect(WORLD.trainers.signe).toMatchObject({ portrait: "signe", className: "WARDEN", music: "battle_leader", mark: "snowdrop_mark", items: [{ item: "spring_water", qty: 2 }] });
   });
 
   it("has a valid, unoccupied glide landing below the healing door", () => {

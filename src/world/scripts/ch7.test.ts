@@ -139,7 +139,7 @@ describe("Chapter 7 scripts", () => {
     expect(host.battle).toHaveBeenCalledTimes(battles);
     events.length = 0;
     await run("ch7_files");
-    expect(events).toEqual(["still:relay_pulse", "stillClear"]);
+    expect(events).toEqual(["still:rootstock_files", "stillClear"]);
     expect(state.flags).toMatchObject({ files_read: true, lake_calmed: true });
     await run("ch7_files");
     expect(host.still).toHaveBeenCalledOnce();

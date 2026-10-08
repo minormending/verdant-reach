@@ -11,6 +11,7 @@ const GROUND = new Set([
   'floor_greenhouse', 'floor_marble', 'stage_floor', 'cable_floor', 'moss',
   'salt_flat', 'cactus_scrub', 'basalt_floor', 'pier', 'seagrass_bed',
   'ash', 'burnt_grass', 'void', 'mat_exit', 'rug', 'water_channel', 'pond_lily',
+  'ice', 'snow', 'snow_grass', 'scree', 'frozen_shore', 'red_water', 'hideout_floor',
 ]);
 
 export function landmarkCoverage(def: MapDef, town = false) {

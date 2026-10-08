@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "snowdrop_shoot",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#386040", "#98b098", "#f8f8f8"],
+  "sport": ["#181818", "#988830", "#98b098", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release.",
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  }
+  "anim": { "intro": [[0, 8], [1, 12], [2, 5], [3, 16], [2, 8], [0, 8]], "idle": [[0, 140], [2, 10], [0, 6]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/snowdrop.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/snowdrop.py" },
+  "notes": "Crystal rule. REARING: two flat grey-green strap leaves with pale central stripes rise through the snow; between them a closed white bud in a small green spathe starts to nod. The bud lifts and nods. WHITE: the snowdrop bud is a white flower in the making (and it rises out of snow). Snow, leaves and scape stay fixed; only the signature part moves. No enclosed dark dots: every inner-tepal chevron joins its tip's outline. Sport: Galanthus nivalis Sandersii Group, yellow ovary and inner marks, so the dark slot becomes a yellow-olive; geometry stays identical."
 }

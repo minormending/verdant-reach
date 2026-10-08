@@ -64,8 +64,10 @@ export const ch7Scripts: Scripts = {
   ch7_crimson_lily: [
     ifFlags({ ch7_arrived: true, crimson_lily_done: false }, [
       say("TODO(text): A crimson giant water lily waits on the islet.", "NARRATOR"),
+      { op: "still", image: "crimson_lily" },
       say("TODO(text): Its unusual colour marks it as a sport.", "NARRATOR"),
       say("TODO(text): The furious lily rises to challenge the player.", "NARRATOR"),
+      { op: "stillClear" },
       { op: "wildBattle", species: "giant_water_lily", level: 40, sport: true, canLose: true },
       // Catch, wilt, flee and even a lost battle all consume the sole encounter.
       flag("crimson_lily_done"),
@@ -136,7 +138,7 @@ export const ch7Scripts: Scripts = {
   ch7_files: [
     ifFlags({ beat_calloway: true }, [
       ifFlags({ files_read: false }, [
-        { op: "still", image: "relay_pulse" },
+        { op: "still", image: "rootstock_files" },
         say("TODO(text): Rootstock's files record its first forced Quickening.", "NARRATOR"),
         say("TODO(text): That experiment was months before the Long Bloom.", "NARRATOR"),
         wait(30),
