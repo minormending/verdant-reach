@@ -229,6 +229,34 @@ describe("music", () => {
     expect(a.chords.split("|").at(-1)!.trim()).toBe("G");                     // never rests on C minor
   });
 
+  // Chapter 9.
+  it("thistledown: E dorian over a picked figure and woodblock ticks, rolling home on B7", () => {
+    const a = ARRANGEMENTS.thistledown;
+    expect([a.harmony, a.drums]).toEqual(["broken", "tick"]);
+    const pcs = new Set(parseSong(MUSIC_DEFS.thistledown).channels.p1!.events.map((e) => e.midi! % 12));
+    expect(pcs.has(1)).toBe(true);                                       // dorian C-sharp
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("B7");
+  });
+
+  it("canyon: a D minor gallop whose lead keeps leaping an octave", () => {
+    const a = ARRANGEMENTS.canyon;
+    expect(a.bass).toBe("gallop");
+    const p1 = parseSong(MUSIC_DEFS.canyon).channels.p1!.events;
+    const leaps = p1.filter((e, i) => i > 0 && Math.abs(e.midi! - p1[i - 1].midi!) >= 7).length;
+    expect(leaps).toBeGreaterThanOrEqual(6);
+  });
+
+  it("ridge: slow, drumless and long-breathed, harmonic minor, ending on E", () => {
+    const a = ARRANGEMENTS.ridge;
+    expect(a.bpm).toBeLessThanOrEqual(80);
+    const song = parseSong(MUSIC_DEFS.ridge);
+    expect(song.channels.noise).toBeUndefined();
+    const p1 = song.channels.p1!.events;
+    expect(p1.filter((e) => e.len >= 96).length).toBeGreaterThan(p1.length / 2); // halves and longer
+    expect(new Set(p1.map((e) => e.midi! % 12)).has(8)).toBe(true);    // G-sharp
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("E");
+  });
+
   it("arranges a 3/4 chart correctly", () => {
     const def = arrange({ bpm: 100, meter: 3, chords: "C | G", melody: "c2. | d2. |", harmony: "waltz", bass: "half", drums: "soft" });
     const song = parseSong(def);

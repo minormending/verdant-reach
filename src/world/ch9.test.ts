@@ -14,12 +14,12 @@ describe("Chapter 9 world", () => {
     expect(MAP_IDS.slice(MAP_IDS.indexOf("route_10"))).toEqual(CH9);
     for (const [id, w, h, outdoor, music, ambient] of [
       ["route_10", 50, 20, true, "route", "leaves"],
-      ["thistledown", 30, 26, true, "small_town", "leaves"],
+      ["thistledown", 30, 26, true, "thistledown", "leaves"],
       ["thistledown_greenhouse", 11, 9, false, "greenhouse", undefined],
       ["thistledown_market", 14, 9, false, "market", undefined],
       ["thistledown_house", 9, 8, false, "herbarium", undefined],
-      ["route_11", 28, 56, true, "route", "none"],
-      ["sanguine_ridge", 32, 28, true, "small_town", "none"],
+      ["route_11", 28, 56, true, "canyon", "none"],
+      ["sanguine_ridge", 32, 28, true, "ridge", "none"],
       ["sanguine_conservatory", 18, 20, false, "conservatory", "none"],
     ] as const) {
       const m = WORLD.maps[id];

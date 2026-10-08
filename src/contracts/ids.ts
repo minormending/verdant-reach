@@ -376,6 +376,7 @@ export const MUSIC = [
   "cedarhallow", "burnt_stand", "hollow", // Chapter 5
   "alpine", "red_lake", "hideout", // Chapter 7
   "relay_seized", // Chapter 8
+  "thistledown", "canyon", "ridge", // Chapter 9
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 

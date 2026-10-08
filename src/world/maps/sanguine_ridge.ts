@@ -2,7 +2,7 @@ import type { MapDef } from "../../contracts";
 import { OUTDOOR, when } from "../build";
 
 export const sanguine_ridge: MapDef = {
-  id: "sanguine_ridge", name: "SANGUINE RIDGE", outdoor: true, music: "small_town", ambient: "none",
+  id: "sanguine_ridge", name: "SANGUINE RIDGE", outdoor: true, music: "ridge", ambient: "none",
   border: "cliff", legend: OUTDOOR,
   tiles: [
     "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
