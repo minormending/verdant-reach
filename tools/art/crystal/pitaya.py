@@ -1,11 +1,13 @@
 """Original Crystal-rule Selenicereus undatus: pitaya_cutting -> dragon_fruit.
 
-Teen COILED: one three-ribbed (triangular) green stem segment. Its two outer
-rib margins are wavy and scalloped, the third rib runs down the middle as a
-lit crest, and tiny areoles sit in the notches as 2px white spine tufts
-(never dark dots). Short aerial roots grip the ground at the base, and the
-young tip, flushed magenta, curls up into a crook as if about to climb.
-The intro curls the tip tighter, flings it up, holds, and settles.
+Teen COILED: an upright cut segment of three-ribbed (triangular) stem,
+standing in a mound of soil and leaning toward the foe, with one rib turned
+to the viewer: a clean white crest line splits the lit green face from the
+black shade face. Both rib margins are deeply scalloped, with a 2px white
+areole tuft in every notch (never dark dots), and short aerial roots grip
+the soil. Only the top quarter curls: a young shoot from the top areole,
+bent into a short crook with a small magenta flush at its very tip. The
+intro curls the crook tighter, flicks it up, holds, and settles.
 Adult LUNGING: the climbing three-ribbed stem arches toward the foe and
 carries the huge night-blooming flower: a broad white cup of narrow pointed
 petals with green seams, ringed by long narrow yellow-green outer bracts with
@@ -174,29 +176,132 @@ def root(s, ctrl, w=2.0):
 
 # ------------------------------------------------------------ the teen ---
 
-CURL = [  # the young tip per frame: rest, wind-up (tighter), flung up, held, settle
-    [(27, 26), (29, 18), (36, 13), (44, 14), (49, 18), (51, 24)],
-    [(27, 26), (29, 19), (35, 15), (41, 16), (44, 20), (44, 24)],
-    [(27, 26), (27, 19), (30, 14), (36, 12), (41, 13), (44, 16)],
-    [(27, 26), (28, 18), (34, 13), (40, 13), (44, 16), (45, 20)],
-    [(27, 26), (29, 18), (36, 13), (45, 14), (50, 18), (52, 23)],
+def segment(s, ctrl, width, step=7.0, amp=4.0, crest=0.16, young=0.0, shade_rim=True,
+            shade_end=0.88, crest_min=7.0, n=200, tufts=True):
+    """A cut pitaya segment: a three-ribbed stem seen with one rib toward
+    the viewer, so two faces show.
+
+    Both outer rib margins (the silhouette) are deeply scalloped: rounded
+    humps between V notches every `step` px, staggered side to side. The
+    facing rib runs down the middle as a clean white crest line; the lit
+    face (left of it) is the stem green with a white rim broken at each
+    notch, the shade face (right of it) is black with a green reflected rim
+    along its humps. A 2px white areole tuft sits in every notch of both
+    margins, lined up along the rib edges. `young` > 0 is the radius of a
+    small magenta flush at the very tip; `shade_end` stops the shade face
+    short of the tip. Returns (pid, mask, path)."""
+    path = bez(ctrl, n)
+    d, nrm = _frame(path)
+    L = d[-1]
+    wf = width if callable(width) else (lambda t, w=width: w)
+    edges = {1: [], -1: []}
+    crest_pts = []
+    for i, ((x, y), (nx, ny)) in enumerate(zip(path, nrm)):
+        t = d[i] / L
+        hw = wf(t) / 2
+        a = amp * min(1.0, hw / 5.0)
+        for side, ph in ((1, 0.0), (-1, 0.5)):
+            f = (d[i] / step + ph) % 1.0
+            v = min(f, 1 - f) * 2
+            bump = v ** 0.6
+            off = max(0.8, hw + a * (bump - 0.75))
+            edges[side].append((x + side * nx * off, y + side * ny * off))
+        c = wf(t) * crest
+        crest_pts.append((x + nx * c, y + ny * c))
+    m = s.poly(edges[-1] + edges[1][::-1])
+    pid = s.part(m, base=1, k=0, line=0)
+    ks = int(len(path) * shade_end)
+    shade = s.poly(crest_pts[:ks] + edges[1][:ks][::-1]) & m
+    # notches on both margins
+    notches = []
+    for side, ph in ((1, 0.0), (-1, 0.5)):
+        kk = 0
+        while True:
+            dist = (kk - ph) * step
+            kk += 1
+            if dist < 1.5:
+                continue
+            if dist > L - 2:
+                break
+            j = min(range(len(d)), key=lambda q: abs(d[q] - dist))
+            notches.append((j, side))
+    yy, xx = np.mgrid[0:s.h, 0:s.w]
+
+    def disc(px_, py_, r):
+        (qx, qy), = s.T([(px_, py_)])
+        return (xx + 0.5 - qx) ** 2 + (yy + 0.5 - qy) ** 2 <= r * r
+    # lit rim along the left humps, broken at the notches
+    cut = np.zeros(m.shape, bool)
+    for j, side in notches:
+        if side == -1:
+            cut |= disc(*edges[-1][j], 2.2)
+    edge = m & ~erode(m, 1)
+    lit = edge & ~shade & ~cut
+    s.decal(lit, 3, on=[pid])
+    # the shade face: black, with a green reflected rim along its humps
+    s.decal(shade, 0, on=[pid], lock=True)
+    if shade_rim:
+        rcut = np.zeros(m.shape, bool)
+        for j, side in notches:
+            if side == 1:
+                rcut |= disc(*edges[1][j], 1.6)
+        s.decal(shade & ~erode(m, 2) & ~rcut, 1, on=[pid], lock=True)
+    # the facing rib: a clean white crest line between the two faces
+    wide = [i for i in range(len(path)) if wf(d[i] / L) >= crest_min]
+    if wide:
+        s.decal(s.line1(crest_pts[wide[0] + 2:wide[-1]]) & erode(m, 1), 3, on=[pid], lock=True)
+    if young:
+        # a small magenta flush at the very tip only
+        ex, ey = path[-1]
+        s.decal(disc(ex, ey, young) & m & ~shade, 2, on=[pid], lock=True)
+    # areole tufts in every notch, just inside the margin
+    if tufts:
+        safe = erode(m, 1)
+        for j, side in notches:
+            t = d[j] / L
+            if wf(t) < 7:
+                continue
+            (x, y), (nx, ny) = path[j], nrm[j]
+            hw = wf(t) / 2 - amp * min(1.0, wf(t) / 10.0) * 0.75
+            tx, ty = ny, -nx
+            p0 = (x + side * nx * (hw - 1.3) + tx * 0.6, y + side * ny * (hw - 1.3) + ty * 0.6)
+            p1 = (x + side * nx * (hw + 0.2) - tx * 0.3, y + side * ny * (hw + 0.2) - ty * 0.3)
+            s.decal(s.line1([p0, p1]) & safe, 3, on=[pid], lock=True)
+    return pid, m, path
+
+
+def soil(s, x0, x1, y=55):
+    """A shallow mound of dark soil the cutting stands in, two grit glints."""
+    m = s.poly([(x0, y + 0.6), (x0 + 3, y - 2.5), (x0 + 8, y - 3.6), (x1 - 8, y - 3.6),
+                (x1 - 3, y - 2.5), (x1, y + 0.6)])
+    pid = s.part(m, base=0, k=0, line=0)
+    s.decal(s.line1([(x0 + 5, y - 2), (x0 + 7, y - 2)]), 3, on=[pid], lock=True)
+    s.decal(s.line1([(x1 - 9, y - 1), (x1 - 7, y - 1)]), 3, on=[pid], lock=True)
+    return pid
+
+
+# the top quarter per frame: rest hook, wind-up (tighter), flicked up, held, settle
+SHOOT = [  # the new shoot per frame: rest crook, wind-up (tighter), flicked up, held, settle
+    [(30, 24), (29, 18), (31, 13), (35, 11), (38, 13), (38, 17)],
+    [(30, 24), (29, 19), (31, 15), (34, 14), (35, 17)],
+    [(30, 24), (29, 18), (29, 13), (31, 10)],
+    [(30, 24), (29, 18), (31, 13), (35, 11), (39, 12)],
+    [(30, 24), (29, 18), (32, 12), (36, 11), (39, 12), (41, 15)],
 ]
 
 
-def cutting_width(t):
-    if t < 0.15:
-        return 14.0 + 4.0 * t / 0.15
-    return 18.0 if t < 0.32 else 18.0 - 13.0 * ((t - 0.32) / 0.68) ** 0.75
-
-
 def cutting_front(frame=0):
+    """COILED: an upright cut segment standing in soil, leaning toward the
+    foe, with a young shoot from its top areole curled into a crook."""
     s = Spr(56, 56, SPAL)
-    s.ox = -2
-    root(s, [(34, 49), (29, 51), (24, 55)])
-    root(s, [(39, 49), (44, 51), (48, 55)])
-    body = [(36, 54), (37, 46), (34, 37), (29, 29)] + CURL[frame]
-    rib_stem(s, body, cutting_width, young=0.07)
-    root(s, [(34, 52), (31, 55)], w=2.4)
+    root(s, [(30, 50), (26, 52), (23, 55)])
+    root(s, [(38, 50), (42, 52), (45, 55)])
+    soil(s, 16, 51)
+    segment(s, SHOOT[frame], lambda t: 7.5 - 1.5 * t, step=5.0, amp=1.6, young=1.6, shade_end=1.0,
+            tufts=False, crest_min=99)
+    segment(s, [(36, 54), (35, 41), (32, 28), (31, 21)], 21.0, young=0.0)
+    root(s, [(31, 51), (28, 55)], w=2.4)
+    root(s, [(39, 51), (41, 55)], w=2.4)
     return tones(s)
 
 
@@ -372,13 +477,14 @@ FRONTS = {IDS[0]: (cutting_front, 5), IDS[1]: (adult_front, 5)}
 
 
 def cutting_back():
+    """From behind and above: the broad ribbed segment, cropped by the
+    bottom edge, its lit and shaded faces and scalloped margins, and the
+    new shoot curling up toward the foe (top right)."""
     s = Spr(48, 48, SPAL)
-    rib_stem(s, [(16, 62), (16, 40), (20, 22), (28, 10), (36, 5), (43, 8), (44, 15), (40, 18)],
-             lambda t: 30 if t < 0.35 else 30 - 23 * ((t - 0.35) / 0.65) ** 0.9, step=8.0, amp=2.8,
-             young=0.12)
-    root(s, [(3, 44), (1, 48)], w=3.0)
-    root(s, [(29, 44), (33, 48)], w=3.0)
-    return tones(s, open_bottom=True)
+    segment(s, [(26, 19), (27, 12), (31, 6), (37, 4), (42, 6), (44, 11)], lambda t: 9.0 - 1.5 * t,
+            step=6.0, amp=2.0, young=2.0, tufts=False, crest_min=99, shade_end=1.0)
+    segment(s, [(21, 62), (21, 44), (23, 27), (24, 17)], 38.0, step=9.0, amp=5.0)
+    return fill_holes(tones(s, open_bottom=True), 0)
 
 
 def flower_back(s, cx, cy, R, bx, by):
@@ -415,24 +521,25 @@ def adult_back():
 
 
 ICONS = {
-    # the crook-tipped stem: scalloped lit margin, crest, magenta tip, roots
+    # the upright ribbed segment: lit face, white crest, shade face, notched
+    # margins, a lit cut top, the young shoot's crook and the soil
     IDS[0]: [
         "................",
-        "................",
-        "......kkkkk.....",
-        ".....k31111k....",
-        "....k311kkk1k...",
-        "....k31k...k2k..",
-        "...kk31k...k2k..",
-        "...k311k....k...",
-        "...k3111k.......",
-        "..kk3111k.......",
-        "..k31111kk......",
-        "...k31111k......",
-        "..kk31111kk.....",
-        "..k3111111k.....",
-        ".k1kk1111kk1k...",
-        ".kk..kkkk..kk...",
+        "......kkk.......",
+        ".....k111k......",
+        ".....k1kk2k.....",
+        ".....k1k.kk.....",
+        ".....k1k........",
+        "...kkk1kkkk.....",
+        "..k33331kkkk....",
+        ".k311111kk1k....",
+        "..k11111kk1k....",
+        ".k311111kkk.....",
+        ".k311111kk1k....",
+        "..k11111kk1k....",
+        ".k311111kkk.....",
+        ".k311111kk1kk...",
+        ".k1kkkkkkkk1k...",
     ],
     # the white flower in side view, its toothed mouth to the foe and its
     # bracts flaring back from the tube; the arched stem and the fruit
@@ -490,9 +597,11 @@ def review_layout(art):
 
 
 POSES = {
-    IDS[0]: "COILED: one three-ribbed green stem segment with wavy, scalloped rib margins and 2px white "
-            "areole tufts in the notches; short aerial roots grip the ground and the magenta-flushed young "
-            "tip curls up and back over the body. The tip curls tighter, flings up and settles.",
+    IDS[0]: "COILED: an upright cut segment of three-ribbed stem in soil, leaning toward the foe: a lit "
+            "green face and a black shade face split by a white crest, deeply scalloped margins with 2px "
+            "white areole tufts in the notches, short aerial roots, and a young shoot from the top curled "
+            "into a short crook with a small magenta flush at its tip. The crook curls tighter, flicks up "
+            "and settles.",
     IDS[1]: "LUNGING: the climbing three-ribbed stem arches toward the foe and carries the huge night "
             "flower (a broad white cup of narrow petals, long yellow-green outer bracts with magenta tips, "
             "a starburst of stamens) and one magenta dragon fruit with green-tipped scales. The flower opens "
