@@ -112,6 +112,30 @@ centre of mass slightly right of centre (the plant leans toward the foe).
 - **The old art** stays reachable as `?art=classic`, and the current GBC
   Crystal art moves into a `crystal` pack.
 
+### R5b kit additions
+
+`kit2` now supplies sampled quadratic/cubic `bezier` centrelines,
+`tapered` curved pods/stems, `shaped`/`oval` material layers with configurable
+material seam ink, `lobed_leaf` (English-oak lobes and midrib), staggered
+`scale_texture` clipped to cupule fills, a connected `specular` ribbon, and
+`clean_clusters`/`icon_hop`. Every helper draws at the target resolution;
+icons have their own compositions, and backs have their own above/behind
+geometry. No v1 sprite is resized or mirrored.
+
+The three line builders write four intro keys (52 ticks, ending on 0),
+material sport maps and bounded moving regions. The common directional
+material pass preserves top-left lighting and binary alpha. Tests cover
+lobes, clipped scales, specular widths, singleton cleanup, sport maps,
+all-view face checks and starter geometry/cluster contracts.
+
+`creatures2/build.py oak chili lily --sheet` writes all nine starters at
+3×, including every intro key, back, both icons and sport, to
+`tools/art/review/creatures2_review.png`. The actual battle-scene draw path
+can be reviewed with `node tools/art/creatures2/review_battle.mjs`; its two
+320×180 software captures sit side by side in the **ignored**
+`tools/art/limezu/review/r5b_battle.png`. Licensed pixels never enter the
+original art contact sheet. Browser/e2e and blind-ID remain lead review.
+
 ## 7. Rollout
 
 1. **R5a, engine:** 64×64 front and back and 32×32 icons; battle and menu

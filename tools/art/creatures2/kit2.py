@@ -173,3 +173,100 @@ def write_species2(id_: str, *, front, back, icon, anim, sport, notes='',
             raise ValueError('invalid moving box')
     B.write_species(id_, arrays, meta, root)
     return True
+
+
+def bezier(points, steps=32):
+    """Sample a quadratic or cubic without antialiasing or random state."""
+    n = len(points)-1
+    return [tuple(sum(math.comb(n,k)*(1-t)**(n-k)*t**k*points[k][axis]
+                      for k in range(n+1)) for axis in (0,1))
+            for t in np.linspace(0,1,steps)]
+
+
+def tapered(image, points, widths, ramp):
+    """A curved stem/pod, rebuilt from its centreline at each pose."""
+    path = bezier(points, 48)
+    sides = [[], []]
+    for i,(x,y) in enumerate(path):
+        a,b = path[max(0,i-1)],path[min(len(path)-1,i+1)]
+        dx,dy = b[0]-a[0],b[1]-a[1]
+        length = max(.01,math.hypot(dx,dy))
+        width = float(np.interp(i/(len(path)-1),np.linspace(0,1,len(widths)),widths))/2
+        for side,sign in zip(sides,(-1,1)):
+            side.append((x-sign*dy/length*width,y+sign*dx/length*width))
+    return shaped(image,sides[0]+sides[1][::-1],ramp)
+
+
+def shaped(image, points, ramp, *, texture=False, ink=OUTLINE):
+    """Layer a directional material with its own overlap edge and lit sel-out."""
+    mask = canvas(image.width)
+    polygon(mask,points,'#ffffff')
+    part = light_top_left(mask,ramp)
+    if texture:
+        part = clustered_texture(part,ramp[1],seed=17,count=10,cluster=3)
+    image.alpha_composite(outline_pass(part,colour=ink,sel_out={ramp[-1]:ramp[1]}))
+    return image
+
+
+def oval(image, box, ramp, *, ink=OUTLINE):
+    mask = canvas(image.width); ellipse(mask,box,'#ffffff')
+    image.alpha_composite(outline_pass(light_top_left(mask,ramp),colour=ink,sel_out={ramp[-1]:ramp[1]}))
+    return image
+
+
+def lobed_leaf(image, base, tip, width, ramp):
+    """English-oak blade: rounded paired lobes and a visible material midrib."""
+    bx,by=base; tx,ty=tip; dx,dy=tx-bx,ty-by; length=max(1,math.hypot(dx,dy))
+    nx,ny=-dy/length,dx/length
+    profile=[(0,0),(.14,.22),(.21,.39),(.30,.40),(.34,.25),(.43,.48),
+             (.52,.48),(.56,.28),(.64,.43),(.73,.38),(.77,.21),(.86,.25),(1,0)]
+    points=[(bx+dx*t+nx*w*width,by+dy*t+ny*w*width) for t,w in profile]
+    points += [(bx+dx*t-nx*w*width,by+dy*t-ny*w*width) for t,w in profile[-2:0:-1]]
+    shaped(image,points,ramp)
+    stem(image,[(bx+dx*.16,by+dy*.16),(bx+dx*.83,by+dy*.83)],ramp[1],2)
+    return image
+
+
+def scale_texture(image, box, ramp, *, step=6):
+    """Staggered cupule scale chevrons, clipped to the existing cap material."""
+    a=np.asarray(image).copy(); x0,y0,x1,y1=map(round,box)
+    ink=canvas(image.width)
+    for row,y in enumerate(range(y0+3,y1-2,step)):
+        for x in range(x0+3+(row%2)*3,x1-2,step):
+            stem(ink,[(x,y),(x+2,y+2),(x+4,y+1)],ramp[1],1)
+            stem(ink,[(x,y-1),(x+2,y)],ramp[-1],1)
+    b=np.asarray(ink); colours=np.array([rgb_of(c) for c in ramp])
+    mask=(a[...,3]>0)&(b[...,3]>0)&(a[...,:3,None]==colours.T).all(axis=2).any(axis=2)
+    a[mask]=b[mask]; image.paste(Image.fromarray(a)); return image
+
+
+def specular(image, points, colour='#f4f0e6', width=2):
+    """One connected sheen ribbon on a glossy upper-left material plane."""
+    if width<2: raise ValueError('specular clusters need width >= 2')
+    return stem(image,bezier(points),colour,width)
+
+
+def clean_clusters(image):
+    """Merge singleton colour islands into an adjacent fill; keep alpha intact."""
+    from collections import deque
+    a=np.asarray(image).copy(); h,w=a.shape[:2]; seen=set()
+    for y in range(h):
+        for x in range(w):
+            if (x,y) in seen or not a[y,x,3]: continue
+            rgb=tuple(a[y,x,:3]); comp=[]; queue=deque([(x,y)]); seen.add((x,y))
+            while queue:
+                xx,yy=queue.popleft(); comp.append((xx,yy))
+                for dx,dy in ((1,0),(-1,0),(0,1),(0,-1)):
+                    nx,ny=xx+dx,yy+dy
+                    if 0<=nx<w and 0<=ny<h and (nx,ny) not in seen and a[ny,nx,3] and tuple(a[ny,nx,:3])==rgb:
+                        seen.add((nx,ny)); queue.append((nx,ny))
+            if len(comp)==1:
+                candidates=[a[ny,nx].copy() for nx,ny in ((x-1,y),(x,y-1),(x+1,y),(x,y+1))
+                            if 0<=nx<w and 0<=ny<h and a[ny,nx,3]]
+                if candidates:
+                    a[y,x]=min(candidates,key=lambda c:sum((int(c[k])-int(a[y,x,k]))**2 for k in range(3)))
+    return Image.fromarray(a)
+
+
+def icon_hop(image):
+    out=canvas(32); out.alpha_composite(image,(0,-2)); return out

@@ -92,7 +92,9 @@ def check_species(id_, entry, roster, all_hashes):
     def worst(rows):
         return max(rows,key=lambda r:{'PASS':0,'WARN':1,'FAIL':2}[r['status']])
     checks['outline'] = worst([dict(outline(a),frame=n) for n,a in enumerate(imgs['front']+imgs['back']+imgs.get('icon',[]))])
-    faces = [{'frame':n,**hit} for n,ix in enumerate(fronts) for hit in face_risk(ix,scale=64/56)['coordinates']]
+    faces = [{'frame':n, 'view':view, **hit}
+             for view in ('front','back','icon') for n,a in enumerate(imgs.get(view,[]))
+             for hit in face_risk(indexes(a),scale=a.shape[0]/56)['coordinates']]
     checks['face_risk'] = result('error',bool(faces),len(faces),coordinates=faces)
     checks['size_class'] = worst([dict(size_class(ix,meta['class']),frame=n) for n,ix in enumerate(fronts)]) if meta else result('error',True,'no species data stage/line')
     checks['grounding'] = worst([dict(result('error',geometry(ix)['bottom'] not in (61,62,63),geometry(ix)['bottom']),frame=n) for n,ix in enumerate(fronts)])

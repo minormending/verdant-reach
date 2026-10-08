@@ -1,15 +1,26 @@
 {
-  "format": "verdant.species/1",
+  "format": "verdant.species/2",
   "id": "green_chili",
-  "palette": ["#181818", "#205030", "#60b838", "#f8f8f8"],
-  "sport": ["#181818", "#201838", "#605078", "#f8f8f8"],
+  "palette": ["#2a2230", "#315249", "#344d48", "#547350", "#547e50", "#7eaa60", "#819c60", "#b4c780", "#bac886", "#f4f0e6"],
+  "sport": {
+    "#344d48": "#343643",
+    "#547350": "#4b485a",
+    "#819c60": "#72637c",
+    "#bac886": "#a293a5",
+    "#315249": "#3d354b",
+    "#547e50": "#5b4b68",
+    "#7eaa60": "#827191",
+    "#b4c780": "#b3a1bb"
+  },
   "frames": {
-    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
     "back": ["back.png"],
     "icon": ["icon.png", "icon__2.png"]
   },
-  "anim": { "intro": [[0, 6], [1, 5], [2, 14], [3, 4], [4, 4], [3, 4], [4, 6], [0, 8]], "idle": [[0, 110], [1, 10]] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/chili.py. Reference photo chili/teen.jpg by ALAMIN (CC BY 4.0), https://commons.wikimedia.org/wiki/File:Green_chili_pepper_on_plant_Bangladesh_1.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
-  "source": { "kind": "generated", "tool": "tools/art/crystal/chili.py" },
-  "notes": "LUNGING. Intro: the tail tip curls tight (wind-up, held), then flicks out straight and quivers like a flame; the calyx, leaves and body hold. The line's calyx accent is the index-1 green, lit by a white rim; the pod's gloss is a long white specular. Sport: 'Black Pearl'. Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves, glossy black fruit, purple flowers (indexes 1-2 only)."
+  "anim": { "intro": [[0, 8], [1, 8], [2, 12], [1, 6], [3, 8], [0, 10]] },
+  "credits": "Original pixel art for Verdant Reach (tools/art/creatures2/chili.py).",
+  "source": { "kind": "generated", "tool": "tools/art/creatures2/chili.py" },
+  "notes": "LUNGING five-petal Capsicum flower and comma-shaped green pod; COILED red shoulder and flame-hook tail. Lime calyx across the family; directional leaf planes and one connected glossy pod specular. Intro: flower neck/lead leaf thrust, then pod tail whips up and recoils, with a clustered ember on the adult. Sport: Capsicum annuum 'Black Pearl', purple flowers, near-black purple foliage and immature pods; fruit normally ripens red (the adult recolour evokes the cultivar's immature black-fruit phase). No faces.",
+  "size": { "front": 64, "back": 64, "icon": 32 },
+  "moving": [[42, 10, 64, 63]]
 }
