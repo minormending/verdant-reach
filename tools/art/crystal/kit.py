@@ -82,6 +82,8 @@ WHITE_PARTS: dict[str, str] = {
     "ghost_pipe": "ghost pipe (Monotropa uniflora) has no chlorophyll: the whole plant is waxy white",
     "edelweiss_bud": "edelweiss (Leontopodium nivale) is covered in white woolly hairs: the button bud is white felt",
     "edelweiss": "edelweiss (Leontopodium nivale) is covered in white woolly hairs: the star's bracts are white felt",
+    "snowdrop_shoot": "the snowdrop's closed bud is white, and it pushes up out of white snow",
+    "snowdrop": "the snowdrop (Galanthus nivalis) flower's tepals are pure white",
 }
 
 SIZES = {"front": 56, "back": 48, "icon": 16}

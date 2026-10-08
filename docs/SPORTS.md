@@ -195,3 +195,12 @@ Chapter 7 moss campion line (set in `tools/art/crystal/campion.py`; palettes are
 | moss_campion | f. alba (white-flowered form) | The same white-flowered form: the dome's blanket of stars turns cream; geometry and the green are identical. | `#50a040 #d8d0a8 #f8f8f8` |
 
 Botanical reference: [Wikipedia, Silene acaulis](https://en.wikipedia.org/wiki/Silene_acaulis) describes the dense, moss-like cushions of narrow bright-green leaves, and notes the flowers are usually pink but very rarely white. The cream (rather than pure white) mid tone keeps the flowers 15% apart from the shared highlight white, as the rules above require.
+Chapter 7 snowdrop line (set in `tools/art/crystal/snowdrop.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| snowdrop_bulb | Sandersii Group | Galanthus nivalis Sandersii Group (including 'Sandersii', 'Flavescens' and 'Lutescens'): the ovary and inner-segment marks are yellow instead of green. The dormant bulb has neither, so its olive-brown dark slot (tunic lines, spear shade) becomes the same yellow-olive; the cream-sage body and the white snow stay. Palette swap only. | `#988830 #b8c0a0 #f8f8f8` |
+| snowdrop_shoot | Sandersii Group | The same yellow-marked snowdrop: the deep-green dark slot (scape, spathe, leaf shade) becomes yellow-olive; the grey-green leaves and the white bud stay. | `#988830 #98b098 #f8f8f8` |
+| snowdrop | Sandersii Group | The same yellow-marked snowdrop: the ovary and the inverted-V marks on the inner tepals turn yellow-olive (the dark slot, which the scape shares); the white tepals and grey-green leaves are unchanged. | `#988830 #98b098 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Galanthus nivalis](https://en.wikipedia.org/wiki/Galanthus_nivalis) describes the green V- or U-shaped mark over the notch at each inner segment's tip, the papery spathe at the top of the scape, and the Sandersii Group, whose ovary and inner-segment marks are yellow instead of green. The yellow-olive shade, and its spread to the scape and leaf shading that share the dark slot, are an artistic interpretation within two colour slots.
