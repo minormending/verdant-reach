@@ -149,7 +149,8 @@ describe("Chapter 7 world", () => {
     for (const [id, team] of Object.entries(teams)) {
       const t = WORLD.trainers[id];
       expect(t.team.map((q) => [q.species, q.level])).toEqual(team);
-      for (const text of [t.intro, t.defeat, t.after]) expect(text).toContain("TODO(text)");
+      for (const text of [t.intro, t.defeat, t.after]) expect(text).toMatch(/^(?!.*TODO)\S.*\S$/);
+      if (id.startsWith("grunt")) expect([t.className, t.name]).toEqual(["ROOTSTOCK", "GRUNT"]);
       expect(t.portrait).toBe(id.startsWith("climber") ? "hiker" : id.startsWith("skier") ? "skier" : id.startsWith("grunt") ? "grunt" : "gardener");
       expect(t.music).toBe(id.startsWith("grunt") ? "battle_rootstock" : "battle_trainer");
     }

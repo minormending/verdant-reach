@@ -54,12 +54,12 @@ export const larchmere: MapDef = {
     { x: 26, y: 22, to: "larchmere_lodge", toX: 6, toY: 10, facing: "up" },
   ],
   npcs: [],
-  signs: [{ x: 17, y: 15, text: "LARCHMERE. BLOOM LAKE lies east, past the LAKESIDE LODGE." }],
+  signs: [{ x: 17, y: 15, text: "LARCHMERE, where the larches turn gold. BLOOM LAKE: east, past the LODGE." }],
   triggers: [
     { x: 26, y: 10, script: "ch7_cons7_door", when: when({ lake_calmed: false }) },
-    // The chalets are private homes (shared locked-door lines).
-    { x: 3, y: 5, script: "bg_door_c" }, { x: 9, y: 5, script: "hh_door_east" },
-    { x: 4, y: 22, script: "gc_door_b" }, { x: 10, y: 22, script: "hh_door_nw" },
+    // The chalets are private homes, each with its own Larchmere door script (lm_door_1..4).
+    { x: 3, y: 5, script: "lm_door_1" }, { x: 9, y: 5, script: "lm_door_2" },
+    { x: 4, y: 22, script: "lm_door_3" }, { x: 10, y: 22, script: "lm_door_4" },
   ],
   onEnter: "ch7_town_enter",
 };

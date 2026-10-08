@@ -79,7 +79,7 @@ export const route_9: MapDef = {
     { id: "mountaineer", sprite: "hiker", x: 8, y: 39, facing: "down", script: "q_lost_climber" },
   ],
   hidden: [{ x: 8, y: 8, item: "climber_pack" }, { x: 23, y: 11, item: "rain_jar" }],
-  signs: [{ x: 13, y: 53, text: "ROUTE 9. The LARCH PASS climbs north to LARCHMERE." }], triggers: [],
+  signs: [{ x: 13, y: 53, text: "ROUTE 9: THE LARCH PASS. North to LARCHMERE. Mind the scree!" }], triggers: [],
   encounters: { grass: { rate: 10, slots: [
     { species: "larch_seedling", weight: 25, minLevel: 32, maxLevel: 33 },
     { species: "campion_cushion", weight: 25, minLevel: 29, maxLevel: 29 },

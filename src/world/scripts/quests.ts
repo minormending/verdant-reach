@@ -705,31 +705,31 @@ export const handPollinatorOffer: ScriptCmd[] = [
 // Finding the hidden pack can precede the offer; only its return consumes it.
 const lostClimberCheck: ScriptCmd[] = [
   hasItem("climber_pack", [
-    say("TODO(text): The mountaineer recognises her missing pack.", "MOUNTAINEER"),
+    say("My pack! Frozen stiff, but that's it. You found it!", "MOUNTAINEER"),
     { op: "takeItem", item: "climber_pack" },
-    say("TODO(text): She thanks the player with rain jars and a Cold Snap.", "MOUNTAINEER"),
+    say("Here. My spare RAIN JARS, and a COLD SNAP. You've earned them.", "MOUNTAINEER"),
     give("rain_jar", 2),
     give("cold_snap"),
     completeQuest("lost_climber"),
-    say("TODO(text): The mountaineer can safely continue her climb.", "MOUNTAINEER"),
+    say("Now I can finish the climb. Properly packed, this time.", "MOUNTAINEER"),
   ], [
-    say("TODO(text): Search the snow higher up Route 9 for the lost pack.", "MOUNTAINEER"),
-    say("TODO(text): Bring the pack back to the mountaineer here.", "MOUNTAINEER"),
+    say("It's up in the snow, farther along ROUTE 9. Look for a lump in a drift.", "MOUNTAINEER"),
+    say("Bring it back here. I'll be waiting. And stamping my feet.", "MOUNTAINEER"),
   ]),
 ];
 const lostClimber: ScriptCmd[] = [
   byQuest("lost_climber", {
     fresh: [
-      say("TODO(text): The mountaineer lost her pack on the snowy slope.", "MOUNTAINEER"),
-      say("TODO(text): Her supplies are buried somewhere farther up Route 9.", "MOUNTAINEER"),
-      say("TODO(text): She asks the player to find and return the pack.", "MOUNTAINEER"),
+      say("A gust tore my pack clean off my back, up on the snowy slope.", "MOUNTAINEER"),
+      say("Rope, flask, the lot. It's buried somewhere higher up ROUTE 9.", "MOUNTAINEER"),
+      say("Could you find it for me? My knees won't take that climb twice.", "MOUNTAINEER"),
       startQuest("lost_climber"),
       ...lostClimberCheck,
     ],
     going: lostClimberCheck,
     finished: [
-      say("TODO(text): The mountaineer thanks the player for finding her supplies.", "MOUNTAINEER"),
-      say("TODO(text): She will fasten the pack securely on her next climb.", "MOUNTAINEER"),
+      say("Thanks again. I'd still be up there digging without you.", "MOUNTAINEER"),
+      say("I've clipped the pack on twice over. No gust is getting it now.", "MOUNTAINEER"),
     ],
   }),
 ];
