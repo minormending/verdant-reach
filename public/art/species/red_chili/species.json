@@ -20,7 +20,7 @@
   "anim": { "intro": [[0, 8], [1, 8], [2, 12], [1, 6], [3, 8], [0, 10]] },
   "credits": "Original pixel art for Verdant Reach (tools/art/creatures2/chili.py).",
   "source": { "kind": "generated", "tool": "tools/art/creatures2/chili.py" },
-  "notes": "LUNGING five-petal Capsicum flower and comma-shaped green pod; COILED red shoulder and flame-hook tail. Lime calyx across the family; directional leaf planes and one connected glossy pod specular. Intro: flower neck/lead leaf thrust, then pod tail whips up and recoils, with a clustered ember on the adult. Sport: Capsicum annuum 'Black Pearl', purple flowers, near-black purple foliage and immature pods; fruit normally ripens red (the adult recolour evokes the cultivar's immature black-fruit phase). No faces.",
+  "notes": "LUNGING five-petal Capsicum flower and comma-shaped green pod; COILED red shoulder and flame-hook tail. Lime calyx across the family; split midrib leaf planes and one connected glossy pod specular. Intro: the thin hooked flower neck thrusts its star six pixels toward the foe; the green tail curls nine pixels upward; the red flame hook whips while its ember rises to a distinct position in every key. Sport: Capsicum annuum 'Black Pearl', purple flowers, near-black purple foliage and immature pods; fruit normally ripens red (the adult recolour evokes the cultivar's immature black-fruit phase). No faces.",
   "size": { "front": 64, "back": 64, "icon": 32 },
   "moving": [[42, 10, 64, 63]]
 }

@@ -319,15 +319,30 @@ tips; their reason is recorded in the species notes. Local palette harmony
 passes for all nine starters. See CREATURES_V2.md §6 for kit additions and
 review commands.
 
-R5b validation currently exposes a cross-version pack fallback defect:
-`traced` has no oak icons and palette-only chili blossom/red chili
-bundles, so those v1 overrides inherit v2 base frame sizes/palettes. The
-Python full-bundle validator raises `palettes differ in length`; the
-TypeScript pack validation reports 20 size mismatches (one test fails;
-1604 pass). The loaders must resolve missing v1 files/metadata through the
-Crystal snapshot before the full bundle gates are green. This is outside
-the R5b worker's allowed file paths. Starter QA (zero errors), all 57 Python
-QA tests, typecheck and the production build pass. Full regeneration
-leaves every file under `public/art/` byte-identical; its final validation
-fails at this same fallback defect. Unrelated regenerated review sheets
-are restored, keeping the pilot diff focused.
+### R5b round 2 (2026-10-08)
+
+Starter feedback replaces diagonal material planes with per-form shading,
+warms the white materials, strengthens each intro key and braces the acorn
+at 27 degrees. The sapling shields forward; the oak crown heaves and its
+fist swings; the chili star thrusts on a thin hooked neck; the pods curl and
+whip with a drifting ember; the lily sepal peels, bud rears and petals open.
+The lily-pad back now has a wrapping near rim below a distinct bud and
+furled leaf. The original-art sheet adds rest/key comparisons at 3× and 1×.
+See CREATURES_V2.md §6 for helper details and ART.md §8 for inheritance.
+
+The cross-version fallback defect is fixed in Python artkit and the TS
+catalog: partial v1 overrides inherit from the Crystal v1 snapshot, never
+from the v2 base. Missing snapshots require complete overrides. Explicit
+`anim: null` remains an override. Regression checks cover native sizes,
+file provenance, inherited palette remapping and missing-snapshot errors.
+All nine starters pass size, palette, face and signature checks; deliberate
+oak lobes and the baby stages' foe-leaning centre of mass retain warnings.
+
+Round 2 verification: starter builder and full bundle validation pass;
+all 60 Python QA tests, typecheck, 1,607 Vitest tests and the production
+build pass. Full `build_all.py --regen` leaves every public art file
+byte-identical; incidental historical review sheets are restored. Both
+ignored battle captures are regenerated and inspected, and the licensed
+pack/config/review paths contain no tracked files. The requested headless
+playthrough cannot start in this sandbox (`listen EPERM 127.0.0.1`, zero
+beats); it still requires a run in an environment allowing local listeners.

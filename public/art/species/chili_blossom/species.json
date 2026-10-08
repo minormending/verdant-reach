@@ -1,15 +1,14 @@
 {
   "format": "verdant.species/2",
   "id": "chili_blossom",
-  "palette": ["#2a2230", "#344d48", "#547350", "#819c60", "#948d9e", "#bac886", "#c7c5bd", "#e9e5d5"],
+  "palette": ["#2a2230", "#344d48", "#547350", "#819c60", "#b8adbd", "#bac886", "#e2d8c4", "#f4f0e6"],
   "sport": {
     "#344d48": "#343643",
     "#547350": "#4b485a",
     "#819c60": "#72637c",
     "#bac886": "#a293a5",
-    "#948d9e": "#8f739d",
-    "#c7c5bd": "#b299c1",
-    "#e9e5d5": "#d5c3dd"
+    "#b8adbd": "#8f739d",
+    "#e2d8c4": "#b299c1"
   },
   "frames": {
     "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
@@ -19,7 +18,7 @@
   "anim": { "intro": [[0, 8], [1, 8], [2, 12], [1, 6], [3, 8], [0, 10]] },
   "credits": "Original pixel art for Verdant Reach (tools/art/creatures2/chili.py).",
   "source": { "kind": "generated", "tool": "tools/art/creatures2/chili.py" },
-  "notes": "LUNGING five-petal Capsicum flower and comma-shaped green pod; COILED red shoulder and flame-hook tail. Lime calyx across the family; directional leaf planes and one connected glossy pod specular. Intro: flower neck/lead leaf thrust, then pod tail whips up and recoils, with a clustered ember on the adult. Sport: Capsicum annuum 'Black Pearl', purple flowers, near-black purple foliage and immature pods; fruit normally ripens red (the adult recolour evokes the cultivar's immature black-fruit phase). No faces.",
+  "notes": "LUNGING five-petal Capsicum flower and comma-shaped green pod; COILED red shoulder and flame-hook tail. Lime calyx across the family; split midrib leaf planes and one connected glossy pod specular. Intro: the thin hooked flower neck thrusts its star six pixels toward the foe; the green tail curls nine pixels upward; the red flame hook whips while its ember rises to a distinct position in every key. Sport: Capsicum annuum 'Black Pearl', purple flowers, near-black purple foliage and immature pods; fruit normally ripens red (the adult recolour evokes the cultivar's immature black-fruit phase). No faces.",
   "size": { "front": 64, "back": 64, "icon": 32 },
   "moving": [[5, 10, 55, 57]]
 }

@@ -19,7 +19,7 @@ class StarterMaterialTests(unittest.TestCase):
         self.assertTrue(colour_set <= {K.rgb_of(c) for c in ramp+[K.OUTLINE]})
         self.assertGreater((a[...,3]>0).sum(),300)
         # The midrib runs through the blade in its own shadow material.
-        self.assertEqual(leaf.getpixel((28,38))[:3],K.rgb_of(ramp[1]))
+        self.assertEqual(leaf.getpixel((28,38))[:3],K.rgb_of(ramp[0]))
         cap=K.canvas();K.oval(cap,(10,20,52,48),ramp)
         before=np.asarray(cap).copy();K.scale_texture(cap,(10,20,52,48),ramp)
         after=np.asarray(cap)
@@ -42,6 +42,24 @@ class StarterMaterialTests(unittest.TestCase):
         cleaned=K.clean_clusters(image)
         self.assertEqual(cleaned.getpixel((20,20)),(131,156,115,255))
         np.testing.assert_array_equal(np.asarray(image)[...,3],np.asarray(cleaned)[...,3])
+
+    def test_form_bands_are_curved_connected_and_keep_binary_alpha(self):
+        ramp=K.material_ramp('#819c60')
+        mask=K.canvas();K.ellipse(mask,(10,10,54,56),'#ffffff')
+        for kind,axis in [('sphere',None),('cylinder',[(32,56),(32,10)]),('leaf',[(32,56),(32,10)])]:
+            with self.subTest(kind=kind):
+                shaded=np.asarray(K.shade_form(mask,ramp,kind,axis=axis))
+                np.testing.assert_array_equal(shaded[...,3],np.asarray(mask)[...,3])
+                colours=np.unique(shaded[shaded[...,3]>0][:,:3],axis=0)
+                self.assertEqual(len(colours),4)
+                for colour in colours:
+                    band=(shaded[...,:3]==colour).all(axis=2)&(shaded[...,3]>0)
+                    self.assertTrue(all(len(c)>1 for c in components(band)))
+        sphere=K.shade_form(mask,ramp)
+        self.assertEqual(sphere.getpixel((24,23))[:3],K.rgb_of(ramp[-1]))
+        # A reflected rim is one tone above the adjacent core shadow.
+        self.assertEqual(sphere.getpixel((51,45))[:3],K.rgb_of(ramp[1]))
+        self.assertRaises(ValueError,K.shade_form,mask,ramp,'unknown')
 
     def test_face_risk_checks_back_and_icon_views(self):
         for view,size in [('back',64),('icon',32)]:
@@ -93,6 +111,11 @@ class StarterMaterialTests(unittest.TestCase):
                 self.assertEqual(intro[-1][0],0)
                 # Signature motion changes the silhouette, not just highlight colour.
                 self.assertGreater(int(((fronts[0]==255)!=(fronts[2]==255)).sum()),0)
+                # A key silhouette must move at least three native pixels.
+                from scipy.ndimage import distance_transform_edt
+                base=fronts[0]!=255; key=fronts[2]!=255
+                displacement=max(distance_transform_edt(~base)[key].max(),distance_transform_edt(~key)[base].max())
+                self.assertGreaterEqual(displacement,3,id_)
                 old=K.ART/'packs/crystal/species'/id_/'species.json'
                 self.assertEqual(json.loads(old.read_text())['format'],'verdant.species/1')
 

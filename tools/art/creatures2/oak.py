@@ -24,40 +24,47 @@ def cap(im,x,y,w,h,peek=0):
 
 
 def acorn(f=0):
-    im=canvas(); peek=(0,1,3,-1)[f]
+    im=canvas(); peek=(0,3,7,-2)[f]
     shaped(im,[(32,48),(26,55),(18,59),(18,62),(25,62),(35,55)],ROOT)
     shaped(im,[(38,48),(40,55),(47,58),(49,62),(41,62),(33,56)],ROOT)
-    shaped(im,[(23,27),(39,25),(46,33),(49,42),(46,51),(37,57),(27,54),(20,46),(18,36)],NUT)
-    cap(im,15,23,31,16,peek)
-    stem(im,[(24,39),(26,43),(28,44)],NUT[-1],2)
-    return clean_clusters(im)
+    body=canvas()
+    shaped(body,[(23,27),(39,25),(46,33),(49,42),(46,51),(37,57),(27,54),(20,46),(18,36)],NUT)
+    cap(body,15,23,31,16,peek)
+    stem(body,[(24,39),(26,43),(28,44)],NUT[-1],2)
+    im.alpha_composite(body.rotate(27,resample=Image.Resampling.NEAREST,center=(35,55)))
+    braced=canvas(); braced.alpha_composite(im,(6,0))
+    return clean_clusters(braced)
 
 
 def sapling(f=0):
-    im=canvas(); peek=(0,2,4,-1)[f]
+    im=canvas(); peek=(0,2,4,-1)[f]; brace=(0,2,5,-1)[f]
     lobed_leaf(im,(40,38),(54,14),19,LEAF)
-    tapered(im,[(34,56),(40,45),(28,32),(28,23)],[12,12,9,8],BARK)
+    tapered(im,[(34,56),(46,43),(22,36),(28,23)],[12,12,9,8],BARK)
     shaped(im,[(33,52),(29,58),(20,61),(19,62),(30,62),(37,59),(47,62),(53,62),(46,57),(41,50)],BARK,texture=True)
     tapered(im,[(34,38),(23,40),(17,35)],[5,5,3],BARK)
     cap(im,21,16,28,15,peek)
-    lobed_leaf(im,(28,45),(10,24),22,LEAF)
+    lobed_leaf(im,(28-brace*.4,45-brace*.2),(10-brace,24-brace),16,LEAF)
     lobed_leaf(im,(44,49),(55,39),15,LEAF)
     return clean_clusters(im)
 
 
 def great(f=0):
-    im=canvas(); peek=(0,2,4,-1)[f]
+    im=canvas(); peek=(0,2,4,-1)[f]; heave=(0,1,3,-1)[f]; swing=(0,3,7,-2)[f]
     # Thick C-trunk, roots and an extended lead bough, never a straight pole.
-    shaped(im,[(37,25),(48,26),(43,42),(44,54),(51,59),(60,62),(47,63),(39,59),(29,63),(20,63),(30,56),(33,43)],BARK,texture=True)
-    tapered(im,[(37,39),(25,32),(10,39),(8,44)],[9,8,7,6],BARK)
+    shaped(im,[(37,25),(48,26),(43,42),(44,54),(51,59),(60,62),(47,63),(39,59),(29,63),(20,63),(30,56),(33,43)],BARK,texture=True,kind="cylinder",axis=[(39,59),(38,43),(42,26)])
+    tapered(im,[(37,39),(25,32),(10+swing*.4,39-swing),(8+swing*.4,44-swing)],[9,8,7,6],BARK)
     tapered(im,[(40,35),(53,36),(58,29)],[6,5,3],BARK)
     # A lobed canopy with coherent leaf planes, offset over the foe.
     tapered(im,[(40,34),(35,21),(17,14)],[8,8,5],BARK)
     tapered(im,[(39,29),(51,16),(58,14)],[7,6,4],BARK)
-    for base,tip,width in [((29,20),(15,6),15),((40,19),(42,0),14),((49,25),(61,10),14),((25,27),(3,17),13),((41,27),(33,10),14)]:
-        lobed_leaf(im,base,tip,width,LEAF)
-    shaped(im,[(7,44),(16,44),(19,49),(15,55),(11,57),(7,54),(5,49)],NUT)
-    cap(im,7,38,15,8,peek)
+    for box in [(17,14,29,26),(32,10,44,24),(48,18,59,29)]:
+        oval(im,(box[0]-heave*.5,box[1]-heave,box[2]+heave*.5,box[3]-heave),LEAF)
+    for base,tip,width in [((29,20),(15,6),13),((40,19),(42,0),12),((49,25),(61,10),12),((25,27),(3,17),11),((41,27),(33,10),12)]:
+        lobed_leaf(im,(base[0],base[1]-heave),(tip[0]+(-heave*.5 if tip[0]<32 else heave*.5),tip[1]-heave),width,LEAF)
+    fist=canvas()
+    shaped(fist,[(7,44),(16,44),(19,49),(15,55),(11,57),(7,54),(5,49)],NUT)
+    cap(fist,7,38,15,8,peek)
+    im.alpha_composite(fist,(round(swing*.4),-swing))
     stem(im,[(35,43),(34,50),(37,56)],BARK[0],2)
     return clean_clusters(im)
 
@@ -110,8 +117,8 @@ def build():
         write_species2(id_,front=fronts,back=[b],icon=[i,icon_hop(i)],
             anim={'intro':[[0,8],[1,8],[2,14],[1,6],[3,8],[0,8]]},
             sport={k:v for k,v in SPORT.items() if k in colours},
-            moving=[[0,0,55,45] if stage<2 else [0,27,28,52]],
+            moving=[[[0,12,58,48]],[[0,14,35,51]],[[0,0,64,36],[0,27,29,59]]][stage],
             tool='tools/art/creatures2/oak.py',
-            notes="BRACED cap-helmet acorn/shield sapling; LOOMING bough adult. English-oak lobes, staggered cupule scales, clustered warm bark, pale radicle feet. Cap lifts about its rear hinge then snaps below rest; the trunk and roots stay registered. Sport: Quercus robur 'Concordia', gold-green nut and butter-yellow leaves; bark and outline stay warm. No faces; the brim is an organ overlap, with no eye marks underneath. QA note: the sapling/adult reach 15 silhouette tips (one above the generic limit), all from deliberately paired English-oak lobes, not loose pixels.")
+            notes="BRACED cap-helmet acorn/shield sapling; LOOMING bough adult. English-oak lobes, staggered cupule scales, clustered warm bark, pale radicle feet. Intro: the braced acorn leans 27 degrees toward the foe and its cap tips about the rear hinge; the sapling lifts its lead leaf-shield; the adult crown heaves and widens as its acorn-fist swings. Roots stay planted. Sport: Quercus robur 'Concordia', gold-green nut and butter-yellow leaves; bark and outline stay warm. No faces; the brim is an organ overlap, with no eye marks underneath. QA note: the sapling/adult reach 16/18 silhouette tips in key poses (above the generic limit), all from deliberately paired English-oak lobes, not loose pixels.")
 
 if __name__=='__main__': build()

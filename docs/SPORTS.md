@@ -39,12 +39,12 @@ table and is kept as reference only (its values are the `classic` pack's sports)
 | oak_acorn | 'Concordia' golden oak (v2) | Quercus robur 'Concordia': gold-green acorn; cupule/bark and radicles unchanged. | nut `#c6a269 → #c8b46e` (four-tone map) |
 | oak_sapling | 'Concordia' golden oak (v2) | Quercus robur 'Concordia': butter-yellow leaves; brown cap and bark unchanged. | leaf `#7b9259 → #c4b15b` (four-tone map) |
 | great_oak | 'Concordia' golden oak (v2) | Quercus robur 'Concordia': butter-yellow canopy and gold-green acorn fist; bark unchanged. | leaf `#7b9259 → #c4b15b`; nut `#c6a269 → #c8b46e` |
-| chili_blossom | 'Black Pearl' (v2) | Capsicum annuum 'Black Pearl' (AAS winner 2006): purple corolla and near-black purple foliage. | petal `#e9e5d5 → #d5c3dd`; leaf/calyx `#819c60 → #72637c` |
+| chili_blossom | 'Black Pearl' (v2) | Capsicum annuum 'Black Pearl' (AAS winner 2006): purple corolla and near-black purple foliage. | petal mid `#e2d8c4 → #b299c1`; leaf/calyx `#819c60 → #72637c` |
 | green_chili | 'Black Pearl' (v2) | Capsicum annuum 'Black Pearl': glossy purple-black immature fruit and foliage; specular unchanged. | pod `#7eaa60 → #827191`; leaf/calyx `#819c60 → #72637c` |
 | red_chili | 'Black Pearl' (v2) | Capsicum annuum 'Black Pearl': adult recolour evokes its immature black-fruit phase (the cultivar's ripe fruit is red); purple-black foliage. | pod `#cb6b58 → #827191`; leaf/calyx `#819c60 → #72637c` |
-| lily_seedpod | 'Chromatella' yellow water lily (v2) | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887), a cultivated relative of Victoria: yellow bud and cream-gold sepal interiors. | rose `#c58a9b → #c7b36f`; cream `#eee6d3 → #eee0ae` |
-| lily_pad | 'Chromatella' yellow water lily (v2) | Nymphaea x marliacea 'Chromatella', a Victoria relative: yellow bud, bronze-toned pad; water sheen unchanged. | rose `#c58a9b → #c7b36f`; leaf `#839c73 → #a49b68`; cream `#eee6d3 → #eee0ae` |
-| giant_water_lily | 'Chromatella' yellow water lily (v2) | Nymphaea x marliacea 'Chromatella', a Victoria relative: yellow flowers over bronze-toned leaves; water sheen unchanged. | rose `#c58a9b → #c7b36f`; leaf `#839c73 → #a49b68`; cream `#eee6d3 → #eee0ae` |
+| lily_seedpod | 'Chromatella' yellow water lily (v2) | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887), a cultivated relative of Victoria: yellow bud and cream-gold sepal interiors. | rose `#c58a9b → #c7b36f`; cream mid `#e2d8c4 → #d5c68b` |
+| lily_pad | 'Chromatella' yellow water lily (v2) | Nymphaea x marliacea 'Chromatella', a Victoria relative: yellow bud, bronze-toned pad; water sheen unchanged. | rose `#c58a9b → #c7b36f`; leaf `#839c73 → #a49b68`; cream mid `#e2d8c4 → #d5c68b` |
+| giant_water_lily | 'Chromatella' yellow water lily (v2) | Nymphaea x marliacea 'Chromatella', a Victoria relative: yellow flowers over bronze-toned leaves; water sheen unchanged. | rose `#c58a9b → #c7b36f`; leaf `#839c73 → #a49b68`; cream mid `#e2d8c4 → #d5c68b` |
 | dandelion_bud | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#387838 #f0a0c0 #f8f8f8` |
 | dandelion | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#405028 #e888b0 #f8f8f8` |
 | dandelion_clock | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#305838 #d098b8 #f8f8f8` |
@@ -177,3 +177,8 @@ Chapter 6 vanilla line (set in `tools/art/crystal/vanilla.py`; palettes are dark
 | vanilla_orchid | 'Variegata' | The same cream-striped Vanilla planifolia form as vanilla_vine. Leaf faces and orchid segments take pale cream-green; the stake and long green capsules retain an olive dark tone. Shared white stays reserved for rims and gloss, with identical geometry. | `#586040 #d0d8a0 #f8f8f8` |
 
 Botanical references: [University of California Riverside Botanic Gardens, Fall 2021 plant list](https://gardens.ucr.edu/sites/g/files/rcwecm4706/files/2021-09/Online%20Fall%202021%20Plant%20List%209.21.2021.pdf) lists Vanilla planifolia 'Variegata' with succulent leaves striped creamy white and pale yellow-green flowers. [UF/IFAS, Vanilla Growing in South Florida (HS1348)](https://ask.ifas.ufl.edu/publication/HS1348) describes the fleshy climbing vine, oval pointed leaves, aerial roots, cream-green flowers with a modified lip, and elongated green capsules. The exact cream-green palette is an artistic interpretation of variegation within two colour slots.
+
+R5b round 2 warms white materials to lilac shadow `#b8adbd`, cream mid
+`#e2d8c4` and warm lit `#f4f0e6`. Sports recolour the shadow and mid tones;
+the shared warm highlight and glossy/water specular stay unchanged. Cultivar
+choices and the oak material sport maps are unchanged.

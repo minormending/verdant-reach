@@ -123,7 +123,7 @@ icons have their own compositions, and backs have their own above/behind
 geometry. No v1 sprite is resized or mirrored.
 
 The three line builders write four intro keys (52 ticks, ending on 0),
-material sport maps and bounded moving regions. The common directional
+material sport maps and bounded moving regions. The per-form
 material pass preserves top-left lighting and binary alpha. Tests cover
 lobes, clipped scales, specular widths, singleton cleanup, sport maps,
 all-view face checks and starter geometry/cluster contracts.
@@ -135,6 +135,40 @@ can be reviewed with `node tools/art/creatures2/review_battle.mjs`; its two
 320×180 software captures sit side by side in the **ignored**
 `tools/art/limezu/review/r5b_battle.png`. Licensed pixels never enter the
 original art contact sheet. Browser/e2e and blind-ID remain lead review.
+
+### R5b round 2: starter feedback
+
+`shade_form(mask, ramp, kind="sphere" | "cylinder" | "leaf", axis=…,
+light=(-1,-1))` quantises surface normals into solid bands. Ovoids use a
+curved terminator, an offset elliptical highlight and a one-pixel reflected
+rim inside the lower-right edge. Cylinders follow their sampled centreline;
+leaves split at a darkest-tone midrib with a lighter lit edge. Overlap seams
+use material shadows; `clean_contact_seams` merges small enclosed dark
+remnants that could suggest eyes or mouths. `light_top_left` is reserved
+for the flat lily-pad surface. Cupule scales follow the cap's curved rows.
+White materials now use `#b8adbd / #e2d8c4 / #f4f0e6`, keeping the pink lily
+crown and cultivar sports.
+
+The acorn leans 27 degrees toward the foe with planted radicles and a low
+front brim; its cap tips up at the key. The sapling has a stronger C-trunk
+and lifts its leaf-shield. The great oak heaves and widens its crown while
+swinging the acorn-fist. The chili blossom lunges on a thin hooked neck,
+the green tail curls upward, and the red hook whips beside an ember at a
+new location each frame. The seedpod peels a cream sepal, the lily-pad bud
+rears on its stalk, and the giant lily opens its reflexed petals outward.
+Every signature key changes the silhouette by at least three native pixels.
+The lily-pad back separates its wrapping upturned near rim, rearing bud
+and furled leaf. All views retain the original outline and pass face QA.
+
+The review sheet keeps its four-key/back/icon/sport row and adds a second
+row per species comparing front 0 with the longest-held intro key at 3×
+and 1×. The two real battle draw-path captures are regenerated in the ignored
+LimeZu review folder. Tests cover form-band count and connected clusters,
+three-pixel signature displacement and all nine bundle contracts.
+
+Pack overrides inherit only from the same species format; partial v1 packs
+over these v2 starters use the Crystal snapshot. See **ART.md §8,
+Same-format inheritance** for the runtime and Python validation rule.
 
 ## 7. Rollout
 

@@ -6,11 +6,11 @@ IDS=['chili_blossom','green_chili','red_chili']
 LEAF=['#344d48','#547350','#819c60','#bac886']
 GREEN=['#315249','#547e50','#7eaa60','#b4c780']
 RED=['#703a50','#a24b51','#cb6b58','#e49c76']
-PETAL=['#948d9e','#c7c5bd','#e9e5d5']
+PETAL=['#b8adbd','#e2d8c4','#f4f0e6']
 SPEC='#f4f0e6'
 PURPLE=['#3d354b','#5b4b68','#827191','#b3a1bb']
 SPORTLEAF=['#343643','#4b485a','#72637c','#a293a5']
-SPORT=dict(zip(LEAF,SPORTLEAF)) | dict(zip(GREEN,PURPLE)) | dict(zip(RED,PURPLE)) | dict(zip(PETAL,['#8f739d','#b299c1','#d5c3dd']))
+SPORT=dict(zip(LEAF,SPORTLEAF)) | dict(zip(GREEN,PURPLE)) | dict(zip(RED,PURPLE)) | dict(zip(PETAL[:2],['#8f739d','#b299c1']))
 
 
 def blade(im,base,tip,width,ramp=LEAF):
@@ -19,8 +19,8 @@ def blade(im,base,tip,width,ramp=LEAF):
             (bx+dx*.62+nx*width*.35,by+dy*.62+ny*width*.35),tip,
             (bx+dx*.62-nx*width*.35,by+dy*.62-ny*width*.35),
             (bx+dx*.3-nx*width*.46,by+dy*.3-ny*width*.46)]
-    shaped(im,points,ramp)
-    stem(im,[(bx+dx*.15,by+dy*.15),(bx+dx*.78,by+dy*.78)],ramp[1],2)
+    shaped(im,points,ramp,kind="leaf",axis=[base,tip])
+    stem(im,[(bx+dx*.15,by+dy*.15),(bx+dx*.78,by+dy*.78)],ramp[0],2)
 
 
 def calyx(im,cx,cy,w=24):
@@ -48,22 +48,22 @@ def flower(im,cx,cy,r,turn=-18,front=True):
 
 
 def blossom(f=0):
-    im=canvas(); lift=(0,2,4,-1)[f]
-    blade(im,(38,47),(53,29),17)
-    tapered(im,[(37,59),(41,40),(29,29),(24,29)],[7,8,6,4],LEAF)
-    shaped(im,[(36,56),(27,61),(25,62),(35,62),(40,60),(48,62),(53,62),(45,57)],LEAF)
-    blade(im,(39,52),(18,48-lift),18)
-    flower(im,26,34-lift*.5,16)
-    tapered(im,[(41,40),(42,23),(49,17),(52,22-lift)],[3,3,3,2],LEAF)
-    return clean_clusters(im)
+    im=canvas(); lift=(0,3,6,-2)[f]
+    blade(im,(38,47),(51,33),15)
+    tapered(im,[(37,59),(44,26),(30-lift,13),(26-lift,30)],[6,5,3,3],LEAF)
+    shaped(im,[(36,56),(27,61),(25,62),(35,62),(40,60),(48,62),(51,62),(45,57)],LEAF)
+    blade(im,(39,52),(18,48-lift),15)
+    flower(im,26-lift,34-lift*.3,15)
+    tapered(im,[(41,40),(44,26),(48,26),(49,29-lift*.3)],[3,3,3,2],LEAF)
+    return clean_contact_seams(im)
 
 
 def pod(stage,f=0):
-    im=canvas(); flick=(0,3,6,-2)[f]; ramp=GREEN if stage==1 else RED
+    im=canvas(); flick=(0,4,9,-3)[f]; ramp=GREEN if stage==1 else RED
     if stage==1:
         blade(im,(27,38),(10,40),18)
         blade(im,(33,26),(52,16),17)
-        tapered(im,[(24,26),(25,51),(40,62),(55,51)],[20,22,18,10],ramp)
+        tapered(im,[(24,26),(25,51),(40,62),(55,51)],[19,21,17,9],ramp)
         tapered(im,[(47,57),(59,57),(59,43),(55-flick*.3,38-flick)],[11,10,6,2],ramp)
         calyx(im,23,23)
         tapered(im,[(24,16),(27,10),(36,11)],[4,4,3],LEAF)
@@ -71,14 +71,15 @@ def pod(stage,f=0):
     else:
         blade(im,(26,25),(3,34),17)
         blade(im,(29,20),(44,10),16)
-        tapered(im,[(25,25),(22,48),(42,64),(57,52)],[25,26,22,15],ramp)
+        tapered(im,[(25,25),(22,48),(42,64),(57,52)],[24,25,21,14],ramp)
         tapered(im,[(49,58),(70,45),(60,18-flick),(50-flick*.3,27-flick)],[17,14,7,3],ramp)
         calyx(im,24,17,29)
         tapered(im,[(25,11),(28,0),(36,2),(40,5)],[5,5,4,3],LEAF)
         specular(im,[(17,28),(17,38),(22,44)],SPEC,3)
         # Detached ≥2px ember echoing the red tip, with a soft material edge.
-        shaped(im,[(43,20-flick*.5),(46,16-flick*.5),(48,20-flick*.5),(45,23-flick*.5)],RED)
-    return clean_clusters(im)
+        ex,ey=[(45,20),(47,15),(49,9),(44,4)][f]
+        shaped(im,[(ex-2,ey),(ex,ey-4),(ex+2,ey),(ex,ey+3)],RED)
+    return clean_contact_seams(im)
 
 
 def back(stage):
@@ -95,7 +96,7 @@ def back(stage):
         calyx(im,39,24,34)
         tapered(im,[(39,18),(40,6),(52,5),(56,9)],[6,6,4,3],LEAF)
         specular(im,[(25,36),(25,49),(22,56)],SPEC,3)
-    return clean_clusters(im)
+    return clean_contact_seams(im)
 
 
 def icon(stage):
@@ -110,7 +111,7 @@ def icon(stage):
         calyx(im,11,10,17)
         tapered(im,[(11,7),(14,3),(20,4)],[3,3,2],LEAF)
         stem(im,[(8,16),(9,22),(12,25)],SPEC,2)
-    return clean_clusters(im)
+    return clean_contact_seams(im)
 
 
 def build():
@@ -121,5 +122,5 @@ def build():
             anim={'intro':[[0,8],[1,8],[2,12],[1,6],[3,8],[0,10]]},
             moving=[[5,10,55,57]] if stage==0 else [[42,10,64,63]],
             sport={k:v for k,v in SPORT.items() if k in colours},tool='tools/art/creatures2/chili.py',
-            notes="LUNGING five-petal Capsicum flower and comma-shaped green pod; COILED red shoulder and flame-hook tail. Lime calyx across the family; directional leaf planes and one connected glossy pod specular. Intro: flower neck/lead leaf thrust, then pod tail whips up and recoils, with a clustered ember on the adult. Sport: Capsicum annuum 'Black Pearl', purple flowers, near-black purple foliage and immature pods; fruit normally ripens red (the adult recolour evokes the cultivar's immature black-fruit phase). No faces.")
+            notes="LUNGING five-petal Capsicum flower and comma-shaped green pod; COILED red shoulder and flame-hook tail. Lime calyx across the family; split midrib leaf planes and one connected glossy pod specular. Intro: the thin hooked flower neck thrusts its star six pixels toward the foe; the green tail curls nine pixels upward; the red flame hook whips while its ember rises to a distinct position in every key. Sport: Capsicum annuum 'Black Pearl', purple flowers, near-black purple foliage and immature pods; fruit normally ripens red (the adult recolour evokes the cultivar's immature black-fruit phase). No faces.")
 if __name__=='__main__': build()

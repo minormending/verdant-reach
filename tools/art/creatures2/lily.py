@@ -5,11 +5,11 @@ from kit2 import *
 IDS=['lily_seedpod','lily_pad','giant_water_lily']
 LEAF=['#354c4e','#54735f','#839c73','#b7c898']
 ROSE=['#765362','#956077','#c58a9b','#e4b2b4']
-CREAM=['#9692a3','#c9c7c5','#eee6d3']
+CREAM=['#b8adbd','#e2d8c4','#f4f0e6']
 SPEC='#f4f0e6'
 GOLD=['#786044','#a48b50','#c7b36f','#e6d899']
 BRONZE=['#514944','#786c4d','#a49b68','#cfca93']
-SPORT=dict(zip(ROSE,GOLD)) | dict(zip(CREAM,['#a4996b','#d5c68b','#eee0ae'])) | dict(zip(LEAF,BRONZE))
+SPORT=dict(zip(ROSE,GOLD)) | dict(zip(CREAM[:2],['#a4996b','#d5c68b'])) | dict(zip(LEAF,BRONZE))
 
 
 def petal_blade(im,base,tip,width,ramp=CREAM,bend=0):
@@ -17,7 +17,7 @@ def petal_blade(im,base,tip,width,ramp=CREAM,bend=0):
     profile=[(0,0),(.18,.30),(.45,.50),(.73,.34),(1,0)]
     points=[(bx+dx*t+nx*(w*width+bend*math.sin(t*math.pi)),by+dy*t+ny*(w*width+bend*math.sin(t*math.pi))) for t,w in profile]
     points += [(bx+dx*t+nx*(-w*width+bend*math.sin(t*math.pi)),by+dy*t+ny*(-w*width+bend*math.sin(t*math.pi))) for t,w in profile[-2:0:-1]]
-    shaped(im,points,ramp,ink=ramp[0])
+    shaped(im,points,ramp,ink=ramp[0],kind="leaf" if ramp==LEAF else "sphere",axis=[base,tip])
 
 
 def bud(im,x,y,w,h):
@@ -35,7 +35,7 @@ def tray(im,box):
     x0,y0,x1,y1=box
     # Far upturned rim above the floor; broad near wall below it.
     oval(im,(x0,y0,x1,y1),ROSE)
-    oval(im,(x0+2,y0+2,x1-2,y1-4),LEAF,ink=LEAF[1])
+    oval(im,(x0+2,y0+2,x1-2,y1-4),LEAF,ink=LEAF[1],kind="flat")
     stem(im,[(x0+6,y0+4),(x0+15,y0+2),(x1-13,y0+2),(x1-5,y0+5)],LEAF[-1],2)
     # Clear water sheen along the lit top-left lip, never scattered dots.
     stem(im,[(x0+7,y0+5),(x0+17,y0+3),(x0+24,y0+3)],SPEC,2)
@@ -50,32 +50,32 @@ def tray(im,box):
 
 
 def seedpod(f=0):
-    im=canvas(); peel=(0,3,6,-1)[f]
-    petal_blade(im,(36,48),(56,37),17,ROSE)
+    im=canvas(); peel=(0,4,9,-2)[f]
+    petal_blade(im,(36,48),(56,37),17,CREAM)
     petal_blade(im,(34,50),(49,62),16,ROSE)
     petal_blade(im,(32,51),(17,62),16,ROSE)
     bud(im,22,21,24,35)
     petal_blade(im,(29,49),(11,34-peel),22,CREAM,bend=2)
-    return clean_clusters(im)
+    return clean_contact_seams(im)
 
 
 def pad(f=0):
-    im=canvas(); peel=(0,3,6,-1)[f]
+    im=canvas(); peel=(0,4,9,-2)[f]
     tray(im,(7,47,61,61))
     petal_blade(im,(46,49),(49,20),16,LEAF,bend=3)
     stem(im,[(47,44),(49,34),(51,24)],ROSE[1],2)
-    tapered(im,[(33,51),(38,35),(26,24)],[7,7,5],LEAF)
-    bud(im,17,12,21,29)
+    tapered(im,[(33,51),(38,35-peel*.5),(26-peel*.4,24-peel*.4)],[7,7,5],LEAF)
+    bud(im,17-peel*.4,12-peel*.4,21,29)
     petal_blade(im,(29,37),(10,26-peel),17,CREAM,bend=2)
-    return clean_clusters(im)
+    return clean_contact_seams(im)
 
 
 def bloom(im,cx,cy,peel=0,back=False):
     # Broad cream outer petals, turned in 3/4; rose inner petals form the crown.
     for tip,width in [((cx-17,cy-21),13),((cx-5,cy-29),12),((cx+9,cy-27),12),((cx+24,cy-17),11)]:
         petal_blade(im,(cx,cy),tip,width,CREAM)
-    petal_blade(im,(cx,cy),(cx-27,cy+2-peel),12,CREAM,bend=-3)
-    petal_blade(im,(cx+1,cy+2),(cx+27,cy+8-peel*.5),12,CREAM,bend=3)
+    petal_blade(im,(cx,cy),(cx-27-peel*.3,cy+2-peel),10,CREAM,bend=-3)
+    petal_blade(im,(cx+1,cy+2),(cx+27+peel*.3,cy+8-peel),10,CREAM,bend=3)
     for tip,width in [((cx-13,cy-15),11),((cx-4,cy-22),12),((cx+8,cy-20),12),((cx+17,cy-12),11)]:
         petal_blade(im,(cx,cy+3),tip,width,ROSE)
     petal_blade(im,(cx+3,cy+1),(cx-14,cy+14),10,CREAM,bend=2)
@@ -87,11 +87,11 @@ def bloom(im,cx,cy,peel=0,back=False):
 
 
 def giant(f=0):
-    im=canvas();peel=(0,3,6,-1)[f]
+    im=canvas();peel=(0,4,9,-2)[f]
     tray(im,(0,49,63,63))
     tapered(im,[(35,51),(39,34),(28,26)],[11,10,8],LEAF)
     bloom(im,33,29,peel)
-    return clean_clusters(im)
+    return clean_contact_seams(im)
 
 
 def back(stage):
@@ -101,16 +101,19 @@ def back(stage):
         petal_blade(im,(23,55),(1,45),24,ROSE)
         petal_blade(im,(41,54),(61,29),28,CREAM)
     else:
-        tray(im,(-3,36,66,72))
+        tray(im,(-3,41,66,72))
         if stage==1:
-            petal_blade(im,(15,57),(8,18),29,LEAF,bend=-3)
+            petal_blade(im,(20,55),(11,14),22,LEAF,bend=-5)
             tapered(im,[(28,52),(33,33),(42,26)],[9,10,6],LEAF)
             bud(im,30,7,25,34)
             petal_blade(im,(42,32),(62,18),18,CREAM)
+            # Near wall wraps the bottom in front of the rearing stalk.
+            shaped(im,[(-3,54),(11,60),(31,63),(53,60),(66,54),(66,64),(-3,64)],ROSE,kind="cylinder",axis=[(0,59),(63,59)])
+            stem(im,[(0,54),(12,59),(31,61),(52,59),(63,54)],LEAF[-1],3)
         else:
             tapered(im,[(30,57),(32,37),(38,29)],[13,11,8],LEAF)
             bloom(im,34,32,back=True)
-    return clean_clusters(im)
+    return clean_contact_seams(im)
 
 
 def icon(stage):
@@ -132,7 +135,7 @@ def icon(stage):
             petal_blade(im,(16,18),tip,13,CREAM)
         for tip in [(9,9),(16,5),(23,10)]:
             petal_blade(im,(16,20),tip,10,ROSE)
-    return clean_clusters(im)
+    return clean_contact_seams(im)
 
 
 def build():
@@ -141,7 +144,7 @@ def build():
         colours={'#%02x%02x%02x'%tuple(p[:3]) for a in fronts+[b,i] for p in np.asarray(a).reshape(-1,4) if p[3]}
         write_species2(id_,front=fronts,back=[b],icon=[i,icon_hop(i)],
             anim={'intro':[[0,8],[1,8],[2,14],[1,6],[3,8],[0,8]]},
-            moving=[[0,18,35,54]] if stage<2 else [[0,20,64,46]],
+            moving=[[[0,18,35,54]],[[0,5,42,52]],[[0,12,64,48]]][stage],
             sport={k:v for k,v in SPORT.items() if k in colours},tool='tools/art/creatures2/lily.py',
-            notes="REARING spiny rose bud, cream sepal peeled as a lead arm; tilted Victoria tray with upturned rose rim, drainage notch, radial veins and a connected water sheen. LOOMING white-to-pink crown and reflexed petal arms. Intro: the lead sepal peels open and closes; adult outer petals spread and settle while the tray stays planted. Sport: yellow flowers and bronze-toned leaves after Nymphaea x marliacea 'Chromatella' (a cultivated water-lily relative, not a Victoria cultivar). Outline and water specular are unchanged. No faces.")
+            notes="REARING spiny rose bud, cream sepal peeled as a lead arm; tilted Victoria tray with upturned rose rim, drainage notch, radial veins and a connected water sheen. LOOMING white-to-pink crown and reflexed petal arms. Intro: the seedpod cream sepal peels up, the pad bud rears on its stalk, and adult outer petals open outward and settle while the tray stays planted. The pad back shows the bud and furled leaf above a wrapping near rim. Sport: yellow flowers and bronze-toned leaves after Nymphaea x marliacea 'Chromatella' (a cultivated water-lily relative, not a Victoria cultivar). Outline and water specular are unchanged. No faces.")
 if __name__=='__main__': build()
