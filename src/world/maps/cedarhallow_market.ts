@@ -1,20 +1,11 @@
 import type { MapDef } from "../../contracts";
+import { marketInterior } from "./market";
 import { LEGEND, say, type Scripts } from "../build";
 
 export const cedarhallow_market: MapDef = {
   id: "cedarhallow_market", name: "MARKET", outdoor: false, music: "market",
   border: "void", legend: LEGEND,
-  tiles: [
-    "WWOOWWOOWW",
-    "WKKKKKKKKW",
-    "WwCwwwwwwW",
-    "WwCwwDDwwW",
-    "WwCwwDDwwW",
-    "WpwwwwwwYW",
-    "WpDwrrwwpW",
-    "WWWWEWWWWW",
-  ],
-  structures: [],
+  ...marketInterior(),
   warps: [{ x: 4, y: 7, to: "cedarhallow", toX: 26, toY: 17, facing: "down" }],
   npcs: [
     { id: "clerk", sprite: "shopkeeper", x: 1, y: 3, facing: "right", movement: "static", script: "ch5_market_clerk" },

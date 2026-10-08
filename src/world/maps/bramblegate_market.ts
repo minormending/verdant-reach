@@ -1,4 +1,5 @@
 import type { MapDef } from "../../contracts";
+import { marketInterior } from "./market";
 import { LEGEND, ifFlags, ifNight, say, type Scripts } from "../build";
 
 // The MARKET: a narrow brick shop. The clerk sits behind the counter on the
@@ -11,18 +12,7 @@ export const bramblegate_market: MapDef = {
   music: "market",
   border: "void",
   legend: LEGEND,
-  tiles: [
-    // x: 0123456789
-    "WWOOWWOOWW", // 0
-    "WKKKKKKKKW", // 1
-    "WwCwwwwwwW", // 2
-    "WwCwwDDwwW", // 3
-    "WwCwwDDwwW", // 4
-    "WpwwwwwwYW", // 5
-    "WpDwrrwwpW", // 6
-    "WWWWEWWWWW", // 7
-  ],
-  structures: [],
+  ...marketInterior(),
   warps: [{ x: 4, y: 7, to: "bramblegate", toX: 4, toY: 14, facing: "down" }],
   npcs: [
     { id: "clerk", sprite: "shopkeeper", x: 1, y: 3, facing: "right", movement: "static", script: "market_clerk" },

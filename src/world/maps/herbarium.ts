@@ -22,21 +22,47 @@ export const herbarium: MapDef = {
   border: "void",
   legend: LEGEND,
   tiles: [
-    "WWOOWWOOWWWIIIIIIIII", // 0
-    "WUwKKKwccKKIYPPPPPYI", // 1
-    "WwwwwwwwwwwIgggggggI", // 2
-    "WJwwDDDwwwwIgPPPPPgI", // 3
-    "WQwwwwwwwwwIgggggggI", // 4
-    "WJwwwwwJQJwIggggggYI", // 5
-    "WwwwwwwwwwwgggggggPI", // 6
-    "WwwwwwwhDDhIggggggPI", // 7
-    "WcwwwwwwwwwIgPPgggPI", // 8
-    "WcwrrrwwwwKIggggggPI", // 9
-    "WwwrrrwwwwKI%%%gggPI", // 10
-    "WKwrrrwwwwKIYPPpggYI", // 11
-    "WWWWEWWWWWWIIIIIIIII", // 12
+    "W¤¤¤¤¤¤¤¤¤¤I¤¤¤¤¤¤¤I",
+    "WUw¤¤¤¤¤¤¤¤I¤¤¤¤¤¤¤I",
+    "WwwwwwwwwwwIgggggggI",
+    "WwwwwwwwwwwIgggggggI",
+    "WwwwwwwwwwwIgggggggI",
+    "WwwwwwwwwwwIgggggggI",
+    "WwwwwwwwwwwggggggggI",
+    "WwwwwwwwwwwIgggggggI",
+    "WwwwwwwwwwwIgggggggI",
+    "WwwwwwwwwwwIgggggggI",
+    "WwwwwwwwwwwI%%%ggggI",
+    "WwwwwwwwwwwIgggggggI",
+    "WWWWEWWWWWWIIIIIIIII",
   ],
-  structures: [],
+  structures: [
+    { key: "prop_bookcase", x: 3, y: 0 },
+    { key: "prop_window", x: 6, y: 0 },
+    { key: "prop_bookcase", x: 9, y: 0 },
+    { key: "prop_table_small", x: 1, y: 3 },
+    { key: "prop_table_small", x: 1, y: 4 },
+    { key: "prop_table_small", x: 1, y: 5 },
+    { key: "prop_desk", x: 7, y: 4 },
+    { key: "prop_table_small", x: 9, y: 5 },
+    { key: "prop_table_small", x: 8, y: 7 },
+    { key: "prop_chair", x: 7, y: 6 },
+    { key: "prop_rug_large", x: 3, y: 8 },
+    { key: "prop_cabinet_glass", x: 9, y: 9 },
+    { key: "prop_cabinet_glass", x: 1, y: 7 },
+    { key: "prop_bookcase", x: 1, y: 10 },
+    { key: "prop_window", x: 14, y: 0 },
+    { key: "prop_plant_tall", x: 12, y: 1 },
+    { key: "prop_planter_box", x: 14, y: 1 },
+    { key: "prop_desk", x: 14, y: 2 },
+    { key: "prop_desk", x: 16, y: 2 },
+    { key: "prop_plant_small", x: 18, y: 5 },
+    { key: "prop_plant_tall", x: 17, y: 7 },
+    { key: "prop_plant_small", x: 18, y: 9 },
+    { key: "prop_plant_tree", x: 12, y: 10 },
+    { key: "prop_planter_box", x: 14, y: 10 },
+    { key: "prop_plant_small", x: 18, y: 11 },
+  ],
   warps: [
     { x: 4, y: 12, to: "fallowfield", toX: 20, toY: 7, facing: "down" },
     { x: 1, y: 1, to: "herbarium_roof", toX: 9, toY: 10, facing: "left" },

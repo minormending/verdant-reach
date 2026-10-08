@@ -1,4 +1,5 @@
 import type { MapDef } from "../../contracts";
+import { marketInterior } from "./market";
 import { LEGEND } from "../build";
 
 // The MARKET: the big shop, with two counters. West: pods and
@@ -11,20 +12,7 @@ export const larchmere_market: MapDef = {
   music: "market",
   border: "void",
   legend: LEGEND,
-  tiles: [
-    // x: 0         1
-    // x: 01234567890123
-    "WWOOWWOOWWOOWW", // 0
-    "WKKKKYwwYKKKKW", // 1 pods and flasks | seed packets and sprays
-    "WwwwKwwwwKwwwW", // 2 clerks at 2,2 and 11,2
-    "WCCCwwwwwwCCCW", // 3 two counters
-    "WwwwwwDDwwwwwW", // 4 a display of glass pods
-    "WwwwwwDDwwwwwW", // 5
-    "WYwwwwwwwwwwpW", // 6
-    "WpDhwwrrwwhDpW", // 7
-    "WWWWWWEEWWWWWW", // 8
-  ],
-  structures: [],
+  ...marketInterior(true),
   warps: [
     { x: 6, y: 8, to: "larchmere", toX: 13, toY: 12, facing: "down" },
     { x: 7, y: 8, to: "larchmere", toX: 13, toY: 12, facing: "down" },

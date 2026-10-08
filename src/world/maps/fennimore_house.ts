@@ -1,11 +1,10 @@
 import type { MapDef } from "../../contracts";
 import { LEGEND, type Scripts } from "../build";
 
-// OLD FENNIMORE's cottage: fifty years of botany in one room. Shelves of field
-// notes, the hearth with his armchair and rug, a bench with the old microscope,
-// more shelves, and pots on every free tile.
-//
-//            0123456789
+// FENNIMORE's cottage: journals and seed packets against the back wall,
+// a hearth, a reading rug, and the microscope and letter tables to the east.
+// His position at 5,3 and the entry at 4,6 stay clear. The one-tile
+// reading alcove at 7,1 keeps the fixed seed-packet sign at 8,1 accessible.
 export const fennimore_house: MapDef = {
   id: "fennimore_house",
   name: "FENNIMORE's HOUSE",
@@ -14,16 +13,29 @@ export const fennimore_house: MapDef = {
   border: "void",
   legend: LEGEND,
   tiles: [
-    "WWOOWWWOOW", // 0
-    "WKKKFKKwJW", // 1
-    "WhwrrrwwQW", // 2
-    "WDwrrrwwJW", // 3
-    "WDhwwwwwwW", // 4
-    "WKwwwwwwKW", // 5
-    "WZDwwwwKKW", // 6
-    "WWWWEWWWWW", // 7
+    "W¤¤¤¤¤¤¤¤W",
+    "W¤¤¤¤¤¤w¤W",
+    "WwwwwwwwwW",
+    "WwwwwwwwwW",
+    "WwwwwwwwwW",
+    "WwwwwwwwwW",
+    "WwwwwwwwwW",
+    "WWWWEWWWWW",
   ],
-  structures: [],
+  structures: [
+    { key: "prop_bookcase", x: 1, y: 0 },
+    { key: "prop_fireplace", x: 4, y: 0 },
+    { key: "prop_sack", x: 8, y: 0 },
+    { key: "prop_window", x: 6, y: 0 },
+    { key: "prop_rug_large", x: 3, y: 3 },
+    { key: "prop_table_small", x: 8, y: 2 },
+    { key: "prop_table_small", x: 8, y: 3 },
+    { key: "prop_chair", x: 2, y: 2 },
+    { key: "prop_table_small", x: 1, y: 3 },
+    { key: "prop_bed_single", x: 1, y: 4 },
+    { key: "prop_bookcase", x: 7, y: 5 },
+    { key: "prop_plant_small", x: 6, y: 6 },
+  ],
   warps: [{ x: 4, y: 7, to: "hedgerow", toX: 13, toY: 8, facing: "down" }],
   npcs: [
     { id: "fennimore", sprite: "fennimore", x: 5, y: 3, facing: "down", movement: "static", script: "pg_fennimore" },

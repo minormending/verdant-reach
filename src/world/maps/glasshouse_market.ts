@@ -1,4 +1,5 @@
 import type { MapDef } from "../../contracts";
+import { marketInterior } from "./market";
 import { LEGEND, ifFlags, ifNight, say, type Scripts } from "../build";
 
 // The GLASSHOUSE MARKET: the big shop, with two counters. West: pods and
@@ -11,20 +12,7 @@ export const glasshouse_market: MapDef = {
   music: "market",
   border: "void",
   legend: LEGEND,
-  tiles: [
-    // x: 0         1
-    // x: 01234567890123
-    "WWOOWWOOWWOOWW", // 0
-    "WKKKKYwwYKKKKW", // 1 pods and flasks | seed packets and sprays
-    "WwwwKwwwwKwwwW", // 2 clerks at 2,2 and 11,2
-    "WCCCwwwwwwCCCW", // 3 two counters
-    "WwwwwwDDwwwwwW", // 4 a display of glass pods
-    "WwwwwwDDwwwwwW", // 5
-    "WYwwwwwwwwwwpW", // 6
-    "WpDhwwrrwwhDpW", // 7
-    "WWWWWWEEWWWWWW", // 8
-  ],
-  structures: [],
+  ...marketInterior(true),
   warps: [
     { x: 6, y: 8, to: "glasshouse_city", toX: 33, toY: 15, facing: "down" },
     { x: 7, y: 8, to: "glasshouse_city", toX: 33, toY: 15, facing: "down" },
