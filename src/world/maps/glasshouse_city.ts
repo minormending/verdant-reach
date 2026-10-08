@@ -47,7 +47,7 @@ export const glasshouse_city: MapDef = {
     "IT..f.l...*.|-.y..----..*.-|---Y---Y--TI", // 20
     "Il.y...*..l.||||||||--||||||l--------llI", // 21
     "IT..*.y..f..*.y....--.*..f..y..*..*...TI", // 22
-    "IT------------------------------------TI", // 23 the south boulevard
+    "IT--------------------------------------", // 23 the south boulevard
     "Il.f.-...#######*y.---................lI", // 24
     "IT.@@@@@.#GkGkG#...--..@@@@..@@@@.@@@@TI", // 25 NURSERY GARDEN | townhouses
     "IT.@@@@@.#GkGkG#l..--.f@@@@.m@@@@Y@@@@TI", // 26
@@ -75,6 +75,7 @@ export const glasshouse_city: MapDef = {
     { key: "city_house", x: 34, y: 25 },       // door 35,28 (locked)
   ],
   warps: [
+    { x: 39, y: 23, to: "route_10", toX: 1, toY: 10, facing: "right" },
     { x: 0, y: 16, to: "route_4", toX: 50, toY: 12, facing: "left" },
     { x: 0, y: 17, to: "route_4", toX: 50, toY: 13, facing: "left" },
     { x: 19, y: 35, to: "route_5", toX: 14, toY: 1, facing: "down" },
@@ -88,6 +89,7 @@ export const glasshouse_city: MapDef = {
     { x: 24, y: 28, to: "glasshouse_house", toX: 4, toY: 6, facing: "up" },
   ],
   npcs: [
+    { id: "east_gate_guard", sprite: "hiker", x: 38, y: 23, facing: "left", script: "ch9_east_gate", visibleWhen: when({ ch8_done: false }) },
     { id: "grunt_r0_1", sprite: "grunt", x: 4, y: 7, facing: "down", trainer: "grunt_r0_1", sight: 2,
       visibleWhen: when({ ch8_started: true, beat_wren: false }) },
     { id: "grunt_r0_2", sprite: "grunt", x: 6, y: 7, facing: "down", trainer: "grunt_r0_2", sight: 2,

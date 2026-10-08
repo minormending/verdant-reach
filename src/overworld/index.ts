@@ -23,7 +23,7 @@ import { rollEncounter, type EncounterKind } from "./encounters";
 import { tryRaftMove } from "./raft";
 import { slidePath } from "./ice";
 import {
-  DIRS, OPPOSITE, buildMap, checkCond, refreshLegend, inSight, isMatWarp, isWalkable, tileAt, tileProps, tryMove,
+  DIRS, OPPOSITE, buildMap, checkCond, filledPitFlag, refreshLegend, inSight, isMatWarp, isWalkable, tileAt, tileProps, tryMove,
   triggerAt, warpAt, type MapRuntime,
 } from "./map";
 import {
@@ -224,6 +224,7 @@ class Overworld implements Scene {
       id = def.id;
     }
     this.map = buildMap(def);
+    refreshLegend(this.map, this.ctx.state.flags);
     this.mapId = id;
     const p = this.player;
     p.x = x; p.y = y; p.step = null; p.facing = facing; p.bumpAnim = 0;
@@ -873,10 +874,15 @@ class Overworld implements Scene {
     if (!(await ctx.ui.yesNo(UPROOT.prompt))) return;
     const dir = this.player.facing;
     const push = tryPushBoulder(this.map, boulder, dir, hasSaxifrage, (x, y) => !!this.npcAt(x, y));
-    if (push.kind !== "push") { await ctx.ui.say(push.text); return; }
+    if (push.kind !== "push" && push.kind !== "fill") { await ctx.ui.say(push.text); return; }
     ctx.audio.playSfx("prune");
     this.shaker.start(4);
     await boulder.begin(dir, NPC_SCRIPT_FRAMES);
+    if (push.kind === "fill") {
+      ctx.state.flags[filledPitFlag(this.mapId, push.x, push.y)] = true;
+      this.npcs = this.npcs.filter((n) => n !== boulder);
+      refreshLegend(this.map, ctx.state.flags);
+    }
   }
 
   /** Field move flow: tile property -> key item -> prompt -> hop + particles -> flag. */

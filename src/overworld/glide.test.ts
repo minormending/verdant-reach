@@ -155,3 +155,47 @@ describe("SEED GLIDE", () => {
   });
 
 });
+
+describe("Chapter 9 SEED GLIDE visits", () => {
+  it.each([
+    ["route_10", 8], ["relay_roof", 8], ["thistledown", 9], ["thistledown_house", 9],
+    ["thistledown_market", 9], ["thistledown_greenhouse", 9], ["route_11", 9],
+    ["sanguine_ridge", 10], ["sanguine_greenhouse", 10], ["sanguine_conservatory", 10],
+  ] as [MapId, number][])("infers visits from %s and its healing point", (map, count) => {
+    const state = fresh();
+    state.position.map = map;
+    state.bag.pruning_shears = 1;
+    expect(visitedGlideMaps(state)).toHaveLength(count);
+    state.position.map = "player_home";
+    state.heal.map = map;
+    expect(visitedGlideMaps(state)).toHaveLength(count);
+  });
+
+  it("does not unlock Thistledown from an open east gate, or the Ridge from BRAM", () => {
+    const state = fresh();
+    state.flags.ch8_done = true;
+    state.position.map = "route_10";
+    expect(glideLanding(WORLD, state, "thistledown")).toBeUndefined();
+    for (const flag of ["ch9_arrived", "tumbleweed_seen", "rival_5_done", "visited_thistledown"]) {
+      state.flags = { [flag]: true };
+      expect(visitedGlideMaps(state)).toHaveLength(9);
+      expect(glideLanding(WORLD, state, "thistledown")).toBeDefined();
+      expect(glideLanding(WORLD, state, "sanguine_ridge")).toBeUndefined();
+    }
+  });
+
+  it("infers the Ridge from its mark and completion scenes, excluding the current town", () => {
+    for (const flag of ["beat_rook", "got_fig_root", "ch9_done", "visited_sanguine_ridge"]) {
+      const state = fresh();
+      state.flags[flag] = true;
+      expect(visitedGlideMaps(state)).toHaveLength(10);
+      expect(glideLanding(WORLD, state, "sanguine_ridge")).toMatchObject({ x: 6, y: 12 });
+    }
+    const state = fresh();
+    state.marks = ["resin_mark"];
+    expect(visitedGlideMaps(state)).toHaveLength(10);
+    state.position.map = "sanguine_ridge";
+    expect(glideLanding(WORLD, state, "sanguine_ridge")).toBeUndefined();
+    expect(glideLanding(WORLD, state, "thistledown")).toMatchObject({ x: 6, y: 11 });
+  });
+});

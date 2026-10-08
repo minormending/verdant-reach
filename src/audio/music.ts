@@ -341,6 +341,52 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
       o5f4 a-4 o6c4 f4 | o6e-2 c2 | o6d2. r4 | o5b4 o6d4 o5g4 d4 |`,
   },
 
+  // ------------------------------------------------------------------ thistledown
+  // A desert-edge town in tumbleweed country: dusty and warm, a little lonely.
+  // E dorian (the raised C-sharp, over an A major chord, keeps it from going
+  // sad), a soft lead that lingers on long notes, a picked "broken" guitar
+  // figure, a slow half-time bass and woodblock ticks. Ends on B7 to roll
+  // back into E minor.
+  thistledown: {
+    bpm: 92, harmony: "broken", harmonyTone: "v6 @1 q4", bass: "half", bassTone: "v12 q6", drums: "tick", drumTone: "v4", fillEvery: 0,
+    chords: "Em | Em | D | Em | C | G | A | Em | C | G | D | Bm | C | A | Em | B7",
+    melody: `${SOFT}
+      o5e2 g4 b4 | o5a4. g8 e2 | o5f+4 a4 d2 | o5e2. r4 |
+      o5e4 g4 o6c4 o5b4 | o5a4 g4 d2 | o5c+4 e4 a4 g4 | o5e2. r4 |
+      o5g4. a8 b4 o6c4 | o6d2 o5b4 g4 | o5a4 f+4 d4 e8 f+8 | o5f+2 d4 o4b4 |
+      o5c4 e4 g4 a4 | o5c+2 e4 a4 | o5g4 f+8 e8 b4 e4 | o5d+2 f+4 b4 |`,
+  },
+
+  // ------------------------------------------------------------------ canyon
+  // Route 11, the red canyon climbing to Sanguine Ridge: an adventurous D
+  // minor gallop. The lead keeps leaping up an octave and scrambling back,
+  // a climber finding holds; the bass gallops, the drums drive, and the last
+  // two bars hang on A major (the dominant) before the climb starts again.
+  canyon: {
+    bpm: 120, harmony: "arp8", harmonyTone: "v5 @1 q5", bass: "gallop", bassTone: "v13 q5", drums: "drive", drumTone: "v7",
+    chords: "Dm | Dm | C | Dm | Bb | C | Dm | A | Dm | F | C | Gm | Bb | C | A | A",
+    melody: `${LEAD}
+      o5d4 o6d4 c8 o5a8 f4 | o5f4. e8 d2 | o5c4 o6c4 o5g4 e4 | o5a2. r4 |
+      o5b-4 o6b-4 f4 d4 | o6e4 c4 o5g2 | o5a4 o6a4 f4 d4 | o5e2. r4 |
+      o5d8 e8 f8 g8 a4 o6a4 | o6c4 o5a4 f4 a4 | o5g4 o6g4 e4 c4 | o5d4 g4 b-4 o6d4 |
+      o6d4. c8 o5b-4 a4 | o5g4 o6c4 e4 g4 | o6e2 c+4 o5a4 | o5e2 c+4 e4 |`,
+  },
+
+  // ------------------------------------------------------------------ ridge
+  // Sanguine Ridge, the ancient dragon trees and the final test: slow, noble
+  // and old. A minor with the major E (the harmonic minor's G-sharp) for
+  // gravity; long half and whole notes that rise to a high D and sink back,
+  // over a held pad and a slow bass, with no drums. Ends on E, the dominant.
+  ridge: {
+    bpm: 76, harmony: "pad", harmonyTone: "v5 @1 q8 ~6", bass: "half", bassTone: "v12 q8", drums: "none",
+    chords: "Am | F | G | Am | Am | Dm | E | E | F | G | Am | C | Dm | E | Am | E",
+    melody: `v10 @1 q8 ~12
+      o5a2 e2 | o5f2. e8 f8 | o5g2 d2 | o5e1 |
+      o5a4 b4 o6c2 | o6d2. c4 | o5b2 g+2 | o5e1 |
+      o5f4 a4 o6c2 | o6d2 o5b2 | o6c4 o5b4 a2 | o5g2 e4 g4 |
+      o5f2 a4 o6d4 | o6e2. d4 | o6c2 o5b4 a4 | o5g+2. r4 |`,
+  },
+
   // ------------------------------------------------------------------ slice end
   // Bittersweet, hopeful: F major with a borrowed B-flat minor sigh.
   slice_end: {

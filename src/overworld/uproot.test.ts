@@ -1,17 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Dir, GameContext, MapDef, MapId, Scene, WorldData } from "../contracts";
-import { REQUIRED_ITEMS } from "../contracts";
+import { REQUIRED_ITEMS, TILES, tilePath } from "../contracts";
 import { DATA } from "../data";
-import { newGameState } from "../save";
+import { createSave, newGameState } from "../save";
 import { Actor } from "./actor";
 import { createOverworldScene } from "./index";
-import { buildMap } from "./map";
+import { buildMap, filledPitFlag, isWalkable, refreshLegend, tileAt, type MapRuntime } from "./map";
+import { TileCatalog } from "./autotile";
+import { TileLayer } from "./tilelayer";
 import { UPROOT, reachableBoulderTiles, solveBoulderPuzzle, tryPushBoulder } from "./uproot";
 
 function board(tiles: string[]): MapDef {
   return {
     id: "route_1", name: "TEST", outdoor: true, music: "route", border: "grass",
-    tiles, legend: { "#": "wall", ".": "grass", "~": "water", v: "ledge_down" },
+    tiles, legend: { "#": "wall", ".": "grass", "~": "water", v: "ledge_down", P: "pit", I: "ice", M: "mat_exit" },
     structures: [], warps: [], npcs: [], signs: [], triggers: [],
   };
 }
@@ -63,6 +65,41 @@ describe("UPROOT push rules", () => {
 });
 
 describe("BFS puzzle solver", () => {
+  it("cannot cross a forced warp beside a pit, but solves it with the warp off the path", () => {
+    const def = board(["########", "#...P..#", "########"]);
+    def.warps = [{ x: 3, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    const stone = { x: 2, y: 1 }, player = { x: 1, y: 1 }, goal = { x: 6, y: 1 };
+    expect(solveBoulderPuzzle(buildMap(def), [stone], player, goal)).toBe(false);
+    // A side pocket puts the warp off the required crossing.
+    def.tiles[0] = "#.######";
+    def.warps[0].x = 1;
+    def.warps[0].y = 0;
+    expect(solveBoulderPuzzle(buildMap(def), [stone], player, goal)).toBe(true);
+  });
+
+  it("cannot push from a forced warp arrival", () => {
+    const def = board(["########", "#...P..#", "########"]);
+    def.warps = [{ x: 2, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    expect(solveBoulderPuzzle(buildMap(def), [{ x: 3, y: 1 }], { x: 1, y: 1 }, { x: 6, y: 1 })).toBe(false);
+    expect(reachableBoulderTiles(buildMap(def), [], { x: 1, y: 1 })).toContain("2,1");
+  });
+
+  it("stops ice traversal at a forced warp", () => {
+    const def = board(["#######", "#.III.#", "#######"]);
+    def.warps = [{ x: 3, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    expect(solveBoulderPuzzle(buildMap(def), [], { x: 1, y: 1 }, { x: 5, y: 1 })).toBe(false);
+    expect(reachableBoulderTiles(buildMap(def), [], { x: 1, y: 1 })).toContain("3,1");
+  });
+
+  it("allows crossing exit mats sideways, but cannot continue after arriving downward", () => {
+    const def = board(["#####", "#...#", "#MM.#", "#...#", "#####"]);
+    def.warps = [{ x: 1, y: 2, to: "route_2", toX: 1, toY: 1 }];
+    expect(solveBoulderPuzzle(buildMap(def), [], { x: 1, y: 2 }, { x: 3, y: 2 })).toBe(true);
+    // Both mats share the warp; a wall prevents walking around them.
+    def.tiles = ["#####", "#..##", "#MM##", "#..##", "#####"];
+    expect(solveBoulderPuzzle(buildMap(def), [], { x: 1, y: 1 }, { x: 1, y: 3 })).toBe(false);
+  });
+
   it.each([
     { name: "one boulder needs the side pocket", tiles: ["#######", "###.###", "#.....#", "#...###", "#######"],
       stones: [{ x: 3, y: 2 }], goal: { x: 5, y: 2 }, solvable: true },
@@ -95,27 +132,32 @@ describe("BFS puzzle solver", () => {
 
 // Exercise the real scene's actors/loading/interaction flow without a canvas.
 type TestOverworld = Scene & {
-  npcs: Actor[]; player: Actor;
+  npcs: Actor[]; player: Actor; map: MapRuntime;
   loadMap(id: MapId, x: number, y: number, dir: Dir): void;
   uproot(boulder: Actor): Promise<void>;
   interact(): boolean;
+  onArrive(): void;
+  useWarp(warp: MapDef["warps"][number]): Promise<void>;
 };
-function scene(yes = true) {
-  const room = board(["....", "...."]);
+function scene(yes = true, tiles = ["....", "...."]) {
+  const room = board(tiles);
   room.npcs = [{ id: "stone", sprite: "boulder", x: 1, y: 0, facing: "down", pushable: true }];
-  const other = { ...board(["...."]), id: "route_2" as const };
+  room.warps = [{ x: 0, y: 1, to: "route_2", toX: 0, toY: 0 }];
+  const other = { ...board(["...."]), id: "route_2" as const,
+    warps: [{ x: 3, y: 0, to: "route_1" as const, toX: 0, toY: 0, facing: "right" as const }] };
   const world = { maps: { route_1: room, route_2: other }, scripts: { start: [] }, trainers: {},
     newGame: { map: "route_1", x: 0, y: 0, facing: "right", script: "start" } } as unknown as WorldData;
   const state = newGameState({ world });
   const say = vi.fn(async (_text: string) => {});
   const yesNo = vi.fn(async (_prompt: string) => yes);
   const ctx = { state, world, data: DATA, assets: {}, audio: { playSfx: vi.fn() }, ui: { say, yesNo } } as unknown as GameContext;
-  return { room, state, say, yesNo, ow: createOverworldScene(ctx, { mode: "none" }) as TestOverworld };
+  return { room, ctx, state, say, yesNo, ow: createOverworldScene(ctx, { mode: "none" }) as TestOverworld };
 }
 async function push(ow: TestOverworld) {
-  const done = ow.uproot(ow.npcs[0]);
+  const boulder = ow.npcs[0];
+  const done = ow.uproot(boulder);
   await Promise.resolve(); // confirmation resolves, then the animated step begins
-  for (let i = 0; i < 12; i++) ow.npcs[0].tick();
+  for (let i = 0; i < 12; i++) boulder.tick();
   await done;
 }
 
@@ -158,5 +200,121 @@ describe("UPROOT overworld flow", () => {
     await vi.waitFor(() => expect(say).toHaveBeenCalledWith("It won't budge."));
     expect(yesNo).toHaveBeenCalledWith("UPROOT it?");
     expect(ow.npcs[0].x).toBe(1);
+  });
+});
+
+describe("BOULDER PITS", () => {
+  it("fills the pit beside a warp, but runtime arrival exits before crossing the bridge", async () => {
+    const { ow, state, room } = scene(true, ["########", "#...P..#", "########"]);
+    room.npcs[0].x = 2;
+    room.npcs[0].y = 1;
+    room.warps = [{ x: 3, y: 1, to: "route_2", toX: 1, toY: 1 }];
+    state.bag.saxifrage = 1;
+    ow.loadMap("route_1", 1, 1, "right");
+    const useWarp = vi.spyOn(ow, "useWarp").mockResolvedValue();
+    await push(ow);
+    ow.player.x = 2;
+    await push(ow);
+    expect(state.flags.filled_route_1_4_1).toBe(true);
+    ow.player.x = 3;
+    ow.onArrive();
+    await vi.waitFor(() => expect(useWarp).toHaveBeenCalledWith(room.warps[0]));
+    expect(ow.player.x).toBeLessThan(4);
+  });
+
+  it("fills an unwalkable pit and draws its persistent walkable replacement", async () => {
+    const { ow, state, room } = scene(true, ["..P.", "...."]);
+    state.bag.saxifrage = 1;
+    expect(TILES.pit.walk).toBe(false);
+    expect(TILES.filled_pit.walk).toBe(true);
+    expect(isWalkable(ow.map, 2, 0)).toBe(false);
+    expect(tryPushBoulder(ow.map, ow.npcs[0], "right", true)).toEqual({ kind: "fill", x: 2, y: 0 });
+    await push(ow);
+    expect(ow.npcs).toHaveLength(0);
+    expect(state.flags.filled_route_1_2_0).toBe(true);
+    expect(tileAt(ow.map, 2, 0)).toBe("filled_pit");
+    expect(isWalkable(ow.map, 2, 0)).toBe(true);
+    const layer = new TileLayer({} as GameContext["assets"], new TileCatalog({ has: () => true }));
+    expect(layer.resolve(ow.map, 2, 0)).toMatchObject({ key: "filled_pit", path: tilePath("filled_pit") });
+    expect(room.tiles[0]).toBe("..P.");
+    expect(room.npcs[0].x).toBe(1);
+    ow.loadMap("route_2", 0, 0, "right");
+    ow.loadMap("route_1", 0, 0, "right");
+    expect(ow.npcs[0]).toMatchObject({ x: 1, y: 0 });
+    expect(tileAt(ow.map, 2, 0)).toBe("filled_pit");
+  });
+
+  it.each(["#", "occupied"])("a filled pit uses normal push rules when its far side is %s", (obstacle) => {
+    const map = buildMap(board(["..P#"]));
+    refreshLegend(map, { [filledPitFlag("route_1", 2, 0)]: true });
+    expect(tryPushBoulder(map, { x: 1, y: 0 }, "right", true)).toEqual({ kind: "push", x: 2, y: 0 });
+    if (obstacle === "occupied") map.def.tiles[0] = "..P.";
+    expect(tryPushBoulder(map, { x: 2, y: 0 }, "right", true, () => obstacle === "occupied"))
+      .toMatchObject({ kind: "blocked", reason: obstacle === "#" ? "wall" : "occupied" });
+  });
+
+  it("does not fill a pit covered by a structure or occupied by another actor", () => {
+    const def = board(["......", "..P...", "......", "......"]);
+    const map = buildMap(def);
+    expect(tryPushBoulder(map, { x: 1, y: 1 }, "right", true, () => true))
+      .toMatchObject({ kind: "blocked", reason: "occupied" });
+    def.structures = [{ key: "house_small", x: 2, y: 0 }];
+    expect(tryPushBoulder(buildMap(def), { x: 1, y: 1 }, "right", true))
+      .toMatchObject({ kind: "blocked", reason: "wall" });
+  });
+
+  it("restores filled pits across save and Continue while resetting every boulder", async () => {
+    const { ow, ctx, state, room } = scene(true, ["..P.", "...."]);
+    room.npcs.push({ id: "spare", sprite: "boulder", x: 2, y: 1, facing: "down", pushable: true });
+    ow.loadMap("route_1", 0, 0, "right");
+    state.bag.saxifrage = 1;
+    await push(ow);
+    const spare = ow.npcs[0];
+    const moved = ow.uproot(spare);
+    await Promise.resolve();
+    for (let i = 0; i < 12; i++) spare.tick();
+    await moved;
+    expect(spare.x).toBe(3);
+    state.position = { map: "route_1", x: 3, y: 0, facing: "left" };
+    const entries = new Map<string, string>();
+    const save = createSave(() => state, {
+      getItem: (k) => entries.get(k) ?? null,
+      setItem: (k, v) => { entries.set(k, v); },
+      removeItem: (k) => { entries.delete(k); },
+    });
+    save.write();
+    const loaded = save.read()!;
+    expect(loaded.flags.filled_route_1_2_0).toBe(true);
+    delete loaded.bag.saxifrage;
+    const continued = createOverworldScene({ ...ctx, state: loaded }, { mode: "continue" }) as TestOverworld;
+    expect(continued.player).toMatchObject({ x: 0, y: 0 });
+    expect(continued.npcs.map((n) => [n.id, n.x, n.y])).toEqual([["stone", 1, 0], ["spare", 2, 1]]);
+    expect(tileAt(continued.map, 2, 0)).toBe("filled_pit");
+    expect(isWalkable(continued.map, 2, 0)).toBe(true);
+  });
+
+  it("keys filled pits by map and coordinate and invalidates the tile cache signature", () => {
+    const map = buildMap(board(["PP."]));
+    refreshLegend(map, { filled_route_2_0_0: true, filled_route_1_2_0: true });
+    const before = map.legendSig;
+    expect(tileAt(map, 0, 0)).toBe("pit");
+    expect(tileAt(map, 2, 0)).toBe("grass");
+    refreshLegend(map, { filled_route_1_0_0: true });
+    expect(map.legendSig).not.toBe(before);
+    expect(tileAt(map, 0, 0)).toBe("filled_pit");
+    expect(tileAt(map, 1, 0)).toBe("pit");
+  });
+
+  it("the solver fills consecutive pits, consumes boulders, and preserves its inputs", () => {
+    const map = buildMap(board(["#...###", "#...###", "#..PP.#", "#######"]));
+    const stones = [{ x: 2, y: 2 }, { x: 2, y: 1 }];
+    const start = { x: 1, y: 2 }, goal = { x: 5, y: 2 };
+    const before = JSON.stringify({ map, stones });
+    expect(solveBoulderPuzzle(map, stones, start, goal)).toBe(true);
+    expect(solveBoulderPuzzle(map, stones.slice(0, 1), start, goal)).toBe(false);
+    expect(reachableBoulderTiles(map, stones, start).has("4,2")).toBe(true);
+    expect(JSON.stringify({ map, stones })).toBe(before);
+    expect(tileAt(map, 3, 2)).toBe("pit");
+    expect(map.filled).toBeUndefined();
   });
 });

@@ -50,7 +50,7 @@ function reachableMaps(flags: Record<string, boolean>) {
 
 describe("Chapter 8 world", () => {
   it("appends the three floors in order at the specified sizes with existing music", () => {
-    expect(MAP_IDS.slice(-3)).toEqual(FLOORS);
+    expect(MAP_IDS.slice(MAP_IDS.indexOf("relay_2f"), MAP_IDS.indexOf("relay_2f") + 3)).toEqual(FLOORS);
     for (const [id, w, h, name, music] of [
       ["relay_2f", 20, 14, "SERVER HALL", "root_relay"],
       ["relay_3f", 18, 14, "PATCH BAY", "root_relay"],

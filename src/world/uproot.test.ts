@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { MapDef, ScriptCmd, WorldData } from "../contracts";
 import { checkProgressWithoutSaxifrage, validateWorld } from "./validate";
 import { continuePosition } from "../overworld/continue";
-import { buildMap, key } from "../overworld/map";
-import { reachableBoulderTiles } from "../overworld/uproot";
+import { buildMap, filledPitFlag, key, refreshLegend } from "../overworld/map";
+import { reachableBoulderTiles, solveBoulderPuzzle } from "../overworld/uproot";
 import { WORLD } from "./index";
 
 const grant: ScriptCmd[] = [
@@ -51,6 +51,42 @@ describe("UPROOT progression validation", () => {
 
   it("allows a reachable SAXIFRAGE giver and a solvable starting puzzle", () => {
     expect(checkProgressWithoutSaxifrage(fixture())).toEqual([]);
+  });
+
+  it("models a pit crossing in both progression and general reachability", () => {
+    const w = fixture();
+    w.maps.route_1.tiles = ["#######", "#######", "#...P.#", "#...###", "#######"];
+    w.maps.route_1.legend.P = "pit";
+    expect(checkProgressWithoutSaxifrage(w)).toEqual([]);
+    expect(validateWorld(w).filter((e) => /unreachable|soft-lock|without UPROOT/.test(e))).toEqual([]);
+    // An extra pit needs a second boulder: opening all pits optimistically
+    // would hide this unsolvable puzzle.
+    w.maps.route_1.tiles[2] = "#...PP#";
+    expect(checkProgressWithoutSaxifrage(w).join("\n")).toMatch(/trigger story/);
+    expect(validateWorld(w).join("\n")).toMatch(/trigger story.*unreachable/);
+  });
+
+  it("a three-pit fixture stays solvable for every filled subset with all four boulders reset", () => {
+    // Each pit separates two chambers. Side pockets let a reset boulder be
+    // moved aside when its bridge is already filled. The fourth is a spare.
+    const room = fixture().maps.route_1;
+    room.tiles = ["###############", "###.###.###.###", "#...P...P...P.#",
+      "#...#...#...###", "#.#############", "###############"];
+    room.legend.P = "pit";
+    room.npcs = [3, 7, 11].map((x) => ({ id: `stone_${x}`, sprite: "boulder", x, y: 2,
+      facing: "down", pushable: true }));
+    room.npcs.push({ id: "spare", sprite: "boulder", x: 1, y: 4, facing: "down", pushable: true });
+    const start = { x: 1, y: 2 }, goal = { x: 13, y: 2 };
+    const before = JSON.stringify(room);
+    for (let subset = 0; subset < 8; subset++) {
+      const map = buildMap(room);
+      const flags = Object.fromEntries([4, 8, 12].map((x, i) => [filledPitFlag(room.id, x, 2), !!(subset & (1 << i))]));
+      refreshLegend(map, flags);
+      expect(solveBoulderPuzzle(map, room.npcs, start, goal), `filled subset ${subset.toString(2)}`).toBe(true);
+    }
+    // There is no route to the goal until all three crossings are open.
+    expect(solveBoulderPuzzle(buildMap(room), [], start, goal)).toBe(false);
+    expect(JSON.stringify(room)).toBe(before);
   });
 
   it("does not treat boulders as NPCs needing talk scripts", () => {

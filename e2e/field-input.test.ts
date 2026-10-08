@@ -527,3 +527,126 @@ it("walks Chapter 8's keycard gate, Relay floors and C/A/B talks through WREN an
     expect(e2e.report.issues).toEqual([]);
   } finally { stop(); }
 });
+
+it.each(["won", "lost"] as const)("walks the east gate, tumbleweed and BRAM's %s battle into ROOK's conservatory", async (outcome) => {
+  const { ctx, e2e, drive, field, stop } = await setup("glasshouse_city", 37, 23);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  // Only the previous chapter's prerequisites are fixtures. Every Chapter 9
+  // flag below is earned by the real scripts, interactions and movement.
+  Object.assign(ctx.state.flags, { ch8_done: true, ch7_done: true, ch4_done: true,
+    gc_arrival_seen: true, relay_listened: true, ch4_grunt_seen: true });
+  ctx.battle = vi.fn().mockImplementation(async (req) => req.trainer?.startsWith("rival_5_") ? outcome : "won");
+  // Supply ROOK's dragon_trees still so its fade/still/clear flow runs without a missing-art warning.
+  vi.spyOn(ctx.assets, "image").mockReturnValue({} as HTMLImageElement);
+  try {
+    expect(await drive(() => e2e.nav("route_10"))).toBe(true);
+    expect(await drive(() => e2e.nav("thistledown"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ ch9_arrived: true, tumbleweed_seen: true, visited_thistledown: true });
+    expect(await drive(() => e2e.nav("thistledown_house"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("stone_botanist"))).toBe(true);
+    expect(ctx.state.flags.quest_window_panes_started).toBe(true);
+    expect(await drive(() => e2e.nav("route_11"))).toBe(true);
+    // Walking past the southern trainer may start its battle mid-path.
+    expect(await drive(() => e2e.trigger("rival_5"))).toBe(true);
+    expect(ctx.battle).toHaveBeenCalledWith(expect.objectContaining({ kind: "trainer",
+      trainer: expect.stringMatching(/^rival_5_/), canLose: true }));
+    expect(ctx.state.flags.rival_5_done).toBe(true);
+    expect(await drive(() => e2e.nav("sanguine_ridge"))).toBe(true);
+    expect(ctx.state.flags.visited_sanguine_ridge).toBe(true);
+    expect(await drive(() => e2e.nav("sanguine_conservatory"))).toBe(true);
+    expect(await drive(() => e2e.solveSanguinePits())).toBe(true);
+    expect(await drive(() => e2e.talkTo("rook"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ beat_rook: true, got_fig_root: true });
+    expect(ctx.state.marks).toContain("resin_mark");
+    expect(ctx.state.bag.fig_root).toBe(1);
+    expect(await drive(() => e2e.walkTo(8, 18))).toBe(true);
+    await drive(async () => {
+      await e2e.press("down");
+      expect(await e2e.advance(400, () => !!ctx.state.flags.ch9_done)).toBe(true);
+    });
+    expect(ctx.state.flags.slice_done).toBe(true);
+    expect(field.player).toMatchObject({ x: 25, y: 9 });
+    expect(ctx.state.position.map).toBe("sanguine_ridge");
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("fills all three ridge pits with A/YES, consumes the boulders and persists the filled tiles on reentry", async () => {
+  const { ctx, e2e, drive, field, stop } = await setup("sanguine_conservatory", 8, 18);
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  // Keep the exit from ending the chapter; this test concerns pit persistence.
+  ctx.state.flags.rival_5_done = true;
+  const { tileAt } = await import("../src/overworld/map");
+  const runtime = () => (field as typeof field & { map: import("../src/overworld/map").MapRuntime }).map;
+  try {
+    expect(await drive(() => e2e.solveSanguinePits())).toBe(true);
+    expect(ctx.state.position).toMatchObject({ x: 8, y: 3 });
+    expect(e2e.report.texts.filter((t) => t.text === "[?] UPROOT it?")).toHaveLength(3);
+    for (const y of [14, 10, 6]) {
+      expect(ctx.state.flags[`filled_sanguine_conservatory_8_${y}`]).toBe(true);
+      expect(tileAt(runtime(), 8, y)).toBe("filled_pit");
+    }
+    expect(await drive(() => e2e.nav("sanguine_ridge"))).toBe(true);
+    expect(await drive(() => e2e.nav("sanguine_conservatory"))).toBe(true);
+    for (const y of [14, 10, 6]) expect(tileAt(runtime(), 8, y)).toBe("filled_pit");
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("bridges ROUTE 11 by A/YES and walks across it to search the hidden RAIN JAR", async () => {
+  const fixture = await setup("route_11", 18, 34);
+  const { ctx, e2e, drive, stop } = fixture;
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  // A post-chapter save supplies the root, but never the bridge/item flags.
+  ctx.state.bag.fig_root = 1;
+  ctx.state.flags.rival_5_done = true;
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  try {
+    const taps = fieldTaps(fixture);
+    expect(await drive(() => e2e.walkTo(23, 35))).toBe(false);
+    expect(await drive(() => e2e.bridgeRoute11Gap()), JSON.stringify({ position: ctx.state.position,
+      flags: ctx.state.flags, texts: e2e.report.texts, issues: e2e.report.issues })).toBe(true);
+    expect(taps).toContainEqual({ x: 18, y: 35, facing: "right", facingFollower: false });
+    const rain = ctx.state.bag.rain_jar ?? 0;
+    expect(await drive(() => e2e.walkTo(23, 35))).toBe(true);
+    await drive(async () => { await e2e.press("a"); await e2e.advance(); });
+    expect(ctx.state.flags).toMatchObject({ bridged_route_11_19_35: true, hidden_route_11_23_35: true });
+    expect(ctx.state.bag.rain_jar).toBe(rain + 1);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("catches a seeded canyon LITHOPS, grows it with battle EXP and earns WINDOW PANES through its records", async () => {
+  const { ctx, e2e, drive, stop } = await setup("route_11", 3, 35);
+  const { createQuickened } = await import("../src/battle");
+  const helper = createQuickened(ctx.data, "red_chili", 65, () => 0.5);
+  Object.assign(helper, { e2e: true });
+  ctx.state.party = [helper];
+  ctx.state.bag.spring_water = 20;
+  e2e.report.suite = "full";
+  ctx.state.flags.ch8_done = true;
+  ctx.state.flags.ch9_arrived = true;
+  try {
+    // Real grass rolls, wild battle scene, pod menu and catch registration.
+    await drive(() => e2e.catchCoastalPlant("lithops", "route_11", [[3, 35], [4, 35]], "caught canyon LITHOPS", "glass_pod"));
+    expect(e2e.report.beats.at(-1)?.ok, JSON.stringify({ beats: e2e.report.beats, issues: e2e.report.issues,
+      texts: e2e.report.texts, battles: e2e.report.battles })).toBe(true);
+    const stone = ctx.state.party.find((q) => q.species === "lithops_pair");
+    expect(stone).toBeDefined();
+    stone!.exp = ctx.data.expForLevel(ctx.data.species[stone!.species].growthRate, 40) - 5;
+    // Real trainer battle/EXP/growth screens, including BRAM's departure.
+    expect(await drive(() => e2e.trigger("rival_5"))).toBe(true);
+    expect(ctx.state.flags.rival_5_done).toBe(true);
+    expect(stone!.species).toBe("lithops_bloom");
+    expect(ctx.state.herbarium.caught).toEqual(expect.arrayContaining(["lithops_pair", "lithops_bloom"]));
+    expect(await drive(() => e2e.nav("thistledown_house"))).toBe(true);
+    const rain = ctx.state.bag.rain_jar ?? 0, pods = ctx.state.bag.glass_pod ?? 0;
+    expect(await drive(() => e2e.talkTo("stone_botanist"))).toBe(true);
+    expect(ctx.state.flags.quest_window_panes_done).toBe(true);
+    expect(ctx.state.bag.rain_jar).toBe(rain + 2);
+    expect(ctx.state.bag.glass_pod).toBe(pods + 5);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});

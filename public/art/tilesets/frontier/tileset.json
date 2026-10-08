@@ -7,6 +7,10 @@
   "columns": 16,
   "tiles": {
     "snow": { "base": [0, 1], "alts": [2, 3, 4] },
+    "root_gap": { "base": 5 },
+    "root_bridge": { "base": 6 },
+    "pit": { "base": 7 },
+    "filled_pit": { "base": 8 },
     "ice": {
       "base": 16,
       "masks": {

@@ -28,6 +28,9 @@ export function ambienceFor(music: MusicId | null, tod: TimeOfDay): AmbienceKind
     case "sugarbush_grove": return "forest";
     case "burnt_stand": return "forest";  // a dead stand: wind in the snags, the odd far bird
     case "alpine": return night ? "night" : "meadow";  // open mountain air: birds by day, crickets at night
+    case "thistledown": return night ? "night" : "town";
+    case "canyon": return night ? "night" : "meadow";   // open air between the walls
+    // ridge: none. Only the wind and the old trees.
     // red_lake: none. The forced lake drowns out the birds.
     // hollow: none. Inside the trunk the drips are the only sound.
     case "prologue_bloom": return "night";

@@ -734,7 +734,44 @@ const lostClimber: ScriptCmd[] = [
   }),
 ];
 
+// --- WINDOW PANES: BOTANIST, THISTLEDOWN --------------------------------------
+const windowPanesCheck: ScriptCmd[] = [
+  caught(["lithops_pebble", "lithops_pair", "lithops_bloom"], [flag("window_panes_lithops")]),
+  caught(["lithops_bloom"], [flag("window_panes_bloom")]),
+  ifFlags({ window_panes_lithops: true, window_panes_bloom: true }, [
+    say("Copied! See the clear tips on the leaves? Those windows let light down into the buried part.", "BOTANIST"),
+    say("As promised: two RAIN JARS and five GLASS PODS.", "BOTANIST"),
+    give("rain_jar", 2),
+    give("glass_pod", 5),
+    completeQuest("window_panes"),
+    say("That's my survey done. Out here, everything hides from the sun. Except me.", "BOTANIST"),
+  ], [
+    ifFlags({ window_panes_lithops: false }, [
+      say("Still need a LITHOPS, any stage. Look in the grass on ROUTE 10 or 11.", "BOTANIST"),
+    ]),
+    ifFlags({ window_panes_bloom: false }, [
+      say("Still need one in flower: a LIVING STONE. A SPLIT STONE grows into one.", "BOTANIST"),
+    ]),
+  ]),
+];
+const windowPanes: ScriptCmd[] = [
+  byQuest("window_panes", {
+    fresh: [
+      say("I'm surveying LITHOPS, all three stages. They grow half-buried and pass for pebbles.", "BOTANIST"),
+      say("Could you catch me one, any stage? And one in flower: a LIVING STONE.", "BOTANIST"),
+      say("Bring me the records, and I'll pay in RAIN JARS and GLASS PODS.", "BOTANIST"),
+      startQuest("window_panes"),
+      ...windowPanesCheck,
+    ],
+    going: windowPanesCheck,
+    finished: [
+      say("Your LITHOPS are in the record, windows and all. Thank you, <PLAYER>.", "BOTANIST"),
+    ],
+  }),
+];
+
 export const questScripts: Scripts = {
+  q_window_panes: windowPanes,
   q_lost_climber: lostClimber,
   q_hand_pollinator: handPollinatorOffer,
   q_fire_followers: fireFollowers,
@@ -764,6 +801,14 @@ const isStarted = (q: string) => [{ flag: started(q), is: true }];
 const isDone = (q: string) => [{ flag: done(q), is: true }];
 
 export const QUESTS: Record<string, QuestDef> = {
+  window_panes: {
+    id: "window_panes", title: "WINDOW PANES", giver: "BOTANIST, THISTLEDOWN", area: "thistledown_house",
+    steps: [
+      { text: "Catch any LITHOPS stage.", doneWhen: [{ flag: "window_panes_lithops", is: true }] },
+      { text: "Catch a LIVING STONE.", doneWhen: [{ flag: "window_panes_bloom", is: true }] },
+    ],
+    reward: "2 RAIN JARS + 5 GLASS PODS",
+  },
   lost_climber: {
     id: "lost_climber", title: "LOST CLIMBER", giver: "MOUNTAINEER, ROUTE 9", area: "route_9",
     steps: [

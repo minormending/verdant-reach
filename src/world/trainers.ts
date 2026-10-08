@@ -625,6 +625,105 @@ const ch8Trainers: TrainerDef[] = [
   ], ch8Lines("wren"), { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
+// Chapter 9 (CH9.md §5). Lines: one set per trainer; the three rival_5
+// variants share BRAM's friendly set.
+const CH9_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  drifter_dune: {
+    intro: "Sand in my boots, sand in my teeth. Sand in my battle plan!",
+    defeat: "Buried...",
+    after: "PRICKLY PEAR pads are stems, not leaves. Its spines are the leaves.",
+  },
+  drifter_mesa: {
+    intro: "Thirty years I've walked this scrub. Never once in a hurry.",
+    defeat: "Well. That was hurried.",
+    after: "A SAGUARO's ribs fold like an accordion. After rain, it swells with water.",
+  },
+  botanist_sage2: {
+    intro: "Out here, gardening is mostly patience. And a little shade.",
+    defeat: "Wilted in the heat.",
+    after: "A PITAYA is a climbing cactus. It clings on with roots along its stems.",
+  },
+  botanist_rue: {
+    intro: "Shh! You nearly trod on a LITHOPS. They look just like pebbles.",
+    defeat: "Trodden on after all.",
+    after: "A LITHOPS is just two fat leaves. Each new pair grows up between the old.",
+  },
+  climber_red: {
+    intro: "The rock's red all the way up. Wait till you see the trees!",
+    defeat: "Lost my grip!",
+    after: "A SNAPDRAGON stays shut until a bee heavy enough pushes it open.",
+  },
+  climber_ochre: {
+    intro: "My UMBRELLA PUP has the shape already. Look at that crown!",
+    defeat: "Folded up like an umbrella.",
+    after: "A grown DRAGON TREE spreads its crown wide and flat, like an open umbrella.",
+  },
+  ranger_flint: {
+    intro: "I came up here for the birds. The DRAGON FRUIT came for me.",
+    defeat: "Flown the nest.",
+    after: "DRAGON FRUIT flowers open for one night only. By morning, they're done.",
+  },
+  ranger_shale: {
+    intro: "Not many birds up here. So I watch stones. One of mine flowered!",
+    defeat: "Stone cold.",
+    after: "A LITHOPS flowers from the split between its two leaves.",
+  },
+  rival_5: {
+    intro: "No collar. No grafts. Just us. Go on.",
+    defeat: "...Yeah. Fair. It still fought well.",
+    after: "It grew back on its own. Took its time. That's allowed.",
+  },
+  jr_ember: {
+    intro: "SNAPDRAGONS bite! Well. They snap. Gently!",
+    defeat: "Snapped shut.",
+    after: "ROOK says the dragon trees here are older than any kingdom.",
+  },
+  jr_scale: {
+    intro: "Fill the pits, cross the hall. But first you cross me!",
+    defeat: "Filled in.",
+    after: "Boulder stuck? Step out and come back in. Unused ones roll home.",
+  },
+  rook: {
+    intro: "Before trees older than kingdoms, we begin. Show me your roots.",
+    defeat: "...So. The ridge will remember your name.",
+    after: "Cut a dragon tree's bark and it weeps red resin. They remember every wound.",
+  },
+};
+const ch9Lines = (id: string) => CH9_LINES[id.startsWith("rival_5_") ? "rival_5" : id];
+const ch9Trainers: TrainerDef[] = [
+  trainer("drifter_dune", "DUNE", "HIKER", "hiker", [T("prickly_pear", 43), T("lithops_pair", 42)], ch9Lines("drifter_dune")),
+  trainer("drifter_mesa", "MESA", "HIKER", "hiker", [T("saguaro", 44)], ch9Lines("drifter_mesa")),
+  trainer("botanist_sage2", "SAGE", "GARDENER", "gardener", [T("pitaya_cutting", 43), T("foxglove", 43)], ch9Lines("botanist_sage2")),
+  trainer("botanist_rue", "RUE", "GARDENER", "gardener", [T("lithops_pair", 43), T("dandelion_clock", 43)], ch9Lines("botanist_rue")),
+  trainer("climber_red", "RED", "HIKER", "hiker", [T("snapdragon_sprout", 44), T("larch", 45)], ch9Lines("climber_red")),
+  trainer("climber_ochre", "OCHRE", "HIKER", "hiker", [T("dragon_sapling", 45)], ch9Lines("climber_ochre")),
+  trainer("ranger_flint", "FLINT", "BIRDWATCHER", "birdwatcher", [T("dragon_fruit", 45), T("saguaro", 45)], ch9Lines("ranger_flint")),
+  trainer("ranger_shale", "SHALE", "BIRDWATCHER", "birdwatcher", [T("lithops_bloom", 46)], ch9Lines("ranger_shale")),
+  // Rival 5: all levels unchanged. Explicit learned moves replace late-game
+  // coverage and healing on the clock/maple/cedar, and reuse Rival 4's starter
+  // moves without its collar. Mean win 81.3%, minimum 41.7% (balance.test.ts).
+  ...STARTER_LINES.map((line) => trainer(`rival_5_${line}`, "BRAM", "RIVAL", "bram", [
+    T("blackberry", 46),
+    T("dandelion_clock", 46, ["wind_scatter", "sunbeam", "perfume"]),
+    T("sugar_maple", 47, ["samara_spin", "sap_spout", "sugar_rush", "hoarfrost"]),
+    T("red_cedar", 47, ["leaf_edge", "pale_touch", "sap_seal", "heartwood"]),
+    T(STARTER_SPECIES[line][2], 49, RIVAL_3_MOVES[line]),
+  ], ch9Lines(`rival_5_${line}`), { ai: "smart", prize: 4900 })),
+  trainer("jr_ember", "EMBER", "JR.GARDENER", "gardener", [T("snapdragon_sprout", 47), T("dragon_sapling", 47)], ch9Lines("jr_ember")),
+  trainer("jr_scale", "SCALE", "JR.GARDENER", "gardener", [T("pitaya_cutting", 47), T("lithops_pair", 48)], ch9Lines("jr_scale")),
+  // Rook: levels -1/-2/-2/-2 (49/50/50/53 → 48/48/48/51). Explicit learned
+  // moves keep Dragon Snap, Night Bloom, Stone Window and Dragon Resin, while
+  // removing repeated healing and broad late-game coverage. Raising only
+  // snapdragon from 47 to 48 gives mean win 58.6%, minimum 30.7%; harder than
+  // Signe (62.8%) and Flora (61.2%) under balance.test.ts's milestone model.
+  trainer("rook", "ROOK", "WARDEN", "rook", [
+    T("snapdragon", 48, ["dragon_snap", "red_resin", "perfume"]),
+    T("dragon_fruit", 48, ["night_bloom", "spine_volley", "nectar_lure"]),
+    T("lithops_bloom", 48, ["thorn_lash", "stone_window", "bristle"]),
+    T("dragon_tree", 51, ["dragon_resin", "sap_seal", "bark_skin"]),
+  ], ch9Lines("rook"), { ai: "smart", music: "battle_leader", mark: "resin_mark", items: [{ item: "spring_water", qty: 2 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers, ...ch8Trainers, ...ch9Trainers].map((t) => [t.id, t]),
 );

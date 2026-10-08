@@ -1,0 +1,43 @@
+import type { MapDef } from "../../contracts";
+import { LEGEND } from "../build";
+
+export const sanguine_conservatory: MapDef = {
+  id: "sanguine_conservatory", name: "CONSERVATORY", outdoor: false, music: "conservatory", ambient: "none",
+  // A hall cut into the ridge: red sandstone walls ("W") round dark-red resin
+  // flags ("t"). The pits and boulders are the puzzle, cell for cell.
+  border: "red_rock", legend: { ...LEGEND, W: "red_rock", t: "resin_floor" },
+  tiles: [
+    "WWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWW",
+    "WWWWWWWtttWWWWWWWW",
+    "WWWWWWWtttWWWWWWWW",
+    "WWWWWWWtttWWWWWWWW",
+    "WWWWWWWtttWWWWWWWW",
+    "WWWWWWWWøWWWWWWWWW",
+    "WWWWWWWtttWWWWWWWW",
+    "WWWWWWWWttWWWWWWWW",
+    "WWWWWWWWttWWWWWWWW",
+    "WWWWWWWWøWWWWWWWWW",
+    "WWWWWWWtttWWWWWWWW",
+    "WWWWWWWWttWWWWWWWW",
+    "WWWWWWWWtWWWWWWWWW",
+    "WWWWWWWWøWWWWWWWWW",
+    "WWWWWWWtttWWWWWWWW",
+    "WWWWWtttttWWWWWWWW",
+    "WWWWWtttttWWWWWWWW",
+    "WWWWWtttttWWWWWWWW",
+    "WWWWWWWWEWWWWWWWWW",
+  ],
+  structures: [],
+  warps: [{ x: 8, y: 19, to: "sanguine_ridge", toX: 25, toY: 9, facing: "down" }],
+  npcs: [
+    { id: "boulder_1", sprite: "boulder", x: 8, y: 15, facing: "up", pushable: true },
+    { id: "boulder_2", sprite: "boulder", x: 8, y: 11, facing: "up", pushable: true },
+    { id: "boulder_3", sprite: "boulder", x: 8, y: 7, facing: "up", pushable: true },
+    { id: "boulder_spare", sprite: "boulder", x: 6, y: 17, facing: "right", pushable: true },
+    { id: "jr_ember", sprite: "gardener", x: 9, y: 17, facing: "left", trainer: "jr_ember", sight: 1 },
+    { id: "jr_scale", sprite: "gardener", x: 9, y: 9, facing: "left", trainer: "jr_scale", sight: 1 },
+    { id: "rook", sprite: "rook", x: 8, y: 2, facing: "down", script: "rook" },
+  ],
+  signs: [], triggers: [],
+};

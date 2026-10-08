@@ -49,7 +49,7 @@ const LIST: Item[] = [
 
   // Found growth triggers; species opt in through growsInto, not an item effect.
   // Serotiny: https://www.nps.gov/places/000/fires-and-forest-ecology.htm
-  { id: "ember_ash", name: "Ember Ash", pocket: "items", price: 0,
+  { id: "ember_ash", name: "Ember Ash", pocket: "items", price: 3000,
     description: "Fire opens some sealed pine cones.",
     effect: { kind: "none" }, usableInBattle: false, usableInField: true },
   // Cold treatment: https://extension.umn.edu/garden-and-home/yard-and-garden/gardening-in-minnesota/planting-bulbs-tubers-and-rhizomes
@@ -58,6 +58,9 @@ const LIST: Item[] = [
     effect: { kind: "none" }, usableInBattle: false, usableInField: true },
 
   // Key items
+  { id: "fig_root", name: "Fig Root", pocket: "key", price: 0,
+    description: "Living roots that grow into bridges.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
   { id: "relay_keycard", name: "Keycard", pocket: "key", price: 0,
     description: "ODELL's pass to every RELAY floor.",
     effect: { kind: "none" }, usableInBattle: false, usableInField: false },

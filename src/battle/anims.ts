@@ -179,6 +179,10 @@ export const MOVE_ANIMS: Record<string, AnimSpec> = {
   needle_drop: S("volley", "spines"),
   woolly_coat: S("harden", "evergreen"),
   vacuum_trap: S("snap", "quick"),
+  // Chapter 9: red resin, night petals and fortified leaf windows
+  dragon_resin: S("glob", "resin"),
+  night_bloom: S("burst", "pale"),
+  stone_window: S("harden", "evergreen"),
   // fallback move used with no PP left
   struggle: S("slam", "struggle"),
 };

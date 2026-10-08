@@ -3,7 +3,7 @@
 //
 //   npm run e2e                                        headless full playthrough
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
-//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 8's TO BE CONTINUED
+//   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> Chapter 9, then ROOT BRIDGE
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
 //
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
@@ -18,6 +18,8 @@
 // SIGNE's ice floor, grows a caught snowdrop and completes LOST CLIMBER.
 // Chapter 8 returns to GLASSHOUSE CITY, takes ODELL's keycard, clears the
 // seized RELAY, patches C/A/B from the work note and stops WREN's broadcast.
+// Chapter 9 crosses the east gate, sees the tumbleweed, battles BRAM, grows
+// a caught living stone, fills ROOK's pits and returns for ROOT BRIDGE.
 //
 // `?timer` keeps the loop running in a hidden tab. Add `&boost=<level>` to set
 // the level of the over-levelled helper (default 48; `boost=0` plays it
@@ -88,11 +90,12 @@ let battleMenu: { menu: Menu; target: number } | null = null;
 let medicine: { item: ItemId; active: number } | null = null;
 /** Throw pods only at the requested line in real grass or water encounters. */
 let captureLine: string | null = null;
+let capturePod: "terrarium_pod" | "glass_pod" = "terrarium_pod";
 function captureItem(): ItemId | null {
   const battle = battleScene();
   return captureLine && battle?.req.kind === "wild"
     && ctx().data.species[active(battle.s, 1).species].line === captureLine
-    && (ctx().state.bag["terrarium_pod"] ?? 0) > 0 ? "terrarium_pod" : null;
+    && (ctx().state.bag[capturePod] ?? 0) > 0 ? capturePod : null;
 }
 let bagKey: keyof typeof KEY | null = null;
 let bagAtCancel = false;
@@ -1705,12 +1708,161 @@ async function chapter8() {
     && ctx().save.read()?.flags["ch8_done"] === true);
 }
 
+// ---------------------------------------------------------------------------
+// Chapter 9: THISTLEDOWN and SANGUINE RIDGE
+// ---------------------------------------------------------------------------
+
+/** Push the three stones north into their pits using the real UPROOT prompt. */
+export async function solveSanguinePits(): Promise<boolean> {
+  const before = report.texts.length;
+  for (const [id, y] of [["boulder_1", 15], ["boulder_2", 11], ["boulder_3", 7]] as const) {
+    if (ow()?.mapId !== "sanguine_conservatory" || !(await walkTo(8, y + 1))) return false;
+    await face("up");
+    await press("a");
+    await sleep(250);
+    await settle();
+    const o = ow();
+    const stone = o?.npcs.find((n) => n.id === id);
+    if (!o || (stone && o.visible(stone)) || !flag(`filled_sanguine_conservatory_8_${y - 1}`)
+      || tileAt(o.map as unknown as MapRuntime, 8, y - 1) !== "filled_pit") return false;
+  }
+  return await walkTo(8, 3) && onTile(8, 3)
+    && report.texts.slice(before).filter((t) => t.text === "[?] UPROOT it?").length === 3;
+}
+
+/** Stand west of the actual gap and confirm ROOT BRIDGE with A/YES. */
+export async function bridgeRoute11Gap(): Promise<boolean> {
+  if (ow()?.mapId !== "route_11" || !(await walkTo(18, 35))) return false;
+  const before = report.texts.length;
+  await face("right");
+  await press("a");
+  await sleep(250);
+  await settle();
+  return flag("bridged_route_11_19_35")
+    && tileAt(ow()!.map as unknown as MapRuntime, 19, 35) === "root_bridge"
+    && report.texts.slice(before).some((t) => t.text === "[?] A narrow gap. ROOT BRIDGE it?");
+}
+
+async function chapter9() {
+  const saved = ctx().save.read();
+  if (!saved?.flags["ch8_done"]) {
+    beat("CONTINUE after Chapter 8", false, "base playthrough did not reach the Chapter 8 save/card");
+    return;
+  }
+  await press("start");
+  await sleep(700);
+  await press("a");
+  await sleep(700);
+  await press("a");
+  const continued = await waitFor(() => !!ow(), 15000);
+  await sleep(1500);
+  if (!continued) { beat("CONTINUE after Chapter 8", false, "no overworld"); return; }
+  await settle();
+  beat("CONTINUE after Chapter 8", flag("ch8_done") && ow()?.mapId === saved.position.map);
+  ctx().state.options.textSpeed = "fast";
+  const st = () => ctx().state;
+  const bag = (item: ItemId) => st().bag[item] ?? 0;
+
+  await nav("glasshouse_city");
+  const city = ow();
+  const guard = city?.npcs.find((n) => n.id === "east_gate_guard");
+  const gateOpen = !!city && !!guard && !city.visible(guard);
+  await nav("route_10");
+  beat("GLASSHOUSE CITY: the east gate opens onto ROUTE 10", gateOpen && ow()?.mapId === "route_10");
+  await nav("thistledown");
+  const town = ow();
+  const tumbleweed = town?.npcs.find((n) => n.id === "tumbleweed_sighting");
+  beat("THISTLEDOWN: the tumbleweed rolls away", ow()?.mapId === "thistledown"
+    && flag("ch9_arrived") && flag("tumbleweed_seen") && flag("visited_thistledown")
+    && !!town && !!tumbleweed && !town.visible(tumbleweed));
+  await nav("thistledown_house");
+  await talkTo("stone_botanist");
+  await expectFlag("WINDOW PANES: accepted", "quest_window_panes_started");
+  await nav("thistledown_greenhouse");
+  await makePartyRoom(); // same cabinet layout; the catch must stay in the party to grow
+  await nav("route_11");
+  beat("ROUTE 11: enter the red canyon", ow()?.mapId === "route_11");
+  await catchCoastalPlant("lithops", "route_11", [[3, 35], [4, 35]], "WINDOW PANES: caught a SPLIT STONE", "glass_pod");
+  const stone = st().party.find((q) => q.species === "lithops_pair");
+  if (!stone) issue("growth", "the caught SPLIT STONE is not in the party");
+  // Compress the grind only, like check:growth. A real defeated opponent must
+  // award the final EXP, level it up, animate growth and register LITHOPS BLOOM.
+  if (stone) stone.exp = ctx().data.expForLevel(ctx().data.species[stone.species].growthRate, 40) - 5;
+  const before = report.battles.length;
+  await trigger("rival_5");
+  const bram = report.battles.slice(before).find((b) => b.request.trainer?.startsWith("rival_5_"));
+  const canyon = ow();
+  const rival = canyon?.npcs.find((n) => n.id === "bram");
+  beat("BRAM: a friendly battle with his regrown partner", flag("rival_5_done")
+    && bram?.request.canLose === true && (bram.outcome === "won" || bram.outcome === "lost")
+    && !!canyon && !!rival && !canyon.visible(rival));
+  // Either BRAM result is valid. If no opponent was defeated, finish the
+  // plant's EXP through another real encounter rather than changing species.
+  for (let steps = 0; steps < 1000 && stone?.species === "lithops_pair"; steps++) {
+    const [x, y] = onTile(3, 35) ? [4, 35] : [3, 35];
+    if (ow()?.mapId !== "route_11" || !(await walkTo(x, y))) break;
+    await settle();
+    refreshHelper();
+  }
+  beat("WINDOW PANES: the caught stone grows into LITHOPS BLOOM", !!stone && stone.species === "lithops_bloom"
+    && st().herbarium.caught.includes("lithops_pair") && st().herbarium.caught.includes("lithops_bloom"));
+  await nav("thistledown_house");
+  const rain = bag("rain_jar"), pods = bag("glass_pod");
+  await talkTo("stone_botanist");
+  beat("WINDOW PANES: rewarded", flag("quest_window_panes_done")
+    && flag("window_panes_lithops") && flag("window_panes_bloom")
+    && bag("rain_jar") === rain + 2 && bag("glass_pod") === pods + 5);
+
+  await nav("sanguine_ridge");
+  beat("SANGUINE RIDGE: arrived by the canyon", ow()?.mapId === "sanguine_ridge"
+    && flag("visited_sanguine_ridge") && flag("rival_5_done"));
+  await nav("sanguine_conservatory");
+  beat("CONSERVATORY 8: UPROOT the three boulders into pits", await solveSanguinePits());
+  const rookBefore = report.battles.length;
+  await talkTo("rook");
+  const rook = report.battles.slice(rookBefore).find((b) => b.request.trainer === "rook");
+  beat("ROOK: resin mark", rook?.outcome === "won" && flag("beat_rook") && st().marks.includes("resin_mark"));
+  beat("ROOK: the FIG ROOT", flag("got_fig_root") && bag("fig_root") === 1);
+
+  const exit = ow()?.map.def.warps.find((w) => w.to === "sanguine_ridge");
+  if (!exit) { beat("chapter 9 done", false, "no conservatory exit"); return; }
+  await untilEndCard(async () => {
+    await walkToQuiet(exit.x, exit.y - 1);
+    await goto(exit.x, exit.y, false);
+    await T().hold(KEY.down, 250);
+  }, "Chapter 9");
+  beat("chapter 9 done: VALE's call to the COUNCIL ARBORETUM", flag("ch9_done") && flag("slice_done")
+    && ctx().save.read()?.flags["ch9_done"] === true);
+
+  // Leaving ROOK fires ch9_end immediately. Continue its real save before
+  // returning to the canyon; there is no flag bypass to postpone the card.
+  await press("start");
+  await sleep(700);
+  await press("a");
+  await sleep(700);
+  await press("a");
+  const resumed = await waitFor(() => !!ow(), 15000);
+  await sleep(1500);
+  if (!resumed) { beat("CONTINUE after Chapter 9", false, "no overworld"); return; }
+  await settle();
+  beat("CONTINUE after Chapter 9", flag("ch9_done") && bag("fig_root") === 1 && ow()?.mapId === "sanguine_ridge");
+  await nav("route_11");
+  beat("ROOT BRIDGE: span ROUTE 11's gap", await bridgeRoute11Gap());
+  const hiddenRain = bag("rain_jar");
+  const ledge = await walkTo(23, 35);
+  await press("a"); // search the real hidden item, beyond the newly bridged gap
+  await sleep(250);
+  await settle();
+  beat("ROOT BRIDGE: fetch the hidden RAIN JAR", ledge && onTile(23, 35)
+    && flag("hidden_route_11_23_35") && bag("rain_jar") === hiddenRain + 1);
+}
+
 /** Free a slot with real cabinet STORE input, keeping the helper in slot 0. */
 export async function makePartyRoom(): Promise<boolean> {
   if (ctx().state.party.length < 6) return true;
   const st = ctx().state;
   const last = st.party.at(-1)!;
-  if (!(await walkTo(1, 4))) return false; // LARCHMERE GREENHOUSE cabinet
+  if (!(await walkTo(1, 4))) return false; // shared GREENHOUSE cabinet layout
   await face("up");
   await press("a");
   await sleep(700);
@@ -1723,7 +1875,7 @@ export async function makePartyRoom(): Promise<boolean> {
   for (let i = 0; i < 8 && !idle(); i++) { await press("b"); await sleep(400); }
   await settle();
   const ok = st.party.length < 6 && st.box.includes(last);
-  if (!ok) issue("cabinet", "could not store a party member before the snowdrop catch");
+  if (!ok) issue("cabinet", "could not store a party member before the story catch");
   return ok;
 }
 
@@ -1742,25 +1894,27 @@ export async function growWithItem(index: number, item: ItemId): Promise<void> {
 
 /** Same pod fixture as FIRE FOLLOWERS, with actual grass/raft encounter rolls.
  * No species, caught record, quest flag or encounter RNG is injected. */
-async function catchCoastalPlant(line: string, map: MapId, tiles: [[number, number], [number, number]], name: string) {
+export async function catchCoastalPlant(line: string, map: MapId, tiles: [[number, number], [number, number]], name: string,
+  pod: "terrarium_pod" | "glass_pod" = "terrarium_pod") {
   const st = ctx().state;
   const total = () => st.party.length + st.box.length;
   const before = total(), texts = report.texts.length;
   const caught = () => [...st.party, ...st.box].some((q) => ctx().data.species[q.species].line === line);
-  st.bag["terrarium_pod"] = Math.max(st.bag["terrarium_pod"] ?? 0, 30);
-  const pods = st.bag["terrarium_pod"];
+  st.bag[pod] = Math.max(st.bag[pod] ?? 0, 30);
+  const pods = st.bag[pod];
   captureLine = line;
+  capturePod = pod;
   try {
-    for (let steps = 0; steps < 1000 && !caught() && (st.bag["terrarium_pod"] ?? 0) > 0; steps++) {
+    for (let steps = 0; steps < 1000 && !caught() && (st.bag[pod] ?? 0) > 0; steps++) {
       const [x, y] = onTile(...tiles[0]) ? tiles[1] : tiles[0];
       if (ow()?.mapId !== map || !(await walkTo(x, y))) break;
       await settle();
       refreshHelper();
     }
-  } finally { captureLine = null; }
-  beat(name, caught() && total() > before && (st.bag["terrarium_pod"] ?? 0) < pods
-    && report.texts.slice(texts).some((t) => /used TERRARIUM POD/i.test(t.text)),
-    `party+box ${before}->${total()}, pods ${pods}->${st.bag["terrarium_pod"] ?? 0}`);
+  } finally { captureLine = null; capturePod = "terrarium_pod"; }
+  beat(name, caught() && total() > before && (st.bag[pod] ?? 0) < pods
+    && report.texts.slice(texts).some((t) => t.text.toUpperCase().includes(`USED ${ctx().data.items[pod].name.toUpperCase()}`)),
+    `party+box ${before}->${total()}, pods ${pods}->${st.bag[pod] ?? 0}`);
 }
 
 /** Catch a quest plant from real grass encounters, driving BAG/PODS/USE.
@@ -2140,6 +2294,7 @@ export async function run(suite: string) {
         await chapter6();
         await chapter7();
         await chapter8();
+        await chapter9();
       }
     } else if (suite === "story") {
       // From a ?dev=world&play=new jump-in.

@@ -57,6 +57,10 @@ export const SPECIES_IDS = [
   "larch_seedling", "larch",
   "edelweiss_bud", "edelweiss",
   "bladderwort_sprig", "bladderwort",
+  // Chapter 9
+  "dragon_seedling", "dragon_sapling", "dragon_tree",
+  "pitaya_cutting", "dragon_fruit",
+  "lithops_pebble", "lithops_pair", "lithops_bloom",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 
@@ -98,6 +102,9 @@ export const MAP_IDS = [
   "route_9", "larchmere", "larchmere_greenhouse", "larchmere_market", "bloom_lake", "larchmere_lodge", "rootstock_hideout_1", "rootstock_hideout_2", "larchmere_conservatory",
   // Chapter 8 (CH8.md §2 order)
   "relay_2f", "relay_3f", "relay_roof",
+  // Chapter 9 (CH9.md §4 order; the extra healing interior follows Route 11).
+  "route_10", "thistledown", "thistledown_greenhouse", "thistledown_market",
+  "thistledown_house", "route_11", "sanguine_greenhouse", "sanguine_ridge", "sanguine_conservatory",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -175,6 +182,10 @@ export const TILES = {
   microscope:     { walk: false, interact: true },
   // --- Round 4: Chapter 4 ----------------------------------------------------
   bramble_stump:  { walk: true },                // a pruned bramble (drawn where PRUNE cut one)
+  root_gap:      { walk: false, fieldMove: "rootbridge" },
+  root_bridge:   { walk: true },                // living roots span a bridged gap
+  pit:           { walk: false },               // UPROOT consumes a boulder to fill it
+  filled_pit:    { walk: true },                // filling persists when boulders reset
   paving:         { walk: true },                // city flagstones
   tropical_grass: { walk: true, encounter: "grass" }, // Palm House undergrowth
   orchard_tree:   { walk: false },               // apple trees (canopy group "orchard")
@@ -241,6 +252,12 @@ export const TILES = {
   roof_vent:      { walk: false },               // a louvred vent box on the roof, steaming
   roof_glass:     { walk: false },               // the Glasshouse dome's top panes (the roof's border)
   rootstock_banner: { walk: false },             // hung on an interior wall during the takeover
+  // Chapter 9: the desert road, Thistledown, the red canyon and Sanguine Ridge
+  desert_scrub:   { walk: true, encounter: "grass" }, // dry scrub and wiry grass on sand: the desert's encounter tile
+  cracked_earth:  { walk: true },                // sun-baked clay plates
+  red_rock:       { walk: false },               // red sandstone walls and outcrops (group "red_rock")
+  red_ledge:      { walk: false, ledge: "down" }, // a red sandstone step: hop south only
+  resin_floor:    { walk: true },                // Conservatory 8: dark-red flags with amber resin grout
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -251,12 +268,15 @@ export interface TileProps {
   water?: boolean;
   ledge?: "down";
   interact?: boolean;
-  /** A field move clears this tile (sets flag `pruned_<map>_<x>_<y>`; then drawn as bramble_stump, walkable). */
+  /** A field move sets its per-cell flag and replaces this tile with walkable terrain. */
   fieldMove?: FieldMove;
 }
 
 /** Field moves (HM equivalents). No move slots: each is unlocked by a key item. */
-export const FIELD_MOVES = { prune: { item: "pruning_shears" } } as const;
+export const FIELD_MOVES = {
+  prune: { item: "pruning_shears" },
+  rootbridge: { item: "fig_root" },
+} as const;
 export type FieldMove = keyof typeof FIELD_MOVES;
 
 /** Multi-tile buildings drawn from one image; footprint is solid except the
@@ -300,6 +320,11 @@ const STRUCTURE_SPECS = {
   chalet:             { w: 4, h: 3, door: { x: 1, y: 2 } },
   frost_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 7
   boathouse:          { w: 4, h: 3 },                       // lakeside scenery
+  // Chapter 9: Thistledown and Sanguine Ridge
+  dragon_tree_big:    { w: 3, h: 3 },                       // ancient dragon's blood tree (scenery)
+  adobe_house:        { w: 4, h: 3, door: { x: 1, y: 2 } }, // flat-roofed Thistledown adobe
+  ridge_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 8, set into the cliff
+  windmill_pump:      { w: 2, h: 3 },                       // desert wind pump over a trough (scenery)
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
@@ -336,6 +361,9 @@ export const CHARACTERS = [
   "crimson_lily",                // the CRIMSON LILY on its islet (static object)
   // Chapter 8
   "mercer",
+  // Chapter 9
+  "rook", "stone_botanist",
+  "tumbleweed_roll",             // a rolling tumbleweed (static object; columns turn it 0/30/60 degrees)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -348,6 +376,7 @@ export const TRAINER_PORTRAITS = [
   "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", // Chapter 6
   "signe", "skier", // Chapter 7
   "mercer", "wren", // Chapter 8
+  "rook", // Chapter 9
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -362,6 +391,7 @@ export const MUSIC = [
   "cedarhallow", "burnt_stand", "hollow", // Chapter 5
   "alpine", "red_lake", "hideout", // Chapter 7
   "relay_seized", // Chapter 8
+  "thistledown", "canyon", "ridge", // Chapter 9
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 
@@ -396,6 +426,7 @@ export const REQUIRED_ITEMS = [
   "wild_berry", "rose_hip",                   // harvested from bushes: heal / cure
   "syrup_jar",                                // key item for the SAP RUN quest
   "pruning_shears",                           // key item: unlocks the PRUNE field move
+  "fig_root",                                 // key item: unlocks ROOT BRIDGE
   "foxfire_lantern",                          // key item: automatically lights dark maps
   "lily_raft",                                // key item: ride water with RAFT
   "saxifrage",                                // key item: unlocks UPROOT boulder pushes
@@ -411,7 +442,7 @@ export type TrainerId = string;
 export type ScriptId = string;
 
 /** Pressed Marks (badges) available so far. */
-export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark", "cactus_mark", "mangrove_mark", "snowdrop_mark"] as const;
+export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark", "cactus_mark", "mangrove_mark", "snowdrop_mark", "resin_mark"] as const;
 export type MarkId = (typeof MARKS)[number];
 
 /** Full-screen 160x144 illustrations shown during key story beats. */
@@ -422,6 +453,7 @@ export const STILLS = [
   "lantern_tree_healed", // Chapter 6
   "rootstock_files", "crimson_lily", // Chapter 7
   "mercer_hub_map", // Chapter 8
+  "dragon_trees", // Chapter 9
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

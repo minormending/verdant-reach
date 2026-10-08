@@ -13,6 +13,7 @@
     "fan_letter": { "file": "fan_letter.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
     "fennimores_letter": { "file": "fennimores_letter.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
     "field_herbarium": { "file": "field_herbarium.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "fig_root": { "file": "fig_root.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast9/icons9.py" } },
     "foxfire_lantern": { "file": "foxfire_lantern.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast5/icons5.py" } },
     "glass_pod": { "file": "glass_pod.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
     "glider_seed": { "file": "glider_seed.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast5/icons5.py" } },

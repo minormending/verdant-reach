@@ -2,7 +2,7 @@
 // new species in the encounter tables (docs/ROUND3.md, docs/ENCOUNTERS.md).
 
 import { describe, expect, it } from "vitest";
-import type { Cond, EncounterSlot, MapDef, MapId } from "../contracts";
+import { MAP_IDS, type Cond, type EncounterSlot, type MapDef, type MapId } from "../contracts";
 import { WORLD } from "./index";
 import { QUEST_GIVERS, eachCmd, harvestId, validateWorld } from "./validate";
 
@@ -15,27 +15,13 @@ const harvestOf = (script: string) => {
   return op!;
 };
 
-/** Keep the original Chapters 1–3 bounds scoped to those chapters. */
-const CH4 = new Set<MapId>([
-  "route_4", "glasshouse_city", "palm_house", "glasshouse_greenhouse", "glasshouse_market", "glasshouse_nursery",
-  "glasshouse_relay", "glasshouse_conservatory", "glasshouse_house", "route_5",
-]);
-
-const CH6 = new Set<MapId>([
-  "route_7", "saltmarsh_harbour", "saltmarsh_greenhouse", "saltmarsh_market", "saltmarsh_conservatory",
-  "route_8", "driftseed_isle", "driftseed_greenhouse", "driftseed_conservatory", "driftseed_vents",
-]);
-
-const CH7 = new Set<MapId>(["route_9", "larchmere", "larchmere_greenhouse", "larchmere_market", "bloom_lake", "larchmere_lodge", "rootstock_hideout_1", "rootstock_hideout_2", "larchmere_conservatory"]);
-
-const CH5 = new Set<MapId>([
-  "route_6", "cedarhallow", "cedarhallow_greenhouse", "cedarhallow_market",
-  "cedarhallow_house", "cedar_hollow", "burnt_stand", "cedarhallow_conservatory",
-]);
+/** Keep the original Chapters 1–3 bounds scoped to those chapters as maps grow. */
+const EARLY = new Set<MapId>(MAP_IDS.slice(0, MAP_IDS.indexOf("route_4")));
+const CH4 = new Set<MapId>(MAP_IDS.slice(MAP_IDS.indexOf("route_4"), MAP_IDS.indexOf("route_6")));
 
 describe("hidden items", () => {
   const all = maps.flatMap((m) => (m.hidden ?? []).map((h) => ({ map: m.id, ...h })));
-  const early = all.filter((h) => !CH4.has(h.map) && !CH5.has(h.map) && !CH6.has(h.map) && !CH7.has(h.map));
+  const early = all.filter((h) => EARLY.has(h.map));
   const ch4 = all.filter((h) => CH4.has(h.map));
   it("hides 6 to 10 items across Chapters 1-3, spread over at least 6 maps (plus a few PRUNE stashes)", () => {
     expect(early.length).toBeGreaterThanOrEqual(6);
@@ -54,7 +40,7 @@ describe("hidden items", () => {
 
 describe("harvest bushes", () => {
   it("plants 6 to 10 bushes in Chapters 1-3 and a few more in Chapter 4, each with its own harvest id", () => {
-    const early = bushes.filter((b) => !CH4.has(b.map) && !CH5.has(b.map) && !CH6.has(b.map) && !CH7.has(b.map));
+    const early = bushes.filter((b) => EARLY.has(b.map));
     expect(early.length).toBeGreaterThanOrEqual(6);
     expect(early.length).toBeLessThanOrEqual(10);
     expect(bushes.filter((b) => CH4.has(b.map)).length).toBeGreaterThanOrEqual(2);
@@ -126,7 +112,7 @@ describe("encounters with the round-3 species", () => {
     for (const s of ["clover_sprout", "cattail_shoot", "foxglove_rosette", "holly_seedling", "mint_sprig", "rose_bud", "pitcher_sprout", "snapdragon_sprout"]) {
       expect(wild.has(s as never), s).toBe(true);
     }
-    for (const m of maps) for (const s of slots(m)) {
+    for (const m of maps.filter((m) => EARLY.has(m.id))) for (const s of slots(m)) {
       if (!s.species.startsWith("snapdragon")) continue;
       expect(m.id).toBe("route_3");
       expect(s.time).toBe("day");
