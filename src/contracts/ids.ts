@@ -309,6 +309,10 @@ export const CHARACTERS = [
   "cone_sack",                   // a Rootstock sack of sealed cones (static object)
   // Chapter 6
   "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", "island_elder",
+  // Chapter 7
+  "signe", "skier", "lodge_keeper",
+  "signal_emitter",              // Rootstock broadcast cabinet: DOWN row on, UP row switched off
+  "crimson_lily",                // the CRIMSON LILY on its islet (static object)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -319,6 +323,7 @@ export const TRAINER_PORTRAITS = [
   "flora_vance", "orchardist", "arranger", "researcher", "gentleman", // Round 4
   "morrow", "lumberjack", "forager", "night_gardener", // Chapter 5
   "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", // Chapter 6
+  "signe", "skier", // Chapter 7
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -389,6 +394,7 @@ export const STILLS = [
   "glasshouse_dome", "relay_pulse", // Round 4
   "fire_cone_vision", "morrow_listening", // Chapter 5
   "lantern_tree_healed", // Chapter 6
+  "rootstock_files", "crimson_lily", // Chapter 7
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

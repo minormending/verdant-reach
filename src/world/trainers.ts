@@ -387,8 +387,8 @@ const ch7Lines = (id: string) => ({
 const ch7Trainers: TrainerDef[] = [
   trainer("climber_ridge", "RIDGE", "HIKER", "hiker", [T("larch_seedling", 33), T("holly", 34)], ch7Lines("climber_ridge")),
   trainer("climber_scree", "SCREE", "HIKER", "hiker", [T("campion_mound", 34)], ch7Lines("climber_scree")),
-  trainer("skier_frost", "FROST", "BIRDWATCHER", "birdwatcher", [T("peppermint", 34), T("edelweiss_bud", 33)], ch7Lines("skier_frost")),
-  trainer("skier_drift", "DRIFT", "BIRDWATCHER", "birdwatcher", [T("snowdrop_shoot", 34), T("larch", 35)], ch7Lines("skier_drift")),
+  trainer("skier_frost", "FROST", "BIRDWATCHER", "skier", [T("peppermint", 34), T("edelweiss_bud", 33)], ch7Lines("skier_frost")),
+  trainer("skier_drift", "DRIFT", "BIRDWATCHER", "skier", [T("snowdrop_shoot", 34), T("larch", 35)], ch7Lines("skier_drift")),
   trainer("grunt_lodge", "LODGE", "GRUNT", "grunt", [T("stinging_nettle", 35), T("venus_flytrap", 35)], ch7Lines("grunt_lodge"), { music: "battle_rootstock" }),
   trainer("grunt_b1_1", "SIGNAL 1", "GRUNT", "grunt", [T("fireweed", 36), T("sugar_maple", 36)], ch7Lines("grunt_b1_1"), { music: "battle_rootstock" }),
   trainer("grunt_b1_2", "SIGNAL 2", "GRUNT", "grunt", [T("red_mangrove", 36), T("bladderwort", 36)], ch7Lines("grunt_b1_2"), { music: "battle_rootstock" }),
@@ -398,7 +398,7 @@ const ch7Trainers: TrainerDef[] = [
   // Tuning: ghost_pipe 38→40 (+2), lodgepole_pine 39→40 (+1), red_mangrove 41→42 (+1).
   // Explicit moves below retain a special Ghost attack and a real fire attack on
   // the pine; the mangrove carries the coverage used by Reyes. Mean win: 75.1%.
-  trainer("calloway", "CALLOWAY", "ADMIN", "shears", [
+  trainer("calloway", "CALLOWAY", "ADMIN", "calloway", [
     T("ghost_pipe", 40, ["pale_bloom", "root_siphon", "spore_cloud", "petal_storm"]),
     T("lodgepole_pine", 40, ["leaf_edge", "ember_seed", "serotiny"]),
     { ...T("red_mangrove", 42, ["flood", "sap_spout", "cold_mist", "stilt_roots"]), grafted: true },
@@ -407,7 +407,7 @@ const ch7Trainers: TrainerDef[] = [
   // Tuning: every member is -1 from §5 (40/41/41/43 → 39/40/40/42).
   // Explicit moves soften repeated healing and Bloom coverage while preserving
   // signature Frost play. Mean win: 62.8%; every party/starter exceeds 25%.
-  trainer("signe", "SIGNE", "WARDEN", "nell_pitcher", [
+  trainer("signe", "SIGNE", "WARDEN", "signe", [
     T("edelweiss", 39, ["frost_bloom", "sunbeam", "woolly_coat"]),
     T("moss_campion", 40, ["cold_mist", "sap_drain", "cushion"]),
     T("larch", 40, ["needle_drop", "frost_needle", "evergreen"]),

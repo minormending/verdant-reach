@@ -29,7 +29,9 @@
     "reyes": { "file": "reyes.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
     "sailor": { "file": "sailor.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
     "schoolkid": { "file": "schoolkid.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
-    "shears": { "file": "shears.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } }
+    "shears": { "file": "shears.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "signe": { "file": "signe.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast7/portraits7.py" } },
+    "skier": { "file": "skier.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast7/portraits7.py" } }
   },
   "credits": "Original pixel art for Verdant Reach."
 }
