@@ -48,10 +48,10 @@ export const thistledown: MapDef = {
   ],
   npcs: [{ id: "tumbleweed_sighting", sprite: "tumbleweed_roll", x: 3, y: 17, facing: "right", script: "ch9_tumbleweed", visibleWhen: when({ tumbleweed_seen: false }) }],
   signs: [
-    { x: 11, y: 20, text: "THISTLEDOWN. The last sweet water before the red canyon." },
-    { x: 18, y: 13, text: "A stall of dried chiles and prickly pear jam. Back soon, says a note." },
-    { x: 19, y: 13, text: "Clay water jars, sealed with wax. They sweat to keep the water cool." },
-    { x: 20, y: 13, text: "Dragon's blood resin, sold in red tears. A little goes a long way." },
+    { x: 11, y: 20, text: "THISTLEDOWN, where the tumbleweeds roll. North: the red canyon." },
+    { x: 18, y: 13, text: "Strings of dried CHILIES and pots of PRICKLY PEAR jam. A note: \"Back at sundown.\"" },
+    { x: 19, y: 13, text: "Unglazed clay jars. Water seeps through and dries off, which keeps the rest cool." },
+    { x: 20, y: 13, text: "Red resin beads in a dish. A card: DRAGON'S BLOOD. NOT FOR SALE. ROOK WOULD KNOW." },
   ],
   triggers: [], onEnter: "ch9_arrival",
 };

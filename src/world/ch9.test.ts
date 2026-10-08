@@ -129,7 +129,7 @@ describe("Chapter 9 world", () => {
     expect(stock).toEqual(["terrarium_pod", "glass_pod", "water_flask", "spring_water", "compost", "neem_spray", "plant_food", "aloe_gel", "cloche", "rain_jar", "ember_ash"]);
   });
 
-  it("uses the exact route and junior teams, portraits and placeholder lines", () => {
+  it("uses the exact route and junior teams, portraits and finished lines", () => {
     const teams = {
       drifter_dune: [["prickly_pear", 43], ["lithops_pair", 42]], drifter_mesa: [["saguaro", 44]],
       botanist_sage2: [["pitaya_cutting", 43], ["foxglove", 43]], botanist_rue: [["lithops_pair", 43], ["dandelion_clock", 43]],
@@ -146,7 +146,7 @@ describe("Chapter 9 world", () => {
     }
     for (const id of [...Object.keys(teams), "rook", "rival_5_oak", "rival_5_chili", "rival_5_lily"]) {
       const t = WORLD.trainers[id];
-      for (const line of [t.intro, t.defeat, t.after]) expect(line).toContain("TODO(text)");
+      for (const line of [t.intro, t.defeat, t.after]) expect(line).toMatch(/^(?!.*TODO)\S.*\S$/);
     }
   });
 

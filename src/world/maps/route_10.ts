@@ -40,7 +40,7 @@ export const route_10: MapDef = {
     { id: "botanist_rue", sprite: "gardener", x: 41, y: 11, facing: "up", trainer: "botanist_rue", sight: 2 },
   ],
   hidden: [{ x: 3, y: 4, item: "spring_water" }, { x: 46, y: 16, item: "glass_pod" }],
-  signs: [{ x: 4, y: 8, text: "ROUTE 10. East: THISTLEDOWN, where the scrub gives way to desert." }],
+  signs: [{ x: 4, y: 8, text: "ROUTE 10. East to THISTLEDOWN. Carry water: the scrub won't share." }],
   triggers: [],
   // Numeric growth triggers override the route's ordinary 40–44 range.
   encounters: { grass: { rate: 12, slots: [
