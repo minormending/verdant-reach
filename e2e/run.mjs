@@ -8,7 +8,7 @@ const args = process.argv.slice(2);
 let speed = 8;
 let seed = 1;
 let headed = false;
-let allowTodo = false; // --allow-placeholders: tolerate TODO(text) dialogue (the ch5 branch only, until the writing pass)
+let allowTodo = false; // --allow-placeholders: tolerate TODO(text) dialogue (the chapter branches, until the writing pass)
 let timeoutMin = 0;
 let reportFile = "";
 for (let i = 0; i < args.length; i++) {
@@ -33,8 +33,9 @@ if (!Number.isInteger(speed) || speed < 1 || speed > 16) {
 }
 
 const started = performance.now();
-// The full suite grows each chapter (73 beats through Chapter 5): about 11 min at speed 8.
-const timeoutMs = timeoutMin ? timeoutMin * 60_000 : Math.max(20 * 60_000, 90 * 60_000 / speed);
+// The full suite grows each chapter (99 beats through Chapter 6), including
+// real grass/water catches and raft crossings. Allow room for alternate seeds.
+const timeoutMs = timeoutMin ? timeoutMin * 60_000 : Math.max(30 * 60_000, 150 * 60_000 / speed);
 const reportPath = reportFile ? new URL(reportFile, `file://${process.cwd()}/`) : new URL("./last-report.json", import.meta.url);
 const abort = new AbortController();
 let server;
@@ -93,7 +94,7 @@ try {
     await sleep(1000, undefined, { signal: abort.signal });
   }
   const failures = report.beats.filter((b) => !b.ok).length;
-  if (report.beats.length !== 73) runnerIssues.push(`Expected all 73 beats; received ${report.beats.length}`);
+  if (report.beats.length !== 99) runnerIssues.push(`Expected all 99 beats; received ${report.beats.length}`);
   process.exitCode = failures === 0 && report.issues.length === 0 && runnerIssues.length === 0 ? 0 : 1;
 } catch (error) {
   runnerIssues.push(error.stack ?? String(error));

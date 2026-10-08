@@ -9,6 +9,7 @@
     "graft_collar": { "file": "graft_collar.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
     "greenhouse_morning": { "file": "greenhouse_morning.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
     "grove_taps": { "file": "grove_taps.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },
+    "lantern_tree_healed": { "file": "lantern_tree_healed.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast6/stills6.py" } },
     "morrow_listening": { "file": "morrow_listening.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast5/stills5.py" } },
     "relay_pulse": { "file": "relay_pulse.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/cast4/stills4.py" } },
     "theft": { "file": "theft.png", "size": [160, 144], "source": { "kind": "generated", "tool": "tools/art/stills.py" } },

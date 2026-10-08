@@ -41,6 +41,8 @@ export interface GameState {
   marks: MarkId[];
   herbarium: { seen: SpeciesId[]; caught: SpeciesId[] };
   position: { map: MapId; x: number; y: number; facing: Dir };
+  /** Riding the LILY RAFT; retained on Continue, cleared by travel and whiteout. */
+  rafting?: boolean;
   heal: { map: MapId; x: number; y: number };  // last greenhouse
   playTimeMs: number;
   options: {

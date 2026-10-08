@@ -273,7 +273,8 @@ describe("herbarium", () => {
       expect(sentences.length, e.species).toBeLessThanOrEqual(4);
       expect(e.heightM).toBeGreaterThan(0);
       expect(e.weightKg).toBeGreaterThan(0);
-      expect(e.scientificName).toMatch(/^[A-Z][a-z]+ [a-z]+$/);
+      // The Chapter 6 prickly pear line is identified to genus (Opuntia).
+      expect(e.scientificName).toMatch(/^[A-Z][a-z]+(?: [a-z]+)?$/);
       // plain ASCII only: the 8x8 font has no accented letters except e-acute
       expect(e.entry, e.species).toMatch(/^[ -~]+$/);
     }

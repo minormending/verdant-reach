@@ -41,8 +41,8 @@ export const fallowfield: MapDef = {
     "T#kk+kk+++#..::...q~~~~~q..T", // 19
     "T#++++++++#..::S.9~0~~~~~35T", // 20
     "TTTT#######TL88L..q~~~0~~TTT", // 21
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTT", // 22
-    "TTTTTTTTTTTTTTTTTTTTTTTTTTTT", // 23
+    "TTTTTTTTTTTTTTTT:TTTTTTTTTTT", // 22
+    "TTTTTTTTTTTTTTTT:TTTTTTTTTTT", // 23
   ],
   structures: [
     { key: "house_small", x: 2, y: 4 },   // home, door 3,6
@@ -54,12 +54,14 @@ export const fallowfield: MapDef = {
     { key: "house_large", x: 22, y: 14 }, // door 24,17
   ],
   warps: [
+    { x: 16, y: 23, to: "route_7", toX: 14, toY: 1, facing: "down" },
     { x: 13, y: 0, to: "route_1", toX: 10, toY: 38, facing: "up" },
     { x: 14, y: 0, to: "route_1", toX: 11, toY: 38, facing: "up" },
     { x: 3, y: 6, to: "player_home", toX: 4, toY: 6, facing: "up" },
     { x: 20, y: 6, to: "herbarium", toX: 4, toY: 11, facing: "up" },
   ],
   npcs: [
+    { id: "ford_keeper", sprite: "villager_a", x: 16, y: 22, facing: "up", movement: "static", script: "ch6_ford_keeper", visibleWhen: when({ ch5_done: false }) },
     { id: "lookout", sprite: "villager_a", x: 14, y: 5, facing: "up", movement: "look_around", script: "ff_lookout" },
     { id: "farmer", sprite: "villager_b", x: 8, y: 18, facing: "left", movement: "look_around", script: "ff_farmer" },
     { id: "elder", sprite: "elder", x: 12, y: 11, facing: "right", movement: "static", script: "ff_elder" },

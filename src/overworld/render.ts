@@ -3,11 +3,16 @@
 // the map-name sign and battle-intro transitions.
 
 import type { Assets, CharacterKey, Dir, StructureKey, TileKey } from "../contracts";
-import { CHAR_ROWS, SCREEN_H, SCREEN_W, STRUCTURES, TILE, UI, characterPath, structurePath, tilePath } from "../contracts";
+import { CHAR_ROWS, SCREEN_H, SCREEN_W, STRUCTURES, TILE, UI, characterPath, structurePath, tilePath, uiPath } from "../contracts";
 import { drawImagePath, drawMissing, imageMissing } from "../engine/gfx";
 import { drawText, drawWindow } from "../ui/kit";
 import { drawTiny } from "../screens/kit/draw";
 import type { CellArt } from "./autotile";
+
+/** Two 24x14 Victoria-pad frames, drawn beneath the player's feet. */
+export function drawLilyRaft(g: CanvasRenderingContext2D, assets: Assets, x: number, y: number, second: boolean) {
+  drawImagePath(g, assets, uiPath("raft"), second ? 24 : 0, 0, 24, 14, x - 4, y + TILE - 9);
+}
 
 /** Flat colours used only when a tile's art is missing (keeps dev maps readable). */
 const FALLBACK: Partial<Record<TileKey, [string, string]>> = {

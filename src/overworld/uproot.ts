@@ -1,0 +1,119 @@
+// UPROOT: pure one-tile pushes and a BFS over layouts for small puzzle boards.
+// Boulder positions belong to map actors, never save flags or map definitions.
+
+import type { Dir } from "../contracts";
+import { DIRS, inBounds, isWalkable, key, tileAt, tileProps, tryMove, type MapRuntime } from "./map";
+import { tryRaftMove } from "./raft";
+
+export const UPROOT = {
+  item: "saxifrage",
+  prompt: "UPROOT it?",
+  locked: "A heavy boulder. It needs UPROOT.",
+  blocked: "It won't budge.",
+} as const;
+
+export interface BoulderPosition { x: number; y: number }
+
+export type PushResult =
+  | { kind: "push"; x: number; y: number }
+  | { kind: "locked"; text: string }
+  | { kind: "blocked"; reason: "wall" | "edge" | "occupied"; text: string };
+
+/** The caller supplies current occupancy (including NPCs and other boulders).
+ *  No hops, chain pushes or mutation: a boulder moves exactly one tile. */
+export function tryPushBoulder(
+  map: MapRuntime, boulder: BoulderPosition, dir: Dir, hasSaxifrage: boolean,
+  occupied: (x: number, y: number) => boolean = () => false,
+): PushResult {
+  if (!hasSaxifrage) return { kind: "locked", text: UPROOT.locked };
+  const { dx, dy } = DIRS[dir];
+  const x = boulder.x + dx, y = boulder.y + dy;
+  if (!inBounds(map, x, y)) return { kind: "blocked", reason: "edge", text: UPROOT.blocked };
+  if (!isWalkable(map, x, y)) return { kind: "blocked", reason: "wall", text: UPROOT.blocked };
+  if (occupied(x, y)) return { kind: "blocked", reason: "occupied", text: UPROOT.blocked };
+  return { kind: "push", x, y };
+}
+
+export interface BoulderPuzzleOptions {
+  /** Combine land pushes with RAFT travel; boulders still only move on land. */
+  rafting?: boolean;
+  /** Default: non-pushable NPCs in the map definition. Override for visibility. */
+  occupied?: (x: number, y: number) => boolean;
+  /** Stop as soon as this tile is reachable; useful for goal-only tests. */
+  goal?: BoulderPosition;
+}
+
+/** All player tiles reachable across the BFS's boulder layouts. Walks within
+ *  one layout are flooded first, so states represent pushes rather than every
+ *  footstep. Boulders are interchangeable; the entire reachable player region
+ *  is part of the key, preserving one-way ledge behaviour. Inputs stay intact. */
+export function reachableBoulderTiles(
+  map: MapRuntime, boulders: readonly BoulderPosition[], player: BoulderPosition,
+  opts: BoulderPuzzleOptions = {},
+): Set<string> {
+  const npcs = new Set(map.def.npcs.filter((n) => !n.pushable).map((n) => key(n.x, n.y)));
+  const occupied = opts.occupied ?? ((x: number, y: number) => npcs.has(key(x, y)));
+  const walkRegion = (start: BoulderPosition, blocked: (x: number, y: number) => boolean) => {
+    const region = new Set<string>();
+    const onWater = (x: number, y: number) => !!tileProps(tileAt(map, x, y)).water;
+    if ((!isWalkable(map, start.x, start.y) && !(opts.rafting && inBounds(map, start.x, start.y) &&
+      onWater(start.x, start.y) && !map.solid.has(key(start.x, start.y)))) || blocked(start.x, start.y)) return region;
+    region.add(key(start.x, start.y));
+    const walks = [start];
+    for (let i = 0; i < walks.length; i++) {
+      const p = walks[i];
+      for (const dir of Object.keys(DIRS) as Dir[]) {
+        const move = opts.rafting
+          ? tryRaftMove(map, p.x, p.y, dir, onWater(p.x, p.y), true, blocked)
+          : tryMove(map, p.x, p.y, dir, blocked);
+        if (move.kind === "blocked" || region.has(key(move.x, move.y))) continue;
+        region.add(key(move.x, move.y));
+        walks.push({ x: move.x, y: move.y });
+      }
+    }
+    return region;
+  };
+  // Once every potentially reachable tile has been seen, no further layouts
+  // can improve the answer. This avoids exhausting free boulder arrangements.
+  const potential = walkRegion(player, occupied);
+  const reached = new Set<string>();
+  const seen = new Set<string>();
+  const queue: { stones: BoulderPosition[]; player: BoulderPosition }[] = [
+    { stones: boulders.map((b) => ({ ...b })), player: { ...player } },
+  ];
+  for (let head = 0; head < queue.length; head++) {
+    const state = queue[head];
+    const at = new Set(state.stones.map((b) => key(b.x, b.y)));
+    const blocked = (x: number, y: number) => at.has(key(x, y)) || occupied(x, y);
+    const region = walkRegion(state.player, blocked);
+    if (!region.size) continue;
+    const signature = [...at].sort().join(";") + "|" + [...region].sort().join(";");
+    if (seen.has(signature)) continue;
+    seen.add(signature);
+    for (const tile of region) reached.add(tile);
+    if (opts.goal && reached.has(key(opts.goal.x, opts.goal.y))) return reached;
+    if (reached.size === potential.size) return reached;
+    for (let i = 0; i < state.stones.length; i++) {
+      const b = state.stones[i];
+      for (const dir of Object.keys(DIRS) as Dir[]) {
+        const { dx, dy } = DIRS[dir];
+        const stand = { x: b.x - dx, y: b.y - dy };
+        if (!region.has(key(stand.x, stand.y))) continue;
+        const push = tryPushBoulder(map, b, dir, true, blocked);
+        if (push.kind !== "push") continue;
+        const stones = state.stones.map((s, j) => j === i ? { x: push.x, y: push.y } : s);
+        // UPROOT moves the boulder; the player stays on the standing tile.
+        queue.push({ stones, player: stand });
+      }
+    }
+  }
+  return reached;
+}
+
+/** Does any sequence of legal walks and UPROOT pushes reach the goal tile? */
+export function solveBoulderPuzzle(
+  map: MapRuntime, boulders: readonly BoulderPosition[], player: BoulderPosition,
+  goal: BoulderPosition, opts: Omit<BoulderPuzzleOptions, "goal"> = {},
+): boolean {
+  return reachableBoulderTiles(map, boulders, player, { ...opts, goal }).has(key(goal.x, goal.y));
+}

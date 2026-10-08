@@ -1,3 +1,4 @@
+import type { TrainerId } from "../src/contracts";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createQuickened } from "../src/battle/logic/stats";
 import { randomStream } from "../src/engine/random";
@@ -15,11 +16,11 @@ afterEach(() => {
 });
 
 /** Exercise the real battle scene, menus, item screens and input driver. This
- * supplements (does not replace) the browser's full 46-beat playthrough. */
-async function fight(seed: number, wounded = false, active = 0) {
+ * supplements (does not replace) the browser's full 99-beat playthrough. */
+async function fight(seed: number, wounded = false, active = 0, trainer: TrainerId = "flora") {
   const originalConsole = { log: console.log, warn: console.warn, error: console.error };
   vi.resetModules();
-  vi.stubGlobal("location", { search: `?speed=8&seed=${seed}&time=day` });
+  vi.stubGlobal("location", { search: `?speed=8&seed=${seed}&time=day${trainer === "flora" ? "" : "&allowTodo"}` });
   const listeners = new Map<string, (event: KeyboardEvent) => void>();
   vi.stubGlobal("addEventListener", (name: string, fn: (event: KeyboardEvent) => void) => listeners.set(name, fn));
   vi.stubGlobal("KeyboardEvent", class {
@@ -61,7 +62,7 @@ async function fight(seed: number, wounded = false, active = 0) {
     e2e.report.frame.samples++;
   }, 16);
   let outcome: string | undefined;
-  void ctx.battle({ kind: "trainer", trainer: "flora" }).then((value) => { outcome = value; });
+  void ctx.battle({ kind: "trainer", trainer }).then((value) => { outcome = value; });
   const drive = e2e.advance(1000, () => outcome !== undefined);
   await vi.advanceTimersByTimeAsync(240_000);
   const advanced = await drive;
@@ -94,4 +95,8 @@ it("selects the active party member when healing a helper outside slot zero", as
   expect(result.bag.spring_water ?? 0).toBe(0);
   expect(result.texts).toContain("[party pick] Use on which? -> 1");
   expect(result.texts).toContain("[battle] RED CHILI recovered 60 HP!");
+});
+
+it.each(["saguaro", "reyes"] as const)("drives %s with the story helper and seed 1", async (trainer) => {
+  await fight(1, false, 0, trainer);
 });

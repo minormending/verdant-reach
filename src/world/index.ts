@@ -5,6 +5,7 @@ import type { Scripts } from "./build";
 import { TRAINERS } from "./trainers";
 import { storyScripts } from "./scripts/story";
 import { act1Scripts } from "./scripts/act1";
+import { ch6Scripts } from "./scripts/ch6";
 import { ch5Scripts } from "./scripts/ch5";
 import { ch4Scripts } from "./scripts/ch4";
 import { QUESTS, questScripts } from "./scripts/quests";
@@ -44,6 +45,17 @@ import * as cedar_hollow from "./maps/cedar_hollow";
 import * as burnt_stand from "./maps/burnt_stand";
 import * as cedarhallow_conservatory from "./maps/cedarhallow_conservatory";
 
+import * as route_7 from "./maps/route_7";
+import * as saltmarsh_harbour from "./maps/saltmarsh_harbour";
+import * as saltmarsh_greenhouse from "./maps/saltmarsh_greenhouse";
+import * as saltmarsh_market from "./maps/saltmarsh_market";
+import * as saltmarsh_conservatory from "./maps/saltmarsh_conservatory";
+import * as route_8 from "./maps/route_8";
+import * as driftseed_isle from "./maps/driftseed_isle";
+import * as driftseed_greenhouse from "./maps/driftseed_greenhouse";
+import * as driftseed_conservatory from "./maps/driftseed_conservatory";
+import * as driftseed_vents from "./maps/driftseed_vents";
+
 const maps: Record<MapId, MapDef> = {
   player_home: player_home.player_home,
   herbarium: herbarium.herbarium,
@@ -70,6 +82,16 @@ const maps: Record<MapId, MapDef> = {
   cedar_hollow: cedar_hollow.cedar_hollow,
   burnt_stand: burnt_stand.burnt_stand,
   cedarhallow_conservatory: cedarhallow_conservatory.cedarhallow_conservatory,
+  route_7: route_7.route_7,
+  saltmarsh_harbour: saltmarsh_harbour.saltmarsh_harbour,
+  saltmarsh_greenhouse: saltmarsh_greenhouse.saltmarsh_greenhouse,
+  saltmarsh_market: saltmarsh_market.saltmarsh_market,
+  saltmarsh_conservatory: saltmarsh_conservatory.saltmarsh_conservatory,
+  route_8: route_8.route_8,
+  driftseed_isle: driftseed_isle.driftseed_isle,
+  driftseed_greenhouse: driftseed_greenhouse.driftseed_greenhouse,
+  driftseed_conservatory: driftseed_conservatory.driftseed_conservatory,
+  driftseed_vents: driftseed_vents.driftseed_vents,
   // Chapter 4
   route_4: route_4.route_4,
   glasshouse_city: glasshouse_city.glasshouse_city,
@@ -106,7 +128,7 @@ function mergeScripts(...all: Scripts[]): Scripts {
 
 export const WORLD: WorldData = {
   maps,
-  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, questScripts, ...mapScripts),
+  scripts: mergeScripts(storyScripts, act1Scripts, ch4Scripts, ch5Scripts, ch6Scripts, questScripts, ...mapScripts),
   trainers: TRAINERS,
   quests: QUESTS,
   glide: [
@@ -115,6 +137,8 @@ export const WORLD: WorldData = {
     { map: "sugarbush", x: 24, y: 12, facing: "down", name: "SUGARBUSH" },
     { map: "glasshouse_city", x: 6, y: 13, facing: "down", name: "GLASSHOUSE CITY" },
     { map: "cedarhallow", x: 6, y: 17, facing: "down", name: "CEDARHALLOW" },
+    { map: "saltmarsh_harbour", x: 6, y: 12, facing: "down", name: "SALTMARSH HARBOUR" },
+    { map: "driftseed_isle", x: 14, y: 13, facing: "down", name: "DRIFTSEED ISLE" },
   ],
   // Prologue: the observation deck at night, beside DR. VALE.
   newGame: { map: "herbarium_roof", x: 5, y: 6, facing: "up", script: "prologue" },

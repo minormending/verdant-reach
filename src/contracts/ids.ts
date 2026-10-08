@@ -45,6 +45,12 @@ export const SPECIES_IDS = [
   "lodgepole_cone", "lodgepole_seedling", "lodgepole_pine",
   "skunk_cabbage_shoot", "skunk_cabbage",
   "cedar_seedling", "red_cedar",
+  // Chapter 6
+  "mangrove_propagule", "mangrove_sapling", "red_mangrove",
+  "seagrass_shoot", "eelgrass",
+  "pear_pad", "padded_cactus", "prickly_pear",
+  "saguaro_pup", "saguaro_column", "saguaro",
+  "vanilla_vine", "vanilla_orchid",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 
@@ -80,6 +86,8 @@ export const MAP_IDS = [
   // Chapter 5 (CH5_IDS.md §B order)
   "route_6", "cedarhallow", "cedarhallow_greenhouse", "cedarhallow_market",
   "cedarhallow_house", "cedar_hollow", "burnt_stand", "cedarhallow_conservatory",
+  // Chapter 6 (CH6.md §4 order)
+  "route_7", "saltmarsh_harbour", "saltmarsh_greenhouse", "saltmarsh_market", "saltmarsh_conservatory", "route_8", "driftseed_isle", "driftseed_greenhouse", "driftseed_conservatory", "driftseed_vents",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -191,6 +199,22 @@ export const TILES = {
   ghostpipe_clump:{ walk: false },               // pale ghost pipes (decoration, unlit)
   glow_pipe:      { walk: false },               // glowing ghost pipes: a light source on dark maps, like lamp_post
   night_floor:    { walk: true },                // Conservatory 4 slate
+  // Chapter 6: tidal coast and volcanic island
+  seagrass_bed:   { walk: false, water: true },
+  mangrove_roots: { walk: false },
+  tide_pool:      { walk: false, water: true },
+  pier:           { walk: true },
+  salt_flat:      { walk: true },
+  driftwood:      { walk: false },
+  beach_rock:     { walk: false },
+  fishing_net:    { walk: false },
+  dry_grass:      { walk: true },               // sparse dune tufts, no encounters
+  shell_scatter:  { walk: true },
+  vent_moss:      { walk: true, encounter: "grass" },
+  cactus_scrub:   { walk: true, encounter: "grass" },
+  volcanic_rock:  { walk: false },
+  basalt_floor:   { walk: true },
+  vent_steam:     { walk: false },
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -238,6 +262,12 @@ const STRUCTURE_SPECS = {
   night_conservatory:  { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 4 (dark glass)
   giant_cedar:         { w: 3, h: 4 },                       // landmark tree (scenery)
   camp_tent:           { w: 3, h: 2 },                       // Rootstock camp tent (scenery)
+  // Chapter 6: Saltmarsh Harbour and Driftseed Isle
+  harbour_house:      { w: 4, h: 3, door: { x: 1, y: 2 } },
+  lantern_tree:       { w: 3, h: 4 },
+  tide_conservatory:  { w: 6, h: 4, door: { x: 3, y: 3 } },
+  adobe_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } },
+  driftwood_hut:      { w: 4, h: 3, door: { x: 1, y: 2 } },
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
@@ -262,9 +292,12 @@ export const CHARACTERS = [
   "flora_vance", "wren", "nursery_keeper", "nursery_keeper_b",
   "researcher", "orchardist", "arranger", "reporter", "gentleman",
   "rose_gate",                   // Conservatory 3 trellis gate (hide via visibleWhen to open)
+  "boulder",                     // UPROOT puzzle object; resets on map entry
   // Chapter 5
   "morrow", "shrine_keeper", "ranger", "lumberjack", "forager", "night_gardener",
   "cone_sack",                   // a Rootstock sack of sealed cones (static object)
+  // Chapter 6
+  "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", "island_elder",
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -274,6 +307,7 @@ export const TRAINER_PORTRAITS = [
   "gardener", "schoolkid", "birdwatcher", "hiker", "beekeeper", "florist",
   "flora_vance", "orchardist", "arranger", "researcher", "gentleman", // Round 4
   "morrow", "lumberjack", "forager", "night_gardener", // Chapter 5
+  "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", // Chapter 6
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -321,6 +355,9 @@ export const REQUIRED_ITEMS = [
   "syrup_jar",                                // key item for the SAP RUN quest
   "pruning_shears",                           // key item: unlocks the PRUNE field move
   "foxfire_lantern",                          // key item: automatically lights dark maps
+  "lily_raft",                                // key item: ride water with RAFT
+  "saxifrage",                                // key item: unlocks UPROOT boulder pushes
+  "cactus_sap",                               // key item: Saguaro's remedy for the Lantern Tree
   "fan_letter", "signed_photo",               // key items for the FAN MAIL quest
 ] as const;
 export type RequiredItemId = (typeof REQUIRED_ITEMS)[number];
@@ -330,7 +367,7 @@ export type TrainerId = string;
 export type ScriptId = string;
 
 /** Pressed Marks (badges) available so far. */
-export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark"] as const;
+export const MARKS = ["bramble_mark", "sundew_mark", "rose_mark", "pipe_mark", "cactus_mark", "mangrove_mark"] as const;
 export type MarkId = (typeof MARKS)[number];
 
 /** Full-screen 160x144 illustrations shown during key story beats. */
@@ -338,6 +375,7 @@ export const STILLS = [
   "bloom", "greenhouse_morning", "theft", "grove_taps", "graft_collar", "vale_call",
   "glasshouse_dome", "relay_pulse", // Round 4
   "fire_cone_vision", "morrow_listening", // Chapter 5
+  "lantern_tree_healed", // Chapter 6
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

@@ -44,6 +44,7 @@ export interface MapDef {
   encounters?: {
     grass?: { rate: number; slots: EncounterSlot[] }; // rate: % chance per step on tall_grass
     bog?: { rate: number; slots: EncounterSlot[] };
+    water?: { rate: number; slots: EncounterSlot[] }; // per raft step on water:true
   };
   /** Force a time of day on this map regardless of the clock (e.g. the prologue
    *  roof is always night). Affects tint, lights, ambience and encounters. */
@@ -66,6 +67,8 @@ export interface NpcDef {
   y: number;
   facing: Dir;
   movement?: "static" | "wander" | "look_around";
+  /** UPROOT boulder: pushed one tile at a time; position resets on map entry. */
+  pushable?: boolean;
   /** Talk script. Trainers use `trainer` instead (engine runs intro -> battle -> after). */
   script?: ScriptId;
   trainer?: TrainerId;

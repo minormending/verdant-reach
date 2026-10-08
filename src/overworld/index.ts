@@ -19,14 +19,15 @@ import { nameEntry } from "../ui/nameEntry";
 import { saveDialog } from "../ui/widgets";
 import { drawSeedBig, seedIcon } from "../ui/seedArt";
 import { Actor, dirTo, type Emote } from "./actor";
-import { rollEncounter } from "./encounters";
+import { rollEncounter, type EncounterKind } from "./encounters";
+import { tryRaftMove } from "./raft";
 import {
   DIRS, OPPOSITE, buildMap, checkCond, refreshLegend, inSight, isMatWarp, isWalkable, tileAt, tileProps, tryMove,
   triggerAt, warpAt, type MapRuntime,
 } from "./map";
 import {
   BattleTransition, TOAST_MS, drawCharacter, drawEmote, drawGrassOverlay, drawMapName, drawShadow, drawStructure,
-  drawToast, eraseCharacter, isStaticObject, rowFor, structureImage,
+  drawToast, drawLilyRaft, eraseCharacter, isStaticObject, rowFor, structureImage,
 } from "./render";
 import { AmbientFx, effectiveAmbient } from "./ambient";
 import { autotileMask } from "./autotile";
@@ -35,6 +36,7 @@ import { Effects, drawHiddenSparkle, drawWaterGlint } from "./effects";
 import { Follower, followerLine } from "./follower";
 import { bushId, hasItem, hiddenAt, hiddenFlag, pickedToday, unfoundHidden } from "./progress";
 import { FIELD_MOVE_FX, fieldMoveFlag, fieldMoveOf } from "./fieldmove";
+import { UPROOT, tryPushBoulder } from "./uproot";
 import { canBattle, nurseryStep, readySeed, seedHint, seedStep, sprout } from "./nursery";
 import { drawHalo, drawTint, lampInfo, makeScreenCanvas, nightGlass, windowGlow } from "./lights";
 import { TileLayer } from "./tilelayer";
@@ -44,6 +46,7 @@ import {
 } from "./script";
 import { runStartMenu } from "./startMenu";
 import { visitedGlideMaps, visitedTownFlag } from "./glide";
+import { continuePosition } from "./continue";
 
 export interface OverworldOpts {
   /** "new": run WORLD.newGame.script; "continue": run the map's onEnter. */
@@ -128,11 +131,11 @@ class Overworld implements Scene {
   toasts: { kind: ToastKind; title: string; at: number }[] = [];
 
   constructor(private ctx: GameContext, private opts: OverworldOpts) {
-    const pos = ctx.state.position;
+    const pos = opts.mode === "continue" ? continuePosition(ctx.world, ctx.state.position) : ctx.state.position;
     this.player = new Actor("player", "player", pos.x, pos.y, pos.facing);
     this.host = this.makeHost();
     this.tiles = new TileLayer(ctx.assets);
-    this.loadMap(pos.map, pos.x, pos.y, pos.facing);
+    this.loadMap(pos.map, pos.x, pos.y, pos.facing, true);
   }
 
   // -------------------------------------------------------------------------
@@ -208,7 +211,8 @@ class Overworld implements Scene {
   // Map loading
   // -------------------------------------------------------------------------
 
-  loadMap(id: MapId, x: number, y: number, facing: Dir) {
+  loadMap(id: MapId, x: number, y: number, facing: Dir, preserveRaft = false) {
+    if (!preserveRaft) delete this.ctx.state.rafting;
     let def = this.ctx.world.maps?.[id];
     if (!def) {
       console.error(`[overworld] map "${id}" is not defined`);
@@ -222,6 +226,7 @@ class Overworld implements Scene {
     this.mapId = id;
     const p = this.player;
     p.x = x; p.y = y; p.step = null; p.facing = facing; p.bumpAnim = 0;
+    // Fresh actors on every entry reset UPROOT puzzles to their authored layout.
     this.npcs = (def.npcs ?? []).map((n) => new Actor(n.id, n.sprite, n.x, n.y, n.facing, n));
     this.follower.place(x, y, facing);
     this.camera.snap();
@@ -280,7 +285,7 @@ class Overworld implements Scene {
   /** The Quickened that walks behind the player: the first healthy one (a seed rolls along too), else the lead. */
   followerMon(): Quickened | null {
     const party = this.ctx.state.party;
-    if (!party.length || !followerOn(this.ctx.state.options)) return null;
+    if (!party.length || !followerOn(this.ctx.state.options) || this.ctx.state.rafting) return null;
     return party.find((q) => q.seed || q.hp > 0) ?? party[0];
   }
 
@@ -301,7 +306,8 @@ class Overworld implements Scene {
       else if (species) this.follower.place(p.x, p.y, p.facing);
     }
     const st = p.step;
-    if (species && st && st.t === 0) this.follower.follow(st.fx, st.fy, st.dur);
+    // After dismounting, keep it tucked until the player leaves a land tile.
+    if (species && st && st.t === 0 && !tileProps(tileAt(this.map, st.fx, st.fy)).water) this.follower.follow(st.fx, st.fy, st.dur);
     this.follower.tick();
   }
 
@@ -321,8 +327,9 @@ class Overworld implements Scene {
     return mapTime(this.map?.def, this.ctx.timeOfDay);
   }
 
-  backdrop(kind?: "grass" | "bog"): BattleRequest["backdrop"] {
+  backdrop(kind?: EncounterKind): BattleRequest["backdrop"] {
     const def = this.map.def;
+    if (kind === "water" || (this.ctx.state.rafting && tileProps(tileAt(this.map, this.player.x, this.player.y)).water)) return "water";
     // Under glass: green-gold daylight; after dark, the dome lets the night in (outdoor maps tint too).
     if (GLASSHOUSE_MAPS.has(this.mapId)) return def.outdoor && this.time() === "night" ? "night" : "glasshouse";
     if (!def.outdoor) return "indoor";
@@ -489,9 +496,11 @@ class Overworld implements Scene {
   private attemptMove(dir: Dir) {
     const p = this.player;
     p.facing = dir;
-    const res = tryMove(this.map, p.x, p.y, dir, this.occupiedForPlayer);
+    const res = tryRaftMove(this.map, p.x, p.y, dir, !!this.ctx.state.rafting, hasItem(this.ctx.state, "lily_raft"), this.occupiedForPlayer);
     const running = this.ctx.input.held("b");
     if (res.kind === "walk") {
+      if (res.rafting) this.ctx.state.rafting = true;
+      else delete this.ctx.state.rafting;
       p.bumpAnim = 0;
       this.inputStep = true;
       this.walking = true;
@@ -509,9 +518,10 @@ class Overworld implements Scene {
       return;
     }
     this.runStreak = 0;
+    // Mounts need A and confirmation, like the other field interactions.
     // Blocked. Standing on a warp and pushing outward uses it (door mats: down only).
     const here = warpAt(this.map, p.x, p.y);
-    if (here && res.reason !== "occupied" && (!isMatWarp(this.map, p.x, p.y) || dir === "down")) {
+    if (here && res.kind === "blocked" && res.reason !== "occupied" && (!isMatWarp(this.map, p.x, p.y) || dir === "down")) {
       this.walking = false;
       void this.flow(() => this.useWarp(here));
       return;
@@ -544,7 +554,7 @@ class Overworld implements Scene {
     }
     if (this.checkTrainers()) return;
     if (this.grace > 0) { this.grace--; return; }
-    const enc = rollEncounter(this.map.def, tileAt(this.map, p.x, p.y), this.time(), this.ctx.rng);
+    const enc = rollEncounter(this.map.def, tileAt(this.map, p.x, p.y), this.time(), this.ctx.rng, !!st.rafting);
     if (enc) {
       this.walking = false;
       void this.flow(() => this.wildEncounter(enc.species, enc.level, enc.kind));
@@ -555,7 +565,7 @@ class Overworld implements Scene {
     const rng = this.ctx.rng;
     for (const n of this.npcs) {
       if (n.def && n.sprite === "bird" && (n.away || this.visible(n))) { this.birdAi(n); continue; }
-      if (!n.def || n.moving || !this.visible(n)) continue;
+      if (!n.def || n.def.pushable || n.moving || !this.visible(n)) continue;
       if (n.sprite === "cat" || n.sprite === "dog") { this.petAi(n); continue; }
       const mode = n.def.movement ?? "static";
       if (mode === "static") continue;
@@ -685,7 +695,7 @@ class Overworld implements Scene {
     const fy = p.y + dy;
     const npc = this.npcAt(fx, fy);
     if (npc && !npc.moving) {
-      void this.flow(() => this.talk(npc));
+      void this.flow(() => npc.def?.pushable ? this.uproot(npc) : this.talk(npc));
       return true;
     }
     if (!npc && this.followerVisible() && !this.follower.moving && this.follower.x === fx && this.follower.y === fy) {
@@ -693,6 +703,11 @@ class Overworld implements Scene {
       return true;
     }
     const tile = tileAt(this.map, fx, fy);
+    const raftMove = tryRaftMove(this.map, p.x, p.y, p.facing, !!this.ctx.state.rafting, hasItem(this.ctx.state, "lily_raft"), this.occupiedForPlayer);
+    if (raftMove.kind === "mount") {
+      void this.flow(() => this.mountRaft());
+      return true;
+    }
     if (tile === "counter") {
       const across = this.npcAt(fx + dx, fy + dy);
       if (across && !across.moving) {
@@ -839,6 +854,20 @@ class Overworld implements Scene {
     return party.find(canBattle) ?? party.find((q) => !q.seed);
   }
 
+  /** NPC field move: confirmation, then one legal push of the current actor. */
+  async uproot(boulder: Actor) {
+    const ctx = this.ctx;
+    const hasSaxifrage = hasItem(ctx.state, UPROOT.item);
+    if (!hasSaxifrage) { await ctx.ui.say(UPROOT.locked); return; }
+    if (!(await ctx.ui.yesNo(UPROOT.prompt))) return;
+    const dir = this.player.facing;
+    const push = tryPushBoulder(this.map, boulder, dir, hasSaxifrage, (x, y) => !!this.npcAt(x, y));
+    if (push.kind !== "push") { await ctx.ui.say(push.text); return; }
+    ctx.audio.playSfx("prune");
+    this.shaker.start(4);
+    await boulder.begin(dir, NPC_SCRIPT_FRAMES);
+  }
+
   /** Field move flow: tile property -> key item -> prompt -> hop + particles -> flag. */
   async useFieldMove(move: FieldMove, x: number, y: number) {
     const ctx = this.ctx;
@@ -966,6 +995,17 @@ class Overworld implements Scene {
   // Sequences
   // -------------------------------------------------------------------------
 
+  async mountRaft() {
+    if (!(await this.ctx.ui.yesNo("Ride the LILY RAFT?"))) return;
+    const p = this.player;
+    const move = tryRaftMove(this.map, p.x, p.y, p.facing, !!this.ctx.state.rafting, hasItem(this.ctx.state, "lily_raft"), this.occupiedForPlayer);
+    if (move.kind !== "mount") return;
+    this.ctx.state.rafting = true;
+    p.bumpAnim = 0;
+    this.inputStep = true;
+    await p.begin(p.facing, WALK_FRAMES);
+  }
+
   async emote(a: Actor, kind: Emote) {
     a.emote = { kind, t: 0 };
     await this.timers.frames(40);
@@ -976,7 +1016,14 @@ class Overworld implements Scene {
     this.ctx.audio.playSfx("door");
     // GBC-style stepped fade: quick out, a beat of black, a gentler fade in.
     await this.fader.to("black", 10);
-    this.loadMap(w.to, w.toX, w.toY, facing);
+    let preserveRaft = false;
+    const destination = this.ctx.world.maps[w.to];
+    if (this.ctx.state.rafting && destination) {
+      const arrival = buildMap(destination);
+      refreshLegend(arrival, this.ctx.state.flags);
+      preserveRaft = !!tileProps(tileAt(arrival, w.toX, w.toY)).water;
+    }
+    this.loadMap(w.to, w.toX, w.toY, facing, preserveRaft);
     this.playMapMusic();
     await this.timers.frames(6);
     await this.fader.to("clear", 14);
@@ -1004,7 +1051,7 @@ class Overworld implements Scene {
     return result;
   }
 
-  async wildEncounter(species: SpeciesId, level: number, kind: "grass" | "bog") {
+  async wildEncounter(species: SpeciesId, level: number, kind: EncounterKind) {
     const r = await this.battle({ kind: "wild", wild: { species, level }, backdrop: this.backdrop(kind) });
     if (r === "lost") await this.whiteout();
   }
@@ -1127,7 +1174,11 @@ class Overworld implements Scene {
       },
       async movePlayer(path) {
         for (const dir of path) {
-          const res = tryMove(self.map, self.player.x, self.player.y, dir);
+          const res = tryRaftMove(self.map, self.player.x, self.player.y, dir, !!ctx.state.rafting, hasItem(ctx.state, "lily_raft"));
+          if (res.kind === "walk" || res.kind === "ledge") {
+            if (res.rafting) ctx.state.rafting = true;
+            else delete ctx.state.rafting;
+          }
           await self.player.begin(dir, res.kind === "ledge" ? HOP_FRAMES : WALK_FRAMES, { hop: res.kind === "ledge" });
         }
         const p = self.player;
@@ -1328,6 +1379,7 @@ class Overworld implements Scene {
         base: py + TILE, order: 1,
         draw: () => {
           if (lift && (!a.fly || a.fly.t < 24)) drawShadow(g, sx, groundY, lift);
+          if (a === this.player && this.ctx.state.rafting) drawLilyRaft(g, assets, sx, groundY, second);
           drawCharacter(g, assets, a.sprite, col, row, sx, sy - lift + clunk);
           if (lg) eraseCharacter(lg, assets, a.sprite, col, row, sx, sy - lift + clunk);
           if (!lift) {

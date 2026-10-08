@@ -89,4 +89,43 @@ describe("SEED GLIDE", () => {
     expect(visitedGlideMaps(state)).toContain("cedarhallow");
     expect(visitedGlideMaps(state)).toHaveLength(5);
   });
+  it.each([
+    ["saltmarsh_harbour", 6], ["saltmarsh_market", 6], ["saltmarsh_greenhouse", 6], ["route_8", 6],
+    ["driftseed_isle", 7], ["driftseed_greenhouse", 7], ["driftseed_conservatory", 7], ["driftseed_vents", 7],
+    ["route_7", 5],
+  ] as [MapId, number][])("recovers Chapter 6 visits from %s, retaining the shears minimum", (map, count) => {
+    const state = fresh();
+    state.position.map = map;
+    state.bag.pruning_shears = 1;
+    expect(visitedGlideMaps(state)).toHaveLength(count);
+    state.position.map = "player_home";
+    state.heal.map = map;
+    expect(visitedGlideMaps(state)).toHaveLength(count);
+  });
+
+  it("does not mistake the open ford or raft for an island visit", () => {
+    const state = fresh();
+    state.flags.ch5_done = true;
+    expect(visitedGlideMaps(state)).not.toContain("saltmarsh_harbour");
+    state.flags.got_raft = true;
+    expect(visitedGlideMaps(state)).toContain("saltmarsh_harbour");
+    expect(visitedGlideMaps(state)).not.toContain("driftseed_isle");
+  });
+
+  it("recovers both towns from post-sap scenes and either Chapter 6 mark", () => {
+    for (const flag of ["got_saxifrage", "got_sap", "lantern_healed", "beat_saguaro", "beat_reyes", "ch6_done", "visited_driftseed_isle"]) {
+      const state = fresh();
+      state.flags[flag] = true;
+      state.bag.pruning_shears = 1;
+      expect(visitedGlideMaps(state)).toHaveLength(7);
+      expect(glideLanding(WORLD, state, "driftseed_isle")).toBeDefined();
+    }
+    for (const mark of ["cactus_mark", "mangrove_mark"] as const) {
+      const state = fresh();
+      state.marks = [mark];
+      state.bag.pruning_shears = 1;
+      expect(visitedGlideMaps(state)).toHaveLength(7);
+    }
+  });
+
 });

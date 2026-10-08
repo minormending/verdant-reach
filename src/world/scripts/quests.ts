@@ -630,7 +630,79 @@ const shrineOffering = (n: number): ScriptCmd[] => [
   ]),
 ];
 
+// --- SEAGRASS SURVEY: Reyes's assistant, ROUTE 8 -------------------------------
+const seagrassSurveyCheck: ScriptCmd[] = [
+  caught(["seagrass_shoot", "eelgrass"], [flag("seagrass_survey_seagrass")]),
+  caught(["mangrove_propagule", "mangrove_sapling", "red_mangrove"], [flag("seagrass_survey_mangrove")]),
+  ifFlags({ seagrass_survey_seagrass: true, seagrass_survey_mangrove: true }, [
+    say("A SEAGRASS and a MANGROVE! Both in the record.", "ASSISTANT"),
+    say("For the survey. Three GLASS PODS, and a RAIN JAR.", "ASSISTANT"),
+    give("glass_pod", 3),
+    give("rain_jar"),
+    completeQuest("seagrass_survey"),
+    say("The CAPTAIN uses these to look after the coast.", "ASSISTANT"),
+  ], [
+    ifFlags({ seagrass_survey_seagrass: false }, [
+      say("Still need a SEAGRASS. Any stage. The beds are full.", "ASSISTANT"),
+    ]),
+    ifFlags({ seagrass_survey_mangrove: false }, [
+      say("Still need a MANGROVE. Any stage. Try the marsh on ROUTE 7.", "ASSISTANT"),
+    ]),
+  ]),
+];
+const seagrassSurvey: ScriptCmd[] = [
+  byQuest("seagrass_survey", {
+    fresh: [
+      say("I'm surveying sea flowers for CAPTAIN REYES.", "ASSISTANT"),
+      say("Even SEAGRASS flowers! Its pollen drifts through the sea.", "ASSISTANT"),
+      say("Could you catch me a SEAGRASS and a MANGROVE?", "ASSISTANT"),
+      say("Any stage counts. Come back here when you have both.", "ASSISTANT"),
+      startQuest("seagrass_survey"),
+      ...seagrassSurveyCheck,
+    ],
+    going: seagrassSurveyCheck,
+    finished: [
+      say("Thanks again. The coastal record's never been so complete.", "ASSISTANT"),
+      say("Shore or sea, flowers everywhere. Even underwater.", "ASSISTANT"),
+    ],
+  }),
+];
+
+// Lead's decision: no "seen a vanilla vine" gate (the engine has no such check, and the
+// trade's own party filter already requires a vine). The trader simply asks for one.
+export const handPollinatorOffer: ScriptCmd[] = [
+  byQuest("hand_pollinator", {
+    fresh: [
+      say("Psst. You haven't found a VANILLA VINE, have you?", "TRADER"),
+      say("Outside Mexico, vanilla is pollinated by hand. Really!", "TRADER"),
+      say("EDMOND ALBIUS worked out how, on REUNION, in 1841.", "TRADER"),
+      say("Trade me a VANILLA VINE, and you can have my POLLY.", "TRADER"),
+      startQuest("hand_pollinator"),
+    ],
+    going: [
+      say("Bring a VANILLA VINE in your party, and POLLY's yours.", "TRADER"),
+    ],
+    finished: [
+      say("How's POLLY? Thriving, I hope.", "TRADER"),
+      say("No pollen, no pod. Vanilla needs a careful hand.", "TRADER"),
+    ],
+  }),
+  ifFlags({ quest_hand_pollinator_done: false }, [
+    { op: "trade", wants: ["vanilla_vine"], gives: { species: "vanilla_vine", level: 30, nickname: "POLLY" },
+      then: [
+        say("Look at that! POLLY's grown into a VANILLA already.", "TRADER"),
+        completeQuest("hand_pollinator"),
+        say("Thanks for the swap. Look after POLLY for me.", "TRADER"),
+      ],
+      else: [
+        say("No? I'll be here when you're ready.", "TRADER"),
+      ],
+    },
+  ]),
+];
+
 export const questScripts: Scripts = {
+  q_hand_pollinator: handPollinatorOffer,
   q_fire_followers: fireFollowers,
   q_shrine_offerings: shrineOfferings,
   q_shrine_offerings_shrine_1: shrineOffering(1),
@@ -651,12 +723,26 @@ export const questScripts: Scripts = {
   q_first_seed: firstSeed,
   q_fan_mail: fanMail,
   q_fan_mail_flora: fanMailFlora,
+  q_seagrass_survey: seagrassSurvey,
 };
 
 const isStarted = (q: string) => [{ flag: started(q), is: true }];
 const isDone = (q: string) => [{ flag: done(q), is: true }];
 
 export const QUESTS: Record<string, QuestDef> = {
+  seagrass_survey: {
+    id: "seagrass_survey", title: "SEAGRASS SURVEY", giver: "REYES'S ASSISTANT, ROUTE 8", area: "route_8",
+    steps: [
+      { text: "Catch a SEAGRASS.", doneWhen: [{ flag: "seagrass_survey_seagrass", is: true }] },
+      { text: "Catch a MANGROVE.", doneWhen: [{ flag: "seagrass_survey_mangrove", is: true }] },
+    ],
+    reward: "3 GLASS PODS + RAIN JAR",
+  },
+  hand_pollinator: {
+    id: "hand_pollinator", title: "HAND POLLINATOR", giver: "TRADER, SALTMARSH MARKET", area: "saltmarsh_market",
+    steps: [{ text: "Trade a VANILLA VINE.", doneWhen: isDone("hand_pollinator") }],
+    reward: "a VANILLA",
+  },
   seed_library: {
     id: "seed_library", title: "SEED LIBRARY", giver: "WILLA, FALLOWFIELD", area: "fallowfield",
     steps: [

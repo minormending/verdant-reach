@@ -80,6 +80,11 @@ const POLLINATION: Record<string, PollinationGroup[]> = {
   lodgepole: ["woodland"],
   skunk: ["wetland"],
   cedar: ["woodland"],
+  mangrove: ["wetland"],
+  seagrass: ["wetland"],
+  prickly_pear: ["garden"],
+  saguaro: ["meadow"],
+  vanilla: ["tropical"],
 };
 
 function sp(d: Def): Species {
@@ -165,6 +170,19 @@ const SKUNK: L = [[1, "ember_seed"], [1, "night_fold"], [5, "sap_drain"], [9, "s
   [18, "snowmelt"], [22, "sap_spout"], [26, "perfume"], [30, "sun_flare"], [34, "bark_skin"], [40, "wildfire"]];
 const CEDAR: L = [[1, "vine_lash"], [1, "sap_seal"], [5, "pale_touch"], [9, "sap_drain"], [13, "root_tap"],
   [17, "leaf_edge"], [20, "heartwood"], [25, "moonbeam"], [29, "bark_skin"], [34, "pale_bloom"], [40, "timber"]];
+
+// Chapter 6 (wild levels 24-31). Stage-specific signatures are added to
+// the grown forms below and retained by later stages, as in Chapter 5.
+const MANGROVE: L = [[1, "dew_drop"], [1, "sap_seal"], [5, "vine_lash"], [9, "root_tap"], [13, "undertow"],
+  [17, "sap_drain"], [21, "root_snare"], [24, "flood"], [30, "leaf_edge"], [36, "bark_skin"], [40, "downpour"]];
+const SEAGRASS: L = [[1, "dew_drop"], [1, "perfume"], [5, "vine_lash"], [9, "sap_drain"], [13, "undertow"],
+  [17, "mist_veil"], [20, "tidal_sway"], [25, "leaf_edge"], [30, "rain_call"], [34, "flood"], [40, "downpour"]];
+const PRICKLY_PEAR: L = [[1, "thorn_jab"], [1, "bristle"], [5, "vine_lash"], [9, "sap_seal"], [14, "glochid_spray"],
+  [18, "pad_slap"], [22, "burr_hitch"], [26, "thorn_lash"], [30, "photosynthesise"], [36, "bark_skin"], [40, "hook_thorns"]];
+const SAGUARO: L = [[1, "thorn_jab"], [1, "curl_up"], [5, "dew_drop"], [9, "sap_seal"], [13, "bristle"],
+  [17, "spine_volley"], [21, "root_tap"], [26, "thorn_lash"], [30, "bark_skin"], [36, "flood"], [42, "hook_thorns"]];
+const VANILLA: L = [[1, "pollen_puff"], [1, "perfume"], [5, "vine_lash"], [9, "sap_drain"], [13, "wind_scatter"],
+  [18, "hand_pollen"], [22, "root_snare"], [26, "sunbeam"], [30, "photosynthesise"], [36, "leaf_gale"], [40, "petal_storm"]];
 
 const ALL: Species[] = [
   // ------------------------------------------------------------- starters
@@ -472,6 +490,56 @@ const ALL: Species[] = [
   sp({ id: "red_cedar", name: "Red Cedar", line: "cedar", stage: 2, types: ["wood", "ghost"],
     base: st(110, 80, 110, 55, 105, 40), rate: "slow", catchRate: 45, baseExp: 190, ev: { hp: 1, def: 1, spd: 1 },
     learnset: learn(CEDAR) }),
+
+  // ============================================================== Chapter 6
+  // ------------------------------------------------------------- mangrove (defence and special defence)
+  sp({ id: "mangrove_propagule", name: "Propagule", line: "mangrove", stage: 1, types: ["water"],
+    base: st(50, 35, 70, 40, 65, 30), rate: "medium", catchRate: 190, baseExp: 64, ev: { def: 1 },
+    grows: ["mangrove_sapling", vigor(24)], learnset: learn(MANGROVE) }),
+  sp({ id: "mangrove_sapling", name: "Stilt Sprout", line: "mangrove", stage: 2, types: ["water", "wood"],
+    base: st(65, 50, 95, 70, 90, 40), rate: "medium", catchRate: 75, baseExp: 140, ev: { def: 1, spd: 1 },
+    grows: ["red_mangrove", vigor(34)], learnset: learn(MANGROVE, [[26, "stilt_roots"]]) }),
+  sp({ id: "red_mangrove", name: "Red Mangrove", line: "mangrove", stage: 3, types: ["water", "wood"],
+    base: st(85, 65, 115, 85, 110, 40), rate: "medium", catchRate: 45, baseExp: 198, ev: { def: 2, spd: 1 },
+    learnset: learn(MANGROVE, [[26, "stilt_roots"]]) }),
+
+  // ------------------------------------------------------------- seagrass (special attack and speed)
+  sp({ id: "seagrass_shoot", name: "Seagrass Tip", line: "seagrass", stage: 1, types: ["water"],
+    base: st(45, 30, 40, 70, 45, 70), rate: "medium", catchRate: 190, baseExp: 66, ev: { spe: 1 },
+    grows: ["eelgrass", vigor(28)], learnset: learn(SEAGRASS) }),
+  sp({ id: "eelgrass", name: "Eelgrass", line: "seagrass", stage: 2, types: ["water"],
+    base: st(65, 45, 55, 110, 65, 110), rate: "medium", catchRate: 60, baseExp: 166, ev: { spa: 1, spe: 1 },
+    learnset: learn(SEAGRASS) }),
+
+  // ------------------------------------------------------------- prickly pear (attack and defence)
+  sp({ id: "pear_pad", name: "Pear Pad", line: "prickly_pear", stage: 1, types: ["thorn"],
+    base: st(45, 70, 65, 40, 40, 30), rate: "medium", catchRate: 190, baseExp: 64, ev: { atk: 1 },
+    activity: "day", grows: ["padded_cactus", vigor(22)], learnset: learn(PRICKLY_PEAR) }),
+  sp({ id: "padded_cactus", name: "Pad Cactus", line: "prickly_pear", stage: 2, types: ["thorn"],
+    base: st(60, 95, 90, 55, 55, 45), rate: "medium", catchRate: 75, baseExp: 136, ev: { atk: 1, def: 1 },
+    activity: "day", grows: ["prickly_pear", vigor(32)], learnset: learn(PRICKLY_PEAR) }),
+  sp({ id: "prickly_pear", name: "Prickly Pear", line: "prickly_pear", stage: 3, types: ["thorn", "bloom"],
+    base: st(75, 115, 110, 70, 70, 50), rate: "medium", catchRate: 45, baseExp: 194, ev: { atk: 2, def: 1 },
+    activity: "day", learnset: learn(PRICKLY_PEAR, [[1, "pollen_puff"], [32, "unfurl"], [36, "petal_storm"]]) }),
+
+  // ------------------------------------------------------------- saguaro (slow-growing HP/defence tank, very low speed)
+  sp({ id: "saguaro_pup", name: "Saguaro Pup", line: "saguaro", stage: 1, types: ["thorn"],
+    base: st(85, 45, 80, 30, 45, 15), rate: "slow", catchRate: 120, baseExp: 66, ev: { hp: 1 },
+    activity: "day", grows: ["saguaro_column", vigor(30)], learnset: learn(SAGUARO) }),
+  sp({ id: "saguaro_column", name: "Tall Saguaro", line: "saguaro", stage: 2, types: ["thorn"],
+    base: st(115, 65, 110, 45, 65, 20), rate: "slow", catchRate: 45, baseExp: 144, ev: { hp: 1, def: 1 },
+    activity: "day", grows: ["saguaro", vigor(40)], learnset: learn(SAGUARO, [[32, "water_store"]]) }),
+  sp({ id: "saguaro", name: "Old Saguaro", line: "saguaro", stage: 3, types: ["thorn", "water"],
+    base: st(145, 85, 135, 55, 75, 25), rate: "slow", catchRate: 45, baseExp: 206, ev: { hp: 2, def: 1 },
+    activity: "day", learnset: learn(SAGUARO, [[32, "water_store"]]) }),
+
+  // ------------------------------------------------------------- vanilla (rare special attacker and special wall; trade growth)
+  sp({ id: "vanilla_vine", name: "Vanilla Vine", line: "vanilla", stage: 1, types: ["bloom"],
+    base: st(45, 30, 40, 75, 70, 40), rate: "medium", catchRate: 45, baseExp: 72, ev: { spa: 1 },
+    grows: ["vanilla_orchid", { kind: "cross_pollination" }], learnset: learn(VANILLA) }),
+  sp({ id: "vanilla_orchid", name: "Vanilla", line: "vanilla", stage: 2, types: ["bloom", "wood"],
+    base: st(70, 45, 60, 115, 110, 70), rate: "medium", catchRate: 45, baseExp: 180, ev: { spa: 1, spd: 1 },
+    learnset: learn(VANILLA) }),
 ];
 
 export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;

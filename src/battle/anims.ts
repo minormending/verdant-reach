@@ -167,6 +167,12 @@ export const MOVE_ANIMS: Record<string, AnimSpec> = {
   serotiny: S("grow", "unfurl"),
   snowmelt: S("ember", "seed"),
   heartwood: S("harden", "bark"),
+  // Chapter 6: roots fortify the user; tides and bristles travel to the foe
+  stilt_roots: S("harden", "bark"),
+  tidal_sway: S("wave"),
+  glochid_spray: S("volley", "spines"),
+  water_store: S("light_rays", "heal"),
+  hand_pollen: S("grow", "unfurl"),
   // fallback move used with no PP left
   struggle: S("slam", "struggle"),
 };

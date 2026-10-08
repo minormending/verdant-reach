@@ -58,6 +58,15 @@ const LIST: Item[] = [
     effect: { kind: "none" }, usableInBattle: false, usableInField: true },
 
   // Key items
+  { id: "lily_raft", name: "Lily Raft", pocket: "key", price: 0,
+    description: "A giant lily pad. Rides on water.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
+  { id: "saxifrage", name: "Saxifrage", pocket: "key", price: 0,
+    description: "Roots UPROOT heavy boulders.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
+  { id: "cactus_sap", name: "Cactus Sap", pocket: "key", price: 0,
+    description: "SAGUARO's healing sap, sealed.",
+    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
   { id: "foxfire_lantern", name: "Foxfire Jar", pocket: "key", price: 0,
     description: "A jar of glowing fungus.",
     effect: { kind: "none" }, usableInBattle: false, usableInField: false },

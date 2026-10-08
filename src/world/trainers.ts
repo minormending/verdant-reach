@@ -322,6 +322,85 @@ const CH5_LINES: Record<string, { intro: string; defeat: string; after: string }
   },
 };
 const ch5Lines = (id: string) => CH5_LINES[id.startsWith("rival_4_") ? "rival_4" : id];
+// Chapter 6 lines: one set per trainer.
+const CH6_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  angler_reed: {
+    intro: "Fish aren't biting. Maybe you will!",
+    defeat: "Snapped my line!",
+    after: "CATTAIL fluff carries the seeds. The wind does the rest.",
+  },
+  angler_moss: {
+    intro: "Sit still long enough and something always bites.",
+    defeat: "Off the hook. Again.",
+    after: "PITCHER PLANTS fish too. Bugs slip in and can't climb out.",
+  },
+  birder_tern: {
+    intro: "Shh! You'll scare the herons. Battle quietly!",
+    defeat: "...That was not quiet.",
+    after: "Mangrove seedlings float off on the tide. Some sail for months.",
+  },
+  grunt_dock_1: {
+    intro: "The doctor said not yet. I say NOW!",
+    defeat: "Ow! Like grabbing a nettle!",
+    after: "She's off to the lake. Never you mind which lake.",
+  },
+  grunt_dock_2: {
+    intro: "Nobody leaves these docks with that seed but us!",
+    defeat: "Snapped shut. On me.",
+    after: "That grey boat's long gone. You'll never catch her now.",
+  },
+  sailor_kelp: {
+    intro: "Ahoy, raft rider! Prepare to be boarded!",
+    defeat: "Sunk without a trace!",
+    after: "Lily pads float on air. Their leaves are full of tiny air spaces.",
+  },
+  sailor_brine: {
+    intro: "One sailor. One QUICKENED. One salty battle!",
+    defeat: "Washed overboard...",
+    after: "EELGRASS meadows calm the waves. Little fish hide in them.",
+  },
+  diver_coral: {
+    intro: "Just came up for air. Battle me before I go back down!",
+    defeat: "Out of breath!",
+    after: "MANGROVE roots shelter whole schools of young fish.",
+  },
+  diver_shoal: {
+    intro: "Seen the seagrass from below? It's a meadow in the sea!",
+    defeat: "Beached!",
+    after: "SEAGRASS isn't seaweed. It's a real flowering plant.",
+  },
+  jr_spine: {
+    intro: "BROTHER SAGUARO says be patient. I'm working on it!",
+    defeat: "Ouch. A prickly loss.",
+    after: "Don't stroke a PRICKLY PEAR. Its bristles come off in your skin.",
+  },
+  jr_needle: {
+    intro: "Sharp! Needle-sharp! It's right there in my name!",
+    defeat: "Blunted...",
+    after: "Cactus spines are leaves, really. Very pointy leaves.",
+  },
+  saguaro: {
+    intro: "Slowly, now. There is no hurry here.",
+    defeat: "...Good. You waited for your moment.",
+    after: "Everything worth growing grows slowly.",
+  },
+  jr_tide: {
+    intro: "The tide's coming in. So am I!",
+    defeat: "Washed out...",
+    after: "SEAGRASS pollen drifts on the current. No bees required.",
+  },
+  jr_current: {
+    intro: "The current carried you this far. Can you swim?",
+    defeat: "Pulled under!",
+    after: "RED MANGROVE roots keep out most of the salt in seawater.",
+  },
+  reyes: {
+    intro: "Hold fast. The tide's turning!",
+    defeat: "Ha! Outsailed, fair and square.",
+    after: "Come back some evening and watch the LANTERN TREE light up.",
+  },
+};
+const ch6Lines = (id: string) => CH6_LINES[id];
 const ch5Trainers: TrainerDef[] = [
   trainer("lumberjack_hale", "HALE", "LUMBERJACK", "lumberjack", [T("maple_sapling", 21), T("holly", 22)], ch5Lines("lumberjack_hale")),
   trainer("lumberjack_birch", "BIRCH", "LUMBERJACK", "lumberjack", [T("pumpkin", 22)], ch5Lines("lumberjack_birch")),
@@ -345,6 +424,36 @@ const ch5Trainers: TrainerDef[] = [
   ], ch5Lines("morrow"), { ai: "smart", music: "battle_leader", mark: "pipe_mark", prize: 2800, items: [{ item: "spring_water", qty: 1 }] }),
 ];
 
+// Chapter 6 teams from CH6.md §5.
+// Balance changes: Saguaro's prescribed 30/31/33 become 35/36/38; Reyes's
+// ace moves from 34 to 35. Explicit moves retain signature setup/healing,
+// with Ghost/Bloom coverage for Saguaro and gentler Water + Wood/Frost
+// coverage for Reyes. balance.test.ts checks both mixed parties, every starter,
+// and the mean bands (80.6% / 69.8%, no player or foe items in the model).
+const ch6Trainers: TrainerDef[] = [
+  trainer("angler_reed", "REED", "HIKER", "angler", [T("cattail", 25), T("sundew", 26)], ch6Lines("angler_reed")),
+  trainer("angler_moss", "MOSS", "HIKER", "angler", [T("pitcher_plant", 26)], ch6Lines("angler_moss")),
+  trainer("birder_tern", "TERN", "BIRDWATCHER", "birdwatcher", [T("mangrove_propagule", 24), T("white_clover", 26)], ch6Lines("birder_tern")),
+  trainer("grunt_dock_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 27), T("fireweed", 27)], ch6Lines("grunt_dock_1"), { music: "battle_rootstock" }),
+  trainer("grunt_dock_2", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 27), T("sugar_maple", 28)], ch6Lines("grunt_dock_2"), { music: "battle_rootstock" }),
+  trainer("sailor_kelp", "KELP", "HIKER", "sailor", [T("seagrass_shoot", 27), T("lily_pad", 28)], ch6Lines("sailor_kelp")),
+  trainer("sailor_brine", "BRINE", "HIKER", "sailor", [T("eelgrass", 29)], ch6Lines("sailor_brine")),
+  trainer("diver_coral", "CORAL", "GARDENER", "diver", [T("mangrove_sapling", 28), T("cattail", 28)], ch6Lines("diver_coral")),
+  trainer("diver_shoal", "SHOAL", "GARDENER", "diver", [T("seagrass_shoot", 28), T("giant_water_lily", 29)], ch6Lines("diver_shoal")),
+  trainer("jr_spine", "SPINE", "JR.GARDENER", "gardener", [T("pear_pad", 28), T("padded_cactus", 29)], ch6Lines("jr_spine")),
+  trainer("jr_needle", "NEEDLE", "JR.GARDENER", "gardener", [T("stinging_nettle", 29), T("padded_cactus", 29)], ch6Lines("jr_needle")),
+  trainer("saguaro", "SAGUARO", "WARDEN", "brother_saguaro", [
+    T("padded_cactus", 34, ["glochid_spray", "vine_lash", "sun_track"]),
+    T("prickly_pear", 35, ["pale_bloom", "sunbeam", "sun_track"]),
+    T("saguaro_column", 37, ["thorn_lash", "root_tap", "water_store", "sun_track"]),
+  ], ch6Lines("saguaro"),
+    { ai: "smart", music: "battle_leader", mark: "cactus_mark", items: [{ item: "spring_water", qty: 1 }] }),
+  trainer("jr_tide", "TIDE", "JR.GARDENER", "gardener", [T("seagrass_shoot", 30), T("lily_pad", 30)], ch6Lines("jr_tide")),
+  trainer("jr_current", "CURRENT", "JR.GARDENER", "gardener", [T("mangrove_sapling", 31), T("eelgrass", 31)], ch6Lines("jr_current")),
+  trainer("reyes", "REYES", "WARDEN", "reyes", [T("eelgrass", 32, ["dew_drop", "cold_mist", "sap_drain"]), T("mangrove_sapling", 32, ["undertow", "cold_mist", "stilt_roots"]), T("giant_water_lily", 33, ["undertow", "pad_slap", "sap_drain"]), T("red_mangrove", 35, ["dew_drop", "sap_spout", "cold_mist", "stilt_roots"])], ch6Lines("reyes"),
+    { ai: "smart", music: "battle_leader", mark: "mangrove_mark", items: [{ item: "spring_water", qty: 2 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers].map((t) => [t.id, t]),
 );

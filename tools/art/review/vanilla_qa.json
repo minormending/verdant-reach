@@ -1,0 +1,379 @@
+{
+  "schema": "verdant.art-qa/1",
+  "changed_ref": "ch6",
+  "changed_paths": [
+    "public/art/index.json",
+    "public/art/species/mangrove_propagule/back.png",
+    "public/art/species/mangrove_propagule/front.png",
+    "public/art/species/mangrove_propagule/front__2.png",
+    "public/art/species/mangrove_propagule/front__3.png",
+    "public/art/species/mangrove_propagule/front__4.png",
+    "public/art/species/mangrove_propagule/front__5.png",
+    "public/art/species/mangrove_propagule/icon.png",
+    "public/art/species/mangrove_propagule/icon__2.png",
+    "public/art/species/mangrove_propagule/species.json",
+    "public/art/species/mangrove_sapling/back.png",
+    "public/art/species/mangrove_sapling/front.png",
+    "public/art/species/mangrove_sapling/front__2.png",
+    "public/art/species/mangrove_sapling/front__3.png",
+    "public/art/species/mangrove_sapling/front__4.png",
+    "public/art/species/mangrove_sapling/front__5.png",
+    "public/art/species/mangrove_sapling/icon.png",
+    "public/art/species/mangrove_sapling/icon__2.png",
+    "public/art/species/mangrove_sapling/species.json",
+    "public/art/species/padded_cactus/back.png",
+    "public/art/species/padded_cactus/front.png",
+    "public/art/species/padded_cactus/front__2.png",
+    "public/art/species/padded_cactus/front__3.png",
+    "public/art/species/padded_cactus/front__4.png",
+    "public/art/species/padded_cactus/front__5.png",
+    "public/art/species/padded_cactus/icon.png",
+    "public/art/species/padded_cactus/icon__2.png",
+    "public/art/species/padded_cactus/species.json",
+    "public/art/species/pear_pad/back.png",
+    "public/art/species/pear_pad/front.png",
+    "public/art/species/pear_pad/front__2.png",
+    "public/art/species/pear_pad/front__3.png",
+    "public/art/species/pear_pad/front__4.png",
+    "public/art/species/pear_pad/front__5.png",
+    "public/art/species/pear_pad/icon.png",
+    "public/art/species/pear_pad/icon__2.png",
+    "public/art/species/pear_pad/species.json",
+    "public/art/species/prickly_pear/back.png",
+    "public/art/species/prickly_pear/front.png",
+    "public/art/species/prickly_pear/front__2.png",
+    "public/art/species/prickly_pear/front__3.png",
+    "public/art/species/prickly_pear/front__4.png",
+    "public/art/species/prickly_pear/front__5.png",
+    "public/art/species/prickly_pear/icon.png",
+    "public/art/species/prickly_pear/icon__2.png",
+    "public/art/species/prickly_pear/species.json",
+    "public/art/species/red_mangrove/back.png",
+    "public/art/species/red_mangrove/front.png",
+    "public/art/species/red_mangrove/front__2.png",
+    "public/art/species/red_mangrove/front__3.png",
+    "public/art/species/red_mangrove/front__4.png",
+    "public/art/species/red_mangrove/front__5.png",
+    "public/art/species/red_mangrove/icon.png",
+    "public/art/species/red_mangrove/icon__2.png",
+    "public/art/species/red_mangrove/species.json",
+    "public/art/species/saguaro/back.png",
+    "public/art/species/saguaro/front.png",
+    "public/art/species/saguaro/front__2.png",
+    "public/art/species/saguaro/front__3.png",
+    "public/art/species/saguaro/front__4.png",
+    "public/art/species/saguaro/front__5.png",
+    "public/art/species/saguaro/icon.png",
+    "public/art/species/saguaro/icon__2.png",
+    "public/art/species/saguaro/species.json",
+    "public/art/species/saguaro_column/back.png",
+    "public/art/species/saguaro_column/front.png",
+    "public/art/species/saguaro_column/front__2.png",
+    "public/art/species/saguaro_column/front__3.png",
+    "public/art/species/saguaro_column/front__4.png",
+    "public/art/species/saguaro_column/front__5.png",
+    "public/art/species/saguaro_column/icon.png",
+    "public/art/species/saguaro_column/icon__2.png",
+    "public/art/species/saguaro_column/species.json",
+    "public/art/species/saguaro_pup/back.png",
+    "public/art/species/saguaro_pup/front.png",
+    "public/art/species/saguaro_pup/front__2.png",
+    "public/art/species/saguaro_pup/front__3.png",
+    "public/art/species/saguaro_pup/front__4.png",
+    "public/art/species/saguaro_pup/front__5.png",
+    "public/art/species/saguaro_pup/icon.png",
+    "public/art/species/saguaro_pup/icon__2.png",
+    "public/art/species/saguaro_pup/species.json",
+    "public/art/species/vanilla_orchid/back.png",
+    "public/art/species/vanilla_orchid/front.png",
+    "public/art/species/vanilla_orchid/front__2.png",
+    "public/art/species/vanilla_orchid/front__3.png",
+    "public/art/species/vanilla_orchid/front__4.png",
+    "public/art/species/vanilla_orchid/front__5.png",
+    "public/art/species/vanilla_orchid/icon.png",
+    "public/art/species/vanilla_orchid/icon__2.png",
+    "public/art/species/vanilla_orchid/species.json",
+    "public/art/species/vanilla_vine/back.png",
+    "public/art/species/vanilla_vine/front.png",
+    "public/art/species/vanilla_vine/front__2.png",
+    "public/art/species/vanilla_vine/front__3.png",
+    "public/art/species/vanilla_vine/front__4.png",
+    "public/art/species/vanilla_vine/front__5.png",
+    "public/art/species/vanilla_vine/icon.png",
+    "public/art/species/vanilla_vine/icon__2.png",
+    "public/art/species/vanilla_vine/species.json"
+  ],
+  "changed_bundles": [
+    "species/mangrove_propagule",
+    "species/mangrove_sapling",
+    "species/padded_cactus",
+    "species/pear_pad",
+    "species/prickly_pear",
+    "species/red_mangrove",
+    "species/saguaro",
+    "species/saguaro_column",
+    "species/saguaro_pup",
+    "species/vanilla_orchid",
+    "species/vanilla_vine"
+  ],
+  "species": {
+    "vanilla_vine": {
+      "crystal": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 errors/0 warnings",
+        "messages": []
+      },
+      "face_risk": {
+        "status": "PASS",
+        "level": "error",
+        "value": 0,
+        "coordinates": []
+      },
+      "size_class": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "teen: 47px/41.0%/1 edges",
+        "extent": 47,
+        "fill": 0.4100765306122449,
+        "edges": 1,
+        "bottom": 55,
+        "com_x": 29.01244167962675,
+        "frame": 0,
+        "frames": [
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 47px/41.0%/1 edges",
+            "extent": 47,
+            "fill": 0.4100765306122449,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 29.01244167962675,
+            "frame": 0
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 46px/40.9%/1 edges",
+            "extent": 46,
+            "fill": 0.4094387755102041,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 29.024143302180686,
+            "frame": 1
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 48px/41.5%/1 edges",
+            "extent": 48,
+            "fill": 0.414859693877551,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 28.90392006149116,
+            "frame": 2
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 47px/41.2%/1 edges",
+            "extent": 47,
+            "fill": 0.41230867346938777,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 28.963650425367362,
+            "frame": 3
+          },
+          {
+            "status": "PASS",
+            "level": "warn",
+            "value": "teen: 47px/41.1%/1 edges",
+            "extent": 47,
+            "fill": 0.41135204081632654,
+            "edges": 1,
+            "bottom": 55,
+            "com_x": 28.986821705426358,
+            "frame": 4
+          }
+        ]
+      },
+      "grounding": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 55,
+        "frame": 0
+      },
+      "centre_of_mass": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 29.01,
+        "frame": 0
+      },
+      "back_fill": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "82.3%",
+        "fill": 0.8233506944444444
+      },
+      "anim_signature": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "6.3% changed/100.0% inside",
+        "changed": 81,
+        "change_share": 0.06298600311041991,
+        "inside_share": 1.0,
+        "boxes_missing": false
+      },
+      "clone_risk": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 pairs; nearest a/d=6/13",
+        "pairs": []
+      },
+      "silhouette_noise": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "1 tips/0 holes",
+        "protrusions": 1,
+        "holes": 0,
+        "frame": 0
+      },
+      "stage_progression": {
+        "status": "PASS",
+        "level": "error",
+        "value": "first stage"
+      }
+    },
+    "vanilla_orchid": {
+      "crystal": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 errors/0 warnings",
+        "messages": []
+      },
+      "face_risk": {
+        "status": "PASS",
+        "level": "error",
+        "value": 0,
+        "coordinates": []
+      },
+      "size_class": {
+        "status": "WARN",
+        "level": "warn",
+        "value": "adult: 56px/58.3%/2 edges",
+        "extent": 56,
+        "fill": 0.5832270408163265,
+        "edges": 2,
+        "bottom": 55,
+        "com_x": 30.837616183706945,
+        "frame": 0,
+        "frames": [
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/58.3%/2 edges",
+            "extent": 56,
+            "fill": 0.5832270408163265,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 30.837616183706945,
+            "frame": 0
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/57.5%/2 edges",
+            "extent": 56,
+            "fill": 0.5752551020408163,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 31.053769401330378,
+            "frame": 1
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/60.5%/2 edges",
+            "extent": 56,
+            "fill": 0.6052295918367347,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 30.450474183350895,
+            "frame": 2
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/59.0%/2 edges",
+            "extent": 56,
+            "fill": 0.5902423469387755,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 30.556996218260398,
+            "frame": 3
+          },
+          {
+            "status": "WARN",
+            "level": "warn",
+            "value": "adult: 56px/58.8%/2 edges",
+            "extent": 56,
+            "fill": 0.5876913265306123,
+            "edges": 2,
+            "bottom": 55,
+            "com_x": 30.86814975583288,
+            "frame": 4
+          }
+        ]
+      },
+      "grounding": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 55,
+        "frame": 0
+      },
+      "centre_of_mass": {
+        "status": "PASS",
+        "level": "warn",
+        "value": 30.84,
+        "frame": 0
+      },
+      "back_fill": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "82.7%",
+        "fill": 0.8272569444444444
+      },
+      "anim_signature": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "20.5% changed/100.0% inside",
+        "changed": 375,
+        "change_share": 0.2050300710770913,
+        "inside_share": 1.0,
+        "boxes_missing": false
+      },
+      "clone_risk": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "0 pairs; nearest a/d=14/12",
+        "pairs": []
+      },
+      "silhouette_noise": {
+        "status": "PASS",
+        "level": "warn",
+        "value": "1 tips/0 holes",
+        "protrusions": 1,
+        "holes": 0,
+        "frame": 0
+      },
+      "stage_progression": {
+        "status": "PASS",
+        "level": "error",
+        "value": "47->56px/41.0%->58.3%"
+      }
+    }
+  },
+  "tilesets": {},
+  "error_count": 0
+}
