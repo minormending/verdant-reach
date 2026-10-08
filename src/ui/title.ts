@@ -22,7 +22,7 @@ function proceduralBackdrop(): HTMLCanvasElement {
   const g = c.getContext("2d")!;
   // Sky bands with a 2px dither between them.
   const bands = ["#0c1428", "#122040", "#182c50", "#1e3a5c", "#284a64", "#38606c"];
-  const bandH = 16;
+  const bandH = Math.ceil(SCREEN_H * 2 / 3 / bands.length);
   bands.forEach((col, i) => {
     g.fillStyle = col;
     g.fillRect(0, i * bandH, SCREEN_W, bandH);
@@ -41,12 +41,12 @@ function proceduralBackdrop(): HTMLCanvasElement {
       g.fillRect(x, h, 1, SCREEN_H - h);
     }
   };
-  ridge(84, 12, 0.045, 1.2, "#284450");
+  ridge(Math.round(SCREEN_H * 0.58), 12, 0.045, 1.2, "#284450");
   // The far slope the Centuryheart stands on.
-  ridge(98, 10, 0.03, 4.1, "#203a3c");
+  ridge(Math.round(SCREEN_H * 0.68), 10, 0.03, 4.1, "#203a3c");
   // Centuryheart: rosette and towering flower spike (Puya raimondii).
-  const cx = 116;
-  const base = 92;
+  const cx = Math.round(SCREEN_W * 0.72);
+  const base = Math.round(SCREEN_H * 0.64);
   g.fillStyle = "#3a5a38";
   g.fillRect(cx - 5, base - 2, 11, 3);
   g.fillRect(cx - 3, base - 4, 7, 2);
@@ -56,23 +56,23 @@ function proceduralBackdrop(): HTMLCanvasElement {
     g.fillRect(cx - half + 1, y, half * 2 - 1, 1);
   }
   // Mid hills and hedgerows.
-  ridge(110, 6, 0.06, 0.4, "#1a3426");
+  ridge(Math.round(SCREEN_H * 0.76), 6, 0.06, 0.4, "#1a3426");
   g.fillStyle = "#16301f";
   for (let x = -4; x < SCREEN_W; x += 9) {
-    const h = 104 + Math.round(Math.sin(x * 0.17) * 3);
+    const h = Math.round(SCREEN_H * 0.72) + Math.round(Math.sin(x * 0.17) * 3);
     g.fillRect(x, h, 8, 3); g.fillRect(x + 1, h - 2, 6, 2); g.fillRect(x + 2, h - 3, 4, 1);
   }
-  ridge(124, 4, 0.08, 2.2, "#10261a");
+  ridge(SCREEN_H - 20, 4, 0.08, 2.2, "#10261a");
   g.fillStyle = "#0a1a12";
-  g.fillRect(0, 134, SCREEN_W, 10);
-  for (let x = 0; x < SCREEN_W; x += 3) g.fillRect(x, 131 + ((x * 7) % 3), 1, 4);
+  g.fillRect(0, SCREEN_H - 10, SCREEN_W, 10);
+  for (let x = 0; x < SCREEN_W; x += 3) g.fillRect(x, SCREEN_H - 13 + ((x * 7) % 3), 1, 4);
   backdrop = c;
   return c;
 }
 
 const STARS = Array.from({ length: 26 }, (_, i) => ({
   x: (i * 53 + 17) % SCREEN_W,
-  y: (i * 29 + 5) % 70,
+  y: (i * 29 + 5) % Math.floor(SCREEN_H * 0.48),
   t: (i * 37) % 120,
 }));
 
@@ -84,15 +84,16 @@ function drawProcedural(g: CanvasRenderingContext2D, frame: number) {
     g.fillRect(s.x, s.y, 1, 1);
   }
   // Glowing bloom along the spike (pulses slowly).
-  const cx = 116;
+  const cx = Math.round(SCREEN_W * 0.72);
+  const bloomY = Math.round(SCREEN_H * 0.64) - 48;
   const pulse = (Math.sin(frame / 30) + 1) / 2;
   g.globalAlpha = 0.18 + pulse * 0.12;
   g.fillStyle = "#f8d860";
-  g.fillRect(cx - 7, 44, 15, 40);
-  g.fillRect(cx - 4, 40, 9, 48);
+  g.fillRect(cx - 7, bloomY + 4, 15, 40);
+  g.fillRect(cx - 4, bloomY, 9, 48);
   g.globalAlpha = 1;
   for (let i = 0; i < 12; i++) {
-    const y = 50 + i * 3;
+    const y = bloomY + 10 + i * 3;
     const lit = (frame / 6 + i) % 12 < 9;
     g.fillStyle = lit ? "#f8e888" : "#d0a040";
     g.fillRect(cx - 1 + (i % 2 ? 2 : -1), y, 1, 1);
@@ -105,17 +106,18 @@ function drawLogo(g: CanvasRenderingContext2D, frame: number, ctx: GameContext) 
     g.drawImage(logo, Math.floor((SCREEN_W - logo.width) / 2), 10);
     return;
   }
+  const logoX = Math.floor((SCREEN_W - 7 * 16) / 2);
   const y = 14 + Math.round(Math.sin(frame / 50));
-  drawTextOutlined(g, "VERDANT", 24 + 1, y + 2, "#0a1a12", "#0a1a12", 2);
-  drawTextOutlined(g, "VERDANT", 24, y, "#f8e070", "#183018", 2);
-  drawTextOutlined(g, "REACH", 40 + 1, y + 22, "#0a1a12", "#0a1a12", 2);
-  drawTextOutlined(g, "REACH", 40, y + 20, "#b8f090", "#183018", 2);
+  drawTextOutlined(g, "VERDANT", logoX + 1, y + 2, "#0a1a12", "#0a1a12", 2);
+  drawTextOutlined(g, "VERDANT", logoX, y, "#f8e070", "#183018", 2);
+  drawTextOutlined(g, "REACH", logoX + 17, y + 22, "#0a1a12", "#0a1a12", 2);
+  drawTextOutlined(g, "REACH", logoX + 16, y + 20, "#b8f090", "#183018", 2);
   // leaf flourish between the words
   g.fillStyle = "#78c058";
-  g.fillRect(28, y + 25, 8, 2); g.fillRect(30, y + 24, 4, 1); g.fillRect(30, y + 27, 4, 1);
-  g.fillRect(124, y + 25, 8, 2); g.fillRect(126, y + 24, 4, 1); g.fillRect(126, y + 27, 4, 1);
+  g.fillRect(logoX + 4, y + 25, 8, 2); g.fillRect(logoX + 6, y + 24, 4, 1); g.fillRect(logoX + 6, y + 27, 4, 1);
+  g.fillRect(logoX + 100, y + 25, 8, 2); g.fillRect(logoX + 102, y + 24, 4, 1); g.fillRect(logoX + 102, y + 27, 4, 1);
   g.fillStyle = "#c8e8a0";
-  drawTextOutlined(g, "A BOTANICAL QUEST", 12, y + 42, "#d8f0c0", "#10261a");
+  drawTextOutlined(g, "A BOTANICAL QUEST", (SCREEN_W - "A BOTANICAL QUEST".length * 8) / 2, y + 42, "#d8f0c0", "#10261a");
 }
 
 type Phase = "fadein" | "press" | "menu" | "continue" | "busy" | "fadeout";
@@ -141,7 +143,8 @@ export function createTitleScene(ctx: GameContext): Scene {
     if (meta && lastIndex === 0 && !menu) lastIndex = 1; // cursor starts on CONTINUE
     const labels = { new: "NEW GAME", continue: "CONTINUE", options: "OPTIONS" };
     menu = new Menu(menuIds.map((id) => labels[id]), sfx, { x: 0, y: 0, start: Math.min(lastIndex, menuIds.length - 1), wrap: false });
-    menu.y = SCREEN_H - menu.h;
+    menu.x = Math.floor((SCREEN_W - menu.w) / 2);
+    menu.y = SCREEN_H - menu.h - 8;
   };
 
   const leave = async (next: () => Promise<void>) => {
@@ -215,12 +218,12 @@ export function createTitleScene(ctx: GameContext): Scene {
     },
     draw(g) {
       const art = ctx.assets.image(uiPath("title"));
-      if (art) g.drawImage(art, 0, 0);
-      else drawProcedural(g, frame);
+      drawProcedural(g, frame);
+      if (art) g.drawImage(art, Math.floor((SCREEN_W - art.width) / 2), Math.floor((SCREEN_H - art.height) / 2));
       pollen.draw(g);
       drawLogo(g, frame, ctx);
       if (phase === "press" || phase === "fadein") {
-        if (Math.floor(frame / 32) % 2 === 0) drawTextOutlined(g, "PRESS START", 36, 120, UI.white, "#10261a");
+        if (Math.floor(frame / 32) % 2 === 0) drawTextOutlined(g, "PRESS START", (SCREEN_W - 11 * 8) / 2, SCREEN_H - 24, UI.white, "#10261a");
       }
       if ((phase === "menu" || phase === "busy" || phase === "continue") && menu) {
         // The menu rises into place over 8 frames when it opens.
@@ -231,7 +234,7 @@ export function createTitleScene(ctx: GameContext): Scene {
         menu.y = y0;
       }
       if (phase === "continue" && meta) {
-        drawSaveInfo(g, meta, 16, 4, 14);
+        drawSaveInfo(g, meta, Math.floor((SCREEN_W - 128) / 2), 64, 14);
       }
       fader.draw(g, SCREEN_W, SCREEN_H);
     },

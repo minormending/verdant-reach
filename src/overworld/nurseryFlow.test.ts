@@ -117,7 +117,7 @@ describe("nursery counter (op: nursery)", () => {
     expect(nurseryOf(state).seedReady).toBe(true);
   });
 
-  it("writes every line to fit the 18x2 box in at most two pages", async () => {
+  it("writes concise lines for the shared text box", async () => {
     const { host, said } = setup({ choices: [0, 1, -1], picks: [0] });
     await runScript(host, [{ op: "nursery" }]);
     for (const s of said) expect(s.length).toBeLessThanOrEqual(72);

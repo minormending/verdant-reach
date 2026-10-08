@@ -1,17 +1,21 @@
 import type { SpeciesId, TileKey, StructureKey, CharacterKey, TrainerPortraitKey } from "./ids";
 
-/** Game Boy Color screen. Everything renders at this size, then integer-scales. */
-export const SCREEN_W = 160;
-export const SCREEN_H = 144;
+/** Native widescreen canvas. Everything renders at this size, then integer-scales. */
+export const SCREEN_W = 320;
+export const SCREEN_H = 180;
 export const TILE = 16;
-export const VIEW_TILES_X = 10;
-export const VIEW_TILES_Y = 9;
+export const VIEW_TILES_X = SCREEN_W / TILE;
+export const VIEW_TILES_Y = SCREEN_H / TILE;
 export const FPS = 60;
 
-/** 8x8 bitmap font; a full-width text box fits 18 characters x 2 lines. */
+/** 8x8 bitmap font; the bottom text box fits 36 characters x 3 lines. */
 export const FONT_W = 8;
 export const FONT_H = 8;
-export const TEXTBOX = { x: 0, y: 96, w: 160, h: 48, cols: 18, lines: 2 } as const;
+const TEXTBOX_LINES = 3;
+const TEXTBOX_H = TEXTBOX_LINES * FONT_H * 2 + FONT_H;
+export const TEXTBOX = {
+  x: 0, y: SCREEN_H - TEXTBOX_H, w: SCREEN_W, h: TEXTBOX_H, cols: 36, lines: TEXTBOX_LINES,
+} as const;
 
 /** UI palette (Crystal-like). Sprites carry their own 4-colour palettes. */
 export const UI = {
@@ -112,13 +116,13 @@ export const speciesPath = (id: SpeciesId, kind: SpeciesSpriteKind, opts: { spor
 /** Front frames: front, front__2 .. front__8 (optional). How they play comes from the bundle's
  *  `anim` (see SpeciesAnim / docs/ART.md); with no `anim`, the first ≤3 ping-pong as the idle. */
 
-/** Story illustrations: 160x144 PNG. */
+/** Story illustrations: existing 160x144 PNGs stay centred at 1x on a dark frame. */
 export const stillPath = (key: import("./ids").StillKey) => `assets/stills/${key}.png`;
 
 /** Optional 16x16 item icons. */
 export const itemIconPath = (id: string) => `assets/items/${id}.png`;
 
-/** 160x144 title screen art and other full-screen UI images. */
+/** Title art and other UI images; legacy backdrops are centred at their native size. */
 export const uiPath = (name: "title" | "title_logo" | "pod" | "pod_open" | "mark_bramble" | "mark_sundew" | "mark_rose" | "battle_ground"
   | "seed" | "seed__2" | "seed_big" | "mark_pipe" | "raft") => // Round 4: Nursery seed — 16x16 party icon (2 frames) and 56x56 summary/sprouting art
   `assets/ui/${name}.png`;

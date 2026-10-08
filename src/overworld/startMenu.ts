@@ -46,7 +46,7 @@ function openMenu(ctx: GameContext, scriptRunning: boolean): Promise<StartItem |
   return ctx.scenes.run<StartItem | null>((done) => {
     const start = Math.max(0, items.indexOf(lastItem));
     const w = 96;
-    const menu = new Menu(items.map((i) => label(ctx, i)), sfx, { x: SCREEN_W - w, y: 0, w, start });
+    const menu = new Menu(items.map((i) => label(ctx, i)), sfx, { x: SCREEN_W - w - 8, y: 8, w, start });
     const scene: Scene = {
       transparent: true,
       update() {

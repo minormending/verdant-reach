@@ -34,11 +34,11 @@
 // straight with only the starter) and `&starter=oak|chili|lily`.
 //
 // Progress goes to the console ("[e2e]") and to `window.__e2e.report`; every
-// beat records the new flags, the map and a 160x144 snapshot.
+// beat records the new flags, the map and a native-size snapshot.
 // `window.__e2e.sheet()` shows the snapshots as a contact sheet.
 
 import type { BattleOutcome, BattleRequest, GameContext, ItemId, MapId, Scene, SceneStack, SpeciesId, TimeOfDay } from "../src/contracts";
-import { TILES } from "../src/contracts";
+import { SCREEN_H, SCREEN_W, TEXTBOX, TILES } from "../src/contracts";
 import { createQuickened, healParty } from "../src/battle";
 import { active, type BattleState } from "../src/battle/logic/battle";
 import { devSeed, randomStream } from "../src/engine/random";
@@ -387,7 +387,7 @@ export function instrument() {
   const g = (document.getElementById("screen") as HTMLCanvasElement).getContext("2d")!;
   const fill = g.fillRect.bind(g);
   g.fillRect = (x: number, y: number, w: number, h: number) => {
-    if (x === 0 && y === 0 && w === 160 && h === 144 && g.fillStyle === "#000000") {
+    if (x === 0 && y === 0 && w === SCREEN_W && h === SCREEN_H && g.fillStyle === "#000000") {
       const t = performance.now();
       queueMicrotask(() => {
         const cost = performance.now() - t;
@@ -416,7 +416,7 @@ export function instrument() {
 
 function safeJson(a: unknown) { try { return JSON.stringify(a); } catch { return String(a); } }
 
-const COLS = 18;
+const COLS = TEXTBOX.cols;
 function checkText(text: string, speaker?: string) {
   // Unbreakable words longer than a text-box line overflow the box.
   const flat = text.replace(/<PLAYER>|\{PLAYER\}/g, "ROWAN").replace(/<RIVAL>|\{RIVAL\}/g, "BRAM");
@@ -2993,8 +2993,8 @@ export function sheet(from = 0, count = 24) {
   Object.assign(div.style, { position: "fixed", inset: "0", zIndex: "50", background: "#0c1a12", overflow: "auto", display: "flex", flexWrap: "wrap", gap: "6px", padding: "6px", alignContent: "flex-start" });
   for (const b of report.beats.slice(from, from + count)) {
     const fig = document.createElement("figure");
-    Object.assign(fig.style, { margin: "0", width: "160px", color: b.ok ? "#a8d098" : "#f87858", font: "9px monospace" });
-    if (b.shot) { const img = new Image(); img.src = b.shot; img.style.imageRendering = "pixelated"; img.width = 160; fig.appendChild(img); }
+    Object.assign(fig.style, { margin: "0", width: `${SCREEN_W}px`, color: b.ok ? "#a8d098" : "#f87858", font: "9px monospace" });
+    if (b.shot) { const img = new Image(); img.src = b.shot; img.style.imageRendering = "pixelated"; img.width = SCREEN_W; fig.appendChild(img); }
     const cap = document.createElement("figcaption");
     cap.textContent = `${b.ok ? "" : "✗ "}${b.name}`;
     fig.appendChild(cap);

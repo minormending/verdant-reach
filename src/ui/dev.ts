@@ -96,7 +96,7 @@ export default function devUi(ctx: GameContext): Scene {
       if (mode === "font") {
         drawWindow(g, 0, 0, SCREEN_W, SCREEN_H);
         const chars = [...GLYPHS.keys()];
-        chars.forEach((ch, i) => drawText(g, ch, 8 + (i % 18) * 8, 8 + Math.floor(i / 18) * 10));
+        chars.forEach((ch, i) => drawText(g, ch, 8 + (i % Math.floor((SCREEN_W - 16) / 8)) * 8, 8 + Math.floor(i / Math.floor((SCREEN_W - 16) / 8)) * 10));
         drawText(g, "The quick brown fox", 8, 84);
         drawText(g, "jumps over the lazy", 8, 94);
         drawText(g, "dog. 0123456789!?", 8, 104);

@@ -71,7 +71,8 @@ export type TextSpeed = "slow" | "mid" | "fast";
 /** Characters revealed per frame (fractions accumulate). */
 const SPEED: Record<TextSpeed, number> = { slow: 1 / 4, mid: 1 / 2, fast: 1 };
 
-const LINE_Y = [TEXTBOX.y + 12, TEXTBOX.y + 28];
+const LINE_SPACING = 16;
+const LINE_Y = Array.from({ length: TEXTBOX.lines }, (_, i) => TEXTBOX.y + 8 + i * LINE_SPACING);
 const TEXT_X = TEXTBOX.x + 8;
 
 export interface TextBoxHooks {
@@ -110,7 +111,7 @@ export class TextBox {
   private get lines() { return this.pages[this.page]; }
 
   /** Lines currently visible (for handing the box to a following menu). */
-  visible(): [string, string] {
+  visible(): string[] {
     const l = this.lines;
     const row = (i: number) => {
       const idx = this.top + i;
@@ -118,7 +119,7 @@ export class TextBox {
       if (idx === this.line) return Array.from(l[idx] ?? "").slice(0, Math.floor(this.chars)).join("");
       return "";
     };
-    return [row(0), row(1)];
+    return Array.from({ length: TEXTBOX.lines }, (_, i) => row(i));
   }
 
   update(input: Input) {
@@ -153,7 +154,7 @@ export class TextBox {
     // typing
     const fast = input.held("a") || input.held("b");
     let budget = fast ? 2 : SPEED[this.hooks.speed()];
-    while (budget > 0 && this.line < lines.length && this.line < this.top + 2) {
+    while (budget > 0 && this.line < lines.length && this.line < this.top + TEXTBOX.lines) {
       const len = Array.from(lines[this.line]).length;
       const before = Math.floor(this.chars);
       this.chars = Math.min(len, this.chars + Math.min(budget, 1));
@@ -166,11 +167,11 @@ export class TextBox {
       if (this.chars >= len) {
         this.line++;
         this.chars = 0;
-        // Line 2 just filled and more follows: pause for A.
-        if (this.line === this.top + 2 && this.line < lines.length) break;
+        // All visible rows filled and more follows: pause for A.
+        if (this.line === this.top + TEXTBOX.lines && this.line < lines.length) break;
       }
     }
-    if (this.line >= lines.length || this.line >= this.top + 2) {
+    if (this.line >= lines.length || this.line >= this.top + TEXTBOX.lines) {
       const lastPage = this.page === this.pages.length - 1;
       const pageDone = this.line >= lines.length;
       if (pageDone && lastPage) {
@@ -187,8 +188,8 @@ export class TextBox {
     drawWindow(g, TEXTBOX.x, TEXTBOX.y, TEXTBOX.w, TEXTBOX.h);
     const lines = this.lines;
     const scrolling = this.scroll > 0;
-    // While scrolling, row 0 is vacated and row 1 moves up in two steps.
-    for (let i = 0; i < 2; i++) {
+    // While scrolling, row 0 is vacated and the other rows move up in two steps.
+    for (let i = 0; i < TEXTBOX.lines; i++) {
       const idx = this.top + i;
       let text = "";
       if (idx < this.line) text = lines[idx] ?? "";
@@ -196,7 +197,7 @@ export class TextBox {
       if (!text) continue;
       if (scrolling) {
         if (i === 0) continue;
-        const y = this.scroll > 2 ? LINE_Y[1] - 8 : LINE_Y[0];
+        const y = LINE_Y[i] - (this.scroll > 2 ? LINE_SPACING / 2 : LINE_SPACING);
         drawText(g, text, TEXT_X, y);
       } else {
         drawText(g, text, TEXT_X, LINE_Y[i]);
@@ -205,15 +206,15 @@ export class TextBox {
     if (this.waiting) {
       // The ▼ prompt bobs gently (1px) rather than blinking.
       const bob = [0, 0, 1, 1][Math.floor(this.frame / 8) % 4];
-      drawText(g, "▼", TEXTBOX.x + TEXTBOX.w - 16, LINE_Y[1] + 8 + bob);
+      drawText(g, "▼", TEXTBOX.x + TEXTBOX.w - 16, LINE_Y[TEXTBOX.lines - 1] + bob);
     }
   }
 }
 
-/** Draw a static text box holding up to two lines. */
+/** Draw a static text box holding up to TEXTBOX.lines rows. */
 export function drawStaticBox(g: CanvasRenderingContext2D, lines: string[]) {
   drawWindow(g, TEXTBOX.x, TEXTBOX.y, TEXTBOX.w, TEXTBOX.h);
-  lines.slice(-2).forEach((l, i) => drawText(g, l, TEXT_X, LINE_Y[i]));
+  lines.slice(-TEXTBOX.lines).forEach((l, i) => drawText(g, l, TEXT_X, LINE_Y[i]));
 }
 
 // ---------------------------------------------------------------------------

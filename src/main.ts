@@ -8,6 +8,7 @@ import { uiPath } from "./contracts";
 import { createAssets, createCanvas, createInput, createSceneStack, runLoop } from "./engine/core";
 import { createGameContext, playClock } from "./engine/context";
 import { installDevRandom } from "./engine/random";
+import { bindScreenLayout } from "./engine/screen";
 import { setAudioSuspended } from "./audio";
 import {
   createLoadingScene, createPause, createShell, installErrorScreen, pauseOnFocusLoss, platformFlags,
@@ -44,7 +45,7 @@ async function boot() {
     addEventListener("pointerup", unlock);
     addEventListener("touchend", unlock);
 
-    if (flags.shell) createShell(canvas, unlock);
+    if (flags.shell) bindScreenLayout(canvas, createShell(canvas, unlock));
     else canvas.style.imageRendering = "pixelated";
 
     let booted = false;

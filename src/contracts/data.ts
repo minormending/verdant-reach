@@ -80,7 +80,7 @@ export interface Move {
   pp: number;
   priority: number;             // default 0
   effects: MoveEffect[];
-  description: string;          // shown in menus (<= 2 lines of 18 chars ideally)
+  description: string;          // shown in menus (fit TEXTBOX.cols × TEXTBOX.lines)
 }
 
 export type ItemEffect =

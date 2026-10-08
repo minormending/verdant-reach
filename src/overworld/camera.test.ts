@@ -1,8 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { CameraRig, Flash, camForTile, easeInOut, panFrames } from "./camera";
+import { SCREEN_H, SCREEN_W, TILE } from "../contracts";
+import { CameraRig, Flash, camForTile, clampCamera, easeInOut, panFrames } from "./camera";
 import { AmbientFx, effectiveAmbient, fireflyBrightness } from "./ambient";
 
 describe("camera rig", () => {
+  it("centres a target tile on the native screen", () => {
+    const camera = camForTile(12, 15);
+    expect(12 * TILE - camera.x + TILE / 2).toBe(SCREEN_W / 2);
+    expect(15 * TILE - camera.y + TILE / 2).toBe(SCREEN_H / 2);
+  });
+
+  it.each([{ w: 10, h: 30 }, { w: 30, h: 8 }, { w: 12, h: 10 }])("centres small axes without following or jitter: %j", (map) => {
+    for (const position of [{ x: -400, y: -400 }, { x: 40.5, y: 20.5 }, { x: 900, y: 900 }]) {
+      const camera = clampCamera(position, map);
+      if (map.w * TILE < SCREEN_W) expect(camera.x).toBe((map.w * TILE - SCREEN_W) / 2);
+      if (map.h * TILE < SCREEN_H) expect(camera.y).toBe((map.h * TILE - SCREEN_H) / 2);
+      expect(Number.isInteger(camera.x) && Number.isInteger(camera.y)).toBe(true);
+    }
+  });
+
+  it("clamps each large-map axis at its edges, including the partial vertical tile", () => {
+    expect(clampCamera({ x: -100, y: -100 }, { w: 30, h: 20 })).toEqual({ x: 0, y: 0 });
+    expect(clampCamera({ x: 1000, y: 1000 }, { w: 30, h: 20 })).toEqual({ x: 30 * TILE - SCREEN_W, y: 20 * TILE - SCREEN_H });
+    expect(clampCamera({ x: 10, y: 11 }, { w: 20, h: 12 })).toEqual({ x: 0, y: 11 });
+  });
+
   it("eases in and out", () => {
     expect(easeInOut(0)).toBe(0);
     expect(easeInOut(1)).toBe(1);

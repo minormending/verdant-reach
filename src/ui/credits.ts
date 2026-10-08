@@ -1,5 +1,5 @@
 import type { GameContext, Scene } from "../contracts";
-import { SCREEN_H, SCREEN_W, UI } from "../contracts";
+import { SCREEN_H, SCREEN_W, TEXTBOX, UI } from "../contracts";
 import { CREDITS } from "../world/credits";
 import { wrapText } from "./font";
 
@@ -8,13 +8,13 @@ export const CREDITS_TICKS_PER_PIXEL = 3;
 const LINE_HEIGHT = 16;
 const GLYPH_HEIGHT = 8;
 const lines = CREDITS.flatMap((entry, i) => [
-  ...wrapText(entry, 18), ...(i < CREDITS.length - 1 ? [""] : []),
+  ...wrapText(entry, TEXTBOX.cols), ...(i < CREDITS.length - 1 ? [""] : []),
 ]);
 /** Finish only after the final glyph has scrolled completely off the top. */
 export const CREDITS_DURATION_TICKS =
   (SCREEN_H + (lines.length - 1) * LINE_HEIGHT + GLYPH_HEIGHT) * CREDITS_TICKS_PER_PIXEL;
 
-/** Opaque 160x144 scene; popping it resumes the ending script and the game. */
+/** Opaque screen-size scene; popping it resumes the ending script and the game. */
 export function rollCredits(ctx: GameContext): Promise<void> {
   return ctx.scenes.run<void>((done) => {
     let ticks = 0;

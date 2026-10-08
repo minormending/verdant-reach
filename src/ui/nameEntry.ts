@@ -9,8 +9,11 @@ import { drawText, drawWindow } from "./kit";
 const UPPER = ["ABCDEFGHI", "JKLMNOPQR", "STUVWXYZ ", "-'.!?&é♪×"];
 const LOWER = ["abcdefghi", "jklmnopqr", "stuvwxyz ", "-'.!?&é♪×"];
 const COLS = 9;
-const GRID_X = 16;
-const GRID_Y = 56;
+const CELL = 16;
+const HEADER_H = 48;
+const GRID_X = Math.floor((SCREEN_W - COLS * CELL) / 2) + CELL / 2;
+const GRID_Y = HEADER_H + Math.floor((SCREEN_H - HEADER_H - 5 * CELL) / 2);
+const HEADER_X = GRID_X - CELL / 2;
 /** Bottom row buttons: [label, first col, last col]. */
 const BUTTONS = [
   { id: "case", cols: [0, 2] },
@@ -115,12 +118,12 @@ export function nameEntry(ctx: GameContext, opts: NameEntryOpts): Promise<string
         g.fillStyle = UI.white;
         g.fillRect(0, 0, SCREEN_W, SCREEN_H);
         // header
-        drawWindow(g, 0, 0, SCREEN_W, 48);
+        drawWindow(g, 0, 0, SCREEN_W, HEADER_H);
         g.fillStyle = "#e8f0e0";
-        g.fillRect(8, 8, 32, 32);
+        g.fillRect(HEADER_X, 8, 32, 32);
         if (opts.species) {
           const icon = speciesPath(opts.species, Math.floor(frame / 16) % 2 && ctx.assets.image(speciesPath(opts.species, "icon__2")) ? "icon__2" : "icon");
-          drawImagePath(g, ctx.assets, icon, 0, 0, 16, 16, 8, 8, 32, 32);
+          drawImagePath(g, ctx.assets, icon, 0, 0, 16, 16, HEADER_X, 8, 32, 32);
         } else {
           const sprite = opts.sprite ?? "player";
           const sheet = characterPath(sprite);
@@ -131,13 +134,13 @@ export function nameEntry(ctx: GameContext, opts: NameEntryOpts): Promise<string
           // Integer scale in the existing box, centred with feet still at y=40.
           const scale = Math.min(2, Math.floor(32 / w), Math.floor(32 / h));
           drawImagePath(g, ctx.assets, sheet, colIdx * w, 0, w, h,
-            24 - w * scale / 2, 40 - h * scale, w * scale, h * scale);
+            HEADER_X + 16 - w * scale / 2, 40 - h * scale, w * scale, h * scale);
         }
-        drawText(g, opts.title, 48, 12);
+        drawText(g, opts.title, HEADER_X + 40, 12);
         // name field with underscores
         const chars = Array.from(model.name);
         for (let i = 0; i < opts.max; i++) {
-          const x = 48 + i * 8;
+          const x = HEADER_X + 40 + i * 8;
           if (chars[i]) drawText(g, chars[i], x, 26);
           const active = i === chars.length && closing < 0;
           g.fillStyle = active && Math.floor(frame / 16) % 2 ? UI.light : UI.dark;
@@ -145,17 +148,17 @@ export function nameEntry(ctx: GameContext, opts: NameEntryOpts): Promise<string
           if (active) g.fillRect(x, 36, 7, 1);
         }
         // grid
-        drawWindow(g, 0, 48, SCREEN_W, SCREEN_H - 48);
+        drawWindow(g, 0, HEADER_H, SCREEN_W, SCREEN_H - HEADER_H);
         rows().forEach((r, ri) => {
-          Array.from(r).forEach((ch, ci) => drawText(g, ch, GRID_X + ci * 16, GRID_Y + ri * 16));
+          Array.from(r).forEach((ch, ci) => drawText(g, ch, GRID_X + ci * CELL, GRID_Y + ri * CELL));
         });
-        const by = GRID_Y + rows().length * 16;
-        drawText(g, lower ? "UPPER" : "lower", GRID_X - 8 + 8, by);
-        drawText(g, "DEL", GRID_X + 4 * 16, by);
-        drawText(g, "END", GRID_X + 7 * 16, by);
+        const by = GRID_Y + rows().length * CELL;
+        drawText(g, lower ? "UPPER" : "lower", GRID_X, by);
+        drawText(g, "DEL", GRID_X + 4 * CELL, by);
+        drawText(g, "END", GRID_X + 7 * CELL, by);
         // cursor
-        const cx = GRID_X + col * 16 - 8;
-        const cy = onButtons() ? by : GRID_Y + row * 16;
+        const cx = GRID_X + col * CELL - 8;
+        const cy = onButtons() ? by : GRID_Y + row * CELL;
         if (closing < 0) drawText(g, "▶", cx, cy);
       },
     };

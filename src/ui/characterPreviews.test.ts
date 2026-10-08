@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GameContext, MapDef } from "../contracts";
-import { characterPath } from "../contracts";
+import { SCREEN_W, TEXTBOX, characterPath } from "../contracts";
 import { tallCharacter } from "../art/character.fixture";
 import { createSceneStack } from "../engine/core";
 import { renderWorldPreview } from "../world/dev";
@@ -72,8 +72,8 @@ describe("character previews", () => {
     void nameEntry(ctx, { title: "YOUR NAME?", max: 7, defaultName: "ROWAN", sprite: "vale" });
     tick(72); // stepB column
     scenes.top()!.draw(g);
-    expect(drawImage).toHaveBeenCalledWith(sheet, 32, 0, 16, 32, 16, 8, 16, 32);
-    expectPortrait(drawImage.mock.calls[0], 32, 40, { x: 8, y: 8, w: 32, h: 32 });
+    expect(drawImage).toHaveBeenCalledWith(sheet, 32, 0, 16, 32, SCREEN_W / 2 - 64, 8, 16, 32);
+    expectPortrait(drawImage.mock.calls[0], 32, 40, { x: SCREEN_W / 2 - 72, y: 8, w: 32, h: 32 });
     expect(ctx.assets.characterFrame).toHaveBeenCalledWith("vale");
   });
 
@@ -83,7 +83,7 @@ describe("character previews", () => {
     void nameEntry(ctx, { title: "YOUR NAME?", max: 7, defaultName: "ROWAN" });
     tick(72);
     scenes.top()!.draw(g);
-    expect(drawImage).toHaveBeenCalledWith(sheet, 0, 0, 16, 32, 16, 8, 16, 32);
+    expect(drawImage).toHaveBeenCalledWith(sheet, 0, 0, 16, 32, SCREEN_W / 2 - 64, 8, 16, 32);
   });
 
   it("new-game intro fits the full 16x32 portrait above its dialogue at 1x", async () => {
@@ -92,8 +92,8 @@ describe("character previews", () => {
     for (let i = 0; i < 48; i++) { tick(1); await Promise.resolve(); }
     expect(ctx.ui.say).toHaveBeenCalled();
     scenes.top()!.draw(g);
-    expect(drawImage).toHaveBeenCalledWith(sheet, 0, 0, 16, 32, 72, 36, 16, 32);
-    expectPortrait(drawImage.mock.calls[0], 32, 68, { x: 56, y: 20, w: 48, h: 48 });
+    expect(drawImage).toHaveBeenCalledWith(sheet, 0, 0, 16, 32, SCREEN_W / 2 - 8, (TEXTBOX.y - 64) / 2 + 24, 16, 32);
+    expectPortrait(drawImage.mock.calls[0], 32, (TEXTBOX.y - 64) / 2 + 56, { x: SCREEN_W / 2 - 24, y: (TEXTBOX.y - 64) / 2 + 8, w: 48, h: 48 });
     expect(ctx.assets.characterFrame).toHaveBeenCalledWith("vale");
   });
 
@@ -114,7 +114,7 @@ describe("character previews", () => {
     expect(ctx.assets.characterFrame).toHaveBeenCalledWith("vale");
   });
 
-  it.each(["metadata", "legacy"])("keeps today's UI portrait positions and scales with %s assets", async (kind) => {
+  it.each(["metadata", "legacy"])("keeps integer UI portrait scales after centring with %s assets", async (kind) => {
     const { ctx, scenes, g, sheet, drawImage, tick } = setup([16, 16]);
     if (kind === "legacy") delete ctx.assets.characterFrame;
     void trainerCard(ctx);
@@ -122,11 +122,11 @@ describe("character previews", () => {
     expect(drawImage).toHaveBeenLastCalledWith(sheet, 0, 0, 16, 16, 116, 30, 32, 32);
     void nameEntry(ctx, { title: "YOUR NAME?", max: 7, defaultName: "ROWAN" });
     scenes.top()!.draw(g);
-    expect(drawImage).toHaveBeenLastCalledWith(sheet, 0, 0, 16, 16, 8, 8, 32, 32);
+    expect(drawImage).toHaveBeenLastCalledWith(sheet, 0, 0, 16, 16, SCREEN_W / 2 - 72, 8, 32, 32);
     void runNewGame(ctx);
     for (let i = 0; i < 48; i++) { tick(1); await Promise.resolve(); }
     scenes.top()!.draw(g);
-    expect(drawImage).toHaveBeenLastCalledWith(sheet, 0, 0, 16, 16, 56, 20, 48, 48);
+    expect(drawImage).toHaveBeenLastCalledWith(sheet, 0, 0, 16, 16, SCREEN_W / 2 - 24, (TEXTBOX.y - 64) / 2 + 8, 48, 48);
   });
 
   it("keeps today's 16x16 world overview and canvas dimensions", () => {

@@ -135,6 +135,7 @@ Until then, `main` ships the GBC fallback. The release horizon
 |---|---|---|
 | R1a ✓ | Engine: tall characters, props (footprint, floor layer), `wall_face`, tests (§2.1–2.3, §2.5); procedural GBC wall-face fallback | Codex |
 | R1b ✓ | Local-pack plumbing and index tests (§2.4–2.5) | Codex |
+| R1d ✓ | Screen core: 320×180, integer scaling, clamped camera and centred small maps, 36×3 dialogue and validation, native-size framed stills, title/intro/card/start-menu layouts and full-screen effects | Codex |
 | R2a ✓ | Interior importer, prop geometry contracts and original GBC fallback props (§1, §3) | lead (mappings) + Codex (code) |
 | R2b ✓ | Outdoor importer, pixel footprints, prop signs, building doors, ground blob masks + local review (character/UI work remains R4/R6) | lead (mappings) + Codex (code) |
 | R3 | Map re-layouts: interiors, then exteriors, chapter by chapter | Codex, QA-gated, with the lead reviewing one render sheet each |
@@ -142,3 +143,15 @@ Until then, `main` ships the GBC fallback. The release horizon
 | R5 | Creature style v2 and a pilot, then the roster | lead (rules) + Codex loop |
 | R6 | UI pass (text box, menus) from Modern UI, if it earns its place | later |
 | R7 | Shipping and the release horizon | the owner + both leads |
+
+### R1d screen decision (2026-10-07)
+
+The owner chose **320×180** for LimeZu's art. R1d keeps 16×16 world tiles
+(20×11.25 visible), centres maps smaller than the view on each axis, and
+uses the existing 8×8 font and border in a bottom **36-column × 3-line**,
+56-pixel-high dialogue box. Legacy 160×144 story stills are centred at 1×
+on a dark frame until redrawn. Title, intro/name entry, ending card and START
+menu use the new canvas; fades, transitions, night tint, GLOW and weather
+cover it. The screen core adapts the existing page shell's canvas placement
+while preserving touch/fullscreen controls. Menu screens in `src/screens/`
+and the battle layout remain for **R1e**; neither is redesigned in R1d.

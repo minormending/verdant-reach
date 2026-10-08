@@ -1,3 +1,4 @@
+import { TEXTBOX } from "../contracts";
 import { describe, expect, it } from "vitest";
 import { GLYPHS, formatText, glyphKey, measureText, paragraphs, wrapText } from "./font";
 import { NameModel } from "./nameEntry";
@@ -15,16 +16,16 @@ describe("bitmap font", () => {
     expect(measureText("ab\nlonger")).toBe(48);
   });
 
-  it("wraps to 18 columns at word boundaries", () => {
-    const lines = wrapText("The CENTURYHEART on the far slope is about to bloom.", 18);
-    expect(lines).toEqual(["The CENTURYHEART", "on the far slope", "is about to bloom."]);
-    for (const l of lines) expect(l.length).toBeLessThanOrEqual(18);
-    expect(wrapText("line one\nline two", 18)).toEqual(["line one", "line two"]);
-    expect(wrapText("ABCDEFGHIJKLMNOPQRSTUVWXYZ", 18)).toEqual(["ABCDEFGHIJKLMNOPQR", "STUVWXYZ"]);
+  it("wraps to 36 columns at word boundaries", () => {
+    const lines = wrapText("The CENTURYHEART on the far slope is about to bloom.", TEXTBOX.cols);
+    expect(lines).toEqual(["The CENTURYHEART on the far slope is", "about to bloom."]);
+    for (const l of lines) expect(l.length).toBeLessThanOrEqual(TEXTBOX.cols);
+    expect(wrapText("line one\nline two", TEXTBOX.cols)).toEqual(["line one", "line two"]);
+    expect(wrapText("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMN", TEXTBOX.cols)).toEqual(["ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJ", "KLMN"]);
   });
 
   it("splits paragraphs on blank lines", () => {
-    expect(paragraphs("Hello there!\n\nSecond box.", 18)).toEqual([["Hello there!"], ["Second box."]]);
+    expect(paragraphs("Hello there!\n\nSecond box.", TEXTBOX.cols)).toEqual([["Hello there!"], ["Second box."]]);
   });
 
   it("substitutes player and rival names", () => {

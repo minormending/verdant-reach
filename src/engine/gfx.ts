@@ -1,8 +1,8 @@
 // Small drawing helpers shared by the engine's scenes: images with a
 // missing-art fallback, fades, shake, and frame-based waiting.
 
-import { DEFAULT_CHARACTER_FRAME } from "../contracts";
-import type { Assets, CharacterKey } from "../contracts";
+import { DEFAULT_CHARACTER_FRAME, SCREEN_H, SCREEN_W, UI } from "../contracts";
+import type { ArtImage, Assets, CharacterKey } from "../contracts";
 
 /** Frame metadata, with the original GBC size for legacy asset stores. */
 export function characterFrame(assets: Assets, sprite: CharacterKey) {
@@ -45,6 +45,13 @@ export function drawImagePath(
   }
   if (opts.placeholder !== false && isMissing(assets, path)) drawMissing(g, path, Math.round(dx), Math.round(dy), dw, dh);
   return false;
+}
+
+/** Frame legacy story art at its native size, with no resampling or stretching. */
+export function drawCenteredStill(g: CanvasRenderingContext2D, image: ArtImage) {
+  g.fillStyle = UI.black;
+  g.fillRect(0, 0, SCREEN_W, SCREEN_H);
+  g.drawImage(image, Math.floor((SCREEN_W - image.width) / 2), Math.floor((SCREEN_H - image.height) / 2));
 }
 
 /** Image available right now? (Kicks off a lazy load if it isn't.) */

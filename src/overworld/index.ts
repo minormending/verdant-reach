@@ -6,14 +6,14 @@ import type { ArtImage,
   Ambient, BattleOutcome, BattleRequest, Dir, GameContext, MapDef, MapId, Quickened, Scene, ScriptCmd, ScriptId,
   SpeciesId, StillKey,
 } from "../contracts";
-import { FIELD_MOVES, SCREEN_H, SCREEN_W, STRUCTURES, TILE, structureFootprint, speciesPath, stillPath, tilePath } from "../contracts";
+import { FIELD_MOVES, SCREEN_H, SCREEN_W, STRUCTURES, TEXTBOX, TILE, VIEW_TILES_X, VIEW_TILES_Y, structureFootprint, speciesPath, stillPath, tilePath } from "../contracts";
 import type { FieldMove } from "../contracts";
 import { followerOn } from "../save";
 import { createQuickened, healParty } from "../battle";
 import { playClock } from "../engine/context";
 import { mapTime } from "../engine/time";
 import { clearScenes } from "../engine/core";
-import { Fader, Shaker, Timers, drawImagePath } from "../engine/gfx";
+import { Fader, Shaker, Timers, drawCenteredStill, drawImagePath } from "../engine/gfx";
 import { drawWindow } from "../ui/kit";
 import { nameEntry } from "../ui/nameEntry";
 import { saveDialog } from "../ui/widgets";
@@ -33,7 +33,7 @@ import {
 } from "./render";
 import { AmbientFx, effectiveAmbient } from "./ambient";
 import { autotileMask } from "./autotile";
-import { CameraRig, Flash, camForTile } from "./camera";
+import { CameraRig, Flash, camForTile, clampCamera } from "./camera";
 import { Effects, drawHiddenSparkle, drawWaterGlint } from "./effects";
 import { Follower, followerLine } from "./follower";
 import { bushId, hasItem, hiddenAt, hiddenFlag, pickedToday, unfoundHidden } from "./progress";
@@ -412,7 +412,7 @@ class Overworld implements Scene {
   /** Camera top-left that centres the player. */
   followCam(): { x: number; y: number } {
     const pp = this.player.pixel();
-    return { x: pp.px - 64, y: pp.py - 64 };
+    return clampCamera(camForTile(pp.px / TILE, pp.py / TILE), this.map);
   }
 
   /** Dust, grass rustles and landing puffs for steps that just began or ended. */
@@ -1284,7 +1284,7 @@ class Overworld implements Scene {
       credits: () => rollCredits(ctx),
       camera(x, y, frames) {
         if (self.camera.following) self.camera.update(self.followCam());
-        return self.camera.pan(camForTile(x, y), frames);
+        return self.camera.pan(clampCamera(camForTile(x, y), self.map), frames);
       },
       cameraReset: (frames) => self.camera.reset(frames, self.followCam()),
       ambient(kind) { self.ambientOverride = kind; },
@@ -1322,16 +1322,16 @@ class Overworld implements Scene {
     this.tiles.draw(g, m, camX, camY, second);
     const tx0 = Math.floor(camX / TILE);
     const ty0 = Math.floor(camY / TILE);
-    for (let ty = ty0; ty <= ty0 + 9; ty++) {
-      for (let tx = tx0; tx <= tx0 + 10; tx++) {
+    for (let ty = ty0; ty <= ty0 + Math.ceil(VIEW_TILES_Y); ty++) {
+      for (let tx = tx0; tx <= tx0 + Math.ceil(VIEW_TILES_X); tx++) {
         const t = tileAt(m, tx, ty);
         if (!tileProps(t).water || autotileMask(m, tx, ty) !== 15) continue;
         drawWaterGlint(g, tx, ty, tx * TILE - camX, ty * TILE - camY, this.frame);
       }
     }
     if (!m.def.outdoor && tod === "night") {
-      for (let ty = ty0; ty <= ty0 + 9; ty++) {
-        for (let tx = tx0; tx <= tx0 + 10; tx++) {
+      for (let ty = ty0; ty <= ty0 + Math.ceil(VIEW_TILES_Y); ty++) {
+        for (let tx = tx0; tx <= tx0 + Math.ceil(VIEW_TILES_X); tx++) {
           if (tileAt(m, tx, ty) !== "window") continue;
           const img = assets.image(this.tiles.resolve(m, tx, ty).path) ?? assets.image(tilePath("window"));
           const night = img && nightGlass(img);
@@ -1533,20 +1533,22 @@ class Overworld implements Scene {
     }
 
     // Story illustration (text boxes and the species window draw over it).
-    if (this.still) g.drawImage(this.still.img, 0, 0, SCREEN_W, SCREEN_H);
+    if (this.still) drawCenteredStill(g, this.still.img);
 
     // UI layer.
     if (this.popup && this.popup.t > 0 && !this.transition.kind) drawMapName(g, this.popup.name, this.popup.t);
     this.drawToasts(g);
+    const portraitX = Math.floor((SCREEN_W - 64) / 2);
+    const portraitY = Math.floor((TEXTBOX.y - 64) / 2);
     if (this.sprouting) {
-      drawWindow(g, 48, 20, 64, 64, { shadow: true });
+      drawWindow(g, portraitX, portraitY, 64, 64, { shadow: true });
       const wob = this.sprouting.shake > 0 ? [0, 1, 1, 0, -1, -1][this.sprouting.shake % 6] : 0;
-      drawSeedBig(g, assets, 52 + wob, 24, this.sprouting.crack);
+      drawSeedBig(g, assets, portraitX + 4 + wob, portraitY + 4, this.sprouting.crack);
     } else if (this.species) {
-      drawWindow(g, 48, 20, 64, 64, { shadow: true });
+      drawWindow(g, portraitX, portraitY, 64, 64, { shadow: true });
       const sportImg = this.speciesSport ? assets.image(speciesPath(this.species, "front", { sport: true })) : undefined;
-      if (sportImg) g.drawImage(sportImg, 52, 24);
-      else drawImagePath(g, assets, speciesPath(this.species, "front"), 0, 0, 56, 56, 52, 24);
+      if (sportImg) g.drawImage(sportImg, portraitX + 4, portraitY + 4);
+      else drawImagePath(g, assets, speciesPath(this.species, "front"), 0, 0, 56, 56, portraitX + 4, portraitY + 4);
     }
     this.transition.draw(g);
     this.flash.draw(g, SCREEN_W, SCREEN_H);

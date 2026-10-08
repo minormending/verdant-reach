@@ -355,8 +355,8 @@ export function drawToast(g: CanvasRenderingContext2D, kind: "new_note" | "note_
 // Battle intro transitions
 // ---------------------------------------------------------------------------
 
-const COLS = SCREEN_W / 8;
-const ROWS = SCREEN_H / 8;
+const COLS = Math.ceil(SCREEN_W / 8);
+const ROWS = Math.ceil(SCREEN_H / 8);
 
 /** Rank (0..1) of each 8x8 block in a clockwise spiral from the outside in. */
 const SPIRAL_RANK: number[] = (() => {
