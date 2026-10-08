@@ -567,7 +567,7 @@ const ch8Trainers: TrainerDef[] = [
   // Wren tuning from §5: every level -2 (44/45/45/48 → 42/43/43/46).
   // Explicit learned moves below soften late-game damage while retaining orchid
   // healing, fungal drain, maple sap and cedar defence. Mean: 75.5%; min: 38.0%.
-  trainer("wren", "WREN", "ADMIN", "researcher", [
+  trainer("wren", "WREN", "ADMIN", "wren", [
     T("moth_orchid", 42, ["wind_scatter", "moonbeam", "false_nectar", "long_bloom"]),
     T("ghost_pipe", 43, ["moonbeam", "root_siphon", "spore_cloud"]),
     T("sugar_maple", 43, ["samara_spin", "sap_spout", "hoarfrost", "sugar_rush"]),

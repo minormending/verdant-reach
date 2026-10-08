@@ -132,7 +132,7 @@ describe("Chapter 8 scripts", () => {
     expect(host.battle).toHaveBeenCalledWith({ kind: "trainer", trainer: "wren", canLose: false, backdrop: undefined });
     expect(state.flags).toMatchObject({ beat_wren: true, broadcast_off: true, mercer_seen: true, mercer_left: true, ch8_takeover: false });
     expect(events).toEqual(["show:wren", "sfx:pulse", "flash", "still:relay_pulse", "stillClear", "show:mercer",
-      "move:mercer:8", "hide:mercer", "move:wren:9", "hide:wren"]);
+      "still:mercer_hub_map", "stillClear", "move:mercer:8", "hide:mercer", "move:wren:9", "hide:wren"]);
     expect(host.endSlice).not.toHaveBeenCalled();
     expect(state.bag.rain_jar).toBeUndefined();
     s.enter("glasshouse_relay");
@@ -226,7 +226,7 @@ describe("Chapter 8 scripts", () => {
     expect(triggerAt(runtime, 7, 7, s.state.flags)).toBeUndefined();
     await s.run("ch8_wren"); await s.run("ch8_wren_after");
     expect(s.host.battle).toHaveBeenCalledTimes(2);
-    expect(s.host.still).toHaveBeenCalledOnce();
+    expect(s.host.still).toHaveBeenCalledTimes(2);
     expect(s.host.moveNpc).toHaveBeenCalledTimes(2);
   });
 
