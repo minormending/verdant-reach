@@ -103,9 +103,9 @@ export const ch6Scripts: Scripts = {
         say("Then the fireflies come back. Dozens. Hundreds. The harbour shines."),
         { op: "stillClear" },
         flag("lantern_healed"),
-        { op: "hideNpc", npc: "reyes_point" },
         say("...Look at it. You brought the light back, <PLAYER>.", "REYES"),
         say("Thank you. Come to my CONSERVATORY. Now I'll battle.", "REYES"),
+        { op: "hideNpc", npc: "reyes_point" },
         cameraReset(),
       ], else: [
         say("The sick roots need CACTUS SAP. You don't have any with you."),
