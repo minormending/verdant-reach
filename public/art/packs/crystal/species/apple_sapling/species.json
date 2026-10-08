@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "apple_sapling",
+  "palette": ["#181818", "#a02830", "#78b840", "#f8f8f8"],
+  "sport": ["#181818", "#502048", "#a06890", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 14], [2, 5], [3, 12], [2, 4], [0, 3]], "idle": [[0, 150], [2, 6]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/apple.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/apple.py" },
+  "notes": "LUNGING: a whip trunk in a C, a king blossom for a head, its first apple held out on the lead twig like a fist. Intro: the king blossom is a shut bud; it swells, POPS open wider than rest and settles. Crystal rule: red is the dark slot (apple, twig and leaf shade), leaf green the light; the blossom is the shared white, flushed red. Sport: Malus 'Royalty' (purple-leaved crabapple: bronze-purple leaves, dark fruit)."
+}

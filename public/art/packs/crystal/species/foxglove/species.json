@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "foxglove",
+  "palette": ["#181818", "#582870", "#d870b0", "#f8f8f8"],
+  "sport": ["#181818", "#585070", "#e0d8c8", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 10], [2, 8], [3, 18], [0, 6], [3, 4], [0, 8]], "idle": [[0, 140], [3, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/foxglove.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/foxglove.py" },
+  "notes": "Crystal rule. LOOMING. Gesture: the bells snap open down the spike bottom-first, as the real raceme opens (all shut, the lower bells pop, every bell flared, held, settle). Two tones: the dusky plum cloak and spire (as in the base art) and foxglove pink bells; the pink is also the lit band and the midrib of each plum leaf, so the dark cloak reads as forms. The spotted throat is a black crescent over a white lip with plum speckles, side-on, never a disc. Sport: 'Alba' (cream bells, dusky spots)."
+}

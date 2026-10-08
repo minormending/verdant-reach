@@ -16,7 +16,7 @@ import { summaryScreen } from "./summary";
 // Bag and party call each other only after initialization, so the static cycle is safe.
 import { bagScreen } from "./bag";
 import { drawSeedIcon } from "../ui/seedArt";
-import { aboveText, HALF, PARTY_ROW_H as ROW_H, partyRowY, RIGHT } from "./kit/layout";
+import { aboveText, HALF, PARTY_ROW_H as ROW_H, partyRowY, partyRowX } from "./kit/layout";
 
 export interface PartyOpts {
   mode: "view" | "pick";
@@ -55,22 +55,22 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
     // soft zebra rows; empty slots show as pale dashed plots
     for (let i = 0; i < 6; i++) {
       g.fillStyle = i % 2 ? "#eef4e2" : "#f8f8f0";
-      skin.surface(g, "slot", 0, partyRowY(i) - (skin.skinOn() ? 2 : 0), SCREEN_W, ROW_H);
+      skin.surface(g, "slot", partyRowX(i), partyRowY(i) - (skin.skinOn() ? 2 : 0), HALF, ROW_H);
     }
     for (let i = party().length; i < 6; i++) {
       g.fillStyle = "#d8e0c8";
-      for (let x = 10; x < RIGHT; x += 4) g.fillRect(x, partyRowY(i) + 8, 2, 1);
+      for (let x = partyRowX(i) + 10; x < partyRowX(i) + HALF - 8; x += 4) g.fillRect(x, partyRowY(i) + 8, 2, 1);
     }
     if (swapFrom >= 0) {
       g.fillStyle = "#d8e8f8";
-      skin.surface(g, "selection", 0, partyRowY(swapFrom), SCREEN_W, ROW_H);
+      skin.surface(g, "selection", partyRowX(swapFrom), partyRowY(swapFrom), HALF, ROW_H);
     }
     if (!hideCursor) {
       g.fillStyle = "#f8f0b8";
-      skin.surface(g, "selection", 0, partyRowY(index) - (skin.skinOn() ? 2 : 0), SCREEN_W, ROW_H);
+      skin.surface(g, "selection", partyRowX(index), partyRowY(index) - (skin.skinOn() ? 2 : 0), HALF, ROW_H);
       g.fillStyle = UI.dark;
-      if (!skin.skinOn()) g.fillRect(0, partyRowY(index), SCREEN_W, 1);
-      if (!skin.skinOn()) g.fillRect(0, partyRowY(index) + ROW_H - 1, SCREEN_W, 1);
+      if (!skin.skinOn()) g.fillRect(partyRowX(index), partyRowY(index), HALF, 1);
+      if (!skin.skinOn()) g.fillRect(partyRowX(index), partyRowY(index) + ROW_H - 1, HALF, 1);
     }
     party().forEach((q, i) => {
       // rows slide in from the right as the menu opens
@@ -79,8 +79,8 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
       drawRow(ctx, g, q, i, i === index && !hideCursor, frame, shownHp.get(q.uid) ?? q.hp, off, growthItem);
     });
     if (!hideCursor) {
-      if (swapFrom >= 0) drawCursor(ctx, g, 0, partyRowY(swapFrom) + 4, true);
-      if (!skin.focus(g, { x: 0, y: partyRowY(index) - 2, w: SCREEN_W, h: ROW_H })) drawCursor(ctx, g, 0, partyRowY(index) + 4, false, frame);
+      if (swapFrom >= 0) drawCursor(ctx, g, partyRowX(swapFrom), partyRowY(swapFrom) + 4, true);
+      if (!skin.focus(g, { x: partyRowX(index), y: partyRowY(index) - 2, w: HALF, h: ROW_H })) drawCursor(ctx, g, partyRowX(index), partyRowY(index) + 4, false, frame);
     }
     ui?.draw(g);
   };
@@ -206,31 +206,31 @@ export function partyScreen(ctx: GameContext, opts: PartyOpts): Promise<number> 
 
 function drawRow(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened, i: number, selected: boolean, frame: number, hp: number, off = 0, growthItem?: ItemId) {
   const y = partyRowY(i);
-  const x = off;
+  const x = partyRowX(i) + off;
   const ability = growthItem ? (canGrowWith(ctx.data, q, growthItem) ? "ABLE" : "NOT ABLE") : null;
   if (q.seed) {
     // A Nursery seed: its icon rocks gently; no level or HP until it sprouts (as Crystal's eggs).
     const f = Math.floor(frame / (selected ? 12 : 28)) % 2 as 0 | 1;
-    drawSeedIcon(g, ctx.assets, 8 + x, y, f);
-    ctx.ui.drawText(g, "SEED", 24 + x, y);
-    if (ability) drawTextRight(ctx, g, ability, RIGHT + x, y + 4);
+    drawSeedIcon(g, ctx.assets, 12 + x, y + 8, f);
+    ctx.ui.drawText(g, "SEED", 40 + x, y + 2);
+    if (ability) drawTextRight(ctx, g, ability, HALF - 8 + x, y + 24);
     return;
   }
   // icons bob faster the healthier they are (and fastest when selected), as in Crystal
   const speed = hp <= 0 ? 0 : hp / q.stats.hp > 0.5 ? (selected ? 6 : 16) : hp / q.stats.hp > 0.2 ? (selected ? 10 : 24) : (selected ? 16 : 32);
   const f = speed === 0 ? 0 : Math.floor(frame / speed) % 2;
   const hop = selected && speed > 0 && Math.floor(frame / speed) % 4 === 1 ? -1 : 0;
-  drawIcon(ctx, g, q.species, 8 + x, y + hop, f, q.sport);
+  drawIcon(ctx, g, q.species, 4 + x, y + hop, f, q.sport);
   const name = qName(ctx.data, q);
-  ctx.ui.drawText(g, name.slice(0, 12), 24 + x, y, hp <= 0 ? "#707070" : undefined);
-  drawLevel(ctx, g, q.level, HALF - 32 + x, y);
-  drawHpBar(g, SCREEN_W - 120 + x, y + 5, Math.max(0, hp), q.stats.hp, 36);
+  ctx.ui.drawText(g, name.slice(0, 12), 40 + x, y + 2, hp <= 0 ? "#707070" : undefined);
+  drawLevel(ctx, g, q.level, 40 + x, y + 12);
+  drawHpBar(g, (ability ? 40 : 100) + x, y + 25, Math.max(0, hp), q.stats.hp, ability ? 26 : 36);
   // Growth eligibility replaces HP numbers and status in the right column.
   if (ability) {
-    drawTextRight(ctx, g, ability, RIGHT + x, y + 4);
+    drawTextRight(ctx, g, ability, HALF - 8 + x, y + 24);
     return;
   }
-  if (q.hp <= 0) drawWiltBadge(g, SCREEN_W / 2 + x, y + 5);
-  else if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], SCREEN_W / 2 + x, y + 5, frame);
-  drawTextRight(ctx, g, `${pad(Math.max(0, Math.round(hp)), 3)}/${pad(q.stats.hp, 3)}`, RIGHT + x, y + 4);
+  if (q.hp <= 0) drawWiltBadge(g, 84 + x, y + 13);
+  else if (q.status) drawStatusBadge(g, q.status, STATUS_ABBR[q.status], 84 + x, y + 13, frame);
+  ctx.ui.drawText(g, `${pad(Math.max(0, Math.round(hp)), 3)}/${pad(q.stats.hp, 3)}`, 40 + x, y + 24);
 }

@@ -1,5 +1,4 @@
-import { SCREEN_W } from "../contracts";
-import { partyRowY, RIGHT } from "./kit/layout";
+import { partyRowY, partyRowX, HALF } from "./kit/layout";
 import { describe, expect, it, vi } from "vitest";
 import type { Button, GameContext, GameData, ItemId, Quickened, SpeciesId } from "../contracts";
 import { createQuickened } from "../battle/logic/stats";
@@ -203,7 +202,7 @@ describe("field growth items", () => {
 });
 
 describe("growth item party labels", () => {
-  it("shows ABLE / NOT ABLE for every member, including seeds, beyond the HP bar", async () => {
+  it("shows eligibility beyond the HP bar inside each party slot, including seeds", async () => {
     const h = harness();
     const eligible = h.plant();
     eligible.status = "scorch";
@@ -213,14 +212,14 @@ describe("growth item party labels", () => {
     const result = partyScreen(h.ctx, { mode: "pick", useItem: "ember_ash" });
     for (let i = 0; i < 20; i++) await h.tick();
     const labels = h.drawParty().filter(([, text]) => text === "ABLE" || text === "NOT ABLE");
-    expect(labels.map(([, text, x, y]) => [text, x, y])).toEqual([
-      ["ABLE", RIGHT - 4 * 8, partyRowY(0) + 4], ["NOT ABLE", RIGHT - 8 * 8, partyRowY(1) + 4], ["NOT ABLE", RIGHT - 8 * 8, partyRowY(2) + 4],
-    ]);
-    // Growth eligibility occupies the right column beyond the HP tab.
-    for (const [, text, x] of labels) {
-      expect(x).toBeGreaterThanOrEqual(SCREEN_W - 120 + 10);
-      expect(x + text.length * 8).toBeLessThanOrEqual(SCREEN_W);
-    }
+    expect(labels.map(([, text]) => text)).toEqual(["ABLE", "NOT ABLE", "NOT ABLE"]);
+    labels.forEach(([, text, x, y], i) => {
+      const slotX = partyRowX(i);
+      expect(x).toBe(slotX + HALF - 8 - text.length * 8);
+      expect(y).toBe(partyRowY(i) + 24);
+      expect(x).toBeGreaterThanOrEqual(slotX + 40 + 26 + 10);
+      expect(x + text.length * 8).toBeLessThanOrEqual(slotX + HALF);
+    });
     await h.tick("b");
     await expect(result).resolves.toBe(-1);
   });

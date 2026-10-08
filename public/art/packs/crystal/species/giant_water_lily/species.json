@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "giant_water_lily",
+  "palette": ["#181818", "#285838", "#e888b0", "#f8f8f8"],
+  "sport": ["#181818", "#385020", "#e8c040", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 6], [2, 18], [1, 4], [3, 8], [4, 6], [0, 8]], "idle": [[0, 140], [4, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/lily.py. Reference photo water_lily/adult.jpg by David Stanley from Nanaimo, Canada (CC BY 2.0), https://commons.wikimedia.org/wiki/File:Victoria_Amazonica_Flower_(14013432784).jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/lily.py" },
+  "notes": "WHITE: Victoria's outer petals are genuinely white (each shaded with a pink crescent, split by black). LOOMING. Intro: the bloom unfurls: the reflexed white arm petals lift high while the pink crown spreads, hold, then the arms sweep down into the display; the tray and stalk hold. The white petals are shaded with crisp pink crescents round the pink crown. Sport: 'Chromatella'. Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads (indexes 1-2 only)."
+}

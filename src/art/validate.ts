@@ -9,7 +9,7 @@ import { CHARACTERS, STRUCTURES, TILES, parseCharacterFrame } from "../contracts
 import { checkSpeciesAnim, MAX_FRONT_FRAMES } from "./anim";
 import { ArtCatalog, isRef, type BundleView } from "./catalog";
 import { BUNDLE_JSON, PACK_FORMAT, refCells, type RawBundle } from "./format";
-import { colorStats, isPalette } from "./palette";
+import { colorStats, isPalette, isSportMap } from "./palette";
 import { SET_DIRS } from "./paths";
 import type { Rgba } from "./png";
 import { requiredPaths, type RequiredPath } from "./required";
@@ -62,7 +62,7 @@ export function validateArt(input: ValidateInput): ValidateResult {
     if (!isObj(r.json)) { add(where, `${BUNDLE_JSON[r.kind].file} is not a JSON object`); continue; }
     const fmt = r.json.format, id = r.json.id;
     if (r.pack === null || fmt !== undefined) {
-      if (fmt !== BUNDLE_JSON[r.kind].format) add(where, `format is ${JSON.stringify(fmt)}, want "${BUNDLE_JSON[r.kind].format}"`);
+      if (fmt !== BUNDLE_JSON[r.kind].format && !(r.kind === "species" && fmt === "verdant.species/2")) add(where, `format is ${JSON.stringify(fmt)}, want "${BUNDLE_JSON[r.kind].format}"`);
     }
     if (r.pack === null || id !== undefined) {
       if (id !== r.id) add(where, `id is ${JSON.stringify(id)} but the folder is "${r.id}"`);
@@ -113,7 +113,7 @@ export function validateArt(input: ValidateInput): ValidateResult {
     if (!req.size) continue;
     const [w, h] = res.rect ? [res.rect[2], res.rect[3]] : (() => { const i = img(res.url); return i ? [i.width, i.height] : [0, 0]; })();
     if (!res.rect && w === 0) { add(req.path, `file ${res.url} is missing or unreadable`); continue; }
-    if (w !== req.size[0] || h !== req.size[1]) add(req.path, `is ${w}x${h}, want ${req.size[0]}x${req.size[1]}`);
+    if (![req.size, ...(req.alternateSizes ?? [])].some(s => w === s[0] && h === s[1])) add(req.path, `is ${w}x${h}, want ${req.size[0]}x${req.size[1]}`);
   }
 
   return {
@@ -139,12 +139,17 @@ function checkBundle(cat: ArtCatalog, v: BundleView, add: Add, img: Img, prefix:
 
   switch (v.kind) {
     case "species": {
-      if (!isPalette(m.palette, 4)) { add(where, "palette must be 4 #rrggbb colours"); return; }
+      const v2 = m.format === "verdant.species/2";
+      if (v2) {
+        if (!isObj(m.size) || m.size.front !== 64 || m.size.back !== 64 || m.size.icon !== 32) add(where, "v2 size must be { front: 64, back: 64, icon: 32 }");
+        if (m.palette !== undefined && (!isPalette(m.palette) || m.palette.length > 16)) add(where, "v2 palette must be at most 16 #rrggbb colours, or omitted");
+      } else if (!isPalette(m.palette, 4)) { add(where, "palette must be 4 #rrggbb colours"); return; }
       if (m.sport === undefined) add(where, "sport palette is missing (shipped species must define one)");
-      else if (!isPalette(m.sport, (m.palette as string[]).length)) add(where, "sport must be #rrggbb colours, the same count as palette");
+      else if (v2 ? !isSportMap(m.sport) : !isPalette(m.sport, (m.palette as string[]).length)) add(where, v2 ? "v2 sport must map #rrggbb colours to #rrggbb colours" : "sport must be #rrggbb colours, the same count as palette");
       const frames = m.frames;
       if (!isObj(frames)) { add(where, "frames must be an object"); return; }
-      const spec = { front: [1, MAX_FRONT_FRAMES, 56], back: [1, 1, 48], icon: [1, 2, 16] } as const;
+      const spec = { front: [1, MAX_FRONT_FRAMES, v2 ? 64 : 56], back: [1, 1, v2 ? 64 : 48], icon: [v2 ? 2 : 1, 2, v2 ? 32 : 16] };
+      const allColors = new Set<string>();
       for (const [list, [min, max, size]] of Object.entries(spec)) {
         const names = frames[list];
         if (!Array.isArray(names) || names.length < min || names.length > max || !names.every((n) => typeof n === "string")) {
@@ -158,6 +163,7 @@ function checkBundle(cat: ArtCatalog, v: BundleView, add: Add, img: Img, prefix:
           if (i.width !== size || i.height !== size) add(where, `${name} is ${i.width}x${i.height}, want ${size}x${size}`);
           const pal = cat.paletteAt(v, f.layer);
           const { colors, partialAlpha } = colorStats(i.data);
+          for (const c of colors) allColors.add(c);
           if (partialAlpha) add(where, `${name}: ${partialAlpha} pixel(s) with partial alpha (must be 0 or 255)`);
           if (pal) {
             const allowed = new Set(pal.map((c) => c.toLowerCase()));
@@ -166,6 +172,7 @@ function checkBundle(cat: ArtCatalog, v: BundleView, add: Add, img: Img, prefix:
           }
         }
       }
+      if (v2 && allColors.size > 16) add(where, `v2 frames use ${allColors.size} colours, maximum 16`);
       // Crystal-style animation (optional): frames exist, intro ends on 0, ticks are positive.
       const front = Array.isArray(frames.front) ? frames.front.length : 0;
       for (const msg of checkSpeciesAnim(m.anim, front)) add(where, msg);

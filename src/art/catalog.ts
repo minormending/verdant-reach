@@ -28,7 +28,7 @@ import {
   BUNDLE_JSON, BUNDLE_KINDS, bundleDir, refCells,
   type BundleKind, type RawBundle, type TileDef, type TileRef,
 } from "./format";
-import { isPalette, makeRecolor, type Recolor } from "./palette";
+import { isPalette, isSportMap, makeRecolor, materialRecolor, type Recolor } from "./palette";
 import { legacyFileOf, logicalPath, parseLogical, SPECIES_FRAME_KINDS, speciesFrameSlot, type LogicalRef } from "./paths";
 
 export const LAB_LAYER = "@lab";
@@ -91,6 +91,11 @@ export function isRef(v: unknown): v is TileRef {
 
 /** Merge one layer's JSON over the accumulated JSON. */
 function mergeJson(kind: BundleKind, under: Record<string, unknown>, over: Record<string, unknown>): Record<string, unknown> {
+  // A format change cannot inherit the other version's palette/sport contract.
+  if (kind === "species" && over.format !== undefined && under.format !== undefined && over.format !== under.format) {
+    under = { ...under };
+    delete under.palette; delete under.sport; delete under.size;
+  }
   const out: Record<string, unknown> = { ...under, ...over };
   const deep = kind === "tilesets" ? "tiles" : kind === "sets" ? "images" : null;
   if (deep && isObj(under[deep]) && isObj(over[deep])) out[deep] = { ...(under[deep] as object), ...(over[deep] as object) };
@@ -244,7 +249,7 @@ export class ArtCatalog {
 
   /** The palette the images of layer `i` are drawn in. */
   paletteAt(v: BundleView, i: number): string[] | undefined {
-    const p = this.valueAt(v, "palette", i);
+    const p = v.layers.slice(0, i + 1).reduce((m, l) => mergeJson(v.kind, m, l.json), {} as Record<string, unknown>).palette;
     return isPalette(p) ? p : undefined;
   }
 
@@ -258,15 +263,20 @@ export class ArtCatalog {
     const name = list[slot.index];
     if (typeof name !== "string") return null;
     const palette = isPalette(v.merged.palette) ? v.merged.palette : undefined;
+    const f = this.findFile(v, name);
+    let recolor = makeRecolor(this.paletteAt(v, f.layer), palette);
     let target = palette;
     if (ref.sport) {
       const sport = v.merged.sport;
-      if (!isPalette(sport) || !palette || sport.length !== palette.length) return null;
-      target = sport;
+      if (v.merged.format === "verdant.species/2" && isSportMap(sport)) {
+        recolor = materialRecolor(recolor, sport);
+      } else {
+        if (!isPalette(sport) || !palette || sport.length !== palette.length) return null;
+        target = sport;
+        recolor = makeRecolor(this.paletteAt(v, f.layer), target);
+      }
     }
-    const f = this.findFile(v, name);
-    const recolor = makeRecolor(this.paletteAt(v, f.layer), target) ?? undefined;
-    return { path, url: f.url, listed: f.listed, legacy: false, recolor, bundle: { kind: "species", id: v.id }, layer: v.layers[f.layer].pack };
+    return { path, url: f.url, listed: f.listed, legacy: false, recolor: recolor ?? undefined, bundle: { kind: "species", id: v.id }, layer: v.layers[f.layer].pack };
   }
 
   /** Index of the layer that last defined `tiles[key]`. */

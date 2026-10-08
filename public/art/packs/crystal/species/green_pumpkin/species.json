@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "green_pumpkin",
+  "palette": ["#181818", "#285038", "#78b040", "#f8f8f8"],
+  "sport": ["#181818", "#284850", "#78a098", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 14], [2, 4], [3, 16], [4, 8], [0, 1]], "idle": [[0, 130], [4, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/pumpkin.py. Reference photo pumpkin/teen.jpg by tracydekalb (CC BY 2.0), https://www.flickr.com/photos/11540627@N03/3966532785: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/pumpkin.py" },
+  "notes": "Crystal rule. BRACED. Gesture: the stem horn rears back, BUTTS forward and rebounds while the tendril tail springs. Each lobe is shaded on its own (a second dark pixel on the shadow half, a white sliver on the lit half). Sport: 'Jarrahdale', slate blue-green."
+}

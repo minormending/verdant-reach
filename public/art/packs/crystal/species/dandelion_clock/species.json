@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "dandelion_clock",
+  "palette": ["#181818", "#386038", "#a8b0d0", "#f8f8f8"],
+  "sport": ["#181818", "#305838", "#d098b8", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 6], [2, 14], [3, 6], [4, 10], [0, 10]], "idle": [[0, 130], [1, 12]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/dandelion.py. Reference photo dandelion/adult.jpg by Martin Ehrensberger (CC0), https://commons.wikimedia.org/wiki/File:20180515_Dscf0118_2_Jpg_(259503189).jpeg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/dandelion.py" },
+  "notes": "WHITE: the seed clock is a white pappus sphere; the lavender shade, and the pappus rays keep form inside the white (no central dot: it read as an eye). BOBBING. Intro: the globe draws in a breath, then puffs: a volley of seeds launches off the blown flank at the foe and drifts away (the intro ends back at rest). Sport: pink dandelion. Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips (indexes 1-2 only)."
+}

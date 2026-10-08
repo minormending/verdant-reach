@@ -85,6 +85,7 @@ class Bundle:
         p = self.file(name)
         a = load_rgba(p)
         if (self.kind == "species" and self.base is not None and p.parent == self.dirs[-1]
+                and self.base.get("palette") and self.data.get("palette")
                 and self.base.get("palette") != self.data.get("palette")):
             a = remap(a, self.base["palette"], self.data["palette"])
         return a
@@ -94,7 +95,11 @@ class Bundle:
         group, i = SPECIES_KINDS[kind]
         a = self.image(self.data["frames"][group][i])
         if sport:
-            a = remap(a, self.data["palette"], self.data["sport"])
+            sport_map = self.data["sport"]
+            if isinstance(sport_map, dict):
+                a = remap(a, list(sport_map), list(sport_map.values()))
+            else:
+                a = remap(a, self.data["palette"], sport_map)
         return a
 
     def frame_kinds(self) -> list[str]:
@@ -136,6 +141,8 @@ def load(kind: str, id_: str, root: Path = ART, packs: list[str] | tuple[str, ..
         pp = json_path(kind, id_, root / "packs" / pk)
         if pp.exists():
             over = load_json(pp)
+            if kind == "species" and data and over.get("format", data.get("format")) != data.get("format"):
+                data = {k:v for k,v in data.items() if k not in ("palette", "sport", "size")}
             data = {**(data or {}), **over}
             dirs.insert(0, pp.parent)
     if data is None:

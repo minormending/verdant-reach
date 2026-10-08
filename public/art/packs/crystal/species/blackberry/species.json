@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "blackberry",
+  "palette": ["#181818", "#482048", "#509038", "#f8f8f8"],
+  "sport": ["#181818", "#805018", "#88a838", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 8], [2, 14], [3, 5], [4, 6], [3, 4], [4, 4], [0, 1]], "idle": [[0, 130], [1, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/bramble.py. Reference photo bramble/adult.jpg by Alan Rockefeller (alan_rockefeller) (CC BY 4.0), https://www.inaturalist.org/observations/379271552: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/bramble.py" },
+  "notes": "LOOMING. Intro: the whip winds back (held), cracks forward over the berries, rebounds and settles; only the tail moves. The berries are black with plum drupelet beads and white glints; the leaves are the only index-2 green. Sport: 'Fall Gold'. Rubus 'Fall Gold' (University of New Hampshire, 1967): golden-amber fruit on yellow-green canes (indexes 1-2 only)."
+}

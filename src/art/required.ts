@@ -14,6 +14,7 @@ export interface RequiredPath {
   group: RequiredGroup;
   /** [w, h] when fixed by the contracts. */
   size?: [number, number];
+  alternateSizes?: [number, number][];
 }
 
 /** Tiles whose second animation frame the game relies on. */
@@ -25,9 +26,9 @@ export const markUiName = (mark: string) => `mark_${mark.replace(/_mark$/, "")}`
 export function requiredPaths(): RequiredPath[] {
   const out: RequiredPath[] = [];
   for (const id of SPECIES_IDS) {
-    out.push({ path: speciesPath(id, "front"), group: "species", size: [56, 56] });
-    out.push({ path: speciesPath(id, "back"), group: "species", size: [48, 48] });
-    out.push({ path: speciesPath(id, "icon"), group: "species", size: [16, 16] });
+    out.push({ path: speciesPath(id, "front"), group: "species", size: [64, 64], alternateSizes: [[56, 56]] });
+    out.push({ path: speciesPath(id, "back"), group: "species", size: [64, 64], alternateSizes: [[48, 48]] });
+    out.push({ path: speciesPath(id, "icon"), group: "species", size: [32, 32], alternateSizes: [[16, 16]] });
   }
   for (const key of Object.keys(TILES) as TileKey[]) {
     // wall_face has a supported procedural base/upper/lower fallback.

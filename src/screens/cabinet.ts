@@ -10,7 +10,7 @@ import { ListView, Menu, ScreenUi } from "./kit/widgets";
 import { summaryScreen } from "./summary";
 import { drawSeedIcon } from "../ui/seedArt";
 
-import { aboveText, CONTENT_H, HALF, LIST_ROWS } from "./kit/layout";
+import { aboveText, CONTENT_H, HALF } from "./kit/layout";
 
 type Mode = "menu" | "deposit" | "withdraw";
 
@@ -36,22 +36,22 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
       skin.surface(g, "plain", 0, 0, SCREEN_W, 9);
       drawTiny(g, mode === "withdraw" ? `CABINET  ${src.length}` : `PARTY  ${src.length}/6`, 4, 2, UI.white);
       for (const [i, r] of list.visibleRows()) {
-        const y = 14 + r * 16;
+        const y = 14 + r * 36;
         const q = src[i];
         g.fillStyle = i === list.index ? "#f8f0b8" : r % 2 ? "#e4efe8" : "#d8e8e0";
-        skin.surface(g, "slot", 0, y - 4, HALF, 16);
-        if (i === list.index) skin.focus(g, { x: 0, y: y - 4, w: HALF, h: 16 });
+        skin.surface(g, "slot", 0, y - 4, HALF, 36);
+        if (i === list.index) skin.focus(g, { x: 0, y: y - 4, w: HALF, h: 36 });
         if (!q) {
-          ctx.ui.drawText(g, "CANCEL", 24, y);
+          ctx.ui.drawText(g, "CANCEL", 44, y + 4);
           continue;
         }
         const f = i === list.index ? Math.floor(frame / 12) % 2 : 0;
-        if (q.seed) drawSeedIcon(g, ctx.assets, 8, y - 4, f as 0 | 1);
+        if (q.seed) drawSeedIcon(g, ctx.assets, 16, y + 4, f as 0 | 1);
         else drawIcon(ctx, g, q.species, 8, y - 4, f, q.sport);
-        ctx.ui.drawText(g, qName(ctx.data, q).slice(0, 12), 24, y);
-        if (!q.seed) drawLevel(ctx, g, q.level, HALF - 36, y);
+        ctx.ui.drawText(g, qName(ctx.data, q).slice(0, 12), 44, y + 4);
+        if (!q.seed) drawLevel(ctx, g, q.level, 44, y + 16);
       }
-      const sy = 14 + (list.index - list.scroll) * 16;
+      const sy = 14 + (list.index - list.scroll) * 36;
       if (!skin.skinOn()) drawCursor(ctx, g, 0, sy, ui.overlays.length > 0, list.frame);
       if (list.canScrollDown()) drawMoreArrow(ctx, g, HALF - 12, CONTENT_H - 12, frame);
       if (list.canScrollUp()) drawMoreArrow(ctx, g, HALF - 12, 10, frame, "up");
@@ -59,7 +59,7 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
     if (list && mode !== "menu") {
       const q = source()[list.index];
       if (q) {
-        const x = HALF + Math.floor((HALF - 56) / 2);
+        const x = HALF + Math.floor((HALF - 64) / 2);
         if (q.seed) drawSeedIcon(g, ctx.assets, x + 20, 40, 0);
         else drawSpecies(ctx, g, q.species, "front", x, 24, { sport: q.sport });
         ctx.ui.drawText(g, qName(ctx.data, q), HALF + 16, 92);
@@ -77,7 +77,7 @@ export function cabinetScreen(ctx: GameContext): Promise<void> {
       return;
     }
     await preload(ctx, src.flatMap((q) => [speciesPath(q.species, "icon"), speciesPath(q.species, "front")]));
-    list = new ListView(ctx, () => source().length + 1, { rows: LIST_ROWS, rowH: 16 });
+    list = new ListView(ctx, () => source().length + 1, { rows: Math.floor((CONTENT_H - 10) / 36), rowH: 36 });
     for (;;) {
       ui.tb.show(m === "withdraw" ? "Take out which QUICKENED?" : "Store which QUICKENED?", "instant");
       await flow.run(list);

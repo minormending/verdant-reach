@@ -295,7 +295,8 @@ export function sportVersion(key: string, src: Src): HTMLCanvasElement {
 
 /** Any species sprite: front … front__8 (animation frames), back, icon, icon__2. */
 export type SpriteKind = SpeciesSpriteKind;
-const sizeOf = (kind: SpriteKind): number => (kind === "back" ? 48 : kind.startsWith("icon") ? 16 : 56);
+export const speciesSlotSize = (kind: SpriteKind): number => kind.startsWith("icon") ? 32 : 64;
+const sizeOf = speciesSlotSize;
 const warnedMissing = new Set<string>();
 
 function hash(s: string): number {
@@ -395,10 +396,18 @@ export interface SpriteDrawOpts {
 export function drawSpecies(
   ctx: GameContext, g: CanvasRenderingContext2D, id: SpeciesId, kind: SpriteKind, x: number, y: number, opts: SpriteDrawOpts = {},
 ) {
-  const size = sizeOf(kind);
   let img: Src = speciesImage(ctx, id, kind, { sport: opts.sport });
   if (opts.silhouette) img = silhouette(`${id}:${kind}:${opts.sport ? "s" : ""}`, img, opts.silhouette);
-  drawImageOpts(g, img, x, y, size, size, opts);
+  drawSpeciesImage(g, img, kind, x, y, opts);
+}
+
+/** Native pixels centred in the v2 slot. Legacy icons deliberately stay 1×. */
+export function drawSpeciesImage(g: CanvasRenderingContext2D, img: Src, kind: SpriteKind, x: number, y: number, opts: SpriteDrawOpts = {}) {
+  const size = speciesSlotSize(kind);
+  const scale = opts.scale ?? 1;
+  // Keep scale effects anchored at the slot's bottom-centre as before.
+  drawImageOpts(g, img, x + Math.floor((size - img.width) / 2),
+    y + Math.floor((size - img.height) / 2) + (size - img.height) / 2 * (1 - scale), img.width, img.height, opts);
 }
 
 /** Draw any image with scale / drop / clip / alpha options. */

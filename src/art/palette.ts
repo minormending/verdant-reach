@@ -18,6 +18,22 @@ export function isPalette(p: unknown, len?: number): p is string[] {
   return Array.isArray(p) && (len === undefined || p.length === len) && p.every((c) => typeof c === "string" && parseHex(c) !== null);
 }
 
+export function isSportMap(p: unknown): p is Record<string, string> {
+  return typeof p === "object" && p !== null && !Array.isArray(p) &&
+    Object.entries(p).every(([a, b]) => parseHex(a) !== null && typeof b === "string" && parseHex(b) !== null);
+}
+
+/** Compose a palette override and material sport into one simultaneous swap. */
+export function materialRecolor(base: Recolor | null, sport: Record<string, string>): Recolor | null {
+  const map = new Map(Object.entries(sport).map(([a, b]) => [a.toLowerCase(), b]));
+  const from = [...(base?.from ?? [])];
+  const to = (base?.to ?? []).map(c => map.get(c.toLowerCase()) ?? c);
+  for (const [a, b] of map) {
+    if (!from.some(c => c.toLowerCase() === a)) { from.push(a); to.push(b); }
+  }
+  return makeRecolor(from, to);
+}
+
 export function samePalette(a: readonly string[], b: readonly string[]): boolean {
   return a.length === b.length && a.every((c, i) => c.toLowerCase() === b[i].toLowerCase());
 }

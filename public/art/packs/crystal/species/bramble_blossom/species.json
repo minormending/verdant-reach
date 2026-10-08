@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "bramble_blossom",
+  "palette": ["#181818", "#883060", "#e8a0c0", "#f8f8f8"],
+  "sport": ["#181818", "#486038", "#d8c8a8", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 6], [2, 14], [3, 5], [4, 4], [3, 4], [4, 6], [0, 1]], "idle": [[0, 120], [4, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/bramble.py. Reference photo bramble/baby.jpg by Sandy Wolkenberg (sadawolk) (CC BY 4.0), https://www.inaturalist.org/observations/286952347: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/bramble.py" },
+  "notes": "COILED. Intro: the thorny tail coils down (wind-up), flicks up and quivers; the flower, cane and leaves hold. The plum cane (index 1) is the line's accent; the pink petals take white on their lit edges, the centre is a plum knot of pistils. Sport: 'Fall Gold'. Rubus 'Fall Gold' (University of New Hampshire, 1967): golden-amber fruit on yellow-green canes (indexes 1-2 only)."
+}

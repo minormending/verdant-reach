@@ -1,4 +1,4 @@
-# Art bundles: the swappable art format (v1)
+# Art bundles: the swappable art format (species v1/v2)
 
 **Goal:** every creature, tileset, structure and character is a
 **self-contained folder of PNGs plus one JSON file**. Swapping one means
@@ -144,6 +144,57 @@ first `front` file) and how long it shows, in 60 fps ticks.
 - `{ "kind": "edited" }`: they were edited by hand or by a tool after
   generation. **Generators must never overwrite an `edited` bundle.**
 - `{ "kind": "imported", "from": "<where>" }`.
+
+### Species format v2
+
+`verdant.species/2` is the original modern creature format in
+[CREATURES_V2.md](CREATURES_V2.md). v1 remains supported unchanged.
+
+```json
+{
+  "format": "verdant.species/2",
+  "id": "oak_acorn",
+  "size": { "front": 64, "back": 64, "icon": 32 },
+  "palette": ["#2a2230", "#355249", "#509056", "#9cc17e"],
+  "sport": { "#355249": "#59472e", "#509056": "#907050", "#9cc17e": "#c5b181" },
+  "frames": { "front": ["front.png", "front__2.png"], "back": ["back.png"], "icon": ["icon.png", "icon__2.png"] },
+  "anim": { "intro": [[0, 18], [1, 18], [0, 1]] },
+  "moving": [[8, 16, 48, 40]],
+  "credits": "Original pixel art for Verdant Reach.",
+  "source": { "kind": "generated", "tool": "tools/art/creatures2/oak.py" },
+  "notes": "Sport: a real cultivar; describe the recoloured materials."
+}
+```
+
+- Front and back files are **64×64**; icons are **32×32**, exactly two.
+  There are 1–8 front frames and one back frame.
+- All frames share at most **16 opaque colours**, with binary alpha. The
+  optional `palette` lists those colours; if omitted, pixels supply them.
+  There is no four-colour or white-share requirement.
+- `sport` is a map of exact RGB colours to material replacements. Unmapped
+  colours, including the outline, stay unchanged. Swaps are simultaneous;
+  replacement colours never trigger a second substitution.
+- Animation uses the existing `anim` contract. Intro lasts 36–72 ticks and
+  ends on frame 0. Optional `moving` boxes are `[x0,y0,x1,y1]`, with exclusive
+  ends, in 64-pixel canvas coordinates; QA uses them for signature motion.
+- `credits`, `notes` and `source` retain their v1 meanings. Edited/imported
+  bundles are never overwritten by generators.
+- Across a pack's explicit species-format change, incompatible `palette`,
+  `sport` and `size` fields reset before applying the new layer. Other fields
+  keep the ordinary shallow merge. Within the same format, palette-only
+  overrides still recolour by index; material sports apply after that swap.
+
+Battle, summary, cabinet, growth and specimen views reserve 64×64 slots;
+party, cabinet and Herbarium indexes reserve 32×32 icon slots. **Legacy v1
+fronts, backs and icons are centred at native 1×**; legacy icons deliberately
+use 1× rather than 2× to retain today's look. Party uses two columns of three
+slots; cabinet and Herbarium lists scroll at their taller row height.
+Overworld icons keep their feet anchored to the occupied tile and remain
+unscaled. Name-entry species icons use the same centred 32×32 slot.
+
+Battle commands and move/type panels use the dialogue rail, leaving both
+creatures and both HP boxes fully visible. Move descriptions occupy a small
+panel in the empty field above the rail. OPTIONS is inset inside its header.
 
 ## 4. Tileset bundle: `tileset.json`
 
@@ -431,8 +482,9 @@ or review images into public bundle folders or git. See RESTYLE.md §1.
 
 - Every JSON file parses, has the right `format` and matches its folder id.
 - Image sizes, frame counts and ref cell bounds are all correct.
-- **Species colours:** every opaque pixel is one of the 4 palette colours,
-  `sport` is present and the right length, and alpha is binary.
+- **Species colours:** v1 uses four palette colours and a same-length sport
+  array; v2 uses at most 16 shared colours, an optional palette and a sport
+  map. Both use binary alpha and their own frame sizes.
 - Every image-backed `TileKey` is in exactly one tileset (`wall_face` may use its procedural fallback).
 - Every logical path the contracts require resolves: species, tiles,
   structures, characters, portraits, required UI, marks and stills.
@@ -543,6 +595,29 @@ longer run; their art is the `classic` pack (below).
 [names…]` first runs the `BUILDERS` list (add a line for a new generator).
 A regen reproduces every `generated` bundle byte-identically: it writes
 nothing when no art changed.
+
+### Creature v2 authoring and the `crystal` pack
+
+`tools/art/creatures2/kit2.py` supplies `material_ramp` (three/four tones,
+with cooler saturated shadows and warmer highlights), `outline_pass`
+(default #2a2230, optional `sel_out` material map), `polygon`, `ellipse`,
+`leaf`, `petal`, `stem`, `light_top_left` and `clustered_texture`. Texture
+clusters are at least two pixels, use an explicit seed, and never form
+shading gradients. `write_species2` validates frames before writing and
+records palette, material sport map, animation, moving boxes and ownership.
+
+`tools/art/creatures2/build.py [line…] [--sheet]` discovers line modules,
+runs each in isolation, indexes bundles and QA-checks v2 species. It is
+registered as `creatures2` in BUILDERS, after `crystal`. Crystal generators
+skip base bundles already on v2, so regeneration cannot revert a redraw.
+R5a adds the kit
+only: there are **no v2 species generators or new creature pixels yet**.
+
+`packs/crystal/` is a byte-for-byte R5a snapshot of today's **130** original
+Crystal-rule species bundles, including every frame and their metadata.
+It is public, indexed, and activated with `?art=crystal` or the Art Lab's
+pack toggle. It preserves the current look when later waves replace the
+base with v2 art. Snapshot files are never regenerated by base builders.
 
 ### The `classic` pack
 

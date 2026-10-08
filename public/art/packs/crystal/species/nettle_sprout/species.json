@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "nettle_sprout",
+  "palette": ["#181818", "#483068", "#78c040", "#f8f8f8"],
+  "sport": ["#181818", "#583870", "#b0c0b0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 12], [2, 4], [3, 18], [2, 4], [3, 6], [0, 6]], "idle": [[0, 120], [2, 6]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/nettle.py. Reference photo nettle/baby.jpg by La.Catholique (Flickr) (CC BY 2.0), https://www.flickr.com/photos/38559542@N02/5118383182: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/nettle.py" },
+  "notes": "Crystal rule. BRACED. Gesture: hunker, then bristle (the crown pair draws down with its hairs flat, springs up and every stinging hair stands on end, held). Two tones: violet is the square stem, the veins and the shadow side of every green leaf, so there is no dark green; the hairs are 1px black bristles past the outline, and white is a rim along the lit saw-teeth. Sport: Lamium maculatum 'Beacon Silver' (violet stems, silver leaves)."
+}

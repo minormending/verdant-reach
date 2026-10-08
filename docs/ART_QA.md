@@ -92,6 +92,41 @@ some recall for useful review volume; large dark discs with internal glints,
 light-only eye pairs, curved mouths, and faces embedded in dense texture can
 escape detection. There are no species-specific suppression lists.
 
+## Creature v2 measurements
+
+`qa.py` detects `format: "verdant.species/2"` automatically. It loads the
+same roster and gameplay stage/line metadata, then uses `checks2.py` rather
+than the Crystal checker. v1 results and gating policy are unchanged.
+
+| Check | Severity | v2 rule |
+|---|---|---|
+| `bundle`, `colours` | error | 64×64 fronts/back, two 32×32 icons, 1–8 fronts; binary alpha; ≤16 colours across **all** frames; optional palette membership and valid sport map. |
+| `outline` | error | No pure #000000 opaque pixel on the cardinal silhouette boundary of any front/back/icon. Sel-out and warm dark material ink are allowed. |
+| `size_class` | error | Baby: extent 42–50, fill 20–36%; teen: 50–58, 26–46%; adult: 58–64, 36–60%, touching at least two canvas edges. Inclusive bounds; fill is opaque count / 4096. |
+| `grounding` | error | Every front's lowest opaque row is 61–63. |
+| `centre_of_mass` | warn | Mean opaque x is 32–39, slightly right of centre. |
+| `back_fill` | warn | Back fill is 45–75%. |
+| `face_risk` | error | All fronts, with dark RGB luminance <0.32 and glints ≥0.82, independent of palette ordering. Existing clear-halo/seed-texture detector; dot area/span and pair distances scale by 64/56. |
+| `animation` | error | Intro references existing frames with positive integer ticks, lasts 36–72 ticks and ends on frame 0. |
+| `anim_signature` | warn | ≥2% changes, ≥80% inside valid end-exclusive `moving` boxes in species.json. Uses exact material colours, including shading changes. |
+| `clone_risk` | warn | Existing aHash/dHash thresholds; entire 64 canvas is compared, without shrinking to the v1 canvas. |
+| `silhouette_noise` | warn | More than 14 single-neighbour tips or 5 enclosed single-pixel holes (64/56 scaling). |
+| `stage_progression` | error | Nondecreasing rest-pose extent/fill against the previous v2 stage. Mixed v1/v2 stages are skipped until that line is redrawn. |
+| `palette_harmony` | warn / info | Nearest local exterior swatch in OKLab; warn above distance **0.12**. Reports each outlier and distance. Missing/empty palette produces an explicit info-level SKIP line. |
+
+Palette harmony reads `Palette.png` **locally** beneath `LIMEZU_EXTERIORS`,
+or the `exteriors` path in gitignored `tools/art/limezu/local.json`. The env
+var wins; it may also name Palette.png directly. Pixels are used only in
+memory for distances, never copied into bundles or review reports. No local
+pack is required for public clones or CI. This is a nearest-swatch heuristic,
+not proof of visual harmony; the lead's review remains necessary.
+
+`test_creatures2.py` uses synthetic fixtures for ramps, lighting, outline and
+sel-out, deterministic clustered texture/writing, locked ownership, sports,
+format detection, sizes/edges, grounding, colour union/alpha, animation,
+faces, silhouette noise, clones, local palette lookup and OKLab warnings.
+Run it as part of the existing unittest discovery command above.
+
 ## Tiles and map landmarks
 
 `--tiles` checks repeatable base tiles and every alternate, including animated

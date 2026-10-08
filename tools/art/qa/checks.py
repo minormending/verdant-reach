@@ -1,5 +1,6 @@
 """Measurable art heuristics. Index arrays use crystal.kit's 255 transparency."""
 from __future__ import annotations
+import math
 import numpy as np
 from PIL import Image
 
@@ -34,9 +35,13 @@ def components(mask, diagonal=False):
         yield comp
 
 
-def face_risk(ix):
+def face_risk(ix, scale=1):
     """Small enclosed dark components; seed lattices are repetitive texture."""
     h, w = ix.shape
+    radius = round(2*scale)
+    dot_area = math.ceil(4*scale*scale)
+    dot_span = math.ceil(scale)
+    pair_span = round(8*scale)
     blobs, slits = [], []
     for comp in components((ix == 0) | (ix == 1), diagonal=True):
         xs, ys = zip(*comp)
@@ -48,21 +53,21 @@ def face_risk(ix):
                for dy in range(-1, 2)} - pixels
         if not all(0 <= x < w and 0 <= y < h and ix[y, x] in (2, 3) for x, y in rim):
             continue
-        halo = {(x+dx, y+dy) for x, y in comp for dx in range(-2, 3)
-                for dy in range(-2, 3)} - pixels
+        halo = {(x+dx, y+dy) for x, y in comp for dx in range(-radius, radius+1)
+                for dy in range(-radius, radius+1)} - pixels
         isolated = all(0 <= x < w and 0 <= y < h and ix[y, x] in (2, 3) for x, y in halo)
-        if 1 <= len(comp) <= 4 and x1-x0 <= 1 and y1-y0 <= 1:
+        if 1 <= len(comp) <= dot_area and x1-x0 <= dot_span and y1-y0 <= dot_span:
             glint = any(ix[y, x] == 3 for xx, yy in comp
-                        for y in range(max(0, yy-2), min(h, yy+3))
-                        for x in range(max(0, xx-2), min(w, xx+3)))
+                        for y in range(max(0, yy-radius), min(h, yy+radius+1))
+                        for x in range(max(0, xx-radius), min(w, xx+radius+1)))
             blobs.append({'x': x0, 'y': y0, 'pixels': len(comp), 'glint': glint,
                           'isolated': isolated, 'core': pixels, 'halo': halo})
-        if isolated and y0 == y1 and 3 <= len(comp) <= 8:
+        if isolated and y0 == y1 and 3 <= len(comp) <= pair_span:
             slits.append({'kind': 'mouth_slit', 'x': x0, 'y': y0, 'pixels': len(comp)})
     flags = []
     # Three or more nearby compact dots form seed/flower texture, not an eye.
     def textured(b):
-        return sum(abs(b['x']-c['x']) <= 8 and abs(b['y']-c['y']) <= 8
+        return sum(abs(b['x']-c['x']) <= pair_span and abs(b['y']-c['y']) <= pair_span
                    for c in blobs) >= 3
     for b in blobs:
         if b['glint'] and b['isolated'] and not textured(b):
@@ -71,7 +76,7 @@ def face_risk(ix):
         for c in blobs[n+1:]:
             pair_halo = (b['halo'] | c['halo']) - b['core'] - c['core']
             clear = all(0 <= x < w and 0 <= y < h and ix[y, x] in (2, 3) for x, y in pair_halo)
-            if clear and 2 <= abs(b['x']-c['x']) <= 8 and abs(b['y']-c['y']) <= 1 and not textured(b) and not textured(c):
+            if clear and 2 <= abs(b['x']-c['x']) <= pair_span and abs(b['y']-c['y']) <= dot_span and not textured(b) and not textured(c):
                 flags.append({'kind': 'eye_pair', 'coordinates': [[b['x'], b['y']], [c['x'], c['y']]]})
     flags.extend(slits)
     return result('error', bool(flags), len(flags), coordinates=flags)
@@ -135,7 +140,7 @@ def anim_signature(frames, intro, boxes):
                   change_share=share, inside_share=inside, boxes_missing=boxes is None)
 
 
-def silhouette_noise(ix):
+def silhouette_noise(ix, scale=1):
     op = ix != T
     p = np.pad(op, 1)
     n = p[:-2, 1:-1].astype(int)+p[2:, 1:-1]+p[1:-1, :-2]+p[1:-1, 2:]
@@ -147,7 +152,7 @@ def silhouette_noise(ix):
             if (dx, dy) != (1, 1):
                 holes &= p[dy:dy+op.shape[0], dx:dx+op.shape[1]]
     count = int(holes.sum())
-    return result('warn', protrusions > 12 or count > 4,
+    return result('warn', protrusions > round(12*scale) or count > round(4*scale*scale),
                   f'{protrusions} tips/{count} holes', protrusions=protrusions, holes=count)
 
 

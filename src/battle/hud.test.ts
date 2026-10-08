@@ -93,14 +93,19 @@ function labelsFit(calls: unknown[][]) {
 
 describe("widescreen battle geometry", () => {
   it("leaves the two native-size creatures clear of the HUD and command rail", () => {
-    expect(ENEMY_HOME.x + 56).toBeLessThanOrEqual(SCREEN_W);
-    expect(ENEMY_HOME.y + 56).toBeLessThan(TEXTBOX.y);
-    expect(PLAYER_HOME.y + 48).toBeLessThan(TEXTBOX.y);
-    expect(PLAYER_HOME.x + 48).toBeLessThanOrEqual(MOVE_INFO_AREA.x);
-    expect(PLAYER_HUD_AREA.x + PLAYER_HUD_AREA.w).toBeLessThanOrEqual(ENEMY_HOME.x);
-    expect(PLAYER_HUD_AREA.y + PLAYER_HUD_AREA.h).toBeLessThanOrEqual(COMMAND_AREA.y);
-    expect(COMMAND_AREA.y + COMMAND_AREA.h).toBe(TEXTBOX.y);
-    expect(PLAYER_HUD_AREA.y + PLAYER_HUD_AREA.h).toBeLessThanOrEqual(MOVE_AREA.y);
+    const sprites = [ENEMY_HOME, PLAYER_HOME].map(p => ({ ...p, w: 64, h: 64 }));
+    const huds = [{ x: 4, y: 4, w: 122, h: 38 }, { x: PLAYER_HUD_AREA.x + 2, y: PLAYER_HUD_AREA.y - 3, w: PLAYER_HUD_AREA.w - 4, h: PLAYER_HUD_AREA.h + 3 }];
+    const controls = [COMMAND_AREA, MOVE_AREA, MOVE_INFO_AREA, { x: 88, y: 98, w: SCREEN_W - 88, h: 26 }];
+    const overlaps = (a: typeof controls[number], b: typeof controls[number]) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    for (const sprite of sprites) {
+      expect(sprite.x + sprite.w).toBeLessThanOrEqual(SCREEN_W);
+      expect(sprite.y + sprite.h).toBeLessThan(TEXTBOX.y);
+      for (const hud of huds) expect(overlaps(sprite, hud)).toBe(false);
+    }
+    for (const panel of controls) {
+      expect(panel.y + panel.h).toBeLessThanOrEqual(SCREEN_H);
+      for (const subject of [...sprites, ...huds]) expect(overlaps(panel, subject)).toBe(false);
+    }
   });
 
   it("fits every species name, three-digit level/HP and status in both HUDs", () => {

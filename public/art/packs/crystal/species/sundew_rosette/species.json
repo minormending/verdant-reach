@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "sundew_rosette",
+  "palette": ["#181818", "#a02048", "#90c840", "#f8f8f8"],
+  "sport": ["#181818", "#386830", "#b8e078", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 14], [2, 5], [3, 18], [4, 8], [0, 1]], "idle": [[0, 120], [4, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/sundew.py. Reference photo sundew/baby.jpg by Krzysztof Ziarnek, Kenraiz (CC BY 4.0), https://commons.wikimedia.org/wiki/File:Drosera_aliciae_kz03.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/sundew.py" },
+  "notes": "Crystal rule. COILED. Gesture: the spoon hand reaches with its dew glinting, then GRABS: the pad cups, the tentacles curl in and the dew flashes, then it relaxes. Every tentacle is a body part ringed by the black outline, crimson in the dark slot, tipped with a white dew bead. Sport: 'Alba', the anthocyanin-free form."
+}

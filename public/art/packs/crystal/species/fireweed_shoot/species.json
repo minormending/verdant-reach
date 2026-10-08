@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "fireweed_shoot",
+  "palette": ["#181818", "#882050", "#e058a0", "#f8f8f8"],
+  "sport": ["#181818", "#487838", "#d0d0c0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 4], [1, 12], [2, 8], [3, 12], [4, 14], [0, 1]], "idle": [[0, 120], [1, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/fireweed.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/fireweed.py" },
+  "notes": "Crystal rule. LUNGING: a reddish leafy shoot in an S, willow leaves as arms (magenta midribs), the nodding tip of closed magenta buds thrust at the foe, a tuft of seed fluff caught in an upper leaf. Gesture: the tip dips, then lifts, and the caught tuft tears free and drifts off. Sport: f. albiflorum."
+}

@@ -11,7 +11,7 @@
 import type { SpeciesAnim } from "../../contracts";
 import { SPECIES_IDS } from "../../contracts";
 import { animState, stepsLength, type AnimState } from "../anim";
-import { isPalette } from "../palette";
+import { isPalette, isSportMap } from "../palette";
 import { frontKind, logicalPath, type SpeciesFrameKind } from "../paths";
 import type { ArtRegistry } from "../registry";
 import { ctx2d, h, nn, pixelCanvas } from "./dom";
@@ -67,7 +67,8 @@ export function animPlayer(env: LabEnv, o: PlayerOpts): AnimPlayer {
   const sport = !!o.sport;
   const anim = reg.speciesAnim(id);
   const order = legacyOrder(reg.frontFrameCount(id));
-  const canvases = o.zooms.map((z) => pixelCanvas(56, 56, z));
+  const size = reg.bundle("species", id)?.merged.format === "verdant.species/2" ? 64 : 56;
+  const canvases = o.zooms.map((z) => pixelCanvas(size, size, z));
   const gs = canvases.map(ctx2d);
   let idleOnly = o.intro === false;
   let start: number | null = null;
@@ -95,7 +96,7 @@ export function animPlayer(env: LabEnv, o: PlayerOpts): AnimPlayer {
     if (key === last) return;
     last = key;
     for (const g of gs) {
-      g.clearRect(0, 0, 56, 56);
+      g.clearRect(0, 0, size, size);
       if (img) g.drawImage(img, 0, 0);
     }
   });
@@ -106,7 +107,9 @@ export function animPlayer(env: LabEnv, o: PlayerOpts): AnimPlayer {
 
 /** Back sprite and icons (2-frame bob) at a zoom. */
 export function backAndIcon(env: LabEnv, reg: ArtRegistry, id: string, sport: boolean, zoom: number): HTMLElement {
-  const back = pixelCanvas(48, 48, zoom), icon = pixelCanvas(16, 16, zoom);
+  const v2 = reg.bundle("species", id)?.merged.format === "verdant.species/2";
+  const bs = v2 ? 64 : 48, is = v2 ? 32 : 16;
+  const back = pixelCanvas(bs, bs, zoom), icon = pixelCanvas(is, is, zoom);
   const gb = ctx2d(back), gi = ctx2d(icon);
   const two = !!reg.resolve(spPath(id, "icon__2", false));
   let lastB = "", lastI = "";
@@ -116,8 +119,8 @@ export function backAndIcon(env: LabEnv, reg: ArtRegistry, id: string, sport: bo
     const i = reg.image(spPath(id, ik, sport));
     if (!b || !i) void reg.loadAll([spPath(id, "back", sport), spPath(id, "icon", sport), spPath(id, "icon__2", sport)].filter((p) => reg.resolve(p)));
     const kb = b ? "b" : "", ki = i ? ik : "";
-    if (kb !== lastB) { lastB = kb; gb.clearRect(0, 0, 48, 48); if (b) gb.drawImage(b, 0, 0); }
-    if (ki !== lastI) { lastI = ki; gi.clearRect(0, 0, 16, 16); if (i) gi.drawImage(i, 0, 0); }
+    if (kb !== lastB) { lastB = kb; gb.clearRect(0, 0, bs, bs); if (b) gb.drawImage(b, 0, 0); }
+    if (ki !== lastI) { lastI = ki; gi.clearRect(0, 0, is, is); if (i) gi.drawImage(i, 0, 0); }
   });
   return h("div", { class: "al-row", style: "gap: 10px; align-items: flex-end" },
     h("div", { class: `al-stage ${env.bgClass()}`, title: "back" }, back),
@@ -135,10 +138,11 @@ export function animTimeline(env: LabEnv, reg: ArtRegistry, id: string, anim: Sp
       h("span", { class: "al-hint" }, phase === "idle" ? "none: holds frame 0" : "none"));
     const row = h("div", { class: "al-tl-steps" });
     steps.forEach(([frame, ticks], i) => {
-      const thumb = pixelCanvas(56, 56, 0.5);
+      const size = reg.bundle("species", id)?.merged.format === "verdant.species/2" ? 64 : 56;
+      const thumb = pixelCanvas(size, size, 0.5);
       const g = ctx2d(thumb);
       const path = spPath(id, frontKind(frame), sport);
-      const paint = () => { const img = reg.image(path); if (img) { g.clearRect(0, 0, 56, 56); g.drawImage(img, 0, 0); return true; } return false; };
+      const paint = () => { const img = reg.image(path); if (img) { g.clearRect(0, 0, size, size); g.drawImage(img, 0, 0); return true; } return false; };
       if (!paint()) void reg.loadAll([path]).then(paint);
       const b = h("div", { class: "al-tl-step", style: `width: ${Math.max(34, Math.round(ticks * 2.2))}px`, title: `step ${i}: frame ${frame} (${frame ? `front__${frame + 1}` : "front"}) for ${ticks} ticks = ${sec(ticks)}` },
         thumb, h("div", { class: "t" }, `f${frame}`, h("br"), `${ticks}t`));
@@ -209,6 +213,7 @@ export function packSpecies(reg: ArtRegistry, pack: string | null): string[] {
 }
 
 function swatches(pal: unknown): HTMLElement {
+  if (isSportMap(pal)) pal = Object.values(pal);
   if (!isPalette(pal)) return h("span", { class: "al-chip bad" }, "no palette");
   return h("div", { class: "al-swatches" }, pal.map((c) => h("div", { class: "al-swatch", style: "cursor: default", title: c },
     h("div", { class: "c", style: `background: ${c}` }), h("div", { class: "t" }, c.toLowerCase()))));

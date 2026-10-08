@@ -25,7 +25,7 @@ import { partyRowY } from "./kit/layout";
 
 // Render real scenes with native asset dimensions. Capture labels and panels;
 // canvas drawing is stubbed so this also runs without a browser.
-function harness() {
+function harness(v2 = false) {
   const scenes = createSceneStack();
   const drawText = vi.fn(), drawWindow = vi.fn(renderWindow);
   const drawImage = vi.fn();
@@ -50,7 +50,7 @@ function harness() {
     input: { pressed: (b: Button) => button === b, repeat: (b: Button) => button === b, held: () => false },
     ui: { drawText, drawWindow, wrap: wrapText, measure: measureText },
     assets: { exists: () => true, has: () => true, image: (path: string) => {
-      const size = path.includes("/icon") || path.includes("/items/") ? 16 : path.includes("/back") ? 48 : 56;
+      const size = path.includes("/items/") ? 16 : path.includes("/icon") ? (v2 ? 32 : 16) : path.includes("/back") ? (v2 ? 64 : 48) : (v2 ? 64 : 56);
       return { width: size, height: size };
     } },
     audio: { playSfx() {}, async playCry() {}, async playJingle() {}, current: () => null, stopMusic() {}, playMusic() {} },
@@ -84,11 +84,11 @@ function harness() {
 afterEach(() => { setActiveArt(null); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe("widescreen menu layout", () => {
-  it.each([false, true].flatMap(pack => ["party", "bag", "shop", "cabinet", "herbarium", "notes", "options", "growth"].map(name => ({ pack, name }))))("keeps $name labels and panels on the canvas (skin=$pack)", async ({name, pack}) => {
+  it.each([false, true].flatMap(pack => [false, true].flatMap(v2 => ["party", "bag", "shop", "cabinet", "herbarium", "notes", "options", "growth"].map(name => ({ pack, v2, name })))))("keeps $name labels and panels on the canvas (skin=$pack, v2=$v2)", async ({name, pack, v2}) => {
     setActiveArt(pack ? fixtureSkin() : null);
     const panel = vi.spyOn(skin, "panel");
     const surface = vi.spyOn(skin, "surface");
-    const h = harness();
+    const h = harness(v2);
     const screens: Record<string, () => unknown> = {
       party: () => partyScreen(h.ctx, { mode: "view" }), bag: () => bagScreen(h.ctx, { inBattle: false }),
       shop: () => shopScreen(h.ctx, ["water_flask", "rain_jar", "neem_spray", "glass_pod"]),
@@ -114,11 +114,11 @@ describe("widescreen menu layout", () => {
     }
   });
 
-  it("keeps all six party rows, their icons and HP labels above dialogue", async () => {
+  it("keeps all six party slots, their icons and HP labels above dialogue", async () => {
     const h = harness();
     void partyScreen(h.ctx, { mode: "view" });
     await h.tick(undefined, 30); h.render();
-    for (let i = 0; i < 6; i++) expect(partyRowY(i) + 16).toBeLessThanOrEqual(TEXTBOX.y);
+    for (let i = 0; i < 6; i++) expect(partyRowY(i) + 32).toBeLessThanOrEqual(TEXTBOX.y);
     const hp = h.drawText.mock.calls.filter(([, t]) => t.includes("/"));
     expect(hp).toHaveLength(6);
     for (const [, , , y] of hp) expect(y + 8).toBeLessThan(TEXTBOX.y);

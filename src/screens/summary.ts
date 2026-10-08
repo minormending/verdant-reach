@@ -148,7 +148,7 @@ function drawHeader(ctx: GameContext, g: CanvasRenderingContext2D, q: Quickened,
   });
   drawTiny(g, `NO. ${String(herbariumNumber(q.species)).padStart(3, "0")}`, 8, 10);
   g.fillStyle = "#e8e4d4";
-  if (!skin.panel(g, "slot", { x: 22, y: 30, w: 62, h: 62 })) g.fillRect(24, 32, 58, 58);
+  if (!skin.panel(g, "slot", { x: 20, y: 28, w: 72, h: 72 })) g.fillRect(24, 32, 64, 64);
   const lively = q.hp > 0 && q.status !== "dormant" && q.status !== "frostbite";
   const animated = idleFrameCount(q.species) > 1;
   const bob = lively && !animated ? cursorBob(frame + 10) : 0;

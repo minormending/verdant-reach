@@ -10,16 +10,16 @@ import { getSpecies, speciesName, TYPE_NAMES } from "../battle/logic/lookup";
 import { runFlowScene, type Flow } from "./kit/flow";
 import {
   cursorBob, drawIcon, drawLeaf, drawMoreArrow, drawPaper, drawSpecies, drawTiny, opaqueBounds, preload, silhouette,
-  speciesImage, TYPE_COLORS,
+  speciesImage, drawSpeciesImage, TYPE_COLORS,
 } from "./kit/draw";
 import { ListView, LINE_Y, TEXT_X } from "./kit/widgets";
 import { herbariumNumber } from "./summary";
 import { habitatLines, habitatOf } from "./habitat";
 import { frontPaths, isAnimated, SpritePlayback } from "./kit/idle";
-import { BOOK_ROWS, CONTENT_H, FOOTER_Y, RIGHT, textCols } from "./kit/layout";
+import { CONTENT_H, FOOTER_Y, RIGHT, textCols } from "./kit/layout";
 
-const ROWS = BOOK_ROWS;
-const ROW_H = 16;
+const ROW_H = 36;
+const ROWS = Math.floor((FOOTER_Y - 12) / ROW_H);
 
 const INK = "#2c3c30";
 const RULE = "#c8d4dc";
@@ -52,10 +52,10 @@ export function herbariumScreen(ctx: GameContext): Promise<void> {
     // ruled lines and the red margin rule
     for (let r = 0; r <= ROWS; r++) {
       g.fillStyle = RULE;
-      g.fillRect(0, 12 + r * ROW_H + 15, SCREEN_W, 1);
+      g.fillRect(0, 12 + r * ROW_H + 35, SCREEN_W, 1);
     }
     g.fillStyle = MARGIN;
-    g.fillRect(34, 9, 1, FOOTER_Y - 9);
+    g.fillRect(50, 9, 1, FOOTER_Y - 9);
     for (const [i, r] of list.visibleRows()) {
       const y = 14 + r * ROW_H;
       const id = ids[i];
@@ -63,19 +63,19 @@ export function herbariumScreen(ctx: GameContext): Promise<void> {
       if (sel) {
         // a highlighter stroke across the selected line
         g.fillStyle = "#f8e898";
-        skin.surface(g, "selection", 35, y - 1, SCREEN_W - 35, 12);
+        skin.surface(g, "selection", 51, y - 1, SCREEN_W - 51, 32);
         g.fillStyle = "#f0d870";
-        g.fillRect(35, y + 10, SCREEN_W - 35, 1);
+        g.fillRect(51, y + 30, SCREEN_W - 51, 1);
       }
       drawTiny(g, num3(i + 1), 2, y + 2, sel ? INK : "#8a8068");
       if (S.has(id)) {
-        drawIcon(ctx, g, id, 17, y - 5, sel ? Math.floor(frame / 8) % 2 : Math.floor((frame + i * 7) / 24) % 2);
-        ctx.ui.drawText(g, speciesName(ctx.data, id).slice(0, 12), 46, y, INK);
-        if (C.has(id)) drawLeaf(g, 37, y);
+        drawIcon(ctx, g, id, 17, y - 1, sel ? Math.floor(frame / 8) % 2 : Math.floor((frame + i * 7) / 24) % 2);
+        ctx.ui.drawText(g, speciesName(ctx.data, id).slice(0, 12), 62, y + 4, INK);
+        if (C.has(id)) drawLeaf(g, 53, y + 4);
         const scientific = ctx.data.herbarium[id]?.scientificName ?? "";
-        drawTiny(g, scientific.slice(0, Math.floor((SCREEN_W / 2 - 24) / 4)), SCREEN_W / 2 + 8, y + 2, "#6a5a40");
+        drawTiny(g, scientific.slice(0, Math.floor((SCREEN_W / 2 - 24) / 4)), 62, y + 18, "#6a5a40");
       } else {
-        ctx.ui.drawText(g, "-----", 46, y, "#a89c80");
+        ctx.ui.drawText(g, "-----", 62, y + 4, "#a89c80");
       }
     }
     // ribbon bookmark beside the selected line, bobbing
@@ -149,17 +149,17 @@ export function showHerbariumEntry(ctx: GameContext, id: SpeciesId): Promise<voi
     frame = f;
     drawPaper(g, 0, 0, SCREEN_W, CONTENT_H, "cream");
     // the mounted specimen: soft shadow, the pressed sprite, tape and a pin
-    const sx = 24, sy = Math.floor((CONTENT_H - 56) / 2) - 8;
+    const sx = 24, sy = Math.floor((CONTENT_H - 64) / 2) - 8;
     const img = speciesImage(ctx, id, "front");
     const shadow = silhouette(`${id}:front:`, img, "#d8c8a0");
-    g.drawImage(shadow, 0, 0, shadow.width, shadow.height, sx + 2, sy + 2, 56, 56);
+    drawSpeciesImage(g, shadow, "front", sx + 2, sy + 2);
     const pose = animated ? playback.kind(id, frame) : "front";
     drawSpecies(ctx, g, id, pose, sx, sy, isCaught ? {} : { silhouette: "#6a6450" });
     const b = opaqueBounds(img);
-    const k = 56 / Math.max(1, img.width);
+    const ox = Math.floor((64 - img.width) / 2), oy = Math.floor((64 - img.height) / 2);
     // tape across the stem / base, and a pin through the top of the plant
-    tape(g, sx + Math.round(b.baseX * k) - 6, sy + Math.round(b.y1 * k) - 3);
-    const pinX = sx + Math.round(((b.x0 + b.x1) / 2) * k), pinY = sy + Math.round(b.y0 * k) + 2;
+    tape(g, sx + ox + b.baseX - 6, sy + oy + b.y1 - 3);
+    const pinX = sx + ox + Math.round((b.x0 + b.x1) / 2), pinY = sy + oy + b.y0 + 2;
     g.fillStyle = "#808890";
     g.fillRect(pinX, pinY, 1, 4);
     g.fillStyle = "#b02828";
