@@ -25,6 +25,16 @@ CATEGORIES = {
     "barrel": "storage", "crate": "storage", "sack": "storage", "watering_can": "storage",
 }
 
+CATEGORIES.update({
+    **{key: "building" for key in "house_large city_house harbour_house house_small lodge barn windmill market market_large herbarium greenhouse cedar_house conservatory".split()},
+    **{key: "tree" for key in "tree_autumn tree_dead tree_palm tree_pine tree_round".split()},
+    **{key: "plant" for key in "bush hedge_block flower_bed".split()},
+    **{key: "table" for key in "bench_park picnic_table dock".split()},
+    **{key: "storage" for key in "barrel_out crate_out haybale log stump boat".split()},
+    **{key: "monument" for key in "statue fountain well rock_large".split()},
+    **{key: "decor" for key in "signpost mailbox lamp_street scarecrow camp_tent".split()},
+})
+
 
 def draw_prop(key: str, w: int, h: int) -> Image.Image:
     im = Image.new("RGBA", (w * 16, h * 16))
@@ -37,7 +47,41 @@ def draw_prop(key: str, w: int, h: int) -> Image.Image:
     def box(bounds, fill=WOOD):
         d.rectangle(bounds, fill=fill, outline=OUTLINE)
 
-    if category == "bed":
+    if category == "building":
+        roof = max(12, H // 3)
+        box((l + 3, roof, r - 3, b), GLASS if key in {"greenhouse", "conservatory"} else LIGHT)
+        d.polygon(((l, roof), (cx, t), (r, roof)), fill=WOOD, outline=OUTLINE)
+        d.line((l + 3, roof - 1, r - 3, roof - 1), fill=LIGHT)
+        for x in range(l + 8, r - 8, 24):
+            for y in range(roof + 7, H - 25, 24):
+                box((x, y, x + 9, y + 12), GLASS)
+                d.line((x + 4, y, x + 4, y + 12), fill=OUTLINE)
+        # Door follows the public tile geometry, never the licensed colours.
+        from limezu.gen_props import prop_specs
+        door = prop_specs()["prop_" + key]["door"]
+        x = door["x"] * 16
+        box((x + 3, H - 18, x + 12, b), WOOD)
+        d.point((x + 10, H - 9), fill=LIGHT)
+        if key == "windmill":
+            d.line((cx - 20, roof - 12, cx + 20, roof + 12), fill=OUTLINE, width=3)
+            d.line((cx + 20, roof - 12, cx - 20, roof + 12), fill=OUTLINE, width=3)
+    elif category == "tree":
+        box((cx - 3, H // 2, cx + 3, b), WOOD)
+        if key == "tree_dead":
+            d.line((cx - 12, H // 3, cx, H // 2, cx + 12, H // 4), fill=OUTLINE, width=3)
+        elif key == "tree_pine":
+            d.polygon(((cx, t), (l, H * 3 // 4), (r, H * 3 // 4)), fill=GREEN, outline=DARK_GREEN)
+        else:
+            d.ellipse((l, t, r, H * 3 // 4), fill=WOOD if key == "tree_autumn" else GREEN, outline=DARK_GREEN)
+            d.arc((l + 4, t + 4, r - 4, H * 2 // 3), 180, 280, fill=LIGHT)
+    elif category == "monument":
+        box((l, H - 9, r, b), OUTLINE)
+        if key == "statue":
+            box((cx - 4, H // 3, cx + 4, H - 10), LIGHT)
+            d.ellipse((cx - 5, t, cx + 5, t + 10), fill=LIGHT, outline=OUTLINE)
+        else:
+            d.ellipse((l, t + 3, r, H - 8), fill=GLASS if key in {"well", "fountain"} else LIGHT, outline=OUTLINE)
+    elif category == "bed":
         box((l, t, r, b))
         box((l + 2, t + 3, r - 2, t + 12), LIGHT)
         box((l + 2, t + 15, r - 2, b - 3), GLASS)

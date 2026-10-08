@@ -2,7 +2,7 @@
   "format": "verdant.structure/1",
   "id": "prop_display_case",
   "image": "structure.png",
-  "size": [2, 2],
+  "size": [2, 1],
   "credits": "Original pixel art for Verdant Reach (tools/art/props_fallback.py).",
   "source": { "kind": "generated", "tool": "tools/art/props_fallback.py" },
   "notes": "FALLBACK: Original GBC shelf for supported no-pack play."

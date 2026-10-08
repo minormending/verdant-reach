@@ -132,6 +132,34 @@ describe("prop collision", () => {
     expect(tryMove(m, 2, 3, "right")).toEqual({ kind: "blocked", reason: "wall" });
   });
 
+  it("keeps gaps between opaque floor supports walkable", () => {
+    STRUCTURES.well = { w: 3, h: 2, footprint: { x: 0, y: 1, w: 3, h: 1, columns: [0, 2] } };
+    const m = buildMap(def);
+    expect(tryMove(m, 4, 4, "up")).toEqual({ kind: "walk", x: 4, y: 3 });
+    expect(tryMove(m, 3, 4, "up")).toEqual({ kind: "blocked", reason: "wall" });
+    expect(tryMove(m, 5, 4, "up")).toEqual({ kind: "blocked", reason: "wall" });
+  });
+
+  it("reads a sign on the prop base when A is pressed facing it", async () => {
+    STRUCTURES.well = { w: 1, h: 2, footprint: { x: 0, y: 1, w: 1, h: 1 } };
+    const map = { ...def, signs: [{ x: 3, y: 3, text: "Pressed leaves." }] };
+    const world = { ...WORLD, maps: { ...WORLD.maps, route_1: map } };
+    const state = newGameState({ world });
+    state.position = { map: "route_1", x: 3, y: 4, facing: "up" };
+    const say = vi.fn().mockResolvedValue(undefined);
+    const ctx = { state, world, data: DATA, rng: () => 0.5, assets: tallAssets(), timeOfDay: () => "day",
+      input: { pressed: (button: string) => button === "a", held: () => false, repeat: () => false },
+      audio: { playSfx: vi.fn(), playMusic: vi.fn(), stopMusic: vi.fn(), current: () => null },
+      ui: { say } } as unknown as GameContext;
+    const scene = createOverworldScene(ctx, { mode: "none" }) as Scene & { player: Actor };
+    scene.player.facing = "right";
+    scene.update(0);
+    expect(say).not.toHaveBeenCalled();
+    scene.player.facing = "up";
+    scene.update(0);
+    await vi.waitFor(() => expect(say).toHaveBeenCalledWith("Pressed leaves."));
+  });
+
   it("keeps a floor rug walkable, even with an explicit footprint", () => {
     STRUCTURES.well = { w: 1, h: 2, footprint: { x: 0, y: 1, w: 1, h: 1 }, layer: "floor" };
     const m = buildMap(def);

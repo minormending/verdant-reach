@@ -2,7 +2,7 @@
 // Used by world.test.ts and by the ?dev=world overview.
 
 import {
-  FIELD_MOVES, JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX, structureFootprint,
+  FIELD_MOVES, JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX, structureFootprint, structureFootprintContains,
 } from "../contracts";
 import type { Ambient, Cond, Dir, MapDef, MapId, NpcDef, ScriptCmd, TileKey, TileProps, WorldData } from "../contracts";
 import { POSTGAME_MAPS } from "./maps/seed_vault";
@@ -104,6 +104,7 @@ export function grid(map: MapDef, opts: { pruned?: boolean; bridged?: boolean; r
     const fp = structureFootprint(def);
     for (let dy = fp.y; dy < fp.y + fp.h; dy++) {
       for (let dx = fp.x; dx < fp.x + fp.w; dx++) {
+        if (!structureFootprintContains(def, dx, dy)) continue;
         if (def.door && dx === def.door.x && dy === def.door.y) continue;
         solid.add(`${s.x + dx},${s.y + dy}`);
       }
@@ -787,7 +788,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       const def = STRUCTURES[s.key];
       if (!def) { errs.push(`${where} bad structure ${s.key}`); continue; }
       const fp = structureFootprint(def);
-      if (![fp.x, fp.y, fp.w, fp.h].every(Number.isInteger) || fp.x < 0 || fp.y < 0 || fp.w < 1 || fp.h < 1 || fp.x + fp.w > def.w || fp.y + fp.h > def.h) {
+      if (![fp.x, fp.y, fp.w, fp.h].every(Number.isInteger) || fp.x < 0 || fp.y < 0 || fp.w < 1 || fp.h < 1 || fp.x + fp.w > def.w || fp.y + fp.h > def.h || (fp.columns && (fp.h !== 1 || fp.columns.length === 0 || new Set(fp.columns).size !== fp.columns.length || fp.columns.some((x) => !Number.isInteger(x) || x < fp.x || x >= fp.x + fp.w)))) {
         errs.push(`${where} ${s.key} has an invalid footprint`);
       }
       for (let dy = 0; dy < def.h; dy++) for (let dx = 0; dx < def.w; dx++) {
@@ -846,10 +847,11 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     // signs
     const signAt = new Set(map.signs.map((s) => `${s.x},${s.y}`));
     // Signs sit on sign posts and mailboxes, or give flavour text to any other
-    // interactable tile (a microscope, a workbench, a shelf of field notes).
+    // interactable tile or a structure footprint (shelves of field notes).
     for (const s of map.signs) {
       const t = g.tile(s.x, s.y);
-      if (!t || !("interact" in TILES[t])) errs.push(`${where} sign at ${s.x},${s.y} is on ${t}`);
+      const onProp = map.structures.some((prop) => STRUCTURES[prop.key] && structureFootprintContains(STRUCTURES[prop.key], s.x - prop.x, s.y - prop.y));
+      if (!t || (!("interact" in TILES[t]) && !onProp)) errs.push(`${where} sign at ${s.x},${s.y} is on ${t}`);
     }
     map.tiles.forEach((row, y) => [...row].forEach((_, x) => {
       const t = g.tile(x, y);
@@ -945,7 +947,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
       for (const s of scenery) {
         const def = STRUCTURES[s.key];
         const fp = structureFootprint(def);
-        for (let dy = fp.y; dy < fp.y + fp.h; dy++) for (let dx = fp.x; dx < fp.x + fp.w; dx++) covers.add(`${s.x + dx},${s.y + dy}`);
+        for (let dy = fp.y; dy < fp.y + fp.h; dy++) for (let dx = fp.x; dx < fp.x + fp.w; dx++) if (structureFootprintContains(def, dx, dy)) covers.add(`${s.x + dx},${s.y + dy}`);
       }
       const solidScenery: Grid = { ...open, structureSolid: (x, y) => open.structureSolid(x, y) || covers.has(`${x},${y}`) };
       // Per entry point, so a second way in can't mask a cut path.

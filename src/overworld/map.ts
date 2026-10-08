@@ -2,7 +2,7 @@
 // movement rules (walls, ledges, occupancy). No DOM; unit-tested.
 
 import type { Cond, Dir, MapDef, MapId, TileKey, TileProps } from "../contracts";
-import { STRUCTURES, TILES, structureFootprint } from "../contracts";
+import { STRUCTURES, TILES, structureFootprint, structureFootprintContains } from "../contracts";
 import { FIELD_MOVE_FX, fieldMoveCells, fieldMoveFlag, fieldMoveOf } from "./fieldmove";
 
 export const DIRS: Record<Dir, { dx: number; dy: number }> = {
@@ -87,6 +87,7 @@ export function buildMap(def: MapDef): MapRuntime {
     const fp = structureFootprint(spec);
     for (let yy = fp.y; yy < fp.y + fp.h; yy++) {
       for (let xx = fp.x; xx < fp.x + fp.w; xx++) {
+        if (!structureFootprintContains(spec, xx, yy)) continue;
         const k = key(s.x + xx, s.y + yy);
         if (!spec.door || xx !== spec.door.x || yy !== spec.door.y) solid.add(k);
       }

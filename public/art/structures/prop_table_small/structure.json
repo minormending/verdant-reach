@@ -2,7 +2,7 @@
   "format": "verdant.structure/1",
   "id": "prop_table_small",
   "image": "structure.png",
-  "size": [2, 1],
+  "size": [1, 1],
   "credits": "Original pixel art for Verdant Reach (tools/art/props_fallback.py).",
   "source": { "kind": "generated", "tool": "tools/art/props_fallback.py" },
   "notes": "FALLBACK: Original GBC table for supported no-pack play."

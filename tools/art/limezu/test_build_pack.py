@@ -10,25 +10,31 @@ from unittest.mock import patch
 from PIL import Image
 
 import build_pack as pack
+from geometry import measure, door_column, trim, measured_props
+from terrain import pick_masks, classify
+import numpy as np
 from gen_props import contract_text, prop_specs, OUTPUT
 
 
 class PropTests(unittest.TestCase):
     def test_geometry_and_unmapped_entries(self):
-        specs = prop_specs({
+        class OpaqueSources:
+            def crop(self, source, box):
+                return Image.new("RGBA", (box[2] - box[0], box[3] - box[1]), (30, 80, 40, 255))
+        _, specs = measured_props({
             "plant": {"source": "interiors:test.png", "box": [0, 0, 16, 32]},
             "bed": {"source": "interiors:test.png", "box": [0, 0, 32, 32]},
             "tiny": {"source": "interiors:test.png", "box": [4, 2, 19, 17]},
             "tall": {"source": "interiors:test.png", "box": [0, 0, 17, 33]},
             "window": {"source": "interiors:test.png", "box": [0, 0, 27, 22]},
             "missing": {"source": None},
-        })
+        }, OpaqueSources())
         self.assertNotIn("prop_missing", specs)
         self.assertEqual(specs["prop_plant"]["footprint"], {"x": 0, "y": 1, "w": 1, "h": 1})
         self.assertEqual(specs["prop_bed"]["footprint"], {"x": 0, "y": 1, "w": 2, "h": 1})
         self.assertEqual(specs["prop_tiny"]["footprint"], {"x": 0, "y": 0, "w": 1, "h": 1})
-        self.assertEqual(specs["prop_tall"]["footprint"], {"x": 0, "y": 1, "w": 2, "h": 2})
-        self.assertEqual(specs["prop_window"]["layer"], "floor")
+        self.assertEqual(specs["prop_tall"]["footprint"], {"x": 0, "y": 2, "w": 2, "h": 1})
+        self.assertEqual(prop_specs()["prop_window"]["layer"], "floor")
         self.assertEqual(OUTPUT.read_text(), contract_text())
 
     def test_padding_preserves_pixels_and_alpha(self):
@@ -40,6 +46,69 @@ class PropTests(unittest.TestCase):
         self.assertEqual(out.getpixel((1, 10)), (0, 0, 0, 0))
         with self.assertRaises(ValueError):
             pack.padded_prop(crop, 1, 1)
+
+
+class PixelGeometryTests(unittest.TestCase):
+    def test_trim_center_and_sparse_floor_contact(self):
+        source = Image.new("RGBA", (80, 70))
+        # A wide canopy with two separate floor contacts and a transparent middle.
+        for x in range(5, 54):
+            source.putpixel((x, 7), (80, 150, 20, 255))
+        for y in range(8, 45):
+            source.putpixel((6, y), (80, 150, 20, 255))
+            source.putpixel((53, y), (80, 150, 20, 255))
+        image, spec = measure(source)
+        self.assertEqual(image.size, (64, 48))
+        self.assertEqual(spec, {"w": 4, "h": 3, "footprint": {"x": 0, "y": 2, "w": 4, "h": 1, "columns": [0, 3]}})
+        self.assertEqual(image.getchannel("A").getbbox(), (7, 10, 56, 48))
+        self.assertEqual(image.getpixel((8, 47)), source.getpixel((6, 44)))
+        with self.assertRaises(ValueError):
+            trim(Image.new("RGBA", (16, 16)))
+
+    def test_lowest_six_pixels_not_all_of_bottom_tile(self):
+        source = Image.new("RGBA", (48, 32))
+        for x in range(48):
+            source.putpixel((x, 23), (50, 80, 20, 255))
+        source.putpixel((24, 31), (50, 80, 20, 255))
+        _, spec = measure(source)
+        self.assertEqual(spec["footprint"], {"x": 1, "y": 0, "w": 1, "h": 1})
+
+    def test_dark_vertical_door_and_centre_fallback(self):
+        source = Image.new("RGBA", (64, 32), (180, 190, 170, 255))
+        for y in range(24, 32):
+            for x in (19, 28):
+                source.putpixel((x, y), (30, 30, 40, 255))
+        self.assertEqual(door_column(source), 1)
+        self.assertEqual(door_column(Image.new("RGBA", (80, 32), (200, 200, 200, 255))), 2)
+
+
+class TerrainTests(unittest.TestCase):
+    def test_every_cardinal_mask_with_inner_corners_ignored(self):
+        fill = np.full((16, 16, 4), (200, 180, 100, 255), dtype=np.uint8)
+        tiles = []
+        # Shuffle order so a hard-coded blob-cell lookup cannot pass.
+        masks = [7, 2, 10, 0, 15, 5, 1, 8, 3, 9, 14, 4, 11, 6, 12, 13]
+        for mask in masks:
+            a = fill.copy()
+            for bit, index in ((1, (slice(0, 2), slice(None))), (2, (slice(None), slice(-2, None))),
+                               (4, (slice(-2, None), slice(None))), (8, (slice(None), slice(0, 2)))):
+                if not mask & bit:
+                    a[index] = (50, 150, 50, 255)
+            a[:3, :3] = (50, 150, 50, 255)
+            tiles.append(a)
+        picks = pick_masks(tiles, fill)
+        self.assertEqual({m: masks[i] for m, i in picks.items()}, {m: m for m in range(16)})
+
+    def test_classifies_all_26_blocks_without_source_fixtures(self):
+        sheet = Image.new("RGBA", (192, 1664))
+        for block in range(26):
+            color = (40, 150, 50, 255) if block % 2 else (30, 50, 160, 255)
+            sheet.paste(Image.new("RGBA", (16, 16), color), (16, block * 64))
+        blocks = classify(sheet)
+        self.assertEqual(len(blocks), 26)
+        self.assertEqual([b["fill"] for b in blocks], [1] * 26)
+        self.assertEqual(blocks[0]["name"], "blue")
+        self.assertEqual(blocks[1]["name"], "green")
 
 
 class WallTests(unittest.TestCase):
@@ -73,6 +142,27 @@ class WallTests(unittest.TestCase):
         for m in range(16):
             self.assertEqual(images[f"wall_face@{m}"][0, 0, 1], 7 if m & 1 else 6)
             self.assertEqual(images[f"wall_face@{m}"][0, 0, 0], 2 if m & 2 else 1)
+
+
+class OutdoorBundleTests(unittest.TestCase):
+    def test_overrides_existing_terrain_water_and_city_owners(self):
+        tile = np.full((16, 16, 4), (50, 140, 90, 255), dtype=np.uint8)
+        outdoor = {key: tile for key in ("grass", "path", "dirt", "sand", "stone_path", "water", "paving")}
+        for key in list(outdoor):
+            if key != "grass":
+                outdoor.update({f"{key}@{mask}": tile for mask in range(16)})
+        with patch.object(pack, "mappings", return_value={}), patch.object(pack, "prop_specs", return_value={}), patch.object(pack, "measured_props", return_value=({}, {})), patch.object(pack, "interior_images", return_value={"floor_wood": tile}), patch.object(pack, "outdoor_images", return_value=(outdoor, [], [])):
+            outputs = pack.outputs(None)
+        import json
+        expected = {"terrain": {"grass", "path", "dirt", "sand", "stone_path"}, "water": {"water"}, "city": {"paving"}}
+        for id_, keys in expected.items():
+            bundle = json.loads(outputs[f"tilesets/{id_}/tileset.json"])
+            self.assertEqual(bundle["id"], id_)
+            self.assertEqual(set(bundle["tiles"]), keys)
+            for key, value in bundle["tiles"].items():
+                if key != "grass":
+                    self.assertEqual(set(value["masks"]), {str(m) for m in range(16)})
+        self.assertNotIn("tilesets/outdoor/tileset.json", outputs)
 
 
 class GuardTests(unittest.TestCase):

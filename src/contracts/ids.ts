@@ -320,8 +320,8 @@ export interface StructureSpec {
   w: number;
   h: number;
   door?: { x: number; y: number };
-  /** Solid rectangle in tiles, relative to the image top-left; defaults to the whole image. */
-  footprint?: { x: number; y: number; w: number; h: number };
+  /** Solid tile bounds; optional absolute image columns preserve gaps in a bottom-row footprint. */
+  footprint?: { x: number; y: number; w: number; h: number; columns?: readonly number[] };
   /** Floor props draw beneath every actor and are never solid. */
   layer?: "floor";
 }
@@ -329,6 +329,12 @@ export interface StructureSpec {
 /** Shared collision and sorting bounds for buildings and furniture props. */
 export function structureFootprint(spec: StructureSpec) {
   return spec.footprint ?? { x: 0, y: 0, w: spec.w, h: spec.h };
+}
+/** Whether an image-relative tile belongs to the footprint, including sparse bases. */
+export function structureFootprintContains(spec: StructureSpec, x: number, y: number) {
+  const fp = structureFootprint(spec);
+  return x >= fp.x && x < fp.x + fp.w && y >= fp.y && y < fp.y + fp.h
+    && (!fp.columns || fp.columns.includes(x));
 }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
 export type StructureKey = keyof typeof STRUCTURE_SPECS;

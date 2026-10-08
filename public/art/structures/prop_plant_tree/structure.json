@@ -2,7 +2,7 @@
   "format": "verdant.structure/1",
   "id": "prop_plant_tree",
   "image": "structure.png",
-  "size": [2, 3],
+  "size": [2, 2],
   "credits": "Original pixel art for Verdant Reach (tools/art/props_fallback.py).",
   "source": { "kind": "generated", "tool": "tools/art/props_fallback.py" },
   "notes": "FALLBACK: Original GBC plant for supported no-pack play."

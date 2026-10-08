@@ -34,6 +34,28 @@ describe("footprint-aware world validation", () => {
     expect(problems()).toEqual([]);
   });
 
+  it("preserves a gap between two bottom-row supports", () => {
+    STRUCTURES.well = { w: 3, h: 2, footprint: { x: 0, y: 1, w: 3, h: 1, columns: [0, 2] } };
+    const g = grid({ ...corridor, structures: [{ key: "well", x: 1, y: 1 }] });
+    expect(g.structureSolid(1, 2)).toBe(true);
+    expect(g.structureSolid(2, 2)).toBe(false);
+    expect(g.structureSolid(3, 2)).toBe(true);
+  });
+
+  it("accepts sign text on a footprint but rejects it on a canopy or footprint gap", () => {
+    STRUCTURES.well = { w: 3, h: 2, footprint: { x: 0, y: 1, w: 3, h: 1, columns: [0, 2] } };
+    const room: MapDef = { ...corridor, tiles: ["#####", "#...#", "#...#", "#...#", "#####"],
+      structures: [{ key: "well", x: 1, y: 1 }], signs: [{ x: 1, y: 2, text: "Field notes." }] };
+    const check = (x: number, y: number) => {
+      const world = structuredClone(WORLD);
+      world.maps.route_1 = { ...room, signs: [{ x, y, text: "Field notes." }] };
+      return validateWorld(world).filter((p) => p.startsWith("[route_1] sign") && p.includes(" is on "));
+    };
+    expect(check(1, 2)).toEqual([]);
+    expect(check(1, 1)).toEqual(["[route_1] sign at 1,1 is on floor_wood"]);
+    expect(check(2, 2)).toEqual(["[route_1] sign at 2,2 is on floor_wood"]);
+  });
+
   it("reports scenery blocking when the footprint itself cuts the only path", () => {
     STRUCTURES.well = { w: 1, h: 2, footprint: { x: 0, y: 0, w: 1, h: 1 } };
     expect(flood(grid(corridor), [{ x: 1, y: 2 }]).has("3,2")).toBe(false);

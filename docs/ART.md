@@ -312,11 +312,45 @@ and CI use the supported GBC fallback until shipping is decided.
 
 ### LimeZu importer
 
-`tools/art/limezu/build_pack.py` builds the interior half of the private
-`limezu` pack: mapped furniture props, four six-cell floor blocks, cream
-wall faces and all sixteen tan-border wall masks. It reads coordinates
-from `tools/art/limezu/mapping/interior_props.json`. Unmapped (`source: null`)
-props have no contract or bundle yet. Map re-layouts are a separate phase.
+`tools/art/limezu/build_pack.py` builds the private interior and exterior
+`limezu` pack: 75 furniture/scenery props, four six-cell interior floor
+blocks, cream wall faces, sixteen tan-border wall masks and seven outdoor
+terrain overrides in the existing `terrain`, `water` and `city` bundle
+owners. Coordinates come from `mapping/interior_props.json` and
+`mapping/exterior_props.json`. Unmapped interior entries remain deferred;
+the eleven unmapped exterior entries receive original GBC scenery. Map
+re-layouts are a separate phase, so existing fallback maps stay unchanged.
+
+`gen_props.py --measure` trims source boxes to their alpha bounds and records
+only tile geometry in public `mapping/prop_geometry.json`. Ordinary contract
+regeneration uses that cache and needs no licensed source sheets. Imported
+images are bottom-aligned and horizontally centred in ceil(width/16) by
+ceil(height/16) canvases. The footprint contains only bottom-row tiles with
+opaque pixels in the lowest six pixels. A sparse `columns` list (absolute
+image tile columns) preserves gaps between supports; collision and validation
+share the same membership helper. Signs may occupy a footprint tile and are
+read by pressing A while facing it; canopy tiles and footprint gaps do not
+qualify. Rugs, windows, paintings, flower beds and docks use the floor layer.
+
+Building doors use the bottom eight pixels to score vertical dark-frame or
+red/brown door-like runs, with a centre fallback. This is a heuristic: check
+the red markers in the local review before R3 placements. `house_small`
+currently reuses the mapped `harbour_house` image. `conservatory` combines
+two mapped greenhouses and a centred 80px classical portico from the garden
+sheet (`[136,2432,216,2496]`); its door is the centre tile.
+
+The exterior blob classifier names all 26 blocks by their dominant fill
+colours. It measures mid-edge strips, ignores inner corners and picks each
+N=1/E=2/S=4/W=8 mask from the source tiles. The chosen blocks are path 1,
+dirt 2, sand edges 7 with fill 9, water 3, paving 19, stone_path 21 and grass
+12. The lead's dirt guess (4) is corrected to 2: block 4 is grey-beige earth
+with muted sage-green edges; block 2 is red-brown soil against the selected
+green grass. Blocks
+19/20 are pale paving variants; 21 is light grey stone. Grass block 12 has
+one plain fill, so no three distinct seamless alternates are emitted. The
+animated water sheet has no compatible fill/frame pair, so water stays
+static. Classification and cell choices live in the ignored pack's
+`terrain-classification.json`.
 
 Set `LIMEZU_INTERIORS`, `LIMEZU_EXTERIORS` and optionally `LIMEZU_UI` to the
 local pack roots, or create **gitignored** `tools/art/limezu/local.json`:
@@ -333,25 +367,27 @@ Environment variables take precedence. These paths are local configuration;
 never commit `local.json`. Run with the pinned art Python environment:
 
 ```bash
-$PY tools/art/limezu/gen_props.py          # public geometry only: src/contracts/props.ts
+$PY tools/art/limezu/gen_props.py --measure # refresh coordinate cache from local sheets
+$PY tools/art/limezu/gen_props.py          # public contracts from coordinate cache
 $PY tools/art/props_fallback.py            # original GBC bundles for every mapped prop
 npm run art:index                         # after adding/removing fallback bundles
-$PY tools/art/limezu/build_pack.py         # private crops + interior shell + local index
+$PY tools/art/limezu/build_pack.py         # private props, interior/outdoor tiles, local index
 $PY tools/art/limezu/build_pack.py --check # read-only freshness check; exit 1 if stale
 $PY tools/art/limezu/gen_props.py --check  # public contract freshness
 $PY tools/art/limezu/test_build_pack.py    # synthetic-pixel importer tests
+$PY tools/art/limezu/review_render.py      # ignored review/r2b.png (1280px wide)
 ```
 
 The `props_contracts` and `props` builders regenerate public geometry and
 fallback art in `build_all.py --regen`. Fallback notes begin `FALLBACK:`;
 these original pixels support no-pack play and pass the release gate.
-Prop boxes round up to tiles; crops are bottom-aligned and horizontally
-centred without scaling. Collision uses the bottom `max(1, h-1)` tile rows.
-Rugs, windows and paintings use the non-solid floor layer.
+Fallback props are drawn independently from original GBC colours and shapes;
+their sizes match the public contract. No licensed pixels are sampled.
 
-**Nothing the importer writes may be committed.** Its only destination is
-`public/art/packs/limezu/`, including its private generation manifest and
-the R1b local index. It verifies every destination with `git check-ignore`
+**No pixel output of the importer may be committed.** Pack outputs stay in
+`public/art/packs/limezu/`, including the private generation manifest and
+the R1b local index. The separate review renderer writes only to the ignored
+`tools/art/limezu/review/` directory and checks that destination too. It verifies every destination with `git check-ignore`
 before writing, rejects symlinks and paths outside that folder, and never
 rewrites the committed index. PNG/JSON bytes are deterministic; repeated
 runs leave unchanged files untouched. Each imported bundle credits
