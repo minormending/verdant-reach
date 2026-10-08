@@ -89,10 +89,12 @@ export const ch9Scripts: Scripts = {
   ],
   ch9_rook_after: [
     ifFlags({ beat_rook: true, got_fig_root: false }, [
+      { op: "still", image: "dragon_trees" },
       say("TODO(text): The Centuryheart is dying, as it must.", "ROOK"),
       say("TODO(text): Its seed is the only voice that can calm the Elder.", "ROOK"),
       say("TODO(text): Mercer knows this too.", "ROOK"),
       say("TODO(text): Rook gives the player a living Fig Root.", "ROOK"),
+      { op: "stillClear" },
       give("fig_root"),
       flag("got_fig_root"),
       say("TODO(text): ROOT BRIDGE grows roots across narrow gaps.", "ROOK"),

@@ -605,7 +605,7 @@ const ch9Trainers: TrainerDef[] = [
   // removing repeated healing and broad late-game coverage. Raising only
   // snapdragon from 47 to 48 gives mean win 58.6%, minimum 30.7%; harder than
   // Signe (62.8%) and Flora (61.2%) under balance.test.ts's milestone model.
-  trainer("rook", "ROOK", "WARDEN", "hollis", [
+  trainer("rook", "ROOK", "WARDEN", "rook", [
     T("snapdragon", 48, ["dragon_snap", "red_resin", "perfume"]),
     T("dragon_fruit", 48, ["night_bloom", "spine_volley", "nectar_lure"]),
     T("lithops_bloom", 48, ["thorn_lash", "stone_window", "bristle"]),

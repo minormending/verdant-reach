@@ -350,6 +350,9 @@ export const CHARACTERS = [
   "crimson_lily",                // the CRIMSON LILY on its islet (static object)
   // Chapter 8
   "mercer",
+  // Chapter 9
+  "rook", "stone_botanist",
+  "tumbleweed_roll",             // a rolling tumbleweed (static object; columns turn it 0/30/60 degrees)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -362,6 +365,7 @@ export const TRAINER_PORTRAITS = [
   "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", // Chapter 6
   "signe", "skier", // Chapter 7
   "mercer", "wren", // Chapter 8
+  "rook", // Chapter 9
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -437,6 +441,7 @@ export const STILLS = [
   "lantern_tree_healed", // Chapter 6
   "rootstock_files", "crimson_lily", // Chapter 7
   "mercer_hub_map", // Chapter 8
+  "dragon_trees", // Chapter 9
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 
