@@ -151,7 +151,7 @@ class OutdoorBundleTests(unittest.TestCase):
         for key in list(outdoor):
             if key != "grass":
                 outdoor.update({f"{key}@{mask}": tile for mask in range(16)})
-        with patch.object(pack, "mappings", return_value={}), patch.object(pack, "prop_specs", return_value={}), patch.object(pack, "measured_props", return_value=({}, {})), patch.object(pack, "interior_images", return_value={"floor_wood": tile}), patch.object(pack, "outdoor_images", return_value=(outdoor, [], [])), patch.object(pack, "ui_outputs", return_value={}):
+        with patch.object(pack, "mappings", return_value={}), patch.object(pack, "prop_specs", return_value={}), patch.object(pack, "measured_props", return_value=({}, {})), patch.object(pack, "interior_images", return_value={"floor_wood": tile}), patch.object(pack, "outdoor_images", return_value=(outdoor, [], [])), patch.object(pack, "ui_outputs", return_value={}), patch.object(pack, "portrait_outputs", return_value={}):
             outputs = pack.outputs(None)
         import json
         expected = {"terrain": {"grass", "path", "dirt", "sand", "stone_path"}, "water": {"water"}, "city": {"paving"}}

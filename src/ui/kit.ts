@@ -3,8 +3,9 @@
 // own scenes also use the exported `TextBox`, `Menu` and drawing helpers.
 
 import * as skin from "./skin";
-import type { GameContext, Input, Scene, UiKit } from "../contracts";
-import { SCREEN_H, SCREEN_W, TEXTBOX, UI } from "../contracts";
+import { drawSpeakerFace } from "./portraits";
+import type { GameContext, Input, Scene, UiKit, SayOptions } from "../contracts";
+import { facePath, SCREEN_H, SCREEN_W, TEXTBOX, UI } from "../contracts";
 import { drawBitmapText, formatText, measureText, paragraphs, wrapText } from "./font";
 
 // ---------------------------------------------------------------------------
@@ -329,20 +330,29 @@ export function createUiKit(ctx: GameContext): UiKit & {
     format,
     lingering,
 
-    say(text: string, opts?: { speaker?: string; autoClose?: boolean }): Promise<void> {
+    say(text: string, opts?: SayOptions): Promise<void> {
       const body = format(opts?.speaker ? `${opts.speaker}: ${text}` : text);
       return ctx.scenes.run<void>((done) => {
         const box = new TextBox(body, hooks, { autoClose: opts?.autoClose });
+        const clock = opts?.faceClock ?? { tick: 0 };
+        let closing = false;
         const scene: Scene = {
           transparent: true,
           update() {
+            if (closing) return;
+            clock.tick++;
             box.update(ctx.input);
             if (box.finished) {
               last = { lines: box.visible(), at: now() };
-              done();
+              if (opts?.face && ctx.assets.has(facePath(opts.face))) {
+                // Keep this card in the current draw. The next say is installed
+                // in the microtask turn, before the next paint, with no blank frame.
+                closing = true;
+                void Promise.resolve().then(() => done());
+              } else done();
             }
           },
-          draw(g) { box.draw(g); },
+          draw(g) { box.draw(g); drawSpeakerFace(g, ctx.assets, opts?.face, clock.tick); },
         };
         return scene;
       });

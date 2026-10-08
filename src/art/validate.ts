@@ -249,9 +249,12 @@ function checkBundle(cat: ArtCatalog, v: BundleView, add: Add, img: Img, prefix:
         if (!/^[A-Za-z0-9_]+$/.test(key)) add(where, `image key "${key}" must be [A-Za-z0-9_]`);
         if (!isObj(e) || typeof e.file !== "string") { add(where, `images.${key} needs a file`); continue; }
         const i = need(e.file, `images.${key}`);
+        const frames = e.frames === undefined ? 1 : e.frames;
+        if (typeof frames !== "number" || !Number.isInteger(frames) || frames < 1) add(where, `images.${key}.frames must be a positive integer`);
+        if (e.frames !== undefined && e.size === undefined) add(where, `images.${key}.frames needs a frame size`);
         if (e.size !== undefined) {
           if (!isSize(e.size)) add(where, `images.${key}.size must be [w, h]`);
-          else if (i && (i.width !== e.size[0] || i.height !== e.size[1])) add(where, `${e.file} is ${i.width}x${i.height}, set.json says ${e.size.join("x")}`);
+          else if (i && (i.width !== e.size[0] * (typeof frames === "number" ? frames : 1) || i.height !== e.size[1])) add(where, `${e.file} is ${i.width}x${i.height}, set.json says ${e.size[0]}x${e.size[1]} per frame (${frames} frames)`);
         }
       }
       return;

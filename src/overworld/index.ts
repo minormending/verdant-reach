@@ -44,7 +44,7 @@ import { drawHalo, drawTint, lampInfo, makeScreenCanvas, nightGlass, windowGlow 
 import { TileLayer } from "./tilelayer";
 import { drawGlow } from "./glowRender";
 import {
-  ScriptAbort, giveItem, harvest, itemName, quickenedName, runScript, trainerBattle, type ScriptHost, type ToastKind,
+  ScriptAbort, giveItem, harvest, itemName, quickenedName, runScript, scriptFacePaths, trainerBattle, type ScriptHost, type ToastKind,
 } from "./script";
 import { runStartMenu } from "./startMenu";
 import { visitedGlideMaps, visitedTownFlag } from "./glide";
@@ -233,6 +233,11 @@ class Overworld implements Scene {
     this.map = buildMap(def);
     refreshLegend(this.map, this.ctx.state.flags);
     this.mapId = id;
+    const scripts = [def.onEnter, def.onWhiteout, ...(def.npcs ?? []).map(n => n.script), ...def.triggers.map(t => t.script)]
+      .filter((s): s is ScriptId => !!s);
+    const faces = scriptFacePaths(this.ctx.world.scripts, scripts, this.player.sprite)
+      .filter(path => this.ctx.assets.exists(path) && !this.ctx.assets.has(path));
+    if (faces.length) void this.ctx.assets.loadAll(faces);
     const p = this.player;
     p.x = x; p.y = y; p.step = null; p.facing = facing; p.bumpAnim = 0;
     // Fresh actors on every entry reset UPROOT puzzles to their authored layout.
@@ -1197,6 +1202,7 @@ class Overworld implements Scene {
     const ctx = this.ctx;
     return {
       ctx,
+      playerCharacter: () => self.player.sprite,
       mapId: () => self.mapId,
       map: () => self.map?.def,
       createQuickened,

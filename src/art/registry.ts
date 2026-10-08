@@ -191,6 +191,26 @@ export class ArtRegistry implements Assets {
     return out;
   }
 
+  imageFrames(path: string): number {
+    return this.catalog.resolve(path)?.frames ?? 1;
+  }
+
+  imageFrame(path: string, frame: number): ArtImage | undefined {
+    const image = this.image(path);
+    if (!image) return;
+    const res = this.catalog.resolve(path);
+    const frames = res?.frames ?? 1;
+    if (frames === 1) return image; // Preserve the exact original fallback object.
+    const index = Math.max(0, Math.min(frames - 1, Math.floor(frame)));
+    const key = `${path}:frame:${index}`;
+    const hit = this.derived.get(key);
+    if (hit) return hit;
+    const [w, h] = res?.frameSize ?? [image.width / frames, image.height];
+    const out = this.derive(image, { ...res!, rect: [index * w, 0, w, h] });
+    this.derived.set(key, out);
+    return out;
+  }
+
   has(path: string): boolean {
     if (!this.isReady) return false;
     const res = this.catalog.resolve(path);

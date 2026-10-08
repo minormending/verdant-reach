@@ -3,9 +3,11 @@
 // so the interpreter itself runs on a fake host in tests.
 
 import type {
-  Ambient, BattleOutcome, BattleRequest, Dir, GameContext, GameData, ItemId, MapDef, MapId,
+  CharacterKey, Ambient, BattleOutcome, BattleRequest, Dir, GameContext, GameData, ItemId, MapDef, MapId,
   MarkId, Quickened, ScriptCmd, ScriptId, SpeciesId, StillKey, TimeOfDay,
 } from "../contracts";
+import { facePath } from "../contracts";
+import { speakerFace } from "../world/speakers";
 import { checkCond } from "./map";
 import { mapTime } from "../engine/time";
 import {
@@ -18,6 +20,8 @@ export type ToastKind = "new_note" | "note_done";
 
 export interface ScriptHost {
   ctx: GameContext;
+  /** Active walking character, for player dialogue faces. */
+  playerCharacter?(): CharacterKey;
   mapId(): MapId;
   map(): MapDef | undefined;
   createQuickened(data: GameData, species: SpeciesId, level: number, rng: () => number): Quickened;
@@ -73,6 +77,7 @@ class ScriptEnd extends Error {}
 export interface ScriptState {
   lastBattle?: BattleOutcome;
   depth: number;
+  faceClock?: { tick: number };
 }
 
 // ---------------------------------------------------------------------------
@@ -250,6 +255,9 @@ export async function runScript(
     throw new ScriptAbort("whiteout");
   }
   try {
+    const faces = scriptFacePaths(host.ctx.world.scripts, [script], host.playerCharacter?.());
+    const pending = faces.filter(path => host.ctx.assets?.exists(path) && !host.ctx.assets.has(path));
+    if (pending.length) await host.ctx.assets.loadAll(pending);
     await exec(host, resolve(host, script), state);
   } catch (e) {
     if (e instanceof ScriptEnd) return;
@@ -276,8 +284,11 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
   const { ctx } = host;
   const flags = ctx.state.flags;
   switch (cmd.op) {
-    case "say":
-      return ctx.ui.say(cmd.text, cmd.speaker ? { speaker: cmd.speaker } : undefined);
+    case "say": {
+      let face = speakerFace(cmd.speaker);
+      if (face === "player") face = host.playerCharacter?.() ?? "player";
+      return ctx.ui.say(cmd.text, face ? { speaker: cmd.speaker, face, faceClock: st.faceClock ??= { tick: 0 } } : cmd.speaker ? { speaker: cmd.speaker } : undefined);
+    }
     case "choice": {
       const i = await ctx.ui.choose(cmd.options, { prompt: cmd.prompt, cancel: false });
       return exec(host, cmd.branches[i < 0 ? cmd.options.length - 1 : i], st);
@@ -452,4 +463,28 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       console.warn(`[script] unknown op "${unknown.op}"`);
     }
   }
+}
+
+/** Optional face preloads for all branches/calls, without story validation. */
+export function scriptFacePaths(scripts: Record<string, ScriptCmd[]>, roots: (ScriptId | ScriptCmd[])[], player: CharacterKey = "player"): string[] {
+  const paths = new Set<string>(), seen = new Set<string>();
+  const visit = (script: ScriptId | ScriptCmd[]) => {
+    if (typeof script === "string") {
+      if (seen.has(script)) return;
+      seen.add(script);
+      script = scripts[script] ?? [];
+    }
+    for (const cmd of script) {
+      if (cmd.op === "say") {
+        const face = speakerFace(cmd.speaker);
+        if (face) paths.add(facePath(face === "player" ? player : face));
+      }
+      if (cmd.op === "call") visit(cmd.script);
+      if ("then" in cmd) { if (cmd.then) visit(cmd.then); if (cmd.else) visit(cmd.else); }
+      if (cmd.op === "choice") cmd.branches.forEach(visit);
+      if (cmd.op === "yesno") { visit(cmd.yes); visit(cmd.no); }
+    }
+  };
+  roots.forEach(visit);
+  return [...paths];
 }

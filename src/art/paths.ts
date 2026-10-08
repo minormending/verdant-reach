@@ -10,7 +10,7 @@ export type FrontFrameKind = (typeof FRONT_KINDS)[number];
 export const SPECIES_FRAME_KINDS: readonly SpeciesFrameKind[] = [...FRONT_KINDS, "back", "icon", "icon__2"];
 
 /** Logical directories served by image sets (ART.md §7). */
-export const SET_DIRS = ["assets/trainers", "assets/items", "assets/ui", "assets/stills"] as const;
+export const SET_DIRS = ["assets/trainers", "assets/items", "assets/ui", "assets/stills", "assets/faces"] as const;
 
 export type LogicalRef =
   | { type: "species"; id: string; kind: SpeciesFrameKind; sport: boolean }
@@ -22,7 +22,7 @@ export type LogicalRef =
 const SPECIES_RE = /^assets\/species\/([a-z0-9_]+)\/(front|front__[2-8]|back|icon|icon__2)\.png(\?sport)?$/;
 const TILE_RE = /^assets\/tiles\/([a-z0-9_]+?)(?:~([1-9])|@(\d{1,2}))?(__2)?\.png$/;
 const ONE_RE = /^assets\/(structures|characters)\/([a-z0-9_]+)\.png$/;
-const SET_RE = /^(assets\/(?:trainers|items|ui|stills))\/([A-Za-z0-9_]+)\.png$/;
+const SET_RE = /^(assets\/(?:trainers|items|ui|stills|faces))\/([A-Za-z0-9_]+)\.png$/;
 
 const cache = new Map<string, LogicalRef | null>();
 

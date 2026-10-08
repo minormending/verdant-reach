@@ -145,6 +145,7 @@ Until then, `main` ships the GBC fallback. The release horizon
 | R4 | Characters for every NPC key; portraits (LimeZu UI portrait generator, if usable) | Codex + lead review |
 | R5 | Creature style v2 and a pilot, then the roster | lead (rules) + Codex loop |
 | R6 ✓ | Modern UI Style 1: measured slices, shared skin, cursors, bars, slots, toggles and unchanged GBC fallback; local render `tools/art/limezu/review/r6.png` | Codex; browser playthrough and lead review pending |
+| R6b ✓ | Trainer portraits from the Portrait Generator, derived from mapping/characters.json; dialogue speaker faces via src/world/speakers.ts | Codex; lead review pending |
 | R7 | Shipping and the release horizon | the owner + both leads |
 
 
@@ -225,3 +226,54 @@ was made by `review_ui.mjs --software` followed by `replay_ui.py`, replaying
 real scene Canvas calls with Pillow at 320×180. It includes all eight requested
 views plus name entry. This supports visual inspection but does not replace
 the pending browser e2e / browser capture review.
+
+### R6b portrait cards (2026-10-08)
+
+`build_pack.py` now derives all 26 trainer heads, the player's back of head,
+and all 51 character faces from `mapping/characters.json`. The resolver uses
+actual Portrait Generator filenames (hair style precedes `48x48`), excludes
+`_Small` accessories, omits the four accessories without equivalents, and
+falls back to accessory variant 1 only when the requested variant is absent.
+Unresolved layers are errors. The public `mapping/portraits.json` holds only
+measured cell geometry, frame coordinates and options: 960×288 sheets,
+96×96 cells, neutral 0,0, blink 2,0, back 4,2.
+
+Cards use the measured slot's native 9-slice caps, one-frame sizes of 56×56
+(trainers) or 48×48 (player back and faces), and unscaled head pixels. The
+chin is bottom-anchored with a four-pixel gap above the inner bottom edge.
+Large hair/hat overflow is clipped at card edges; the facial features stay
+visible. Neutral and blink cards share crop bounds and placement. Image-set
+`frames` defaults to 1; the optional count describes horizontal frames and
+`size` describes one frame. Base portraits remain static.
+
+Faces are optional assets under `assets/faces`. The story-owned speaker table
+was absent, so `src/world/speakers.ts` is created with the specified empty
+mapping. Only script `say` commands resolve that table. Map entry and script
+execution preload resolved faces; dialogue uses a shared script clock and
+retains the card through the confirming frame. Blinks last six ticks every
+150 ticks. Player faces resolve through the active player's walking key.
+
+Local review commands (all pixel outputs remain gitignored):
+
+```bash
+node tools/art/limezu/review_portraits.mjs --software
+$PY tools/art/limezu/replay_ui.py r6b
+$PY tools/art/limezu/review_portraits.py
+```
+
+The sheets are `review/r6b.png` and `review/r6b-faces.png`, with both blink
+frames and labelled walking-sprite comparisons for every trainer. The
+320×180 trainer-intro and dialogue captures currently replay real scene
+Canvas calls with Pillow. `review/r6b.html` provides the same scenes in a
+self-contained browser page with PNG download links; its speaker fixture is
+injected only into the review build. Browser capture and full e2e verification
+remain pending: this worker's sandbox denies localhost binding, and no browser
+is available through the UI tool.
+
+The broader `build_all.py --regen` check reproduces the base art but its Python
+validator (`tools/art/artkit/validate.py`, outside this worker's allowed edit
+scope) still treats an image-set `size` as the whole file size. It reports 77
+size errors for these horizontal strips. The TypeScript validator and local
+importer freshness check support the frame metadata and pass. The lead needs
+to add the same frame-aware size handling to the Python validator before the
+broader regeneration check can pass with the local pack installed.
