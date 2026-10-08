@@ -118,6 +118,7 @@
     "burnt": ["sheet.png"],
     "city": ["sheet.png"],
     "coast": ["sheet.png"],
+    "desert": ["sheet.png"],
     "frontier": ["sheet.png"],
     "hideout": ["sheet.png"],
     "hollow": ["sheet.png"],
@@ -130,6 +131,7 @@
     "palm_house": ["sheet.png"],
     "relay": ["sheet.png"],
     "relay_upper": ["sheet.png"],
+    "ridge": ["sheet.png"],
     "rose": ["sheet.png"],
     "terrain": ["sheet.png"],
     "town": ["sheet.png"],
@@ -137,6 +139,7 @@
   },
   "structures": {
     "adobe_conservatory": ["structure.png"],
+    "adobe_house": ["structure.png"],
     "alpine_lodge": ["structure.png"],
     "barn": ["structure.png"],
     "big_maple": ["structure.png"],
@@ -147,6 +150,7 @@
     "chalet": ["structure.png"],
     "city_house": ["structure.png"],
     "conservatory": ["structure.png"],
+    "dragon_tree_big": ["structure.png"],
     "driftwood_hut": ["structure.png"],
     "fountain": ["structure.png"],
     "frost_conservatory": ["structure.png"],
@@ -166,10 +170,12 @@
     "palm_house": ["structure.png"],
     "relay_mast": ["structure.png"],
     "relay_station": ["structure.png"],
+    "ridge_conservatory": ["structure.png"],
     "rose_conservatory": ["structure.png"],
     "tide_conservatory": ["structure.png"],
     "well": ["structure.png"],
-    "windmill": ["structure.png"]
+    "windmill": ["structure.png"],
+    "windmill_pump": ["structure.png"]
   },
   "characters": {
     "angler": ["sheet.png"],

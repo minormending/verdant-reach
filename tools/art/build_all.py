@@ -58,6 +58,7 @@ BUILDERS: list[tuple[str, str]] = [
     ("cast8", "cast8/build.py"),          # Chapter 8 MERCER, MERCER and WREN portraits, RELAY KEYCARD icon, hub-map still
     ("env9", "env9/build.py"),            # Chapter 8 Root Relay upper floors (after tiles and env4: props drawn over wall, cable_floor, paving)
     ("cast9", "cast9/build.py"),          # Chapter 9 ROOK, the stone botanist, the tumbleweed, ROOK portrait, FIG ROOT, RESIN MARK, dragon-trees still
+    ("env10", "env10/build.py"),          # Chapter 9 desert, canyon and ridge tiles, Thistledown and Sanguine Ridge structures (after tiles: scrub sits on the sand colour)
 ]
 
 

@@ -230,7 +230,7 @@ describe("WINDOW PANES quest", () => {
       [{ flag: "window_panes_lithops", is: true }], [{ flag: "window_panes_bloom", is: true }],
     ]);
     expect(ops(questScripts.q_window_panes).filter((c) => c.op === "ifCaught").map((c) => c.species)).toContainEqual(["lithops_pebble", "lithops_pair", "lithops_bloom"]);
-    expect(WORLD.maps.thistledown_house.npcs.find((n) => n.id === "stone_botanist")).toMatchObject({ sprite: "researcher", script: "q_window_panes" });
+    expect(WORLD.maps.thistledown_house.npcs.find((n) => n.id === "stone_botanist")).toMatchObject({ sprite: "stone_botanist", script: "q_window_panes" });
   });
 
   it.each(["lithops_pebble", "lithops_pair"] as const)("records %s first, then the bloom, with one reward", async (first) => {
