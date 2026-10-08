@@ -158,12 +158,15 @@ const OBJECT_SPRITES: ReadonlySet<CharacterKey> = new Set<CharacterKey>([
 /**
  * Sheet row for a character. Puzzle objects follow the flag convention:
  * an NPC id `lever:<flag>` or `valve:<flag>` shows the UP row while that flag
- * is true (the "on" frame) and the DOWN row otherwise.
+ * is true (the "on" frame) and the DOWN row otherwise. An explicit stateFlag
+ * uses the same rows and takes precedence over the id convention and facing.
  */
 export function rowFor(
   id: string, sprite: CharacterKey, facing: Dir, flags: Record<string, boolean>,
   pickedToday: (harvestId: string) => boolean = () => false,
+  stateFlag?: string,
 ): Dir {
+  if (stateFlag !== undefined) return flags[stateFlag] ? "up" : "down";
   if (sprite === "lever" || sprite === "valve") {
     const m = /^(?:lever|valve):(.+)$/.exec(id);
     if (m) return flags[m[1]] ? "up" : "down";

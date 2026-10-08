@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "alpine_lodge",
+  "image": "structure.png",
+  "size": [5, 3],
+  "credits": "Original hand-pixelled Chapter 7 environment for Verdant Reach; no copied or traced game art.",
+  "source": { "kind": "generated", "tool": "tools/art/env8/buildings.py" }
+}

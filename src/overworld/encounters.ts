@@ -3,6 +3,7 @@
 
 import type { EncounterSlot, MapDef, SpeciesId, TileKey, TimeOfDay } from "../contracts";
 import { TILES } from "../contracts";
+import { checkCond } from "./map";
 
 /** "day" slots cover morning and day; "night" only night; "any"/unset always. */
 export function slotActive(slot: EncounterSlot, tod: TimeOfDay): boolean {
@@ -36,7 +37,8 @@ export function rollLevel(slot: EncounterSlot, rng: () => number): number {
 export type EncounterKind = "grass" | "bog" | "water";
 
 export function encounterKindFor(tile: TileKey, rafting = false): EncounterKind | null {
-  const props = TILES[tile] as { encounter?: EncounterKind; water?: boolean };
+  const props = TILES[tile] as { encounter?: EncounterKind; water?: boolean; slide?: boolean };
+  if (props.slide) return null;
   if (props.water) return rafting ? "water" : null;
   return props.encounter ?? null;
 }
@@ -46,12 +48,14 @@ export function encounterKindFor(tile: TileKey, rafting = false): EncounterKind 
  * `rate` is the % chance per step.
  */
 export function rollEncounter(
-  map: Pick<MapDef, "encounters">, tile: TileKey, tod: TimeOfDay, rng: () => number,
+  map: Pick<MapDef, "encounters" | "encountersWhen">, tile: TileKey, tod: TimeOfDay, rng: () => number,
   rafting = false,
+  flags: Record<string, boolean> = {},
 ): { species: SpeciesId; level: number; kind: EncounterKind } | null {
   const kind = encounterKindFor(tile, rafting);
   if (!kind) return null;
-  const table = map.encounters?.[kind];
+  const match = map.encountersWhen?.find((entry) => checkCond(entry.when, flags));
+  const table = (match ? match.encounters : map.encounters)?.[kind];
   if (!table || table.rate <= 0) return null;
   if (rng() * 100 >= table.rate) return null;
   const slot = pickWeighted(filterSlots(table.slots, tod), rng);

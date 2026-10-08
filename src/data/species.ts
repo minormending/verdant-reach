@@ -85,6 +85,11 @@ const POLLINATION: Record<string, PollinationGroup[]> = {
   prickly_pear: ["garden"],
   saguaro: ["meadow"],
   vanilla: ["tropical"],
+  snowdrop: ["meadow"],
+  campion: ["meadow"],
+  larch: ["woodland"],
+  edelweiss: ["meadow"],
+  bladderwort: ["carnivore"],
 };
 
 function sp(d: Def): Species {
@@ -183,6 +188,19 @@ const SAGUARO: L = [[1, "thorn_jab"], [1, "curl_up"], [5, "dew_drop"], [9, "sap_
   [17, "spine_volley"], [21, "root_tap"], [26, "thorn_lash"], [30, "bark_skin"], [36, "flood"], [42, "hook_thorns"]];
 const VANILLA: L = [[1, "pollen_puff"], [1, "perfume"], [5, "vine_lash"], [9, "sap_drain"], [13, "wind_scatter"],
   [18, "hand_pollen"], [22, "root_snare"], [26, "sunbeam"], [30, "photosynthesise"], [36, "leaf_gale"], [40, "petal_storm"]];
+
+// Chapter 7 (wild levels 32-40). Snowdrop's signature starts at stage 2;
+// the other lines learn theirs at stage 1 and keep them after growth.
+const SNOWDROP: L = [[1, "hoarfrost"], [1, "sap_seal"], [5, "pollen_puff"], [9, "perfume"], [13, "sap_drain"],
+  [17, "mist_veil"], [21, "cold_mist"], [26, "frost_bloom"], [30, "photosynthesise"], [34, "sun_track"], [44, "snowdrift"]];
+const CAMPION: L = [[1, "hoarfrost"], [1, "curl_up"], [5, "vine_lash"], [9, "sap_seal"], [13, "root_tap"],
+  [17, "cold_mist"], [22, "cushion"], [26, "sap_drain"], [30, "frost_bloom"], [34, "bark_skin"], [38, "photosynthesise"], [44, "snowdrift"]];
+const LARCH: L = [[1, "vine_lash"], [1, "sap_seal"], [5, "hoarfrost"], [9, "root_tap"], [13, "sap_drain"],
+  [17, "leaf_edge"], [22, "frost_needle"], [26, "needle_drop"], [30, "root_snare"], [34, "evergreen"], [40, "timber"], [44, "snowdrift"]];
+const EDELWEISS: L = [[1, "hoarfrost"], [1, "perfume"], [5, "pollen_puff"], [9, "sap_drain"], [13, "mist_veil"],
+  [18, "wind_scatter"], [24, "woolly_coat"], [28, "frost_bloom"], [34, "sunbeam"], [38, "photosynthesise"], [42, "snowdrift"]];
+const BLADDERWORT: L = [[1, "quick_snap"], [1, "nectar_lure"], [5, "dew_drop"], [9, "pad_slap"], [13, "sticky_dew"],
+  [17, "undertow"], [21, "digest"], [25, "vacuum_trap"], [30, "snap_trap"], [36, "flood"], [40, "pitfall"]];
 
 const ALL: Species[] = [
   // ------------------------------------------------------------- starters
@@ -540,6 +558,53 @@ const ALL: Species[] = [
   sp({ id: "vanilla_orchid", name: "Vanilla", line: "vanilla", stage: 2, types: ["bloom", "wood"],
     base: st(70, 45, 60, 115, 110, 70), rate: "medium", catchRate: 45, baseExp: 180, ev: { spa: 1, spd: 1 },
     learnset: learn(VANILLA) }),
+
+  // ============================================================== Chapter 7
+  // ------------------------------------------------------------- snowdrop (special attack and speed; cold opens the bulb)
+  sp({ id: "snowdrop_bulb", name: "Snow Bulb", line: "snowdrop", stage: 1, types: ["frost"],
+    base: st(45, 30, 40, 70, 40, 65), rate: "medium", catchRate: 190, baseExp: 64, ev: { spa: 1 },
+    grows: ["snowdrop_shoot", { kind: "item", item: "cold_snap" }], learnset: learn(SNOWDROP) }),
+  sp({ id: "snowdrop_shoot", name: "Snow Shoot", line: "snowdrop", stage: 2, types: ["frost", "bloom"],
+    base: st(60, 40, 55, 95, 60, 90), rate: "medium", catchRate: 75, baseExp: 138, ev: { spa: 1, spe: 1 },
+    grows: ["snowdrop", vigor(36)], learnset: learn(SNOWDROP, [[34, "sunbeam"], [38, "thaw_bloom"]]) }),
+  sp({ id: "snowdrop", name: "Snowdrop", line: "snowdrop", stage: 3, types: ["frost", "bloom"],
+    base: st(75, 50, 65, 115, 75, 110), rate: "medium", catchRate: 45, baseExp: 194, ev: { spa: 2, spe: 1 },
+    learnset: learn(SNOWDROP, [[34, "sunbeam"], [38, "thaw_bloom"]]) }),
+
+  // ------------------------------------------------------------- campion (HP and both defences; very bulky)
+  sp({ id: "campion_cushion", name: "Moss Cushion", line: "campion", stage: 1, types: ["frost"],
+    base: st(75, 35, 75, 35, 65, 15), rate: "medium", catchRate: 190, baseExp: 66, ev: { hp: 1 },
+    activity: "day", grows: ["campion_mound", vigor(30)], learnset: learn(CAMPION) }),
+  sp({ id: "campion_mound", name: "Moss Mound", line: "campion", stage: 2, types: ["frost", "wood"],
+    base: st(100, 45, 100, 50, 95, 20), rate: "medium", catchRate: 75, baseExp: 142, ev: { hp: 1, def: 1 },
+    activity: "day", grows: ["moss_campion", vigor(40)], learnset: learn(CAMPION) }),
+  sp({ id: "moss_campion", name: "Moss Campion", line: "campion", stage: 3, types: ["frost", "bloom"],
+    base: st(125, 55, 120, 60, 115, 25), rate: "medium", catchRate: 45, baseExp: 198, ev: { hp: 1, def: 1, spd: 1 },
+    activity: "day", learnset: learn(CAMPION, [[1, "pollen_puff"], [36, "sunbeam"]]) }),
+
+  // ------------------------------------------------------------- larch (attack and defence)
+  sp({ id: "larch_seedling", name: "Larch Sprout", line: "larch", stage: 1, types: ["wood", "frost"],
+    base: st(55, 75, 70, 35, 45, 30), rate: "slow", catchRate: 150, baseExp: 68, ev: { atk: 1 },
+    grows: ["larch", vigor(34)], learnset: learn(LARCH) }),
+  sp({ id: "larch", name: "Larch", line: "larch", stage: 2, types: ["wood", "frost"],
+    base: st(85, 115, 110, 55, 70, 45), rate: "slow", catchRate: 60, baseExp: 180, ev: { atk: 1, def: 1 },
+    learnset: learn(LARCH) }),
+
+  // ------------------------------------------------------------- edelweiss (special defence and special attack)
+  sp({ id: "edelweiss_bud", name: "Edel Bud", line: "edelweiss", stage: 1, types: ["frost", "bloom"],
+    base: st(45, 30, 45, 70, 75, 35), rate: "medium", catchRate: 150, baseExp: 66, ev: { spd: 1 },
+    activity: "day", grows: ["edelweiss", vigor(32)], learnset: learn(EDELWEISS) }),
+  sp({ id: "edelweiss", name: "Edelweiss", line: "edelweiss", stage: 2, types: ["frost", "bloom"],
+    base: st(70, 45, 65, 110, 125, 55), rate: "medium", catchRate: 60, baseExp: 174, ev: { spd: 1, spa: 1 },
+    activity: "day", learnset: learn(EDELWEISS) }),
+
+  // ------------------------------------------------------------- bladderwort (speed and attack)
+  sp({ id: "bladderwort_sprig", name: "Bladdersprig", line: "bladderwort", stage: 1, types: ["bug", "water"],
+    base: st(45, 65, 35, 45, 35, 70), rate: "medium", catchRate: 150, baseExp: 64, ev: { spe: 1 },
+    grows: ["bladderwort", vigor(33)], learnset: learn(BLADDERWORT) }),
+  sp({ id: "bladderwort", name: "Bladderwort", line: "bladderwort", stage: 2, types: ["bug", "water"],
+    base: st(65, 105, 55, 70, 60, 110), rate: "medium", catchRate: 60, baseExp: 172, ev: { spe: 1, atk: 1 },
+    learnset: learn(BLADDERWORT) }),
 ];
 
 export const SPECIES = Object.fromEntries(ALL.map((s) => [s.id, s])) as Record<SpeciesId, Species>;

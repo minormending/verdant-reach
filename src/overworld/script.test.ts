@@ -197,6 +197,40 @@ describe("script interpreter", () => {
     expect(said).not.toContain("after");
   });
 
+  it.each(["won", "caught", "lost", "fled"] as const)("continues a static sport fixture after %s with canLose", async (outcome) => {
+    const { host, state } = setup({ battles: [outcome] });
+    const fixture: ScriptCmd[] = [
+      { op: "wildBattle", species: "giant_water_lily", level: 40, sport: true, canLose: true },
+      { op: "setFlag", flag: "static_sport_done" },
+      { op: "hideNpc", npc: "static_sport" },
+    ];
+    await runScript(host, fixture);
+    expect(host.battle).toHaveBeenCalledExactlyOnceWith({
+      kind: "wild", wild: { species: "giant_water_lily", level: 40, sport: true }, canLose: true, backdrop: undefined,
+    });
+    expect(state.flags.static_sport_done).toBe(true);
+    expect(host.setNpcVisible).toHaveBeenCalledWith("static_sport", false);
+    expect(host.whiteout).not.toHaveBeenCalled();
+  });
+
+  it("leaves the sport override unset for ordinary scripted wild battles", async () => {
+    const { host } = setup();
+    await runScript(host, [{ op: "wildBattle", species: "giant_water_lily", level: 40 }]);
+    expect(host.battle).toHaveBeenCalledWith(expect.objectContaining({
+      wild: { species: "giant_water_lily", level: 40, sport: undefined },
+    }));
+  });
+
+  it("still whites out on a wild battle loss without canLose", async () => {
+    const { host, state } = setup({ battles: ["lost"] });
+    await expect(runScript(host, [
+      { op: "wildBattle", species: "giant_water_lily", level: 40, sport: true },
+      { op: "setFlag", flag: "static_sport_done" },
+    ])).rejects.toThrow("whiteout");
+    expect(host.whiteout).toHaveBeenCalledOnce();
+    expect(state.flags.static_sport_done).toBeUndefined();
+  });
+
   it("heals and records the heal point", async () => {
     const { host, state, jingles } = setup();
     state.party.push({ ...makeQ("oak_acorn", 5), hp: 0, stats: { hp: 20, atk: 1, def: 1, spa: 1, spd: 1, spe: 1 } });

@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "snowdrop_bulb",
+  "palette": ["#181818", "#605838", "#b8c0a0", "#f8f8f8"],
+  "sport": ["#181818", "#988830", "#b8c0a0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 8], [1, 12], [2, 5], [3, 16], [2, 8], [0, 8]], "idle": [[0, 130], [2, 10], [0, 6]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/snowdrop.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/snowdrop.py" },
+  "notes": "Crystal rule. BRACED: a plump papery bulb half sunk in a snow crust, cream body under a pale tunic with dry brown tunic lines, one blunt grey-green leaf spear piercing the neck. The spear pushes up through the crust. Snow, leaves and scape stay fixed; only the signature part moves. No enclosed dark dots: every inner-tepal chevron joins its tip's outline. Sport: Galanthus nivalis Sandersii Group, yellow ovary and inner marks, so the dark slot becomes a yellow-olive; geometry stays identical."
+}

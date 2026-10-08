@@ -6,8 +6,8 @@ import { checkProgressWithoutPrune, eachCmd, flood, grid, prunable, validateWorl
 
 describe("world data", () => {
   it("glides to the tile below each town's healing-building door", () => {
-    const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse", "cedarhallow_greenhouse", "saltmarsh_greenhouse", "driftseed_greenhouse"];
-    expect(WORLD.glide?.map((d) => d.map)).toEqual(["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle"]);
+    const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse", "cedarhallow_greenhouse", "saltmarsh_greenhouse", "driftseed_greenhouse", "larchmere_greenhouse"];
+    expect(WORLD.glide?.map((d) => d.map)).toEqual(["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle", "larchmere"]);
     for (const [i, landing] of WORLD.glide!.entries()) {
       const town = WORLD.maps[landing.map];
       const door = town.warps.find((w) => w.to === buildings[i])!;
@@ -252,6 +252,14 @@ describe("Chapter 4", () => {
 
 describe("validator self-check", () => {
   const clone = () => structuredClone(WORLD);
+  it("accepts a static sport battle fixture", () => {
+    const w = clone();
+    w.scripts.static_sport_fixture = [
+      { op: "wildBattle", species: "giant_water_lily", level: 40, sport: true, canLose: true },
+      { op: "setFlag", flag: "static_sport_done" },
+    ];
+    expect(validateWorld(w)).toEqual([]);
+  });
   it("rejects solid, off-map, missing-map and unreachable glide landings", () => {
     for (const landing of [
       { map: "fallowfield", x: 0, y: 0 },

@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "larch",
+  "palette": ["#181818", "#a04038", "#e0a830", "#f8f8f8"],
+  "sport": ["#181818", "#804858", "#80b0a0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 8], [1, 12], [2, 6], [3, 16], [4, 12], [0, 8]], "idle": [[0, 140], [1, 10], [0, 8]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Larix decidua, https://en.wikipedia.org/wiki/Larix_decidua . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/larch.py" },
+  "notes": "Crystal rule. Larix decidua. LOOMING: a tall narrow cone leaning over the foe, tiers of solid autumn-gold drapes of drooping branchlets with blunt upswept bough tips, small upright cones, one red larch rose upper-left, and fallen gold needles heaped at the foot. Gesture: the boughs dip, lift and shake while a shower of needles falls, then settle; trunk, roots and ground stay fixed. Needle tone over a rosy bark red-brown that is also the larch rose and the cones (dark slot). Sport: the soft blue-green needles of the Japanese larch (Larix kaempferi)."
+}

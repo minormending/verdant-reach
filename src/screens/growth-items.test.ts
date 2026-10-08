@@ -224,7 +224,7 @@ describe("growth item party labels", () => {
   });
 
   it("keeps ordinary party rows for medicine and items with no species trigger", async () => {
-    for (const item of ["water_flask", "cold_snap"]) {
+    for (const item of ["water_flask", "neem_spray"]) { // cold_snap opens snowdrop_bulb since Chapter 7
       const h = harness();
       h.ctx.state.party = [h.plant()];
       const result = partyScreen(h.ctx, { mode: "pick", useItem: item });

@@ -454,6 +454,102 @@ const ch6Trainers: TrainerDef[] = [
     { ai: "smart", music: "battle_leader", mark: "mangrove_mark", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
+// Chapter 7 (CH7.md §5): preserve team identities and ±2 boss-level bounds.
+const CH7_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  climber_ridge: {
+    intro: "The air's thin up here. Let's see if you can keep up!",
+    defeat: "Out of breath. Out of luck.",
+    after: "LARCHES are conifers, but they drop every needle in autumn.",
+  },
+  climber_scree: {
+    intro: "Mind the scree! And mind my QUICKENED!",
+    defeat: "Slipped...",
+    after: "MOSS CAMPION grows in a tight cushion. It keeps its middle warm.",
+  },
+  skier_frost: {
+    intro: "Fresh powder, fresh challenger!",
+    defeat: "Wiped out!",
+    after: "EDELWEISS wears woolly hairs against the cold and the glare.",
+  },
+  skier_drift: {
+    intro: "I go downhill fast. You'll go down faster!",
+    defeat: "Straight into a drift...",
+    after: "SNOWDROPS flower at winter's end. Sometimes right through the snow.",
+  },
+  grunt_lodge: {
+    intro: "Nobody goes near that bookcase. Nobody!",
+    defeat: "Stung. The doctor won't like this.",
+    after: "There's nothing behind the bookcase. Nothing at all!",
+  },
+  grunt_b1_1: {
+    intro: "Hands off the emitter! The doctor needs that signal!",
+    defeat: "Switched off...",
+    after: "FIREWEED springs up after a fire. We just skip the fire.",
+  },
+  grunt_b1_2: {
+    intro: "This emitter's mine. So's my BLADDERWORT. Snap!",
+    defeat: "Sucked in and spat out.",
+    after: "A BLADDERWORT trap snaps in about a millisecond. Faster than you.",
+  },
+  grunt_b1_3: {
+    intro: "Last emitter. Last guard. Last chance to turn back!",
+    defeat: "That was the last one, wasn't it.",
+    after: "The doctor's downstairs. She won't go as easy as me.",
+  },
+  jr_flurry: {
+    intro: "Careful on the ice! Once you slide, you can't stop!",
+    defeat: "Slid right past me...",
+    after: "Plan every slide before you take it. SIGNE does.",
+  },
+  jr_hoarfrost: {
+    intro: "Frost forms overnight. So did my strategy!",
+    defeat: "Melted.",
+    after: "Only female HOLLY plants grow berries. Look for the red ones.",
+  },
+  calloway: {
+    intro: "Observe closely. You may learn something.",
+    defeat: "...Noted. A variable I failed to control.",
+    after: "Nature is slow. I am not.",
+  },
+  signe: {
+    intro: "Cold teaches patience. Let's see what you've learned.",
+    defeat: "...Good. You held steady in the cold.",
+    after: "Snow is a blanket. Under it, everything waits for spring.",
+  },
+};
+const ch7Lines = (id: string) => CH7_LINES[id];
+const ch7Trainers: TrainerDef[] = [
+  trainer("climber_ridge", "RIDGE", "HIKER", "hiker", [T("larch_seedling", 33), T("holly", 34)], ch7Lines("climber_ridge")),
+  trainer("climber_scree", "SCREE", "HIKER", "hiker", [T("campion_mound", 34)], ch7Lines("climber_scree")),
+  trainer("skier_frost", "FROST", "BIRDWATCHER", "skier", [T("peppermint", 34), T("edelweiss_bud", 33)], ch7Lines("skier_frost")),
+  trainer("skier_drift", "DRIFT", "BIRDWATCHER", "skier", [T("snowdrop_shoot", 34), T("larch", 35)], ch7Lines("skier_drift")),
+  trainer("grunt_lodge", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 35), T("venus_flytrap", 35)], ch7Lines("grunt_lodge"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_1", "GRUNT", "ROOTSTOCK", "grunt", [T("fireweed", 36), T("sugar_maple", 36)], ch7Lines("grunt_b1_1"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_2", "GRUNT", "ROOTSTOCK", "grunt", [T("red_mangrove", 36), T("bladderwort", 36)], ch7Lines("grunt_b1_2"), { music: "battle_rootstock" }),
+  trainer("grunt_b1_3", "GRUNT", "ROOTSTOCK", "grunt", [T("prickly_pear", 37), T("foxglove", 36)], ch7Lines("grunt_b1_3"), { music: "battle_rootstock" }),
+  trainer("jr_flurry", "FLURRY", "JR.GARDENER", "gardener", [T("edelweiss", 38), T("snowdrop_shoot", 38)], ch7Lines("jr_flurry")),
+  trainer("jr_hoarfrost", "HOARFROST", "JR.GARDENER", "gardener", [T("campion_mound", 39), T("holly", 39)], ch7Lines("jr_hoarfrost")),
+  // Tuning: ghost_pipe 38→40 (+2), lodgepole_pine 39→40 (+1), red_mangrove 41→42 (+1).
+  // Explicit moves below retain a special Ghost attack and a real fire attack on
+  // the pine; the mangrove carries the coverage used by Reyes. Mean win: 75.1%.
+  trainer("calloway", "CALLOWAY", "ADMIN", "calloway", [
+    T("ghost_pipe", 40, ["pale_bloom", "root_siphon", "spore_cloud", "petal_storm"]),
+    T("lodgepole_pine", 40, ["leaf_edge", "ember_seed", "serotiny"]),
+    { ...T("red_mangrove", 42, ["flood", "sap_spout", "cold_mist", "stilt_roots"]), grafted: true },
+  ], ch7Lines("calloway"),
+    { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 1 }] }),
+  // Tuning: every member is -1 from §5 (40/41/41/43 → 39/40/40/42).
+  // Explicit moves soften repeated healing and Bloom coverage while preserving
+  // signature Frost play. Mean win: 62.8%; every party/starter exceeds 25%.
+  trainer("signe", "SIGNE", "WARDEN", "signe", [
+    T("edelweiss", 39, ["frost_bloom", "sunbeam", "woolly_coat"]),
+    T("moss_campion", 40, ["cold_mist", "sap_drain", "cushion"]),
+    T("larch", 40, ["needle_drop", "frost_needle", "evergreen"]),
+    T("snowdrop", 42, ["thaw_bloom", "sap_drain", "sun_track"]),
+  ], ch7Lines("signe"),
+    { ai: "smart", music: "battle_leader", mark: "snowdrop_mark", items: [{ item: "spring_water", qty: 2 }] }),
+];
+
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
-  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers].map((t) => [t.id, t]),
+  [...routeTrainers, ...juniors, ...leaders, ...villains, ...rivals, ...ch4Trainers, ...ch5Trainers, ...ch6Trainers, ...ch7Trainers].map((t) => [t.id, t]),
 );

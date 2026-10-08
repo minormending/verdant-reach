@@ -4,12 +4,14 @@
 import {
   FIELD_MOVES, JINGLES, MAP_IDS, MARKS, MUSIC, REQUIRED_ITEMS, SFX, SPECIES_IDS, STILLS, STRUCTURES, TILES, TEXTBOX,
 } from "../contracts";
-import type { Ambient, Cond, MapDef, MapId, NpcDef, ScriptCmd, TileKey, TileProps, WorldData } from "../contracts";
+import type { Ambient, Cond, Dir, MapDef, MapId, NpcDef, ScriptCmd, TileKey, TileProps, WorldData } from "../contracts";
 import { pickupItem } from "./build";
 import { DATA } from "../data";
 import { glowField, glowLamps } from "../overworld/glow";
 import { buildMap } from "../overworld/map";
 import { reachableBoulderTiles } from "../overworld/uproot";
+import { slidePathFrom } from "../overworld/ice";
+import { DIRS as MOVE_DIRS, type MoveResult } from "../overworld/map";
 
 /**
  * Side-quest givers (docs/ROUND3.md §4). Narrative writes the `q_*` scripts in
@@ -69,6 +71,10 @@ export interface Grid {
   doors: { x: number; y: number; key: string }[];
   /** Water is traversable only after the LILY RAFT is obtainable. */
   rafting?: boolean;
+  /** NPC occupancy on ice maps; ordinary map validation keeps its existing policy. */
+  occupied?: (x: number, y: number) => boolean;
+  /** A step-on warp stops a slide even on ice. */
+  warp?: (x: number, y: number) => boolean;
 }
 
 /** The map's walk grid. With `pruned`, every prunable tile reads as a cut stump
@@ -78,6 +84,13 @@ export function grid(map: MapDef, opts: { pruned?: boolean; rafting?: boolean } 
   const w = map.tiles[0]?.length ?? 0;
   const solid = new Set<string>();
   const doors: Grid["doors"] = [];
+  const hasIce = [map.legend, ...(map.legendWhen ?? []).map((entry) => entry.legend)]
+    .some((legend) => map.tiles.some((row) => [...row].some((ch) => {
+      const t = legend[ch];
+      return !!t && !!(TILES[t] as TileProps)?.slide;
+    })));
+  const npcs = new Set(map.npcs.map((n) => `${n.x},${n.y}`));
+  const warps = new Set(map.warps.map((w) => `${w.x},${w.y}`));
   for (const s of map.structures) {
     const def = STRUCTURES[s.key];
     for (let dy = 0; dy < def.h; dy++) {
@@ -90,6 +103,8 @@ export function grid(map: MapDef, opts: { pruned?: boolean; rafting?: boolean } 
   }
   return {
     w, h, doors, rafting: opts.rafting,
+    occupied: hasIce ? (x, y) => npcs.has(`${x},${y}`) : undefined,
+    warp: (x, y) => warps.has(`${x},${y}`),
     tile(x, y) {
       if (x < 0 || y < 0 || x >= w || y >= h) return undefined;
       const t = map.legend[map.tiles[y][x]];
@@ -114,28 +129,48 @@ const DIRS = [
   [0, -1], [0, 1], [-1, 0], [1, 0],
 ] as const;
 
-/** Tiles reachable from `starts`, honouring one-way ledges and ignoring NPCs. */
+/** One legal direction ends at a slide stop, with no turn on intermediate ice. */
+function gridMove(g: Grid, x: number, y: number, dir: Dir) {
+  const move = (px: number, py: number, d: Dir): MoveResult => {
+    const { dx, dy } = MOVE_DIRS[d];
+    const nx = px + dx;
+    let ny = py + dy;
+    if (g.tile(nx, ny) === "ledge_down" && !g.structureSolid(nx, ny)) {
+      if (dy !== 1 || (g.rafting && waterTile(g.tile(px, py)))) return { kind: "blocked", reason: "ledge" };
+      ny += 1;
+      if (!walkable(g, nx, ny)) return { kind: "blocked", reason: "wall" };
+      if (g.occupied?.(nx, ny)) return { kind: "blocked", reason: "occupied" };
+      return { kind: "ledge", x: nx, y: ny };
+    }
+    if (!walkable(g, nx, ny)) return { kind: "blocked", reason: "wall" };
+    // Ice cannot mount a raft automatically: mounting requires a land interaction.
+    const from = g.tile(px, py);
+    if (from && (TILES[from] as TileProps).slide && raftTile(g, nx, ny)) return { kind: "blocked", reason: "wall" };
+    if (g.occupied?.(nx, ny)) return { kind: "blocked", reason: "occupied" };
+    return { kind: "walk", x: nx, y: ny };
+  };
+  return slidePathFrom({ x, y }, dir, move, (px, py) => {
+    const t = g.tile(px, py);
+    return !!t && !!(TILES[t] as TileProps).slide && !g.warp?.(px, py);
+  }).at(-1);
+}
+
+/** Reachable stops, honouring one-way ledges and slides. */
 export function flood(g: Grid, starts: { x: number; y: number }[]): Set<string> {
   const seen = new Set<string>();
   const queue: [number, number][] = [];
   for (const s of starts) {
-    if (walkable(g, s.x, s.y) && !seen.has(`${s.x},${s.y}`)) {
+    if (walkable(g, s.x, s.y) && !g.occupied?.(s.x, s.y) && !seen.has(`${s.x},${s.y}`)) {
       seen.add(`${s.x},${s.y}`);
       queue.push([s.x, s.y]);
     }
   }
   for (let head = 0; head < queue.length; head++) {
     const [x, y] = queue[head];
-    for (const [dx, dy] of DIRS) {
-      let nx = x + dx;
-      let ny = y + dy;
-      const t = g.tile(nx, ny);
-      if (t === "ledge_down") {
-        const from = g.tile(x, y);
-        if (dy !== 1 || (g.rafting && waterTile(from))) continue;
-        ny += 1; // hop over
-      }
-      if (!walkable(g, nx, ny)) continue;
+    for (const dir of Object.keys(MOVE_DIRS) as Dir[]) {
+      const stop = gridMove(g, x, y, dir);
+      if (!stop) continue;
+      const { x: nx, y: ny } = stop;
       const k = `${nx},${ny}`;
       if (!seen.has(k)) { seen.add(k); queue.push([nx, ny]); }
     }
@@ -146,18 +181,30 @@ export function flood(g: Grid, starts: { x: number; y: number }[]): Set<string> 
 /** Tiles from which some `target` is reachable: `flood` run backwards (ledge hops included),
  *  so a soft-lock check is one pass instead of a flood from every tile. */
 export function canReach(g: Grid, targets: { x: number; y: number }[]): Set<string> {
+  // Reverse the actual slide edges: adjacent ice cells need not be connected
+  // as stops, and a slide can enter a dead end from much farther away.
+  const reverse = new Map<string, Point[]>();
+  for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) {
+    if (!walkable(g, x, y) || g.occupied?.(x, y)) continue;
+    for (const dir of Object.keys(MOVE_DIRS) as Dir[]) {
+      const stop = gridMove(g, x, y, dir);
+      if (!stop) continue;
+      const k = `${stop.x},${stop.y}`;
+      const list = reverse.get(k) ?? [];
+      list.push({ x, y });
+      reverse.set(k, list);
+    }
+  }
   const seen = new Set<string>();
   const queue: [number, number][] = [];
   const visit = (x: number, y: number) => {
     const k = `${x},${y}`;
-    if (!seen.has(k) && walkable(g, x, y)) { seen.add(k); queue.push([x, y]); }
+    if (!seen.has(k) && walkable(g, x, y) && !g.occupied?.(x, y)) { seen.add(k); queue.push([x, y]); }
   };
   for (const t of targets) visit(t.x, t.y);
   for (let head = 0; head < queue.length; head++) {
     const [x, y] = queue[head];
-    for (const [dx, dy] of DIRS) visit(x - dx, y - dy);       // a plain step into (x, y)
-    const from = g.tile(x, y - 2);
-    if (g.tile(x, y - 1) === "ledge_down" && !(g.rafting && waterTile(from))) visit(x, y - 2);  // a hop down over the ledge
+    for (const p of reverse.get(`${x},${y}`) ?? []) visit(p.x, p.y);
   }
   return seen;
 }
@@ -611,6 +658,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     const where = `[${id}]`;
     if (map.id !== id) errs.push(`${where} id mismatch ${map.id}`);
     if (!music.has(map.music)) errs.push(`${where} bad music ${map.music}`);
+    for (const o of map.musicWhen ?? []) if (!music.has(o.music)) errs.push(`${where} bad musicWhen music ${o.music}`);
     if (!(map.border in TILES)) errs.push(`${where} bad border ${map.border}`);
 
     // rows + legend
@@ -731,22 +779,25 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     if (map.healPoint && !walkable(grid(map), map.healPoint.x, map.healPoint.y)) errs.push(`${where} healPoint is solid`);
 
     // encounters
-    for (const kind of ["grass", "bog", "water"] as const) {
-      const enc = map.encounters?.[kind];
-      if (!enc) continue;
-      for (const s of enc.slots) {
-        if (!species.has(s.species)) errs.push(`${where} encounter species ${s.species}`);
-        if (s.minLevel > s.maxLevel) errs.push(`${where} encounter levels ${s.species}`);
-      }
-      for (const time of ["day", "night"] as const) {
-        if (!enc.slots.some((s) => !s.time || s.time === "any" || s.time === time)) {
-          errs.push(`${where} ${kind} encounters empty at ${time}`);
+    for (const table of [map.encounters, ...(map.encountersWhen ?? []).map((entry) => entry.encounters)]) {
+      for (const kind of ["grass", "bog", "water"] as const) {
+        const enc = table?.[kind];
+        if (!enc) continue;
+        for (const s of enc.slots) {
+          if (!species.has(s.species)) errs.push(`${where} encounter species ${s.species}`);
+          if (s.minLevel > s.maxLevel) errs.push(`${where} encounter levels ${s.species}`);
+        }
+        for (const time of ["day", "night"] as const) {
+          if (!enc.slots.some((s) => !s.time || s.time === "any" || s.time === time)) {
+            errs.push(`${where} ${kind} encounters empty at ${time}`);
+          }
         }
       }
     }
     map.tiles.forEach((row, y) => [...row].forEach((_, x) => {
       const t = g.tile(x, y);
       if (t === "tall_grass" && !map.encounters?.grass) errs.push(`${where} tall grass at ${x},${y} but no grass encounters`);
+      if (t === "snow" && !map.encounters?.grass) errs.push(`${where} snow at ${x},${y} but no grass encounters`);
       if (t === "bog" && !map.encounters?.bog) errs.push(`${where} bog at ${x},${y} but no bog encounters`);
     }));
 

@@ -21,6 +21,7 @@ import { drawSeedBig, seedIcon } from "../ui/seedArt";
 import { Actor, dirTo, type Emote } from "./actor";
 import { rollEncounter, type EncounterKind } from "./encounters";
 import { tryRaftMove } from "./raft";
+import { slidePath } from "./ice";
 import {
   DIRS, OPPOSITE, buildMap, checkCond, refreshLegend, inSight, isMatWarp, isWalkable, tileAt, tileProps, tryMove,
   triggerAt, warpAt, type MapRuntime,
@@ -241,8 +242,9 @@ class Overworld implements Scene {
   }
 
   musicFor(def: MapDef) {
-    if (def.outdoor && def.music === "route" && mapTime(def, this.ctx.timeOfDay) === "night") return "route_night" as const;
-    return def.music;
+    const music = def.musicWhen?.find((o) => checkCond(o.when, this.ctx.state.flags))?.music ?? def.music;
+    if (def.outdoor && music === "route" && mapTime(def, this.ctx.timeOfDay) === "night") return "route_night" as const;
+    return music;
   }
 
   playMapMusic() {
@@ -546,6 +548,15 @@ class Overworld implements Scene {
       void this.flow(() => this.useWarp(w));
       return;
     }
+    if (tileProps(tileAt(this.map, p.x, p.y)).slide) {
+      const next = slidePath(this.map, p.x, p.y, p.facing, this.occupiedForPlayer)[0];
+      if (next) {
+        this.inputStep = true;
+        this.walking = true;
+        void p.begin(p.facing, next.kind === "ledge" ? HOP_FRAMES : WALK_FRAMES, { hop: next.kind === "ledge" });
+        return;
+      }
+    }
     const trig = triggerAt(this.map, p.x, p.y, st.flags);
     if (trig) {
       this.walking = false;
@@ -554,7 +565,7 @@ class Overworld implements Scene {
     }
     if (this.checkTrainers()) return;
     if (this.grace > 0) { this.grace--; return; }
-    const enc = rollEncounter(this.map.def, tileAt(this.map, p.x, p.y), this.time(), this.ctx.rng, !!st.rafting);
+    const enc = rollEncounter(this.map.def, tileAt(this.map, p.x, p.y), this.time(), this.ctx.rng, !!st.rafting, st.flags);
     if (enc) {
       this.walking = false;
       void this.flow(() => this.wildEncounter(enc.species, enc.level, enc.kind));
@@ -1180,6 +1191,11 @@ class Overworld implements Scene {
             else delete ctx.state.rafting;
           }
           await self.player.begin(dir, res.kind === "ledge" ? HOP_FRAMES : WALK_FRAMES, { hop: res.kind === "ledge" });
+          while (tileProps(tileAt(self.map, self.player.x, self.player.y)).slide) {
+            const next = slidePath(self.map, self.player.x, self.player.y, dir, self.occupiedForPlayer)[0];
+            if (!next) break;
+            await self.player.begin(dir, next.kind === "ledge" ? HOP_FRAMES : WALK_FRAMES, { hop: next.kind === "ledge" });
+          }
         }
         const p = self.player;
         ctx.state.position = { map: self.mapId, x: p.x, y: p.y, facing: p.facing };
@@ -1350,7 +1366,7 @@ class Overworld implements Scene {
       const groundY = py - camY;
       const sy = groundY - 4;
       if (sx < -16 || sx > SCREEN_W || sy - lift < -24 || sy - lift > SCREEN_H) continue;
-      const row = rowFor(a.id, a.sprite, a.facing, flags, this.pickedToday);
+      const row = rowFor(a.id, a.sprite, a.facing, flags, this.pickedToday, a.def?.stateFlag);
       if (a.wobble > 0) sx += [0, 1, 1, 0, -1, -1][a.wobble % 6];
       if (a.lastRow !== null && a.lastRow !== row) a.clunk = 8;
       a.lastRow = row;

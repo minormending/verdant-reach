@@ -1,0 +1,78 @@
+import type { MapDef } from "../../contracts";
+import { OUTDOOR, when } from "../build";
+
+export const bloom_lake: MapDef = {
+  id: "bloom_lake", name: "BLOOM LAKE", outdoor: true, music: "route", ambient: "spores",
+  border: "larch_tree",
+  // Shore paths of frozen_shore (z) round a grass verge; the shore encounters are snow grass (n).
+  legend: { ...OUTDOOR, T: "larch_tree", z: "frozen_shore", n: "snow_grass" },
+  // The lake runs red while its plants are forced awake; calming it restores ordinary water.
+  legendWhen: [{ when: when({ lake_calmed: false }), legend: { "~": "red_water" } }],
+  musicWhen: [{ when: when({ lake_calmed: false }), music: "red_lake" }],
+  tiles: [
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "TTTzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzTTT",
+    "TTzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzTT",
+    "Tzz........4.............o.......zzT",
+    "Tzz.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.zzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "TznS~~~~~~~~~~~~y...*~~~~~~~~~~~.nzT",
+    "::n:~~~~~~~~~~~~.*..f~~~~~~~~~~~.nzT",
+    "::n:~~~~~~~~~~~~.....~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~f...y~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~*.y..~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzn.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.nzT",
+    "Tzz.~~~~~~~~~~~~~~~~~~~~~~~~~~~~.zzT",
+    "Tzz.....3..................o.....zzT",
+    "TTzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzTT",
+    "TTTzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzTTT",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+  ],
+  structures: [],
+  warps: [
+    { x: 0, y: 17, to: "larchmere", toX: 34, toY: 17, facing: "left" },
+    { x: 0, y: 18, to: "larchmere", toX: 34, toY: 18, facing: "left" },
+  ],
+  npcs: [{ id: "crimson_lily", sprite: "crimson_lily", x: 18, y: 18, facing: "down", script: "ch7_crimson_lily", visibleWhen: when({ crimson_lily_done: false }) }],
+  signs: [{ x: 3, y: 16, text: "BLOOM LAKE. Rafts launch from the shore. Please don't pick the lilies." }], triggers: [],
+  encounters: { grass: { rate: 10, slots: [
+    { species: "edelweiss_bud", weight: 40, minLevel: 31, maxLevel: 31 },
+    { species: "campion_cushion", weight: 30, minLevel: 29, maxLevel: 29 },
+    { species: "snowdrop_bulb", weight: 30, minLevel: 33, maxLevel: 36 },
+  ] }, water: { rate: 20, slots: [
+    { species: "bladderwort_sprig", weight: 35, minLevel: 32, maxLevel: 32 },
+    { species: "lily_pad", weight: 25, minLevel: 31, maxLevel: 31 },
+    { species: "cattail", weight: 20, minLevel: 36, maxLevel: 40 },
+    { species: "eelgrass", weight: 20, minLevel: 36, maxLevel: 40 },
+  ] } },
+  encountersWhen: [{ when: when({ lake_calmed: true }), encounters: {
+    grass: { rate: 10, slots: [
+      { species: "edelweiss_bud", weight: 40, minLevel: 31, maxLevel: 31 },
+      { species: "campion_cushion", weight: 30, minLevel: 29, maxLevel: 29 },
+      { species: "snowdrop_bulb", weight: 30, minLevel: 33, maxLevel: 36 },
+    ] }, water: { rate: 8, slots: [
+      { species: "bladderwort_sprig", weight: 40, minLevel: 32, maxLevel: 32 },
+      { species: "eelgrass", weight: 30, minLevel: 33, maxLevel: 37 },
+      { species: "lily_pad", weight: 30, minLevel: 31, maxLevel: 31 },
+    ] },
+  } }],
+};

@@ -128,4 +128,30 @@ describe("SEED GLIDE", () => {
     }
   });
 
+  it.each(["larchmere", "larchmere_lodge", "larchmere_market", "larchmere_greenhouse", "larchmere_conservatory", "bloom_lake", "rootstock_hideout_1", "rootstock_hideout_2"] as MapId[])("recovers Chapter 7 visits from %s without a shears cap", (map) => {
+    const state = fresh();
+    state.bag.pruning_shears = 1;
+    state.position.map = map;
+    expect(visitedGlideMaps(state)).toHaveLength(8);
+    state.position.map = "player_home";
+    state.heal.map = map;
+    expect(visitedGlideMaps(state)).toHaveLength(8);
+  });
+
+  it("requires evidence of Larchmere arrival beyond the cleared pass", () => {
+    const state = fresh();
+    state.flags.ch6_done = true;
+    state.position.map = "route_9";
+    state.bag.pruning_shears = 1;
+    expect(visitedGlideMaps(state)).toHaveLength(7);
+    expect(glideLanding(WORLD, state, "larchmere")).toBeUndefined();
+    state.flags.ch7_arrived = true;
+    expect(visitedGlideMaps(state)).toHaveLength(8);
+    expect(glideLanding(WORLD, state, "larchmere")).toMatchObject({ x: 6, y: 12 });
+    state.flags = {};
+    state.position.map = "player_home";
+    state.marks = ["snowdrop_mark"];
+    expect(visitedGlideMaps(state)).toHaveLength(8);
+  });
+
 });

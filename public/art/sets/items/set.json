@@ -6,6 +6,7 @@
     "aloe_gel": { "file": "aloe_gel.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
     "cactus_sap": { "file": "cactus_sap.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast6/icons6.py" } },
     "centuryheart_seed": { "file": "centuryheart_seed.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "climber_pack": { "file": "climber_pack.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast7/icons7.py" } },
     "cloche": { "file": "cloche.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
     "compost": { "file": "compost.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
     "ember_ash": { "file": "ember_ash.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast5/icons5.py" } },

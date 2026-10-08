@@ -33,6 +33,8 @@ export interface MapDef {
   /** Legend overrides applied while their condition holds (e.g. the grove's
    *  tapped maples become plain maples once `grove_cleared`). First match wins. */
   legendWhen?: { when: Cond; legend: Record<string, TileKey> }[];
+  /** Conditional music: the first entry whose `when` holds replaces `music` (e.g. the red lake until it is calmed). */
+  musicWhen?: { when: Cond; music: MusicId }[];
   /** Tile used beyond the map edge (e.g. "tree" outdoors, "void" indoors). */
   border: TileKey;
   structures: { key: StructureKey; x: number; y: number }[];
@@ -46,6 +48,8 @@ export interface MapDef {
     bog?: { rate: number; slots: EncounterSlot[] };
     water?: { rate: number; slots: EncounterSlot[] }; // per raft step on water:true
   };
+  /** Conditional encounter tables. First match wins; otherwise use `encounters`. */
+  encountersWhen?: { when: Cond; encounters: MapDef["encounters"] }[];
   /** Force a time of day on this map regardless of the clock (e.g. the prologue
    *  roof is always night). Affects tint, lights, ambience and encounters. */
   time?: TimeOfDay;
@@ -62,6 +66,9 @@ export interface MapDef {
 
 export interface NpcDef {
   id: string;                   // unique within the map
+  /** Render UP while this flag is true, DOWN otherwise. Lever/valve IDs may
+   *  also use `lever:<flag>` / `valve:<flag>`; stateFlag takes precedence. */
+  stateFlag?: string;
   sprite: CharacterKey;
   x: number;
   y: number;
@@ -92,7 +99,7 @@ export type ScriptCmd =
   | { op: "hideSpecies" }
   | { op: "giveMark"; mark: MarkId }
   | { op: "battle"; trainer: TrainerId; canLose?: boolean } // sets flag `beat_<trainer>` on win
-  | { op: "wildBattle"; species: SpeciesId; level: number; canLose?: boolean }
+  | { op: "wildBattle"; species: SpeciesId; level: number; sport?: boolean; canLose?: boolean }
   | { op: "ifLastBattle"; result: "won" | "lost"; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "heal" }                                        // full party heal + jingle
   | { op: "warp"; to: MapId; x: number; y: number; facing?: Dir }

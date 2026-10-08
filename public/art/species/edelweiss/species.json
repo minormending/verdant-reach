@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "edelweiss",
+  "palette": ["#181818", "#908830", "#b0c0a0", "#f8f8f8"],
+  "sport": ["#181818", "#987838", "#d8c890", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 8], [1, 12], [2, 6], [3, 18], [4, 12], [0, 8]], "idle": [[0, 140], [1, 10], [0, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/edelweiss.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/edelweiss.py" },
+  "notes": "Crystal rule. REARING: the woolly white star held up toward the foe on a felted stem: eight lance-shaped blunt bracts around a touching cluster of domed yellow-olive flower heads, narrow woolly leaves and limestone below. The bracts spread open and a puff of wool fibres drifts up. Rosette, rock and stem stay fixed. WHITE: edelweiss is covered in white woolly hairs; the bracts and bud are genuinely white felt (shaded grey-green inside), and the limestone's lit top plane is pale stone. Woolly grey-green mid; dull yellow-olive dark for the flower heads and shading. Felt is clustered short marks; no enclosed dark dots. Sport: creamy-yellow felt, a natural colour variation of plants grown in shade and at lower altitude (not a named cultivar); geometry stays identical."
+}

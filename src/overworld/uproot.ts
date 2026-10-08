@@ -4,6 +4,7 @@
 import type { Dir } from "../contracts";
 import { DIRS, inBounds, isWalkable, key, tileAt, tileProps, tryMove, type MapRuntime } from "./map";
 import { tryRaftMove } from "./raft";
+import { slidePathFrom } from "./ice";
 
 export const UPROOT = {
   item: "saxifrage",
@@ -63,10 +64,14 @@ export function reachableBoulderTiles(
     for (let i = 0; i < walks.length; i++) {
       const p = walks[i];
       for (const dir of Object.keys(DIRS) as Dir[]) {
-        const move = opts.rafting
-          ? tryRaftMove(map, p.x, p.y, dir, onWater(p.x, p.y), true, blocked)
-          : tryMove(map, p.x, p.y, dir, blocked);
-        if (move.kind === "blocked" || region.has(key(move.x, move.y))) continue;
+        const path = slidePathFrom(p, dir, (x, y, d) => {
+          const move = opts.rafting && !tileProps(tileAt(map, x, y)).slide
+            ? tryRaftMove(map, x, y, d, onWater(x, y), true, blocked)
+            : tryMove(map, x, y, d, blocked);
+          return move.kind === "mount" ? { kind: "walk", x: move.x, y: move.y } : move;
+        }, (x, y) => !!tileProps(tileAt(map, x, y)).slide);
+        const move = path.at(-1);
+        if (!move || region.has(key(move.x, move.y))) continue;
         region.add(key(move.x, move.y));
         walks.push({ x: move.x, y: move.y });
       }

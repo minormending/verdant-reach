@@ -412,6 +412,57 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
       o2a1 | ^1 | ^1 | ^1 | b-1 | ^1 | a1 | ^1 |
       f1 | ^1 | o3d1 | e1 | o2a1 | ^1 | b-1 | o3e1 |`,
   },
+
+  // ------------------------------------------------------------------ alpine
+  // Route 9 and Larchmere: a bright G major Ländler (a country waltz) in thin
+  // mountain air. The first half walks up the chord; the second half yodels,
+  // leaping a sixth and falling back (g to e, d to b, a to f-sharp). A soft
+  // waltz accompaniment, no drums. The last bar (D) leans back into G.
+  alpine: {
+    bpm: 138, meter: 3, harmony: "waltz", harmonyTone: "v5 @1 q5", bass: "waltz", bassTone: "v13 q6", drums: "none",
+    chords: "G | G | C | G | D | D | G | G | G | G | C | Am | G | D | G | G | C | C | G | G | D | D | G | G | Em | C | G | Em | Am | D | G | D",
+    melody: `${SOFT}
+      o5d4 g4 b4 | o6d2 o5b4 | o6c4 o5g4 e4 | o5d2. |
+      o5f+4 a4 o6d4 | o6c4 o5a4 f+4 | o5g4 b4 o6d4 | o5g2. |
+      o5d4 g8 a8 b4 | o6d4 o5b4 g4 | o5e4 g4 o6c4 | o5e2 c4 |
+      o5d4 g4 b4 | o5a4 f+4 d4 | o5g8 a8 b4 a4 | o5g2. |
+      o5g4 o6e4 o5g4 | o6e2 c4 | o5d4 b4 d4 | o5b2 g4 |
+      o5a4 o6f+4 o5a4 | o6f+4 e8 d8 o5a4 | o5b4 o6d4 o5b4 | o5g2. |
+      o5e4 g4 b4 | o6c2 o5g4 | o5b4 a4 g4 | o5e2 g4 |
+      o5a4 o6c4 e4 | o6d4 c4 o5a4 | o5b4 g4 b4 | o5a2 f+4 |`,
+  },
+
+  // ------------------------------------------------------------------ red lake
+  // Bloom Lake while it's forced awake ("the lake is screaming"). F minor that
+  // keeps sliding onto the flat side (D-flat, G-flat: a tritone from the
+  // tonic's C). A thin reed lead holds long wails that sag a semitone as they
+  // die, over a nervous sixteenth shimmer, a pulsing low F and tense drums.
+  // It never rests on F minor: the last bar is C, pulling back to the start.
+  red_lake: {
+    bpm: 96, harmony: "arp16", harmonyTone: "v4 @0 q4", bass: "pulse", bassTone: "v11 q5", drums: "tense", drumTone: "v6", fillEvery: 0,
+    chords: "Fm | Fm | Db | Db | Bbm | Gb | C | C | Fm | Ab | Db | Gb | Bbm | C | Db | C",
+    melody: `v10 @0 q7 ~10
+      o5c2. f4 | o5a-2 g4 f4 | o5f2. a-4 | p-1 o6d-1 p0 |
+      o5b-4 o6d-4 f4 d-4 | o6c2 o5b-4 a-4 | o5g2 p-1 e2 p0 | p-1 o5b-1 p0 |
+      o5c4 f4 a-4 o6c4 | o6e-2. c4 | o6d-4 c4 o5b-4 a-4 | o5g-2 p-1 b-2 p0 |
+      o5f4 b-4 o6d-4 f4 | o6e2 p-1 g2 p0 | o6f2 e-4 d-4 | o6c2 o5e2 |`,
+  },
+
+  // ------------------------------------------------------------------ hideout
+  // The Rootstock hideout under the lodge: cold, mechanical and busy. A
+  // staccato C minor motif that climbs in clipped steps and keeps tripping
+  // over chromatic neighbours (f-sharp, b natural), stabbed chords, a driving
+  // octave bass and the industrial groove. The G at the end of each phrase is
+  // the alarm the base keeps half-raising.
+  hideout: {
+    bpm: 108, harmony: "stab", harmonyTone: "v5 @2 q3", bass: "octave8", bassTone: "v14 q4", drums: "industrial", drumTone: "v8",
+    chords: "Cm | Cm | Ab | G | Cm | Cm | Db | G | Fm | Fm | Ab | G | Cm | Eb | Db | G",
+    melody: `v11 @2 q5
+      o5c8 r8 c8 e-8 g4 f+8 g8 | o5e-4 d8 c8 o4b4 r4 | o5c8 r8 c8 e-8 a-4 g8 a-8 | o5b2 g4 r4 |
+      o6c8 r8 c8 o5b8 a-8 g8 f8 e-8 | o5d4 e-8 d8 c4 r4 | o5d-8 f8 a-8 o6d-8 c4 o5a-4 | o5g2 r8 g8 a-8 b8 |
+      o6c4. o5a-8 f4 r4 | o5a-8 g8 f8 e-8 d4 r4 | o5e-4. c8 a-4 g4 | o5b2 d4 g4 |
+      o6c8 r8 o5g8 r8 e-8 r8 c8 r8 | o5e-4 g4 b-4 o6d4 | o6d-4 c4 o5a-4 f4 | o5g4 b4 o6d4 o5b4 |`,
+  },
 };
 
 export const MUSIC_DEFS: Record<MusicId, SongDef> = Object.fromEntries(

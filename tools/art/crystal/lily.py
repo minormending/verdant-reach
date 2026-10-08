@@ -55,11 +55,12 @@ PAL = {  # (index 1, index 2)
     "lily_pad": ("#702848", "#70b040"),
     "giant_water_lily": ("#285838", "#e888b0"),
 }
-# 'Chromatella' (docs/SPORTS.md): canary-yellow flowers over bronze-mottled pads.
+# 'Escarboucle' (docs/SPORTS.md): deep crimson flowers over darker, bronze-tinged pads.
+# The giant_water_lily sport is the CRIMSON LILY met on Bloom Lake (Chapter 7).
 SPORT = {
-    "lily_seedpod": ("#604018", "#c09038"),
-    "lily_pad": ("#684018", "#98a038"),
-    "giant_water_lily": ("#385020", "#e8c040"),
+    "lily_seedpod": ("#401018", "#a82030"),
+    "lily_pad": ("#681020", "#587838"),
+    "giant_water_lily": ("#304028", "#c02838"),
 }
 
 
@@ -444,8 +445,9 @@ NOTES = {
                         "stalk hold. The white petals are "
                         "shaded with crisp pink crescents round the pink crown.",
 }
-SPORT_NOTE = (" Sport: 'Chromatella'. Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): "
-              "canary-yellow flowers over bronze-mottled pads (indexes 1-2 only).")
+SPORT_NOTE = (" Sport: 'Escarboucle'. Nymphaea 'Escarboucle' (Latour-Marliac, 1909): "
+              "deep crimson flowers over darker, bronze-tinged pads (indexes 1-2 only). "
+              "The giant sport is the CRIMSON LILY of Bloom Lake.")
 
 
 def make():
