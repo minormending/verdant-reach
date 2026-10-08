@@ -1,0 +1,26 @@
+{
+  "format": "verdant.character/1",
+  "id": "signe",
+  "sheet": "sheet.png",
+  "frame": [
+    16,
+    16
+  ],
+  "rows": [
+    "down",
+    "up",
+    "left",
+    "right"
+  ],
+  "columns": [
+    "stand",
+    "stepA",
+    "stepB"
+  ],
+  "credits": "Original pixel art for Verdant Reach (tools/art/characters.py).",
+  "source": {
+    "kind": "imported",
+    "from": "Original GBC character bundle: nell_pitcher"
+  },
+  "notes": "FALLBACK: Original GBC nell_pitcher stand-in for signe; retained for play without the private LimeZu pack."
+}

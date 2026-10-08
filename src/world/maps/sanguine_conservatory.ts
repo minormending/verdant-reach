@@ -35,7 +35,7 @@ export const sanguine_conservatory: MapDef = {
     { id: "boulder_spare", sprite: "boulder", x: 6, y: 17, facing: "right", pushable: true },
     { id: "jr_ember", sprite: "gardener", x: 9, y: 17, facing: "left", trainer: "jr_ember", sight: 1 },
     { id: "jr_scale", sprite: "gardener", x: 9, y: 9, facing: "left", trainer: "jr_scale", sight: 1 },
-    { id: "rook", sprite: "hollis", x: 8, y: 2, facing: "down", script: "rook" },
+    { id: "rook", sprite: "rook", x: 8, y: 2, facing: "down", script: "rook" },
   ],
   signs: [], triggers: [],
 };

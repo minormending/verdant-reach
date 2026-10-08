@@ -1,0 +1,26 @@
+{
+  "format": "verdant.character/1",
+  "id": "pyra",
+  "sheet": "sheet.png",
+  "frame": [
+    16,
+    16
+  ],
+  "rows": [
+    "down",
+    "up",
+    "left",
+    "right"
+  ],
+  "columns": [
+    "stand",
+    "stepA",
+    "stepB"
+  ],
+  "credits": "Original pixel art for Verdant Reach (tools/art/characters.py).",
+  "source": {
+    "kind": "imported",
+    "from": "Original GBC character bundle: florist"
+  },
+  "notes": "FALLBACK: Original GBC florist stand-in for pyra; retained for play without the private LimeZu pack."
+}

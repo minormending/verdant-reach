@@ -327,10 +327,31 @@ and CI use the supported GBC fallback until shipping is decided.
 `limezu` pack: 75 furniture/scenery props, four six-cell interior floor
 blocks, cream wall faces, sixteen tan-border wall masks and seven outdoor
 terrain overrides in the existing `terrain`, `water` and `city` bundle
-owners. Coordinates come from `mapping/interior_props.json` and
+owners, plus 51 composed character bundles. Coordinates come from `mapping/interior_props.json` and
 `mapping/exterior_props.json`. Unmapped interior entries remain deferred;
 the eleven unmapped exterior entries receive original GBC scenery. Map
 re-layouts are a separate phase, so existing fallback maps stay unchanged.
+
+Character picks are filenames in `mapping/characters.json`. The importer
+composites Character Generator `Bodies`, `Eyes`, `Outfits`, `Hairstyles`,
+then `Accessories` from their `16x16` folders; null layers are skipped.
+Frames are actually **16×32**. It uses the common **896px-wide** region
+(Bodies is 927px wide): preview row y=0 has right/up/left/down; idle at
+y=32 and walk at y=64 each have six frames per direction in that order.
+It verifies idle frame 0's body alpha silhouette against each preview and
+checks the horizontal eye pattern in idle 0 and all six walk frames.
+Down has two visible eyes, up none; vertical walking bob is ignored by
+the direction check. Idle frame 4 blinks, so it is not used as a stand.
+The output is 48×128 with `frame: [16,32]`: down/up/left/right rows and
+idle 0, walk 1, walk 4 columns (`stand`, `stepA`, `stepB`). `--check`
+compares character PNGs, metadata and the local index too.
+
+MERCER, ROWAN, SIGNE, ROOK, BELLADONNA, MIMI OSA, TITUS ARUM and PYRA
+have distinct character keys. Their public bundles copy the previous
+original GBC stand-in sheets, with `FALLBACK:` notes and imported source
+metadata to preserve them during regeneration. Objects and animals stay
+in GBC style: `item_pickup`, `harvest_bush`, `boulder`, `lever`, `valve`,
+`potted_plant`, `hedge_gate`, `rose_gate`, `cone_sack`, `bird`, `cat`, `dog`.
 
 `gen_props.py --measure` trims source boxes to their alpha bounds and records
 only tile geometry in public `mapping/prop_geometry.json`. Ordinary contract
@@ -382,11 +403,12 @@ $PY tools/art/limezu/gen_props.py --measure # refresh coordinate cache from loca
 $PY tools/art/limezu/gen_props.py          # public contracts from coordinate cache
 $PY tools/art/props_fallback.py            # original GBC bundles for every mapped prop
 npm run art:index                         # after adding/removing fallback bundles
-$PY tools/art/limezu/build_pack.py         # private props, interior/outdoor tiles, local index
+$PY tools/art/limezu/build_pack.py         # private props, tiles, composed characters, local index
 $PY tools/art/limezu/build_pack.py --check # read-only freshness check; exit 1 if stale
 $PY tools/art/limezu/gen_props.py --check  # public contract freshness
 $PY tools/art/limezu/test_build_pack.py    # synthetic-pixel importer tests
 $PY tools/art/limezu/review_render.py      # ignored review/r2b.png (1280px wide)
+$PY tools/art/limezu/review_characters.py  # ignored review/r4.png: 3x frames + authored HOME at 320x180
 ```
 
 The `props_contracts` and `props` builders regenerate public geometry and

@@ -132,10 +132,13 @@ def check_simple(b: B.Bundle, out: list[Problem], req: dict) -> None:
             out.append(("error", w, "sheet missing"))
             return
         a = load_rgba(p)
-        if a.shape[:2] != (64, 48):
-            out.append(("error", w, f"sheet is {a.shape[1]}x{a.shape[0]}, want 48x64"))
-        if d.get("frame") != B.CHAR_FRAME or d.get("rows") != B.CHAR_ROWS or d.get("columns") != B.CHAR_COLUMNS:
-            out.append(("error", w, "frame/rows/columns must be the v1 values"))
+        frame = d.get("frame")
+        if frame not in ([16, 16], [16, 32]):
+            out.append(("error", w, "frame must be [16,16] or [16,32]"))
+        elif a.shape[:2] != (frame[1] * 4, frame[0] * 3):
+            out.append(("error", w, f"sheet is {a.shape[1]}x{a.shape[0]}, want {frame[0] * 3}x{frame[1] * 4}"))
+        if d.get("rows") != B.CHAR_ROWS or d.get("columns") != B.CHAR_COLUMNS:
+            out.append(("error", w, "rows/columns must be the v1 values"))
     elif b.kind == "set":
         if not isinstance(d.get("logicalDir"), str) or not d["logicalDir"].startswith("assets/"):
             out.append(("error", w, "logicalDir must be assets/<dir>"))

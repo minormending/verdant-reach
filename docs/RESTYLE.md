@@ -142,7 +142,7 @@ Until then, `main` ships the GBC fallback. The release horizon
 | R2b ✓ | Outdoor importer, pixel footprints, prop signs, building doors, ground blob masks + local review (character/UI work remains R4/R6) | lead (mappings) + Codex (code) |
 | R3a ✓ | Prologue/Chapter 1 interiors: `player_home`, `herbarium`, `herbarium_roof` (outdoor deck), `fennimore_house`, `bramblegate_conservatory`; shared `greenhouseMap()` (all ten healing centres) and narrow/wide market layouts (all six markets). Local 2× review: `tools/art/limezu/review/r3a.png`. | Codex; lead review pending |
 | R3 | Map re-layouts: interiors, then exteriors, chapter by chapter | Codex, QA-gated, with the lead reviewing one render sheet each |
-| R4 | Characters for every NPC key; portraits (LimeZu UI portrait generator, if usable) | Codex + lead review |
+| R4 ✓ | 51 composed 16×32 characters; eight later-cast keys with original GBC stand-in fallbacks; objects/animals keep GBC. Local review: `tools/art/limezu/review/r4.png` (all directions and down steps at 3×, HOME at 320×180). Portraits deferred. | Codex; lead review pending |
 | R5 | Creature style v2 and a pilot, then the roster | lead (rules) + Codex loop |
 | R6 ✓ | Modern UI Style 1: measured slices, shared skin, cursors, bars, slots, toggles and unchanged GBC fallback; local render `tools/art/limezu/review/r6.png` | Codex; browser playthrough and lead review pending |
 | R7 | Shipping and the release horizon | the owner + both leads |

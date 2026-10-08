@@ -46,7 +46,7 @@ export const council_arboretum: MapDef = {
     { id: "grunt_arb_2", sprite: "grunt", x: 18, y: 7, facing: "down", trainer: "grunt_arb_2", sight: 1 },
     { id: "grunt_arb_3", sprite: "grunt", x: 18, y: 3, facing: "left", trainer: "grunt_arb_3", sight: 1 },
     { id: "bram_arboretum", sprite: "bram", x: 21, y: 20, facing: "left", script: "ch10_bram_joins", visibleWhen: when({ bram_joined: false }) },
-    { id: "rowan_arboretum", sprite: "vale", x: 17, y: 14, facing: "down", script: "ch10_end", visibleWhen: when({ beat_mercer: true }) },
+    { id: "rowan_arboretum", sprite: "rowan", x: 17, y: 14, facing: "down", script: "ch10_end", visibleWhen: when({ beat_mercer: true }) },
   ],
   signs: [],
   triggers: [
