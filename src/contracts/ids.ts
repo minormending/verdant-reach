@@ -328,6 +328,8 @@ export const CHARACTERS = [
   "signe", "skier", "lodge_keeper",
   "signal_emitter",              // Rootstock broadcast cabinet: DOWN row on, UP row switched off
   "crimson_lily",                // the CRIMSON LILY on its islet (static object)
+  // Chapter 8
+  "mercer",
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -339,6 +341,7 @@ export const TRAINER_PORTRAITS = [
   "morrow", "lumberjack", "forager", "night_gardener", // Chapter 5
   "reyes", "brother_saguaro", "calloway", "sailor", "diver", "angler", // Chapter 6
   "signe", "skier", // Chapter 7
+  "mercer", "wren", // Chapter 8
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -411,6 +414,7 @@ export const STILLS = [
   "fire_cone_vision", "morrow_listening", // Chapter 5
   "lantern_tree_healed", // Chapter 6
   "rootstock_files", "crimson_lily", // Chapter 7
+  "mercer_hub_map", // Chapter 8
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 
