@@ -186,3 +186,12 @@ Chapter 7 bladderwort line (set in `tools/art/crystal/bladderwort.py`; palettes 
 | bladderwort | bronze-red anthocyanin form (natural colour form, not a named cultivar) | The same natural bronze-red colouring as the sprig: the leaf lace, stolon and flower stalk take bronze-red, while the bright yellow flowers and bladders keep the yellow mid tone. Palette swap only. | `#8c4030 #f0d038 #f8f8f8` |
 
 References: [Wikipedia, Utricularia](https://en.wikipedia.org/wiki/Utricularia) describes the free-floating, finely divided leaves with bladder traps and the yellow two-lipped flowers held above the water. The bronze-red sport palette is an artistic interpretation of the reddish anthocyanin colouring many aquatic plants take on in strong light; it is not a named cultivar.
+Chapter 7 moss campion line (set in `tools/art/crystal/campion.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| campion_cushion | f. alba (white-flowered form) | Silene acaulis f. alba: the natural white-flowered form of moss campion. Only the rose-pink mid slot (the closed buds) becomes cream; the cushion green in the dark slot stays. The shared white stays highlights and frost only, so the white share is unchanged. | `#50a040 #d8d0a8 #f8f8f8` |
+| campion_mound | f. alba (white-flowered form) | The same white-flowered form: the open five-petalled stars turn cream over the unchanged green cushion and frosted rock. | `#50a040 #d8d0a8 #f8f8f8` |
+| moss_campion | f. alba (white-flowered form) | The same white-flowered form: the dome's blanket of stars turns cream; geometry and the green are identical. | `#50a040 #d8d0a8 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Silene acaulis](https://en.wikipedia.org/wiki/Silene_acaulis) describes the dense, moss-like cushions of narrow bright-green leaves, and notes the flowers are usually pink but very rarely white. The cream (rather than pure white) mid tone keeps the flowers 15% apart from the shared highlight white, as the rules above require.
