@@ -87,6 +87,17 @@ describe("Chapter 7 world", () => {
     }
   });
 
+  it("plays the Chapter 7 music: alpine on the pass and in town, the red lake until calmed, the hideout below", () => {
+    const musicAt = (id: MapId, flags: Record<string, boolean>) =>
+      WORLD.maps[id].musicWhen?.find((o) => holds(o.when, flags))?.music ?? WORLD.maps[id].music;
+    expect(musicAt("route_9", {})).toBe("alpine");
+    expect(musicAt("larchmere", {})).toBe("alpine");
+    expect(musicAt("bloom_lake", { lake_calmed: false })).toBe("red_lake");
+    expect(musicAt("bloom_lake", { lake_calmed: true })).toBe("route");
+    expect(musicAt("rootstock_hideout_1", {})).toBe("hideout");
+    expect(musicAt("rootstock_hideout_2", {})).toBe("hideout");
+  });
+
   it("uses the exact capped encounters before and after calming the lake", () => {
     const tuples = (slots: NonNullable<NonNullable<typeof WORLD.maps.route_9.encounters>["grass"]>["slots"]) => slots.map((s) => [s.species, s.weight, s.minLevel, s.maxLevel]);
     expect(tuples(WORLD.maps.route_9.encounters!.grass!.slots)).toEqual([

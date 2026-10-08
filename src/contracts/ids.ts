@@ -331,6 +331,7 @@ export const MUSIC = [
   "victory_leader", "slice_end",
   "glasshouse_city", "palm_house", "root_relay", // Round 4
   "cedarhallow", "burnt_stand", "hollow", // Chapter 5
+  "alpine", "red_lake", "hideout", // Chapter 7
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 

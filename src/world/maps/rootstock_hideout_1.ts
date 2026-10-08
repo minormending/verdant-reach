@@ -2,7 +2,7 @@ import type { MapDef } from "../../contracts";
 import { LEGEND, when } from "../build";
 
 export const rootstock_hideout_1: MapDef = {
-  id: "rootstock_hideout_1", name: "HIDEOUT B1", outdoor: false, music: "sugarbush_grove", ambient: "none",
+  id: "rootstock_hideout_1", name: "HIDEOUT B1", outdoor: false, music: "hideout", ambient: "none",
   border: "void", legend: LEGEND,
   tiles: [
     "WWWWWWWWWWWWWWWWWWWWWWWW",

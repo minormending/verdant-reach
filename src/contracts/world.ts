@@ -33,6 +33,8 @@ export interface MapDef {
   /** Legend overrides applied while their condition holds (e.g. the grove's
    *  tapped maples become plain maples once `grove_cleared`). First match wins. */
   legendWhen?: { when: Cond; legend: Record<string, TileKey> }[];
+  /** Conditional music: the first entry whose `when` holds replaces `music` (e.g. the red lake until it is calmed). */
+  musicWhen?: { when: Cond; music: MusicId }[];
   /** Tile used beyond the map edge (e.g. "tree" outdoors, "void" indoors). */
   border: TileKey;
   structures: { key: StructureKey; x: number; y: number }[];

@@ -2,7 +2,7 @@ import type { MapDef } from "../../contracts";
 import { OUTDOOR } from "../build";
 
 export const route_9: MapDef = {
-  id: "route_9", name: "ROUTE 9", outdoor: true, music: "route", ambient: "mist",
+  id: "route_9", name: "ROUTE 9", outdoor: true, music: "alpine", ambient: "mist",
   border: "tree", legend: OUTDOOR,
   tiles: [
     "TTTTTTTTTTTTTT::TTTTTTTTTTTTTT",

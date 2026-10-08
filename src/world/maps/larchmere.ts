@@ -2,7 +2,7 @@ import type { MapDef } from "../../contracts";
 import { OUTDOOR, when } from "../build";
 
 export const larchmere: MapDef = {
-  id: "larchmere", name: "LARCHMERE", outdoor: true, music: "small_town", ambient: "none",
+  id: "larchmere", name: "LARCHMERE", outdoor: true, music: "alpine", ambient: "none",
   border: "tree", legend: OUTDOOR,
   tiles: [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",

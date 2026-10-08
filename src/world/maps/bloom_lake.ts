@@ -4,6 +4,7 @@ import { OUTDOOR, when } from "../build";
 export const bloom_lake: MapDef = {
   id: "bloom_lake", name: "BLOOM LAKE", outdoor: true, music: "route", ambient: "spores",
   border: "tree", legend: OUTDOOR,
+  musicWhen: [{ when: when({ lake_calmed: false }), music: "red_lake" }],
   tiles: [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
     "T..................................T",
