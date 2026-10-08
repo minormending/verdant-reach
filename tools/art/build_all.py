@@ -56,6 +56,7 @@ BUILDERS: list[tuple[str, str]] = [
     ("cast7", "cast7/build.py"),          # Chapter 7 cast, portraits, emitter, CRIMSON LILY, pack icon, Mark, stills
     ("env8", "env8/build.py"),            # Chapter 7 alpine and hideout tiles, Larchmere structures (after tiles: red_water recolours water)
     ("cast8", "cast8/build.py"),          # Chapter 8 MERCER, MERCER and WREN portraits, RELAY KEYCARD icon, hub-map still
+    ("env9", "env9/build.py"),            # Chapter 8 Root Relay upper floors (after tiles and env4: props drawn over wall, cable_floor, paving)
 ]
 
 

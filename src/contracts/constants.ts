@@ -72,6 +72,8 @@ export const AUTOTILE: Partial<Record<TileKey, string>> = {
   ice: "ice",
   // Chapter 7: the red lake shares the water shoreline; hideout walls join into one mass.
   red_water: "water", hideout_wall: "hideout_wall",
+  // Chapter 8: cable runs join, bend and end.
+  cable_trunk: "cable_trunk",
 };
 /** Ground variation: `${key}~1.png`..`${key}~3.png` (if present) are picked by a
  *  position hash so large fields never look stamped. Base tile = variant 0. */
