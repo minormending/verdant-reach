@@ -121,6 +121,7 @@
     "orchard": ["sheet.png"],
     "palm_house": ["sheet.png"],
     "relay": ["sheet.png"],
+    "relay_upper": ["sheet.png"],
     "rose": ["sheet.png"],
     "terrain": ["sheet.png"],
     "town": ["sheet.png"],

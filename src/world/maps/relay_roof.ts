@@ -3,18 +3,22 @@ import { LEGEND, when } from "../build";
 
 export const relay_roof: MapDef = {
   id: "relay_roof", name: "RELAY ROOF", outdoor: true, music: "rootstock_appears",
-  border: "void", legend: { ...LEGEND, "@": "paving" },
+  // Beyond the railing, the Glasshouse dome's top panes glow with the city below.
+  border: "roof_glass", legend: { ...LEGEND, "@": "cable_floor", "=": "cable_trunk", v: "roof_vent" },
+  // The mast (7,3..5) stands on a steel service deck reached by a plated
+  // walkway from the stair. Seized trunks run into its lattice and its foot
+  // from two vent boxes. WREN's and MERCER's cells and their walk east stay clear.
   tiles: [
     "||||||||||||||||",
+    "|----v---------|",
     "|--------------|",
-    "|--------------|",
-    "|------@-------|",
-    "|------@-------|",
-    "|------@-------|",
-    "|--------------|",
-    "|--------------|",
-    "|--------------|",
-    "|--------------|",
+    "|-----/@/------|",
+    "|-----/@======v|",
+    "|-v====@/------|",
+    "|-----///------|",
+    "|-----///----v-|",
+    "|-///////------|",
+    "|-/------------|",
     "|-u------------|",
     "||||||||||||||||",
   ],

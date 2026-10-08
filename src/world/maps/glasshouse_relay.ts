@@ -15,7 +15,7 @@ export const glasshouse_relay: MapDef = {
   music: "root_relay",
   musicWhen: [{ when: when({ ch8_started: true, beat_wren: false }), music: "rootstock_appears" }],
   border: "void",
-  legend: LEGEND,
+  legend: { ...LEGEND, b: "wall" },
   tiles: [
     // x: 0         1
     // x: 012345678901234567
@@ -25,7 +25,7 @@ export const glasshouse_relay: MapDef = {
     "W////////////////W", // 3
     "W//x///xxxx///x//W", // 4 the LISTENING DESK at 7..10,4
     "WhD/////////////pW", // 5 the beat triggers on 7..8,5
-    "WWWWWWW//WWWW/WWWW", // 6 doorway 7..8; staff door 13,6
+    "WWWWWbW//WbWW/WWWW", // 6 doorway 7..8; staff door 13,6; ROOTSTOCK banners at 5 and 10 in the takeover
     "WKKKiiiiiii[WUW[[W", // 7 the LOBBY; the staff passage (FLORA leaves this way)
     "Wiiiiiiiiiii[W[//W", // 8
     "WpiiDDiiiiii//i//W", // 9
@@ -40,6 +40,8 @@ export const glasshouse_relay: MapDef = {
   legendWhen: [
     { when: when({ ch8_started: false }), legend: { U: "wall" } },
     { when: when({ got_keycard: false }), legend: { U: "wall" } },
+    // Cosmetic: ROOTSTOCK hangs its banners in the lobby while it holds the Relay.
+    { when: when({ ch8_started: true, beat_wren: false }), legend: { b: "rootstock_banner" } },
   ],
   onEnter: "ch8_relay_enter",
   structures: [],

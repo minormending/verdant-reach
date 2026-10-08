@@ -3,18 +3,23 @@ import { LEGEND, when } from "../build";
 
 export const relay_3f: MapDef = {
   id: "relay_3f", name: "PATCH BAY", outdoor: false, music: "root_relay",
-  border: "void", legend: LEGEND,
+  border: "void", legend: { ...LEGEND, "=": "cable_trunk", t: "relay_terminal", b: "rootstock_banner", g: "hideout_floor" },
+  // The console row (A, B, C at 5, 8, 11) is the room's focus: trunks come
+  // down both walls and along the north wall (behind the roof stair) into A
+  // and C, patch leads join A-B and B-C, ROOTSTOCK's banner hangs over B and
+  // a dark grate deck lies in front of the row. Two banks of operator desks
+  // face it; the grunts' lines and the stair approach stay open.
   tiles: [
-    "WWWWWWWWWWWWWWWWWW",
-    "W////x//x//x/////W",
-    "W//////////////U/W",
+    "WWWWWWWWbWWWWWWWWW",
+    "W====x==x==x=====W",
+    "W=/ggggggggggg/U=W",
+    "W=/ggggggggggg//=W",
+    "W=//////////////=W",
+    "W=//////////////=W",
     "W////////////////W",
     "W////////////////W",
     "W////////////////W",
-    "W////////////////W",
-    "W////////////////W",
-    "W////////////////W",
-    "W////////////////W",
+    "W///ttt////ttt///W",
     "W////////////////W",
     "W////////////////W",
     "W/u//////////////W",

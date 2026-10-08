@@ -3,20 +3,23 @@ import { LEGEND, when } from "../build";
 
 export const relay_2f: MapDef = {
   id: "relay_2f", name: "SERVER HALL", outdoor: false, music: "root_relay",
-  border: "void", legend: LEGEND,
+  border: "void", legend: { ...LEGEND, "=": "cable_trunk", t: "relay_terminal", b: "rootstock_banner" },
+  // Rack rows with cable lanes between them. Root-brown trunks run out of the
+  // west wall into every rack row, and along the north wall into the two
+  // terminals flanking the pinned work note (9,1). The grunts' lanes stay open.
   tiles: [
-    "WWWWWWWWWWWWWWWWWWWW",
-    "W////////J/////////W",
+    "WWWWWbWWWWWWWbWWWWWW",
+    "W=======tJt====////W",
     "W////////////////U/W",
-    "W///[[[[///[[[[////W",
+    "W===[[[[///[[[[////W",
+    "W/////////////////tW",
+    "W//////////////////W",
+    "W===[[[[///[[[[====W",
     "W//////////////////W",
     "W//////////////////W",
-    "W///[[[[///[[[[////W",
+    "W===[[[[///[[[[====W",
     "W//////////////////W",
-    "W//////////////////W",
-    "W///[[[[///[[[[////W",
-    "W//////////////////W",
-    "W//////////////////W",
+    "W/////////////////tW",
     "W/u////////////////W",
     "WWWWWWWWWWWWWWWWWWWW",
   ],

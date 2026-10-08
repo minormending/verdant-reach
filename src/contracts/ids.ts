@@ -235,6 +235,12 @@ export const TILES = {
   red_water:      { walk: false, water: true },  // Bloom Lake while forced awake (legendWhen only)
   hideout_floor:  { walk: true },                // dark steel grate
   hideout_wall:   { walk: false },               // riveted panels and pipes
+  // Chapter 8: the Root Relay's upper floors under Rootstock
+  cable_trunk:    { walk: false },               // a root-like cable bundle in a floor channel (group "cable_trunk")
+  relay_terminal: { walk: false },               // a waist-high monitoring desk
+  roof_vent:      { walk: false },               // a louvred vent box on the roof, steaming
+  roof_glass:     { walk: false },               // the Glasshouse dome's top panes (the roof's border)
+  rootstock_banner: { walk: false },             // hung on an interior wall during the takeover
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
