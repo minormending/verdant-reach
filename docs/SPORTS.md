@@ -178,3 +178,11 @@ Chapter 7 edelweiss line (set in `tools/art/crystal/edelweiss.py`; palettes are 
 | edelweiss | creamy-yellow felt (natural colour variation) | The same natural creamy-felt variation as edelweiss_bud, not a named cultivar. The star's bract shading and the woolly leaves take cream, and the domed flower heads deepen from yellow-olive to ochre; the white felt stays white, with identical geometry. | `#987838 #d8c890 #f8f8f8` |
 
 Botanical reference: [Wikipedia, Leontopodium nivale](https://en.wikipedia.org/wiki/Leontopodium_nivale) describes the woolly white hairs on the leaves and the fuzzy white bracts around five to six small yellow clustered flower heads, and its rocky limestone habitat. These support the anatomy. The creamier felt of shaded, lower-altitude plants is the lead's design brief: that page does not describe it, and the exact cream palette is an artistic interpretation within two colour slots.
+Chapter 7 bladderwort line (set in `tools/art/crystal/bladderwort.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| bladderwort_sprig | bronze-red anthocyanin form (natural colour form, not a named cultivar) | Utricularia vulgaris. Plants in sunny, nutrient-poor water flush bronze-red with anthocyanin; this is a natural colour form, not a cultivar or genetically stable sport. Crystal: the water-green leaf slot turns bronze-red; the pale green bladders, the curled tip and the white water line stay as they are. | `#8c4030 #c0dc78 #f8f8f8` |
+| bladderwort | bronze-red anthocyanin form (natural colour form, not a named cultivar) | The same natural bronze-red colouring as the sprig: the leaf lace, stolon and flower stalk take bronze-red, while the bright yellow flowers and bladders keep the yellow mid tone. Palette swap only. | `#8c4030 #f0d038 #f8f8f8` |
+
+References: [Wikipedia, Utricularia](https://en.wikipedia.org/wiki/Utricularia) describes the free-floating, finely divided leaves with bladder traps and the yellow two-lipped flowers held above the water. The bronze-red sport palette is an artistic interpretation of the reddish anthocyanin colouring many aquatic plants take on in strong light; it is not a named cultivar.
