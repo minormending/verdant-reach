@@ -169,3 +169,13 @@ Chapter 6 vanilla line (set in `tools/art/crystal/vanilla.py`; palettes are dark
 | vanilla_orchid | 'Variegata' | The same cream-striped Vanilla planifolia form as vanilla_vine. Leaf faces and orchid segments take pale cream-green; the stake and long green capsules retain an olive dark tone. Shared white stays reserved for rims and gloss, with identical geometry. | `#586040 #d0d8a0 #f8f8f8` |
 
 Botanical references: [University of California Riverside Botanic Gardens, Fall 2021 plant list](https://gardens.ucr.edu/sites/g/files/rcwecm4706/files/2021-09/Online%20Fall%202021%20Plant%20List%209.21.2021.pdf) lists Vanilla planifolia 'Variegata' with succulent leaves striped creamy white and pale yellow-green flowers. [UF/IFAS, Vanilla Growing in South Florida (HS1348)](https://ask.ifas.ufl.edu/publication/HS1348) describes the fleshy climbing vine, oval pointed leaves, aerial roots, cream-green flowers with a modified lip, and elongated green capsules. The exact cream-green palette is an artistic interpretation of variegation within two colour slots.
+
+Chapter 7 moss campion line (set in `tools/art/crystal/campion.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| campion_cushion | f. alba (white-flowered form) | Silene acaulis f. alba: the natural white-flowered form of moss campion. Only the rose-pink mid slot (the closed buds) becomes cream; the cushion green in the dark slot stays. The shared white stays highlights and frost only, so the white share is unchanged. | `#50a040 #d8d0a8 #f8f8f8` |
+| campion_mound | f. alba (white-flowered form) | The same white-flowered form: the open five-petalled stars turn cream over the unchanged green cushion and frosted rock. | `#50a040 #d8d0a8 #f8f8f8` |
+| moss_campion | f. alba (white-flowered form) | The same white-flowered form: the dome's blanket of stars turns cream; geometry and the green are identical. | `#50a040 #d8d0a8 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Silene acaulis](https://en.wikipedia.org/wiki/Silene_acaulis) describes the dense, moss-like cushions of narrow bright-green leaves, and notes the flowers are usually pink but very rarely white. The cream (rather than pure white) mid tone keeps the flowers 15% apart from the shared highlight white, as the rules above require.
