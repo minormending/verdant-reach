@@ -144,7 +144,7 @@ Until then, `main` ships the GBC fallback. The release horizon
 | R3 | Map re-layouts: interiors, then exteriors, chapter by chapter | Codex, QA-gated, with the lead reviewing one render sheet each |
 | R4 | Characters for every NPC key; portraits (LimeZu UI portrait generator, if usable) | Codex + lead review |
 | R5 | Creature style v2 and a pilot, then the roster | lead (rules) + Codex loop |
-| R6 | UI pass (text box, menus) from Modern UI, if it earns its place | later |
+| R6 ✓ | Modern UI Style 1: measured slices, shared skin, cursors, bars, slots, toggles and unchanged GBC fallback; local render `tools/art/limezu/review/r6.png` | Codex; browser playthrough and lead review pending |
 | R7 | Shipping and the release horizon | the owner + both leads |
 
 
@@ -198,3 +198,30 @@ existing panel borders, bitmap fonts and cursors remain until R6.
 The R1e worker verified typecheck, unit/layout tests and the production build.
 The full browser playthrough still needs lead verification: this worker's
 sandbox rejects localhost server binding and Chromium startup.
+
+### R6 UI skin (2026-10-08)
+
+The private importer now builds `sets/ui_limezu` from the lead's Style 1
+mapping. It scans the central axes to the contiguous inner fill to measure
+asymmetric 9-slice caps (horizontal caps for bars); an outline that shares the
+fill colour is excluded from the inner region. `--check` covers these crops,
+metadata and the private index. Panel metadata supplies the darkest border
+ink, with the specified contrast fallback.
+
+`src/ui/skin.ts` is the shared drawing layer for windows, dialogue, list
+selections, grid focus, HP/EXP, toggles and money icons. The existing geometry
+and font are retained. Nearest-neighbour slices fit the existing padding;
+small controls compress only their fixed caps. The mapped highlight has a
+dark centre, so selections draw its authored frame around parchment instead
+of putting dark ink on that centre. Missing skin assets retain the exact
+GBC drawing primitives. The fallback reference hashes were also verified
+against the pre-R6 implementations from HEAD.
+
+Local review: `node tools/art/limezu/review_ui.mjs` creates an ignored,
+self-contained `review/r6.html` using the real screens. Open it in a browser
+and save its `r6.png` link into the same ignored directory. In this sandbox,
+Chromium startup and localhost binding are denied. The provided `r6.png`
+was made by `review_ui.mjs --software` followed by `replay_ui.py`, replaying
+real scene Canvas calls with Pillow at 320×180. It includes all eight requested
+views plus name entry. This supports visual inspection but does not replace
+the pending browser e2e / browser capture review.

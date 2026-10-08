@@ -151,7 +151,7 @@ class OutdoorBundleTests(unittest.TestCase):
         for key in list(outdoor):
             if key != "grass":
                 outdoor.update({f"{key}@{mask}": tile for mask in range(16)})
-        with patch.object(pack, "mappings", return_value={}), patch.object(pack, "prop_specs", return_value={}), patch.object(pack, "measured_props", return_value=({}, {})), patch.object(pack, "interior_images", return_value={"floor_wood": tile}), patch.object(pack, "outdoor_images", return_value=(outdoor, [], [])):
+        with patch.object(pack, "mappings", return_value={}), patch.object(pack, "prop_specs", return_value={}), patch.object(pack, "measured_props", return_value=({}, {})), patch.object(pack, "interior_images", return_value={"floor_wood": tile}), patch.object(pack, "outdoor_images", return_value=(outdoor, [], [])), patch.object(pack, "ui_outputs", return_value={}):
             outputs = pack.outputs(None)
         import json
         expected = {"terrain": {"grass", "path", "dirt", "sand", "stone_path"}, "water": {"water"}, "city": {"paving"}}
@@ -194,6 +194,56 @@ class GuardTests(unittest.TestCase):
     def test_environment_takes_precedence(self):
         with patch.dict(os.environ, {"LIMEZU_INTERIORS": "/tmp/example-interiors"}):
             self.assertEqual(pack.roots()["interiors"], Path("/tmp/example-interiors").resolve())
+
+
+class UiSliceTests(unittest.TestCase):
+    def test_asymmetric_nine_slice(self):
+        from limezu.ui import slice_insets
+        image = Image.new("RGBA", (17, 15), (40, 30, 20, 255))
+        image.paste((210, 190, 160, 255), (2, 3, 13, 10))
+        self.assertEqual(slice_insets(image), [2, 3, 4, 5])
+
+    def test_border_matches_fill_but_is_not_inner_region(self):
+        from limezu.ui import slice_insets
+        image = Image.new("RGBA", (15, 15), (40, 30, 20, 255))
+        image.paste((100, 80, 60, 255), (2, 2, 13, 13))
+        image.paste((40, 30, 20, 255), (4, 4, 11, 11))
+        self.assertEqual(slice_insets(image), [4, 4, 4, 4])
+
+    def test_horizontal_keeps_shaded_full_height(self):
+        from limezu.ui import slice_insets
+        image = Image.new("RGBA", (23, 10), (20, 20, 20, 255))
+        image.paste((80, 180, 80, 255), (4, 2, 18, 8))
+        self.assertEqual(slice_insets(image, True), [4, 0, 5, 0])
+
+    def test_ui_crops_and_metadata_are_deterministic(self):
+        from limezu.ui import ui_outputs
+        import json
+        class SyntheticSources:
+            def crop(self, source, box):
+                image = Image.new("RGBA", (box[2]-box[0], box[3]-box[1]), (40,30,20,255))
+                image.paste((210,190,160,255), (2,2,image.width-2,image.height-2))
+                return image
+        def build():
+            return ui_outputs(SyntheticSources(), pack.json_bytes, pack.png_bytes, pack.to_rgba, 'Synthetic', 'test')
+        result = build()
+        self.assertEqual(result, build())
+        bundle = json.loads(result['sets/ui_limezu/set.json'])
+        self.assertEqual(bundle['logicalDir'], 'assets/ui')
+        self.assertNotIn('more_text', bundle['images'])
+        self.assertEqual(bundle['images']['panel_window']['insets'], [2,2,2,2])
+        self.assertEqual(bundle['images']['bar_green']['insets'], [2,0,2,0])
+        for key, entry in bundle['images'].items():
+            image = Image.open(__import__('io').BytesIO(result[f'sets/ui_limezu/{key}.png']))
+            self.assertEqual(list(image.size), entry['size'])
+
+    def test_transparent_centre_rejected_and_contrast_fallback(self):
+        from limezu.ui import slice_insets, panel_colors
+        with self.assertRaises(ValueError):
+            slice_insets(Image.new("RGBA", (10, 10)))
+        image = Image.new("RGBA", (10, 10), (180, 160, 140, 255))
+        image.paste((210, 190, 160, 255), (2, 2, 8, 8))
+        self.assertEqual(panel_colors(image, [2, 2, 2, 2])['ink'], '#3a2a1e')
 
 
 if __name__ == "__main__":

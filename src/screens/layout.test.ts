@@ -17,13 +17,17 @@ import { notesScreen } from "./notes";
 import { optionsScreen } from "./options";
 import { shopScreen } from "./shop";
 import { runGrowth } from "./flows/growth";
+import * as skin from "../ui/skin";
+import { drawWindow as renderWindow } from "../ui/kit";
+import { fixtureSkin } from "../ui/skin.fixture";
+import { setActiveArt } from "../art/registry";
 import { partyRowY } from "./kit/layout";
 
 // Render real scenes with native asset dimensions. Capture labels and panels;
 // canvas drawing is stubbed so this also runs without a browser.
 function harness() {
   const scenes = createSceneStack();
-  const drawText = vi.fn(), drawWindow = vi.fn();
+  const drawText = vi.fn(), drawWindow = vi.fn(renderWindow);
   const drawImage = vi.fn();
   const g = new Proxy({ drawImage, fillStyle: "", globalAlpha: 1 }, {
     get(target, key) { return key in target ? target[key as keyof typeof target] : () => {}; },
@@ -77,10 +81,13 @@ function harness() {
   return { ctx, scenes, tick, render, drawText, drawWindow, drawImage };
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { setActiveArt(null); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe("widescreen menu layout", () => {
-  it.each(["party", "bag", "shop", "cabinet", "herbarium", "notes", "options", "growth"])("keeps %s labels and panels on the canvas", async (name) => {
+  it.each([false, true].flatMap(pack => ["party", "bag", "shop", "cabinet", "herbarium", "notes", "options", "growth"].map(name => ({ pack, name }))))("keeps $name labels and panels on the canvas (skin=$pack)", async ({name, pack}) => {
+    setActiveArt(pack ? fixtureSkin() : null);
+    const panel = vi.spyOn(skin, "panel");
+    const surface = vi.spyOn(skin, "surface");
     const h = harness();
     const screens: Record<string, () => unknown> = {
       party: () => partyScreen(h.ctx, { mode: "view" }), bag: () => bagScreen(h.ctx, { inBattle: false }),
@@ -95,6 +102,16 @@ describe("widescreen menu layout", () => {
     if (name === "cabinet" || name === "shop") { await h.tick("a"); h.render(); }
     if (name === "notes") { await h.tick("a"); h.render(); }
     if (name === "bag") { await h.tick("a"); h.render(); }
+    if (pack) {
+      const bounds = [
+        ...panel.mock.calls.map(([, , rect]) => rect),
+        ...surface.mock.calls.map(([, , x, y, w, h]) => ({ x, y, w, h })),
+      ];
+      expect(bounds.length).toBeGreaterThan(0);
+      for (const [, text, x, y] of h.drawText.mock.calls) {
+        expect(bounds.some(r => x >= r.x && y >= r.y && x + measureText(text) <= r.x + r.w && y + 8 <= r.y + r.h), text).toBe(true);
+      }
+    }
   });
 
   it("keeps all six party rows, their icons and HP labels above dialogue", async () => {

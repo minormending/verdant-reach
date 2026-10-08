@@ -2,6 +2,7 @@
 // menus and YES/NO. Other modules reach this through `ctx.ui`; the engine's
 // own scenes also use the exported `TextBox`, `Menu` and drawing helpers.
 
+import * as skin from "./skin";
 import type { GameContext, Input, Scene, UiKit } from "../contracts";
 import { SCREEN_H, SCREEN_W, TEXTBOX, UI } from "../contracts";
 import { drawBitmapText, formatText, measureText, paragraphs, wrapText } from "./font";
@@ -11,7 +12,16 @@ import { drawBitmapText, formatText, measureText, paragraphs, wrapText } from ".
 // ---------------------------------------------------------------------------
 
 export function drawText(g: CanvasRenderingContext2D, text: string, x: number, y: number, color: string = UI.black) {
-  drawBitmapText(g, text, x, y, color);
+  if (text === "▶" || text === "▷" || text === "▼" || text === "▲" || text === "◀") {
+    if (skin.cursor(g, text === "▼" ? "down" : text === "▲" ? "up" : text === "◀" ? "left" : "arrow", x, y)) return;
+  }
+  if (text.includes("$") && skin.skinOn()) {
+    Array.from(text).forEach((ch, i) => {
+      if (ch !== "$" || !skin.icon(g, "coin", x + i * 8, y)) drawBitmapText(g, ch, x + i * 8, y, skin.textColor(g, x, y, color));
+    });
+    return;
+  }
+  drawBitmapText(g, text, x, y, skin.textColor(g, x, y, color));
 }
 
 /** Text drawn at an integer scale (title logo, cards). */
@@ -35,8 +45,9 @@ export function drawTextOutlined(
  * bottom-right (for windows floating over the map).
  */
 export function drawWindow(
-  g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, opts: { shadow?: boolean } = {},
+  g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, opts: { shadow?: boolean; kind?: skin.PanelKind } = {},
 ) {
+  if (skin.panel(g, opts.kind ?? (y === TEXTBOX.y && h === TEXTBOX.h ? "window" : "inset"), { x, y, w, h })) return;
   x = Math.round(x); y = Math.round(y);
   if (opts.shadow) {
     g.fillStyle = "rgba(16,24,32,0.30)";
@@ -277,6 +288,7 @@ export class Menu {
 
   draw(g: CanvasRenderingContext2D, opts: { cursor?: boolean } = {}) {
     drawWindow(g, this.x, this.y, this.w, this.h, { shadow: true });
+    skin.highlight(g, { x: this.x + 6, y: this.rowY(this.index) - 3, w: this.w - 12, h: this.spacing === 16 ? 14 : 8 });
     this.options.forEach((o, i) => drawText(g, o, this.x + 16, this.rowY(i)));
     if (opts.cursor !== false) {
       // The ▶ nudges right 1px on a slow beat (rests while you move it).

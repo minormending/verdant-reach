@@ -1,3 +1,4 @@
+import * as skin from "../ui/skin";
 // Crystal-layout battle HUD boxes, backdrops with layered battle grounds,
 // trainer pictures, the leader / Rootstock versus banner and the level-up
 // stat window.
@@ -88,16 +89,19 @@ export function drawGraftCollarPlaceholder(g: CanvasRenderingContext2D, x: numbe
 export function drawEnemyHud(ctx: GameContext, g: CanvasRenderingContext2D, h: HudView, caught: boolean, frame = 0) {
   if (!h.visible || !h.q) return;
   const x = 8 + Math.round(h.dx), y = 8;
+  skin.panel(g, "plain", { x: x - 4, y: y - 4, w: 122, h: 38 });
   ctx.ui.drawText(g, qName(ctx.data, h.q), x, y);
   if (caught) drawLeaf(g, x, y + 10);
   if (h.status) drawStatusBadge(g, h.status, STATUS_ABBR[h.status], x + 12, y + 10, frame);
   drawLevel(ctx, g, h.level, x + 96, y + 8);
   drawHpBar(g, x + 8, y + 21, h.hp, h.q.stats.hp, 88);
   g.fillStyle = UI.black;
-  g.fillRect(x, y + 23, 1, 6);
-  g.fillRect(x, y + 29, 112, 1);
-  g.fillRect(x + 112, y + 28, 1, 1);
-  g.fillRect(x + 113, y + 27, 1, 1);
+  if (!skin.skinOn()) {
+    g.fillRect(x, y + 23, 1, 6);
+    g.fillRect(x, y + 29, 112, 1);
+    g.fillRect(x + 112, y + 28, 1, 1);
+    g.fillRect(x + 113, y + 27, 1, 1);
+  }
 }
 
 /** Player HUD between the two creatures, above the command rail. */
@@ -105,6 +109,7 @@ export function drawPlayerHud(ctx: GameContext, g: CanvasRenderingContext2D, h: 
   if (!h.visible || !h.q) return;
   const a = PLAYER_HUD_AREA, x = a.x + 8 + Math.round(h.dx), y = a.y;
   const right = x + a.w - 16;
+  skin.panel(g, "plain", { x: x - 6, y: y - 3, w: a.w - 4, h: a.h + 3 });
   ctx.ui.drawText(g, qName(ctx.data, h.q), x, y);
   if (h.status) drawStatusBadge(g, h.status, STATUS_ABBR[h.status], x, y + 10, frame);
   const flashOn = h.flash > 0 && (h.flash >> 2) % 2 === 0;
@@ -116,9 +121,11 @@ export function drawPlayerHud(ctx: GameContext, g: CanvasRenderingContext2D, h: 
   drawHpBar(g, x, y + 18, h.hp, h.q.stats.hp, a.w - 34);
   drawTextRight(ctx, g, `${pad(Math.max(0, Math.round(h.hp)), 3)}/${pad(h.q.stats.hp, 3)}`, right, y + 26);
   g.fillStyle = UI.black;
-  g.fillRect(right + 1, y + 12, 1, 26);
-  g.fillRect(x - 4, y + 38, a.w - 11, 1);
-  g.fillRect(x - 5, y + 37, 1, 3);
+  if (!skin.skinOn()) {
+    g.fillRect(right + 1, y + 12, 1, 26);
+    g.fillRect(x - 4, y + 38, a.w - 11, 1);
+    g.fillRect(x - 5, y + 37, 1, 3);
+  }
   drawExpBar(g, x, y + 38, h.exp, a.w - 16, false);
   if (flashOn) { g.fillStyle = UI.white; g.fillRect(x + 14, y + 40, a.w - 32, 3); }
 }

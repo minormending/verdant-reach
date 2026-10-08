@@ -5,6 +5,7 @@
 import type { Button, GameContext, Input } from "../../contracts";
 import { SCREEN_W, SCREEN_H, TEXTBOX } from "../../contracts";
 import type { Flow, Task } from "./flow";
+import * as skin from "../../ui/skin";
 import { drawCursor, drawMoreArrow } from "./draw";
 
 export const TEXT_X = TEXTBOX.x + 8;
@@ -280,6 +281,8 @@ export class Menu implements Task {
 
   draw(g: CanvasRenderingContext2D, opts: { cursor?: boolean; hollow?: boolean } = {}) {
     if (this.opts.window !== false) this.ctx.ui.drawWindow(g, this.opts.x, this.opts.y, this.w, this.h);
+    const selected = this.itemPos(this.index);
+    skin.highlight(g, { x: selected.x - 2, y: selected.y - 3, w: (this.opts.colW ?? (this.w - 16) / (this.opts.cols ?? 1)) - 2, h: this.spacing === 16 ? 14 : 8 });
     this.options.forEach((o, i) => {
       const p = this.itemPos(i);
       this.ctx.ui.drawText(g, o, p.x + 8, p.y);

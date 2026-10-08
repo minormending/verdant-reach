@@ -1,3 +1,4 @@
+import * as skin from "./skin";
 // Crystal-style naming screen: a letter grid with UPPER/lower, DEL and END.
 // Used for the player name, the rival (optional) and nicknames.
 
@@ -120,7 +121,7 @@ export function nameEntry(ctx: GameContext, opts: NameEntryOpts): Promise<string
         // header
         drawWindow(g, 0, 0, SCREEN_W, HEADER_H);
         g.fillStyle = "#e8f0e0";
-        g.fillRect(HEADER_X, 8, 32, 32);
+        skin.surface(g, "slot", HEADER_X, 8, 32, 32);
         if (opts.species) {
           const icon = speciesPath(opts.species, Math.floor(frame / 16) % 2 && ctx.assets.image(speciesPath(opts.species, "icon__2")) ? "icon__2" : "icon");
           drawImagePath(g, ctx.assets, icon, 0, 0, 16, 16, HEADER_X, 8, 32, 32);
@@ -159,7 +160,10 @@ export function nameEntry(ctx: GameContext, opts: NameEntryOpts): Promise<string
         // cursor
         const cx = GRID_X + col * CELL - 8;
         const cy = onButtons() ? by : GRID_Y + row * CELL;
-        if (closing < 0) drawText(g, "▶", cx, cy);
+        if (closing < 0) {
+          skin.highlight(g, { x: cx + 7, y: cy - 3, w: onButtons() ? 44 : CELL - 2, h: 14 });
+          drawText(g, "▶", cx, cy);
+        }
       },
     };
     return scene;

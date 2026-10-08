@@ -1,3 +1,4 @@
+import * as skin from "../ui/skin";
 // Market: BUY / SELL / CANCEL with a quantity picker and money display.
 // Drawn over the map (transparent), like Crystal's Mart.
 
@@ -30,6 +31,7 @@ export function shopScreen(ctx: GameContext, stock: ItemId[]): Promise<void> {
     drawTextRight(ctx, g, String(ctx.state.money), 80, 8);
     if (list) {
       ctx.ui.drawWindow(g, SIDE, 0, SCREEN_W - SIDE, CONTENT_H);
+      skin.highlight(g, { x: SIDE + 6, y: 5 + (list.index - list.scroll) * 16, w: SCREEN_W - SIDE - 12, h: 14 });
       for (const [i, r] of list.visibleRows()) {
         const y = 8 + r * 16;
         const id = listItems[i];
