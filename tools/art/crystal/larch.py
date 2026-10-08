@@ -5,12 +5,15 @@ on a soil mound with a low lead twig held across the front like a shield and
 a smaller rear twig up behind. Every twig carries soft rosettes: starburst
 tufts of short needles on little spurs. One rosy-red larch rose (the young
 female cone) stands upright on the leader: the line's accent.
-larch (adult), LOOMING: a tall narrow cone leaning over the foe. Upswept
-boughs carry drooping branchlets strung with autumn-gold rosettes, a few
-small upright cones and the red larch rose; fallen gold needles drift at the
-foot of the trunk (the signature NEEDLE DROP).
+larch (adult), LOOMING: a tall narrow cone leaning over the foe, built from
+six tiers of solid autumn-gold drapes (curtains of drooping branchlets) that
+widen toward the bottom. Each tier's blunt bough tips sweep up past the tier
+above; the dark slot is only the shadow under each hem, a few white sheen
+pixels light the left of each drape, and the trunk shows only at the foot.
+Two small upright cones, the red larch rose upper-left toward the foe, and
+fallen gold needles heaped at the foot (the signature NEEDLE DROP).
 
-Intro: the boughs dip, lift and shake while a shower of needles falls, then
+Intro: the tiers dip, lift and shake while a shower of needles falls, then
 settle. Trunk, roots and ground stay registered.
 Two tones: fresh green (seedling) / autumn gold (adult) over a rosy bark
 red-brown, which is also the larch rose and the cones (dark slot).
@@ -165,76 +168,113 @@ def seedling(s, lift=0.0):
 
 # --------------------------------------------------------------- adult ----
 
-TRUNK = [(35, 56), (34, 42), (27, 21), (18, 1)]
-# Upswept boughs, bottom to top: (trunk y, side -1 left / +1 right, reach,
-# curtain depth). The foe side (left) reaches further: the cone leans over.
-BOUGHS = [(45, 1, 16, 7), (43, -1, 22, 8), (37, 1, 14, 7), (34, -1, 19, 8),
-          (28, 1, 12, 7), (25, -1, 16, 7), (19, 1, 9, 6), (16, -1, 12, 6),
-          (11, 1, 6, 5), (8, -1, 8, 5), (4, 1, 4, 4)]
+# Tiers of drooping branchlet curtains, top to bottom, as (top, hem) fractions
+# of the cone's height. Each overlaps the one below so the trunk only shows
+# at the foot.
+TIERS = [(0.0, 0.22), (0.15, 0.39), (0.32, 0.56), (0.49, 0.73), (0.66, 0.89), (0.82, 1.0)]
 
 
-def trunk_at(y):
-    path = bez(TRUNK, 200)
-    return min(path, key=lambda p: abs(p[1] - y))
+class Cone:
+    """The crown's envelope: a narrow cone from `apex` to the hem line at
+    `base`, its axis leaning toward the foe."""
+
+    def __init__(self, apex, base, half):
+        self.apex, self.base, self.half = apex, base, half
+
+    def y(self, f):
+        return self.apex[1] + (self.base[1] - self.apex[1]) * f
+
+    def c(self, f):
+        return self.apex[0] + (self.base[0] - self.apex[0]) * f
+
+    def hw(self, f):
+        return 1.2 + self.half * max(0.0, f) ** 0.88
 
 
-def spray(s, at, side, reach, depth, lift=0.0, rim=1.0):
-    """One upswept bough with its curtain of drooping branchlets.
+def drape(s, env, f0, f1, lift=0.0, tip=3.0, scallop=9.0, top=False):
+    """One tier: a solid gold drape of drooping branchlets.
 
-    The bough leaves the trunk level and sweeps up at the tip; under it the
-    branchlets hang in a curtain whose hem is a fringe of rosette points.
-    Bark-tone strands run down the curtain, the hem band is shaded and the
-    bough's lit top edge takes a short white rim. Returns the bough tip.
-    """
-    x0, y0 = at
-    x0 += side * 1.5
-    rise = reach * 0.4 + lift
-    tip = (x0 + side * reach, y0 - rise)
-    top = bez([(x0, y0), (x0 + side * reach * 0.55, y0 + 0.3 - lift * 0.2), tip], 50)
-    n = max(2, round(reach / 3.2))
-    hem = []
-    for i in range(2 * n + 1):
-        f = 0.08 + 0.9 * i / (2 * n)
-        bx, by = top[min(len(top) - 1, int(f * (len(top) - 1)))]
-        d = depth * (0.55 + 0.45 * math.sin(math.pi * min(1.0, f * 1.25)))
-        d = min(d, 2 + depth * (1 - f) * 1.6)
-        hem.append((bx, by + d + (0.6 if i % 2 == 0 else -2.2)))
-    poly = top + [(tip[0], tip[1] + 1.5)] + hem[::-1]
-    m = s.poly(poly)
-    pid = s.part(m, base=2, k=1, shadow=(0.3 * side, 1), sh_tone=1, line=0)
-    for i in range(1, 2 * n, 2):
-        hx, hy = hem[i]
-        f = 0.08 + 0.9 * i / (2 * n)
-        ty = top[min(len(top) - 1, int(f * (len(top) - 1)))][1]
-        if hy - ty > 3:
-            s.decal(s.line1([(hx + 0.5, ty + 2.5), (hx + 0.5, hy + 0.5)]), 1, on=[pid])
-    up_edge = m & ~np.roll(m, 1, axis=0)
-    yy, xx = np.mgrid[0:s.h, 0:s.w]
-    ox = getattr(s, "ox", 0)
-    lo, hi = sorted((x0 + ox + side * reach * 0.12, x0 + ox + side * reach * (0.7 if side < 0 else 0.4) * rim))
-    s.decal(up_edge & (xx >= lo) & (xx <= hi), 3, on=[pid])
-    if reach >= 12:
-        # a drooping branchlet ends in a gold rosette below the hem
-        hx, hy = hem[int(len(hem) * 0.62)]
-        tuft(s, hx, hy + 1.5, 3.2, a0=reach * 0.7, white=1)
-    return tip
+    The top corners are blunt upswept bough tips poking out past the tier
+    above (the top tier is the spire instead); the hem is a few long rounded
+    scallops parted by short black strand notches; a small white sheen sits
+    on the lit left of the drape. Returns (mask, part id, left tip, right tip)."""
+    y0, y1 = env.y(f0), env.y(f1)
+    c0, c1 = env.c(f0), env.c(f1)
+    w0, w1 = env.hw(f0 + 0.08), env.hw(f1)
+    up = tip + lift
+    lt = (c0 - w0 - 3.5, y0 + 2.5 - up)
+    rt = (c0 + w0 + 3.5, y0 + 2.5 - up * 0.8)
+    if top:
+        pts = [(c0 - 1.2, y0), (c0 + 1.2, y0)]
+    else:
+        pts = [(c0 - w0 * 0.4, y0), (c0 + w0 * 0.4, y0),
+               (rt[0] - 2.5, rt[1] + 1.5), (rt[0] - 0.5, rt[1]), (rt[0] + 1.0, rt[1] + 0.3),
+               (rt[0] + 1.2, rt[1] + 2.0)]
+    n = max(2, round(2 * w1 / scallop))
+    xr, xl = c1 + w1 + 1.0, c1 - w1 - 1.0
+    hem, notches = [], []
+    for k in range(n):
+        a, b = xr - (xr - xl) * k / n, xr - (xr - xl) * (k + 1) / n
+        for u in np.linspace(0, 1, 9):
+            x = a + (b - a) * u
+            edge = abs(x - c1) / (w1 + 1)
+            droop = 2.8 * math.sin(math.pi * u) ** 0.7 - lift * 0.6 * edge
+            hem.append((x, y1 - 2.0 + droop))
+        if k < n - 1:
+            notches.append((b, y1 - 2.0))
+    pts += hem
+    if not top:
+        pts += [(lt[0] - 1.2, lt[1] + 2.0), (lt[0] - 1.0, lt[1] + 0.3), (lt[0] + 0.5, lt[1]),
+                (lt[0] + 2.5, lt[1] + 1.5)]
+    m = s.poly(pts)
+    pid = s.part(m, base=2, k=0, line=0)
+    for x, y in notches:
+        s.decal(s.line1([(x + 0.5, y - 2.0), (x + 0.5, y + 1.5)]), 0, on=[pid])
+    # sheen: a small white highlight on the lit left of the drape, below the
+    # hem of the tier above (never along an edge)
+    alt = round(f0 * 6) % 2
+    x = c1 - w1 * ((0.72 if alt else 0.5) if not top else 0.2) + 0.5
+    ya = y0 + (y1 - y0) * ((0.5 if alt else 0.42) if not top else 0.45)
+    s.decal(s.poly([(x, ya), (x + 1.8, ya), (x + 1.3, ya + 4.5), (x - 0.5, ya + 4.5)]), 3, on=[pid])
+    if not top:
+        x2 = x + (4 if alt else -3.5)
+        s.decal(s.line1([(x2 + 0.5, ya + 1.5), (x2 + 0.3, ya + 4.5)]), 3, on=[pid])
+    return m, pid, lt, rt
+
+
+def crown(s, env, lift=0.0, tiers=TIERS, rose_at=1, rose_size=0.9, cones=(2, 3), shadow=True, side=-1):
+    """Draw the tiers bottom first, so each hem overlaps the tier below and
+    casts its shadow (the dark slot) onto it."""
+    from _d_kit import shift
+    drawn, tips = [], {}
+    for i in range(len(tiers) - 1, -1, -1):
+        f0, f1 = tiers[i]
+        m, pid, lt, rt = drape(s, env, f0, f1, lift * (0.4 + 0.6 * f1), top=(i == 0))
+        tips[i] = (lt, rt)
+        if shadow and drawn:
+            band = (shift(m, -1, -1) | shift(m, -1, -2)) & ~m
+            s.decal(band, 1, on=drawn)
+        drawn.append(pid)
+    for i in cones:
+        x, y = tips[i][1 if side < 0 else 0]
+        cone(s, x + side * 2.5, y - 1.0, 0.7)
+    x, y = tips[rose_at][0 if side < 0 else 1]
+    rose(s, x - side * 1.0, y - 2.6 * rose_size, rose_size)
+    return tips
+
+
+FRONT_CONE = Cone((20.5, 1.5), (31.0, 47.0), 14.5)
+BACK_CONE = Cone((35.0, 1.0), (21.0, 50.0), 22.0)
+BACK_TIERS = [(0.0, 0.22), (0.14, 0.40), (0.32, 0.60), (0.52, 0.80), (0.72, 1.0)]
 
 
 def adult(s, lift=0.0):
-    s.ox = 1
+    s.ox = 2
     soil(s, 10, 52, litter=True)
-    wood(s, [(33, 52), (29, 52), (26, 55)], (3.5, 2), shine=False)
-    wood(s, [(35, 52), (39, 52), (43, 55)], (3.5, 2), shine=False)
-    wood(s, TRUNK, (4.5, 1.2))
-    tips = {}
-    for y, side, reach, depth in BOUGHS:
-        tips[(y, side)] = spray(s, trunk_at(y), side, reach, depth, lift * (0.5 + reach / 22))
-    for key in ((28, 1), (37, 1)):
-        x, y = tips[key]
-        cone(s, x - 4, y - 0.5, 0.8)
-    x, y = tips[(25, -1)]
-    rose(s, x + 1.5, y - 3.5, 1.1)
-    tuft(s, 18, 2, 2.5)
+    wood(s, [(30, 52), (26, 52), (23, 55)], (3.5, 2), shine=False)
+    wood(s, [(32, 52), (36, 52), (40, 55)], (3.5, 2), shine=False)
+    wood(s, [(31.5, 55), (31, 44), (28, 30)], (4.5, 3.0))
+    crown(s, FRONT_CONE, lift, rose_size=0.75)
 
 
 # ------------------------------------------------------------- frames -----
@@ -326,52 +366,42 @@ def back(sid):
         wood(s, [(32, 12), (34, 8)], 2, shine=False)
         rose(s, 35, 6, 1.6)
     else:
-        trunk = [(19, 60), (21, 40), (28, 17), (35, 3)]
-        wood(s, trunk, (8, 2))
-        path = bez(trunk, 200)
-
-        def at(y):
-            return min(path, key=lambda p: abs(p[1] - y))
-        tips = {}
-        for y, side, reach, depth in ((47, -1, 20, 11), (46, 1, 24, 11), (39, -1, 18, 10),
-                                      (37, 1, 21, 10), (30, -1, 15, 9), (28, 1, 18, 9),
-                                      (21, -1, 12, 8), (19, 1, 14, 8), (12, -1, 8, 6),
-                                      (10, 1, 10, 6), (5, 1, 6, 5)):
-            tips[(y, side)] = spray(s, at(y), side, reach, depth, rim=1.6)
-        x, y = tips[(28, 1)]
-        rose(s, x - 3, y - 3, 1.4)
-        tuft(s, 35, 3, 3)
+        # the same cone from behind and above: its tip leans to the top-right,
+        # toward the foe, the near tiers big and cut off by the screen edge
+        crown(s, BACK_CONE, tiers=BACK_TIERS, rose_at=1, rose_size=1.1, cones=(2,),
+              side=1)
     return blunt(tones(s, open_bottom=True))
 
 
-# The adult icon: a narrow gold cone leaning left, its edge notched into
-# whorls of upswept boughs. Per row: (reach left of the trunk, reach right,
-# role) where role is "top" (lit bough), "hang" (hanging strands) or "-".
-ICON_ROWS = [(0, 0, "-"), (1, 1, "top"), (2, 1, "-"), (1, 1, "hang"),
-             (3, 2, "top"), (4, 3, "-"), (3, 2, "hang"),
-             (5, 4, "top"), (6, 5, "-"), (5, 4, "hang"),
-             (7, 5, "top"), (7, 6, "-"), (6, 5, "hang")]
+# The adult icon: a little gold cone of three drapes leaning left, each tier's
+# bough tips swept up past the tier above, the shadow under each hem in the
+# dark slot, a white sheen on the lit left, over a trunk foot and needles.
+# (first row, [(left, right) per row], tips)
+ICON_TIERS = [(1, [(6, 6), (5, 7), (4, 8), (4, 9)], False),
+              (5, [(3, 9), (3, 10), (2, 10), (2, 11)], True),
+              (9, [(2, 11), (1, 12), (1, 13), (2, 13)], True)]
 
 
 def adult_icon():
     from _d_kit import close_outline
     t = np.full((16, 16), -1, int)
-    for y, (lw, rw, role) in enumerate(ICON_ROWS, start=1):
-        c = int(round(5.5 + (y - 1) * 0.25))
-        for x in range(c - lw, c + rw + 1):
-            t[y, x] = 2
-        if role == "hang":
-            for x in range(c - lw, c + rw + 1):
-                if (x - c) % 3:
-                    t[y, x] = 1
-        t[y, c + rw] = 1 if y > 2 else t[y, c + rw]           # the shade side
-        if role == "top":
-            t[y, c - lw:c - lw + 2] = 3                         # the lit bough
-        if y >= 4:
-            t[y, c] = 1                                         # the trunk
-    t[14, 6:9] = 1
-    t[15, 3:13] = 2
-    t[15, 6:9] = 1
+    for k, (y0, rows, tips) in enumerate(ICON_TIERS):
+        for j, (l, r) in enumerate(rows):
+            y = y0 + j
+            t[y, l:r + 1] = 2
+            if j == 0 and k:
+                t[y, l + 2:r] = 1                      # the shadow under the hem above
+            if j == 1 or (k == 0 and j == 2):
+                t[y, l:l + 2] = 3                      # the lit sheen
+            if j and y > 2:
+                t[y, r] = 1                            # the shade side
+        if tips:
+            l, r = rows[0]
+            t[y0 - 1, l - 1] = 2
+            t[y0 - 1, r + 1] = 2
+    t[13, 6:8] = 1                                     # the trunk
+    t[14, 3:13] = 2                                    # fallen needles
+    t[14, 6:8] = 1
     t = close_outline(t)
     return np.where(t >= 0, t, T).astype(np.uint8)
 
@@ -420,9 +450,9 @@ def build():
         "larch_seedling": "BRACED: a short woody stem on a soil mound; a low lead twig of big green "
                           "needle rosettes held across the front like a shield, a smaller rear twig "
                           "behind, and one rosy-red larch rose upright on the leader.",
-        "larch": "LOOMING: a tall narrow cone leaning over the foe; upswept boughs with drooping "
-                 "branchlets of autumn-gold rosettes, small upright cones, one red larch rose, and "
-                 "fallen gold needles heaped at the foot.",
+        "larch": "LOOMING: a tall narrow cone leaning over the foe, tiers of solid autumn-gold "
+                 "drapes of drooping branchlets with blunt upswept bough tips, small upright cones, "
+                 "one red larch rose upper-left, and fallen gold needles heaped at the foot.",
     }
     for sid in IDS:
         fs, b, icons = art[sid]
