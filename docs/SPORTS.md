@@ -8,12 +8,19 @@ Each sport here is based on a real sport, cultivar or natural colour form of tha
 Where the plant has none in cultivation, it uses the nearest real form of a close
 relative and names it as such (fern, nettle, moonflower).
 
-**How it renders** (ART.md §3): `species.json` `sport[i]` replaces `palette[i]` pixel
+**V2 starter material maps:** the oak, chili and lily lines now use
+`verdant.species/2`, authored in `tools/art/creatures2/`. Each map recolours
+whole material ramps; there is no GBC channel snapping or fixed white slot.
+The table gives the key base colours below; the complete dark-to-light maps
+live in each bundle's `species.json`. Outline, unchanged bark and glossy
+near-white speculars are preserved. The Crystal pack keeps the v1 sports.
+
+**V1 rendering** (ART.md §3): `species.json` `sport[i]` replaces `palette[i]` pixel
 for pixel. Index 0 stays `#181818`. So each sport is written against what that species'
 slots *do*: the holly's dark slot is its berries, the oak's dark slot is bark and cap,
 and the sunflower's light slot is its rays.
 
-**Rules**
+**V1 rules**
 - GBC-snapped: every channel is a multiple of 8.
 - The tones keep their dark-to-light order.
 - Dark/mid and mid/light are each at least 15% apart in greyscale, so the form still reads in battle.
@@ -21,22 +28,23 @@ and the sunflower's light slot is its rays.
   index 3 stays the shared white `#f8f8f8`. The sunflower line is the one approved
   exception: its index 3 is the line's gold, so its sport also changes index 3 (cream rays).
 
-**Source of truth:** since the Crystal-rule rollout, every species' sport lives in its
-line's generator, `tools/art/crystal/<line>.py`. The table below lists each sport as
+**Source of truth:** unmigrated v1 species' sports live in their
+line generators, `tools/art/crystal/<line>.py`; the v2 starters use
+`tools/art/creatures2/<line>.py`. The table below lists each sport as
 (dark, mid, light) = indexes 1–3. `tools/art/species_f/sports.py` is the pre-Crystal
 table and is kept as reference only (its values are the `classic` pack's sports).
 
-| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+| Species | Sport | Real cultivar / reference | Sport palette (v1) / key material map colours (v2) |
 |---|---|---|---|
-| oak_acorn | 'Concordia' golden oak | Quercus robur 'Concordia' (Van Geert, Ghent, 1843): butter-yellow leaves, gold-green acorns. | `#585018 #b8b040 #f8f8f8` |
-| oak_sapling | 'Concordia' golden oak | Quercus robur 'Concordia' (Van Geert, Ghent, 1843): butter-yellow leaves, gold-green acorns. | `#584018 #d0b828 #f8f8f8` |
-| great_oak | 'Concordia' golden oak | Quercus robur 'Concordia' (Van Geert, Ghent, 1843): butter-yellow leaves, gold-green acorns. | `#504018 #d0b030 #f8f8f8` |
-| chili_blossom | 'Black Pearl' | Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers. | `#382048 #9878b8 #f8f8f8` |
-| green_chili | 'Black Pearl' | Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers. | `#201838 #605078 #f8f8f8` |
-| red_chili | 'Black Pearl' | Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers. | `#281828 #684878 #f8f8f8` |
-| lily_seedpod | 'Chromatella' yellow water lily | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads. | `#604018 #c09038 #f8f8f8` |
-| lily_pad | 'Chromatella' yellow water lily | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads. | `#684018 #98a038 #f8f8f8` |
-| giant_water_lily | 'Chromatella' yellow water lily | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads. | `#385020 #e8c040 #f8f8f8` |
+| oak_acorn | 'Concordia' golden oak (v2) | Quercus robur 'Concordia': gold-green acorn; cupule/bark and radicles unchanged. | nut `#c6a269 → #c8b46e` (four-tone map) |
+| oak_sapling | 'Concordia' golden oak (v2) | Quercus robur 'Concordia': butter-yellow leaves; brown cap and bark unchanged. | leaf `#7b9259 → #c4b15b` (four-tone map) |
+| great_oak | 'Concordia' golden oak (v2) | Quercus robur 'Concordia': butter-yellow canopy and gold-green acorn fist; bark unchanged. | leaf `#7b9259 → #c4b15b`; nut `#c6a269 → #c8b46e` |
+| chili_blossom | 'Black Pearl' (v2) | Capsicum annuum 'Black Pearl' (AAS winner 2006): purple corolla and near-black purple foliage. | petal mid `#e2d8c4 → #b299c1`; leaf/calyx `#819c60 → #72637c` |
+| green_chili | 'Black Pearl' (v2) | Capsicum annuum 'Black Pearl': glossy purple-black immature fruit and foliage; specular unchanged. | pod `#7eaa60 → #827191`; leaf/calyx `#819c60 → #72637c` |
+| red_chili | 'Black Pearl' (v2) | Capsicum annuum 'Black Pearl': adult recolour evokes its immature black-fruit phase (the cultivar's ripe fruit is red); purple-black foliage. | pod `#cb6b58 → #827191`; leaf/calyx `#819c60 → #72637c` |
+| lily_seedpod | 'Chromatella' yellow water lily (v2) | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887), a cultivated relative of Victoria: yellow bud and cream-gold sepal interiors. | rose `#c58a9b → #c7b36f`; cream mid `#e2d8c4 → #d5c68b` |
+| lily_pad | 'Chromatella' yellow water lily (v2) | Nymphaea x marliacea 'Chromatella', a Victoria relative: yellow bud, bronze-toned pad; water sheen unchanged. | rose `#c58a9b → #c7b36f`; leaf `#839c73 → #a49b68`; cream mid `#e2d8c4 → #d5c68b` |
+| giant_water_lily | 'Chromatella' yellow water lily (v2) | Nymphaea x marliacea 'Chromatella', a Victoria relative: yellow flowers over bronze-toned leaves; water sheen unchanged. | rose `#c58a9b → #c7b36f`; leaf `#839c73 → #a49b68`; cream mid `#e2d8c4 → #d5c68b` |
 | dandelion_bud | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#387838 #f0a0c0 #f8f8f8` |
 | dandelion | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#405028 #e888b0 #f8f8f8` |
 | dandelion_clock | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#305838 #d098b8 #f8f8f8` |
@@ -89,7 +97,7 @@ table and is kept as reference only (its values are the `classic` pack's sports)
 
 Round 4 Palm House lines (set in `tools/art/crystal/{orchid,monstera,lotus}.py` since the Crystal-rule rollout; palettes are dark, light, shared white):
 
-| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+| Species | Sport | Real cultivar / reference | Sport palette (v1) / key material map colours (v2) |
 |---|---|---|---|
 | orchid_keiki | variegated moth orchid | Phalaenopsis Sogo Vivien 'Variegata', a cream-edged variegated-leaf sport sold as a mini: yellow-green leaves, the plum bud and leaf shade turn olive. | `#605030 #c0c058 #f8f8f8` |
 | orchid_spike | harlequin moth orchid | Phalaenopsis harlequins: a mericlone sport of Phal. Golden Peoker 'Brother' (Taiwan, 1990s), white flowers splashed maroon-black. The plum slot (spike, buds, lip, shade) turns maroon; the leaves go sage. | `#481830 #90a858 #f8f8f8` |
@@ -101,7 +109,7 @@ Round 4 Palm House lines (set in `tools/art/crystal/{orchid,monstera,lotus}.py` 
 
 Chapter 5 lodgepole, skunk cabbage and cedar lines (set in `tools/art/crystal/{lodgepole,skunk_cabbage,cedar}.py`; palettes are dark, light, shared white):
 
-| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+| Species | Sport | Real cultivar / reference | Sport palette (v1) / key material map colours (v2) |
 |---|---|---|---|
 | lodgepole_cone | 'Chief Joseph' | Pinus contorta var. latifolia 'Chief Joseph' (found wild in Oregon's Wallowa Mountains): green in summer, its needles turn bright gold in winter. Crystal: gold needles, a warm bark and cone brown. | `#805830 #d8c030 #f8f8f8` |
 | lodgepole_seedling | 'Chief Joseph' | Pinus contorta var. latifolia 'Chief Joseph' (found wild in Oregon's Wallowa Mountains): green in summer, its needles turn bright gold in winter. Crystal: gold needles, a warm bark and cone brown. | `#805830 #d8c030 #f8f8f8` |
@@ -113,7 +121,7 @@ Chapter 5 lodgepole, skunk cabbage and cedar lines (set in `tools/art/crystal/{l
 
 Chapter 5 ghostpipe and fireweed lines (set in `tools/art/crystal/{ghostpipe,fireweed}.py`; palettes are dark, light, shared white):
 
-| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+| Species | Sport | Real cultivar / reference | Sport palette (v1) / key material map colours (v2) |
 |---|---|---|---|
 | ghostpipe_stalk | pink form | the natural pink form of the ghost pipe, Monotropa uniflora (uncommon pink-flushed plants occur in the wild): pale rose wax, a dusky rose shade. | `#985068 #e8b0c8 #f8f8f8` |
 | ghostpipe_nodding | pink form | the natural pink form of the ghost pipe, Monotropa uniflora (uncommon pink-flushed plants occur in the wild): pale rose wax, a dusky rose shade. | `#985068 #e8b0c8 #f8f8f8` |
@@ -124,7 +132,7 @@ Chapter 5 ghostpipe and fireweed lines (set in `tools/art/crystal/{ghostpipe,fir
 
 Chapter 6 seagrass line (set in `tools/art/crystal/seagrass.py`; palettes are dark, mid, shared white):
 
-| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+| Species | Sport | Real cultivar / reference | Sport palette (v1) / key material map colours (v2) |
 |---|---|---|---|
 | seagrass_shoot | warmer green foliage (natural variation; no named colour form identified) | Zostera marina. No named cultivar or botanical colour form was identified in the consulted references. The sport interprets ordinary green foliage with a modest warmer green shift; it does not claim a named or genetically stable sport. See references below. | `#286048 #80b868 #f8f8f8` |
 | eelgrass | warmer green foliage (natural variation; no named colour form identified) | Zostera marina, the same natural green variation as the shoot; no named colour form identified. White midrib, sheath and oxygen-bubble highlights stay white. | `#286048 #80b868 #f8f8f8` |
@@ -133,7 +141,7 @@ References: the [USDA NRCS eelgrass fact sheet](https://plants.usda.gov/Document
 
 Chapter 6 mangrove line (set in `tools/art/crystal/mangrove.py`; palettes are dark, mid, shared white):
 
-| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+| Species | Sport | Real cultivar / reference | Sport palette (v1) / key material map colours (v2) |
 |---|---|---|---|
 | mangrove_propagule | sun-bleached yellow-green (natural colour interpretation) | Rhizophora mangle. No named cultivar is claimed: the green propagule and first leaves take the natural yellow-green of sun-bleached foliage, interpreted artistically rather than as a genetically stable sport. Brown rooting tip and mud stay warm brown; white gloss stays white. | `#906038 #b8c868 #f8f8f8` |
 | mangrove_sapling | sun-bleached yellow-green (natural colour interpretation) | Rhizophora mangle, the same natural yellow-green interpretation as the propagule; no named cultivar. Red-brown stilt roots remain brown and the white water-line reflections stay white. | `#906038 #b8c868 #f8f8f8` |
@@ -143,7 +151,7 @@ Botanical references: [University of Florida IFAS, Red Mangrove (FR460)](https:/
 
 Chapter 6 prickly pear line (set in `tools/art/crystal/prickly_pear.py`; palettes are dark, mid, shared white):
 
-| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+| Species | Sport | Real cultivar / reference | Sport palette (v1) / key material map colours (v2) |
 |---|---|---|---|
 | pear_pad | Santa Rita purple prickly pear | Opuntia 'Santa Rita' (also listed as O. santa-rita / O. violacea 'Santa Rita'): violet-purple pads, particularly in cold or dry conditions. Crystal: purple-violet paddle faces, plum-magenta in the dark slot; white glochid highlights stay white. | `#782850 #b088c0 #f8f8f8` |
 | padded_cactus | Santa Rita purple prickly pear | The same real purple prickly pear as pear_pad, expressed in the four joined paddle faces. White areole tufts and edge highlights stay white. | `#782850 #b088c0 #f8f8f8` |
@@ -153,7 +161,7 @@ Botanical references: the [University of Arizona Campus Arboretum, Santa Rita pr
 
 Chapter 6 saguaro line (set in `tools/art/crystal/saguaro.py`; palettes are dark, mid, shared white):
 
-| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+| Species | Sport | Real cultivar / reference | Sport palette (v1) / key material map colours (v2) |
 |---|---|---|---|
 | saguaro_pup | blue-grey waxy bloom (unnamed colour interpretation) | Carnegiea gigantea: an artistic blue-grey interpretation of waxy bloom on drought-stressed stems, not a named cultivar or genetically stable colour sport. Only the two green slots change; white spine highlights stay white. | `#405c68 #98b0b8 #f8f8f8` |
 | saguaro_column | blue-grey waxy bloom (unnamed colour interpretation) | The same unnamed waxy-bloom interpretation on the unbranched stem. Cristate (crested) growth changes shape, so it cannot be represented by this palette sport. | `#405c68 #98b0b8 #f8f8f8` |
@@ -163,9 +171,14 @@ Botanical references: [NPS, Saguaro Cactus](https://home.nps.gov/orpi/learn/natu
 
 Chapter 6 vanilla line (set in `tools/art/crystal/vanilla.py`; palettes are dark, mid, shared white):
 
-| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+| Species | Sport | Real cultivar / reference | Sport palette (v1) / key material map colours (v2) |
 |---|---|---|---|
 | vanilla_vine | 'Variegata' | Vanilla planifolia 'Variegata': fleshy green leaves striped creamy white. Crystal: a pale cream-green leaf face over olive-green shade and a green-brown stake; the existing longitudinal highlights suggest the striping. Palette swap only. | `#586040 #d0d8a0 #f8f8f8` |
 | vanilla_orchid | 'Variegata' | The same cream-striped Vanilla planifolia form as vanilla_vine. Leaf faces and orchid segments take pale cream-green; the stake and long green capsules retain an olive dark tone. Shared white stays reserved for rims and gloss, with identical geometry. | `#586040 #d0d8a0 #f8f8f8` |
 
 Botanical references: [University of California Riverside Botanic Gardens, Fall 2021 plant list](https://gardens.ucr.edu/sites/g/files/rcwecm4706/files/2021-09/Online%20Fall%202021%20Plant%20List%209.21.2021.pdf) lists Vanilla planifolia 'Variegata' with succulent leaves striped creamy white and pale yellow-green flowers. [UF/IFAS, Vanilla Growing in South Florida (HS1348)](https://ask.ifas.ufl.edu/publication/HS1348) describes the fleshy climbing vine, oval pointed leaves, aerial roots, cream-green flowers with a modified lip, and elongated green capsules. The exact cream-green palette is an artistic interpretation of variegation within two colour slots.
+
+R5b round 2 warms white materials to lilac shadow `#b8adbd`, cream mid
+`#e2d8c4` and warm lit `#f4f0e6`. Sports recolour the shadow and mid tones;
+the shared warm highlight and glossy/water specular stay unchanged. Cultivar
+choices and the oak material sport maps are unchanged.

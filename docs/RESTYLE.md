@@ -144,6 +144,7 @@ Until then, `main` ships the GBC fallback. The release horizon
 | R3 | Map re-layouts: interiors, then exteriors, chapter by chapter | Codex, QA-gated, with the lead reviewing one render sheet each |
 | R4 ✓ | 51 composed 16×32 characters; eight later-cast keys with original GBC stand-in fallbacks; objects/animals keep GBC. Local review: `tools/art/limezu/review/r4.png` (all directions and down steps at 3×, HOME at 320×180). Portraits deferred. | Codex; lead review pending |
 | R5a ✓ | Creature v2 engine: 64×64 / 32×32 slots, v1 compatibility at centred 1×, material sport maps, original Crystal snapshot pack, kit2 and synthetic QA v2; no new creature art | Codex; browser e2e pending (sandbox denies localhost binding) |
+| R5b ✓ | Starter v2 pilot: nine original oak/chili/lily bundles, 64×64 fronts/backs and 32×32 icons, four intro keys, material sports and 3× review; local real-scene battle captures in ignored LimeZu review | Codex; traced-pack fallback fix, blind-ID and lead review pending |
 | R5 | Creature style v2 and a pilot, then the roster | lead (rules) + Codex loop |
 | R6 ✓ | Modern UI Style 1: measured slices, shared skin, cursors, bars, slots, toggles and unchanged GBC fallback; local render `tools/art/limezu/review/r6.png` | Codex; browser playthrough and lead review pending |
 | R6b ✓ | Trainer portraits from the Portrait Generator, derived from mapping/characters.json; dialogue speaker faces via src/world/speakers.ts | Codex; lead review pending |
@@ -294,3 +295,54 @@ Palette harmony reads local exteriors Palette.png only, skipping with info
 when absent. `build_all.py --regen` includes the empty creatures2 builder.
 The headless e2e command was attempted but could not start its local server:
 `listen EPERM 127.0.0.1`; browser playthrough remains for lead verification.
+
+### R5b starter pilot (2026-10-08)
+
+The oak, chili and Victoria water-lily lines now use original v2 bundles.
+Shared cap/calyx/bud-and-rim motifs, named poses and material ramps connect
+each three-stage family. The Crystal pack preserves all nine earlier
+bundles. Four deterministic front keys move the signature organ; dedicated
+back compositions and separately drawn 32px icons complete each bundle.
+Sports recolour the named materials after 'Concordia', 'Black Pearl' and
+'Chromatella' (the lily cultivar is a related Nymphaea, not Victoria).
+
+The original-art 3× sheet is `tools/art/review/creatures2_review.png`.
+`node tools/art/creatures2/review_battle.mjs` captures the real scene draw
+path with the local LimeZu pack: OAK SAPLING back/GREEN CHILI front and
+LILY PAD back/GREAT OAK front, each at 320×180, side by side in the ignored
+`tools/art/limezu/review/r5b_battle.png`. This is software Canvas replay;
+a browser capture and blind-ID remain for the lead.
+
+V2 face checks now cover backs and both icons as well as every front key.
+The only intended QA warnings are the oak's deliberately lobed silhouette
+tips; their reason is recorded in the species notes. Local palette harmony
+passes for all nine starters. See CREATURES_V2.md §6 for kit additions and
+review commands.
+
+### R5b round 2 (2026-10-08)
+
+Starter feedback replaces diagonal material planes with per-form shading,
+warms the white materials, strengthens each intro key and braces the acorn
+at 27 degrees. The sapling shields forward; the oak crown heaves and its
+fist swings; the chili star thrusts on a thin hooked neck; the pods curl and
+whip with a drifting ember; the lily sepal peels, bud rears and petals open.
+The lily-pad back now has a wrapping near rim below a distinct bud and
+furled leaf. The original-art sheet adds rest/key comparisons at 3× and 1×.
+See CREATURES_V2.md §6 for helper details and ART.md §8 for inheritance.
+
+The cross-version fallback defect is fixed in Python artkit and the TS
+catalog: partial v1 overrides inherit from the Crystal v1 snapshot, never
+from the v2 base. Missing snapshots require complete overrides. Explicit
+`anim: null` remains an override. Regression checks cover native sizes,
+file provenance, inherited palette remapping and missing-snapshot errors.
+All nine starters pass size, palette, face and signature checks; deliberate
+oak lobes and the baby stages' foe-leaning centre of mass retain warnings.
+
+Round 2 verification: starter builder and full bundle validation pass;
+all 60 Python QA tests, typecheck, 1,607 Vitest tests and the production
+build pass. Full `build_all.py --regen` leaves every public art file
+byte-identical; incidental historical review sheets are restored. Both
+ignored battle captures are regenerated and inspected, and the licensed
+pack/config/review paths contain no tracked files. The requested headless
+playthrough cannot start in this sandbox (`listen EPERM 127.0.0.1`, zero
+beats); it still requires a run in an environment allowing local listeners.

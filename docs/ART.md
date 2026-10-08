@@ -334,6 +334,22 @@ in it overrides the base bundle with the same id:
 - So a pack can replace images, palettes, single tiles (`tiles.<key>`) or a
   whole tileset sheet.
 
+**Same-format inheritance.** A species override inherits metadata and files
+only from a bundle of the **same format**. When a `verdant.species/1` pack
+replaces a v2 base, missing frames, icons, animation and palette come from
+`packs/crystal/species/<id>/`, the R5a v1 snapshot. Inherited images are
+recoloured from the snapshot palette into the override palette, as usual.
+The v2 base is excluded from both metadata merging and file lookup. Explicit
+values (including `anim: null`) still override the snapshot. Selecting
+`?art=traced` therefore uses the traced oak front and Crystal's 16px icons;
+selecting `?art=crystal` or no pack preserves their respective native art.
+
+If Crystal lacks a matching v1 species, the override must supply a complete
+bundle; missing required metadata or files is a validation error. Other
+format changes likewise require complete replacement bundles, with no
+cross-format fallback. Python artkit and the TypeScript catalog apply the
+same rule, including when several packs are active.
+
 **Palette-only overrides.** If a pack species changes `palette` but not
 `frames`, the base images are recoloured index by index (base `palette[i]`
 becomes pack `palette[i]`). A recolour pack therefore needs no images at all.
@@ -640,7 +656,7 @@ of its classic folder into `species/` with `source.kind` set to `edited`.
   - the photo-traced fronts of the sunflower, oak, pumpkin, flytrap and fern
     lines (from `creature-sprites/out/plants`);
   - back views traced from the same cut-outs;
-  - icons that fall back to the base icons recoloured into the pack palette;
+  - icons that fall back to same-format icons (Crystal for v2 starters), recoloured into the pack palette;
   - palette-only overrides for `chili_blossom` and `red_chili`;
   - `"anim": null` on the traced species, which have a single front frame;
   - credits in `packs/traced/CREDITS.md`.

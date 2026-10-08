@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import { buildIndex, strayFolders } from "../../tools/art/index.mjs";
 import type { ArtIndex } from "./format";
 import { diskImages, loadPacksFromDisk, loadRawFromDisk } from "./fs";
+import { ArtCatalog } from "./catalog";
 import { requiredPaths } from "./required";
 import { errorsOnly, validateArt, type Problem } from "./validate";
 
@@ -40,6 +41,21 @@ if (legacyCount) {
 }
 
 describe("art bundles (docs/ART.md §9)", () => {
+  it("resolves the traced oak front and Crystal v1 inherited icons at their native sizes", () => {
+    const traced = new ArtCatalog(raw, { packs: ["traced"] });
+    const images = diskImages(PUBLIC);
+    const front = traced.resolve("assets/species/oak_acorn/front.png")!;
+    const icon = traced.resolve("assets/species/oak_acorn/icon.png")!;
+    expect(front.layer).toBe("traced");
+    expect(icon.layer).toBe("crystal");
+    expect(images(front.url)!.width).toBe(56);
+    expect(images(icon.url)!.width).toBe(16);
+    for (const [packs, size] of [[[], 64], [["crystal"], 56]] as const) {
+      const cat = new ArtCatalog(raw, { packs });
+      expect(images(cat.resolve("assets/species/oak_acorn/front.png")!.url)!.width).toBe(size);
+    }
+  });
+
   it("index.json matches the folders (run `npm run art:index`)", () => {
     expect(onDisk, "public/art/index.json is missing").not.toBeNull();
     expect(onDisk).toEqual(fresh);

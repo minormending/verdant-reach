@@ -126,9 +126,19 @@ export class ArtCatalog {
     }
     for (const [k, list] of groups) {
       list.sort((a, b) => rank(a.pack) - rank(b.pack));
-      const layers: Layer[] = list.map((r) => ({
-        pack: r.pack, dir: bundleDir(r.kind, r.id, r.pack, this.artRoot), files: new Set(r.files), json: r.json as Record<string, unknown>,
-      }));
+      let layers: Layer[] = [];
+      for (const r of list) {
+        const json = r.json as Record<string, unknown>;
+        const format = layers.reduce((m, l) => mergeJson(r.kind, m, l.json), {} as Record<string, unknown>).format;
+        if (r.kind === "species" && json.format !== undefined && format !== undefined && json.format !== format) {
+          const snapshot = raw.find(s => s.kind === "species" && s.id === r.id && s.pack === "crystal" && isObj(s.json) && s.json.format === json.format);
+          layers = json.format === "verdant.species/1" && snapshot ? [{
+            pack: "crystal", dir: bundleDir(r.kind, r.id, "crystal", this.artRoot),
+            files: new Set(snapshot.files), json: snapshot.json as Record<string, unknown>,
+          }] : [];
+        }
+        layers.push({ pack: r.pack, dir: bundleDir(r.kind, r.id, r.pack, this.artRoot), files: new Set(r.files), json });
+      }
       const lab = opts.lab?.get(k);
       if (lab) layers.push({ pack: LAB_LAYER, dir: "", files: new Set(), json: lab });
       const kind = list[0].kind;

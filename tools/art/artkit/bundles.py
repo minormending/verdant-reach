@@ -142,7 +142,18 @@ def load(kind: str, id_: str, root: Path = ART, packs: list[str] | tuple[str, ..
         if pp.exists():
             over = load_json(pp)
             if kind == "species" and data and over.get("format", data.get("format")) != data.get("format"):
-                data = {k:v for k,v in data.items() if k not in ("palette", "sport", "size")}
+                # Crossing formats discards both metadata and file inheritance.
+                # Partial v1 overrides use the frozen R5a Crystal snapshot.
+                snapshot = json_path(kind, id_, root / "packs" / "crystal")
+                fallback = load_json(snapshot) if snapshot.exists() else None
+                if over.get("format") == "verdant.species/1" and fallback and fallback.get("format") == over["format"]:
+                    data = dict(fallback)
+                    base = dict(fallback)
+                    dirs = [snapshot.parent]
+                else:
+                    data = {}
+                    base = None
+                    dirs = []
             data = {**(data or {}), **over}
             dirs.insert(0, pp.parent)
     if data is None:

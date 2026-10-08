@@ -11,6 +11,8 @@ import qa
 import checks2 as C
 from creatures2 import kit2
 from artkit.bundles import load
+from artkit.core import ART
+from artkit.resolve import Resolver
 from artkit.validate import validate
 
 
@@ -129,6 +131,53 @@ class Creatures2Tests(unittest.TestCase):
             with patch.object(qa.kit,'SPECIES_DIR',root):
                 self.assertEqual(qa.kit.write_species('fixture',palette=[],sport=[],front=[],back=[],icon=[],anim={},notes='',tool='synthetic'),[])
             self.assertEqual(path.read_text(),content)
+
+    def test_v1_over_v2_uses_crystal_snapshot_and_remaps_inherited_icons(self):
+        resolver=Resolver(ART,packs=['traced'])
+        bundle=resolver.bundle('species','oak_acorn')
+        crystal=load('species','oak_acorn',ART,['crystal'])
+        self.assertEqual(bundle.data['format'],'verdant.species/1')
+        self.assertIsNone(bundle.data['anim'])  # explicit traced null disables the intro
+        self.assertIn('packs/traced/',str(bundle.file('front.png')))
+        self.assertIn('packs/crystal/',str(bundle.file('icon.png')))
+        self.assertEqual(resolver.image('assets/species/oak_acorn/front.png').shape,(56,56,4))
+        self.assertEqual(resolver.image('assets/species/oak_acorn/icon.png').shape,(16,16,4))
+        source=crystal.frame('icon')
+        expected=source.copy()
+        for old,new in zip(crystal.data['palette'],bundle.data['palette']):
+            mask=(source[...,:3]==kit2.rgb_of(old)).all(axis=2)&(source[...,3]>0)
+            expected[mask,:3]=kit2.rgb_of(new)
+        np.testing.assert_array_equal(bundle.frame('icon'),expected)
+        self.assertEqual(load('species','oak_acorn').frame('icon').shape,(32,32,4))
+        self.assertEqual(crystal.frame('icon').shape,(16,16,4))
+
+    def test_missing_same_format_snapshot_requires_complete_override(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp); js,imgs=self.fixture()
+            kit2.write_species2('fixture',front=imgs['front'],back=imgs['back'],icon=imgs['icon'],
+                                anim=js['anim'],sport=js['sport'],root=root)
+            folder=root/'packs/traced/species/fixture';folder.mkdir(parents=True)
+            palette=['#181818','#204020','#509056','#f8f8f8']
+            meta={'format':'verdant.species/1','palette':palette,'sport':palette}
+            (folder/'species.json').write_text(json.dumps(meta))
+            (root/'packs/traced/pack.json').write_text(json.dumps({'format':'verdant.pack/1','id':'traced'}))
+            errors=[p[2] for p in validate(root,coverage=False) if p[0]=='error']
+            self.assertTrue(any('frames.icon' in e for e in errors))
+            self.assertNotIn('frames',load('species','fixture',root,['traced']).data)
+            meta['frames']={'front':['front.png'],'back':['back.png'],'icon':['icon.png']}
+            for name,size in [('front',56),('back',48),('icon',16)]:
+                Image.new('RGBA',(size,size),(80,144,86,255)).save(folder/(name+'.png'))
+            (folder/'species.json').write_text(json.dumps(meta))
+            self.assertEqual([p for p in validate(root,coverage=False) if p[0]=='error'],[])
+            # Missing metadata, unlike explicit null, inherits from the snapshot.
+            snapshot=root/'packs/crystal/species/fixture'; snapshot.mkdir(parents=True)
+            (snapshot/'species.json').write_text(json.dumps({**meta,'anim':{'intro':[[0,52]]}}))
+            for name in ('front','back','icon'):
+                (snapshot/(name+'.png')).write_bytes((folder/(name+'.png')).read_bytes())
+            (folder/'species.json').write_text(json.dumps({'format':'verdant.species/1'}))
+            inherited=load('species','fixture',root,['traced'])
+            self.assertEqual(inherited.data['anim'],{'intro':[[0,52]]})
+            self.assertEqual(inherited.data['palette'],palette)
 
     def test_writer_roundtrip_sport_determinism_and_locks(self):
         js,imgs=self.fixture()

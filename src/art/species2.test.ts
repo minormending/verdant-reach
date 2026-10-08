@@ -49,6 +49,38 @@ describe("species bundle v2", () => {
     expect(cat.resolve("assets/species/oak_acorn/front.png?sport")!.recolor).toEqual({ from: ["#509056"], to: ["#907050"] });
   });
 
+  it("inherits traced v1 frames, icons, animation and colours from Crystal over a v2 base", () => {
+    const palette = ["#181818", "#204020", "#509056", "#f8f8f8"];
+    const crystal: RawBundle = { ...fixture(palette), pack: "crystal",
+      files: [...fixture().files, "front__2.png"],
+      json: { format: "verdant.species/1", palette, sport: palette,
+        frames: { front: ["front.png", "front__2.png"], back: ["back.png"], icon: ["icon.png", "icon__2.png"] },
+        anim: { intro: [[0,20],[1,20],[0,12]] } } };
+    const traced: RawBundle = { kind: "species", id: "oak_acorn", pack: "traced",
+      files: ["species.json", "front.png", "back.png"],
+      json: { format: "verdant.species/1", palette: ["#181818", "#403820", "#907050", "#f8f8f8"] } };
+    const raw = [fixture(), crystal, traced];
+    const cat = new ArtCatalog(raw, { packs: ["traced"] });
+    expect(cat.resolve("assets/species/oak_acorn/front.png")!.url).toContain("packs/traced/");
+    for (const name of ["front__2", "icon", "icon__2"]) {
+      const frame = cat.resolve(`assets/species/oak_acorn/${name}.png`)!;
+      expect(frame.url).toContain("packs/crystal/");
+      expect(frame.recolor).toEqual({ from: palette, to: (traced.json as {palette: string[]}).palette });
+    }
+    expect(cat.bundle("species", "oak_acorn")!.merged.anim).toEqual((crystal.json as {anim: unknown}).anim);
+    expect(cat.bundle("species", "oak_acorn")!.merged.size).toBeUndefined();
+    expect(new ArtCatalog(raw).bundle("species", "oak_acorn")!.merged.format).toBe("verdant.species/2");
+    expect(new ArtCatalog(raw, { packs: ["crystal"] }).resolve("assets/species/oak_acorn/icon.png")!.url).toContain("packs/crystal/");
+
+    const missing = new ArtCatalog([fixture(), traced], { packs: ["traced"] });
+    expect(missing.resolve("assets/species/oak_acorn/icon.png")).toBeNull();
+    const result = validateArt({ raw: [fixture(), traced], legacy: [], required: [], image,
+      packs: { traced: { json: { format: "verdant.pack/1", id: "traced", name: "Traced" } } } });
+    expect(result.problems.some(p => p.where.startsWith("packs/traced/") && p.message.includes("frames"))).toBe(true);
+    const complete = { ...crystal, pack: "complete" };
+    expect(new ArtCatalog([fixture(), complete], { packs: ["complete"] }).resolve("assets/species/oak_acorn/icon.png")!.url).toContain("packs/complete/");
+  });
+
   it("rejects mismatched dimensions, more than sixteen shared colours, and array sports", () => {
     const raw = fixture();
     raw.json = { ...(raw.json as object), sport: ["#907050"] };

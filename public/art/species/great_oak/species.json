@@ -1,15 +1,40 @@
 {
-  "format": "verdant.species/1",
+  "format": "verdant.species/2",
   "id": "great_oak",
-  "palette": ["#181818", "#584018", "#68b838", "#f8f8f8"],
-  "sport": ["#181818", "#504018", "#d0b030", "#f8f8f8"],
+  "palette": [
+    "#2a2230",
+    "#344944",
+    "#52674b",
+    "#533f49",
+    "#76533f",
+    "#795548",
+    "#7b9259",
+    "#a37b4c",
+    "#a67850",
+    "#b2b978",
+    "#c6a269",
+    "#c8a273",
+    "#dec38e"
+  ],
+  "sport": {
+    "#344944": "#66533f",
+    "#52674b": "#9a823e",
+    "#7b9259": "#c4b15b",
+    "#b2b978": "#e3d18d",
+    "#76533f": "#77603d",
+    "#a37b4c": "#a18b4c",
+    "#c6a269": "#c8b46e",
+    "#dec38e": "#e1d399"
+  },
   "frames": {
-    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png", "front__6.png"],
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png"],
     "back": ["back.png"],
     "icon": ["icon.png", "icon__2.png"]
   },
-  "anim": { "intro": [[0, 6], [1, 6], [2, 8], [3, 4], [4, 4], [3, 4], [4, 4], [1, 6], [5, 6], [0, 1]], "idle": [[0, 140], [3, 6], [4, 6]] },
-  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/oak.py. Reference photo oak/adult.jpg by AnRo0002 (CC0), https://commons.wikimedia.org/wiki/File:20130425Quercus_robur01.jpg: used as a drawing reference, not traced. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
-  "source": { "kind": "generated", "tool": "tools/art/crystal/oak.py" },
-  "notes": "Intro: the crown inhales, heaves up 2px and swells, the leaves shiver twice (the clump lobes rotate), then it drops 1px past rest and settles. Trunk, boughs and the acorn fist hold still. Learned: green-on-green works with ONE dark: the bark brown shades every clump, black splits the front clumps, white rims their lit tops. Sport: 'Concordia' golden oak. Quercus robur 'Concordia' (Van Geert, Ghent, 1843): butter-yellow leaves, gold-green acorns (indexes 1-2 only)."
+  "anim": { "intro": [[0, 8], [1, 8], [2, 14], [1, 6], [3, 8], [0, 8]] },
+  "credits": "Original pixel art for Verdant Reach (tools/art/creatures2/oak.py).",
+  "source": { "kind": "generated", "tool": "tools/art/creatures2/oak.py" },
+  "notes": "BRACED cap-helmet acorn/shield sapling; LOOMING bough adult. English-oak lobes, staggered cupule scales, clustered warm bark, pale radicle feet. Intro: the braced acorn leans 27 degrees toward the foe and its cap tips about the rear hinge; the sapling lifts its lead leaf-shield; the adult crown heaves and widens as its acorn-fist swings. Roots stay planted. Sport: Quercus robur 'Concordia', gold-green nut and butter-yellow leaves; bark and outline stay warm. No faces; the brim is an organ overlap, with no eye marks underneath. QA note: the sapling/adult reach 16/18 silhouette tips in key poses (above the generic limit), all from deliberately paired English-oak lobes, not loose pixels.",
+  "size": { "front": 64, "back": 64, "icon": 32 },
+  "moving": [[0, 0, 64, 36], [0, 27, 29, 59]]
 }

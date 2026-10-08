@@ -1,4 +1,4 @@
-"""Discover and build original v2 lines in isolated processes. R5a has none."""
+"""Discover and build original v2 lines in isolated processes. Each line is discovered without a second registry."""
 from __future__ import annotations
 import subprocess
 import sys
@@ -35,11 +35,16 @@ def main(argv):
     import qa
     roster = qa.load_roster()
     ids = [i for i,v in roster.items() if v['js'].get('format') == 'verdant.species/2']
-    args = ids
+    result = int(bool(failed) or bool(ids and qa.main(ids)))
     if '--sheet' in argv and ids:
-        # Review every v2 bundle that differs from the selected git baseline.
-        args += ['--changed', 'HEAD', '--sheet', str(HERE.parent/'review/creatures2_review.png')]
-    return int(bool(failed) or bool(ids and qa.main(args)))
+        from _review import review_sheet
+        pilot = ['oak_acorn','oak_sapling','great_oak','chili_blossom',
+                 'green_chili','red_chili','lily_seedpod','lily_pad','giant_water_lily']
+        ordered = [i for i in pilot if i in ids]+sorted(set(ids)-set(pilot))
+        path = HERE.parent/'review/creatures2_review.png'
+        review_sheet(ordered,path)
+        print(f'Sheet: {path}')
+    return result
 
 
 if __name__ == '__main__':
