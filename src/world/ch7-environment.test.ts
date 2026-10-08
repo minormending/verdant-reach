@@ -28,6 +28,14 @@ const GAMEPLAY: [MapId, string][] = [
 const CHALET_DOORS = [[3, 5, "bg_door_c"], [9, 5, "hh_door_east"], [4, 22, "gc_door_b"], [10, 22, "hh_door_nw"]] as const;
 const isChaletDoor = (id: MapId, x: number, y: number) => id === "larchmere" && CHALET_DOORS.some(([cx, cy]) => cx === x && cy === y);
 
+// The lead's cast swap (after the cast7 wave): new Chapter 7 sprites replace
+// these stand-ins one for one. Hash them as the stand-ins, so any other sprite
+// change still fails.
+const RESKIN: Record<string, string> = {
+  signe: "nell_pitcher", skier: "birdwatcher", lodge_keeper: "shopkeeper",
+  signal_emitter: "lever", crimson_lily: "potted_plant", calloway: "researcher",
+};
+
 function gameplay(id: MapId): string {
   const m = WORLD.maps[id];
   // Bloom Lake's red-water swap is new art; every other legend swap is frozen.
@@ -35,7 +43,7 @@ function gameplay(id: MapId): string {
   const legendWhen = (m.legendWhen ?? []).filter((o) => !Object.values(o.legend).includes("red_water"))
     .map((o) => ({ ...o, legend: Object.fromEntries(Object.entries(o.legend).map(([c, t]) => [c, t === "hideout_wall" ? "wall" : t])) }));
   return JSON.stringify({
-    warps: m.warps, triggers: m.triggers.filter((t) => !isChaletDoor(id, t.x, t.y)), npcs: m.npcs, hidden: m.hidden ?? [],
+    warps: m.warps, triggers: m.triggers.filter((t) => !isChaletDoor(id, t.x, t.y)), npcs: m.npcs.map((n) => ({ ...n, sprite: RESKIN[n.sprite] ?? n.sprite })), hidden: m.hidden ?? [],
     doors: m.structures.filter((s) => STRUCTURES[s.key].door)
       .map((s) => [s.x + STRUCTURES[s.key].door!.x, s.y + STRUCTURES[s.key].door!.y])
       .filter(([x, y]) => !isChaletDoor(id, x, y)),

@@ -132,7 +132,7 @@ describe("Chapter 7 world", () => {
     expect(WORLD.maps.route_9.npcs.filter((n) => n.trainer)).toHaveLength(4);
     expect(WORLD.maps.route_9.hidden).toHaveLength(2);
     expect(WORLD.maps.route_9.hidden!.some((h) => h.item === "climber_pack" && WORLD.maps.route_9.legend[WORLD.maps.route_9.tiles[h.y][h.x]] === "snow")).toBe(true);
-    expect(WORLD.maps.bloom_lake.npcs[0]).toMatchObject({ id: "crimson_lily", sprite: "potted_plant", visibleWhen: [{ flag: "crimson_lily_done", is: false }] });
+    expect(WORLD.maps.bloom_lake.npcs[0]).toMatchObject({ id: "crimson_lily", sprite: "crimson_lily", visibleWhen: [{ flag: "crimson_lily_done", is: false }] });
     const stock: string[] = [];
     for (const id of ["ch7_market_pods", "ch7_market_care"]) eachCmd(WORLD.scripts[id], (c) => { if (c.op === "shop") stock.push(...c.stock); });
     expect(stock).toEqual(["terrarium_pod", "glass_pod", "water_flask", "spring_water", "compost", "neem_spray", "plant_food", "aloe_gel", "cloche", "rain_jar"]);

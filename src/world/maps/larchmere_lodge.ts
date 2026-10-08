@@ -24,7 +24,7 @@ export const larchmere_lodge: MapDef = {
   structures: [],
   warps: [{ x: 6, y: 11, to: "larchmere", toX: 26, toY: 23, facing: "down" }],
   npcs: [
-    { id: "lodge_keeper", sprite: "shopkeeper", x: 3, y: 1, facing: "down", script: "ch7_lodge_keeper" },
+    { id: "lodge_keeper", sprite: "lodge_keeper", x: 3, y: 1, facing: "down", script: "ch7_lodge_keeper" },
     { id: "grunt_lodge", sprite: "grunt", x: 9, y: 9, facing: "left", script: "ch7_lodge_grunt", visibleWhen: when({ lodge_grunt_seen: false }) },
   ],
   signs: [], triggers: [

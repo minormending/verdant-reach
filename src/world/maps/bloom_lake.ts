@@ -52,7 +52,7 @@ export const bloom_lake: MapDef = {
     { x: 0, y: 17, to: "larchmere", toX: 34, toY: 17, facing: "left" },
     { x: 0, y: 18, to: "larchmere", toX: 34, toY: 18, facing: "left" },
   ],
-  npcs: [{ id: "crimson_lily", sprite: "potted_plant", x: 18, y: 18, facing: "down", script: "ch7_crimson_lily", visibleWhen: when({ crimson_lily_done: false }) }],
+  npcs: [{ id: "crimson_lily", sprite: "crimson_lily", x: 18, y: 18, facing: "down", script: "ch7_crimson_lily", visibleWhen: when({ crimson_lily_done: false }) }],
   signs: [{ x: 3, y: 16, text: "BLOOM LAKE. Raft landing: launch from the shore." }], triggers: [],
   encounters: { grass: { rate: 10, slots: [
     { species: "edelweiss_bud", weight: 40, minLevel: 31, maxLevel: 31 },

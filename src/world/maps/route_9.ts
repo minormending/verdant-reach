@@ -74,8 +74,8 @@ export const route_9: MapDef = {
   npcs: [
     { id: "climber_ridge", sprite: "hiker", x: 10, y: 45, facing: "right", trainer: "climber_ridge", sight: 2 },
     { id: "climber_scree", sprite: "hiker", x: 20, y: 29, facing: "left", trainer: "climber_scree", sight: 2 },
-    { id: "skier_frost", sprite: "birdwatcher", x: 9, y: 14, facing: "right", trainer: "skier_frost", sight: 2 },
-    { id: "skier_drift", sprite: "birdwatcher", x: 20, y: 7, facing: "left", trainer: "skier_drift", sight: 2 },
+    { id: "skier_frost", sprite: "skier", x: 9, y: 14, facing: "right", trainer: "skier_frost", sight: 2 },
+    { id: "skier_drift", sprite: "skier", x: 20, y: 7, facing: "left", trainer: "skier_drift", sight: 2 },
     { id: "mountaineer", sprite: "hiker", x: 8, y: 39, facing: "down", script: "q_lost_climber" },
   ],
   hidden: [{ x: 8, y: 8, item: "climber_pack" }, { x: 23, y: 11, item: "rain_jar" }],

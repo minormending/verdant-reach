@@ -34,6 +34,6 @@ export const rootstock_hideout_2: MapDef = {
     // No reverse town warp: Calloway's escape tunnel is one-way.
     { x: 15, y: 2, to: "larchmere", toX: 30, toY: 23, facing: "down" },
   ],
-  npcs: [{ id: "calloway", sprite: "researcher", x: 8, y: 5, facing: "down", script: "calloway", visibleWhen: when({ calloway_escaped: false }) }],
+  npcs: [{ id: "calloway", sprite: "calloway", x: 8, y: 5, facing: "down", script: "calloway", visibleWhen: when({ calloway_escaped: false }) }],
   signs: [], triggers: [{ x: 11, y: 4, script: "ch7_files" }],
 };
