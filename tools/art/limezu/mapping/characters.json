@@ -1,0 +1,362 @@
+{
+ "_note": "LimeZu Character Generator layers (interiors:2_Characters/Character_Generator/<Layer>/16x16/<file>), composited in the order body, eyes, outfit, hair, accessory. Picked by Codex (delegate/lz-chars.mjs) from numbered sheets, reviewed by the lead. File names only, no pixels.",
+ "characters": {
+  "angler": {
+   "body": "Body_01.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_26_01.png",
+   "hair": "Hairstyle_06_03.png",
+   "accessory": "Accessory_11_Beanie_01.png"
+  },
+  "arranger": {
+   "body": "Body_09.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_24_04.png",
+   "hair": "Hairstyle_10_03.png",
+   "accessory": null
+  },
+  "beekeeper": {
+   "body": "Body_02.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_08_02.png",
+   "hair": "Hairstyle_12_01.png",
+   "accessory": "Accessory_18_Chef_02.png"
+  },
+  "belladonna": {
+   "body": "Body_06.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_28_01.png",
+   "hair": "Hairstyle_04_04.png",
+   "accessory": null
+  },
+  "birdwatcher": {
+   "body": "Body_03.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_14_02.png",
+   "hair": "Hairstyle_02_02.png",
+   "accessory": "Accessory_11_Beanie_01.png"
+  },
+  "bram": {
+   "body": "Body_01.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_20_02.png",
+   "hair": "Hairstyle_05_04.png",
+   "accessory": null
+  },
+  "brother_saguaro": {
+   "body": "Body_05.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_25_03.png",
+   "hair": "Hairstyle_14_05.png",
+   "accessory": "Accessory_11_Beanie_02.png"
+  },
+  "calloway": {
+   "body": "Body_06.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_09_01.png",
+   "hair": "Hairstyle_11_04.png",
+   "accessory": "Accessory_15_Glasses_01.png"
+  },
+  "diver": {
+   "body": "Body_04.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_31_01.png",
+   "hair": "Hairstyle_12_07.png",
+   "accessory": null
+  },
+  "elder": {
+   "body": "Body_06.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_22_03.png",
+   "hair": "Hairstyle_06_05.png",
+   "accessory": "Accessory_15_Glasses_01.png"
+  },
+  "fennimore": {
+   "body": "Body_06.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_14_02.png",
+   "hair": "Hairstyle_12_05.png",
+   "accessory": "Accessory_15_Glasses_06.png"
+  },
+  "flora_vance": {
+   "body": "Body_05.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_28_02.png",
+   "hair": "Hairstyle_18_01.png",
+   "accessory": null
+  },
+  "florist": {
+   "body": "Body_08.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_25_05.png",
+   "hair": "Hairstyle_18_01.png",
+   "accessory": null
+  },
+  "forager": {
+   "body": "Body_03.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_11_03.png",
+   "hair": "Hairstyle_18_03.png",
+   "accessory": "Accessory_07_Bataclava_03.png"
+  },
+  "gardener": {
+   "body": "Body_05.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_10_05.png",
+   "hair": "Hairstyle_09_01.png",
+   "accessory": "Accessory_11_Beanie_02.png"
+  },
+  "gentleman": {
+   "body": "Body_04.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_06_03.png",
+   "hair": "Hairstyle_02_04.png",
+   "accessory": null
+  },
+  "greenhouse_keeper": {
+   "body": "Body_03.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_12_01.png",
+   "hair": "Hairstyle_11_03.png",
+   "accessory": null
+  },
+  "grunt": {
+   "body": "Body_05.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_08_02.png",
+   "hair": "Hairstyle_06_05.png",
+   "accessory": null
+  },
+  "hiker": {
+   "body": "Body_07.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_17_01.png",
+   "hair": "Hairstyle_03_07.png",
+   "accessory": "Accessory_04_Snapback_02.png"
+  },
+  "hollis": {
+   "body": "Body_04.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_18_02.png",
+   "hair": "Hairstyle_06_05.png",
+   "accessory": "Accessory_11_Beanie_01.png"
+  },
+  "island_elder": {
+   "body": "Body_05.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_28_04.png",
+   "hair": "Hairstyle_22_05.png",
+   "accessory": null
+  },
+  "kid": {
+   "body": "Body_09.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_16_01.png",
+   "hair": "Hairstyle_14_02.png",
+   "accessory": null
+  },
+  "lumberjack": {
+   "body": "Body_01.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_18_03.png",
+   "hair": "Hairstyle_12_04.png",
+   "accessory": "Accessory_12_Mustache_05.png"
+  },
+  "mercer": {
+   "body": "Body_01.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_19_03.png",
+   "hair": "Hairstyle_14_05.png",
+   "accessory": null
+  },
+  "mimi_osa": {
+   "body": "Body_08.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_33_02.png",
+   "hair": "Hairstyle_27_01.png",
+   "accessory": null
+  },
+  "morrow": {
+   "body": "Body_06.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_27_01.png",
+   "hair": "Hairstyle_11_05.png",
+   "accessory": null
+  },
+  "nell_pitcher": {
+   "body": "Body_02.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_09_03.png",
+   "hair": "Hairstyle_11_02.png",
+   "accessory": null
+  },
+  "night_gardener": {
+   "body": "Body_09.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_19_01.png",
+   "hair": "Hairstyle_14_03.png",
+   "accessory": null
+  },
+  "nursery_keeper": {
+   "body": "Body_05.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_11_02.png",
+   "hair": "Hairstyle_09_05.png",
+   "accessory": "Accessory_11_Beanie_03.png"
+  },
+  "nursery_keeper_b": {
+   "body": "Body_07.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_11_04.png",
+   "hair": "Hairstyle_06_06.png",
+   "accessory": "Accessory_04_Snapback_03.png"
+  },
+  "orchardist": {
+   "body": "Body_04.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_03_04.png",
+   "hair": "Hairstyle_06_04.png",
+   "accessory": "Accessory_11_Beanie_02.png"
+  },
+  "pip": {
+   "body": "Body_02.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_22_03.png",
+   "hair": "Hairstyle_01_02.png",
+   "accessory": "Accessory_04_Snapback_03.png"
+  },
+  "player": {
+   "body": "Body_02.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_18_04.png",
+   "hair": "Hairstyle_01_03.png",
+   "accessory": "Accessory_04_Snapback_02.png"
+  },
+  "pyra": {
+   "body": "Body_07.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_16_03.png",
+   "hair": "Hairstyle_29_06.png",
+   "accessory": null
+  },
+  "ranger": {
+   "body": "Body_04.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_04_01.png",
+   "hair": "Hairstyle_12_03.png",
+   "accessory": "Accessory_05_Dino_Snapback_01.png"
+  },
+  "reporter": {
+   "body": "Body_01.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_22_01.png",
+   "hair": "Hairstyle_01_03.png",
+   "accessory": null
+  },
+  "researcher": {
+   "body": "Body_06.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_29_03.png",
+   "hair": "Hairstyle_02_05.png",
+   "accessory": "Accessory_15_Glasses_01.png"
+  },
+  "reyes": {
+   "body": "Body_04.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_15_03.png",
+   "hair": "Hairstyle_23_04.png",
+   "accessory": "Accessory_06_Policeman_Hat_02.png"
+  },
+  "rook": {
+   "body": "Body_04.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_26_02.png",
+   "hair": "Hairstyle_09_04.png",
+   "accessory": null
+  },
+  "rowan": {
+   "body": "Body_05.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_10_01.png",
+   "hair": "Hairstyle_14_06.png",
+   "accessory": null
+  },
+  "sailor": {
+   "body": "Body_02.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_23_03.png",
+   "hair": "Hairstyle_14_02.png",
+   "accessory": "Accessory_07_Bataclava_01.png"
+  },
+  "schoolkid": {
+   "body": "Body_02.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_10_04.png",
+   "hair": "Hairstyle_14_01.png",
+   "accessory": null
+  },
+  "shears": {
+   "body": "Body_04.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_27_03.png",
+   "hair": "Hairstyle_21_04.png",
+   "accessory": null
+  },
+  "shopkeeper": {
+   "body": "Body_01.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_25_02.png",
+   "hair": "Hairstyle_12_02.png",
+   "accessory": null
+  },
+  "shrine_keeper": {
+   "body": "Body_02.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_28_02.png",
+   "hair": "Hairstyle_11_05.png",
+   "accessory": null
+  },
+  "signe": {
+   "body": "Body_02.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_06_04.png",
+   "hair": "Hairstyle_18_01.png",
+   "accessory": "Accessory_05_Dino_Snapback_02.png"
+  },
+  "titus_arum": {
+   "body": "Body_06.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_32_03.png",
+   "hair": "Hairstyle_24_04.png",
+   "accessory": null
+  },
+  "vale": {
+   "body": "Body_03.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_08_01.png",
+   "hair": "Hairstyle_11_01.png",
+   "accessory": null
+  },
+  "villager_a": {
+   "body": "Body_04.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_13_04.png",
+   "hair": "Hairstyle_04_02.png",
+   "accessory": null
+  },
+  "villager_b": {
+   "body": "Body_01.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_01_05.png",
+   "hair": "Hairstyle_02_03.png",
+   "accessory": null
+  },
+  "wren": {
+   "body": "Body_08.png",
+   "eyes": "Eyes_01.png",
+   "outfit": "Outfit_24_01.png",
+   "hair": "Hairstyle_27_03.png",
+   "accessory": null
+  }
+ }
+}
