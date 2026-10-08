@@ -85,6 +85,7 @@ WHITE_PARTS: dict[str, str] = {
     "snowdrop_shoot": "the snowdrop's closed bud is white, and it pushes up out of white snow",
     "snowdrop": "the snowdrop (Galanthus nivalis) flower's tepals are pure white",
     "lithops_bloom": "lithops flowers (L. karasmontana and others) are white, daisy-like and bigger than a leaf pair",
+    "dragon_fruit": "the pitaya's (Selenicereus undatus) huge night flower has white inner tepals",
 }
 
 SIZES = {"front": 56, "back": 48, "icon": 16}

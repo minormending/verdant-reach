@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "dragon_fruit",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#3c9048", "#f058a0", "#f8f8f8"],
+  "sport": ["#181818", "#3c9048", "#e8d038", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release."
+  "anim": { "intro": [[0, 6], [1, 12], [2, 6], [3, 18], [4, 10], [0, 8]], "idle": [[0, 150], [4, 10], [0, 8]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/pitaya.py. Drawn under the Crystal rule (docs/CREATURES.md); no sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/pitaya.py" },
+  "notes": "Crystal rule. LUNGING: the climbing three-ribbed stem arches toward the foe and carries the huge night flower (a broad white cup of narrow petals, long yellow-green outer bracts with magenta tips, a starburst of stamens) and one magenta dragon fruit with green-tipped scales. The flower opens wide, holds and settles. WHITE: the pitaya's huge night flower (Selenicereus undatus) has white inner tepals. Stem green in the dark slot, magenta-pink in the mid. Roots and the stem base stay fixed; only the signature part moves. Areoles are white tufts, never dark dots; the stamens are joined lines, never dots. Sport: the yellow pitaya (Selenicereus megalanthus), a related species with yellow fruit skin: the magenta mid slot turns yellow; geometry stays identical."
 }
