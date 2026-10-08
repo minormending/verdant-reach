@@ -27,6 +27,10 @@ function gameplay(id: MapId): string {
 }
 
 // [map, gameplay digest, encounter-footprint digest]
+// Gameplay digests re-pinned after the lead's merge: Thistledown, Route 11 and
+// Sanguine Ridge play their Chapter 9 tracks, and ROOK, the stone botanist and
+// the tumbleweed use their own sprites (all intended). Everything else is as
+// frozen before the dressing pass.
 const FROZEN: [MapId, string, string][] = [
   ["route_10", "f4170cbaa0444b577e3d6ddd0b9e27a2c87140bb936b036f6fcde2f0e504854f", "a51689675d7b437f21975da4369568a29eb997396b6e10701d8a865f3c9c8dfe"],
   ["thistledown", "15bb77944cbf1629be08935b28cffa0a4924e3fb63ee2a6fa8098d7df67afcbc", "ab97e4c31a6e757201e3cb09a55357147a11595d4a273ba06f755047fee8f12b"],
