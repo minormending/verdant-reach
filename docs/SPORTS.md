@@ -169,3 +169,12 @@ Chapter 6 vanilla line (set in `tools/art/crystal/vanilla.py`; palettes are dark
 | vanilla_orchid | 'Variegata' | The same cream-striped Vanilla planifolia form as vanilla_vine. Leaf faces and orchid segments take pale cream-green; the stake and long green capsules retain an olive dark tone. Shared white stays reserved for rims and gloss, with identical geometry. | `#586040 #d0d8a0 #f8f8f8` |
 
 Botanical references: [University of California Riverside Botanic Gardens, Fall 2021 plant list](https://gardens.ucr.edu/sites/g/files/rcwecm4706/files/2021-09/Online%20Fall%202021%20Plant%20List%209.21.2021.pdf) lists Vanilla planifolia 'Variegata' with succulent leaves striped creamy white and pale yellow-green flowers. [UF/IFAS, Vanilla Growing in South Florida (HS1348)](https://ask.ifas.ufl.edu/publication/HS1348) describes the fleshy climbing vine, oval pointed leaves, aerial roots, cream-green flowers with a modified lip, and elongated green capsules. The exact cream-green palette is an artistic interpretation of variegation within two colour slots.
+
+Chapter 7 edelweiss line (set in `tools/art/crystal/edelweiss.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| edelweiss_bud | creamy-yellow felt (natural colour variation) | Leontopodium nivale: a natural colour variation, the creamier, less silvery felt of plants grown in shade and at lower altitude; not a named cultivar. Crystal: the woolly grey-green leaves and the button bud's shading turn cream, the limestone flank a warm ochre; the white felt highlights stay white. Palette swap only. | `#987838 #d8c890 #f8f8f8` |
+| edelweiss | creamy-yellow felt (natural colour variation) | The same natural creamy-felt variation as edelweiss_bud, not a named cultivar. The star's bract shading and the woolly leaves take cream, and the domed flower heads deepen from yellow-olive to ochre; the white felt stays white, with identical geometry. | `#987838 #d8c890 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Leontopodium nivale](https://en.wikipedia.org/wiki/Leontopodium_nivale) describes the woolly white hairs on the leaves and the fuzzy white bracts around five to six small yellow clustered flower heads, and its rocky limestone habitat. These support the anatomy. The creamier felt of shaded, lower-altitude plants is the lead's design brief: that page does not describe it, and the exact cream palette is an artistic interpretation within two colour slots.
