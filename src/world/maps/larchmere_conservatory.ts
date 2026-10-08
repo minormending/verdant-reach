@@ -3,7 +3,10 @@ import { LEGEND } from "../build";
 
 export const larchmere_conservatory: MapDef = {
   id: "larchmere_conservatory", name: "CONSERVATORY", outdoor: false, music: "conservatory", ambient: "none",
-  border: "void", legend: LEGEND,
+  border: "void",
+  // Frost theme: frosted glass walls, pale marble and potted snowdrops set into the glass
+  // between the ice lanes. Every ice, floor and wall cell is where the puzzle had it.
+  legend: { ...LEGEND, W: "glass_wall", g: "floor_marble" },
   tiles: [
     "WWWWWWWWWWWWWWWW",
     "WggggggggggggggW",
@@ -13,15 +16,15 @@ export const larchmere_conservatory: MapDef = {
     "WWWWWWWWWWWWWgWW",
     "WWg{{{{{{{{{{gWW",
     "WWgWWWWWWWWWWWWW",
-    "WWgWWWWWWWWWWWWW",
+    "WWgWpWWWpWWWpWWW",
     "WWgWWWWWWWWWWWWW",
     "WWg{{{{{{{{{{gWW",
     "WWWWWWWWWWWWWgWW",
-    "WWWWWWWWWWWWWgWW",
+    "WWWWWpWWWpWWWgWW",
     "WWWWWWWWWWWWWgWW",
     "WWg{{{{{{{{{{gWW",
     "WWgWWWWWWWWWWWWW",
-    "WWgWWWWWWWWWWWWW",
+    "WWgWpWWWpWWWpWWW",
     "WggggggggggggggW",
     "WggggggggggggggW",
     "WWWWWWWEWWWWWWWW",

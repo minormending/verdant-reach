@@ -41,7 +41,7 @@ describe("Chapter 7 world", () => {
       expect(tileAt(lodge, 10, 2)).toBe(open ? "stairs_down" : "bookshelf");
       expect(tryMove(lodge, 10, 3, "up").kind === "walk").toBe(open);
       const b1 = buildMap(resolved("rootstock_hideout_1", { emitters_off: open }));
-      expect(tileAt(b1, 21, 2)).toBe(open ? "stairs_down" : "wall");
+      expect(tileAt(b1, 21, 2)).toBe(open ? "stairs_down" : "hideout_wall");
       expect(tryMove(b1, 21, 3, "up").kind === "walk").toBe(open);
       const b2 = buildMap(resolved("rootstock_hideout_2", { beat_calloway: open, files_read: open }));
       expect(tryMove(b2, 15, 3, "up").kind === "walk").toBe(open);

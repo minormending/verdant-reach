@@ -1,0 +1,37 @@
+{
+  "format": "verdant.tileset/1",
+  "id": "alpine",
+  "name": "Alpine Pass",
+  "tileSize": 16,
+  "sheet": "sheet.png",
+  "columns": 16,
+  "tiles": {
+    "larch_tree": { "base": 0 },
+    "scree": { "base": 1, "alts": [2, 3, 4] },
+    "snow_grass": { "base": [5, 6] },
+    "frozen_shore": { "base": 7, "alts": [8, 9, 10] },
+    "red_water": {
+      "base": [16, 17],
+      "masks": {
+        "0": [32, 48],
+        "1": [33, 49],
+        "2": [34, 50],
+        "3": [35, 51],
+        "4": [36, 52],
+        "5": [37, 53],
+        "6": [38, 54],
+        "7": [39, 55],
+        "8": [40, 56],
+        "9": [41, 57],
+        "10": [42, 58],
+        "11": [43, 59],
+        "12": [44, 60],
+        "13": [45, 61],
+        "14": [46, 62],
+        "15": [47, 63]
+      }
+    }
+  },
+  "credits": "Original hand-pixelled Chapter 7 environment for Verdant Reach; no copied or traced game art.",
+  "source": { "kind": "generated", "tool": "tools/art/env8/tilesets.py" }
+}
