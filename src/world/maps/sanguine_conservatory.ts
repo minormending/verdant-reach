@@ -3,7 +3,9 @@ import { LEGEND } from "../build";
 
 export const sanguine_conservatory: MapDef = {
   id: "sanguine_conservatory", name: "CONSERVATORY", outdoor: false, music: "conservatory", ambient: "none",
-  border: "void", legend: LEGEND,
+  // A hall cut into the ridge: red sandstone walls ("W") round dark-red resin
+  // flags ("t"). The pits and boulders are the puzzle, cell for cell.
+  border: "red_rock", legend: { ...LEGEND, W: "red_rock", t: "resin_floor" },
   tiles: [
     "WWWWWWWWWWWWWWWWWW",
     "WWWWWWWWWWWWWWWWWW",

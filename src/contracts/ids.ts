@@ -252,6 +252,12 @@ export const TILES = {
   roof_vent:      { walk: false },               // a louvred vent box on the roof, steaming
   roof_glass:     { walk: false },               // the Glasshouse dome's top panes (the roof's border)
   rootstock_banner: { walk: false },             // hung on an interior wall during the takeover
+  // Chapter 9: the desert road, Thistledown, the red canyon and Sanguine Ridge
+  desert_scrub:   { walk: true, encounter: "grass" }, // dry scrub and wiry grass on sand: the desert's encounter tile
+  cracked_earth:  { walk: true },                // sun-baked clay plates
+  red_rock:       { walk: false },               // red sandstone walls and outcrops (group "red_rock")
+  red_ledge:      { walk: false, ledge: "down" }, // a red sandstone step: hop south only
+  resin_floor:    { walk: true },                // Conservatory 8: dark-red flags with amber resin grout
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -314,6 +320,11 @@ const STRUCTURE_SPECS = {
   chalet:             { w: 4, h: 3, door: { x: 1, y: 2 } },
   frost_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 7
   boathouse:          { w: 4, h: 3 },                       // lakeside scenery
+  // Chapter 9: Thistledown and Sanguine Ridge
+  dragon_tree_big:    { w: 3, h: 3 },                       // ancient dragon's blood tree (scenery)
+  adobe_house:        { w: 4, h: 3, door: { x: 1, y: 2 } }, // flat-roofed Thistledown adobe
+  ridge_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 8, set into the cliff
+  windmill_pump:      { w: 2, h: 3 },                       // desert wind pump over a trough (scenery)
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;

@@ -121,7 +121,9 @@ describe("Chapter 9 world", () => {
     for (const id of ["route_10", "route_11"] as const) expect(WORLD.maps[id].npcs.filter((n) => n.trainer)).toHaveLength(4);
     expect(WORLD.maps.route_10.hidden).toHaveLength(2);
     expect(WORLD.maps.sanguine_conservatory.npcs.filter((n) => n.trainer)).toHaveLength(2);
-    expect(WORLD.maps.sanguine_ridge.structures.filter((s) => s.key === "big_oak")).toHaveLength(3);
+    // The Chapter 9 environment pass: dragon's blood trees replace the three big_oak stand-ins.
+    expect(WORLD.maps.sanguine_ridge.structures.filter((s) => s.key === "big_oak")).toHaveLength(0);
+    expect(WORLD.maps.sanguine_ridge.structures.filter((s) => s.key === "dragon_tree_big").length).toBeGreaterThanOrEqual(3);
     const stock: string[] = [];
     for (const id of ["ch9_market_pods", "ch9_market_care"]) eachCmd(WORLD.scripts[id], (c) => { if (c.op === "shop") stock.push(...c.stock); });
     expect(stock).toEqual(["terrarium_pod", "glass_pod", "water_flask", "spring_water", "compost", "neem_spray", "plant_food", "aloe_gel", "cloche", "rain_jar", "ember_ash"]);
