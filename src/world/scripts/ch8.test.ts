@@ -81,17 +81,28 @@ const gates: { script: string; flags: Record<string, boolean>; needs: string[]; 
 ];
 
 describe("Chapter 8 scripts", () => {
-  it("wires every scene with spoken TODO placeholders and the correct speakers", () => {
+  it("wires every scene, with finished dialogue, one name per speaker and speaker-less narration", () => {
+    const speakers = new Set<string>();
+    let narration = 0;
     for (const [id, cmds] of Object.entries(ch8Scripts)) {
       expect(WORLD.scripts[id], id).toBe(cmds);
       for (const c of ops(cmds)) if (c.op === "say") {
-        expect(c.text).toMatch(/^TODO\(text\): /);
-        expect(c.speaker).toBeTruthy();
+        expect(c.text).not.toMatch(/TODO/);
+        // Narration has no speaker, as in Chapters 5–7: "NARRATOR" would print "NARRATOR:".
+        if (c.speaker === undefined) { narration++; continue; }
+        speakers.add(c.speaker);
         if (id === "ch8_director" || id === "ch8_reward") expect(c.speaker).toBe("ODELL");
         if (id === "ch8_bram" || id === "ch8_bram_after") expect(c.speaker).toBe("BRAM");
         if (id === "ch8_wren") expect(c.speaker).toBe("WREN");
       }
     }
+    expect(narration).toBeGreaterThan(0);
+    expect([...speakers].sort()).toEqual(["BRAM", "MERCER", "ODELL", "VALE", "WREN"]);
+  });
+
+  it("names the patch order C, A, B in the work note", () => {
+    const text = ops(ch8Scripts.ch8_patch_note).flatMap((c) => (c.op === "say" ? [c.text] : [])).join(" ");
+    expect(text).toContain("C, then A, then B");
   });
 
   it("follows arrival → keycard → lobby → note → patch → Bram → Wren → Mercer → reward → end", async () => {
@@ -132,7 +143,7 @@ describe("Chapter 8 scripts", () => {
     expect(host.battle).toHaveBeenCalledWith({ kind: "trainer", trainer: "wren", canLose: false, backdrop: undefined });
     expect(state.flags).toMatchObject({ beat_wren: true, broadcast_off: true, mercer_seen: true, mercer_left: true, ch8_takeover: false });
     expect(events).toEqual(["show:wren", "sfx:pulse", "flash", "still:relay_pulse", "stillClear", "show:mercer",
-      "move:mercer:8", "hide:mercer", "move:wren:9", "hide:wren"]);
+      "still:mercer_hub_map", "stillClear", "move:mercer:8", "hide:mercer", "move:wren:9", "hide:wren"]);
     expect(host.endSlice).not.toHaveBeenCalled();
     expect(state.bag.rain_jar).toBeUndefined();
     s.enter("glasshouse_relay");
@@ -142,8 +153,10 @@ describe("Chapter 8 scripts", () => {
     expect(host.endSlice).toHaveBeenCalledOnce();
     expect(events.at(-1)).toBe("abort:endSlice");
     const lines = vi.mocked(host.ctx.ui.say).mock.calls.map(([text]) => text);
-    expect(lines.indexOf("TODO(text): Please accept two RAIN JARS and $3000.")).toBeLessThan(
-      lines.indexOf("TODO(text): MERCER has the map of the network's hubs."));
+    const reward = lines.findIndex((text) => text.includes("two RAIN JARS and $3000"));
+    const call = lines.findIndex((text) => text.includes("MERCER has the RELAY's map of the hubs"));
+    expect(reward).toBeGreaterThanOrEqual(0);
+    expect(reward).toBeLessThan(call);
   });
 
   it.each(gates.flatMap((g) => g.needs.map((missing) => ({ ...g, missing }))))(
@@ -189,7 +202,7 @@ describe("Chapter 8 scripts", () => {
       for (const id of "abc") await s.run(`ch8_console_${id}`);
       expect(s.host.cameraReset).toHaveBeenCalledOnce();
       expect(s.host.ctx.ui.say).toHaveBeenLastCalledWith(
-        "TODO(text): The signal is already routed to the roof stair.", { speaker: "NARRATOR" });
+        "The patch holds. The signal runs clean up to the roof.", undefined);
     }
   });
 
@@ -226,7 +239,7 @@ describe("Chapter 8 scripts", () => {
     expect(triggerAt(runtime, 7, 7, s.state.flags)).toBeUndefined();
     await s.run("ch8_wren"); await s.run("ch8_wren_after");
     expect(s.host.battle).toHaveBeenCalledTimes(2);
-    expect(s.host.still).toHaveBeenCalledOnce();
+    expect(s.host.still).toHaveBeenCalledTimes(2);
     expect(s.host.moveNpc).toHaveBeenCalledTimes(2);
   });
 

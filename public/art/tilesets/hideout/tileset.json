@@ -1,0 +1,34 @@
+{
+  "format": "verdant.tileset/1",
+  "id": "hideout",
+  "name": "Rootstock Hideout",
+  "tileSize": 16,
+  "sheet": "sheet.png",
+  "columns": 16,
+  "tiles": {
+    "hideout_floor": { "base": 0, "alts": [1, 2, 3] },
+    "hideout_wall": {
+      "base": 16,
+      "masks": {
+        "0": 32,
+        "1": 33,
+        "2": 34,
+        "3": 35,
+        "4": 36,
+        "5": 37,
+        "6": 38,
+        "7": 39,
+        "8": 40,
+        "9": 41,
+        "10": 42,
+        "11": 43,
+        "12": 44,
+        "13": 45,
+        "14": 46,
+        "15": 47
+      }
+    }
+  },
+  "credits": "Original hand-pixelled Chapter 7 environment for Verdant Reach; no copied or traced game art.",
+  "source": { "kind": "generated", "tool": "tools/art/env8/tilesets.py" }
+}

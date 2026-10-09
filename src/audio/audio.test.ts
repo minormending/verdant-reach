@@ -176,6 +176,87 @@ describe("music", () => {
     expect(new Set(gaps).size).toBe(gaps.length);               // irregular: no two gaps alike, even across the loop
   });
 
+  // Chapter 7.
+  it("alpine: a drumless G major waltz whose second half yodels in sixths", () => {
+    const a = ARRANGEMENTS.alpine;
+    expect(a.meter).toBe(3);
+    expect(a.chords.split("|")[0].trim()).toBe("G");
+    const song = parseSong(MUSIC_DEFS.alpine);
+    expect(song.channels.noise).toBeUndefined();
+    const notes = song.channels.p1!.events;
+    const pcs = new Set(notes.map((e) => e.midi! % 12));
+    expect(pcs.has(6)).toBe(true);                             // F-sharp: G major...
+    expect(pcs.has(5)).toBe(false);                            // ...never F natural
+    const half = song.length / 2;
+    const leaps = (from: number, to: number) => notes.filter((e, i) => i > 0 && e.tick >= from && e.tick < to
+      && Math.abs(e.midi! - notes[i - 1].midi!) >= 8).length;
+    expect(leaps(half, song.length)).toBeGreaterThan(leaps(0, half)); // the yodel half leaps more
+    expect(leaps(half, song.length)).toBeGreaterThanOrEqual(6);
+  });
+
+  it("red_lake: F minor wails that sag a semitone, never resting on the tonic chord at the loop", () => {
+    const a = ARRANGEMENTS.red_lake;
+    const song = parseSong(MUSIC_DEFS.red_lake);
+    const sags = song.channels.p1!.events.filter((e) => e.slide < 0);
+    expect(sags.length).toBeGreaterThanOrEqual(5);
+    for (const s of sags) expect(s.len).toBeGreaterThanOrEqual(96); // long wails, halves and wholes
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("C");       // ends on the dominant
+    expect(a.chords).toMatch(/\bGb\b/);                          // the tritone side
+    expect(song.channels.noise).toBeDefined();
+  });
+
+  it("hideout: a staccato C minor motif over the industrial groove", () => {
+    const a = ARRANGEMENTS.hideout;
+    expect(a.drums).toBe("industrial");
+    const song = parseSong(MUSIC_DEFS.hideout);
+    const p1 = song.channels.p1!.events;
+    const short = p1.filter((e) => e.len <= 24).length;
+    expect(short).toBeGreaterThan(p1.length / 2);                // mostly eighths: clipped steps
+    const pcs = new Set(p1.map((e) => e.midi! % 12));
+    expect(pcs.has(3)).toBe(true);                               // E-flat: C minor
+    expect(pcs.has(6) && pcs.has(11)).toBe(true);                // the chromatic neighbours F-sharp and B
+  });
+
+  // Chapter 8.
+  it("relay_seized: the relay's pulse under a two-hit command that keeps silencing the old tune", () => {
+    const a = ARRANGEMENTS.relay_seized;
+    expect(a.bass).toBe(ARRANGEMENTS.root_relay.bass);                      // the same network throb
+    const p1 = parseSong(MUSIC_DEFS.relay_seized).channels.p1!;
+    const barTicks = 192;
+    const commands = p1.bars.map((_, b) => p1.events.filter((e) => e.tick >= b * barTicks && e.tick < (b + 1) * barTicks))
+      .filter((n) => n.length === 2 && n[0].midi === n[1].midi && n[1].tick - n[0].tick === 96).length;
+    expect(commands).toBeGreaterThanOrEqual(5);                               // "be still", struck twice
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("G");                     // never rests on C minor
+  });
+
+  // Chapter 9.
+  it("thistledown: E dorian over a picked figure and woodblock ticks, rolling home on B7", () => {
+    const a = ARRANGEMENTS.thistledown;
+    expect([a.harmony, a.drums]).toEqual(["broken", "tick"]);
+    const pcs = new Set(parseSong(MUSIC_DEFS.thistledown).channels.p1!.events.map((e) => e.midi! % 12));
+    expect(pcs.has(1)).toBe(true);                                       // dorian C-sharp
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("B7");
+  });
+
+  it("canyon: a D minor gallop whose lead keeps leaping an octave", () => {
+    const a = ARRANGEMENTS.canyon;
+    expect(a.bass).toBe("gallop");
+    const p1 = parseSong(MUSIC_DEFS.canyon).channels.p1!.events;
+    const leaps = p1.filter((e, i) => i > 0 && Math.abs(e.midi! - p1[i - 1].midi!) >= 7).length;
+    expect(leaps).toBeGreaterThanOrEqual(6);
+  });
+
+  it("ridge: slow, drumless and long-breathed, harmonic minor, ending on E", () => {
+    const a = ARRANGEMENTS.ridge;
+    expect(a.bpm).toBeLessThanOrEqual(80);
+    const song = parseSong(MUSIC_DEFS.ridge);
+    expect(song.channels.noise).toBeUndefined();
+    const p1 = song.channels.p1!.events;
+    expect(p1.filter((e) => e.len >= 96).length).toBeGreaterThan(p1.length / 2); // halves and longer
+    expect(new Set(p1.map((e) => e.midi! % 12)).has(8)).toBe(true);    // G-sharp
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("E");
+  });
+
   it("arranges a 3/4 chart correctly", () => {
     const def = arrange({ bpm: 100, meter: 3, chords: "C | G", melody: "c2. | d2. |", harmony: "waltz", bass: "half", drums: "soft" });
     const song = parseSong(def);

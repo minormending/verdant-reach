@@ -1,0 +1,8 @@
+{
+  "format": "verdant.structure/1",
+  "id": "windmill_pump",
+  "image": "structure.png",
+  "size": [2, 3],
+  "credits": "Original hand-pixelled Chapter 9 environment for Verdant Reach; no copied or traced game art.",
+  "source": { "kind": "generated", "tool": "tools/art/env10/buildings.py" }
+}

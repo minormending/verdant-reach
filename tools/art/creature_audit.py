@@ -119,18 +119,18 @@ def audit(id_, stage=None):
 
 
 def load_stages():
-    """Stage class per species from src/data/species.ts (line + stage)."""
-    import re
-    src = ROOT / "src" / "data" / "species.ts"
-    if not src.exists():
+    """Stage class per species from src/data/species/<line>.json (docs/DATA.md)."""
+    import json
+    folder = ROOT / "src" / "data" / "species"
+    if not folder.is_dir():
         return {}
-    rows = re.findall(r'id:\s*"(\w+)",[^\n]*?line:\s*"(\w+)",\s*stage:\s*(\d)', src.read_text())
-    top = {}
-    for _, line, st in rows:
-        top[line] = max(top.get(line, 0), int(st))
+    out = {}
     names = {3: ["baby", "teen", "adult"], 2: ["teen", "adult"], 1: ["adult"]}
-    return {i: names[top[l]][int(st) - 1] for i, l, st in rows if top[l] in names}
-
+    for f in sorted(folder.glob("*.json")):
+        stages = [(s["id"], s["stage"]) for s in json.loads(f.read_text())["species"]]
+        top = max(st for _, st in stages)
+        out.update({i: names[top][st - 1] for i, st in stages if top in names})
+    return out
 
 if __name__ == "__main__":
     ids = sys.argv[1:] or sorted(p.name for p in SP.iterdir() if p.is_dir())

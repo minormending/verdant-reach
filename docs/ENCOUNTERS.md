@@ -3,7 +3,7 @@
 This is from the data agent (agent 6) for the world agent (agent 8). The
 level bands follow [SLICE.md](SLICE.md). Every route gets 5–7 distinct
 species, and the 16 new species sit in the habitats given in ROUND3 §2.
-Species data is in `src/data/species.ts`.
+Species data is in `src/data/species/<line>.json` (docs/DATA.md).
 
 **How to read the tables**
 - "Day" covers morning and day; "Night" is 18:00–04:00.

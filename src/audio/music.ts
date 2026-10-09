@@ -324,6 +324,69 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
       e-4. f8 g4 o6c4 | f2 e-4 c4 | o5d2 c2 | o4b2. r4 |`,
   },
 
+  // ------------------------------------------------------------------ relay seized
+  // The Root Relay under Rootstock: the network's own pulse (the root_relay
+  // bass throb and rootless pad), but the questioning lead has been silenced.
+  // Every other bar is the broadcast's command, one note struck twice ("be
+  // still"), and between them the old curious figure (g, a-flat, g) now
+  // droops and stops. The command climbs C, E-flat, D-flat as the tension
+  // grows, and it ends on G with B natural, never resting.
+  relay_seized: {
+    bpm: 90, harmony: "pad", harmonyTone: "v4 @0 q8 ~6", bass: "pulse", bassTone: "v14 q4", drums: "tense", drumTone: "v5", fillEvery: 0,
+    chords: "Cm | Cm | Abmaj7 | Abmaj7 | Fm | Fm | Gsus4 | G | Cm | Cm | Dbmaj7 | Dbmaj7 | Fm | Abmaj7 | Gsus4 | G",
+    melody: `v10 @1 q5 ~4
+      o6c4 r4 o6c4 r4 | o5g4 a-8g8 e-2 | o6c4 r4 o6c4 r4 | o5a-4 g8f8 e-2 |
+      o6c4 r4 o6c4 r4 | o5a-4 g8f8 c2 | o5c4 d4 g4 r4 | o5b2. r4 |
+      o6e-4 r4 o6e-4 r4 | o6d4 c8 o5b8 g2 | o6d-4 r4 o6d-4 r4 | o6c4 o5a-8f8 c2 |
+      o5f4 a-4 o6c4 f4 | o6e-2 c2 | o6d2. r4 | o5b4 o6d4 o5g4 d4 |`,
+  },
+
+  // ------------------------------------------------------------------ thistledown
+  // A desert-edge town in tumbleweed country: dusty and warm, a little lonely.
+  // E dorian (the raised C-sharp, over an A major chord, keeps it from going
+  // sad), a soft lead that lingers on long notes, a picked "broken" guitar
+  // figure, a slow half-time bass and woodblock ticks. Ends on B7 to roll
+  // back into E minor.
+  thistledown: {
+    bpm: 92, harmony: "broken", harmonyTone: "v6 @1 q4", bass: "half", bassTone: "v12 q6", drums: "tick", drumTone: "v4", fillEvery: 0,
+    chords: "Em | Em | D | Em | C | G | A | Em | C | G | D | Bm | C | A | Em | B7",
+    melody: `${SOFT}
+      o5e2 g4 b4 | o5a4. g8 e2 | o5f+4 a4 d2 | o5e2. r4 |
+      o5e4 g4 o6c4 o5b4 | o5a4 g4 d2 | o5c+4 e4 a4 g4 | o5e2. r4 |
+      o5g4. a8 b4 o6c4 | o6d2 o5b4 g4 | o5a4 f+4 d4 e8 f+8 | o5f+2 d4 o4b4 |
+      o5c4 e4 g4 a4 | o5c+2 e4 a4 | o5g4 f+8 e8 b4 e4 | o5d+2 f+4 b4 |`,
+  },
+
+  // ------------------------------------------------------------------ canyon
+  // Route 11, the red canyon climbing to Sanguine Ridge: an adventurous D
+  // minor gallop. The lead keeps leaping up an octave and scrambling back,
+  // a climber finding holds; the bass gallops, the drums drive, and the last
+  // two bars hang on A major (the dominant) before the climb starts again.
+  canyon: {
+    bpm: 120, harmony: "arp8", harmonyTone: "v5 @1 q5", bass: "gallop", bassTone: "v13 q5", drums: "drive", drumTone: "v7",
+    chords: "Dm | Dm | C | Dm | Bb | C | Dm | A | Dm | F | C | Gm | Bb | C | A | A",
+    melody: `${LEAD}
+      o5d4 o6d4 c8 o5a8 f4 | o5f4. e8 d2 | o5c4 o6c4 o5g4 e4 | o5a2. r4 |
+      o5b-4 o6b-4 f4 d4 | o6e4 c4 o5g2 | o5a4 o6a4 f4 d4 | o5e2. r4 |
+      o5d8 e8 f8 g8 a4 o6a4 | o6c4 o5a4 f4 a4 | o5g4 o6g4 e4 c4 | o5d4 g4 b-4 o6d4 |
+      o6d4. c8 o5b-4 a4 | o5g4 o6c4 e4 g4 | o6e2 c+4 o5a4 | o5e2 c+4 e4 |`,
+  },
+
+  // ------------------------------------------------------------------ ridge
+  // Sanguine Ridge, the ancient dragon trees and the final test: slow, noble
+  // and old. A minor with the major E (the harmonic minor's G-sharp) for
+  // gravity; long half and whole notes that rise to a high D and sink back,
+  // over a held pad and a slow bass, with no drums. Ends on E, the dominant.
+  ridge: {
+    bpm: 76, harmony: "pad", harmonyTone: "v5 @1 q8 ~6", bass: "half", bassTone: "v12 q8", drums: "none",
+    chords: "Am | F | G | Am | Am | Dm | E | E | F | G | Am | C | Dm | E | Am | E",
+    melody: `v10 @1 q8 ~12
+      o5a2 e2 | o5f2. e8 f8 | o5g2 d2 | o5e1 |
+      o5a4 b4 o6c2 | o6d2. c4 | o5b2 g+2 | o5e1 |
+      o5f4 a4 o6c2 | o6d2 o5b2 | o6c4 o5b4 a2 | o5g2 e4 g4 |
+      o5f2 a4 o6d4 | o6e2. d4 | o6c2 o5b4 a4 | o5g+2. r4 |`,
+  },
+
   // ------------------------------------------------------------------ slice end
   // Bittersweet, hopeful: F major with a borrowed B-flat minor sigh.
   slice_end: {
@@ -411,6 +474,57 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
     bassLine: `v12 q8
       o2a1 | ^1 | ^1 | ^1 | b-1 | ^1 | a1 | ^1 |
       f1 | ^1 | o3d1 | e1 | o2a1 | ^1 | b-1 | o3e1 |`,
+  },
+
+  // ------------------------------------------------------------------ alpine
+  // Route 9 and Larchmere: a bright G major Ländler (a country waltz) in thin
+  // mountain air. The first half walks up the chord; the second half yodels,
+  // leaping a sixth and falling back (g to e, d to b, a to f-sharp). A soft
+  // waltz accompaniment, no drums. The last bar (D) leans back into G.
+  alpine: {
+    bpm: 138, meter: 3, harmony: "waltz", harmonyTone: "v5 @1 q5", bass: "waltz", bassTone: "v13 q6", drums: "none",
+    chords: "G | G | C | G | D | D | G | G | G | G | C | Am | G | D | G | G | C | C | G | G | D | D | G | G | Em | C | G | Em | Am | D | G | D",
+    melody: `${SOFT}
+      o5d4 g4 b4 | o6d2 o5b4 | o6c4 o5g4 e4 | o5d2. |
+      o5f+4 a4 o6d4 | o6c4 o5a4 f+4 | o5g4 b4 o6d4 | o5g2. |
+      o5d4 g8 a8 b4 | o6d4 o5b4 g4 | o5e4 g4 o6c4 | o5e2 c4 |
+      o5d4 g4 b4 | o5a4 f+4 d4 | o5g8 a8 b4 a4 | o5g2. |
+      o5g4 o6e4 o5g4 | o6e2 c4 | o5d4 b4 d4 | o5b2 g4 |
+      o5a4 o6f+4 o5a4 | o6f+4 e8 d8 o5a4 | o5b4 o6d4 o5b4 | o5g2. |
+      o5e4 g4 b4 | o6c2 o5g4 | o5b4 a4 g4 | o5e2 g4 |
+      o5a4 o6c4 e4 | o6d4 c4 o5a4 | o5b4 g4 b4 | o5a2 f+4 |`,
+  },
+
+  // ------------------------------------------------------------------ red lake
+  // Bloom Lake while it's forced awake ("the lake is screaming"). F minor that
+  // keeps sliding onto the flat side (D-flat, G-flat: a tritone from the
+  // tonic's C). A thin reed lead holds long wails that sag a semitone as they
+  // die, over a nervous sixteenth shimmer, a pulsing low F and tense drums.
+  // It never rests on F minor: the last bar is C, pulling back to the start.
+  red_lake: {
+    bpm: 96, harmony: "arp16", harmonyTone: "v4 @0 q4", bass: "pulse", bassTone: "v11 q5", drums: "tense", drumTone: "v6", fillEvery: 0,
+    chords: "Fm | Fm | Db | Db | Bbm | Gb | C | C | Fm | Ab | Db | Gb | Bbm | C | Db | C",
+    melody: `v10 @0 q7 ~10
+      o5c2. f4 | o5a-2 g4 f4 | o5f2. a-4 | p-1 o6d-1 p0 |
+      o5b-4 o6d-4 f4 d-4 | o6c2 o5b-4 a-4 | o5g2 p-1 e2 p0 | p-1 o5b-1 p0 |
+      o5c4 f4 a-4 o6c4 | o6e-2. c4 | o6d-4 c4 o5b-4 a-4 | o5g-2 p-1 b-2 p0 |
+      o5f4 b-4 o6d-4 f4 | o6e2 p-1 g2 p0 | o6f2 e-4 d-4 | o6c2 o5e2 |`,
+  },
+
+  // ------------------------------------------------------------------ hideout
+  // The Rootstock hideout under the lodge: cold, mechanical and busy. A
+  // staccato C minor motif that climbs in clipped steps and keeps tripping
+  // over chromatic neighbours (f-sharp, b natural), stabbed chords, a driving
+  // octave bass and the industrial groove. The G at the end of each phrase is
+  // the alarm the base keeps half-raising.
+  hideout: {
+    bpm: 108, harmony: "stab", harmonyTone: "v5 @2 q3", bass: "octave8", bassTone: "v14 q4", drums: "industrial", drumTone: "v8",
+    chords: "Cm | Cm | Ab | G | Cm | Cm | Db | G | Fm | Fm | Ab | G | Cm | Eb | Db | G",
+    melody: `v11 @2 q5
+      o5c8 r8 c8 e-8 g4 f+8 g8 | o5e-4 d8 c8 o4b4 r4 | o5c8 r8 c8 e-8 a-4 g8 a-8 | o5b2 g4 r4 |
+      o6c8 r8 c8 o5b8 a-8 g8 f8 e-8 | o5d4 e-8 d8 c4 r4 | o5d-8 f8 a-8 o6d-8 c4 o5a-4 | o5g2 r8 g8 a-8 b8 |
+      o6c4. o5a-8 f4 r4 | o5a-8 g8 f8 e-8 d4 r4 | o5e-4. c8 a-4 g4 | o5b2 d4 g4 |
+      o6c8 r8 o5g8 r8 e-8 r8 c8 r8 | o5e-4 g4 b-4 o6d4 | o6d-4 c4 o5a-4 f4 | o5g4 b4 o6d4 o5b4 |`,
   },
 };
 

@@ -175,9 +175,10 @@ describe("Chapter 6 world", () => {
     for (const [id, team] of Object.entries(teams)) {
       const t = WORLD.trainers[id];
       expect(t.team.map((q) => [q.species, q.level]), id).toEqual(team);
-      expect(t.intro).toContain("TODO(text)");
-      expect(t.defeat).toContain("TODO(text)");
-      expect(t.after).toContain("TODO(text)");
+      for (const line of [t.intro, t.defeat, t.after]) {
+        expect(line, id).toBeTruthy();
+        expect(line, id).not.toContain("TODO");
+      }
       const portrait = id.startsWith("angler") ? "angler" : id.startsWith("sailor") ? "sailor" : id.startsWith("diver") ? "diver" : id.startsWith("birder") ? "birdwatcher" : id.startsWith("grunt") ? "grunt" : "gardener";
       expect(t.portrait).toBe(portrait);
       expect(t.music).toBe(id.startsWith("grunt") ? "battle_rootstock" : "battle_trainer");
