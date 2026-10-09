@@ -1,0 +1,58 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "cattail",
+  "pollination": ["wetland"],
+  "species": [
+    {
+      "id": "cattail_shoot",
+      "name": "Bulrush",
+      "stage": 1,
+      "types": ["water"],
+      "baseStats": { "hp": 50, "atk": 50, "def": 55, "spa": 45, "spd": 45, "spe": 40 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 58,
+      "evYield": { "def": 1 },
+      "activity": "any",
+      "growsInto": { "species": "cattail", "trigger": { "kind": "vigor", "level": 17 } },
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "sap_seal"],
+        [5, "pad_slap"],
+        [9, "cattail_fluff"],
+        [13, "undertow"],
+        [17, "root_tap"],
+        [21, "rain_call"],
+        [25, "leaf_edge"],
+        [29, "bark_skin"],
+        [34, "flood"],
+        [40, "timber"]
+      ]
+    },
+    {
+      "id": "cattail",
+      "name": "Cattail",
+      "stage": 2,
+      "types": ["water", "wood"],
+      "baseStats": { "hp": 75, "atk": 80, "def": 80, "spa": 65, "spd": 65, "spe": 55 },
+      "growthRate": "medium",
+      "catchRate": 90,
+      "baseExp": 150,
+      "evYield": { "atk": 1, "def": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "sap_seal"],
+        [5, "pad_slap"],
+        [9, "cattail_fluff"],
+        [13, "undertow"],
+        [17, "root_tap"],
+        [17, "leaf_edge"],
+        [21, "rain_call"],
+        [29, "bark_skin"],
+        [34, "flood"],
+        [40, "timber"]
+      ]
+    }
+  ]
+}

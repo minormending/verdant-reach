@@ -1,0 +1,59 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "paradise",
+  "pollination": ["tropical"],
+  "species": [
+    {
+      "id": "paradise_shoot",
+      "name": "Paradise Bud",
+      "stage": 1,
+      "types": ["bloom"],
+      "baseStats": { "hp": 50, "atk": 62, "def": 48, "spa": 58, "spd": 45, "spe": 57 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 72,
+      "evYield": { "atk": 1 },
+      "activity": "day",
+      "growsInto": { "species": "bird_of_paradise", "trigger": { "kind": "vigor", "level": 28 } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "sun_track"],
+        [5, "ember_seed"],
+        [9, "perfume"],
+        [13, "smoulder"],
+        [17, "pollen_perch"],
+        [21, "sun_flare"],
+        [25, "sunbeam"],
+        [30, "unfurl"],
+        [34, "petal_storm"],
+        [38, "wildfire"]
+      ]
+    },
+    {
+      "id": "bird_of_paradise",
+      "name": "Crane Flower",
+      "stage": 2,
+      "types": ["bloom", "fire"],
+      "baseStats": { "hp": 70, "atk": 95, "def": 65, "spa": 95, "spd": 65, "spe": 80 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 182,
+      "evYield": { "atk": 1, "spa": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "sun_track"],
+        [5, "ember_seed"],
+        [9, "perfume"],
+        [13, "smoulder"],
+        [17, "pollen_perch"],
+        [21, "sun_flare"],
+        [25, "sunbeam"],
+        [28, "chili_burst"],
+        [30, "unfurl"],
+        [34, "petal_storm"],
+        [38, "wildfire"]
+      ]
+    }
+  ]
+}

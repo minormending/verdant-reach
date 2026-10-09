@@ -1,0 +1,92 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "lily",
+  "pollination": ["wetland", "tropical"],
+  "species": [
+    {
+      "id": "lily_seedpod",
+      "name": "Lily Seedpod",
+      "stage": 1,
+      "types": ["water"],
+      "baseStats": { "hp": 50, "atk": 42, "def": 50, "spa": 62, "spd": 64, "spe": 52 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 63,
+      "evYield": { "spd": 1 },
+      "activity": "any",
+      "growsInto": { "species": "lily_pad", "trigger": { "kind": "vigor", "level": 16 } },
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "sap_seal"],
+        [6, "pad_slap"],
+        [7, "hoarfrost"],
+        [9, "rain_call"],
+        [12, "cold_mist"],
+        [13, "undertow"],
+        [17, "sap_drain"],
+        [20, "mist_veil"],
+        [24, "flood"],
+        [28, "photosynthesise"],
+        [33, "pale_bloom"],
+        [38, "downpour"]
+      ]
+    },
+    {
+      "id": "lily_pad",
+      "name": "Lily Pad",
+      "stage": 2,
+      "types": ["water"],
+      "baseStats": { "hp": 66, "atk": 56, "def": 64, "spa": 82, "spd": 84, "spe": 64 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 140,
+      "evYield": { "spd": 2 },
+      "activity": "any",
+      "growsInto": { "species": "giant_water_lily", "trigger": { "kind": "vigor", "level": 32 } },
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "sap_seal"],
+        [6, "pad_slap"],
+        [7, "hoarfrost"],
+        [9, "rain_call"],
+        [12, "cold_mist"],
+        [13, "undertow"],
+        [16, "mist_veil"],
+        [17, "sap_drain"],
+        [24, "flood"],
+        [28, "photosynthesise"],
+        [33, "pale_bloom"],
+        [38, "downpour"]
+      ]
+    },
+    {
+      "id": "giant_water_lily",
+      "name": "Giant Lily",
+      "stage": 3,
+      "types": ["water"],
+      "baseStats": { "hp": 90, "atk": 70, "def": 90, "spa": 108, "spd": 107, "spe": 60 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 207,
+      "evYield": { "spd": 3 },
+      "activity": "any",
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "sap_seal"],
+        [6, "pad_slap"],
+        [7, "hoarfrost"],
+        [9, "rain_call"],
+        [12, "cold_mist"],
+        [13, "undertow"],
+        [16, "mist_veil"],
+        [17, "sap_drain"],
+        [24, "flood"],
+        [28, "photosynthesise"],
+        [32, "petal_storm"],
+        [33, "pale_bloom"],
+        [38, "downpour"],
+        [44, "curl_up"]
+      ]
+    }
+  ]
+}

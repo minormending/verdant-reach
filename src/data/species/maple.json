@@ -1,0 +1,87 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "maple",
+  "pollination": ["woodland"],
+  "species": [
+    {
+      "id": "maple_samara",
+      "name": "Maple Samara",
+      "stage": 1,
+      "types": ["wood"],
+      "baseStats": { "hp": 40, "atk": 45, "def": 40, "spa": 45, "spd": 45, "spe": 55 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 54,
+      "evYield": { "spe": 1 },
+      "activity": "any",
+      "growsInto": { "species": "maple_sapling", "trigger": { "kind": "vigor", "level": 12 } },
+      "learnset": [
+        [1, "samara_spin"],
+        [1, "sugar_rush"],
+        [5, "sap_drain"],
+        [9, "sap_seal"],
+        [12, "leaf_edge"],
+        [16, "sap_spout"],
+        [20, "root_tap"],
+        [25, "hoarfrost"],
+        [30, "bark_skin"],
+        [35, "leaf_gale"],
+        [40, "timber"]
+      ]
+    },
+    {
+      "id": "maple_sapling",
+      "name": "Maple Sprout",
+      "stage": 2,
+      "types": ["wood"],
+      "baseStats": { "hp": 60, "atk": 60, "def": 60, "spa": 65, "spd": 65, "spe": 60 },
+      "growthRate": "medium",
+      "catchRate": 75,
+      "baseExp": 128,
+      "evYield": { "spa": 1, "spd": 1 },
+      "activity": "any",
+      "growsInto": { "species": "sugar_maple", "trigger": { "kind": "tending", "friendship": 220 } },
+      "learnset": [
+        [1, "samara_spin"],
+        [1, "sugar_rush"],
+        [5, "sap_drain"],
+        [9, "sap_seal"],
+        [12, "leaf_edge"],
+        [16, "sap_spout"],
+        [20, "root_tap"],
+        [25, "hoarfrost"],
+        [30, "bark_skin"],
+        [35, "leaf_gale"],
+        [40, "timber"]
+      ]
+    },
+    {
+      "id": "sugar_maple",
+      "name": "Sugar Maple",
+      "stage": 3,
+      "types": ["wood", "frost"],
+      "baseStats": { "hp": 85, "atk": 80, "def": 80, "spa": 95, "spd": 90, "spe": 65 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 195,
+      "evYield": { "spa": 2, "spd": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "samara_spin"],
+        [1, "sugar_rush"],
+        [1, "frost_bloom"],
+        [5, "sap_drain"],
+        [9, "sap_seal"],
+        [12, "leaf_edge"],
+        [16, "sap_spout"],
+        [20, "root_tap"],
+        [25, "hoarfrost"],
+        [30, "bark_skin"],
+        [30, "cold_snap"],
+        [35, "leaf_gale"],
+        [38, "snowdrift"],
+        [40, "timber"]
+      ]
+    }
+  ]
+}

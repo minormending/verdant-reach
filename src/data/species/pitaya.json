@@ -1,0 +1,60 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "pitaya",
+  "pollination": ["garden", "tropical"],
+  "species": [
+    {
+      "id": "pitaya_cutting",
+      "name": "Pitaya Pad",
+      "stage": 1,
+      "types": ["dragon", "thorn"],
+      "baseStats": { "hp": 50, "atk": 40, "def": 40, "spa": 75, "spd": 45, "spe": 70 },
+      "growthRate": "medium",
+      "catchRate": 120,
+      "baseExp": 70,
+      "evYield": { "spa": 1 },
+      "activity": "night",
+      "growsInto": { "species": "dragon_fruit", "trigger": { "kind": "vigor", "level": 38 } },
+      "learnset": [
+        [1, "dragon_nip"],
+        [1, "perfume"],
+        [5, "thorn_jab"],
+        [9, "sap_drain"],
+        [13, "nectar_lure"],
+        [17, "red_resin"],
+        [22, "thorn_lash"],
+        [26, "spine_volley"],
+        [30, "night_bloom"],
+        [36, "moonbeam"],
+        [42, "photosynthesise"],
+        [48, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "dragon_fruit",
+      "name": "Dragon Fruit",
+      "stage": 2,
+      "types": ["dragon", "thorn"],
+      "baseStats": { "hp": 75, "atk": 60, "def": 60, "spa": 115, "spd": 75, "spe": 110 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 184,
+      "evYield": { "spa": 1, "spe": 1 },
+      "activity": "night",
+      "learnset": [
+        [1, "dragon_nip"],
+        [1, "perfume"],
+        [5, "thorn_jab"],
+        [9, "sap_drain"],
+        [13, "nectar_lure"],
+        [17, "red_resin"],
+        [22, "thorn_lash"],
+        [26, "spine_volley"],
+        [30, "night_bloom"],
+        [36, "moonbeam"],
+        [42, "photosynthesise"],
+        [48, "hook_thorns"]
+      ]
+    }
+  ]
+}

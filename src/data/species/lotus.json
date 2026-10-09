@@ -1,0 +1,61 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "lotus",
+  "pollination": ["wetland", "tropical"],
+  "species": [
+    {
+      "id": "lotus_seed",
+      "name": "Lotus Seed",
+      "stage": 1,
+      "types": ["water"],
+      "baseStats": { "hp": 50, "atk": 40, "def": 55, "spa": 55, "spd": 60, "spe": 45 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 66,
+      "evYield": { "spd": 1 },
+      "activity": "any",
+      "growsInto": { "species": "sacred_lotus", "trigger": { "kind": "vigor", "level": 26 } },
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "perfume"],
+        [5, "pollen_puff"],
+        [9, "lotus_effect"],
+        [13, "undertow"],
+        [17, "pod_shower"],
+        [21, "mist_veil"],
+        [25, "photosynthesise"],
+        [30, "rain_call"],
+        [34, "flood"],
+        [38, "petal_storm"],
+        [42, "downpour"]
+      ]
+    },
+    {
+      "id": "sacred_lotus",
+      "name": "Sacred Lotus",
+      "stage": 2,
+      "types": ["water", "bloom"],
+      "baseStats": { "hp": 80, "atk": 50, "def": 85, "spa": 95, "spd": 100, "spe": 55 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 164,
+      "evYield": { "spd": 2 },
+      "activity": "any",
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "perfume"],
+        [5, "pollen_puff"],
+        [9, "lotus_effect"],
+        [13, "undertow"],
+        [17, "pod_shower"],
+        [21, "mist_veil"],
+        [25, "photosynthesise"],
+        [26, "sunbeam"],
+        [30, "rain_call"],
+        [34, "flood"],
+        [38, "petal_storm"],
+        [42, "downpour"]
+      ]
+    }
+  ]
+}

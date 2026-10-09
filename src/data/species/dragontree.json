@@ -1,0 +1,89 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "dragontree",
+  "pollination": ["woodland"],
+  "species": [
+    {
+      "id": "dragon_seedling",
+      "name": "Dragon Seed",
+      "stage": 1,
+      "types": ["dragon", "wood"],
+      "baseStats": { "hp": 70, "atk": 35, "def": 65, "spa": 45, "spd": 65, "spe": 20 },
+      "growthRate": "slow",
+      "catchRate": 120,
+      "baseExp": 66,
+      "evYield": { "hp": 1 },
+      "activity": "any",
+      "growsInto": { "species": "dragon_sapling", "trigger": { "kind": "vigor", "level": 30 } },
+      "learnset": [
+        [1, "dragon_nip"],
+        [1, "sap_seal"],
+        [5, "vine_lash"],
+        [9, "sap_drain"],
+        [13, "root_tap"],
+        [17, "fossil_print"],
+        [22, "leaf_edge"],
+        [25, "red_resin"],
+        [30, "bark_skin"],
+        [36, "sap_spout"],
+        [40, "leaf_gale"],
+        [50, "old_growth"]
+      ]
+    },
+    {
+      "id": "dragon_sapling",
+      "name": "Umbrella Pup",
+      "stage": 2,
+      "types": ["dragon", "wood"],
+      "baseStats": { "hp": 95, "atk": 50, "def": 90, "spa": 65, "spd": 90, "spe": 30 },
+      "growthRate": "slow",
+      "catchRate": 60,
+      "baseExp": 146,
+      "evYield": { "hp": 1, "def": 1 },
+      "activity": "any",
+      "growsInto": { "species": "dragon_tree", "trigger": { "kind": "vigor", "level": 45 } },
+      "learnset": [
+        [1, "dragon_nip"],
+        [1, "sap_seal"],
+        [5, "vine_lash"],
+        [9, "sap_drain"],
+        [13, "root_tap"],
+        [17, "fossil_print"],
+        [22, "leaf_edge"],
+        [25, "red_resin"],
+        [30, "bark_skin"],
+        [36, "sap_spout"],
+        [40, "leaf_gale"],
+        [45, "dragon_resin"],
+        [50, "old_growth"]
+      ]
+    },
+    {
+      "id": "dragon_tree",
+      "name": "Dragon Tree",
+      "stage": 3,
+      "types": ["dragon", "wood"],
+      "baseStats": { "hp": 120, "atk": 65, "def": 115, "spa": 80, "spd": 115, "spe": 35 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 210,
+      "evYield": { "hp": 1, "def": 1, "spd": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "dragon_nip"],
+        [1, "sap_seal"],
+        [5, "vine_lash"],
+        [9, "sap_drain"],
+        [13, "root_tap"],
+        [17, "fossil_print"],
+        [22, "leaf_edge"],
+        [25, "red_resin"],
+        [30, "bark_skin"],
+        [36, "sap_spout"],
+        [40, "leaf_gale"],
+        [45, "dragon_resin"],
+        [50, "old_growth"]
+      ]
+    }
+  ]
+}

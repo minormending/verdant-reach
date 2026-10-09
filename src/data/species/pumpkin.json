@@ -1,0 +1,84 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "pumpkin",
+  "pollination": ["garden"],
+  "species": [
+    {
+      "id": "pumpkin_blossom",
+      "name": "Pumpkin Bud",
+      "stage": 1,
+      "types": ["wood"],
+      "baseStats": { "hp": 60, "atk": 55, "def": 60, "spa": 35, "spd": 40, "spe": 25 },
+      "growthRate": "slow",
+      "catchRate": 120,
+      "baseExp": 62,
+      "evYield": { "hp": 1 },
+      "activity": "any",
+      "growsInto": { "species": "green_pumpkin", "trigger": { "kind": "vigor", "level": 14 } },
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "curl_up"],
+        [5, "seed_burst"],
+        [9, "sap_seal"],
+        [14, "acorn_drop"],
+        [18, "root_tap"],
+        [22, "smoulder"],
+        [26, "gourd_slam"],
+        [31, "bark_skin"],
+        [36, "rot_touch"],
+        [40, "timber"]
+      ]
+    },
+    {
+      "id": "green_pumpkin",
+      "name": "Green Gourd",
+      "stage": 2,
+      "types": ["wood"],
+      "baseStats": { "hp": 85, "atk": 70, "def": 85, "spa": 45, "spd": 55, "spe": 30 },
+      "growthRate": "slow",
+      "catchRate": 90,
+      "baseExp": 135,
+      "evYield": { "hp": 2 },
+      "activity": "any",
+      "growsInto": { "species": "pumpkin", "trigger": { "kind": "vigor", "level": 26 } },
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "curl_up"],
+        [5, "seed_burst"],
+        [9, "sap_seal"],
+        [14, "acorn_drop"],
+        [14, "gourd_slam"],
+        [18, "root_tap"],
+        [22, "smoulder"],
+        [31, "bark_skin"],
+        [36, "rot_touch"],
+        [40, "timber"]
+      ]
+    },
+    {
+      "id": "pumpkin",
+      "name": "Pumpkin",
+      "stage": 3,
+      "types": ["wood"],
+      "baseStats": { "hp": 115, "atk": 95, "def": 110, "spa": 55, "spd": 75, "spe": 35 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 196,
+      "evYield": { "hp": 3 },
+      "activity": "any",
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "curl_up"],
+        [5, "seed_burst"],
+        [9, "sap_seal"],
+        [14, "acorn_drop"],
+        [14, "gourd_slam"],
+        [18, "root_tap"],
+        [22, "smoulder"],
+        [31, "bark_skin"],
+        [36, "rot_touch"],
+        [40, "timber"]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "pitcher",
+  "pollination": ["carnivore", "wetland"],
+  "species": [
+    {
+      "id": "pitcher_sprout",
+      "name": "Tiny Pitcher",
+      "stage": 1,
+      "types": ["bug"],
+      "baseStats": { "hp": 50, "atk": 50, "def": 50, "spa": 55, "spd": 55, "spe": 35 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 68,
+      "evYield": { "spd": 1 },
+      "activity": "any",
+      "growsInto": { "species": "pitcher_plant", "trigger": { "kind": "vigor", "level": 18 } },
+      "learnset": [
+        [1, "slick_rim"],
+        [1, "nectar_lure"],
+        [5, "dew_drop"],
+        [8, "sticky_dew"],
+        [12, "digest"],
+        [15, "undertow"],
+        [22, "pitfall_slurp"],
+        [25, "pitfall"],
+        [28, "rain_call"],
+        [32, "mist_veil"],
+        [36, "flood"],
+        [40, "downpour"]
+      ]
+    },
+    {
+      "id": "pitcher_plant",
+      "name": "Bog Pitcher",
+      "stage": 2,
+      "types": ["bug", "water"],
+      "baseStats": { "hp": 75, "atk": 75, "def": 75, "spa": 85, "spd": 85, "spe": 50 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 160,
+      "evYield": { "hp": 1, "spd": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "slick_rim"],
+        [1, "nectar_lure"],
+        [5, "dew_drop"],
+        [8, "sticky_dew"],
+        [12, "digest"],
+        [15, "undertow"],
+        [18, "pitfall_slurp"],
+        [25, "pitfall"],
+        [28, "rain_call"],
+        [32, "mist_veil"],
+        [36, "flood"],
+        [40, "downpour"]
+      ]
+    }
+  ]
+}

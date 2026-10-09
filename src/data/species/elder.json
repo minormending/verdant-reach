@@ -1,0 +1,27 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "elder",
+  "pollination": [],
+  "species": [
+    {
+      "id": "elder",
+      "name": "The Elder",
+      "stage": 1,
+      "types": ["wood", "ghost"],
+      "baseStats": { "hp": 160, "atk": 100, "def": 100, "spa": 90, "spd": 160, "spe": 30 },
+      "growthRate": "slow",
+      "catchRate": 3,
+      "baseExp": 255,
+      "evYield": { "hp": 1, "spd": 2 },
+      "activity": "any",
+      "learnset": [
+        [1, "many_trunks"],
+        [1, "root_tap"],
+        [1, "pale_bloom"],
+        [1, "bark_skin"],
+        [65, "old_growth"],
+        [70, "photosynthesise"]
+      ]
+    }
+  ]
+}

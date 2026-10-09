@@ -1,0 +1,57 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "sundew",
+  "pollination": ["carnivore", "wetland"],
+  "species": [
+    {
+      "id": "sundew_rosette",
+      "name": "Dew Rosette",
+      "stage": 1,
+      "types": ["bug"],
+      "baseStats": { "hp": 50, "atk": 45, "def": 50, "spa": 60, "spd": 60, "spe": 35 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 75,
+      "evYield": { "spa": 1 },
+      "activity": "any",
+      "growsInto": { "species": "sundew", "trigger": { "kind": "vigor", "level": 18 } },
+      "learnset": [
+        [1, "dew_grasp"],
+        [1, "sticky_dew"],
+        [5, "pollen_puff"],
+        [9, "nectar_lure"],
+        [13, "digest"],
+        [18, "sun_track"],
+        [22, "photosynthesise"],
+        [27, "sunbeam"],
+        [32, "pitfall"],
+        [38, "petal_storm"]
+      ]
+    },
+    {
+      "id": "sundew",
+      "name": "Sundew",
+      "stage": 2,
+      "types": ["bug", "bloom"],
+      "baseStats": { "hp": 75, "atk": 65, "def": 75, "spa": 100, "spd": 90, "spe": 55 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 172,
+      "evYield": { "spa": 2 },
+      "activity": "any",
+      "learnset": [
+        [1, "dew_grasp"],
+        [1, "sticky_dew"],
+        [5, "pollen_puff"],
+        [9, "nectar_lure"],
+        [13, "digest"],
+        [18, "sun_track"],
+        [18, "sun_flare"],
+        [22, "photosynthesise"],
+        [27, "sunbeam"],
+        [32, "pitfall"],
+        [38, "petal_storm"]
+      ]
+    }
+  ]
+}

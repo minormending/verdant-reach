@@ -1,0 +1,85 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "orchid",
+  "pollination": ["tropical"],
+  "species": [
+    {
+      "id": "orchid_keiki",
+      "name": "Orchid Keiki",
+      "stage": 1,
+      "types": ["bloom"],
+      "baseStats": { "hp": 45, "atk": 35, "def": 45, "spa": 60, "spd": 55, "spe": 50 },
+      "growthRate": "medium",
+      "catchRate": 120,
+      "baseExp": 64,
+      "evYield": { "spa": 1 },
+      "activity": "night",
+      "growsInto": { "species": "orchid_spike", "trigger": { "kind": "vigor", "level": 16 } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "perfume"],
+        [5, "velamen"],
+        [9, "wind_scatter"],
+        [12, "false_nectar"],
+        [16, "sun_track"],
+        [20, "moonbeam"],
+        [25, "sunbeam"],
+        [29, "spore_cloud"],
+        [34, "unfurl"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "orchid_spike",
+      "name": "Orchid Spike",
+      "stage": 2,
+      "types": ["bloom"],
+      "baseStats": { "hp": 58, "atk": 42, "def": 58, "spa": 80, "spd": 72, "spe": 60 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 135,
+      "evYield": { "spa": 2 },
+      "activity": "night",
+      "growsInto": { "species": "moth_orchid", "trigger": { "kind": "vigor_night", "level": 22 } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "perfume"],
+        [5, "velamen"],
+        [9, "wind_scatter"],
+        [12, "false_nectar"],
+        [16, "sun_track"],
+        [20, "moonbeam"],
+        [25, "sunbeam"],
+        [29, "spore_cloud"],
+        [34, "unfurl"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "moth_orchid",
+      "name": "Moth Orchid",
+      "stage": 3,
+      "types": ["bloom"],
+      "baseStats": { "hp": 75, "atk": 45, "def": 70, "spa": 110, "spd": 95, "spe": 85 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 196,
+      "evYield": { "spa": 3 },
+      "activity": "night",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "perfume"],
+        [5, "velamen"],
+        [9, "wind_scatter"],
+        [12, "false_nectar"],
+        [16, "sun_track"],
+        [20, "moonbeam"],
+        [22, "long_bloom"],
+        [25, "sunbeam"],
+        [29, "spore_cloud"],
+        [34, "unfurl"],
+        [40, "petal_storm"]
+      ]
+    }
+  ]
+}
