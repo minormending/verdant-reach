@@ -1,15 +1,15 @@
-// Species data lives in ./species/<line>.json, one file per evolution line
-// (format: docs/DATA.md). This module loads them at build time (Vite inlines
+// Species data lives in ./species/<line>.json, one file per evolution line,
+// with each species' Herbarium entry (format: docs/DATA.md). This module loads them at build time (Vite inlines
 // the JSON) and checks each file's shape, so a bad edit fails loudly with the
 // file and field rather than breaking a battle later. Balance and data tests
 // still gate every change (src/battle/logic/balance.test.ts, src/data/*.test.ts).
 
-import type { GrowthTrigger, PollinationGroup, Species, SpeciesId, Stats, TypeId } from "../contracts";
+import type { GrowthTrigger, HerbariumEntry, PollinationGroup, Species, SpeciesId, Stats, TypeId } from "../contracts";
 import { POLLINATION_GROUPS, SPECIES_IDS, TYPES } from "../contracts";
 
 /** One evolution line as stored on disk. */
 export interface SpeciesLineFile {
-  format: "verdant.speciesline/1";
+  format: "verdant.speciesline/2";
   line: string;
   pollination: PollinationGroup[];
   species: {
@@ -25,6 +25,8 @@ export interface SpeciesLineFile {
     activity: Species["activity"];
     growsInto?: { species: SpeciesId; trigger: GrowthTrigger };
     learnset: [number, string][];
+    /** The Field Herbarium page. `fact` is the one true, checkable fact `entry` contains; `source` cites it. */
+    herbarium: Omit<HerbariumEntry, "species"> & { fact: string; source: string };
   }[];
 }
 
@@ -38,7 +40,7 @@ export function speciesLineErrors(file: string, d: SpeciesLineFile): string[] {
   const errs: string[] = [];
   const at = (where: string, msg: string) => errs.push(`${file}: ${where}: ${msg}`);
   const isInt = (n: unknown) => typeof n === "number" && Number.isInteger(n);
-  if (d.format !== "verdant.speciesline/1") at("format", `expected "verdant.speciesline/1"`);
+  if (d.format !== "verdant.speciesline/2") at("format", `expected "verdant.speciesline/2"`);
   if (`${d.line}.json` !== file) at("line", `must match the file name (${file})`);
   if (!Array.isArray(d.pollination) || d.pollination.some((g) => !(POLLINATION_GROUPS as readonly string[]).includes(g))) at("pollination", "unknown group");
   if (!Array.isArray(d.species) || d.species.length === 0) at("species", "must be a non-empty array");
@@ -56,14 +58,22 @@ export function speciesLineErrors(file: string, d: SpeciesLineFile): string[] {
     if (!ACTIVITY.includes(s.activity)) at(w, `activity must be one of ${ACTIVITY.join(", ")}`);
     if (s.growsInto && (!(SPECIES_IDS as readonly string[]).includes(s.growsInto.species) || !TRIGGERS.includes(s.growsInto.trigger?.kind))) at(w, "growsInto needs a known species and trigger kind");
     if (!Array.isArray(s.learnset) || s.learnset.some((e) => !Array.isArray(e) || !isInt(e[0]) || e[0] < 1 || typeof e[1] !== "string")) at(w, "learnset entries must be [level, move]");
+    const hb = s.herbarium;
+    if (!hb || typeof hb !== "object") at(w, "herbarium entry is required");
+    else {
+      for (const k of ["scientificName", "category", "entry", "fact"] as const) if (typeof hb[k] !== "string" || !hb[k].trim()) at(w, `herbarium.${k} is required`);
+      if (typeof hb.source !== "string" || !/https?:\/\//.test(hb.source)) at(w, "herbarium.source must cite a URL");
+      if (typeof hb.heightM !== "number" || hb.heightM <= 0 || typeof hb.weightKg !== "number" || hb.weightKg <= 0) at(w, "herbarium.heightM and weightKg must be positive numbers");
+    }
   }
   return errs;
 }
 
 const files = import.meta.glob<SpeciesLineFile>("./species/*.json", { eager: true, import: "default" });
 
-function load(): Record<SpeciesId, Species> {
+function load(): { species: Record<SpeciesId, Species>; herbarium: Record<SpeciesId, HerbariumEntry> } {
   const byId = new Map<SpeciesId, Species>();
+  const pages = new Map<SpeciesId, HerbariumEntry>();
   const errs: string[] = [];
   for (const [path, d] of Object.entries(files)) {
     const file = path.slice(path.lastIndexOf("/") + 1);
@@ -77,11 +87,22 @@ function load(): Record<SpeciesId, Species> {
         learnset: s.learnset.map(([level, move]) => ({ level, move })),
         pollination: d.pollination,
       });
+      if (s.herbarium) {
+        const { scientificName, category, heightM, weightKg, entry } = s.herbarium;
+        pages.set(s.id, { species: s.id, scientificName, category, heightM, weightKg, entry });
+      }
     }
   }
   if (errs.length) throw new Error(`Invalid species data:\n${errs.join("\n")}`);
   // SPECIES_IDS order, so iteration order is stable whatever the file layout.
-  return Object.fromEntries(SPECIES_IDS.filter((id) => byId.has(id)).map((id) => [id, byId.get(id)!])) as Record<SpeciesId, Species>;
+  const ids = SPECIES_IDS.filter((id) => byId.has(id));
+  return {
+    species: Object.fromEntries(ids.map((id) => [id, byId.get(id)!])) as Record<SpeciesId, Species>,
+    herbarium: Object.fromEntries(ids.filter((id) => pages.has(id)).map((id) => [id, pages.get(id)!])) as Record<SpeciesId, HerbariumEntry>,
+  };
 }
 
-export const SPECIES = load();
+const LOADED = load();
+export const SPECIES = LOADED.species;
+/** Field Herbarium pages, from each species' `herbarium` block. */
+export const HERBARIUM = LOADED.herbarium;
