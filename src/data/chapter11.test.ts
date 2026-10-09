@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { SPECIES_IDS } from "../contracts";
 import { isSelfAnim, MOVE_ANIMS } from "../battle/anims";
@@ -54,14 +54,18 @@ describe("Chapter 11 species", () => {
     });
 
     it(`${line.line} has distinct entries with exactly the prescribed sourced fact`, () => {
-      const sourceText = readFileSync(new URL("./herbarium.ts", import.meta.url), "utf8");
+      // Each page's fact and source are fields in its line file (docs/DATA.md).
+      const pages = new Map<string, { fact: string; source: string }>();
+      for (const f of readdirSync(new URL("./species/", import.meta.url))) {
+        for (const sp of JSON.parse(readFileSync(new URL(`./species/${f}`, import.meta.url), "utf8")).species) pages.set(sp.id, sp.herbarium);
+      }
       const entries = line.ids.map((id) => {
         const h = DATA.herbarium[id];
         expect(h.scientificName, id).toBe(line.scientificName);
         const sentences = h.entry.split(/(?<=[.!?])\s+/);
         expect(sentences, id).toHaveLength(2);
         expect(sentences[1], id).toBe(line.fact);
-        expect(sourceText, id).toContain(`// Fact: ${line.fact}\n  // Source: ${line.source}\n  h("${id}"`);
+        expect(pages.get(id), id).toMatchObject({ fact: line.fact, source: line.source });
         return h.entry;
       });
       expect(new Set(entries).size).toBe(line.ids.length);

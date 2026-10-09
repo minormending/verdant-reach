@@ -56,7 +56,7 @@ export interface AnimSpec {
 
 const S = (family: AnimFamily, variant?: string): AnimSpec => ({ family, variant });
 
-/** Explicit per-move choices (every move in src/data/moves.ts). */
+/** Explicit per-move choices (every move in src/data/moves.json). */
 export const MOVE_ANIMS: Record<string, AnimSpec> = {
   // wood
   vine_lash: S("vine_whip"),

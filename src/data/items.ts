@@ -1,113 +1,38 @@
-// Items. Names <= 13 chars. Prices follow SLICE.md (pod 200, flask 300,
-// neem 250). Price 0 = cannot be bought or sold.
+// Items live in ./items.json (format: docs/DATA.md). Names <= 13 chars; prices
+// follow SLICE.md (pod 200, flask 300, neem 250); price 0 = can't be bought or
+// sold. This module checks each item's shape at build time.
 
 import type { Item } from "../contracts";
+import { STATUSES } from "../contracts";
+import file from "./items.json";
 
-const LIST: Item[] = [
-  // Pods
-  { id: "terrarium_pod", name: "Terrarium Pod", pocket: "pods", price: 200,
-    description: "Glass acorn. Tired plants root in.",
-    effect: { kind: "pod", catchMultiplier: 1 }, usableInBattle: true, usableInField: false },
-  { id: "glass_pod", name: "Glass Pod", pocket: "pods", price: 600,
-    description: "Thick glass, warm soil. Better odds.",
-    effect: { kind: "pod", catchMultiplier: 1.5 }, usableInBattle: true, usableInField: false },
+export interface ItemsFile { format: "verdant.items/1"; items: Item[] }
 
-  // Healing
-  { id: "water_flask", name: "Water Flask", pocket: "items", price: 300,
-    description: "A long cool drink. Restores 20 HP.",
-    effect: { kind: "heal", amount: 20 }, usableInBattle: true, usableInField: true },
-  { id: "spring_water", name: "Spring Water", pocket: "items", price: 700,
-    description: "Icy spring water. Restores 60 HP.",
-    effect: { kind: "heal", amount: 60 }, usableInBattle: true, usableInField: true },
-  { id: "rain_jar", name: "Rain Jar", pocket: "items", price: 1500,
-    description: "Soft rain, saved. Restores all HP.",
-    effect: { kind: "heal_full" }, usableInBattle: true, usableInField: true },
-  { id: "compost", name: "Compost", pocket: "items", price: 1500,
-    description: "Lifts the wilted back to half HP.",
-    effect: { kind: "revive", fraction: 0.5 }, usableInBattle: true, usableInField: true },
-  { id: "neem_spray", name: "Neem Spray", pocket: "items", price: 250,
-    description: "Neem oil mist. Cures any status.",
-    effect: { kind: "cure_status" }, usableInBattle: true, usableInField: true },
-  { id: "plant_food", name: "Plant Food", pocket: "items", price: 1200,
-    description: "Slow feed: 10 PP to every move.",
-    effect: { kind: "restore_pp", amount: 10 }, usableInBattle: true, usableInField: true },
-  // Round 4: Glasshouse Market plant care. Cheaper than neem: one status each.
-  { id: "aloe_gel", name: "Aloe Gel", pocket: "items", price: 150,
-    description: "Cool aloe sap. Soothes a scorch.",
-    effect: { kind: "cure_status", status: "scorch" }, usableInBattle: true, usableInField: true },
-  { id: "cloche", name: "Glass Cloche", pocket: "items", price: 150,
-    description: "A warm glass bell. Thaws frostbite.",
-    effect: { kind: "cure_status", status: "frostbite" }, usableInBattle: true, usableInField: true },
+const POCKETS = ["items", "pods", "key"];
+const EFFECTS = ["heal", "heal_full", "revive", "cure_status", "pod", "restore_pp", "none"];
 
-  // Harvested from bushes (regrow daily); sellable, not stocked by default.
-  { id: "wild_berry", name: "Wild Berry", pocket: "items", price: 200,
-    description: "Sweet and juicy. Restores 30 HP.",
-    effect: { kind: "heal", amount: 30 }, usableInBattle: true, usableInField: true },
-  { id: "rose_hip", name: "Rose Hip", pocket: "items", price: 200,
-    description: "Full of vitamin C. Cures any status.",
-    effect: { kind: "cure_status" }, usableInBattle: true, usableInField: true },
+/** Shape errors in an items file (empty when valid). */
+export function itemsFileErrors(d: ItemsFile): string[] {
+  const errs: string[] = [];
+  if (d.format !== "verdant.items/1") errs.push(`items.json: format: expected "verdant.items/1"`);
+  const seen = new Set<string>();
+  for (const [i, it] of (d.items ?? []).entries()) {
+    const at = (msg: string) => errs.push(`items.json: items[${i}] ${it.id ?? "?"}: ${msg}`);
+    if (typeof it.id !== "string" || !/^[a-z0-9_]+$/.test(it.id)) at("id must be lower_snake_case");
+    if (seen.has(it.id)) at("id is defined twice");
+    seen.add(it.id);
+    if (typeof it.name !== "string" || !it.name || it.name.length > 13) at("name must be 1-13 characters");
+    if (!POCKETS.includes(it.pocket)) at(`pocket must be one of ${POCKETS.join(", ")}`);
+    if (!Number.isInteger(it.price) || it.price < 0) at("price must be a whole number, 0 = not for sale");
+    if (typeof it.description !== "string" || !it.description || it.description.length > 36) at("description must be 1-36 characters");
+    if (!it.effect || !EFFECTS.includes(it.effect.kind)) at(`effect.kind must be one of ${EFFECTS.join(", ")}`);
+    else if (it.effect.kind === "cure_status" && it.effect.status !== undefined && !(STATUSES as readonly string[]).includes(it.effect.status)) at(`effect.status ${it.effect.status} is unknown`);
+    if (typeof it.usableInBattle !== "boolean" || typeof it.usableInField !== "boolean") at("usableInBattle and usableInField must be true or false");
+  }
+  return errs;
+}
 
-  // Found growth triggers; species opt in through growsInto, not an item effect.
-  // Serotiny: https://www.nps.gov/places/000/fires-and-forest-ecology.htm
-  { id: "ember_ash", name: "Ember Ash", pocket: "items", price: 3000,
-    description: "Fire opens some sealed pine cones.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: true },
-  // Cold treatment: https://extension.umn.edu/garden-and-home/yard-and-garden/gardening-in-minnesota/planting-bulbs-tubers-and-rhizomes
-  { id: "cold_snap", name: "Cold Snap", pocket: "items", price: 0,
-    description: "Many bulbs need cold to flower.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: true },
+const errs = itemsFileErrors(file as ItemsFile);
+if (errs.length) throw new Error(`Invalid items data:\n${errs.join("\n")}`);
 
-  // Key items
-  { id: "old_diary", name: "Old Diary", pocket: "key", price: 0,
-    description: "FENNIMORE's grandfather's diary.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "fig_root", name: "Fig Root", pocket: "key", price: 0,
-    description: "Living roots that grow into bridges.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "relay_keycard", name: "Keycard", pocket: "key", price: 0,
-    description: "ODELL's pass to every RELAY floor.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "lily_raft", name: "Lily Raft", pocket: "key", price: 0,
-    description: "A giant lily pad. Rides on water.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "saxifrage", name: "Saxifrage", pocket: "key", price: 0,
-    description: "Roots UPROOT heavy boulders.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "cactus_sap", name: "Cactus Sap", pocket: "key", price: 0,
-    description: "SAGUARO's healing sap, sealed.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "foxfire_lantern", name: "Foxfire Jar", pocket: "key", price: 0,
-    description: "A jar of glowing fungus.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  // Alsomitra macrocarpa, the Javan cucumber, disperses winged gliding seeds.
-  { id: "glider_seed", name: "Glider Seed", pocket: "key", price: 0,
-    description: "A winged seed that glides far.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "field_herbarium", name: "Herbarium", pocket: "key", price: 0,
-    description: "Sketch the seen. Press the caught.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "centuryheart_seed", name: "Century Seed", pocket: "key", price: 0,
-    description: "Warm to the touch. It hums.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "fennimores_letter", name: "Old Letter", pocket: "key", price: 0,
-    description: "For DR. VALE. A green wax seal.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "syrup_jar", name: "Syrup Jar", pocket: "key", price: 0,
-    description: "Fresh maple syrup for the BAKER.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  // Round 4
-  { id: "pruning_shears", name: "Garden Shears", pocket: "key", price: 0,
-    description: "Oiled and sharp. PRUNES brambles.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "fan_letter", name: "Fan Letter", pocket: "key", price: 0,
-    description: "For FLORA VANCE. Smells of roses.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "climber_pack", name: "Climber Pack", pocket: "key", price: 0,
-    description: "A lost climber's rucksack, frosted.",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-  { id: "signed_photo", name: "Signed Photo", pocket: "key", price: 0,
-    description: "FLORA, mid-wink. \"Kisses! F.V.\"",
-    effect: { kind: "none" }, usableInBattle: false, usableInField: false },
-];
-
-export const ITEMS: Record<string, Item> = Object.fromEntries(LIST.map((i) => [i.id, i]));
+export const ITEMS: Record<string, Item> = Object.fromEntries((file as ItemsFile).items.map((i) => [i.id, i]));

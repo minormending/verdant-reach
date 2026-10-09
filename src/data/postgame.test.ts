@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { SPECIES_IDS } from "../contracts";
 import { isSelfAnim, MOVE_ANIMS } from "../battle/anims";
@@ -51,8 +51,11 @@ describe("Post-game species (POSTGAME.md §2)", () => {
       const sentences = h.entry.split(/(?<=[.!?])\s+/);
       expect(sentences).toHaveLength(2);
       expect(sentences[1]).toBe(row.fact);
-      const text = readFileSync(new URL("./herbarium.ts", import.meta.url), "utf8");
-      expect(text).toContain(`// Fact: ${row.fact}\n  // Source: https://en.wikipedia.org/wiki/${row.source}\n  h("${row.id}"`);
+      // The page's fact and source are fields in its line file (docs/DATA.md).
+      const page = readdirSync(new URL("./species/", import.meta.url))
+        .flatMap((f) => JSON.parse(readFileSync(new URL(`./species/${f}`, import.meta.url), "utf8")).species)
+        .find((sp: { id: string }) => sp.id === row.id)?.herbarium;
+      expect(page, row.id).toMatchObject({ fact: row.fact, source: `https://en.wikipedia.org/wiki/${row.source}` });
     });
 
     it(`${row.id} cannot breed with itself or any other species, in either nursery slot`, () => {
