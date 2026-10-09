@@ -14,12 +14,12 @@ describe("Chapter 9 world", () => {
     expect(MAP_IDS.slice(MAP_IDS.indexOf("route_10"), MAP_IDS.indexOf("route_10") + CH9.length)).toEqual(CH9);
     for (const [id, w, h, outdoor, music, ambient] of [
       ["route_10", 50, 20, true, "route", "leaves"],
-      ["thistledown", 30, 26, true, "small_town", "leaves"],
+      ["thistledown", 30, 26, true, "thistledown", "leaves"],
       ["thistledown_greenhouse", 11, 9, false, "greenhouse", undefined],
       ["thistledown_market", 14, 9, false, "market", undefined],
       ["thistledown_house", 9, 8, false, "herbarium", undefined],
-      ["route_11", 28, 56, true, "route", "none"],
-      ["sanguine_ridge", 32, 28, true, "small_town", "none"],
+      ["route_11", 28, 56, true, "canyon", "none"],
+      ["sanguine_ridge", 32, 28, true, "ridge", "none"],
       ["sanguine_conservatory", 18, 20, false, "conservatory", "none"],
     ] as const) {
       const m = WORLD.maps[id];
@@ -111,8 +111,8 @@ describe("Chapter 9 world", () => {
       ["glasshouse_city", "east_gate_guard", "ch9_east_gate"], ["thistledown", "tumbleweed_sighting", "ch9_tumbleweed"],
       ["thistledown_house", "stone_botanist", "q_window_panes"], ["route_11", "bram", "rival_5"], ["sanguine_conservatory", "rook", "rook"],
     ] as const) expect(WORLD.maps[map].npcs.find((n) => n.id === id)?.script).toBe(script);
-    expect(WORLD.maps.thistledown_house.npcs.find((n) => n.id === "stone_botanist")?.sprite).toBe("researcher");
-    expect(WORLD.maps.thistledown.npcs.find((n) => n.id === "tumbleweed_sighting")).toMatchObject({ sprite: "item_pickup", visibleWhen: [{ flag: "tumbleweed_seen", is: false }] });
+    expect(WORLD.maps.thistledown_house.npcs.find((n) => n.id === "stone_botanist")?.sprite).toBe("stone_botanist");
+    expect(WORLD.maps.thistledown.npcs.find((n) => n.id === "tumbleweed_sighting")).toMatchObject({ sprite: "tumbleweed_roll", visibleWhen: [{ flag: "tumbleweed_seen", is: false }] });
     expect(WORLD.maps.route_11.triggers.find((t) => t.script === "rival_5")?.when).toEqual([{ flag: "rival_5_done", is: false }]);
     expect(WORLD.maps.thistledown.onEnter).toBe("ch9_arrival");
     expect(WORLD.maps.sanguine_ridge.onEnter).toBe("ch9_end");
@@ -120,13 +120,15 @@ describe("Chapter 9 world", () => {
     for (const id of ["route_10", "route_11"] as const) expect(WORLD.maps[id].npcs.filter((n) => n.trainer)).toHaveLength(4);
     expect(WORLD.maps.route_10.hidden).toHaveLength(2);
     expect(WORLD.maps.sanguine_conservatory.npcs.filter((n) => n.trainer)).toHaveLength(2);
-    expect(WORLD.maps.sanguine_ridge.structures.filter((s) => s.key === "big_oak")).toHaveLength(3);
+    // The Chapter 9 environment pass: dragon's blood trees replace the three big_oak stand-ins.
+    expect(WORLD.maps.sanguine_ridge.structures.filter((s) => s.key === "big_oak")).toHaveLength(0);
+    expect(WORLD.maps.sanguine_ridge.structures.filter((s) => s.key === "dragon_tree_big").length).toBeGreaterThanOrEqual(3);
     const stock: string[] = [];
     for (const id of ["ch9_market_pods", "ch9_market_care"]) eachCmd(WORLD.scripts[id], (c) => { if (c.op === "shop") stock.push(...c.stock); });
     expect(stock).toEqual(["terrarium_pod", "glass_pod", "water_flask", "spring_water", "compost", "neem_spray", "plant_food", "aloe_gel", "cloche", "rain_jar", "ember_ash"]);
   });
 
-  it("uses the exact route and junior teams, portraits and placeholder lines", () => {
+  it("uses the exact route and junior teams, portraits and finished lines", () => {
     const teams = {
       drifter_dune: [["prickly_pear", 43], ["lithops_pair", 42]], drifter_mesa: [["saguaro", 44]],
       botanist_sage2: [["pitaya_cutting", 43], ["foxglove", 43]], botanist_rue: [["lithops_pair", 43], ["dandelion_clock", 43]],
@@ -143,7 +145,7 @@ describe("Chapter 9 world", () => {
     }
     for (const id of [...Object.keys(teams), "rook", "rival_5_oak", "rival_5_chili", "rival_5_lily"]) {
       const t = WORLD.trainers[id];
-      for (const line of [t.intro, t.defeat, t.after]) expect(line).toContain("TODO(text)");
+      for (const line of [t.intro, t.defeat, t.after]) expect(line).toMatch(/^(?!.*TODO)\S.*\S$/);
     }
   });
 
@@ -158,7 +160,7 @@ describe("Chapter 9 world", () => {
       ]);
     }
     const t = WORLD.trainers.rook;
-    expect(t).toMatchObject({ portrait: "hollis", className: "WARDEN", ai: "smart", music: "battle_leader", mark: "resin_mark", items: [{ item: "spring_water", qty: 2 }] });
+    expect(t).toMatchObject({ portrait: "rook", className: "WARDEN", ai: "smart", music: "battle_leader", mark: "resin_mark", items: [{ item: "spring_water", qty: 2 }] });
     expect(t.team.map((q) => [q.species, q.level])).toEqual([["snapdragon", 48], ["dragon_fruit", 48], ["lithops_bloom", 48], ["dragon_tree", 51]]);
     t.team.forEach((q, i) => expect(Math.abs(q.level - [49, 50, 50, 53][i])).toBeLessThanOrEqual(2));
     expect(t.team.map((q) => q.moves)).toEqual([

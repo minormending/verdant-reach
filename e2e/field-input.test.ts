@@ -214,7 +214,7 @@ it.each([
     expect(ctx.state.rafting).toBeUndefined();
     expect(ctx.state.flags.lantern_healed).toBe(true);
     expect(ctx.state.bag.cactus_sap ?? 0).toBe(0);
-    expect(e2e.report.texts.some((t) => /Fireflies return/.test(t.text))).toBe(true);
+    expect(e2e.report.texts.some((t) => /the fireflies come back/.test(t.text))).toBe(true);
     expect(await drive(() => e2e.nav("saltmarsh_conservatory"))).toBe(true);
     expect(e2e.report.issues).toEqual([]);
   } finally { stop(); }
@@ -537,6 +537,8 @@ it.each(["won", "lost"] as const)("walks the east gate, tumbleweed and BRAM's %s
   Object.assign(ctx.state.flags, { ch8_done: true, ch7_done: true, ch4_done: true,
     gc_arrival_seen: true, relay_listened: true, ch4_grunt_seen: true });
   ctx.battle = vi.fn().mockImplementation(async (req) => req.trainer?.startsWith("rival_5_") ? outcome : "won");
+  // Supply ROOK's dragon_trees still so its fade/still/clear flow runs without a missing-art warning.
+  vi.spyOn(ctx.assets, "image").mockReturnValue({} as HTMLImageElement);
   try {
     expect(await drive(() => e2e.nav("route_10"))).toBe(true);
     expect(await drive(() => e2e.nav("thistledown"))).toBe(true);

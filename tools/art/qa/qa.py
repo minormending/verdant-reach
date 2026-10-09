@@ -22,23 +22,24 @@ from checks import (result, face_risk, size_class, grounding, centre_of_mass,
 
 GROUND_KEYS = {'grass', 'path', 'stone_path', 'dirt', 'sand', 'moss', 'ash',
                'tropical_grass', 'paving', 'salt_flat', 'basalt_floor',
-               'dry_grass', 'shell_scatter', 'vent_moss'}
+               'dry_grass', 'shell_scatter', 'vent_moss', 'scree', 'frozen_shore',
+               'desert_scrub', 'cracked_earth'}
 
 
 def species_metadata():
-    """Read the deliberately simple sp({ id/name/line/stage }) data header.
+    """Line and stage per species, from src/data/species/<line>.json (docs/DATA.md).
 
     Fail closed if an id cannot be resolved, rather than silently guessing its
     stage from the generator filename (edited/imported art has no such name).
     """
-    source = (ROOT/'src/data/species.ts').read_text()
-    matches = re.findall(r'sp\(\{\s*id:\s*"([^"]+)"\s*,\s*name:\s*"[^"]+"\s*,\s*line:\s*"([^"]+)"\s*,\s*stage:\s*([123])', source)
-    meta = {id_: {'line': line, 'stage': int(stage)} for id_, line, stage in matches}
-    for m in meta.values():
-        length = max(v['stage'] for v in meta.values() if v['line'] == m['line'])
-        m['class'] = 'adult' if m['stage'] == length else 'baby' if length == 3 and m['stage'] == 1 else 'teen'
+    meta = {}
+    for f in sorted((ROOT/'src/data/species').glob('*.json')):
+        d = json.loads(f.read_text())
+        length = max(s['stage'] for s in d['species'])
+        for s in d['species']:
+            cls = 'adult' if s['stage'] == length else 'baby' if length == 3 and s['stage'] == 1 else 'teen'
+            meta[s['id']] = {'line': d['line'], 'stage': s['stage'], 'class': cls}
     return meta
-
 
 def load_roster():
     meta = species_metadata()

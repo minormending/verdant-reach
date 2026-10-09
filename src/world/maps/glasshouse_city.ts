@@ -182,7 +182,7 @@ export const scripts: Scripts = {
   ],
   gc_researcher: [
     ifFlags({ ch8_started: true, beat_wren: false }, [
-      say("TODO(text): The sensor plants have stopped moving.", "RESEARCHER"),
+      say("The sensor plants have stopped moving. Not a twitch since the mast began to hum.", "RESEARCHER"),
     ], [
       ifFlags({ relay_listened: true }, [
         say("The needles all swung at once. I've checked the wiring twice."),
@@ -206,7 +206,7 @@ export const scripts: Scripts = {
   ],
   gc_gardener: [
     ifFlags({ ch8_started: true, beat_wren: false }, [
-      say("TODO(text): My plant will not move.", "GARDENER"),
+      say("My QUICKENED won't move. Not for water, not for sun. It just stands there.", "GARDENER"),
     ], [
       say("No wind under the dome, so no seeds blow in. No weeds!"),
       say("...Almost no weeds. Dandelions always find a way."),
@@ -214,7 +214,7 @@ export const scripts: Scripts = {
   ],
   gc_resident: [
     ifFlags({ ch8_started: true, beat_wren: false }, [
-      say("TODO(text): Every plant on my sill stands frozen.", "RESIDENT"),
+      say("Every plant on my sill stands frozen. Hard to tell with the cactus, mind.", "RESIDENT"),
     ], [
       ifNight(
         [say("Hear that? The RELAY's mast hums at night. Louder since the bloom.")],

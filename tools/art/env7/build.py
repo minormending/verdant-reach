@@ -57,12 +57,23 @@ def scene(rows, out, resolver):
     return im
 
 
-def review(out):
+def contract_keys():
+    """Frontier tiles whose TileKey exists on this branch (Chapter 7 has only ice and snow)."""
+    import re
+    text = (ROOT / "src/contracts/ids.ts").read_text()
+    return [k for k in TS.ORDER if re.search(rf"^\s*{k}:\s*{{", text, re.M)]
+
+
+def base_key(stem):
+    return stem.split("@")[0].split("__")[0].split("~")[0]
+
+
+def review(out, order):
     resolver = Resolver()
     sheet = Image.new("RGB", (936, 668), "#ece8d8")
     d = ImageDraw.Draw(sheet)
     d.text((12, 8), "FRONTIER / original tiles / 4x nearest neighbour / 6x6 scenes", fill="#383840")
-    for i, key in enumerate(TS.ORDER):
+    for i, key in enumerate(order):
         x, y = 12 + (i % 3) * 308, 32 + (i // 3) * 312
         d.text((x, y), key.upper(), fill="#383840")
         sheet.paste(out[key].resize((64, 64), Image.Resampling.NEAREST), (x, y + 20))
@@ -82,10 +93,12 @@ def review(out):
 def build(save=True):
     out = TS.images()
     TS.check(out)
+    order = contract_keys()
+    out = {stem: im for stem, im in out.items() if base_key(stem) in order}
     if save:
         emit.tileset("frontier", out, "tools/art/env7/tilesets.py", name="Frontier",
-                     order=TS.ORDER, credits="Original pixel art for Verdant Reach (frontier environment).")
-    review(out)
+                     order=order, credits="Original pixel art for Verdant Reach (frontier environment).")
+    review(out, order)
     print(f"frontier: {len(out)} tile images; review: {REVIEW.relative_to(ROOT)}")
 
 

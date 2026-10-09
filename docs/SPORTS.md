@@ -34,9 +34,9 @@ table and is kept as reference only (its values are the `classic` pack's sports)
 | chili_blossom | 'Black Pearl' | Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers. | `#382048 #9878b8 #f8f8f8` |
 | green_chili | 'Black Pearl' | Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers. | `#201838 #605078 #f8f8f8` |
 | red_chili | 'Black Pearl' | Capsicum annuum 'Black Pearl' (USDA, AAS winner 2006): near-black leaves and glossy black fruit, purple flowers. | `#281828 #684878 #f8f8f8` |
-| lily_seedpod | 'Chromatella' yellow water lily | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads. | `#604018 #c09038 #f8f8f8` |
-| lily_pad | 'Chromatella' yellow water lily | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads. | `#684018 #98a038 #f8f8f8` |
-| giant_water_lily | 'Chromatella' yellow water lily | Nymphaea x marliacea 'Chromatella' (Latour-Marliac, 1887): canary-yellow flowers over bronze-mottled pads. | `#385020 #e8c040 #f8f8f8` |
+| lily_seedpod | 'Escarboucle' red water lily | Nymphaea 'Escarboucle' (Latour-Marliac, 1909): deep crimson flowers over darker, bronze-tinged pads. | `#401018 #a82030 #f8f8f8` |
+| lily_pad | 'Escarboucle' red water lily | Nymphaea 'Escarboucle' (Latour-Marliac, 1909): deep crimson flowers over darker, bronze-tinged pads. | `#681020 #587838 #f8f8f8` |
+| giant_water_lily | 'Escarboucle' red water lily | Nymphaea 'Escarboucle' (Latour-Marliac, 1909): deep crimson flowers over darker, bronze-tinged pads. The giant sport is the CRIMSON LILY of Bloom Lake (Chapter 7). | `#304028 #c02838 #f8f8f8` |
 | dandelion_bud | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#387838 #f0a0c0 #f8f8f8` |
 | dandelion | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#405028 #e888b0 #f8f8f8` |
 | dandelion_clock | pink dandelion | Taraxacum pseudoroseum, the pink dandelion of Central Asia: rose florets with pale tips. | `#305838 #d098b8 #f8f8f8` |
@@ -169,3 +169,73 @@ Chapter 6 vanilla line (set in `tools/art/crystal/vanilla.py`; palettes are dark
 | vanilla_orchid | 'Variegata' | The same cream-striped Vanilla planifolia form as vanilla_vine. Leaf faces and orchid segments take pale cream-green; the stake and long green capsules retain an olive dark tone. Shared white stays reserved for rims and gloss, with identical geometry. | `#586040 #d0d8a0 #f8f8f8` |
 
 Botanical references: [University of California Riverside Botanic Gardens, Fall 2021 plant list](https://gardens.ucr.edu/sites/g/files/rcwecm4706/files/2021-09/Online%20Fall%202021%20Plant%20List%209.21.2021.pdf) lists Vanilla planifolia 'Variegata' with succulent leaves striped creamy white and pale yellow-green flowers. [UF/IFAS, Vanilla Growing in South Florida (HS1348)](https://ask.ifas.ufl.edu/publication/HS1348) describes the fleshy climbing vine, oval pointed leaves, aerial roots, cream-green flowers with a modified lip, and elongated green capsules. The exact cream-green palette is an artistic interpretation of variegation within two colour slots.
+
+Chapter 7 edelweiss line (set in `tools/art/crystal/edelweiss.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| edelweiss_bud | creamy-yellow felt (natural colour variation) | Leontopodium nivale: a natural colour variation, the creamier, less silvery felt of plants grown in shade and at lower altitude; not a named cultivar. Crystal: the woolly grey-green leaves and the button bud's shading turn cream, the limestone flank a warm ochre; the white felt highlights stay white. Palette swap only. | `#987838 #d8c890 #f8f8f8` |
+| edelweiss | creamy-yellow felt (natural colour variation) | The same natural creamy-felt variation as edelweiss_bud, not a named cultivar. The star's bract shading and the woolly leaves take cream, and the domed flower heads deepen from yellow-olive to ochre; the white felt stays white, with identical geometry. | `#987838 #d8c890 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Leontopodium nivale](https://en.wikipedia.org/wiki/Leontopodium_nivale) describes the woolly white hairs on the leaves and the fuzzy white bracts around five to six small yellow clustered flower heads, and its rocky limestone habitat. These support the anatomy. The creamier felt of shaded, lower-altitude plants is the lead's design brief: that page does not describe it, and the exact cream palette is an artistic interpretation within two colour slots.
+Chapter 7 bladderwort line (set in `tools/art/crystal/bladderwort.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| bladderwort_sprig | bronze-red anthocyanin form (natural colour form, not a named cultivar) | Utricularia vulgaris. Plants in sunny, nutrient-poor water flush bronze-red with anthocyanin; this is a natural colour form, not a cultivar or genetically stable sport. Crystal: the water-green leaf slot turns bronze-red; the pale green bladders, the curled tip and the white water line stay as they are. | `#8c4030 #c0dc78 #f8f8f8` |
+| bladderwort | bronze-red anthocyanin form (natural colour form, not a named cultivar) | The same natural bronze-red colouring as the sprig: the leaf lace, stolon and flower stalk take bronze-red, while the bright yellow flowers and bladders keep the yellow mid tone. Palette swap only. | `#8c4030 #f0d038 #f8f8f8` |
+
+References: [Wikipedia, Utricularia](https://en.wikipedia.org/wiki/Utricularia) describes the free-floating, finely divided leaves with bladder traps and the yellow two-lipped flowers held above the water. The bronze-red sport palette is an artistic interpretation of the reddish anthocyanin colouring many aquatic plants take on in strong light; it is not a named cultivar.
+Chapter 7 moss campion line (set in `tools/art/crystal/campion.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| campion_cushion | f. alba (white-flowered form) | Silene acaulis f. alba: the natural white-flowered form of moss campion. Only the rose-pink mid slot (the closed buds) becomes cream; the cushion green in the dark slot stays. The shared white stays highlights and frost only, so the white share is unchanged. | `#50a040 #d8d0a8 #f8f8f8` |
+| campion_mound | f. alba (white-flowered form) | The same white-flowered form: the open five-petalled stars turn cream over the unchanged green cushion and frosted rock. | `#50a040 #d8d0a8 #f8f8f8` |
+| moss_campion | f. alba (white-flowered form) | The same white-flowered form: the dome's blanket of stars turns cream; geometry and the green are identical. | `#50a040 #d8d0a8 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Silene acaulis](https://en.wikipedia.org/wiki/Silene_acaulis) describes the dense, moss-like cushions of narrow bright-green leaves, and notes the flowers are usually pink but very rarely white. The cream (rather than pure white) mid tone keeps the flowers 15% apart from the shared highlight white, as the rules above require.
+Chapter 7 snowdrop line (set in `tools/art/crystal/snowdrop.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| snowdrop_bulb | Sandersii Group | Galanthus nivalis Sandersii Group (including 'Sandersii', 'Flavescens' and 'Lutescens'): the ovary and inner-segment marks are yellow instead of green. The dormant bulb has neither, so its olive-brown dark slot (tunic lines, spear shade) becomes the same yellow-olive; the cream-sage body and the white snow stay. Palette swap only. | `#988830 #b8c0a0 #f8f8f8` |
+| snowdrop_shoot | Sandersii Group | The same yellow-marked snowdrop: the deep-green dark slot (scape, spathe, leaf shade) becomes yellow-olive; the grey-green leaves and the white bud stay. | `#988830 #98b098 #f8f8f8` |
+| snowdrop | Sandersii Group | The same yellow-marked snowdrop: the ovary and the inverted-V marks on the inner tepals turn yellow-olive (the dark slot, which the scape shares); the white tepals and grey-green leaves are unchanged. | `#988830 #98b098 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Galanthus nivalis](https://en.wikipedia.org/wiki/Galanthus_nivalis) describes the green V- or U-shaped mark over the notch at each inner segment's tip, the papery spathe at the top of the scape, and the Sandersii Group, whose ovary and inner-segment marks are yellow instead of green. The yellow-olive shade, and its spread to the scape and leaf shading that share the dark slot, are an artistic interpretation within two colour slots.
+Chapter 7 larch line (set in `tools/art/crystal/larch.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| larch_seedling | Japanese larch blue-green | The soft blue-green needles of Larix kaempferi, the Japanese larch, a close relative of the European larch (Larix decidua) and a natural colour of the genus rather than a named cultivar. Crystal: the fresh-green rosettes turn blue-green; the dark slot (bark, larch rose) shifts from rosy red-brown to a cooler plum-brown, an artistic choice. White stays white. | `#804858 #80b0a0 #f8f8f8` |
+| larch | Japanese larch blue-green | The same Larix kaempferi blue-green as larch_seedling: the autumn-gold curtains, rosettes and fallen needles take the blue-green of its summer foliage; bark, cones and the larch rose take the cooler plum-brown. Palette swap only. | `#804858 #80b0a0 #f8f8f8` |
+
+Botanical references: [Wikipedia, Larix decidua](https://en.wikipedia.org/wiki/Larix_decidua) describes the needles in rosettes on short shoots, the red young female cones and the golden autumn needle drop; [Wikipedia, Larix kaempferi](https://en.wikipedia.org/wiki/Larix_kaempferi) describes the Japanese larch's glaucous blue-green needles. The exact two-tone palettes, and the plum-brown dark slot of the sport, are an artistic interpretation.
+Chapter 9 lithops line (set in `tools/art/crystal/lithops.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| lithops_pebble | 'Rubra' | Lithops optica 'Rubra', the widely grown purple-red form of L. optica. Crystal: the stone-tan leaves, sand banks and pebbles (mid slot) turn a deep wine red; the olive window networks, fissure shading and grit (dark slot) turn a dark plum. White highlights stay white. Palette swap only. | `#582030 #a84058 #f8f8f8` |
+| lithops_pair | 'Rubra' | The same purple-red L. optica 'Rubra' as lithops_pebble: every leaf pair, and the pebbles and sand that share the mid slot, turn wine red over plum windows. | `#582030 #a84058 #f8f8f8` |
+| lithops_bloom | 'Rubra' | The same L. optica 'Rubra' palette. The white petals stay white, but the flower's tan petal seams and stamen boss share the mid slot, so they take the wine red too: an artifact of the two colour slots, not a claim about the cultivar's flowers. | `#582030 #a84058 #f8f8f8` |
+
+Botanical references: [Wikipedia, Lithops](https://en.wikipedia.org/wiki/Lithops) describes the mostly buried leaves, their translucent leaf windows, and the fissure between the pair that produces new leaves and the yellow or white flowers (some large enough to hide the leaves); [Wikipedia, Lithops optica](https://en.wikipedia.org/wiki/Lithops_optica) describes the widely cultivated purple-red 'Rubra'; [Wikipedia, Lithops karasmontana](https://en.wikipedia.org/wiki/Lithops_karasmontana) describes grey, stone-like leaves with brown mottling and white, narrow-rayed flowers. The exact two-tone palettes, and the sand and pebbles sharing the plant's slots, are an artistic interpretation.
+
+Chapter 9 dragon tree line (set in `tools/art/crystal/dragontree.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| dragon_seedling | Canary Islands dragon tree grey-green | The paler, greyish-green foliage of Dracaena draco, the Canary Islands dragon tree, a close relative of the Socotra dragon tree (Dracaena cinnabari); a natural colour of the genus, not a named cultivar. Crystal: the blue-green swords turn pale grey-green; the dark slot (the resin bead, the stem's shading) shifts from crimson-brown to a slightly browner red-brown, an artistic choice. White stays white. | `#884038 #a0b898 #f8f8f8` |
+| dragon_sapling | Canary Islands dragon tree grey-green | The same Dracaena draco grey-green: both leaf tufts take the paler foliage; the bark shading and the resin drop take the browner red. Palette swap only. | `#884038 #a0b898 #f8f8f8` |
+| dragon_tree | Canary Islands dragon tree grey-green | The same Dracaena draco grey-green: the umbrella crown turns pale grey-green over the browner red underside band, bark shading and weeping resin; geometry is identical. | `#884038 #a0b898 #f8f8f8` |
+
+Botanical references: [Wikipedia, Dracaena cinnabari](https://en.wikipedia.org/wiki/Dracaena_cinnabari) describes the upturned, densely packed, umbrella-shaped crown, the dichotomous branching in which each branch repeatedly divides in two, the long stiff leaves in dense rosettes at the branch ends, and the crimson red resin called dragon's blood. [Wikipedia, Dracaena draco](https://en.wikipedia.org/wiki/Dracaena_draco) describes the mature plant's umbrella-like habit and the reddish resin that cut bark or leaves secrete; [Barcelona Zoo, Canary Islands dragon tree](https://zoobarcelona.cat/en/node/329) describes its greyish-green leaves and the red resin from cuts in the bark. Neither page gives the Socotra tree's leaf colour, so its blue-green, the exact two-tone palettes and the browner red of the sport are an artistic interpretation.
+Chapter 9 pitaya line (set in `tools/art/crystal/pitaya.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| pitaya_cutting | yellow pitaya (Selenicereus megalanthus, a related species) | Not a cultivar of Selenicereus undatus: the yellow pitaya is a related species of the same genus whose fruit skin is yellow. Crystal: the magenta mid slot (the cutting's young tip) turns yellow; the stem green in the dark slot and the white areole tufts stay. Palette swap only. | `#3c9048 #e8d038 #f8f8f8` |
+| dragon_fruit | yellow pitaya (Selenicereus megalanthus, a related species) | The same yellow pitaya: the fruit skin and the bract tips take yellow; the stem green and the white flower are unchanged. The real yellow pitaya's fruit is spiny and tuberculate rather than scaly, so the shared scale geometry is an interpretation. | `#3c9048 #e8d038 #f8f8f8` |
+
+Botanical references: [Wikipedia, Selenicereus undatus](https://en.wikipedia.org/wiki/Selenicereus_undatus) describes the climbing stems with generally three ribs and undulate, horny margins, small areoles with short spines, aerial roots, the scented nocturnal flowers with greenish-yellow outer tepals and white inner tepals, and the red fruit with large bracteoles. [Wikipedia, Selenicereus megalanthus](https://en.wikipedia.org/wiki/Selenicereus_megalanthus) describes the yellow-skinned, tuberculate, spiny fruit, the nocturnal funnel-shaped flowers and the three-ribbed stems with aerial roots, and contrasts its spiny fruit with S. undatus. The magenta tip of the cutting's young growth, the exact two-tone palettes and the yellow bract tips of the sport are an artistic interpretation.

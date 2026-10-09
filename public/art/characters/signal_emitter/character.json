@@ -1,0 +1,10 @@
+{
+  "format": "verdant.character/1",
+  "id": "signal_emitter",
+  "sheet": "sheet.png",
+  "frame": [16, 16],
+  "rows": ["down", "up", "left", "right"],
+  "columns": ["stand", "stepA", "stepB"],
+  "credits": "Hand-authored original pixel art for Verdant Reach (Chapter 7 cast generator).",
+  "source": { "kind": "generated", "tool": "tools/art/cast7/chars7.py" }
+}
