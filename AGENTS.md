@@ -55,8 +55,8 @@ leave `git status` clean (the generators are deterministic).
 |---|---|
 | Shared contracts (ids, data shapes, ops). Change them deliberately and keep them minimal. | `src/contracts/` |
 | Engine, overworld, battle, menus | `src/engine`, `src/overworld`, `src/battle`, `src/screens`, `src/ui` |
-| Species data (stats, types, learnsets, growth): JSON, one file per line | `src/data/species/<line>.json` (format: **docs/DATA.md**) |
-| Moves, items, Herbarium facts | `src/data/` (every Herbarium entry holds one TRUE, sourced plant fact) |
+| Game data as JSON (format: **docs/DATA.md**): species and their Herbarium pages, one file per line | `src/data/species/<line>.json` (every Herbarium page holds one TRUE plant fact with its `source`) |
+| Moves and items | `src/data/moves.json`, `src/data/items.json` |
 | Maps, story scripts, trainers | `src/world/` (`validate.ts` proves reachability, no soft-locks and text fit) |
 | Art runtime (resolves logical asset paths to bundles), the Art Lab | `src/art/` |
 | **All art, as swappable bundles** | `public/art/` (format: **docs/ART.md**) |
@@ -134,10 +134,9 @@ Without a seed, the game uses its usual randomness.
 ### How to add a new species
 
 1. Add the id to `SPECIES_IDS` in `src/contracts/ids.ts`.
-2. Add its data (stats, learnset, growth) to its line's JSON file in
-   `src/data/species/` (a new line gets a new file with its `pollination`;
-   see docs/DATA.md), and a Herbarium entry with a true, sourced fact in
-   `src/data/herbarium.ts`.
+2. Add its data (stats, learnset, growth) and its `herbarium` page (one true
+   fact, with its `source`) to its line's JSON file in `src/data/species/`.
+   A new line gets a new file with its `pollination`; see docs/DATA.md.
 3. Add encounters in `src/world/maps/`.
 4. Draw it in a `tools/art/crystal/<line>.py` module (copy a similar line),
    then `npm run art:index`. The bundle test fails until every required

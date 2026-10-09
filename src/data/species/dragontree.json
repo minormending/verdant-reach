@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "dragontree",
   "pollination": ["woodland"],
   "species": [
@@ -28,7 +28,16 @@
         [36, "sap_spout"],
         [40, "leaf_gale"],
         [50, "old_growth"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Dracaena cinnabari",
+        "category": "Dragon Seed",
+        "heightM": 0.2,
+        "weightKg": 0.3,
+        "entry": "It dreams of standing beside you. Its kind grows an umbrella-shaped crown and has red resin called dragon's blood.",
+        "fact": "Its red resin is called dragon's blood, and it grows an umbrella-shaped crown.",
+        "source": "https://en.wikipedia.org/wiki/Dracaena_cinnabari"
+      }
     },
     {
       "id": "dragon_sapling",
@@ -56,7 +65,16 @@
         [40, "leaf_gale"],
         [45, "dragon_resin"],
         [50, "old_growth"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Dracaena cinnabari",
+        "category": "Umbrella Pup",
+        "heightM": 1.5,
+        "weightKg": 12,
+        "entry": "It seems proud of its place in your party. Its red resin is named dragon's blood, and its crown grows like an umbrella.",
+        "fact": "Its red resin is called dragon's blood, and it grows an umbrella-shaped crown.",
+        "source": "https://en.wikipedia.org/wiki/Dracaena_cinnabari"
+      }
     },
     {
       "id": "dragon_tree",
@@ -83,7 +101,16 @@
         [40, "leaf_gale"],
         [45, "dragon_resin"],
         [50, "old_growth"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Dracaena cinnabari",
+        "category": "Dragon Tree",
+        "heightM": 8,
+        "weightKg": 600,
+        "entry": "It welcomes you like an old friend. The red resin is known as dragon's blood, and the crown spreads into an umbrella shape.",
+        "fact": "Its red resin is called dragon's blood, and it grows an umbrella-shaped crown.",
+        "source": "https://en.wikipedia.org/wiki/Dracaena_cinnabari"
+      }
     }
   ]
 }

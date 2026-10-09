@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "pitcher",
   "pollination": ["carnivore", "wetland"],
   "species": [
@@ -28,7 +28,16 @@
         [32, "mist_veil"],
         [36, "flood"],
         [40, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Sarracenia leucophylla",
+        "category": "Pitfall",
+        "heightM": 0.05,
+        "weightKg": 0.1,
+        "entry": "It sits in the moss with its hood up, smelling sweet. The white-topped pitcher plant grows wild only near the Gulf Coast of the United States, in boggy pine savannas.",
+        "fact": "Sarracenia leucophylla (white-topped pitcher plant) is native only to the Gulf Coastal Plain of the southeastern US (FL, AL, GA, MS), in wet pine savannas and bogs. (Matches the white-hooded Crystal-rule art.)",
+        "source": "https://en.wikipedia.org/wiki/Sarracenia_leucophylla"
+      }
     },
     {
       "id": "pitcher_plant",
@@ -54,7 +63,16 @@
         [32, "mist_veil"],
         [36, "flood"],
         [40, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Sarracenia leucophylla",
+        "category": "Pitfall",
+        "heightM": 0.3,
+        "weightKg": 1,
+        "entry": "Insects come for the nectar and never leave. Stiff downward-pointing hairs stop them climbing out, so they fall into the pool below and drown.",
+        "fact": "Sarracenia pitchers have stiff downward-pointing hairs; insects can't climb out and drown in the fluid below.",
+        "source": "https://www.fs.usda.gov/wildflowers/plant-of-the-week/sarracenia_purpurae.shtml (genus-wide trait)"
+      }
     }
   ]
 }

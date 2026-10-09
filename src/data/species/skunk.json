@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "skunk",
   "pollination": ["wetland"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "sun_flare"],
         [34, "bark_skin"],
         [40, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Symplocarpus foetidus",
+        "category": "Skunk Shoot",
+        "heightM": 0.15,
+        "weightKg": 0.4,
+        "entry": "Its mottled hood pokes up through the snow, perfectly snug. Skunk cabbage can heat its own flowers well above the air temperature, melting the snow around them.",
+        "fact": "Flowers heat well above air temperature and melt surrounding snow.",
+        "source": "https://en.wikipedia.org/wiki/Symplocarpus_foetidus"
+      }
     },
     {
       "id": "skunk_cabbage",
@@ -52,7 +61,16 @@
         [30, "sun_flare"],
         [34, "bark_skin"],
         [40, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Symplocarpus foetidus",
+        "category": "Skunk Cabbage",
+        "heightM": 0.6,
+        "weightKg": 3,
+        "entry": "Big bright leaves, a hooded flower, and a smell that earns its name. Its flowers can make themselves far warmer than the air, melting the snow around them.",
+        "fact": "Flowers heat well above air temperature and melt surrounding snow.",
+        "source": "https://en.wikipedia.org/wiki/Symplocarpus_foetidus"
+      }
     }
   ]
 }

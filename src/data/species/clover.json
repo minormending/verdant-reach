@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "clover",
   "pollination": ["meadow"],
   "species": [
@@ -28,7 +28,16 @@
         [30, "unfurl"],
         [35, "sunbeam"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Trifolium repens",
+        "category": "Trefoil",
+        "heightM": 0.05,
+        "weightKg": 0.02,
+        "entry": "It hides in lawns, three leaves at a time. Its old name is a small one: shamrock comes from an Irish word meaning young clover.",
+        "fact": "\"shamrock\" is from Irish seamrog, a diminutive of seamair (clover): \"young clover\".",
+        "source": "https://en.wikipedia.org/wiki/Shamrock"
+      }
     },
     {
       "id": "white_clover",
@@ -54,7 +63,16 @@
         [30, "unfurl"],
         [35, "sunbeam"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Trifolium repens",
+        "category": "Trefoil",
+        "heightM": 0.2,
+        "weightKg": 0.1,
+        "entry": "Where it creeps, the grass grows greener. Bacteria in its root nodules pull nitrogen from the air and turn it into plant food.",
+        "fact": "white clover fixes atmospheric nitrogen in root nodules, in symbiosis with Rhizobium bacteria.",
+        "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9534031/"
+      }
     }
   ]
 }

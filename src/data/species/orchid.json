@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "orchid",
   "pollination": ["tropical"],
   "species": [
@@ -27,7 +27,16 @@
         [29, "spore_cloud"],
         [34, "unfurl"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Phalaenopsis hybrid",
+        "category": "Keiki",
+        "heightM": 0.05,
+        "weightKg": 0.1,
+        "entry": "It clings to its parent's flower stem until its roots are ready. Keiki is the Hawaiian word for baby, and each one is an exact clone of its mother.",
+        "fact": "\"keiki\" is Hawaiian for baby or child; orchids grow keikis, clone plantlets, on the flower spike.",
+        "source": "https://www.aos.org/orchid-care/what-is-growing-on-the-flower-stem"
+      }
     },
     {
       "id": "orchid_spike",
@@ -53,7 +62,16 @@
         [29, "spore_cloud"],
         [34, "unfurl"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Phalaenopsis hybrid",
+        "category": "Flower Spike",
+        "heightM": 0.4,
+        "weightKg": 0.4,
+        "entry": "It raises its spike slowly, saving every bloom for the right moment. Orchid seeds are as fine as dust, with no food inside, and only sprout if a fungus feeds them.",
+        "fact": "orchid seeds are dust-fine with no food store, and need a mycorrhizal fungus to germinate.",
+        "source": "https://www.humboldtorchids.org/seeds.php"
+      }
     },
     {
       "id": "moth_orchid",
@@ -79,7 +97,16 @@
         [29, "spore_cloud"],
         [34, "unfurl"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Phalaenopsis hybrid",
+        "category": "Moth Bloom",
+        "heightM": 0.7,
+        "weightKg": 1.2,
+        "entry": "Its blooms hover in the gloom like great moths. The name Phalaenopsis means moth-like, because its flowers were thought to look like moths in flight.",
+        "fact": "Phalaenopsis is from Greek phalaina (moth) + opsis (appearance): the flowers look like moths.",
+        "source": "https://www.aos.org/orchid-care/orchid-care-and-culture-sheets/phalaenopsis-culture-sheet/phalaenopsis-the-genus"
+      }
     }
   ]
 }

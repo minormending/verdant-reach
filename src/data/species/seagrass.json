@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "seagrass",
   "pollination": ["wetland"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "rain_call"],
         [34, "flood"],
         [40, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Zostera marina",
+        "category": "Seagrass Tip",
+        "heightM": 0.15,
+        "weightKg": 0.02,
+        "entry": "It is a true flowering plant pollinated underwater. Its pollen drifts through the sea.",
+        "fact": "It is a true flowering plant that is pollinated underwater: its pollen drifts through the sea.",
+        "source": "https://en.wikipedia.org/wiki/Zostera_marina"
+      }
     },
     {
       "id": "eelgrass",
@@ -52,7 +61,16 @@
         [30, "rain_call"],
         [34, "flood"],
         [40, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Zostera marina",
+        "category": "Seagrass",
+        "heightM": 1,
+        "weightKg": 0.2,
+        "entry": "It is a true flowering plant pollinated underwater. Its pollen drifts through the sea.",
+        "fact": "It is a true flowering plant that is pollinated underwater: its pollen drifts through the sea.",
+        "source": "https://en.wikipedia.org/wiki/Zostera_marina"
+      }
     }
   ]
 }

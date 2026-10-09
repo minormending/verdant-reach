@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "fireweed",
   "pollination": ["meadow"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "sunbeam"],
         [34, "photosynthesise"],
         [40, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Chamaenerion angustifolium",
+        "category": "Fire Fluff",
+        "heightM": 0.05,
+        "weightKg": 0.1,
+        "entry": "A wisp of down that drifts toward wherever the ground is blackest. Fireweed is one of the first plants to grow back after a forest fire.",
+        "fact": "Fireweed is one of the first plants to grow back after a forest fire.",
+        "source": "https://www.fs.usda.gov/wildflowers/plant-of-the-week/chamerion_angustifolium.shtml"
+      }
     },
     {
       "id": "fireweed_shoot",
@@ -53,7 +62,16 @@
         [30, "sunbeam"],
         [34, "photosynthesise"],
         [40, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Chamaenerion angustifolium",
+        "category": "Fire Shoot",
+        "heightM": 0.4,
+        "weightKg": 0.6,
+        "entry": "It shoulders up out of the ash, red-stemmed and stubborn. After a forest fire, fireweed is among the first plants to return.",
+        "fact": "Fireweed is one of the first plants to grow back after a forest fire.",
+        "source": "https://www.fs.usda.gov/wildflowers/plant-of-the-week/chamerion_angustifolium.shtml"
+      }
     },
     {
       "id": "fireweed",
@@ -78,7 +96,16 @@
         [30, "sunbeam"],
         [34, "photosynthesise"],
         [40, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Chamaenerion angustifolium",
+        "category": "Fire Bloom",
+        "heightM": 1.5,
+        "weightKg": 2.5,
+        "entry": "Its magenta spikes are often the first colour back in a burnt clearing. Fireweed is one of the first plants to grow back after a forest fire.",
+        "fact": "Fireweed is one of the first plants to grow back after a forest fire.",
+        "source": "https://www.fs.usda.gov/wildflowers/plant-of-the-week/chamerion_angustifolium.shtml"
+      }
     }
   ]
 }

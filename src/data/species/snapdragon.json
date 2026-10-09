@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "snapdragon",
   "pollination": ["garden"],
   "species": [
@@ -28,7 +28,16 @@
         [33, "primal_frond"],
         [37, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Antirrhinum majus",
+        "category": "Dragon Bloom",
+        "heightM": 0.1,
+        "weightKg": 0.2,
+        "entry": "It huffs at anything that comes too close. Its Latin name, Antirrhinum, comes from Greek words for a snout, after the flower's shape.",
+        "fact": "Antirrhinum comes from Greek anti + rhis (nose), from the flower's resemblance to an animal's snout.",
+        "source": "https://en.wikipedia.org/wiki/Antirrhinum"
+      }
     },
     {
       "id": "snapdragon",
@@ -54,7 +63,16 @@
         [33, "primal_frond"],
         [37, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Antirrhinum majus",
+        "category": "Dragon Bloom",
+        "heightM": 1,
+        "weightKg": 2.5,
+        "entry": "Squeeze a snapdragon flower at the sides and its jaws gape open, which is how it got its name. Bumblebees are strong enough to pry their way in.",
+        "fact": "the flower's \"mouth\" opens when its sides are squeezed (hence snapdragon); bumblebees are strong enough to open it.",
+        "source": "https://en.wikipedia.org/wiki/Antirrhinum_majus"
+      }
     }
   ]
 }
