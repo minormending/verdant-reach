@@ -69,6 +69,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
   - Unique characters with weighted walk cycles, and trainer portraits.
   - Title art.
   - Species were drawn from real-plant photo references; the photo credits are in `public/art/CREDITS.md`.
+- **Editable creature data:** every species' stats, types, learnset, growth and catch rate is plain JSON, one file per evolution line in `src/data/species/` (format in [docs/DATA.md](docs/DATA.md)). Edit a number and the game, the data tests and the balance tests pick it up; art stays separate, so swapping an art pack never changes gameplay.
 
 ## Development
 
