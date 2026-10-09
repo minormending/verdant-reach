@@ -14,9 +14,10 @@ it for fun, to practise engineering management and planning.
 - **Live site:** https://minormending.github.io/verdant-reach/. It deploys
   automatically on every push to `main` (`.github/workflows/pages.yml` runs the
   tests, the build and the headless playthrough, and deploys only if all pass).
-- **Scope so far:** the Prologue through Chapter 4 (Glasshouse City,
-  Conservatory 3). The story bible is in `docs/story/` (chapters 5–11 aren't
-  built yet).
+- **Scope so far:** the Prologue through Chapter 9 (Thistledown and Sanguine
+  Ridge, Conservatory 8). The story bible is in `docs/story/`; Chapters 10–11
+  and the post-game live on feature branches until their art and dialogue are
+  finished.
 
 ## Commands
 
@@ -27,7 +28,7 @@ npm run typecheck           # strict tsc
 npm test                    # vitest, about 420 tests: data, world validation, puzzles, balance, art bundles
 npm run build               # typecheck + production bundle (relative base, for GitHub Pages)
 npx playwright install chromium # first use: install the e2e browser
-npm run e2e                 # headless full playthrough, 46 beats, speed 8, seed 1, daytime
+npm run e2e                 # headless full playthrough, 162 beats, speed 8, seed 1, daytime
 npm run e2e -- --seed 42    # replay another RNG seed (unsigned 32-bit integer)
 npm run art:index           # REQUIRED after adding, removing or renaming any file under public/art/
 
@@ -54,12 +55,13 @@ leave `git status` clean (the generators are deterministic).
 |---|---|
 | Shared contracts (ids, data shapes, ops). Change them deliberately and keep them minimal. | `src/contracts/` |
 | Engine, overworld, battle, menus | `src/engine`, `src/overworld`, `src/battle`, `src/screens`, `src/ui` |
-| Species data, moves, items, Herbarium facts | `src/data/` (every Herbarium entry holds one TRUE, sourced plant fact) |
+| Species data (stats, types, learnsets, growth): JSON, one file per line | `src/data/species/<line>.json` (format: **docs/DATA.md**) |
+| Moves, items, Herbarium facts | `src/data/` (every Herbarium entry holds one TRUE, sourced plant fact) |
 | Maps, story scripts, trainers | `src/world/` (`validate.ts` proves reachability, no soft-locks and text fit) |
 | Art runtime (resolves logical asset paths to bundles), the Art Lab | `src/art/` |
 | **All art, as swappable bundles** | `public/art/` (format: **docs/ART.md**) |
 | Art generators and tools (Python) | `tools/art/` |
-| Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 46 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
+| Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 162 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
 
 The e2e runner fixes time to day and defaults to `--seed 1`. It prints the seed
 and records it in the report; use `--seed N` to reproduce another run. Dev URLs
@@ -132,8 +134,10 @@ Without a seed, the game uses its usual randomness.
 ### How to add a new species
 
 1. Add the id to `SPECIES_IDS` in `src/contracts/ids.ts`.
-2. Add its data (stats, learnset, `pollination`, growth) and a Herbarium entry
-   with a true, sourced fact in `src/data/`.
+2. Add its data (stats, learnset, growth) to its line's JSON file in
+   `src/data/species/` (a new line gets a new file with its `pollination`;
+   see docs/DATA.md), and a Herbarium entry with a true, sourced fact in
+   `src/data/herbarium.ts`.
 3. Add encounters in `src/world/maps/`.
 4. Draw it in a `tools/art/crystal/<line>.py` module (copy a similar line),
    then `npm run art:index`. The bundle test fails until every required
