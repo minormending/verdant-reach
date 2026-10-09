@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "lithops",
   "pollination": ["meadow"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "thorn_lash"],
         [38, "hook_thorns"],
         [46, "photosynthesise"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Lithops",
+        "category": "Pebble Leaf",
+        "heightM": 0.02,
+        "weightKg": 0.02,
+        "entry": "It seems happy to keep you company. Growing almost buried, it lets light through translucent windows at its leaf tips.",
+        "fact": "It grows almost buried, letting light in through translucent windows on its leaf tips.",
+        "source": "https://en.wikipedia.org/wiki/Lithops"
+      }
     },
     {
       "id": "lithops_pair",
@@ -53,7 +62,16 @@
         [30, "thorn_lash"],
         [38, "hook_thorns"],
         [46, "photosynthesise"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Lithops",
+        "category": "Split Stone",
+        "heightM": 0.03,
+        "weightKg": 0.05,
+        "entry": "It feels like a familiar little neighbour. Translucent leaf-tip windows admit light while nearly all of the plant grows buried.",
+        "fact": "It grows almost buried, letting light in through translucent windows on its leaf tips.",
+        "source": "https://en.wikipedia.org/wiki/Lithops"
+      }
     },
     {
       "id": "lithops_bloom",
@@ -80,7 +98,16 @@
         [34, "sunbeam"],
         [38, "hook_thorns"],
         [46, "photosynthesise"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Lithops",
+        "category": "Living Stone",
+        "heightM": 0.05,
+        "weightKg": 0.1,
+        "entry": "It offers a quiet welcome home. Almost buried as it grows, it receives light through the translucent windows on its leaf tips.",
+        "fact": "It grows almost buried, letting light in through translucent windows on its leaf tips.",
+        "source": "https://en.wikipedia.org/wiki/Lithops"
+      }
     }
   ]
 }

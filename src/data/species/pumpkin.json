@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "pumpkin",
   "pollination": ["garden"],
   "species": [
@@ -27,7 +27,16 @@
         [31, "bark_skin"],
         [36, "rot_touch"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Cucurbita maxima",
+        "category": "Gourd",
+        "heightM": 0.3,
+        "weightKg": 1,
+        "entry": "It opens wide for the bees each morning. A pumpkin vine bears male and female flowers; the female has a tiny pumpkin at its base.",
+        "fact": "pumpkins have separate male and female flowers; the female has a tiny fruit at its base.",
+        "source": "https://www.missouribotanicalgarden.org/gardens-gardening/your-garden/help-for-the-home-gardener/advice-tips-resources/visual-guides/pollination-of-squash-and-pumpkins"
+      }
     },
     {
       "id": "green_pumpkin",
@@ -53,7 +62,16 @@
         [31, "bark_skin"],
         [36, "rot_touch"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Cucurbita maxima",
+        "category": "Gourd",
+        "heightM": 0.5,
+        "weightKg": 18,
+        "entry": "It rolls when it wants to go somewhere. Botanically, a pumpkin is a fruit: a hard-skinned berry called a pepo.",
+        "fact": "botanically a pumpkin is a fruit, a hard-rinded berry called a pepo.",
+        "source": "https://www.missouribotanicalgarden.org/gardens-gardening/your-garden/help-for-the-home-gardener/advice-tips-resources/visual-guides/pollination-of-squash-and-pumpkins"
+      }
     },
     {
       "id": "pumpkin",
@@ -78,7 +96,16 @@
         [31, "bark_skin"],
         [36, "rot_touch"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Cucurbita maxima",
+        "category": "Gourd",
+        "heightM": 1,
+        "weightKg": 90,
+        "entry": "Once it settles, good luck moving it. Giant contest pumpkins have weighed more than 1,200 kg.",
+        "fact": "contest pumpkins have topped 1,200 kg (Guinness record 1,278.8 kg, 2025).",
+        "source": "https://www.guinnessworldrecords.com/world-records/heaviest-pumpkin"
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "cedar",
   "pollination": ["woodland"],
   "species": [
@@ -27,7 +27,16 @@
         [29, "bark_skin"],
         [34, "pale_bloom"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Thuja plicata",
+        "category": "Cedar Sprout",
+        "heightM": 0.4,
+        "weightKg": 1,
+        "entry": "Flat sprays of tiny scale leaves on a thread of a stem. It's in no hurry to grow up: a western red cedar can live for over a thousand years.",
+        "fact": "Western red cedar can live for over a thousand years.",
+        "source": "https://www.fs.usda.gov/database/feis/plants/tree/thupli/all.html"
+      }
     },
     {
       "id": "red_cedar",
@@ -52,7 +61,16 @@
         [29, "bark_skin"],
         [34, "pale_bloom"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Thuja plicata",
+        "category": "Ancient Cedar",
+        "heightM": 12,
+        "weightKg": 900,
+        "entry": "It listens as though it has all the time in the world, and it may. Western red cedars can live for more than a thousand years.",
+        "fact": "Western red cedar can live for over a thousand years.",
+        "source": "https://www.fs.usda.gov/database/feis/plants/tree/thupli/all.html"
+      }
     }
   ]
 }

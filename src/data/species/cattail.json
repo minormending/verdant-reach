@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "cattail",
   "pollination": ["wetland"],
   "species": [
@@ -27,7 +27,16 @@
         [29, "bark_skin"],
         [34, "flood"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Typha latifolia",
+        "category": "Reedmace",
+        "heightM": 0.5,
+        "weightKg": 0.5,
+        "entry": "It stands ankle-deep and waits for summer. One plant, two names: the British call it bulrush, while North Americans say cattail.",
+        "fact": "Typha latifolia is called bulrush in Britain and (broadleaf) cattail in North America.",
+        "source": "https://en.wikipedia.org/wiki/Typha_latifolia"
+      }
     },
     {
       "id": "cattail",
@@ -52,7 +61,16 @@
         [29, "bark_skin"],
         [34, "flood"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Typha latifolia",
+        "category": "Reedmace",
+        "heightM": 2,
+        "weightKg": 3,
+        "entry": "Never poke the brown spike. A single cattail head can burst into more than 200,000 fluffy seeds that ride the wind and water.",
+        "fact": "broadleaf cattail spikes averaged over 222,000 seeds each; the seeds carry fluffy hairs that float and fly.",
+        "source": "https://www.fs.usda.gov/database/feis/plants/graminoid/typlat/all.html"
+      }
     }
   ]
 }

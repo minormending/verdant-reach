@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "mangrove",
   "pollination": ["wetland"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "leaf_edge"],
         [36, "bark_skin"],
         [40, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Rhizophora mangle",
+        "category": "Propagule",
+        "heightM": 0.3,
+        "weightKg": 0.1,
+        "entry": "Its seeds sprout while still on the parent tree. They drop as long propagules that can float at sea for months.",
+        "fact": "Its seeds sprout while still on the parent tree, then drop as long propagules that can float at sea for months.",
+        "source": "https://en.wikipedia.org/wiki/Rhizophora_mangle"
+      }
     },
     {
       "id": "mangrove_sapling",
@@ -54,7 +63,16 @@
         [30, "leaf_edge"],
         [36, "bark_skin"],
         [40, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Rhizophora mangle",
+        "category": "Stilt Sprout",
+        "heightM": 1.2,
+        "weightKg": 8,
+        "entry": "Its seeds sprout while still on the parent tree. They drop as long propagules that can float at sea for months.",
+        "fact": "Its seeds sprout while still on the parent tree, then drop as long propagules that can float at sea for months.",
+        "source": "https://en.wikipedia.org/wiki/Rhizophora_mangle"
+      }
     },
     {
       "id": "red_mangrove",
@@ -80,7 +98,16 @@
         [30, "leaf_edge"],
         [36, "bark_skin"],
         [40, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Rhizophora mangle",
+        "category": "Mangrove",
+        "heightM": 6,
+        "weightKg": 350,
+        "entry": "Its seeds sprout while still on the parent tree. They drop as long propagules that can float at sea for months.",
+        "fact": "Its seeds sprout while still on the parent tree, then drop as long propagules that can float at sea for months.",
+        "source": "https://en.wikipedia.org/wiki/Rhizophora_mangle"
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "sundew",
   "pollination": ["carnivore", "wetland"],
   "species": [
@@ -26,7 +26,16 @@
         [27, "sunbeam"],
         [32, "pitfall"],
         [38, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Drosera rotundifolia",
+        "category": "Dewtrap",
+        "heightM": 0.05,
+        "weightKg": 0.05,
+        "entry": "It sparkles even at noon. Each leaf is tipped with sticky drops that shine like dew, which is how the sundew got its name.",
+        "fact": "sundew tentacles are tipped with glistening sticky drops that look like dew.",
+        "source": "https://www.ipcc.ie/a-to-z-peatlands/peatland-species/carnivorous-plants-killers-in-the-bog/"
+      }
     },
     {
       "id": "sundew",
@@ -51,7 +60,16 @@
         [27, "sunbeam"],
         [32, "pitfall"],
         [38, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Drosera rotundifolia",
+        "category": "Dewtrap",
+        "heightM": 0.2,
+        "weightKg": 0.3,
+        "entry": "Bog soil is poor, so it dines on insects. Its tentacles bend slowly toward trapped prey, and the leaf can curl around it.",
+        "fact": "tentacles bend toward prey and the leaf can curl around it; sundews grow in nitrogen-poor bogs.",
+        "source": "https://www.ipcc.ie/a-to-z-peatlands/peatland-species/carnivorous-plants-killers-in-the-bog/"
+      }
     }
   ]
 }

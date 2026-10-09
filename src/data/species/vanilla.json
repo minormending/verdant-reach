@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "vanilla",
   "pollination": ["tropical"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "photosynthesise"],
         [36, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Vanilla planifolia",
+        "category": "Vanilla Vine",
+        "heightM": 0.5,
+        "weightKg": 0.3,
+        "entry": "Outside Mexico, its flowers are pollinated by hand. Edmond Albius worked out the method on Reunion in 1841.",
+        "fact": "Outside Mexico its flowers are pollinated by hand, a method worked out by Edmond Albius on Réunion in 1841.",
+        "source": "https://en.wikipedia.org/wiki/Edmond_Albius"
+      }
     },
     {
       "id": "vanilla_orchid",
@@ -52,7 +61,16 @@
         [30, "photosynthesise"],
         [36, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Vanilla planifolia",
+        "category": "Vanilla",
+        "heightM": 3,
+        "weightKg": 2,
+        "entry": "Outside Mexico, its flowers are pollinated by hand. Edmond Albius worked out the method on Reunion in 1841.",
+        "fact": "Outside Mexico its flowers are pollinated by hand, a method worked out by Edmond Albius on Réunion in 1841.",
+        "source": "https://en.wikipedia.org/wiki/Edmond_Albius"
+      }
     }
   ]
 }

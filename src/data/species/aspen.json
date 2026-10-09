@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "aspen",
   "pollination": ["woodland"],
   "species": [
@@ -28,7 +28,16 @@
         [42, "pale_bloom"],
         [46, "leaf_gale"],
         [54, "old_growth"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Populus tremuloides",
+        "category": "Root Sucker",
+        "heightM": 0.5,
+        "weightKg": 1,
+        "entry": "It reaches out as though an old friend is nearby. A single aspen clone can grow thousands of trunks from one shared root system.",
+        "fact": "An aspen clone can have thousands of trunks on one shared root system.",
+        "source": "https://en.wikipedia.org/wiki/Pando_(tree)"
+      }
     },
     {
       "id": "quaking_aspen",
@@ -55,7 +64,16 @@
         [46, "leaf_gale"],
         [50, "many_trunks"],
         [54, "old_growth"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Populus tremuloides",
+        "category": "Quaking Aspen",
+        "heightM": 12,
+        "weightKg": 450,
+        "entry": "Its leaves tremble when you come close. A single aspen clone can grow thousands of trunks from one shared root system.",
+        "fact": "An aspen clone can have thousands of trunks on one shared root system.",
+        "source": "https://en.wikipedia.org/wiki/Pando_(tree)"
+      }
     }
   ]
 }

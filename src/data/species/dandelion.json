@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "dandelion",
   "pollination": ["meadow"],
   "species": [
@@ -27,7 +27,16 @@
         [29, "photosynthesise"],
         [34, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Taraxacum officinale",
+        "category": "Lion's Tooth",
+        "heightM": 0.1,
+        "weightKg": 0.2,
+        "entry": "Its jagged leaves nip at passing ankles. Fittingly, dandelion comes from the French dent de lion: lion's tooth.",
+        "fact": "\"dandelion\" comes from French dent de lion, lion's tooth, for the jagged leaves.",
+        "source": "https://en.wikipedia.org/wiki/Taraxacum"
+      }
     },
     {
       "id": "dandelion",
@@ -53,7 +62,16 @@
         [29, "photosynthesise"],
         [34, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Taraxacum officinale",
+        "category": "Sunburst",
+        "heightM": 0.3,
+        "weightKg": 0.4,
+        "entry": "It loves a bright lawn. Each 'petal' is really a whole tiny flower, and a single head holds 100 or more.",
+        "fact": "a dandelion \"flower\" is a head of many tiny florets (often 100-200+), each making one seed.",
+        "source": "https://gardens.duke.edu/wp-content/uploads/Duke-Gardens-Meet-a-Plant-Dandelion.pdf"
+      }
     },
     {
       "id": "dandelion_clock",
@@ -78,7 +96,16 @@
         [29, "photosynthesise"],
         [34, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Taraxacum officinale",
+        "category": "Seed Clock",
+        "heightM": 0.4,
+        "weightKg": 0.3,
+        "entry": "One breath and it is gone. Above each seed's parachute spins a ring of air, a kind of flight first described in 2018.",
+        "fact": "dandelion seed parachutes form a separated vortex ring (Cummins et al. 2018, Nature).",
+        "source": "https://www.nature.com/articles/s41586-018-0604-2"
+      }
     }
   ]
 }

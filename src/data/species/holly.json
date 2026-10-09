@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "holly",
   "pollination": ["woodland"],
   "species": [
@@ -28,7 +28,16 @@
         [32, "cold_snap"],
         [36, "snowdrift"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Ilex aquifolium",
+        "category": "Evergreen",
+        "heightM": 0.2,
+        "weightKg": 0.3,
+        "entry": "Every leaf is armed, just in case. Holly grows its spiniest leaves low down, where deer browse, and smoother ones high out of reach.",
+        "fact": "holly grows spinier leaves low down where deer and goats browse, smoother leaves higher up (Herrera & Bazaga 2013).",
+        "source": "https://www.nationalgeographic.com/news/2012/12/121220-holly-leaves-prickly-plants-science/"
+      }
     },
     {
       "id": "holly",
@@ -54,7 +63,16 @@
         [32, "cold_snap"],
         [36, "snowdrift"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Ilex aquifolium",
+        "category": "Evergreen",
+        "heightM": 3,
+        "weightKg": 60,
+        "entry": "It stays green through the hardest frost. Hollies are male or female, and only the female plants bear the bright red berries.",
+        "fact": "holly is dioecious; only female plants bear red berries.",
+        "source": "https://naturescalendar.woodlandtrust.org.uk/what-we-record-and-why/species-we-record/shrubs/holly/"
+      }
     }
   ]
 }
