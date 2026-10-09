@@ -1,0 +1,61 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "monstera",
+  "pollination": ["tropical"],
+  "species": [
+    {
+      "id": "monstera_cutting",
+      "name": "Monstera Tip",
+      "stage": 1,
+      "types": ["wood"],
+      "baseStats": { "hp": 55, "atk": 55, "def": 55, "spa": 45, "spd": 50, "spe": 40 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 66,
+      "evYield": { "atk": 1 },
+      "activity": "any",
+      "growsInto": { "species": "monstera", "trigger": { "kind": "vigor", "level": 24 } },
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "sap_seal"],
+        [5, "sap_drain"],
+        [9, "root_snare"],
+        [13, "seed_burst"],
+        [17, "aerial_root"],
+        [21, "leaf_edge"],
+        [26, "photosynthesise"],
+        [30, "root_tap"],
+        [34, "bark_skin"],
+        [38, "leaf_gale"],
+        [42, "timber"]
+      ]
+    },
+    {
+      "id": "monstera",
+      "name": "Monstera",
+      "stage": 2,
+      "types": ["wood"],
+      "baseStats": { "hp": 90, "atk": 90, "def": 85, "spa": 60, "spd": 75, "spe": 60 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 162,
+      "evYield": { "hp": 1, "atk": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "sap_seal"],
+        [5, "sap_drain"],
+        [9, "root_snare"],
+        [13, "seed_burst"],
+        [17, "aerial_root"],
+        [21, "leaf_edge"],
+        [24, "fenestrate"],
+        [26, "photosynthesise"],
+        [30, "root_tap"],
+        [34, "bark_skin"],
+        [38, "leaf_gale"],
+        [42, "timber"]
+      ]
+    }
+  ]
+}

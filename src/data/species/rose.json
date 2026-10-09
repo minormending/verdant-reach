@@ -1,0 +1,60 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "rose",
+  "pollination": ["garden", "woodland"],
+  "species": [
+    {
+      "id": "rose_bud",
+      "name": "Rose Bud",
+      "stage": 1,
+      "types": ["thorn"],
+      "baseStats": { "hp": 45, "atk": 60, "def": 45, "spa": 45, "spd": 45, "spe": 55 },
+      "growthRate": "medium",
+      "catchRate": 120,
+      "baseExp": 64,
+      "evYield": { "atk": 1 },
+      "activity": "day",
+      "growsInto": { "species": "wild_rose", "trigger": { "kind": "vigor_day", "level": 18 } },
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "perfume"],
+        [5, "pollen_puff"],
+        [8, "vine_lash"],
+        [10, "bristle"],
+        [12, "spine_volley"],
+        [22, "rose_thorn"],
+        [25, "unfurl"],
+        [28, "thorn_lash"],
+        [32, "sunbeam"],
+        [36, "petal_storm"],
+        [40, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "wild_rose",
+      "name": "Wild Rose",
+      "stage": 2,
+      "types": ["thorn", "bloom"],
+      "baseStats": { "hp": 65, "atk": 95, "def": 70, "spa": 70, "spd": 70, "spe": 85 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 162,
+      "evYield": { "atk": 2 },
+      "activity": "day",
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "perfume"],
+        [5, "pollen_puff"],
+        [8, "vine_lash"],
+        [10, "bristle"],
+        [12, "spine_volley"],
+        [18, "rose_thorn"],
+        [25, "unfurl"],
+        [28, "thorn_lash"],
+        [32, "sunbeam"],
+        [36, "petal_storm"],
+        [40, "hook_thorns"]
+      ]
+    }
+  ]
+}

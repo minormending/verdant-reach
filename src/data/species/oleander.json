@@ -1,0 +1,33 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "oleander",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "oleander",
+      "name": "Oleander",
+      "stage": 1,
+      "types": ["bloom", "ghost"],
+      "baseStats": { "hp": 85, "atk": 60, "def": 80, "spa": 100, "spd": 100, "spe": 55 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 176,
+      "evYield": { "spa": 1, "spd": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "perfume"],
+        [7, "pale_touch"],
+        [12, "sap_drain"],
+        [17, "wind_scatter"],
+        [22, "rot_touch"],
+        [27, "night_fold"],
+        [32, "moonbeam"],
+        [38, "photosynthesise"],
+        [44, "sunbeam"],
+        [48, "pale_bloom"],
+        [54, "petal_storm"]
+      ]
+    }
+  ]
+}

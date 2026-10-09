@@ -1,0 +1,86 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "lithops",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "lithops_pebble",
+      "name": "Pebble Leaf",
+      "stage": 1,
+      "types": ["thorn"],
+      "baseStats": { "hp": 45, "atk": 35, "def": 90, "spa": 35, "spd": 75, "spe": 10 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 64,
+      "evYield": { "def": 1 },
+      "activity": "day",
+      "growsInto": { "species": "lithops_pair", "trigger": { "kind": "vigor", "level": 28 } },
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "curl_up"],
+        [5, "sap_seal"],
+        [9, "burr_hitch"],
+        [13, "bristle"],
+        [17, "spine_volley"],
+        [21, "sap_drain"],
+        [24, "stone_window"],
+        [30, "thorn_lash"],
+        [38, "hook_thorns"],
+        [46, "photosynthesise"]
+      ]
+    },
+    {
+      "id": "lithops_pair",
+      "name": "Split Stone",
+      "stage": 2,
+      "types": ["thorn"],
+      "baseStats": { "hp": 60, "atk": 50, "def": 120, "spa": 45, "spd": 110, "spe": 15 },
+      "growthRate": "medium",
+      "catchRate": 75,
+      "baseExp": 138,
+      "evYield": { "def": 1, "spd": 1 },
+      "activity": "day",
+      "growsInto": { "species": "lithops_bloom", "trigger": { "kind": "vigor", "level": 40 } },
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "curl_up"],
+        [5, "sap_seal"],
+        [9, "burr_hitch"],
+        [13, "bristle"],
+        [17, "spine_volley"],
+        [21, "sap_drain"],
+        [24, "stone_window"],
+        [30, "thorn_lash"],
+        [38, "hook_thorns"],
+        [46, "photosynthesise"]
+      ]
+    },
+    {
+      "id": "lithops_bloom",
+      "name": "Living Stone",
+      "stage": 3,
+      "types": ["thorn", "bloom"],
+      "baseStats": { "hp": 75, "atk": 65, "def": 140, "spa": 55, "spd": 135, "spe": 20 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 196,
+      "evYield": { "def": 2, "spd": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "curl_up"],
+        [1, "pollen_puff"],
+        [5, "sap_seal"],
+        [9, "burr_hitch"],
+        [13, "bristle"],
+        [17, "spine_volley"],
+        [21, "sap_drain"],
+        [24, "stone_window"],
+        [30, "thorn_lash"],
+        [34, "sunbeam"],
+        [38, "hook_thorns"],
+        [46, "photosynthesise"]
+      ]
+    }
+  ]
+}

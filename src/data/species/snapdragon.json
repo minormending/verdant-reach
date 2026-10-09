@@ -1,0 +1,60 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "snapdragon",
+  "pollination": ["garden"],
+  "species": [
+    {
+      "id": "snapdragon_sprout",
+      "name": "Snap Sprout",
+      "stage": 1,
+      "types": ["dragon"],
+      "baseStats": { "hp": 50, "atk": 62, "def": 50, "spa": 58, "spd": 50, "spe": 45 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 72,
+      "evYield": { "atk": 1 },
+      "activity": "day",
+      "growsInto": { "species": "snapdragon", "trigger": { "kind": "vigor", "level": 22 } },
+      "learnset": [
+        [1, "dragon_nip"],
+        [1, "perfume"],
+        [5, "pollen_puff"],
+        [9, "vine_lash"],
+        [13, "red_resin"],
+        [17, "dragon_snap"],
+        [21, "unfurl"],
+        [25, "old_growth"],
+        [29, "sunbeam"],
+        [33, "primal_frond"],
+        [37, "leaf_gale"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "snapdragon",
+      "name": "Snapdragon",
+      "stage": 2,
+      "types": ["dragon", "bloom"],
+      "baseStats": { "hp": 76, "atk": 96, "def": 72, "spa": 86, "spd": 70, "spe": 70 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 180,
+      "evYield": { "atk": 2, "spa": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "dragon_nip"],
+        [1, "perfume"],
+        [5, "pollen_puff"],
+        [9, "vine_lash"],
+        [13, "red_resin"],
+        [17, "dragon_snap"],
+        [21, "unfurl"],
+        [22, "old_growth"],
+        [29, "sunbeam"],
+        [33, "primal_frond"],
+        [37, "leaf_gale"],
+        [40, "petal_storm"]
+      ]
+    }
+  ]
+}

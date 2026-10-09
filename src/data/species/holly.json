@@ -1,0 +1,60 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "holly",
+  "pollination": ["woodland"],
+  "species": [
+    {
+      "id": "holly_seedling",
+      "name": "Holly Sprout",
+      "stage": 1,
+      "types": ["thorn"],
+      "baseStats": { "hp": 50, "atk": 55, "def": 65, "spa": 35, "spd": 50, "spe": 30 },
+      "growthRate": "slow",
+      "catchRate": 120,
+      "baseExp": 66,
+      "evYield": { "def": 1 },
+      "activity": "any",
+      "growsInto": { "species": "holly", "trigger": { "kind": "vigor", "level": 20 } },
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "bristle"],
+        [5, "hoarfrost"],
+        [8, "sap_seal"],
+        [12, "spine_volley"],
+        [16, "frost_needle"],
+        [24, "evergreen"],
+        [26, "holly_spines"],
+        [28, "thorn_lash"],
+        [32, "cold_snap"],
+        [36, "snowdrift"],
+        [40, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "holly",
+      "name": "Holly",
+      "stage": 2,
+      "types": ["thorn", "frost"],
+      "baseStats": { "hp": 75, "atk": 90, "def": 100, "spa": 50, "spd": 80, "spe": 45 },
+      "growthRate": "slow",
+      "catchRate": 60,
+      "baseExp": 160,
+      "evYield": { "def": 2 },
+      "activity": "any",
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "bristle"],
+        [5, "hoarfrost"],
+        [8, "sap_seal"],
+        [12, "spine_volley"],
+        [16, "frost_needle"],
+        [20, "holly_spines"],
+        [24, "evergreen"],
+        [28, "thorn_lash"],
+        [32, "cold_snap"],
+        [36, "snowdrift"],
+        [40, "hook_thorns"]
+      ]
+    }
+  ]
+}

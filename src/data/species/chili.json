@@ -1,0 +1,86 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "chili",
+  "pollination": ["garden"],
+  "species": [
+    {
+      "id": "chili_blossom",
+      "name": "Chili Flower",
+      "stage": 1,
+      "types": ["fire"],
+      "baseStats": { "hp": 39, "atk": 48, "def": 40, "spa": 62, "spd": 46, "spe": 75 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 65,
+      "evYield": { "spe": 1 },
+      "activity": "any",
+      "growsInto": { "species": "green_chili", "trigger": { "kind": "vigor", "level": 16 } },
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "unfurl"],
+        [6, "seed_burst"],
+        [9, "capsaicin"],
+        [13, "smoulder"],
+        [17, "sun_flare"],
+        [20, "chili_burst"],
+        [24, "leaf_edge"],
+        [28, "sun_track"],
+        [33, "sap_drain"],
+        [38, "wildfire"]
+      ]
+    },
+    {
+      "id": "green_chili",
+      "name": "Green Chili",
+      "stage": 2,
+      "types": ["fire"],
+      "baseStats": { "hp": 56, "atk": 62, "def": 55, "spa": 82, "spd": 60, "spe": 90 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 142,
+      "evYield": { "spa": 1, "spe": 1 },
+      "activity": "any",
+      "growsInto": { "species": "red_chili", "trigger": { "kind": "vigor", "level": 32 } },
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "unfurl"],
+        [6, "seed_burst"],
+        [9, "capsaicin"],
+        [13, "smoulder"],
+        [17, "sun_flare"],
+        [20, "chili_burst"],
+        [24, "leaf_edge"],
+        [28, "sun_track"],
+        [33, "sap_drain"],
+        [38, "wildfire"]
+      ]
+    },
+    {
+      "id": "red_chili",
+      "name": "Red Chili",
+      "stage": 3,
+      "types": ["fire"],
+      "baseStats": { "hp": 75, "atk": 80, "def": 70, "spa": 110, "spd": 80, "spe": 110 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 209,
+      "evYield": { "spa": 3 },
+      "activity": "any",
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "unfurl"],
+        [6, "seed_burst"],
+        [9, "capsaicin"],
+        [13, "smoulder"],
+        [17, "sun_flare"],
+        [20, "chili_burst"],
+        [24, "leaf_edge"],
+        [28, "sun_track"],
+        [32, "red_resin"],
+        [33, "sap_drain"],
+        [38, "wildfire"],
+        [44, "petal_storm"]
+      ]
+    }
+  ]
+}

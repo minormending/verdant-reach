@@ -1,0 +1,32 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "prayer",
+  "pollination": ["woodland"],
+  "species": [
+    {
+      "id": "prayer_plant",
+      "name": "Prayer Plant",
+      "stage": 1,
+      "types": ["bloom", "wood"],
+      "baseStats": { "hp": 80, "atk": 55, "def": 95, "spa": 85, "spd": 105, "spe": 50 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 172,
+      "evYield": { "def": 1, "spd": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "leaf_fold"],
+        [7, "vine_lash"],
+        [12, "sap_drain"],
+        [17, "wind_scatter"],
+        [22, "leaf_edge"],
+        [27, "spore_cloud"],
+        [32, "night_fold"],
+        [38, "photosynthesise"],
+        [44, "leaf_gale"],
+        [50, "sunbeam"]
+      ]
+    }
+  ]
+}

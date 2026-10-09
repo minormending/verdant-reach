@@ -1,0 +1,62 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "foxglove",
+  "pollination": ["meadow", "woodland"],
+  "species": [
+    {
+      "id": "foxglove_rosette",
+      "name": "Fox Rosette",
+      "stage": 1,
+      "types": ["bloom"],
+      "baseStats": { "hp": 45, "atk": 30, "def": 45, "spa": 60, "spd": 60, "spe": 40 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 64,
+      "evYield": { "spa": 1 },
+      "activity": "night",
+      "growsInto": { "species": "foxglove", "trigger": { "kind": "vigor_night", "level": 18 } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "nectar_lure"],
+        [5, "pale_touch"],
+        [8, "allelopathy"],
+        [11, "wind_scatter"],
+        [14, "wither"],
+        [17, "moonbeam"],
+        [20, "spore_cloud"],
+        [24, "digitalis"],
+        [28, "night_fold"],
+        [32, "pale_bloom"],
+        [36, "sunbeam"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "foxglove",
+      "name": "Foxglove",
+      "stage": 2,
+      "types": ["bloom", "ghost"],
+      "baseStats": { "hp": 65, "atk": 45, "def": 65, "spa": 100, "spd": 90, "spe": 70 },
+      "growthRate": "medium",
+      "catchRate": 75,
+      "baseExp": 155,
+      "evYield": { "spa": 2 },
+      "activity": "night",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "nectar_lure"],
+        [5, "pale_touch"],
+        [8, "allelopathy"],
+        [11, "wind_scatter"],
+        [14, "wither"],
+        [17, "moonbeam"],
+        [18, "digitalis"],
+        [20, "spore_cloud"],
+        [28, "night_fold"],
+        [32, "pale_bloom"],
+        [36, "sunbeam"],
+        [40, "petal_storm"]
+      ]
+    }
+  ]
+}

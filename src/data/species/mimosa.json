@@ -1,0 +1,58 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "mimosa",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "mimosa_sprout",
+      "name": "Mimosa Shoot",
+      "stage": 1,
+      "types": ["bloom", "wood"],
+      "baseStats": { "hp": 50, "atk": 45, "def": 60, "spa": 55, "spd": 55, "spe": 35 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 66,
+      "evYield": { "def": 1 },
+      "activity": "day",
+      "growsInto": { "species": "sensitive_plant", "trigger": { "kind": "vigor", "level": 34 } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "sap_seal"],
+        [7, "vine_lash"],
+        [12, "sap_drain"],
+        [17, "wind_scatter"],
+        [22, "leaf_edge"],
+        [26, "spore_cloud"],
+        [30, "leaf_fold"],
+        [38, "photosynthesise"],
+        [44, "leaf_gale"],
+        [50, "sunbeam"]
+      ]
+    },
+    {
+      "id": "sensitive_plant",
+      "name": "Sensitive",
+      "stage": 2,
+      "types": ["bloom", "wood"],
+      "baseStats": { "hp": 75, "atk": 65, "def": 100, "spa": 85, "spd": 95, "spe": 60 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 176,
+      "evYield": { "def": 1, "spd": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "sap_seal"],
+        [7, "vine_lash"],
+        [12, "sap_drain"],
+        [17, "wind_scatter"],
+        [22, "leaf_edge"],
+        [26, "spore_cloud"],
+        [30, "leaf_fold"],
+        [38, "photosynthesise"],
+        [44, "leaf_gale"],
+        [50, "sunbeam"]
+      ]
+    }
+  ]
+}

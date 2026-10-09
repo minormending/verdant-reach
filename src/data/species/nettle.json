@@ -1,0 +1,56 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "nettle",
+  "pollination": ["woodland"],
+  "species": [
+    {
+      "id": "nettle_sprout",
+      "name": "Nettle Shoot",
+      "stage": 1,
+      "types": ["thorn"],
+      "baseStats": { "hp": 45, "atk": 65, "def": 45, "spa": 35, "spd": 45, "spe": 60 },
+      "growthRate": "medium",
+      "catchRate": 120,
+      "baseExp": 72,
+      "evYield": { "atk": 1 },
+      "activity": "any",
+      "growsInto": { "species": "stinging_nettle", "trigger": { "kind": "vigor", "level": 16 } },
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "bristle"],
+        [5, "sting_hairs"],
+        [9, "root_snare"],
+        [13, "spine_volley"],
+        [16, "allelopathy"],
+        [21, "burr_hitch"],
+        [26, "thorn_lash"],
+        [32, "pitfall"],
+        [38, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "stinging_nettle",
+      "name": "Great Nettle",
+      "stage": 2,
+      "types": ["thorn"],
+      "baseStats": { "hp": 70, "atk": 100, "def": 70, "spa": 50, "spd": 65, "spe": 95 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 168,
+      "evYield": { "atk": 2 },
+      "activity": "any",
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "bristle"],
+        [5, "sting_hairs"],
+        [9, "root_snare"],
+        [13, "spine_volley"],
+        [16, "allelopathy"],
+        [16, "thorn_lash"],
+        [21, "burr_hitch"],
+        [32, "pitfall"],
+        [38, "hook_thorns"]
+      ]
+    }
+  ]
+}

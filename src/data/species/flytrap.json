@@ -1,0 +1,84 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "flytrap",
+  "pollination": ["carnivore"],
+  "species": [
+    {
+      "id": "flytrap_seedling",
+      "name": "Tiny Flytrap",
+      "stage": 1,
+      "types": ["bug"],
+      "baseStats": { "hp": 40, "atk": 60, "def": 40, "spa": 30, "spd": 35, "spe": 55 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 60,
+      "evYield": { "atk": 1 },
+      "activity": "any",
+      "growsInto": { "species": "young_flytrap", "trigger": { "kind": "vigor", "level": 12 } },
+      "learnset": [
+        [1, "quick_snap"],
+        [1, "nectar_lure"],
+        [5, "vine_lash"],
+        [8, "sticky_dew"],
+        [12, "snap_trap"],
+        [16, "digest"],
+        [20, "bristle"],
+        [24, "pitfall"],
+        [29, "leaf_edge"],
+        [34, "curl_up"],
+        [40, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "young_flytrap",
+      "name": "Flytrap",
+      "stage": 2,
+      "types": ["bug"],
+      "baseStats": { "hp": 55, "atk": 85, "def": 55, "spa": 40, "spd": 50, "spe": 75 },
+      "growthRate": "medium",
+      "catchRate": 120,
+      "baseExp": 130,
+      "evYield": { "atk": 2 },
+      "activity": "any",
+      "growsInto": { "species": "venus_flytrap", "trigger": { "kind": "vigor", "level": 22 } },
+      "learnset": [
+        [1, "quick_snap"],
+        [1, "nectar_lure"],
+        [5, "vine_lash"],
+        [8, "sticky_dew"],
+        [12, "snap_trap"],
+        [16, "digest"],
+        [20, "bristle"],
+        [24, "pitfall"],
+        [29, "leaf_edge"],
+        [34, "curl_up"],
+        [40, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "venus_flytrap",
+      "name": "Venus Trap",
+      "stage": 3,
+      "types": ["bug"],
+      "baseStats": { "hp": 70, "atk": 120, "def": 75, "spa": 55, "spd": 65, "spe": 100 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 192,
+      "evYield": { "atk": 3 },
+      "activity": "any",
+      "learnset": [
+        [1, "quick_snap"],
+        [1, "nectar_lure"],
+        [5, "vine_lash"],
+        [8, "sticky_dew"],
+        [12, "snap_trap"],
+        [16, "digest"],
+        [20, "bristle"],
+        [22, "pitfall"],
+        [29, "leaf_edge"],
+        [34, "curl_up"],
+        [40, "hook_thorns"]
+      ]
+    }
+  ]
+}
