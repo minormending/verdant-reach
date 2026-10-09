@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "saguaro",
   "pollination": ["meadow"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "bark_skin"],
         [36, "flood"],
         [42, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Carnegiea gigantea",
+        "category": "Saguaro Pup",
+        "heightM": 0.15,
+        "weightKg": 0.4,
+        "entry": "It may grow for decades before sprouting its first arm. For a saguaro, that can take 50 to 70 years.",
+        "fact": "A saguaro may grow for 50 to 70 years before it sprouts its first arm.",
+        "source": "https://www.nps.gov/sagu/learn/nature/saguaro-cactus.htm"
+      }
     },
     {
       "id": "saguaro_column",
@@ -54,7 +63,16 @@
         [32, "water_store"],
         [36, "flood"],
         [42, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Carnegiea gigantea",
+        "category": "Tall Saguaro",
+        "heightM": 3,
+        "weightKg": 150,
+        "entry": "It may grow for decades before sprouting its first arm. For a saguaro, that can take 50 to 70 years.",
+        "fact": "A saguaro may grow for 50 to 70 years before it sprouts its first arm.",
+        "source": "https://www.nps.gov/sagu/learn/nature/saguaro-cactus.htm"
+      }
     },
     {
       "id": "saguaro",
@@ -80,7 +98,16 @@
         [32, "water_store"],
         [36, "flood"],
         [42, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Carnegiea gigantea",
+        "category": "Old Saguaro",
+        "heightM": 10,
+        "weightKg": 2000,
+        "entry": "It may grow for decades before sprouting its first arm. For a saguaro, that can take 50 to 70 years.",
+        "fact": "A saguaro may grow for 50 to 70 years before it sprouts its first arm.",
+        "source": "https://www.nps.gov/sagu/learn/nature/saguaro-cactus.htm"
+      }
     }
   ]
 }

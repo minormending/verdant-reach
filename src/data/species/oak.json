@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "oak",
   "pollination": ["woodland"],
   "species": [
@@ -29,7 +29,16 @@
         [28, "bark_skin"],
         [33, "spore_cloud"],
         [38, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Quercus robur",
+        "category": "Acorn",
+        "heightM": 0.1,
+        "weightKg": 0.5,
+        "entry": "It sits very still, thinking long, slow thoughts. Patience runs in the family: a real oak seldom bears acorns before it is about 40.",
+        "fact": "English oak usually starts bearing acorns at ~40 years.",
+        "source": "https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/english-oak/"
+      }
     },
     {
       "id": "oak_sapling",
@@ -57,7 +66,16 @@
         [24, "leaf_edge"],
         [33, "spore_cloud"],
         [38, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Quercus robur",
+        "category": "Sapling",
+        "heightM": 1.2,
+        "weightKg": 9,
+        "entry": "It trails after jays, fascinated. Fair enough: jays bury acorns to eat later, forget a few, and so plant new oaks.",
+        "fact": "Eurasian jays bury acorns and forget some, which grow into oaks.",
+        "source": "https://link.springer.com/article/10.1007/s10336-024-02181-0"
+      }
     },
     {
       "id": "great_oak",
@@ -86,7 +104,16 @@
         [33, "spore_cloud"],
         [38, "timber"],
         [44, "old_growth"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Quercus robur",
+        "category": "Great Tree",
+        "heightM": 6,
+        "weightKg": 410,
+        "entry": "Birds nest in its crown and it never minds. In Britain, some 2,300 kinds of living thing are linked to native oaks.",
+        "fact": "~2,300 species are associated with native oaks in the UK (Mitchell et al. 2019).",
+        "source": "https://www.sciencedirect.com/science/article/abs/pii/S0006320718317920"
+      }
     }
   ]
 }

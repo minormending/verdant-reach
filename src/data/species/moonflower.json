@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "moonflower",
   "pollination": ["garden", "tropical"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "pale_bloom"],
         [35, "sunbeam"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Ipomoea alba",
+        "category": "Night Bloom",
+        "heightM": 0.05,
+        "weightKg": 0.05,
+        "entry": "It only wakes after dark. Its seed coat is so hard that gardeners nick or soak moonflower seeds before sowing.",
+        "fact": "moonflower seeds have hard coats, so gardeners nick or soak them before sowing.",
+        "source": "https://blogs.ifas.ufl.edu/wakullaco/2020/10/14/moonflower-ipomoea-alba/"
+      }
     },
     {
       "id": "moonflower_vine",
@@ -53,7 +62,16 @@
         [30, "pale_bloom"],
         [35, "sunbeam"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Ipomoea alba",
+        "category": "Night Bloom",
+        "heightM": 2,
+        "weightKg": 2,
+        "entry": "It climbs toward the moon. It shares a genus with the morning glory, but keeps the opposite hours: it flowers at night.",
+        "fact": "moonflower shares the genus Ipomoea with morning glories, but blooms at night.",
+        "source": "https://en.wikipedia.org/wiki/Ipomoea_alba"
+      }
     },
     {
       "id": "moonflower",
@@ -78,7 +96,16 @@
         [25, "perfume"],
         [35, "sunbeam"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Ipomoea alba",
+        "category": "Night Bloom",
+        "heightM": 3,
+        "weightKg": 4,
+        "entry": "Its white flowers open at dusk, often fast enough to watch. Hawk moths visit in the dark to drink its nectar.",
+        "fact": "flowers open at dusk, often fast enough to watch, and are pollinated by hawk moths.",
+        "source": "https://en.wikipedia.org/wiki/Ipomoea_alba"
+      }
     }
   ]
 }

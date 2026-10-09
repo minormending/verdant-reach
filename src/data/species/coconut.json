@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "coconut",
   "pollination": [],
   "species": [
@@ -23,7 +23,16 @@
         [40, "water_store"],
         [50, "leaf_gale"],
         [60, "drift_seed"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Cocos nucifera",
+        "category": "Drift Fruit",
+        "heightM": 0.3,
+        "weightKg": 1.5,
+        "entry": "It bobs along as though the sea were home. Its fruit can float and stay viable across long ocean crossings.",
+        "fact": "Its fruit can float and stay viable across long ocean crossings.",
+        "source": "https://en.wikipedia.org/wiki/Coconut"
+      }
     }
   ]
 }

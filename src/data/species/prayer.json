@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "prayer",
   "pollination": ["woodland"],
   "species": [
@@ -26,7 +26,16 @@
         [38, "photosynthesise"],
         [44, "leaf_gale"],
         [50, "sunbeam"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Maranta leuconeura",
+        "category": "Prayer Plant",
+        "heightM": 0.3,
+        "weightKg": 0.5,
+        "entry": "It seems to wish you a peaceful evening. Its leaves fold upward at night, like hands in prayer.",
+        "fact": "Its leaves fold upward at night, like hands in prayer.",
+        "source": "https://en.wikipedia.org/wiki/Maranta_leuconeura"
+      }
     }
   ]
 }

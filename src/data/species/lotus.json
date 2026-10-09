@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "lotus",
   "pollination": ["wetland", "tropical"],
   "species": [
@@ -28,7 +28,16 @@
         [34, "flood"],
         [38, "petal_storm"],
         [42, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Nelumbo nucifera",
+        "category": "Seed",
+        "heightM": 0.02,
+        "weightKg": 0.01,
+        "entry": "It can wait a very long time. A lotus seed from a dry lakebed in China, carbon-dated at about 1,300 years old, still sprouted.",
+        "fact": "a sacred lotus seed about 1,300 years old (radiocarbon-dated) was germinated (Shen-Miller et al.).",
+        "source": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/950DD5CB3E32BA6D99A79CAB5D75B038/S0960258502000144a.pdf/sacred-lotus-the-long-living-fruits-of-china-antique.pdf"
+      }
     },
     {
       "id": "sacred_lotus",
@@ -55,7 +64,16 @@
         [34, "flood"],
         [38, "petal_storm"],
         [42, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Nelumbo nucifera",
+        "category": "Lotus",
+        "heightM": 1.5,
+        "weightKg": 8,
+        "entry": "It rises spotless out of the mud. Its flower makes its own heat, holding itself at about 30 to 35 C for days, even on cold nights.",
+        "fact": "lotus flowers make their own heat and hold themselves at about 30-36 C for 2-4 days (Seymour & Schultze-Motel 1996).",
+        "source": "https://www.nature.com/articles/383305a0"
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "maple",
   "pollination": ["woodland"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "bark_skin"],
         [35, "leaf_gale"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Acer saccharum",
+        "category": "Winged Seed",
+        "heightM": 0.1,
+        "weightKg": 0.1,
+        "entry": "It adores high places and long falls. A maple's winged seed spins like a rotor, falling slowly and drifting far.",
+        "fact": "maple samaras spin like helicopter blades, slowing the fall so wind carries them farther.",
+        "source": "https://www.mdpi.com/2313-7673/6/2/23/htm"
+      }
     },
     {
       "id": "maple_sapling",
@@ -53,7 +62,16 @@
         [30, "bark_skin"],
         [35, "leaf_gale"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Acer saccharum",
+        "category": "Sweet Tree",
+        "heightM": 1.5,
+        "weightKg": 8,
+        "entry": "It is very, very patient. Young sugar maples can wait decades in deep shade for a gap to open in the canopy.",
+        "fact": "sugar maple saplings survive decades of shade until a canopy gap opens.",
+        "source": "https://www.srs.fs.usda.gov/pubs/misc/ag_654/volume_2/acer/saccharum.htm"
+      }
     },
     {
       "id": "sugar_maple",
@@ -81,7 +99,16 @@
         [35, "leaf_gale"],
         [38, "snowdrift"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Acer saccharum",
+        "category": "Sweet Tree",
+        "heightM": 5,
+        "weightKg": 380,
+        "entry": "Its sap runs on frosty nights and thawing days. It takes about 40 litres of sap, boiled down, to make 1 litre of syrup.",
+        "fact": "about 40 L of sap boil down to 1 L of maple syrup.",
+        "source": "https://vermontmaple.org/learn/how-its-made"
+      }
     }
   ]
 }

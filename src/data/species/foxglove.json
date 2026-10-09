@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "foxglove",
   "pollination": ["meadow", "woodland"],
   "species": [
@@ -29,7 +29,16 @@
         [32, "pale_bloom"],
         [36, "sunbeam"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Digitalis purpurea",
+        "category": "Fairy Glove",
+        "heightM": 0.15,
+        "weightKg": 0.3,
+        "entry": "It lies low and flat, biding its time. Foxgloves are biennials: a ring of leaves in the first year, flowers only in the second.",
+        "fact": "Digitalis purpurea is a biennial: a basal rosette only in year one, flowering spires in year two.",
+        "source": "https://plantfinder.mobot.org/PlantFinderDetails.aspx?kempercode=c530"
+      }
     },
     {
       "id": "foxglove",
@@ -56,7 +65,16 @@
         [32, "pale_bloom"],
         [36, "sunbeam"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Digitalis purpurea",
+        "category": "Fairy Glove",
+        "heightM": 1.5,
+        "weightKg": 1.2,
+        "entry": "Bumblebees adore it; everyone else, beware. Every part is poisonous, yet it gave doctors digitalis, a heart drug made famous by William Withering in 1785.",
+        "fact": "foxglove is the source of the heart drug digitalis, popularised by William Withering's 1785 account.",
+        "source": "https://en.wikipedia.org/wiki/William_Withering"
+      }
     }
   ]
 }

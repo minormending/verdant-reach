@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "prickly_pear",
   "pollination": ["garden"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "photosynthesise"],
         [36, "bark_skin"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Opuntia",
+        "category": "Pear Pad",
+        "heightM": 0.2,
+        "weightKg": 0.5,
+        "entry": "Its pads carry glochids, tiny barbed bristles. They detach at a touch.",
+        "fact": "Its pads carry glochids: tiny barbed bristles that detach at a touch.",
+        "source": "https://en.wikipedia.org/wiki/Opuntia"
+      }
     },
     {
       "id": "padded_cactus",
@@ -53,7 +62,16 @@
         [30, "photosynthesise"],
         [36, "bark_skin"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Opuntia",
+        "category": "Pad Cactus",
+        "heightM": 0.6,
+        "weightKg": 5,
+        "entry": "Its pads carry glochids, tiny barbed bristles. They detach at a touch.",
+        "fact": "Its pads carry glochids: tiny barbed bristles that detach at a touch.",
+        "source": "https://en.wikipedia.org/wiki/Opuntia"
+      }
     },
     {
       "id": "prickly_pear",
@@ -81,7 +99,16 @@
         [36, "bark_skin"],
         [36, "petal_storm"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Opuntia",
+        "category": "Prickly Pear",
+        "heightM": 1.5,
+        "weightKg": 20,
+        "entry": "Its pads carry glochids, tiny barbed bristles. They detach at a touch.",
+        "fact": "Its pads carry glochids: tiny barbed bristles that detach at a touch.",
+        "source": "https://en.wikipedia.org/wiki/Opuntia"
+      }
     }
   ]
 }

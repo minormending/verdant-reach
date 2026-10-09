@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "burr",
   "pollination": [],
   "species": [
@@ -23,7 +23,16 @@
         [40, "thorn_lash"],
         [50, "snap_trap"],
         [60, "hook_cling"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Arctium",
+        "category": "Hitchhiker",
+        "heightM": 0.03,
+        "weightKg": 0.005,
+        "entry": "It clings to you, ready to come along. Its hooked burrs inspired the invention of Velcro.",
+        "fact": "Its hooked burrs inspired the invention of Velcro.",
+        "source": "https://en.wikipedia.org/wiki/Arctium"
+      }
     }
   ]
 }

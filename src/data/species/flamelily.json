@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "flamelily",
   "pollination": ["meadow"],
   "species": [
@@ -28,7 +28,16 @@
         [40, "leaf_edge"],
         [46, "petal_storm"],
         [52, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Gloriosa superba",
+        "category": "Flame Tuber",
+        "heightM": 0.15,
+        "weightKg": 0.1,
+        "entry": "It seems eager to see what lies ahead. It climbs by tendrils at the tips of its leaves.",
+        "fact": "It climbs by tendrils at the tips of its leaves.",
+        "source": "https://en.wikipedia.org/wiki/Gloriosa_superba"
+      }
     },
     {
       "id": "flame_lily",
@@ -54,7 +63,16 @@
         [40, "leaf_edge"],
         [46, "petal_storm"],
         [52, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Gloriosa superba",
+        "category": "Flame Lily",
+        "heightM": 3,
+        "weightKg": 1,
+        "entry": "It reaches out as if offering to lead the way. It climbs by tendrils at the tips of its leaves.",
+        "fact": "It climbs by tendrils at the tips of its leaves.",
+        "source": "https://en.wikipedia.org/wiki/Gloriosa_superba"
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "bladderwort",
   "pollination": ["carnivore"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "snap_trap"],
         [36, "flood"],
         [40, "pitfall"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Utricularia vulgaris",
+        "category": "Bladdersprig",
+        "heightM": 0.1,
+        "weightKg": 0.02,
+        "entry": "It seems to be waiting for a surprise. Its tiny underwater bladders snap open and suck in prey in about a millisecond.",
+        "fact": "Its tiny underwater bladders snap open and suck in prey in about a millisecond.",
+        "source": "https://en.wikipedia.org/wiki/Utricularia"
+      }
     },
     {
       "id": "bladderwort",
@@ -52,7 +61,16 @@
         [30, "snap_trap"],
         [36, "flood"],
         [40, "pitfall"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Utricularia vulgaris",
+        "category": "Bladderwort",
+        "heightM": 0.8,
+        "weightKg": 0.2,
+        "entry": "It never misses its cue. In roughly a millisecond, its little underwater bladders open with a snap and draw prey inside.",
+        "fact": "Its tiny underwater bladders snap open and suck in prey in about a millisecond.",
+        "source": "https://en.wikipedia.org/wiki/Utricularia"
+      }
     }
   ]
 }

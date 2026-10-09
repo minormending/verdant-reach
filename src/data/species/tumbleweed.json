@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "tumbleweed",
   "pollination": [],
   "species": [
@@ -23,7 +23,16 @@
         [40, "leaf_edge"],
         [50, "hook_thorns"],
         [60, "roll_scatter"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Salsola tragus",
+        "category": "Rolling Bush",
+        "heightM": 0.8,
+        "weightKg": 2,
+        "entry": "It always seems ready for another journey. When dry, it breaks off at the root and rolls in the wind, scattering seeds as it goes.",
+        "fact": "When dry, it breaks off at the root and rolls in the wind, scattering seeds as it goes.",
+        "source": "https://en.wikipedia.org/wiki/Salsola_tragus"
+      }
     }
   ]
 }

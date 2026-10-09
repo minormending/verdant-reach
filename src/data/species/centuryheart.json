@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "centuryheart",
   "pollination": [],
   "species": [
@@ -23,7 +23,16 @@
         [40, "photosynthesise"],
         [50, "petal_storm"],
         [60, "old_growth"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Puya raimondii",
+        "category": "Century Rose",
+        "heightM": 0.5,
+        "weightKg": 8,
+        "entry": "It settles beside you, in no hurry to bloom. It can grow for decades before flowering once, then dies.",
+        "fact": "It can grow for decades before flowering once, then dies.",
+        "source": "https://en.wikipedia.org/wiki/Puya_raimondii"
+      }
     }
   ]
 }

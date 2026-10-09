@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "apple",
   "pollination": ["garden"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "photosynthesise"],
         [35, "leaf_gale"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Malus domestica",
+        "category": "Pip",
+        "heightM": 0.05,
+        "weightKg": 0.1,
+        "entry": "It rolls off on its own, never quite like its parents. Plant an apple pip and you get a brand-new kind of apple, which is why named apples are grafted instead.",
+        "fact": "apples don't grow true from seed; every pip is a new variety, so named kinds are grafted.",
+        "source": "https://extension.psu.edu/hobbiest-gardening-growing-fruit-tree-plants-from-seed"
+      }
     },
     {
       "id": "apple_sapling",
@@ -53,7 +62,16 @@
         [30, "photosynthesise"],
         [35, "leaf_gale"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Malus domestica",
+        "category": "Whip",
+        "heightM": 1.5,
+        "weightKg": 6,
+        "entry": "Growers call a young unbranched tree a whip. It sulks when left alone, and with reason: most apples need pollen from a different variety to set fruit.",
+        "fact": "most apple varieties are self-incompatible and need pollen from a different variety.",
+        "source": "https://extension.umaine.edu/fruit/growing-fruit-trees-in-maine/pollination-requirements/"
+      }
     },
     {
       "id": "apple_tree",
@@ -82,7 +100,16 @@
         [35, "leaf_gale"],
         [40, "timber"],
         [44, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Malus domestica",
+        "category": "Orchard",
+        "heightM": 4,
+        "weightKg": 300,
+        "entry": "It drops its best fruit on those who look after it. Every eating apple descends mainly from wild apple forests in the Tian Shan mountains of Kazakhstan.",
+        "fact": "the wild apple Malus sieversii of the Tian Shan, Kazakhstan, is the main ancestor of the eating apple.",
+        "source": "https://www.smithsonianmag.com/travel/saving-the-apples-ancient-ancestor-in-the-forests-of-kazakhstan-180983493/"
+      }
     }
   ]
 }

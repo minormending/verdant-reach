@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "pitaya",
   "pollination": ["garden", "tropical"],
   "species": [
@@ -28,7 +28,16 @@
         [36, "moonbeam"],
         [42, "photosynthesise"],
         [48, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Selenicereus undatus",
+        "category": "Pitaya Pad",
+        "heightM": 0.3,
+        "weightKg": 0.4,
+        "entry": "It seems to be saving you a surprise. Its huge flowers open at night and last for just that one night.",
+        "fact": "Its huge flowers open at night and last only one night.",
+        "source": "https://en.wikipedia.org/wiki/Selenicereus_undatus"
+      }
     },
     {
       "id": "dragon_fruit",
@@ -54,7 +63,16 @@
         [36, "moonbeam"],
         [42, "photosynthesise"],
         [48, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Selenicereus undatus",
+        "category": "Dragon Fruit",
+        "heightM": 3,
+        "weightKg": 15,
+        "entry": "It makes an evening feel like a celebration. Each enormous flower opens after dark, lasting only a single night.",
+        "fact": "Its huge flowers open at night and last only one night.",
+        "source": "https://en.wikipedia.org/wiki/Selenicereus_undatus"
+      }
     }
   ]
 }

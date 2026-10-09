@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "methuselah",
   "pollination": [],
   "species": [
@@ -24,7 +24,16 @@
         [50, "timber"],
         [60, "snowdrift"],
         [70, "old_rings"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Pinus longaeva",
+        "category": "Old Pine",
+        "heightM": 8,
+        "weightKg": 1500,
+        "entry": "It keeps quiet company beneath the stars. Some living bristlecone pines are more than 4,800 years old.",
+        "fact": "Some living bristlecone pines are more than 4,800 years old.",
+        "source": "https://en.wikipedia.org/wiki/Pinus_longaeva"
+      }
     }
   ]
 }

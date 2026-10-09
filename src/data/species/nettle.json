@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "nettle",
   "pollination": ["woodland"],
   "species": [
@@ -26,7 +26,16 @@
         [26, "thorn_lash"],
         [32, "pitfall"],
         [38, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Urtica dioica",
+        "category": "Stinger",
+        "heightM": 0.2,
+        "weightKg": 0.2,
+        "entry": "Brush past it and you'll know. Young nettle leaves are cooked like spinach, and cooking takes the sting away.",
+        "fact": "young nettle leaves are cooked like spinach; cooking removes the sting.",
+        "source": "https://www.gettystewart.com/how-to-prepare-stinging-nettle-to-eat/"
+      }
     },
     {
       "id": "stinging_nettle",
@@ -50,7 +59,16 @@
         [21, "burr_hitch"],
         [32, "pitfall"],
         [38, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Urtica dioica",
+        "category": "Stinger",
+        "heightM": 1.2,
+        "weightKg": 3,
+        "entry": "Every hair is a tiny needle. The brittle silica tips snap off in skin and inject histamine.",
+        "fact": "nettle hairs have brittle silica tips that snap off and inject histamine and other irritants.",
+        "source": "Fu et al. 2006, Annals of Botany, https://doi.org/10.1093/aob/mcl089"
+      }
     }
   ]
 }

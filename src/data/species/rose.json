@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "rose",
   "pollination": ["garden", "woodland"],
   "species": [
@@ -28,7 +28,16 @@
         [32, "sunbeam"],
         [36, "petal_storm"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Rosa canina",
+        "category": "Dog Rose",
+        "heightM": 0.3,
+        "weightKg": 0.4,
+        "entry": "Pick it up carefully, or not at all. A rose's 'thorns' are really prickles, outgrowths of the stem's skin rather than true thorns.",
+        "fact": "rose \"thorns\" are prickles, outgrowths of the stem's epidermis, not true thorns (modified stems).",
+        "source": "https://en.wikipedia.org/wiki/Rose"
+      }
     },
     {
       "id": "wild_rose",
@@ -54,7 +63,16 @@
         [32, "sunbeam"],
         [36, "petal_storm"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Rosa canina",
+        "category": "Dog Rose",
+        "heightM": 2,
+        "weightKg": 8,
+        "entry": "Its hips glow red in autumn hedges. In wartime Britain, volunteers picked wild rose hips by the ton to make vitamin C syrup.",
+        "fact": "in WWII Britain volunteers collected ~200 tons of wild rose hips for vitamin C syrup.",
+        "source": "http://foragerplants.blogspot.com/2018/06/dog-rose-rosa-canina.html"
+      }
     }
   ]
 }

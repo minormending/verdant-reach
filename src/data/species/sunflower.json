@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "sunflower",
   "pollination": ["meadow", "garden"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "unfurl"],
         [35, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Helianthus annuus",
+        "category": "Sun Seeker",
+        "heightM": 0.2,
+        "weightKg": 0.3,
+        "entry": "It always knows where the sun is. Young sunflowers follow it west by day, then swing back east overnight.",
+        "fact": "young sunflowers track the sun east to west, then turn back east at night (Atamian et al. 2016).",
+        "source": "https://www.sciencedaily.com/releases/2016/08/160804152431.htm"
+      }
     },
     {
       "id": "sunflower_bud",
@@ -53,7 +62,16 @@
         [30, "unfurl"],
         [35, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Helianthus annuus",
+        "category": "Sun Seeker",
+        "heightM": 1,
+        "weightKg": 1.5,
+        "entry": "Weeds give it a wide berth. Sunflowers release chemicals that hold back other plants growing nearby.",
+        "fact": "sunflower residues release chemicals that hold back other plants (allelopathy).",
+        "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10180669/"
+      }
     },
     {
       "id": "sunflower",
@@ -78,7 +96,16 @@
         [30, "unfurl"],
         [35, "leaf_gale"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Helianthus annuus",
+        "category": "Sun Seeker",
+        "heightM": 2.4,
+        "weightKg": 3,
+        "entry": "It greets every sunrise. Once in bloom, a sunflower stops turning and faces east, so it warms up fast each morning.",
+        "fact": "mature sunflower heads stop tracking and face east, warming faster in the morning.",
+        "source": "https://www.sciencedaily.com/releases/2016/08/160804152431.htm"
+      }
     }
   ]
 }
