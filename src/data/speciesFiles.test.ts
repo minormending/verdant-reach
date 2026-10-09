@@ -37,14 +37,25 @@ describe("species line files", () => {
     }
   });
 
+  it("gives every species a sourced Herbarium page", () => {
+    for (const f of files) for (const s of read(f).species) {
+      expect(s.herbarium?.fact, `${f} ${s.id}`).toBeTruthy();
+      expect(s.herbarium?.source, `${f} ${s.id}`).toMatch(/https?:\/\//);
+      expect(DATA.herbarium[s.id]?.entry, `${f} ${s.id}`).toBe(s.herbarium.entry);
+    }
+    expect(Object.keys(DATA.herbarium)).toEqual([...SPECIES_IDS]);
+  });
+
   it("reports mistakes with the file and field", () => {
     const bad = structuredClone(read("oak.json"));
     bad.species[0].baseStats.hp = 0;
     bad.species[0].types = ["plasma" as never];
     bad.line = "acorn";
+    bad.species[0].herbarium.source = "same as above";
     const errs = speciesLineErrors("oak.json", bad);
     expect(errs).toContain("oak.json: line: must match the file name (oak.json)");
     expect(errs.some((e) => e.includes("oak_acorn") && e.includes("baseStats.hp"))).toBe(true);
     expect(errs.some((e) => e.includes("types must be 1-2 known types"))).toBe(true);
+    expect(errs.some((e) => e.includes("herbarium.source must cite a URL"))).toBe(true);
   });
 });
