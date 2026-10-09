@@ -1,0 +1,84 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "fern",
+  "pollination": ["spore"],
+  "species": [
+    {
+      "id": "fern_fiddlehead",
+      "name": "Fiddlehead",
+      "stage": 1,
+      "types": ["wood"],
+      "baseStats": { "hp": 40, "atk": 50, "def": 45, "spa": 35, "spd": 45, "spe": 50 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 55,
+      "evYield": { "atk": 1 },
+      "activity": "any",
+      "growsInto": { "species": "unfurling_fern", "trigger": { "kind": "vigor", "level": 13 } },
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "curl_up"],
+        [5, "sap_drain"],
+        [9, "leaf_edge"],
+        [13, "night_fold"],
+        [17, "fossil_print"],
+        [21, "spore_cloud"],
+        [25, "old_growth"],
+        [30, "leaf_gale"],
+        [35, "red_resin"],
+        [40, "primal_frond"]
+      ]
+    },
+    {
+      "id": "unfurling_fern",
+      "name": "Fern Frond",
+      "stage": 2,
+      "types": ["wood"],
+      "baseStats": { "hp": 55, "atk": 70, "def": 60, "spa": 50, "spd": 60, "spe": 70 },
+      "growthRate": "medium",
+      "catchRate": 120,
+      "baseExp": 124,
+      "evYield": { "atk": 1, "spe": 1 },
+      "activity": "any",
+      "growsInto": { "species": "ostrich_fern", "trigger": { "kind": "vigor", "level": 25 } },
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "curl_up"],
+        [5, "sap_drain"],
+        [9, "leaf_edge"],
+        [13, "night_fold"],
+        [17, "fossil_print"],
+        [21, "spore_cloud"],
+        [25, "old_growth"],
+        [30, "leaf_gale"],
+        [35, "red_resin"],
+        [40, "primal_frond"]
+      ]
+    },
+    {
+      "id": "ostrich_fern",
+      "name": "Ostrich Fern",
+      "stage": 3,
+      "types": ["wood", "dragon"],
+      "baseStats": { "hp": 70, "atk": 95, "def": 80, "spa": 70, "spd": 80, "spe": 90 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 190,
+      "evYield": { "atk": 2, "spe": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "curl_up"],
+        [5, "sap_drain"],
+        [9, "leaf_edge"],
+        [13, "night_fold"],
+        [17, "fossil_print"],
+        [21, "spore_cloud"],
+        [25, "old_growth"],
+        [25, "primal_frond"],
+        [30, "leaf_gale"],
+        [35, "red_resin"]
+      ]
+    }
+  ]
+}

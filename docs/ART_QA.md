@@ -76,8 +76,8 @@ checks that aggregate frames; face coordinates retain every hit.
 | `clone_risk` | warn | Both 64-bit aHash distance <5 and 64-bit dHash distance <7 against another line's front[0]. Whole canvas, composited over battle-box green, resized with BOX filtering; size and placement are retained. Same-line pairs are excluded. |
 | `silhouette_noise` | warn | More than 12 opaque pixels with exactly one cardinal opaque neighbour, or more than 4 transparent 1px holes enclosed by all eight opaque neighbours. Diagonal-only orphan pixels remain kit's responsibility. |
 
-Stage and line come from the `sp({ id, name, line, stage, ... })` headers in
-`src/data/species.ts`. The final stage is adult, stage 1 of a three-stage line
+Stage and line come from the species JSON files,
+`src/data/species/<line>.json` (docs/DATA.md). The final stage is adult, stage 1 of a three-stage line
 is baby, and intermediate stages and stage 1 of two-stage lines are teen.
 Missing metadata fails rather than guessing; keep the parser in sync if that
 authoring syntax changes. Fill means canvas area, not bounding-box area.

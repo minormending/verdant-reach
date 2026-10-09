@@ -1,0 +1,88 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "snowdrop",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "snowdrop_bulb",
+      "name": "Snow Bulb",
+      "stage": 1,
+      "types": ["frost"],
+      "baseStats": { "hp": 45, "atk": 30, "def": 40, "spa": 70, "spd": 40, "spe": 65 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 64,
+      "evYield": { "spa": 1 },
+      "activity": "any",
+      "growsInto": { "species": "snowdrop_shoot", "trigger": { "kind": "item", "item": "cold_snap" } },
+      "learnset": [
+        [1, "hoarfrost"],
+        [1, "sap_seal"],
+        [5, "pollen_puff"],
+        [9, "perfume"],
+        [13, "sap_drain"],
+        [17, "mist_veil"],
+        [21, "cold_mist"],
+        [26, "frost_bloom"],
+        [30, "photosynthesise"],
+        [34, "sun_track"],
+        [44, "snowdrift"]
+      ]
+    },
+    {
+      "id": "snowdrop_shoot",
+      "name": "Snow Shoot",
+      "stage": 2,
+      "types": ["frost", "bloom"],
+      "baseStats": { "hp": 60, "atk": 40, "def": 55, "spa": 95, "spd": 60, "spe": 90 },
+      "growthRate": "medium",
+      "catchRate": 75,
+      "baseExp": 138,
+      "evYield": { "spa": 1, "spe": 1 },
+      "activity": "any",
+      "growsInto": { "species": "snowdrop", "trigger": { "kind": "vigor", "level": 36 } },
+      "learnset": [
+        [1, "hoarfrost"],
+        [1, "sap_seal"],
+        [5, "pollen_puff"],
+        [9, "perfume"],
+        [13, "sap_drain"],
+        [17, "mist_veil"],
+        [21, "cold_mist"],
+        [26, "frost_bloom"],
+        [30, "photosynthesise"],
+        [34, "sun_track"],
+        [34, "sunbeam"],
+        [38, "thaw_bloom"],
+        [44, "snowdrift"]
+      ]
+    },
+    {
+      "id": "snowdrop",
+      "name": "Snowdrop",
+      "stage": 3,
+      "types": ["frost", "bloom"],
+      "baseStats": { "hp": 75, "atk": 50, "def": 65, "spa": 115, "spd": 75, "spe": 110 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 194,
+      "evYield": { "spa": 2, "spe": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "hoarfrost"],
+        [1, "sap_seal"],
+        [5, "pollen_puff"],
+        [9, "perfume"],
+        [13, "sap_drain"],
+        [17, "mist_veil"],
+        [21, "cold_mist"],
+        [26, "frost_bloom"],
+        [30, "photosynthesise"],
+        [34, "sun_track"],
+        [34, "sunbeam"],
+        [38, "thaw_bloom"],
+        [44, "snowdrift"]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "mangrove",
+  "pollination": ["wetland"],
+  "species": [
+    {
+      "id": "mangrove_propagule",
+      "name": "Propagule",
+      "stage": 1,
+      "types": ["water"],
+      "baseStats": { "hp": 50, "atk": 35, "def": 70, "spa": 40, "spd": 65, "spe": 30 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 64,
+      "evYield": { "def": 1 },
+      "activity": "any",
+      "growsInto": { "species": "mangrove_sapling", "trigger": { "kind": "vigor", "level": 24 } },
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "sap_seal"],
+        [5, "vine_lash"],
+        [9, "root_tap"],
+        [13, "undertow"],
+        [17, "sap_drain"],
+        [21, "root_snare"],
+        [24, "flood"],
+        [30, "leaf_edge"],
+        [36, "bark_skin"],
+        [40, "downpour"]
+      ]
+    },
+    {
+      "id": "mangrove_sapling",
+      "name": "Stilt Sprout",
+      "stage": 2,
+      "types": ["water", "wood"],
+      "baseStats": { "hp": 65, "atk": 50, "def": 95, "spa": 70, "spd": 90, "spe": 40 },
+      "growthRate": "medium",
+      "catchRate": 75,
+      "baseExp": 140,
+      "evYield": { "def": 1, "spd": 1 },
+      "activity": "any",
+      "growsInto": { "species": "red_mangrove", "trigger": { "kind": "vigor", "level": 34 } },
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "sap_seal"],
+        [5, "vine_lash"],
+        [9, "root_tap"],
+        [13, "undertow"],
+        [17, "sap_drain"],
+        [21, "root_snare"],
+        [24, "flood"],
+        [26, "stilt_roots"],
+        [30, "leaf_edge"],
+        [36, "bark_skin"],
+        [40, "downpour"]
+      ]
+    },
+    {
+      "id": "red_mangrove",
+      "name": "Red Mangrove",
+      "stage": 3,
+      "types": ["water", "wood"],
+      "baseStats": { "hp": 85, "atk": 65, "def": 115, "spa": 85, "spd": 110, "spe": 40 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 198,
+      "evYield": { "def": 2, "spd": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "sap_seal"],
+        [5, "vine_lash"],
+        [9, "root_tap"],
+        [13, "undertow"],
+        [17, "sap_drain"],
+        [21, "root_snare"],
+        [24, "flood"],
+        [26, "stilt_roots"],
+        [30, "leaf_edge"],
+        [36, "bark_skin"],
+        [40, "downpour"]
+      ]
+    }
+  ]
+}

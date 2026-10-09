@@ -1,0 +1,88 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "apple",
+  "pollination": ["garden"],
+  "species": [
+    {
+      "id": "apple_pip",
+      "name": "Apple Pip",
+      "stage": 1,
+      "types": ["wood"],
+      "baseStats": { "hp": 50, "atk": 55, "def": 50, "spa": 40, "spd": 45, "spe": 40 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 58,
+      "evYield": { "atk": 1 },
+      "activity": "day",
+      "growsInto": { "species": "apple_sapling", "trigger": { "kind": "vigor", "level": 18 } },
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "sap_seal"],
+        [5, "seed_burst"],
+        [9, "sap_drain"],
+        [13, "root_tap"],
+        [17, "windfall"],
+        [21, "leaf_edge"],
+        [25, "bark_skin"],
+        [30, "photosynthesise"],
+        [35, "leaf_gale"],
+        [40, "timber"]
+      ]
+    },
+    {
+      "id": "apple_sapling",
+      "name": "Apple Whip",
+      "stage": 2,
+      "types": ["wood"],
+      "baseStats": { "hp": 65, "atk": 75, "def": 70, "spa": 50, "spd": 60, "spe": 45 },
+      "growthRate": "medium",
+      "catchRate": 75,
+      "baseExp": 130,
+      "evYield": { "atk": 1, "def": 1 },
+      "activity": "day",
+      "growsInto": { "species": "apple_tree", "trigger": { "kind": "tending", "friendship": 220 } },
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "sap_seal"],
+        [5, "seed_burst"],
+        [9, "sap_drain"],
+        [13, "root_tap"],
+        [17, "windfall"],
+        [21, "leaf_edge"],
+        [25, "bark_skin"],
+        [30, "photosynthesise"],
+        [35, "leaf_gale"],
+        [40, "timber"]
+      ]
+    },
+    {
+      "id": "apple_tree",
+      "name": "Apple Tree",
+      "stage": 3,
+      "types": ["wood", "bloom"],
+      "baseStats": { "hp": 90, "atk": 100, "def": 90, "spa": 70, "spd": 85, "spe": 50 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 192,
+      "evYield": { "atk": 2, "def": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "sap_seal"],
+        [1, "pollen_puff"],
+        [1, "unfurl"],
+        [5, "seed_burst"],
+        [9, "sap_drain"],
+        [13, "root_tap"],
+        [17, "windfall"],
+        [21, "leaf_edge"],
+        [25, "bark_skin"],
+        [30, "photosynthesise"],
+        [30, "sunbeam"],
+        [35, "leaf_gale"],
+        [40, "timber"],
+        [44, "petal_storm"]
+      ]
+    }
+  ]
+}

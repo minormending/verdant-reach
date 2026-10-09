@@ -1,0 +1,58 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "edelweiss",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "edelweiss_bud",
+      "name": "Edel Bud",
+      "stage": 1,
+      "types": ["frost", "bloom"],
+      "baseStats": { "hp": 45, "atk": 30, "def": 45, "spa": 70, "spd": 75, "spe": 35 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 66,
+      "evYield": { "spd": 1 },
+      "activity": "day",
+      "growsInto": { "species": "edelweiss", "trigger": { "kind": "vigor", "level": 32 } },
+      "learnset": [
+        [1, "hoarfrost"],
+        [1, "perfume"],
+        [5, "pollen_puff"],
+        [9, "sap_drain"],
+        [13, "mist_veil"],
+        [18, "wind_scatter"],
+        [24, "woolly_coat"],
+        [28, "frost_bloom"],
+        [34, "sunbeam"],
+        [38, "photosynthesise"],
+        [42, "snowdrift"]
+      ]
+    },
+    {
+      "id": "edelweiss",
+      "name": "Edelweiss",
+      "stage": 2,
+      "types": ["frost", "bloom"],
+      "baseStats": { "hp": 70, "atk": 45, "def": 65, "spa": 110, "spd": 125, "spe": 55 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 174,
+      "evYield": { "spa": 1, "spd": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "hoarfrost"],
+        [1, "perfume"],
+        [5, "pollen_puff"],
+        [9, "sap_drain"],
+        [13, "mist_veil"],
+        [18, "wind_scatter"],
+        [24, "woolly_coat"],
+        [28, "frost_bloom"],
+        [34, "sunbeam"],
+        [38, "photosynthesise"],
+        [42, "snowdrift"]
+      ]
+    }
+  ]
+}

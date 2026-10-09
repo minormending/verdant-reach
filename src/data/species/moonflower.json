@@ -1,0 +1,84 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "moonflower",
+  "pollination": ["garden", "tropical"],
+  "species": [
+    {
+      "id": "moonflower_seed",
+      "name": "Moon Seed",
+      "stage": 1,
+      "types": ["ghost"],
+      "baseStats": { "hp": 40, "atk": 35, "def": 40, "spa": 60, "spd": 50, "spe": 50 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 62,
+      "evYield": { "spa": 1 },
+      "activity": "night",
+      "growsInto": { "species": "moonflower_vine", "trigger": { "kind": "vigor", "level": 12 } },
+      "learnset": [
+        [1, "pale_touch"],
+        [1, "night_fold"],
+        [5, "pollen_puff"],
+        [8, "wither"],
+        [12, "spore_cloud"],
+        [16, "moonbeam"],
+        [20, "dodder_coil"],
+        [25, "perfume"],
+        [30, "pale_bloom"],
+        [35, "sunbeam"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "moonflower_vine",
+      "name": "Moon Vine",
+      "stage": 2,
+      "types": ["ghost"],
+      "baseStats": { "hp": 55, "atk": 50, "def": 55, "spa": 80, "spd": 65, "spe": 65 },
+      "growthRate": "medium",
+      "catchRate": 120,
+      "baseExp": 128,
+      "evYield": { "spa": 2 },
+      "activity": "night",
+      "growsInto": { "species": "moonflower", "trigger": { "kind": "vigor_night", "level": 22 } },
+      "learnset": [
+        [1, "pale_touch"],
+        [1, "night_fold"],
+        [5, "pollen_puff"],
+        [8, "wither"],
+        [12, "spore_cloud"],
+        [16, "moonbeam"],
+        [20, "dodder_coil"],
+        [25, "perfume"],
+        [30, "pale_bloom"],
+        [35, "sunbeam"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "moonflower",
+      "name": "Moonflower",
+      "stage": 3,
+      "types": ["ghost", "bloom"],
+      "baseStats": { "hp": 75, "atk": 60, "def": 70, "spa": 110, "spd": 90, "spe": 80 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 188,
+      "evYield": { "spa": 3 },
+      "activity": "night",
+      "learnset": [
+        [1, "pale_touch"],
+        [1, "night_fold"],
+        [5, "pollen_puff"],
+        [8, "wither"],
+        [12, "spore_cloud"],
+        [16, "moonbeam"],
+        [20, "dodder_coil"],
+        [22, "pale_bloom"],
+        [25, "perfume"],
+        [35, "sunbeam"],
+        [40, "petal_storm"]
+      ]
+    }
+  ]
+}

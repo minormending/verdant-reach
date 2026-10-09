@@ -1,0 +1,58 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "seagrass",
+  "pollination": ["wetland"],
+  "species": [
+    {
+      "id": "seagrass_shoot",
+      "name": "Seagrass Tip",
+      "stage": 1,
+      "types": ["water"],
+      "baseStats": { "hp": 45, "atk": 30, "def": 40, "spa": 70, "spd": 45, "spe": 70 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 66,
+      "evYield": { "spe": 1 },
+      "activity": "any",
+      "growsInto": { "species": "eelgrass", "trigger": { "kind": "vigor", "level": 28 } },
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "perfume"],
+        [5, "vine_lash"],
+        [9, "sap_drain"],
+        [13, "undertow"],
+        [17, "mist_veil"],
+        [20, "tidal_sway"],
+        [25, "leaf_edge"],
+        [30, "rain_call"],
+        [34, "flood"],
+        [40, "downpour"]
+      ]
+    },
+    {
+      "id": "eelgrass",
+      "name": "Eelgrass",
+      "stage": 2,
+      "types": ["water"],
+      "baseStats": { "hp": 65, "atk": 45, "def": 55, "spa": 110, "spd": 65, "spe": 110 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 166,
+      "evYield": { "spa": 1, "spe": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "dew_drop"],
+        [1, "perfume"],
+        [5, "vine_lash"],
+        [9, "sap_drain"],
+        [13, "undertow"],
+        [17, "mist_veil"],
+        [20, "tidal_sway"],
+        [25, "leaf_edge"],
+        [30, "rain_call"],
+        [34, "flood"],
+        [40, "downpour"]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "saguaro",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "saguaro_pup",
+      "name": "Saguaro Pup",
+      "stage": 1,
+      "types": ["thorn"],
+      "baseStats": { "hp": 85, "atk": 45, "def": 80, "spa": 30, "spd": 45, "spe": 15 },
+      "growthRate": "slow",
+      "catchRate": 120,
+      "baseExp": 66,
+      "evYield": { "hp": 1 },
+      "activity": "day",
+      "growsInto": { "species": "saguaro_column", "trigger": { "kind": "vigor", "level": 30 } },
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "curl_up"],
+        [5, "dew_drop"],
+        [9, "sap_seal"],
+        [13, "bristle"],
+        [17, "spine_volley"],
+        [21, "root_tap"],
+        [26, "thorn_lash"],
+        [30, "bark_skin"],
+        [36, "flood"],
+        [42, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "saguaro_column",
+      "name": "Tall Saguaro",
+      "stage": 2,
+      "types": ["thorn"],
+      "baseStats": { "hp": 115, "atk": 65, "def": 110, "spa": 45, "spd": 65, "spe": 20 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 144,
+      "evYield": { "hp": 1, "def": 1 },
+      "activity": "day",
+      "growsInto": { "species": "saguaro", "trigger": { "kind": "vigor", "level": 40 } },
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "curl_up"],
+        [5, "dew_drop"],
+        [9, "sap_seal"],
+        [13, "bristle"],
+        [17, "spine_volley"],
+        [21, "root_tap"],
+        [26, "thorn_lash"],
+        [30, "bark_skin"],
+        [32, "water_store"],
+        [36, "flood"],
+        [42, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "saguaro",
+      "name": "Old Saguaro",
+      "stage": 3,
+      "types": ["thorn", "water"],
+      "baseStats": { "hp": 145, "atk": 85, "def": 135, "spa": 55, "spd": 75, "spe": 25 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 206,
+      "evYield": { "hp": 2, "def": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "curl_up"],
+        [5, "dew_drop"],
+        [9, "sap_seal"],
+        [13, "bristle"],
+        [17, "spine_volley"],
+        [21, "root_tap"],
+        [26, "thorn_lash"],
+        [30, "bark_skin"],
+        [32, "water_store"],
+        [36, "flood"],
+        [42, "hook_thorns"]
+      ]
+    }
+  ]
+}
