@@ -1,0 +1,58 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "bladderwort",
+  "pollination": ["carnivore"],
+  "species": [
+    {
+      "id": "bladderwort_sprig",
+      "name": "Bladdersprig",
+      "stage": 1,
+      "types": ["bug", "water"],
+      "baseStats": { "hp": 45, "atk": 65, "def": 35, "spa": 45, "spd": 35, "spe": 70 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 64,
+      "evYield": { "spe": 1 },
+      "activity": "any",
+      "growsInto": { "species": "bladderwort", "trigger": { "kind": "vigor", "level": 33 } },
+      "learnset": [
+        [1, "quick_snap"],
+        [1, "nectar_lure"],
+        [5, "dew_drop"],
+        [9, "pad_slap"],
+        [13, "sticky_dew"],
+        [17, "undertow"],
+        [21, "digest"],
+        [25, "vacuum_trap"],
+        [30, "snap_trap"],
+        [36, "flood"],
+        [40, "pitfall"]
+      ]
+    },
+    {
+      "id": "bladderwort",
+      "name": "Bladderwort",
+      "stage": 2,
+      "types": ["bug", "water"],
+      "baseStats": { "hp": 65, "atk": 105, "def": 55, "spa": 70, "spd": 60, "spe": 110 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 172,
+      "evYield": { "atk": 1, "spe": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "quick_snap"],
+        [1, "nectar_lure"],
+        [5, "dew_drop"],
+        [9, "pad_slap"],
+        [13, "sticky_dew"],
+        [17, "undertow"],
+        [21, "digest"],
+        [25, "vacuum_trap"],
+        [30, "snap_trap"],
+        [36, "flood"],
+        [40, "pitfall"]
+      ]
+    }
+  ]
+}

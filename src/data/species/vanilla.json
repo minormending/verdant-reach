@@ -1,0 +1,58 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "vanilla",
+  "pollination": ["tropical"],
+  "species": [
+    {
+      "id": "vanilla_vine",
+      "name": "Vanilla Vine",
+      "stage": 1,
+      "types": ["bloom"],
+      "baseStats": { "hp": 45, "atk": 30, "def": 40, "spa": 75, "spd": 70, "spe": 40 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 72,
+      "evYield": { "spa": 1 },
+      "activity": "any",
+      "growsInto": { "species": "vanilla_orchid", "trigger": { "kind": "cross_pollination" } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "perfume"],
+        [5, "vine_lash"],
+        [9, "sap_drain"],
+        [13, "wind_scatter"],
+        [18, "hand_pollen"],
+        [22, "root_snare"],
+        [26, "sunbeam"],
+        [30, "photosynthesise"],
+        [36, "leaf_gale"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "vanilla_orchid",
+      "name": "Vanilla",
+      "stage": 2,
+      "types": ["bloom", "wood"],
+      "baseStats": { "hp": 70, "atk": 45, "def": 60, "spa": 115, "spd": 110, "spe": 70 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 180,
+      "evYield": { "spa": 1, "spd": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "perfume"],
+        [5, "vine_lash"],
+        [9, "sap_drain"],
+        [13, "wind_scatter"],
+        [18, "hand_pollen"],
+        [22, "root_snare"],
+        [26, "sunbeam"],
+        [30, "photosynthesise"],
+        [36, "leaf_gale"],
+        [40, "petal_storm"]
+      ]
+    }
+  ]
+}

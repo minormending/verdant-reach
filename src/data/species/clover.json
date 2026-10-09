@@ -1,0 +1,60 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "clover",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "clover_sprout",
+      "name": "Shamrock",
+      "stage": 1,
+      "types": ["bloom"],
+      "baseStats": { "hp": 50, "atk": 35, "def": 50, "spa": 45, "spd": 55, "spe": 40 },
+      "growthRate": "fast",
+      "catchRate": 255,
+      "baseExp": 50,
+      "evYield": { "spd": 1 },
+      "activity": "day",
+      "growsInto": { "species": "white_clover", "trigger": { "kind": "tending", "friendship": 120 } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "night_fold"],
+        [5, "vine_lash"],
+        [8, "sap_drain"],
+        [11, "lucky_leaf"],
+        [15, "root_snare"],
+        [18, "nitro_fix"],
+        [22, "wind_scatter"],
+        [26, "perfume"],
+        [30, "unfurl"],
+        [35, "sunbeam"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "white_clover",
+      "name": "White Clover",
+      "stage": 2,
+      "types": ["bloom"],
+      "baseStats": { "hp": 85, "atk": 50, "def": 75, "spa": 70, "spd": 90, "spe": 50 },
+      "growthRate": "fast",
+      "catchRate": 90,
+      "baseExp": 140,
+      "evYield": { "spd": 2 },
+      "activity": "day",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "night_fold"],
+        [1, "nitro_fix"],
+        [5, "vine_lash"],
+        [8, "sap_drain"],
+        [11, "lucky_leaf"],
+        [15, "root_snare"],
+        [22, "wind_scatter"],
+        [26, "perfume"],
+        [30, "unfurl"],
+        [35, "sunbeam"],
+        [40, "petal_storm"]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "nightshade",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "nightshade_sprout",
+      "name": "Shade Sprout",
+      "stage": 1,
+      "types": ["bloom", "ghost"],
+      "baseStats": { "hp": 45, "atk": 35, "def": 40, "spa": 75, "spd": 50, "spe": 65 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 68,
+      "evYield": { "spa": 1 },
+      "activity": "night",
+      "growsInto": { "species": "nightshade", "trigger": { "kind": "vigor", "level": 36 } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "perfume"],
+        [7, "pale_touch"],
+        [12, "sap_drain"],
+        [17, "wind_scatter"],
+        [22, "rot_touch"],
+        [27, "night_fold"],
+        [32, "moonbeam"],
+        [36, "photosynthesise"],
+        [44, "pale_bloom"],
+        [48, "petal_storm"],
+        [54, "spore_cloud"]
+      ]
+    },
+    {
+      "id": "nightshade",
+      "name": "Nightshade",
+      "stage": 2,
+      "types": ["bloom", "ghost"],
+      "baseStats": { "hp": 70, "atk": 55, "def": 65, "spa": 120, "spd": 80, "spe": 100 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 180,
+      "evYield": { "spa": 1, "spe": 1 },
+      "activity": "night",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "perfume"],
+        [7, "pale_touch"],
+        [12, "sap_drain"],
+        [17, "wind_scatter"],
+        [22, "rot_touch"],
+        [27, "night_fold"],
+        [32, "moonbeam"],
+        [36, "photosynthesise"],
+        [40, "atropine"],
+        [44, "pale_bloom"],
+        [48, "petal_storm"],
+        [54, "spore_cloud"]
+      ]
+    }
+  ]
+}

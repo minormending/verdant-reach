@@ -1,0 +1,58 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "skunk",
+  "pollination": ["wetland"],
+  "species": [
+    {
+      "id": "skunk_cabbage_shoot",
+      "name": "Skunk Shoot",
+      "stage": 1,
+      "types": ["fire", "wood"],
+      "baseStats": { "hp": 65, "atk": 35, "def": 45, "spa": 50, "spd": 75, "spe": 20 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 66,
+      "evYield": { "spd": 1 },
+      "activity": "any",
+      "growsInto": { "species": "skunk_cabbage", "trigger": { "kind": "vigor", "level": 26 } },
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "night_fold"],
+        [5, "sap_drain"],
+        [9, "smoulder"],
+        [13, "root_snare"],
+        [18, "snowmelt"],
+        [22, "sap_spout"],
+        [26, "perfume"],
+        [30, "sun_flare"],
+        [34, "bark_skin"],
+        [40, "wildfire"]
+      ]
+    },
+    {
+      "id": "skunk_cabbage",
+      "name": "Skunkcabbage",
+      "stage": 2,
+      "types": ["fire", "wood"],
+      "baseStats": { "hp": 100, "atk": 55, "def": 65, "spa": 85, "spd": 110, "spe": 30 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 164,
+      "evYield": { "hp": 1, "spd": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "night_fold"],
+        [5, "sap_drain"],
+        [9, "smoulder"],
+        [13, "root_snare"],
+        [18, "snowmelt"],
+        [22, "sap_spout"],
+        [26, "perfume"],
+        [30, "sun_flare"],
+        [34, "bark_skin"],
+        [40, "wildfire"]
+      ]
+    }
+  ]
+}

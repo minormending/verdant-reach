@@ -1,0 +1,60 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "mint",
+  "pollination": ["garden"],
+  "species": [
+    {
+      "id": "mint_sprig",
+      "name": "Mint Sprig",
+      "stage": 1,
+      "types": ["frost"],
+      "baseStats": { "hp": 45, "atk": 40, "def": 40, "spa": 60, "spd": 45, "spe": 65 },
+      "growthRate": "fast",
+      "catchRate": 190,
+      "baseExp": 60,
+      "evYield": { "spe": 1 },
+      "activity": "any",
+      "growsInto": { "species": "peppermint", "trigger": { "kind": "vigor", "level": 16 } },
+      "learnset": [
+        [1, "hoarfrost"],
+        [1, "perfume"],
+        [5, "vine_lash"],
+        [8, "cold_mist"],
+        [12, "sap_drain"],
+        [15, "root_snare"],
+        [20, "menthol_chill"],
+        [24, "unfurl"],
+        [28, "frost_bloom"],
+        [32, "cold_snap"],
+        [36, "leaf_gale"],
+        [40, "snowdrift"]
+      ]
+    },
+    {
+      "id": "peppermint",
+      "name": "Peppermint",
+      "stage": 2,
+      "types": ["frost"],
+      "baseStats": { "hp": 65, "atk": 55, "def": 60, "spa": 95, "spd": 65, "spe": 100 },
+      "growthRate": "fast",
+      "catchRate": 75,
+      "baseExp": 150,
+      "evYield": { "spa": 1, "spe": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "hoarfrost"],
+        [1, "perfume"],
+        [5, "vine_lash"],
+        [8, "cold_mist"],
+        [12, "sap_drain"],
+        [15, "root_snare"],
+        [16, "menthol_chill"],
+        [24, "unfurl"],
+        [28, "frost_bloom"],
+        [32, "cold_snap"],
+        [36, "leaf_gale"],
+        [40, "snowdrift"]
+      ]
+    }
+  ]
+}

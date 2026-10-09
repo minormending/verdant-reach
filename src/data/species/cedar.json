@@ -1,0 +1,58 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "cedar",
+  "pollination": ["woodland"],
+  "species": [
+    {
+      "id": "cedar_seedling",
+      "name": "Cedar Sprout",
+      "stage": 1,
+      "types": ["wood", "ghost"],
+      "baseStats": { "hp": 65, "atk": 45, "def": 65, "spa": 35, "spd": 70, "spe": 30 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 72,
+      "evYield": { "spd": 1 },
+      "activity": "any",
+      "growsInto": { "species": "red_cedar", "trigger": { "kind": "vigor", "level": 34 } },
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "sap_seal"],
+        [5, "pale_touch"],
+        [9, "sap_drain"],
+        [13, "root_tap"],
+        [17, "leaf_edge"],
+        [20, "heartwood"],
+        [25, "moonbeam"],
+        [29, "bark_skin"],
+        [34, "pale_bloom"],
+        [40, "timber"]
+      ]
+    },
+    {
+      "id": "red_cedar",
+      "name": "Red Cedar",
+      "stage": 2,
+      "types": ["wood", "ghost"],
+      "baseStats": { "hp": 110, "atk": 80, "def": 110, "spa": 55, "spd": 105, "spe": 40 },
+      "growthRate": "slow",
+      "catchRate": 45,
+      "baseExp": 190,
+      "evYield": { "hp": 1, "def": 1, "spd": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "sap_seal"],
+        [5, "pale_touch"],
+        [9, "sap_drain"],
+        [13, "root_tap"],
+        [17, "leaf_edge"],
+        [20, "heartwood"],
+        [25, "moonbeam"],
+        [29, "bark_skin"],
+        [34, "pale_bloom"],
+        [40, "timber"]
+      ]
+    }
+  ]
+}

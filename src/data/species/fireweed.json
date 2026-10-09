@@ -1,0 +1,84 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "fireweed",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "fireweed_fluff",
+      "name": "Fire Fluff",
+      "stage": 1,
+      "types": ["fire", "bloom"],
+      "baseStats": { "hp": 40, "atk": 35, "def": 35, "spa": 65, "spd": 40, "spe": 65 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 60,
+      "evYield": { "spa": 1 },
+      "activity": "day",
+      "growsInto": { "species": "fireweed_shoot", "trigger": { "kind": "vigor", "level": 20 } },
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "unfurl"],
+        [5, "pollen_puff"],
+        [9, "smoulder"],
+        [12, "seed_drift"],
+        [17, "wind_scatter"],
+        [21, "sun_flare"],
+        [25, "sun_track"],
+        [30, "sunbeam"],
+        [34, "photosynthesise"],
+        [40, "wildfire"]
+      ]
+    },
+    {
+      "id": "fireweed_shoot",
+      "name": "Fire Shoot",
+      "stage": 2,
+      "types": ["fire", "bloom"],
+      "baseStats": { "hp": 55, "atk": 45, "def": 50, "spa": 90, "spd": 65, "spe": 95 },
+      "growthRate": "medium",
+      "catchRate": 75,
+      "baseExp": 135,
+      "evYield": { "spa": 1, "spe": 1 },
+      "activity": "day",
+      "growsInto": { "species": "fireweed", "trigger": { "kind": "vigor", "level": 30 } },
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "unfurl"],
+        [5, "pollen_puff"],
+        [9, "smoulder"],
+        [12, "seed_drift"],
+        [17, "wind_scatter"],
+        [21, "sun_flare"],
+        [25, "sun_track"],
+        [30, "sunbeam"],
+        [34, "photosynthesise"],
+        [40, "wildfire"]
+      ]
+    },
+    {
+      "id": "fireweed",
+      "name": "Fireweed",
+      "stage": 3,
+      "types": ["fire", "bloom"],
+      "baseStats": { "hp": 70, "atk": 55, "def": 65, "spa": 110, "spd": 75, "spe": 110 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 192,
+      "evYield": { "spa": 2, "spe": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "unfurl"],
+        [5, "pollen_puff"],
+        [9, "smoulder"],
+        [12, "seed_drift"],
+        [17, "wind_scatter"],
+        [21, "sun_flare"],
+        [25, "sun_track"],
+        [30, "sunbeam"],
+        [34, "photosynthesise"],
+        [40, "wildfire"]
+      ]
+    }
+  ]
+}

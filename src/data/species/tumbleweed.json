@@ -1,0 +1,29 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "tumbleweed",
+  "pollination": [],
+  "species": [
+    {
+      "id": "tumbleweed",
+      "name": "Tumbleweed",
+      "stage": 1,
+      "types": ["thorn", "wood"],
+      "baseStats": { "hp": 90, "atk": 120, "def": 90, "spa": 70, "spd": 80, "spe": 130 },
+      "growthRate": "slow",
+      "catchRate": 3,
+      "baseExp": 255,
+      "evYield": { "atk": 1, "spe": 2 },
+      "activity": "any",
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "vine_lash"],
+        [10, "bristle"],
+        [20, "samara_spin"],
+        [30, "spine_volley"],
+        [40, "leaf_edge"],
+        [50, "hook_thorns"],
+        [60, "roll_scatter"]
+      ]
+    }
+  ]
+}

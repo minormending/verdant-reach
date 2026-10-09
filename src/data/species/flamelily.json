@@ -1,0 +1,60 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "flamelily",
+  "pollination": ["meadow"],
+  "species": [
+    {
+      "id": "flame_lily_tuber",
+      "name": "Flame Tuber",
+      "stage": 1,
+      "types": ["fire", "bloom"],
+      "baseStats": { "hp": 45, "atk": 65, "def": 40, "spa": 60, "spd": 40, "spe": 55 },
+      "growthRate": "medium",
+      "catchRate": 150,
+      "baseExp": 68,
+      "evYield": { "atk": 1 },
+      "activity": "day",
+      "growsInto": { "species": "flame_lily", "trigger": { "kind": "vigor", "level": 38 } },
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "unfurl"],
+        [7, "pollen_puff"],
+        [12, "vine_lash"],
+        [17, "smoulder"],
+        [22, "wind_scatter"],
+        [27, "sun_flare"],
+        [30, "photosynthesise"],
+        [34, "climbing_flame"],
+        [40, "leaf_edge"],
+        [46, "petal_storm"],
+        [52, "wildfire"]
+      ]
+    },
+    {
+      "id": "flame_lily",
+      "name": "Flame Lily",
+      "stage": 2,
+      "types": ["fire", "bloom"],
+      "baseStats": { "hp": 70, "atk": 110, "def": 60, "spa": 95, "spd": 65, "spe": 90 },
+      "growthRate": "medium",
+      "catchRate": 60,
+      "baseExp": 180,
+      "evYield": { "atk": 1, "spe": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "ember_seed"],
+        [1, "unfurl"],
+        [7, "pollen_puff"],
+        [12, "vine_lash"],
+        [17, "smoulder"],
+        [22, "wind_scatter"],
+        [27, "sun_flare"],
+        [30, "photosynthesise"],
+        [34, "climbing_flame"],
+        [40, "leaf_edge"],
+        [46, "petal_storm"],
+        [52, "wildfire"]
+      ]
+    }
+  ]
+}

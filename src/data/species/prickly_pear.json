@@ -1,0 +1,87 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "prickly_pear",
+  "pollination": ["garden"],
+  "species": [
+    {
+      "id": "pear_pad",
+      "name": "Pear Pad",
+      "stage": 1,
+      "types": ["thorn"],
+      "baseStats": { "hp": 45, "atk": 70, "def": 65, "spa": 40, "spd": 40, "spe": 30 },
+      "growthRate": "medium",
+      "catchRate": 190,
+      "baseExp": 64,
+      "evYield": { "atk": 1 },
+      "activity": "day",
+      "growsInto": { "species": "padded_cactus", "trigger": { "kind": "vigor", "level": 22 } },
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "bristle"],
+        [5, "vine_lash"],
+        [9, "sap_seal"],
+        [14, "glochid_spray"],
+        [18, "pad_slap"],
+        [22, "burr_hitch"],
+        [26, "thorn_lash"],
+        [30, "photosynthesise"],
+        [36, "bark_skin"],
+        [40, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "padded_cactus",
+      "name": "Pad Cactus",
+      "stage": 2,
+      "types": ["thorn"],
+      "baseStats": { "hp": 60, "atk": 95, "def": 90, "spa": 55, "spd": 55, "spe": 45 },
+      "growthRate": "medium",
+      "catchRate": 75,
+      "baseExp": 136,
+      "evYield": { "atk": 1, "def": 1 },
+      "activity": "day",
+      "growsInto": { "species": "prickly_pear", "trigger": { "kind": "vigor", "level": 32 } },
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "bristle"],
+        [5, "vine_lash"],
+        [9, "sap_seal"],
+        [14, "glochid_spray"],
+        [18, "pad_slap"],
+        [22, "burr_hitch"],
+        [26, "thorn_lash"],
+        [30, "photosynthesise"],
+        [36, "bark_skin"],
+        [40, "hook_thorns"]
+      ]
+    },
+    {
+      "id": "prickly_pear",
+      "name": "Prickly Pear",
+      "stage": 3,
+      "types": ["thorn", "bloom"],
+      "baseStats": { "hp": 75, "atk": 115, "def": 110, "spa": 70, "spd": 70, "spe": 50 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 194,
+      "evYield": { "atk": 2, "def": 1 },
+      "activity": "day",
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "bristle"],
+        [1, "pollen_puff"],
+        [5, "vine_lash"],
+        [9, "sap_seal"],
+        [14, "glochid_spray"],
+        [18, "pad_slap"],
+        [22, "burr_hitch"],
+        [26, "thorn_lash"],
+        [30, "photosynthesise"],
+        [32, "unfurl"],
+        [36, "bark_skin"],
+        [36, "petal_storm"],
+        [40, "hook_thorns"]
+      ]
+    }
+  ]
+}

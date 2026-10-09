@@ -1,0 +1,29 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "burr",
+  "pollination": [],
+  "species": [
+    {
+      "id": "burr",
+      "name": "Burr",
+      "stage": 1,
+      "types": ["thorn", "bug"],
+      "baseStats": { "hp": 90, "atk": 130, "def": 100, "spa": 60, "spd": 100, "spe": 100 },
+      "growthRate": "slow",
+      "catchRate": 3,
+      "baseExp": 255,
+      "evYield": { "atk": 2, "spe": 1 },
+      "activity": "any",
+      "learnset": [
+        [1, "thorn_jab"],
+        [1, "quick_snap"],
+        [10, "bristle"],
+        [20, "burr_hitch"],
+        [30, "sticky_dew"],
+        [40, "thorn_lash"],
+        [50, "snap_trap"],
+        [60, "hook_cling"]
+      ]
+    }
+  ]
+}

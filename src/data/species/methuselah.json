@@ -1,0 +1,30 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "methuselah",
+  "pollination": [],
+  "species": [
+    {
+      "id": "methuselah",
+      "name": "Methuselah",
+      "stage": 1,
+      "types": ["wood", "frost"],
+      "baseStats": { "hp": 130, "atk": 90, "def": 140, "spa": 80, "spd": 150, "spe": 30 },
+      "growthRate": "slow",
+      "catchRate": 3,
+      "baseExp": 255,
+      "evYield": { "def": 1, "spd": 2 },
+      "activity": "night",
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "hoarfrost"],
+        [10, "bark_skin"],
+        [20, "frost_needle"],
+        [30, "needle_drop"],
+        [40, "frost_bloom"],
+        [50, "timber"],
+        [60, "snowdrift"],
+        [70, "old_rings"]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "format": "verdant.speciesline/1",
+  "line": "sunflower",
+  "pollination": ["meadow", "garden"],
+  "species": [
+    {
+      "id": "sunflower_seedling",
+      "name": "Sun Seedling",
+      "stage": 1,
+      "types": ["bloom"],
+      "baseStats": { "hp": 45, "atk": 40, "def": 40, "spa": 55, "spd": 45, "spe": 30 },
+      "growthRate": "medium",
+      "catchRate": 235,
+      "baseExp": 52,
+      "evYield": { "spa": 1 },
+      "activity": "day",
+      "growsInto": { "species": "sunflower_bud", "trigger": { "kind": "vigor", "level": 12 } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "sun_track"],
+        [5, "sap_drain"],
+        [9, "seed_burst"],
+        [12, "allelopathy"],
+        [16, "photosynthesise"],
+        [20, "sun_flare"],
+        [24, "sunbeam"],
+        [30, "unfurl"],
+        [35, "leaf_gale"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "sunflower_bud",
+      "name": "Sun Bud",
+      "stage": 2,
+      "types": ["bloom"],
+      "baseStats": { "hp": 65, "atk": 50, "def": 55, "spa": 75, "spd": 60, "spe": 45 },
+      "growthRate": "medium",
+      "catchRate": 120,
+      "baseExp": 120,
+      "evYield": { "spa": 2 },
+      "activity": "day",
+      "growsInto": { "species": "sunflower", "trigger": { "kind": "vigor_day", "level": 24 } },
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "sun_track"],
+        [5, "sap_drain"],
+        [9, "seed_burst"],
+        [12, "allelopathy"],
+        [16, "photosynthesise"],
+        [20, "sun_flare"],
+        [24, "sunbeam"],
+        [30, "unfurl"],
+        [35, "leaf_gale"],
+        [40, "petal_storm"]
+      ]
+    },
+    {
+      "id": "sunflower",
+      "name": "Sunflower",
+      "stage": 3,
+      "types": ["bloom"],
+      "baseStats": { "hp": 90, "atk": 70, "def": 75, "spa": 110, "spd": 85, "spe": 50 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 182,
+      "evYield": { "spa": 3 },
+      "activity": "day",
+      "learnset": [
+        [1, "pollen_puff"],
+        [1, "sun_track"],
+        [5, "sap_drain"],
+        [9, "seed_burst"],
+        [12, "allelopathy"],
+        [16, "photosynthesise"],
+        [20, "sun_flare"],
+        [24, "sunbeam"],
+        [30, "unfurl"],
+        [35, "leaf_gale"],
+        [40, "petal_storm"]
+      ]
+    }
+  ]
+}
