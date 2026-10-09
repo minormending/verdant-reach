@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "lily",
   "pollination": ["wetland", "tropical"],
   "species": [
@@ -29,7 +29,16 @@
         [28, "photosynthesise"],
         [33, "pale_bloom"],
         [38, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Victoria amazonica",
+        "category": "Seedpod",
+        "heightM": 0.2,
+        "weightKg": 1,
+        "entry": "It drifts down slow rivers, bobbing. In Brazil the real plant is called water maize, and its seeds are roasted and eaten.",
+        "fact": "Victoria seeds are eaten and locally called \"milho-d'agua\", water maize.",
+        "source": "https://www.monaconatureencyclopedia.com/victoria-amazonica/?lang=en"
+      }
     },
     {
       "id": "lily_pad",
@@ -57,7 +66,16 @@
         [28, "photosynthesise"],
         [33, "pale_bloom"],
         [38, "downpour"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Victoria amazonica",
+        "category": "Pad",
+        "heightM": 0.3,
+        "weightKg": 12,
+        "entry": "Gentle on top, prickly underneath. Sharp spines guard the underside of a giant lily pad, probably to keep fish away.",
+        "fact": "pads have sharp spines underneath, probably to deter fish and manatees.",
+        "source": "https://stories.rbge.org.uk/archives/15311"
+      }
     },
     {
       "id": "giant_water_lily",
@@ -86,7 +104,16 @@
         [33, "pale_bloom"],
         [38, "downpour"],
         [44, "curl_up"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Victoria amazonica",
+        "category": "Giant Lily",
+        "heightM": 0.5,
+        "weightKg": 45,
+        "entry": "Its pads can reach 3 m across. Watch the flowers: they open white on the first night and turn pink on the second.",
+        "fact": "flowers open white on the first night and turn pink on the second.",
+        "source": "https://www.kew.org/plants/giant-waterlily"
+      }
     }
   ]
 }

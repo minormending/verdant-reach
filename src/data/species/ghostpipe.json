@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "ghostpipe",
   "pollination": ["woodland"],
   "species": [
@@ -27,7 +27,16 @@
         [32, "pale_bloom"],
         [36, "rot_touch"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Monotropa uniflora",
+        "category": "Ghost Stalk",
+        "heightM": 0.08,
+        "weightKg": 0.1,
+        "entry": "It pushes up through the leaf litter, white as a candle. Ghost pipe has no chlorophyll at all. Its food comes from fungi linked to the roots of nearby trees.",
+        "fact": "No chlorophyll; food comes from fungi linked to nearby trees' roots.",
+        "source": "https://www.fs.usda.gov/wildflowers/plant-of-the-week/monotropa_uniflora.shtml"
+      }
     },
     {
       "id": "ghostpipe_nodding",
@@ -54,7 +63,16 @@
         [32, "pale_bloom"],
         [36, "rot_touch"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Monotropa uniflora",
+        "category": "Nodding Pipe",
+        "heightM": 0.15,
+        "weightKg": 0.2,
+        "entry": "Its one flower hangs its head, as if someone below had spoken. With no chlorophyll, it can't feed on light; fungi linked to the roots of nearby trees feed it instead.",
+        "fact": "No chlorophyll; food comes from fungi linked to nearby trees' roots.",
+        "source": "https://www.fs.usda.gov/wildflowers/plant-of-the-week/monotropa_uniflora.shtml"
+      }
     },
     {
       "id": "ghost_pipe",
@@ -80,7 +98,16 @@
         [32, "pale_bloom"],
         [36, "rot_touch"],
         [40, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Monotropa uniflora",
+        "category": "Ghost Pipe",
+        "heightM": 0.25,
+        "weightKg": 0.4,
+        "entry": "A clump of waxy stems that seems to listen to the ground. It makes no food of its own: with no chlorophyll, it takes its food from fungi linked to the roots of the trees around it.",
+        "fact": "No chlorophyll; food comes from fungi linked to nearby trees' roots.",
+        "source": "https://www.fs.usda.gov/wildflowers/plant-of-the-week/monotropa_uniflora.shtml"
+      }
     }
   ]
 }

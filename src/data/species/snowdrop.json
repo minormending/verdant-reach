@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "snowdrop",
   "pollination": ["meadow"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "photosynthesise"],
         [34, "sun_track"],
         [44, "snowdrift"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Galanthus nivalis",
+        "category": "Snow Bulb",
+        "heightM": 0.04,
+        "weightKg": 0.02,
+        "entry": "It waits for a chilly invitation. Its bulb needs a cold winter before it will flower.",
+        "fact": "Its bulb needs a cold winter before it will flower.",
+        "source": "https://en.wikipedia.org/wiki/Galanthus_nivalis"
+      }
     },
     {
       "id": "snowdrop_shoot",
@@ -55,7 +64,16 @@
         [34, "sunbeam"],
         [38, "thaw_bloom"],
         [44, "snowdrift"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Galanthus nivalis",
+        "category": "Snow Shoot",
+        "heightM": 0.1,
+        "weightKg": 0.03,
+        "entry": "It seems ready to say hello. A winter of cold is needed by its bulb before flowering.",
+        "fact": "Its bulb needs a cold winter before it will flower.",
+        "source": "https://en.wikipedia.org/wiki/Galanthus_nivalis"
+      }
     },
     {
       "id": "snowdrop",
@@ -82,7 +100,16 @@
         [34, "sunbeam"],
         [38, "thaw_bloom"],
         [44, "snowdrift"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Galanthus nivalis",
+        "category": "Snowdrop",
+        "heightM": 0.2,
+        "weightKg": 0.05,
+        "entry": "It offers a quiet little greeting. Before it can bloom, its bulb must pass through a cold winter.",
+        "fact": "Its bulb needs a cold winter before it will flower.",
+        "source": "https://en.wikipedia.org/wiki/Galanthus_nivalis"
+      }
     }
   ]
 }

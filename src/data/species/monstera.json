@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "monstera",
   "pollination": ["tropical"],
   "species": [
@@ -28,7 +28,16 @@
         [34, "bark_skin"],
         [38, "leaf_gale"],
         [42, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Monstera deliciosa",
+        "category": "Cutting",
+        "heightM": 0.3,
+        "weightKg": 0.8,
+        "entry": "It shuffles away from the light, which seems backwards. Young monstera vines grow toward the darkest shadow they can see, because a shadow usually means a tree to climb.",
+        "fact": "Monstera seedlings grow toward the darkest part of the horizon, which leads them to a tree to climb (skototropism).",
+        "source": "https://www.science.org/doi/10.1126/science.190.4216.804 (Strong & Ray 1975, Monstera gigantea)"
+      }
     },
     {
       "id": "monstera",
@@ -55,7 +64,16 @@
         [34, "bark_skin"],
         [38, "leaf_gale"],
         [42, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Monstera deliciosa",
+        "category": "Split Leaf",
+        "heightM": 2.5,
+        "weightKg": 40,
+        "entry": "It shares its fruit with no one until it's ready. A monstera fruit takes over a year to ripen, and before then it is full of needle-like crystals that sting the mouth.",
+        "fact": "Monstera deliciosa fruit takes over a year to ripen; unripe fruit is full of stinging calcium oxalate crystals.",
+        "source": "https://en.wikipedia.org/wiki/Monstera_deliciosa"
+      }
     }
   ]
 }

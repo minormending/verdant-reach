@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "oleander",
   "pollination": ["meadow"],
   "species": [
@@ -27,7 +27,16 @@
         [44, "sunbeam"],
         [48, "pale_bloom"],
         [54, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Nerium oleander",
+        "category": "Oleander",
+        "heightM": 3,
+        "weightKg": 30,
+        "entry": "It greets a familiar footstep with a little sway. All parts of the plant are toxic if eaten.",
+        "fact": "All parts of the plant are toxic if eaten.",
+        "source": "https://en.wikipedia.org/wiki/Nerium"
+      }
     }
   ]
 }

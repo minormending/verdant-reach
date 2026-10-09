@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "edelweiss",
   "pollination": ["meadow"],
   "species": [
@@ -27,7 +27,16 @@
         [34, "sunbeam"],
         [38, "photosynthesise"],
         [42, "snowdrift"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Leontopodium nivale",
+        "category": "Edel Bud",
+        "heightM": 0.05,
+        "weightKg": 0.02,
+        "entry": "It seems snug in its little coat. Its woolly white hairs help protect it from cold and strong mountain sunlight.",
+        "fact": "Its woolly white hairs help protect it from cold and strong mountain sunlight.",
+        "source": "https://en.wikipedia.org/wiki/Leontopodium_nivale"
+      }
     },
     {
       "id": "edelweiss",
@@ -52,7 +61,16 @@
         [34, "sunbeam"],
         [38, "photosynthesise"],
         [42, "snowdrift"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Leontopodium nivale",
+        "category": "Edelweiss",
+        "heightM": 0.2,
+        "weightKg": 0.08,
+        "entry": "It greets the summit like an old friend. Woolly white hairs give it protection from the cold and the mountains' strong sunlight.",
+        "fact": "Its woolly white hairs help protect it from cold and strong mountain sunlight.",
+        "source": "https://en.wikipedia.org/wiki/Leontopodium_nivale"
+      }
     }
   ]
 }

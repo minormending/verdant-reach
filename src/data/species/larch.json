@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "larch",
   "pollination": ["woodland"],
   "species": [
@@ -28,7 +28,16 @@
         [34, "evergreen"],
         [40, "timber"],
         [44, "snowdrift"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Larix decidua",
+        "category": "Larch Sprout",
+        "heightM": 0.4,
+        "weightKg": 0.6,
+        "entry": "It seems eager for a fresh start. Unlike most conifers, larches drop all their needles every autumn.",
+        "fact": "Unlike most conifers, larches drop all their needles every autumn.",
+        "source": "https://en.wikipedia.org/wiki/Larix_decidua"
+      }
     },
     {
       "id": "larch",
@@ -54,7 +63,16 @@
         [34, "evergreen"],
         [40, "timber"],
         [44, "snowdrift"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Larix decidua",
+        "category": "Larch",
+        "heightM": 10,
+        "weightKg": 500,
+        "entry": "It takes change in its stride. Every autumn it sheds all its needles, unlike most other conifers.",
+        "fact": "Unlike most conifers, larches drop all their needles every autumn.",
+        "source": "https://en.wikipedia.org/wiki/Larix_decidua"
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "bramble",
   "pollination": ["woodland"],
   "species": [
@@ -27,7 +27,16 @@
         [29, "leaf_edge"],
         [34, "bark_skin"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Rubus fruticosus",
+        "category": "Bramble",
+        "heightM": 0.4,
+        "weightKg": 2,
+        "entry": "It never stays where it was planted. Wherever a bramble cane's tip touches soil, it roots and starts a new plant.",
+        "fact": "bramble canes root where their tips touch the ground (tip-layering).",
+        "source": "https://bsbi.org/in-your-area/local-botany/co-fermanagh/fermanagh-species-accounts/rubus-fruticosus-l-agg"
+      }
     },
     {
       "id": "bramble_berry",
@@ -53,7 +62,16 @@
         [29, "leaf_edge"],
         [34, "bark_skin"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Rubus fruticosus",
+        "category": "Bramble",
+        "heightM": 0.9,
+        "weightKg": 6,
+        "entry": "It blushes when cross. Blackberries start green, turn red, and only then ripen to black.",
+        "fact": "blackberries start green, turn red, then ripen black.",
+        "source": "https://www.backyardnature.net/frt_aggr.htm"
+      }
     },
     {
       "id": "blackberry",
@@ -79,7 +97,16 @@
         [29, "leaf_edge"],
         [34, "bark_skin"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Rubus fruticosus",
+        "category": "Bramble",
+        "heightM": 1.8,
+        "weightKg": 22,
+        "entry": "Whole families of birds hide in its thickets. A blackberry isn't one berry but a cluster of tiny fruits, each with its own seed.",
+        "fact": "a blackberry is an aggregate fruit of drupelets, each with one seed.",
+        "source": "https://www.backyardnature.net/frt_aggr.htm"
+      }
     }
   ]
 }

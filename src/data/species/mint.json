@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "mint",
   "pollination": ["garden"],
   "species": [
@@ -28,7 +28,16 @@
         [32, "cold_snap"],
         [36, "leaf_gale"],
         [40, "snowdrift"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Mentha piperita",
+        "category": "Menthol",
+        "heightM": 0.1,
+        "weightKg": 0.05,
+        "entry": "A cool breeze seems to follow it. Menthol in mint switches on TRPM8, the nerve sensor for cold, so it feels chilly without being cold.",
+        "fact": "menthol activates the TRPM8 cold receptor, so it feels cold without a change in temperature (McKemy et al. 2002).",
+        "source": "https://www.nature.com/articles/nature719"
+      }
     },
     {
       "id": "peppermint",
@@ -54,7 +63,16 @@
         [32, "cold_snap"],
         [36, "leaf_gale"],
         [40, "snowdrift"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Mentha piperita",
+        "category": "Menthol",
+        "heightM": 0.6,
+        "weightKg": 0.6,
+        "entry": "It never sets seed, yet it turns up everywhere. Peppermint is a hybrid of water mint and spearmint, and it spreads by creeping runners.",
+        "fact": "peppermint is a sterile hybrid of water mint and spearmint, spread only by rhizomes and stolons.",
+        "source": "https://en.wikipedia.org/wiki/Peppermint"
+      }
     }
   ]
 }

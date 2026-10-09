@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "lodgepole",
   "pollination": ["woodland"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "sap_spout"],
         [36, "leaf_gale"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Pinus contorta",
+        "category": "Sealed Cone",
+        "heightM": 0.08,
+        "weightKg": 0.2,
+        "entry": "Sealed tight, it can sit out the years without a twitch. Many lodgepole cones are glued shut with resin and open only in the heat of a fire, a trick called serotiny.",
+        "fact": "Many cones are resin-sealed and open only in fire's heat (serotiny).",
+        "source": "https://www.fs.usda.gov/database/feis/plants/tree/pinconl/all.html"
+      }
     },
     {
       "id": "lodgepole_seedling",
@@ -56,7 +65,16 @@
         [30, "sap_spout"],
         [36, "leaf_gale"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Pinus contorta",
+        "category": "Pine Sprout",
+        "heightM": 0.5,
+        "weightKg": 1.5,
+        "entry": "It sprang from a cone that was waiting for a fire. Many lodgepole cones stay sealed with resin until a fire's heat opens them; this is called serotiny.",
+        "fact": "Many cones are resin-sealed and open only in fire's heat (serotiny).",
+        "source": "https://www.fs.usda.gov/database/feis/plants/tree/pinconl/all.html"
+      }
     },
     {
       "id": "lodgepole_pine",
@@ -84,7 +102,16 @@
         [30, "sap_spout"],
         [36, "leaf_gale"],
         [40, "timber"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Pinus contorta",
+        "category": "Lodgepole",
+        "heightM": 8,
+        "weightKg": 350,
+        "entry": "Tall, straight and slim, it keeps its sealed cones in reserve. Many of them are shut with resin and open only in a fire's heat, a trait called serotiny.",
+        "fact": "Many cones are resin-sealed and open only in fire's heat (serotiny).",
+        "source": "https://www.fs.usda.gov/database/feis/plants/tree/pinconl/all.html"
+      }
     }
   ]
 }

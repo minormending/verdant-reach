@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "paradise",
   "pollination": ["tropical"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "unfurl"],
         [34, "petal_storm"],
         [38, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Strelitzia reginae",
+        "category": "Crane Bud",
+        "heightM": 0.4,
+        "weightKg": 1,
+        "entry": "It holds its head high, as if waiting to be announced. The plant is named Strelitzia after Queen Charlotte, a princess of Mecklenburg-Strelitz.",
+        "fact": "Joseph Banks named Strelitzia after Queen Charlotte, born a princess of Mecklenburg-Strelitz.",
+        "source": "https://en.wikipedia.org/wiki/Strelitzia"
+      }
     },
     {
       "id": "bird_of_paradise",
@@ -53,7 +62,16 @@
         [30, "unfurl"],
         [34, "petal_storm"],
         [38, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Strelitzia reginae",
+        "category": "Bird Flower",
+        "heightM": 1.5,
+        "weightKg": 12,
+        "entry": "Also called the bird of paradise. When a sunbird lands on the blue petals to drink, its weight springs them open and dusts its feet with pollen.",
+        "fact": "sunbirds perch on the flower; their weight opens the blue petals and dusts their feet with pollen.",
+        "source": "https://en.wikipedia.org/wiki/Strelitzia_reginae"
+      }
     }
   ]
 }

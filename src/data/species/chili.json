@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "chili",
   "pollination": ["garden"],
   "species": [
@@ -27,7 +27,16 @@
         [28, "sun_track"],
         [33, "sap_drain"],
         [38, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Capsicum annuum",
+        "category": "Pepper Flower",
+        "heightM": 0.3,
+        "weightKg": 1.2,
+        "entry": "A small white flower with a big temper. Chilies come from the Americas; they only reached Europe in the 1490s.",
+        "fact": "chilies are native to the Americas; reached Europe after Columbus (1493).",
+        "source": "https://en.wikipedia.org/wiki/Chili_pepper"
+      }
     },
     {
       "id": "green_chili",
@@ -53,7 +62,16 @@
         [28, "sun_track"],
         [33, "sap_drain"],
         [38, "wildfire"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Capsicum annuum",
+        "category": "Pepper",
+        "heightM": 0.6,
+        "weightKg": 3.5,
+        "entry": "It isn't ripe yet, and it knows it. A green chili is simply unripe fruit; most kinds blush red as they ripen.",
+        "fact": "green chilies are unripe; most ripen to red.",
+        "source": "https://en.wikipedia.org/wiki/Chili_pepper"
+      }
     },
     {
       "id": "red_chili",
@@ -80,7 +98,16 @@
         [33, "sap_drain"],
         [38, "wildfire"],
         [44, "petal_storm"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Capsicum annuum",
+        "category": "Hot Pepper",
+        "heightM": 1,
+        "weightKg": 7,
+        "entry": "Mammals keep well clear. Birds can't feel capsaicin's burn, so they eat chilies happily and scatter the seeds.",
+        "fact": "birds lack the capsaicin-sensing TRPV1 response, so they eat chilies and spread the seeds.",
+        "source": "Tewksbury & Nabhan 2001, Nature (https://www.researchgate.net/publication/11869926)"
+      }
     }
   ]
 }

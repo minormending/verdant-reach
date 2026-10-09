@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "fern",
   "pollination": ["spore"],
   "species": [
@@ -27,7 +27,16 @@
         [30, "leaf_gale"],
         [35, "red_resin"],
         [40, "primal_frond"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Matteuccia struthiopteris",
+        "category": "Fiddlehead",
+        "heightM": 0.2,
+        "weightKg": 0.2,
+        "entry": "It stays curled up until it trusts you. Fiddleheads are named for a violin's scroll, and in Maine they're cooked as a spring treat.",
+        "fact": "fiddleheads are coiled young fern fronds named for the scroll of a violin; ostrich fern ones are eaten cooked.",
+        "source": "https://extension.umaine.edu/publications/4198e/"
+      }
     },
     {
       "id": "unfurling_fern",
@@ -53,7 +62,16 @@
         [30, "leaf_gale"],
         [35, "red_resin"],
         [40, "primal_frond"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Matteuccia struthiopteris",
+        "category": "Frond",
+        "heightM": 0.8,
+        "weightKg": 1,
+        "entry": "Ferns make spores, not seeds. The ostrich fern grows separate brown fronds just for spores, and they stand all winter.",
+        "fact": "ostrich ferns grow separate brown fertile fronds that release spores.",
+        "source": "https://extension.umaine.edu/publications/2540e/"
+      }
     },
     {
       "id": "ostrich_fern",
@@ -78,7 +96,16 @@
         [25, "primal_frond"],
         [30, "leaf_gale"],
         [35, "red_resin"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Matteuccia struthiopteris",
+        "category": "Old Frond",
+        "heightM": 1.6,
+        "weightKg": 2,
+        "entry": "Its fronds look like ostrich plumes. Ferns were growing more than 360 million years ago, long before the first flower.",
+        "fact": "ferns appeared ~360+ million years ago, long before flowering plants (~130 Mya).",
+        "source": "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderDetails.aspx?kempercode=e180 (+ fossil record)"
+      }
     }
   ]
 }

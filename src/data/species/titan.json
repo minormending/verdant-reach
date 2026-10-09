@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "titan",
   "pollination": ["carnivore"],
   "species": [
@@ -29,7 +29,16 @@
         [44, "pale_bloom"],
         [48, "spore_cloud"],
         [58, "photosynthesise"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Amorphophallus titanum",
+        "category": "Corpse Corm",
+        "heightM": 0.3,
+        "weightKg": 5,
+        "entry": "It seems content to wait for its moment. Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it.",
+        "fact": "Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it.",
+        "source": "https://en.wikipedia.org/wiki/Amorphophallus_titanum"
+      }
     },
     {
       "id": "corpse_leaf",
@@ -57,7 +66,16 @@
         [44, "pale_bloom"],
         [48, "spore_cloud"],
         [58, "photosynthesise"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Amorphophallus titanum",
+        "category": "Corpse Leaf",
+        "heightM": 4,
+        "weightKg": 40,
+        "entry": "It offers you a broad patch of shade. Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it.",
+        "fact": "Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it.",
+        "source": "https://en.wikipedia.org/wiki/Amorphophallus_titanum"
+      }
     },
     {
       "id": "titan_arum",
@@ -85,7 +103,16 @@
         [48, "spore_cloud"],
         [52, "carrion_bloom"],
         [58, "photosynthesise"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Amorphophallus titanum",
+        "category": "Titan Arum",
+        "heightM": 3,
+        "weightKg": 100,
+        "entry": "It stands beside you with quiet pride. Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it.",
+        "fact": "Its huge flower smells of rotting meat, which draws carrion beetles and flies to pollinate it.",
+        "source": "https://en.wikipedia.org/wiki/Amorphophallus_titanum"
+      }
     }
   ]
 }

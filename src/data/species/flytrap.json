@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "flytrap",
   "pollination": ["carnivore"],
   "species": [
@@ -27,7 +27,16 @@
         [29, "leaf_edge"],
         [34, "curl_up"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Dionaea muscipula",
+        "category": "Snap Trap",
+        "heightM": 0.05,
+        "weightKg": 0.1,
+        "entry": "It snaps at anything, even raindrops. Wild flytraps live only in bogs within about 120 km of Wilmington, North Carolina.",
+        "fact": "wild Venus flytraps grow only within ~120 km of Wilmington, North Carolina.",
+        "source": "https://homegrown.extension.ncsu.edu/2022/09/02/the-venus-flytrap-a-north-carolina-native"
+      }
     },
     {
       "id": "young_flytrap",
@@ -53,7 +62,16 @@
         [29, "leaf_edge"],
         [34, "curl_up"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Dionaea muscipula",
+        "category": "Snap Trap",
+        "heightM": 0.1,
+        "weightKg": 0.3,
+        "entry": "It counts before it bites. A trap usually shuts only when its trigger hairs are touched twice within about 20 seconds.",
+        "fact": "a trap shuts when trigger hairs are touched twice within ~20-30 s.",
+        "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7351144/"
+      }
     },
     {
       "id": "venus_flytrap",
@@ -78,7 +96,16 @@
         [29, "leaf_edge"],
         [34, "curl_up"],
         [40, "hook_thorns"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Dionaea muscipula",
+        "category": "Snap Trap",
+        "heightM": 0.3,
+        "weightKg": 1.5,
+        "entry": "Its jaws are quicker than your eyes. A flytrap's trap snaps shut in about a tenth of a second.",
+        "fact": "a trap snaps shut in about a tenth of a second.",
+        "source": "https://asknature.org/strategy/leaves-rapidly-snap-shut/"
+      }
     }
   ]
 }

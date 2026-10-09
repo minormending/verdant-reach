@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "elder",
   "pollination": [],
   "species": [
@@ -21,7 +21,16 @@
         [1, "bark_skin"],
         [65, "old_growth"],
         [70, "photosynthesise"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Populus tremuloides",
+        "category": "Elder Clone",
+        "heightM": 24,
+        "weightKg": 6000000,
+        "entry": "Every trunk turns toward you in welcome. A single aspen clone can grow thousands of trunks from one shared root system.",
+        "fact": "An aspen clone can have thousands of trunks on one shared root system.",
+        "source": "https://en.wikipedia.org/wiki/Pando_(tree)"
+      }
     }
   ]
 }

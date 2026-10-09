@@ -1,5 +1,5 @@
 {
-  "format": "verdant.speciesline/1",
+  "format": "verdant.speciesline/2",
   "line": "mimosa",
   "pollination": ["meadow"],
   "species": [
@@ -27,7 +27,16 @@
         [38, "photosynthesise"],
         [44, "leaf_gale"],
         [50, "sunbeam"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Mimosa pudica",
+        "category": "Mimosa Shoot",
+        "heightM": 0.1,
+        "weightKg": 0.05,
+        "entry": "It seems shy, but stays close to you. Its leaflets fold inward within seconds when touched.",
+        "fact": "Its leaflets fold inward within seconds when touched.",
+        "source": "https://en.wikipedia.org/wiki/Mimosa_pudica"
+      }
     },
     {
       "id": "sensitive_plant",
@@ -52,7 +61,16 @@
         [38, "photosynthesise"],
         [44, "leaf_gale"],
         [50, "sunbeam"]
-      ]
+      ],
+      "herbarium": {
+        "scientificName": "Mimosa pudica",
+        "category": "Sensitive",
+        "heightM": 0.5,
+        "weightKg": 0.4,
+        "entry": "It makes room for you among its soft leaves. Its leaflets fold inward within seconds when touched.",
+        "fact": "Its leaflets fold inward within seconds when touched.",
+        "source": "https://en.wikipedia.org/wiki/Mimosa_pudica"
+      }
     }
   ]
 }
