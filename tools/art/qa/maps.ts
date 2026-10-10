@@ -13,6 +13,7 @@ const GROUND = new Set([
   'ash', 'burnt_grass', 'void', 'mat_exit', 'rug', 'water_channel', 'pond_lily',
   'ice', 'snow', 'snow_grass', 'scree', 'frozen_shore', 'red_water', 'hideout_floor',
   'desert_scrub', 'cracked_earth', 'resin_floor',
+  'grove_floor', 'grove_grass', 'root_vein', 'listening_clearing',
 ]);
 
 export function landmarkCoverage(def: MapDef, town = false) {
