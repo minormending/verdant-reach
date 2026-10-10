@@ -24,18 +24,18 @@ function seat(id: MapId, name: string, npc: string, sprite: CharacterKey, next: 
   }
   return room;
 }
-export const council_1 = seat("council_1", "APOTHECARY", "belladonna", "florist", "council_2", "beat_council_1");
-export const council_2 = seat("council_2", "SLEEPER", "mimi_osa", "researcher", "council_3", "beat_council_2");
-export const council_3 = seat("council_3", "ROTTER", "titus_arum", "gentleman", "council_4", "beat_council_3");
-export const council_4 = seat("council_4", "KINDLER", "pyra", "florist", "keeper_hall", "beat_council_4");
-export const keeper_hall = seat("keeper_hall", "KEEPER'S HALL", "rowan", "vale", "fellowship_hall", "beat_keeper", 14, 16);
+export const council_1 = seat("council_1", "APOTHECARY", "belladonna", "belladonna", "council_2", "beat_council_1");
+export const council_2 = seat("council_2", "SLEEPER", "mimi_osa", "mimi_osa", "council_3", "beat_council_2");
+export const council_3 = seat("council_3", "ROTTER", "titus_arum", "titus_arum", "council_4", "beat_council_3");
+export const council_4 = seat("council_4", "KINDLER", "pyra", "pyra", "keeper_hall", "beat_council_4");
+export const keeper_hall = seat("keeper_hall", "KEEPER'S HALL", "rowan", "rowan", "fellowship_hall", "beat_keeper", 14, 16);
 export const fellowship_hall: MapDef = {
   id: "fellowship_hall", name: "THE HERBARIUM", outdoor: false, music: "prologue_bloom",
   border: "void", legend: { ...LEGEND, N: "stairs_up" },
   tiles: ["WWOOOOOOWW", "WKiiggiPKW", "WiiiggiPiW", "WiiirriiPW", "WiiirriiPW", "WiiiiiiiiW", "WiiiiiiiiW", "WWWWEWWWWW"],
   structures: [], warps: [{ x: 4, y: 7, to: "council_hall", toX: 7, toY: 1, facing: "down" }],
   npcs: [
-    { id: "rowan", sprite: "vale", x: 4, y: 2, facing: "down", script: "ch11_ending" },
+    { id: "rowan", sprite: "rowan", x: 4, y: 2, facing: "down", script: "ch11_ending" },
     { id: "imogen", sprite: "vale", x: 6, y: 2, facing: "down", script: "ch11_ending", visibleWhen: when({ game_cleared: true }) },
   ],
   signs: [], triggers: [], onEnter: "ch11_ending",
