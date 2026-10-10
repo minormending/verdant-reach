@@ -7,6 +7,7 @@ import {
 import type { Ambient, Cond, Dir, MapDef, MapId, NpcDef, ScriptCmd, TileKey, TileProps, WorldData } from "../contracts";
 import { pickupItem } from "./build";
 import { DATA } from "../data";
+import { WHITEOUT_SCRIPT } from "../overworld/script";
 import { glowField, glowLamps } from "../overworld/glow";
 import { buildMap } from "../overworld/map";
 import { reachableBoulderTiles } from "../overworld/uproot";
@@ -50,11 +51,14 @@ export const isBoarder = (n: NpcDef): boolean => /^boarder_\d+$/.test(n.id);
 
 /**
  * PRUNE (docs/ROUND4.md §2.1). Bramble tiles block until the player holds the
- * PRUNING SHEARS. Maps listed here are optional loops gated by brambles: their
+ * PRUNING SHEARS. Chapter 10 requires PRUNE on Route 12 and beyond.
+ * Earlier maps listed here are optional loops gated by brambles: their
  * NPCs and items may sit beyond a bramble. Everywhere else, every warp,
  * trigger, sign and NPC (bar item pickups and bushes) must be reachable
- * without PRUNE, so the story never needs it.
+ * without PRUNE.
  */
+/** Chapter 10 deliberately requires PRUNE on its main road. */
+export const PRUNE_REQUIRED_MAPS: MapId[] = MAP_IDS.slice(MAP_IDS.indexOf("route_12"));
 export const PRUNE_OPTIONAL_MAPS: MapId[] = ["route_5"];
 export const prunable = (t: TileKey | undefined): boolean => !!t && (TILES[t] as { fieldMove?: string }).fieldMove === "prune";
 export const bridgeable = (t: TileKey | undefined): boolean => !!t && (TILES[t] as TileProps).fieldMove === "rootbridge";
@@ -433,7 +437,7 @@ function progress(world: WorldData) {
           case "trade": branch(c.then ?? []); branch(c.else ?? []); break;
           case "choice": c.branches.forEach((b) => branch(b)); break;
           case "yesno": branch(c.yes); branch(c.no); break;
-          case "ifTime": case "ifLastBattle": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed":
+          case "ifTime": case "ifLastBattle": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed": case "ifMarks":
             branch(c.then); branch(c.else ?? []); break;
         }
       }
@@ -496,7 +500,8 @@ function progress(world: WorldData) {
     const beforeOnly = (when: Cond | undefined) => !!when?.some((c) => c.flag === gate.flag && !c.is);
     const available = (when: Cond | undefined) => !when?.some((c) => c.flag === gate.flag && c.is !== obtainable);
     for (const m of maps) {
-      if (gate.policy === "required" && !affected.get(gate.id)!.has(m.id)) continue;
+      const policy = gate.id === "prune" && PRUNE_REQUIRED_MAPS.includes(m.id) ? "content" : gate.policy;
+      if (policy === "required" && !affected.get(gate.id)!.has(m.id)) continue;
       const where = `[${m.id}] without ${gate.name}:`;
       const early = before.reaches.get(m.id) ?? new Set<string>();
       const late = after.reaches.get(m.id) ?? new Set<string>();
@@ -504,20 +509,20 @@ function progress(world: WorldData) {
       const g = terrain(m, after.enabled);
       const potentialEnabled = new Set(before.enabled).add(gate.id);
       const potentialGrid = terrain(m, potentialEnabled);
-      const potential = reachFrom(m, potentialEnabled, (gate.policy === "content" ? after : before).entries.get(m.id) ?? []);
-      if (gate.policy === "optional") {
+      const potential = reachFrom(m, potentialEnabled, (policy === "content" ? after : before).entries.get(m.id) ?? []);
+      if (policy === "optional") {
         if (!before.entries.has(m.id)) { errs.push(`${where} the map can't be reached`); continue; }
         for (const wp of m.warps) if (prunable(locked.tile(wp.x, wp.y))) errs.push(`${where} a bramble sits on the warp at ${wp.x},${wp.y}`);
         if (gate.optionalMaps?.includes(m.id)) continue;
       }
       const need = (earlyOk: boolean, lateOk: boolean, possible: boolean, when: Cond | undefined, what: string) => {
-        if (gate.policy === "optional") {
+        if (policy === "optional") {
           if (!earlyOk && possible) errs.push(`${where} ${what} is behind brambles`);
           return;
         }
-        if (gate.policy === "content" && !possible) return; // Decorative water requires no raft.
+        if (policy === "content" && !possible) return; // Decorative water requires no raft.
         const earlyOnly = beforeOnly(when);
-        if (gate.policy === "required" && !earlyOnly && !available(when) && !gate.resetPaths) return;
+        if (policy === "required" && !earlyOnly && !available(when) && !gate.resetPaths) return;
         if (earlyOnly ? earlyOk : lateOk) return;
         errs.push(gate.resetPaths && obtainable && !earlyOnly
           ? `${where} ${what} has no reachable path from its reset layout with ${gate.flag}`
@@ -525,18 +530,18 @@ function progress(world: WorldData) {
       };
       for (const n of m.npcs) {
         if (n.pushable) continue;
-        if (gate.policy !== "content" && (n.sprite === "item_pickup" || n.sprite === "harvest_bush" || isBoarder(n))) continue;
+        if (policy !== "content" && (n.sprite === "item_pickup" || n.sprite === "harvest_bush" || isBoarder(n))) continue;
         need(canTalk(locked, early, n.x, n.y), canTalk(g, late, n.x, n.y), canTalk(potentialGrid, potential, n.x, n.y), n.visibleWhen, `npc ${n.id}`);
       }
       for (const t of m.triggers) {
         const base = bases.get(m.id)!;
-        need(triggerReached(base, locked, early, t), triggerReached(base, g, late, t), triggerReached(base, potentialGrid, potential, t), t.when, `trigger ${t.script}${gate.policy === "optional" && !isTalkTrigger(base, t) ? ` at ${t.x},${t.y}` : ""}`);
+        need(triggerReached(base, locked, early, t), triggerReached(base, g, late, t), triggerReached(base, potentialGrid, potential, t), t.when, `trigger ${t.script}${policy === "optional" && !isTalkTrigger(base, t) ? ` at ${t.x},${t.y}` : ""}`);
       }
       for (const wp of m.warps) need(early.has(`${wp.x},${wp.y}`), late.has(`${wp.x},${wp.y}`), potential.has(`${wp.x},${wp.y}`), undefined, `warp at ${wp.x},${wp.y}`);
-      if (gate.policy !== "required") {
+      if (policy !== "required") {
         for (const sign of m.signs) need(canTalk(locked, early, sign.x, sign.y), canTalk(g, late, sign.x, sign.y), canTalk(potentialGrid, potential, sign.x, sign.y), undefined, `sign at ${sign.x},${sign.y}`);
       }
-      if (gate.policy === "content") {
+      if (policy === "content") {
         for (const h of m.hidden ?? []) need(canTalk(locked, early, h.x, h.y), canTalk(g, late, h.x, h.y), canTalk(potentialGrid, potential, h.x, h.y), undefined, `hidden ${h.item}`);
       }
       if (gate.rooms && !obtainable && [...potential].some((k) => !early.has(k))) errs.push(`${where} ${gate.rooms} require an obtainable ${gate.item}`);
@@ -592,7 +597,7 @@ export function eachCmd(cmds: ScriptCmd[], fn: (c: ScriptCmd) => void) {
       case "trade":
         if (c.then) eachCmd(c.then, fn); if (c.else) eachCmd(c.else, fn); break;
       case "if": case "ifTime": case "ifLastBattle":
-      case "ifHasItem": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed":
+      case "ifHasItem": case "ifPartyHas": case "ifCaught": case "ifCaughtCount": case "ifNurserySeed": case "ifMarks":
         eachCmd(c.then, fn); if (c.else) eachCmd(c.else, fn); break;
     }
   }
@@ -968,11 +973,14 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
         }
         break;
       case "giveMark": if (!marks.has(c.mark)) errs.push(`${at} unknown mark ${c.mark}`); break;
+      case "ifMarks":
+        for (const mark of c.marks) if (!marks.has(mark)) errs.push(`${at} unknown mark ${mark}`);
+        break;
       case "battle": if (!world.trainers[c.trainer]) errs.push(`${at} unknown trainer ${c.trainer}`); break;
       case "music": if (!music.has(c.id)) errs.push(`${at} unknown music ${c.id}`); break;
       case "sfx": if (!sfx.has(c.id)) errs.push(`${at} unknown sfx ${c.id}`); break;
       case "jingle": if (!jingles.has(c.id)) errs.push(`${at} unknown jingle ${c.id}`); break;
-      case "call": if (!world.scripts[c.script]) errs.push(`${at} calls missing ${c.script}`); break;
+      case "call": if (c.script !== WHITEOUT_SCRIPT && !world.scripts[c.script]) errs.push(`${at} calls missing ${c.script}`); break;
       case "ambient": if (!AMBIENTS.has(c.kind)) errs.push(`${at} unknown ambient ${c.kind}`); break;
       case "still": if (!stills.has(c.image)) errs.push(`${at} unknown still ${c.image}`); break;
       case "ifHasItem": if (!items.has(c.item)) errs.push(`${at} unknown item ${c.item}`); break;

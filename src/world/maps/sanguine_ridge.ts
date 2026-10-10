@@ -22,7 +22,7 @@ export const sanguine_ridge: MapDef = {
     "Acccssssssccccccccccccssss@@@ccA",
     "Acccssssssssssssssssssssss@@@ccA",
     "Acccccsssssssssssssssscccc@@@ccA",
-    "AcccccccccsssssssssssscccccccccA",
+    "NcccccccccsssssssssssscccccccccA",
     "AccccAAAccsssssssssssscccccccccA",
     "AAAcccAAcccccccsscccccccccccccAA",
     "AAAAcccccccccccssvvvvvcccccccAAA",
@@ -36,6 +36,7 @@ export const sanguine_ridge: MapDef = {
     "AAAAAAAAcccccccccccAAAAAAAAAAAAA",
     "AAAAAAAAAAAAAAAccAAAAAAAAAAAAAAA",
   ],
+  legendWhen: [{ when: when({ ch9_done: false }), legend: { N: "cliff" } }],
   structures: [
     { key: "greenhouse", x: 4, y: 9 }, { key: "ridge_conservatory", x: 22, y: 5 },
     // Dragon's blood trees: the three stand-in oaks' places, and three more on the terraces.
@@ -43,12 +44,13 @@ export const sanguine_ridge: MapDef = {
     { key: "dragon_tree_big", x: 9, y: 3 }, { key: "dragon_tree_big", x: 12, y: 9 }, { key: "dragon_tree_big", x: 26, y: 12 },
   ],
   warps: [
+    { x: 0, y: 15, to: "route_12", toX: 38, toY: 28, facing: "left" },
     { x: 15, y: 27, to: "route_11", toX: 13, toY: 1, facing: "down" },
     { x: 16, y: 27, to: "route_11", toX: 14, toY: 1, facing: "down" },
     { x: 6, y: 11, to: "sanguine_greenhouse", toX: 5, toY: 7, facing: "up" },
     { x: 25, y: 8, to: "sanguine_conservatory", toX: 8, toY: 18, facing: "up" },
   ],
   npcs: [], signs: [],
-  triggers: [{ x: 25, y: 9, script: "ch9_cons8_door", when: when({ rival_5_done: false }) }],
+  triggers: [{ x: 1, y: 15, script: "ch10_west_gate", when: when({ ch9_done: false }) }, { x: 25, y: 9, script: "ch9_cons8_door", when: when({ rival_5_done: false }) }],
   onEnter: "ch9_end",
 };

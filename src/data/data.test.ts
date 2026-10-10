@@ -80,7 +80,7 @@ describe("species", () => {
     for (const s of species) {
       const t = total(s.id);
       expect(t, s.id).toBeGreaterThanOrEqual(240);
-      expect(t, s.id).toBeLessThanOrEqual(530);
+      expect(t, s.id).toBeLessThanOrEqual(s.id === "elder" ? 640 : 530);
       expect(s.catchRate).toBeGreaterThanOrEqual(3);
       expect(s.catchRate).toBeLessThanOrEqual(255);
     }
@@ -170,10 +170,11 @@ describe("round 4 lines", () => {
 });
 
 describe("pollination", () => {
-  it("every species has valid groups shared by its whole line; ferns only pair with ferns", () => {
+  it("breedable species have valid groups shared by their line; legendaries cannot set seed", () => {
     const byLine = new Map<string, string>();
     for (const s of species) {
-      expect(s.pollination?.length, s.id).toBeGreaterThan(0);
+      if (s.id === "elder") expect(s.pollination, s.id).toEqual([]);
+      else expect(s.pollination?.length, s.id).toBeGreaterThan(0);
       for (const g of s.pollination!) expect(POLLINATION_GROUPS, s.id).toContain(g);
       const key = JSON.stringify(s.pollination);
       if (byLine.has(s.line)) expect(key, s.id).toBe(byLine.get(s.line));

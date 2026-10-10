@@ -11,7 +11,7 @@ const holds = (c: Cond | undefined, flags: Record<string, boolean>) => !c || c.e
 
 describe("Chapter 9 world", () => {
   it("appends the eight maps in order, with the extra greenhouse after Route 11", () => {
-    expect(MAP_IDS.slice(MAP_IDS.indexOf("route_10"))).toEqual(CH9);
+    expect(MAP_IDS.slice(MAP_IDS.indexOf("route_10"), MAP_IDS.indexOf("route_10") + CH9.length)).toEqual(CH9);
     for (const [id, w, h, outdoor, music, ambient] of [
       ["route_10", 50, 20, true, "route", "leaves"],
       ["thistledown", 30, 26, true, "thistledown", "leaves"],
@@ -80,7 +80,6 @@ describe("Chapter 9 world", () => {
     // Chapter 8 remains staged with stub scripts. Model that prerequisite's
     // completion while exercising Chapter 9's actual gated reward chain.
     const world = structuredClone(WORLD);
-    world.scripts.ch8_arrival = [{ op: "setFlag", flag: "ch8_done" }];
     expect(checkProgressWithoutFigRoot(world)).toEqual([]);
     expect(validateWorld(world)).toEqual([]);
   });

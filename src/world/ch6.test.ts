@@ -71,8 +71,9 @@ describe("Chapter 6 world", () => {
   });
 
   it("requires obtainable saxifrage for the boulder rooms", () => {
-    expect(checkProgressWithoutSaxifrage(WORLD)).toEqual([]);
-    const without = structuredClone(WORLD);
+    const staged = structuredClone(WORLD);
+    expect(checkProgressWithoutSaxifrage(staged)).toEqual([]);
+    const without = structuredClone(staged);
     without.scripts.ch6_elder = [];
     expect(checkProgressWithoutSaxifrage(without).join("\n")).toMatch(/without UPROOT/);
     for (const id of ["driftseed_conservatory", "driftseed_vents"] as const) {

@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "aspen_sucker",
+  "palette": ["#181818", "#887828", "#b8c890", "#f8f8f8"],
+  "sport": ["#181818", "#903828", "#e09860", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 8], [2, 8], [3, 8], [4, 10], [0, 8]], "idle": [[0, 130], [4, 8], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Populus tremuloides, https://en.wikipedia.org/wiki/Populus_tremuloides . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/aspen.py" },
+  "notes": "Crystal rule. Populus tremuloides. REARING: a slender pale stem pushing up from a visible root runner, a pale root crossing the soil from off-frame; round, finely toothed sage leaves on long flattened stalks, the head leaf tilted at the foe, the lead leaf raised, and one leaf caught mid-tremble, twisted edge-on to show its pale underside. Gesture: the leaves tremble, a flutter wave running from the lead leaf to the rear ones; the stem, root and soil stay fixed. Mid tone (pale sage for the sucker, pale gold for the adult) over a deep gold-olive dark slot (leaf shade, knots, soil); the pale bark is white plus the mid tone. Sport: the autumn-red colour form some aspen clones show, a natural colour variation rather than a cultivar."
+}

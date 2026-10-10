@@ -39,7 +39,8 @@ const FROZEN: [MapId, string, string][] = [
   ["thistledown_house", "c2dfce242a1a5a1762fe9b0e317bd06f7dedfecc3fc746e32922000f06854eeb", "5be59d365acb8d35446f682c6d314fffd5db5846ab8c6eb021e6bacd98a82aa0"],
   ["route_11", "0a8193b9bae05edc599d03778b848cd512f7ad4093c838aa75b2c5c10d26333c", "776a355ca15d1a3687d74231f88ba26ab8d4666eb0c42d25b54c34216c7fe5f8"],
   ["sanguine_greenhouse", "b01fa45041ad3ac8ad9f0a1392068429d82b4b42dcffc1237df5535a28ad2b11", "7842ea36364692b6e923afa8e8e80906d45e5e19f2520aced6536917938bec15"],
-  ["sanguine_ridge", "5e59ef7772688f38ca9d260ee8707973008cd3a5c1a1e8224f87070ec69c3ef9", "a33e216780b14d5b358065dd769231e600e3c98ee45816d36b2c12de51bca70f"],
+  // Re-pinned on ch10: Chapter 10 adds the west exit to ROUTE 12 (warp 0,15) and its ch10_west_gate trigger.
+  ["sanguine_ridge", "a00f4d4c4614047bc3f5ab59b359dacb30d1a2cc675b6ad0936a018f23d526ea", "a33e216780b14d5b358065dd769231e600e3c98ee45816d36b2c12de51bca70f"],
   ["sanguine_conservatory", "5d1f5fd075ebdd36261a7c552a37bdb33c96bc1e91d0ea015476d5c5d048d911", "19ed3692e952a3d029fee42e0a01e3aa84aaedf44919c6a64c3f1f5fc4e8aac0"],
 ];
 

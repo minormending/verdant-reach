@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { GameContext, MapDef, MapId, MusicId, Scene } from "../contracts";
 import { DATA } from "../data";
+import { createBattleScene } from "../battle/scene";
+import { createQuickened } from "../battle/logic/stats";
+import { runScript, ScriptAbort } from "./script";
 import { Fader, Timers } from "../engine/gfx";
 import { createSave, newGameState } from "../save";
 import { Menu } from "../ui/kit";
@@ -30,7 +33,7 @@ function context(map: MapId = "glasshouse_city"): GameContext {
     audio: {
       current: () => music,
       playMusic: vi.fn((id: MusicId) => { music = id; }),
-      playSfx: vi.fn(),
+      playSfx: vi.fn(), stopMusic: vi.fn(),
     },
     ui: { say: vi.fn(async () => {}) },
     input: { pressed: () => false, held: () => false, repeat: () => false },
@@ -53,7 +56,7 @@ beforeEach(() => {
   vi.spyOn(Timers.prototype, "frames").mockResolvedValue(undefined);
   vi.spyOn(BattleTransition.prototype, "run").mockResolvedValue(undefined);
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe("conditional map music", () => {
   it("plays the takeover track on lobby entry before the derived flag is refreshed", async () => {
@@ -122,6 +125,75 @@ describe("conditional map music", () => {
     await vi.waitFor(() => expect(scene.busy).toBe(0));
     expect(ctx.audio.playSfx).toHaveBeenCalledWith("menu_open");
     expect(ctx.audio.current()).toBe("relay_seized");
+  });
+
+  it.each([false, true])("handles no-healthy-party trainer and wild battles as losses (canLose: %s)", async (canLose) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubGlobal("window", {});
+    for (const kind of ["trainer", "wild"] as const) {
+      const ctx = context("elder_grove_heart");
+      ctx.state.party = [createQuickened(DATA, "oak_acorn", 5, () => 0.5)];
+      ctx.state.party[0].hp = 0;
+      ctx.state.money = 1001;
+      ctx.state.heal = { map: "arboretum_greenhouse", x: 5, y: 5 };
+      ctx.battle = async (request) => {
+        const battle = createBattleScene(ctx, request, () => {}) as unknown as { main(): Promise<"lost"> };
+        return battle.main();
+      };
+      const scene = sceneFor(ctx);
+      const cmd = kind === "trainer"
+        ? { op: "battle" as const, trainer: "mercer" as const, canLose }
+        : { op: "wildBattle" as const, species: "elder" as const, level: 60, canLose };
+      const task = runScript(scene.host, [cmd, { op: "ifLastBattle", result: "lost", then: [{ op: "setFlag", flag: "returned_lost" }] }]);
+      if (canLose) {
+        await task;
+        expect(ctx.state.flags.returned_lost).toBe(true);
+        expect(ctx.state.party[0].hp).toBe(0);
+        expect(ctx.state.money).toBe(1001);
+        expect(ctx.state.position.map).toBe("elder_grove_heart");
+      } else {
+        await expect(task).rejects.toBeInstanceOf(ScriptAbort);
+        expect(ctx.state.flags.returned_lost).not.toBe(true);
+        expect(ctx.state.position).toEqual({ ...ctx.state.heal, facing: "up" });
+        expect(ctx.state.party[0].hp).toBe(ctx.state.party[0].stats.hp);
+        expect(ctx.state.money).toBe(501);
+      }
+      expect(ctx.state.flags.beat_mercer).not.toBe(true);
+    }
+  });
+
+  it("refreshes the conditional heart track after Mercer's win flag and planting", async () => {
+    const ctx = context("elder_grove_heart");
+    Object.assign(ctx.state.flags, { bram_joined: true, beat_wren_2: true });
+    ctx.state.bag.centuryheart_seed = 1;
+    const scene = sceneFor(ctx);
+    scene.host.still = vi.fn(async () => {});
+    scene.host.stillClear = vi.fn(async () => {});
+    scene.host.shake = vi.fn(async () => {});
+    scene.playMapMusic();
+    expect(ctx.audio.current()).toBe("rootstock_appears");
+    await runScript(scene.host, "mercer");
+    expect(ctx.state.flags).toMatchObject({ beat_mercer: true, centuryheart_planted: true });
+    expect(ctx.audio.current()).toBe("prologue_bloom");
+    expect(vi.mocked(ctx.audio.playMusic).mock.calls).toEqual([
+      ["rootstock_appears"], ["battle_mercer"], ["rootstock_appears"], ["prologue_bloom"],
+    ]);
+  });
+
+  it.each(["won", "caught", "fled", "lost"] as const)("restores the heart's calm track after an Elder battle (%s)", async (outcome) => {
+    const ctx = context("elder_grove_heart");
+    const scene = sceneFor(ctx);
+    expect(scene.musicFor(WORLD.maps.elder_grove_heart)).toBe("rootstock_appears");
+    ctx.state.flags.beat_mercer = true;
+    ctx.state.flags.centuryheart_planted = true;
+    scene.playMapMusic();
+    expect(ctx.audio.current()).toBe("prologue_bloom");
+    vi.mocked(ctx.battle).mockResolvedValue(outcome);
+    await scene.host.battle({ kind: "wild", wild: { species: "elder", level: 60 }, canLose: true });
+    expect(vi.mocked(ctx.audio.playMusic).mock.calls).toEqual([
+      ["prologue_bloom"], ["battle_wild"], ["prologue_bloom"],
+    ]);
+    expect(ctx.audio.current()).toBe("prologue_bloom");
   });
 
   it("selects the first matching track, defaults missing flags to false, and falls back to base music", () => {

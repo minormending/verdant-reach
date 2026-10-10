@@ -66,6 +66,7 @@ export const MOVE_ANIMS: Record<string, AnimSpec> = {
   gourd_slam: S("heavy_drop", "gourd"),
   seed_burst: S("seed_arc", "seed"),
   timber: S("heavy_drop", "log"),
+  many_trunks: S("heavy_drop", "log"),
   sap_drain: S("drain", "sap"),
   sap_spout: S("glob", "sap"),
   leaf_gale: S("gale", "leaf"),

@@ -6,8 +6,8 @@ import { checkProgressWithoutPrune, eachCmd, flood, grid, prunable, validateWorl
 
 describe("world data", () => {
   it("glides to the tile below each town's healing-building door", () => {
-    const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse", "cedarhallow_greenhouse", "saltmarsh_greenhouse", "driftseed_greenhouse", "larchmere_greenhouse", "thistledown_greenhouse", "sanguine_greenhouse"];
-    expect(WORLD.glide?.map((d) => d.map)).toEqual(["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle", "larchmere", "thistledown", "sanguine_ridge"]);
+    const buildings = ["herbarium", "bramblegate_greenhouse", "sugarbush_greenhouse", "glasshouse_greenhouse", "cedarhallow_greenhouse", "saltmarsh_greenhouse", "driftseed_greenhouse", "larchmere_greenhouse", "thistledown_greenhouse", "sanguine_greenhouse", "arboretum_greenhouse"];
+    expect(WORLD.glide?.map((d) => d.map)).toEqual(["fallowfield", "bramblegate", "sugarbush", "glasshouse_city", "cedarhallow", "saltmarsh_harbour", "driftseed_isle", "larchmere", "thistledown", "sanguine_ridge", "council_arboretum"]);
     for (const [i, landing] of WORLD.glide!.entries()) {
       const town = WORLD.maps[landing.map];
       const door = town.warps.find((w) => w.to === buildings[i])!;

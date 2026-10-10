@@ -61,6 +61,8 @@ export const SPECIES_IDS = [
   "dragon_seedling", "dragon_sapling", "dragon_tree",
   "pitaya_cutting", "dragon_fruit",
   "lithops_pebble", "lithops_pair", "lithops_bloom",
+  // Chapter 10
+  "aspen_sucker", "quaking_aspen", "elder",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 
@@ -105,6 +107,9 @@ export const MAP_IDS = [
   // Chapter 9 (CH9.md §4 order; the extra healing interior follows Route 11).
   "route_10", "thistledown", "thistledown_greenhouse", "thistledown_market",
   "thistledown_house", "route_11", "sanguine_greenhouse", "sanguine_ridge", "sanguine_conservatory",
+  // Chapter 10 (CH10.md §4 order).
+  "route_12", "council_arboretum", "arboretum_greenhouse", "elder_grove_1",
+  "elder_grove_2", "elder_grove_3", "elder_grove_heart", "council_hall",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -258,6 +263,12 @@ export const TILES = {
   red_rock:       { walk: false },               // red sandstone walls and outcrops (group "red_rock")
   red_ledge:      { walk: false, ledge: "down" }, // a red sandstone step: hop south only
   resin_floor:    { walk: true },                // Conservatory 8: dark-red flags with amber resin grout
+  // Chapter 10: the Elder Grove
+  aspen_tree:     { walk: false },               // pale aspen with a golden crown; the Grove's trees, borders and shifting lanes
+  grove_floor:    { walk: true },                // golden aspen leaf litter on dark loam
+  grove_grass:    { walk: true, encounter: "grass" }, // tall pale grass and ferns: the Grove's encounter tile
+  root_vein:      { walk: true },                // pale glowing roots leading toward the heart (group "root_vein")
+  listening_clearing: { walk: true },            // mushrooms and moss round a glow: ring 2's step triggers only
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -325,6 +336,10 @@ const STRUCTURE_SPECS = {
   adobe_house:        { w: 4, h: 3, door: { x: 1, y: 2 } }, // flat-roofed Thistledown adobe
   ridge_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 8, set into the cliff
   windmill_pump:      { w: 2, h: 3 },                       // desert wind pump over a trough (scenery)
+  // Chapter 10: the Council Arboretum and the Elder Grove
+  council_hall:       { w: 6, h: 4, door: { x: 3, y: 3 } }, // the Council's pale-stone hall
+  grove_gate:         { w: 4, h: 2 },                       // a tower of the Grove Gate; a pair flanks the open gap (scenery)
+  elder_trunk:        { w: 4, h: 4 },                       // the Elder's vast pale trunk at the heart (scenery)
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
@@ -364,6 +379,9 @@ export const CHARACTERS = [
   // Chapter 9
   "rook", "stone_botanist",
   "tumbleweed_roll",             // a rolling tumbleweed (static object; columns turn it 0/30/60 degrees)
+  // Chapter 10
+  "rowan", "council_warden",
+  "elder_root",                  // the Elder's glowing root knot (static object; column 0 rest, columns 1-2 pulse)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -377,6 +395,7 @@ export const TRAINER_PORTRAITS = [
   "signe", "skier", // Chapter 7
   "mercer", "wren", // Chapter 8
   "rook", // Chapter 9
+  "rowan", // Chapter 10
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -392,6 +411,7 @@ export const MUSIC = [
   "alpine", "red_lake", "hideout", // Chapter 7
   "relay_seized", // Chapter 8
   "thistledown", "canyon", "ridge", // Chapter 9
+  "elder_grove", "battle_mercer", // Chapter 10
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 
@@ -454,6 +474,7 @@ export const STILLS = [
   "rootstock_files", "crimson_lily", // Chapter 7
   "mercer_hub_map", // Chapter 8
   "dragon_trees", // Chapter 9
+  "centuryheart_sprouts", // Chapter 10
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

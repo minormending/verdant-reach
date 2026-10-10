@@ -236,10 +236,17 @@ export function childLists(c: ScriptCmd): (ScriptCmd[] | undefined)[] {
 // Interpreter
 // ---------------------------------------------------------------------------
 
+/** Built-in recovery script, callable using the existing call command. */
+export const WHITEOUT_SCRIPT = "whiteout";
+
 /** Run a script by id or command list. Resolves when it finishes or ends. */
 export async function runScript(
   host: ScriptHost, script: ScriptId | ScriptCmd[], state: ScriptState = { depth: 0 },
 ): Promise<void> {
+  if (script === WHITEOUT_SCRIPT) {
+    await host.whiteout();
+    throw new ScriptAbort("whiteout");
+  }
   try {
     await exec(host, resolve(host, script), state);
   } catch (e) {
@@ -375,6 +382,10 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       return;
     }
     case "call": {
+      if (cmd.script === WHITEOUT_SCRIPT) {
+        await host.whiteout();
+        throw new ScriptAbort("whiteout");
+      }
       if (st.depth > 16) throw new Error(`[script] call depth exceeded at "${cmd.script}"`);
       st.depth++;
       try {
@@ -399,6 +410,8 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       return host.stillClear?.();
     case "ifHasItem":
       return exec(host, hasItem(ctx.state, cmd.item, cmd.qty ?? 1) ? cmd.then : cmd.else, st);
+    case "ifMarks":
+      return exec(host, cmd.marks.every((mark) => ctx.state.marks.includes(mark)) ? cmd.then : cmd.else, st);
     case "ifPartyHas":
       return exec(host, partyHas(ctx.state, cmd.species) ? cmd.then : cmd.else, st);
     case "ifCaught":

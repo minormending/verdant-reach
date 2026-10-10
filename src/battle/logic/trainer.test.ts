@@ -111,9 +111,9 @@ describe("trainer graft collars", () => {
     }
   });
 
-  it("grafts only rival 4's forced starter and Calloway's ace (Chapters 5 and 7)", () => {
+  it("grafts Rival 4's partner and Calloway's prescribed plants", () => {
     const grafted = Object.values(WORLD.trainers).filter((t) => t.team.some((m) => m.grafted)).map((t) => t.id).sort();
-    expect(grafted).toEqual(["calloway", "rival_4_chili", "rival_4_lily", "rival_4_oak"]);
-    for (const id of grafted) expect(WORLD.trainers[id].team.filter((m) => m.grafted)).toHaveLength(1);
+    expect(grafted).toEqual(["calloway", "calloway_2", "rival_4_chili", "rival_4_lily", "rival_4_oak"]);
+    for (const id of grafted) expect(WORLD.trainers[id].team.filter((m) => m.grafted)).toHaveLength(id === "calloway_2" ? 2 : 1);
   });
 });

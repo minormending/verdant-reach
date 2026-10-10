@@ -650,3 +650,159 @@ it("catches a seeded canyon LITHOPS, grows it with battle EXP and earns WINDOW P
     expect(e2e.report.issues).toEqual([]);
   } finally { stop(); }
 });
+
+it("crosses Route 12 with all four required field moves through real prompts", async () => {
+  const fixture = await setup("sanguine_ridge", 2, 15);
+  const { ctx, e2e, drive, field, stop } = fixture;
+  const { MARKS } = await import("../src/contracts");
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 65, () => 0.5)];
+  ctx.state.flags.ch9_done = true;
+  ctx.state.marks = [...MARKS];
+  ctx.state.bag.fig_root = 1;
+  ctx.state.bag.pruning_shears = 1;
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  try {
+    expect(await drive(() => e2e.nav("route_12"))).toBe(true);
+    const taps = fieldTaps(fixture);
+    for (const [x, y] of [[30, 26], [22, 18], [14, 10]]) {
+      expect(await drive(() => e2e.bridgeRoute12Gap(x, y)), JSON.stringify({x, y, position:ctx.state.position, flags:ctx.state.flags, texts:e2e.report.texts, issues:e2e.report.issues})).toBe(true);
+      expect(ctx.state.flags[`bridged_route_12_${x}_${y}`]).toBe(true);
+      expect(taps).toContainEqual({ x: x + 1, y, facing: "left", facingFollower: false });
+    }
+    expect(await drive(() => e2e.solveRoute12Pits())).toBe(true);
+    expect(e2e.report.texts.filter((t) => t.text === "[?] A narrow gap. ROOT BRIDGE it?")).toHaveLength(3);
+    expect(e2e.report.texts.filter((t) => t.text === "[?] UPROOT it?")).toHaveLength(2);
+    for (const x of [5, 6]) {
+      expect(ctx.state.flags[`filled_route_12_${x}_7`]).toBe(true);
+      expect(taps).toContainEqual({ x, y: 9, facing: "up", facingFollower: false });
+    }
+    expect(await drive(() => e2e.raftRoute12Pond())).toBe(true);
+    expect(taps).toContainEqual({ x: 5, y: 6, facing: "up", facingFollower: false });
+    expect(ctx.state.rafting).toBeUndefined();
+    expect(await drive(() => e2e.pruneRoute12Bramble())).toBe(true);
+    expect(ctx.state.flags.pruned_route_12_3_3).toBe(true);
+    expect(taps).toContainEqual({ x: 4, y: 3, facing: "left", facingFollower: false });
+    expect(await drive(() => e2e.talkTo("marks_warden"))).toBe(true);
+    expect(field.player).toMatchObject({ x: 3, y: 3, facing: "up" });
+    expect(ctx.state.flags.ch10_marks_checked).toBe(true);
+    expect(await drive(() => e2e.nav("council_arboretum"))).toBe(true);
+    expect(ctx.state.flags).toMatchObject({ ch10_arrived: true, visited_council_arboretum: true });
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("joins BRAM, rematches each admin and listens through all three clearings in both directions", async () => {
+  const fixture = await setup("council_arboretum", 32, 22);
+  const { ctx, e2e, drive, stop } = fixture;
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 65, () => 0.5)];
+  // Only prerequisites from the earlier chapters; all Grove flags are earned.
+  ctx.state.flags.ch10_arrived = true;
+  ctx.battle = vi.fn().mockResolvedValue("won");
+  try {
+    expect(await drive(() => e2e.trigger("ch10_council_door"))).toBe(true);
+    expect(ctx.state.position.map).toBe("council_arboretum");
+    expect(await drive(() => e2e.talkTo("bram_arboretum"))).toBe(true);
+    expect(ctx.state.flags.bram_joined).toBe(true);
+    expect(await drive(() => e2e.nav("elder_grove_1"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("shears_2"))).toBe(true);
+    expect(ctx.state.flags.shears_2_yielded).toBe(true);
+    expect(await drive(() => e2e.nav("elder_grove_2"))).toBe(true);
+    expect(await drive(() => e2e.solveGroveLanes()), JSON.stringify({position:ctx.state.position, flags:ctx.state.flags, texts:e2e.report.texts, issues:e2e.report.issues})).toBe(true);
+    expect(ctx.state.flags.grove_lean).toBe(true);
+    // This grunt is south of the upper lane; talking must return through a
+    // live open lane without accidentally revisiting a listening clearing.
+    expect(await drive(() => e2e.talkTo("grunt_g2_2"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("calloway_2"))).toBe(true);
+    expect(ctx.state.flags.calloway_2_yielded).toBe(true);
+    expect(await drive(() => e2e.nav("elder_grove_3"))).toBe(true);
+    expect(await drive(() => e2e.talkTo("wren_2"))).toBe(true);
+    expect(ctx.state.flags.wren_2_yielded).toBe(true);
+    const q = ctx.state.party[0];
+    q.hp = 1;
+    q.moves[0].pp = 0;
+    expect(await drive(() => e2e.talkTo("bram_ring_3"))).toBe(true);
+    expect(ctx.state.flags.ch10_bram_healed).toBe(true);
+    expect(q.hp).toBe(q.stats.hp);
+    expect(q.moves[0].pp).toBe(ctx.data.moves[q.moves[0].id].pp);
+    expect(await drive(() => e2e.nav("elder_grove_2"))).toBe(true);
+    expect(await drive(() => e2e.solveGroveLanes(false))).toBe(true);
+    expect(ctx.state.flags.grove_lean).toBe(false);
+    expect(await drive(() => e2e.nav("elder_grove_1"))).toBe(true);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("heals in place after the Elder wilts the party and starts a playable retry", async () => {
+  const { ctx, e2e, drive, stop } = await setup("elder_grove_heart", 10, 18);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "oak_acorn", 1, () => 0.5)];
+  Object.assign(ctx.state.flags, { beat_mercer: true, beat_wren_2: true, centuryheart_planted: true });
+  ctx.state.heal = { map: "elder_grove_3", x: 13, y: 2 };
+  ctx.state.money = 1001;
+  const battle = ctx.battle.bind(ctx);
+  const hpAtLoss: number[][] = [];
+  ctx.battle = async (request) => {
+    const outcome = await battle(request);
+    if (outcome === "lost") hpAtLoss.push(ctx.state.party.map((q) => q.hp));
+    return outcome;
+  };
+  try {
+    expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
+    expect(hpAtLoss).toEqual([[0]]);
+    expect(e2e.report.battles.at(-1)?.outcome).toBe("lost");
+    // The Elder's roots mend the party at the heart: no whiteout, no money lost.
+    expect(ctx.state.position.map).toBe("elder_grove_heart");
+    expect(ctx.state.money).toBe(1001);
+    expect(ctx.state.party[0].hp).toBe(ctx.state.party[0].stats.hp);
+    expect(ctx.state.flags.elder_caught).not.toBe(true);
+    const texts = e2e.report.texts.length;
+    expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
+    expect(hpAtLoss).toEqual([[0], [0]]);
+    expect(e2e.report.battles.map((b) => b.outcome)).toEqual(["lost", "lost"]);
+    expect(e2e.report.texts.slice(texts).some((t) => t.text.includes("OAK ACORN used"))).toBe(true);
+    expect(ctx.state.flags.elder_caught).not.toBe(true);
+    expect(ctx.state.money).toBe(1001);
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("keeps the Elder after a real uncaught battle and can challenge it again with real pods", async () => {
+  const { ctx, e2e, drive, field, stop } = await setup("elder_grove_heart", 10, 18);
+  const { createQuickened } = await import("../src/battle");
+  const helper = createQuickened(ctx.data, "red_chili", 85, () => 0.5);
+  Object.assign(helper, { e2e: true });
+  ctx.state.party = [helper];
+  Object.assign(ctx.state.flags, { centuryheart_planted: true, beat_mercer: true, beat_wren_2: true });
+  ctx.state.heal = { map: "elder_grove_3", x: 13, y: 2 };
+  e2e.report.suite = "full";
+  const visible = () => {
+    const n = field.npcs.find((n) => n.id === "the_elder")!;
+    return (field as typeof field & { visible(n: typeof n): boolean }).visible(n);
+  };
+  try {
+    // Normal FIGHT input wilts it; no battle outcome or story flag is forced.
+    expect(await drive(() => e2e.talkTo("the_elder"))).toBe(true);
+    expect(e2e.report.battles.at(-1)?.outcome).toBe("won");
+    expect(ctx.state.flags.elder_caught).not.toBe(true);
+    expect(visible()).toBe(true);
+    e2e.beat("refresh helper before the retry");
+    const before = e2e.report.battles.length;
+    expect(await drive(() => e2e.challengeElder()), JSON.stringify({ battles: e2e.report.battles,
+      issues: e2e.report.issues, position: ctx.state.position })).toBe(true);
+    const attempts = e2e.report.battles.slice(before);
+    expect(attempts.length).toBeGreaterThanOrEqual(1);
+    expect(attempts.length).toBeLessThanOrEqual(2);
+    expect(attempts.every((b) => b.request.kind === "wild" && b.request.wild?.species === "elder"
+      && b.request.wild.level === 60 && b.request.canLose === true && b.outcome)).toBe(true);
+    if (ctx.state.flags.elder_caught) {
+      expect(visible()).toBe(false);
+      expect(ctx.state.herbarium.caught).toContain("elder");
+    } else {
+      expect(attempts).toHaveLength(2);
+      expect(visible()).toBe(true);
+    }
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
