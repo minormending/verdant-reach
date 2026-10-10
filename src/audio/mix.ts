@@ -51,6 +51,8 @@ export const MUSIC_TRIM: Partial<Record<MusicId, number>> = {
   // canyon: -17.2 untrimmed (the gallop and drive carry it).
   elder_grove: 1.20,       // -18.7 -> -17.1 (a drone and a soft tremble, no drums)
   // battle_mercer: -17.7 untrimmed, level with battle_rootstock.
+  council: 1.15,           // -18.4 -> -17.2 (a pad, a march bass and ticks)
+  battle_keeper: 1.10,     // -17.7 -> -16.9 (near battle_leader)
 };
 
 /** Per-effect gain: quiet UI blips up, the long hot ones down. */

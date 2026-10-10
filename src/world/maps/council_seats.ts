@@ -4,7 +4,7 @@ import { LEGEND, when } from "../build";
 function seat(id: MapId, name: string, npc: string, sprite: CharacterKey, next: MapId, win: string, width = 12, height = 12): MapDef {
   const x = Math.floor(width / 2) - 1;
   const room: MapDef = {
-    id, name, outdoor: false, music: "conservatory", border: "void", legend: { ...LEGEND, N: "stairs_up" },
+    id, name, outdoor: false, music: "council", border: "void", legend: { ...LEGEND, N: "stairs_up" },
     tiles: Array.from({ length: height }, (_, y) => y === 0 || y === height - 1
       ? "W".repeat(x) + (y === 0 ? "N" : "E") + "W".repeat(width - x - 1)
       : "W" + "i".repeat(width - 2) + "W"),

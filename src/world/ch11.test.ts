@@ -53,7 +53,7 @@ describe("Chapter 11 Council world", () => {
       const m = WORLD.maps[id as MapId];
       expect([m.tiles[0].length, m.tiles.length]).toEqual(i === 0 ? [16, 12] : i === 5 ? [14, 16] : i === 6 ? [10, 8] : [12, 12]);
       expect(m.outdoor).toBe(false);
-      expect(m.music).toBe(i === 0 ? "herbarium" : i === 6 ? "prologue_bloom" : "conservatory");
+      expect(m.music).toBe(i === 0 ? "herbarium" : i === 6 ? "prologue_bloom" : "council"); // the Chapter 11 seat-room theme
       expect(m.encounters).toBeUndefined();
     }
   });
@@ -158,7 +158,7 @@ describe("Chapter 11 Council world", () => {
         }
       }
       expect(trainer.ai).toBe("smart");
-      expect(trainer.music).toBe("battle_leader");
+      expect(trainer.music).toBe(id === "rowan" ? "battle_keeper" : "battle_leader"); // the Keeper has his own battle theme
       expect(trainer.items).toEqual([{ item: "spring_water", qty: id === "rowan" ? 3 : 2 }]);
       for (const [kind, text] of [["intro", trainer.intro], ["defeat", trainer.defeat], ["after", trainer.after]]) expect(text).toBe(`TODO(text): ${id} ${kind}`);
     }

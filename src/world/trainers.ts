@@ -910,7 +910,7 @@ const ch11Trainers: TrainerDef[] = [
     T("moss_campion", 65, ["sunbeam", "vine_lash", "photosynthesise", "curl_up"]),
     T("sacred_lotus", 66, ["perfume", "dew_drop", "petal_storm", "undertow"]),
     T("great_oak", 65, ["acorn_drop", "photosynthesise", "leaf_edge", "root_snare"]),
-  ], ch11Lines("rowan"), { ...council, items: [{ item: "spring_water", qty: 3 }] }),
+  ], ch11Lines("rowan"), { ...council, music: "battle_keeper", items: [{ item: "spring_water", qty: 3 }] }),
 ];
 
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
