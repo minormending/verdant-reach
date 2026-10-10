@@ -256,3 +256,20 @@ Chapter 10 Elder (set in `tools/art/crystal/elder.py`; palettes are dark, mid, s
 | elder | silver-blue "winter" palette (artistic interpretation) | Not a cultivar or a natural colour form: a pale silver-blue palette imagining the grove in winter, chosen for the game's legendary. Crystal: the pale green-gold crowns and the glow in the roots (mid slot) turn pale silver-blue, and the gold-olive shade, knots and root crevices (dark slot) turn slate blue. The white bark and the veins of light stay white. Palette swap only. | `#485880 #b0c8e0 #f8f8f8` |
 
 Botanical reference: [Wikipedia, Pando (tree)](https://en.wikipedia.org/wiki/Pando_(tree)) describes the aspen clone whose many stems share one root system, which the Elder is drawn after. Neither the Pando nor the Populus tremuloides page describes a blue colouring; the winter palette is an artistic interpretation.
+
+Chapter 11 mimosa line (set in `tools/art/crystal/mimosa.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| mimosa_sprout | white pom-pom form (artistic interpretation) | Not a cultivar or a documented colour form: the Mimosa pudica reference describes only pale pink or purple flower heads, so a white-headed sensitive plant is imagined for the sport. Crystal: the pink mid slot (the shoot, petioles and the closed bud) turns a pale cream-white, and the fresh-green dark slot (leaflets, the bud's bracts, the mound) turns a cooler sage green. White highlights stay white. Palette swap only. | `#589858 #e8e0d8 #f8f8f8` |
+| sensitive_plant | white pom-pom form (artistic interpretation) | The same imagined white form: the three fluffy flower heads turn cream-white. The prickly stems and petioles share the mid slot, so they turn cream as well: an artifact of the two colour slots, not a claim about the plant. The feathery leaves take the sage green. | `#589858 #e8e0d8 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Mimosa pudica](https://en.wikipedia.org/wiki/Mimosa_pudica) describes the bipinnately compound leaves (one or two pinna pairs, 10–26 leaflets per pinna) whose leaflets fold inward and droop when touched and reopen minutes later, the slender, prickly stems that become creeping or trailing with age, and the stalked, globose pale pink or purple flower heads with pink to lavender filaments. It describes no white-flowered form, so the sport is an artistic interpretation, as are the exact two-tone palettes.
+
+Chapter 11 prayer plant (set in `tools/art/crystal/prayer.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| prayer_plant | var. kerchoveana (rabbit's foot) | Maranta leuconeura var. kerchoveana, a naturally occurring variety (RHS Award of Garden Merit) with dark blotches between the leaf veins and light green undersides; the base palette follows var. erythroneura (the herringbone plant: strong red veining on dark green leaves, deep red undersides). Crystal: the red-pink mid slot (the herringbone veins and the raised leaves' undersides) turns light green, and the deep-green dark slot (the blades and stalks) turns a fresh leaf green, so the black blotches along each midrib read as kerchoveana's dark marks. White stays white. Palette swap only. | `#6c9850 #c8e0a0 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Maranta leuconeura](https://en.wikipedia.org/wiki/Maranta_leuconeura) describes the oval leaves that lie flat by day and rise upright at night "as if in prayer", and the two naturally occurring varieties: var. kerchoveana, with dark blotches between the veins and light green undersides, and var. erythroneura, with strong red veining on dark green leaves and deep red undersides. The exact two-tone palettes, and the light green taken by the sport's veins (which share the undersides' slot), are an artistic interpretation.
