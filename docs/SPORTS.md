@@ -256,3 +256,20 @@ Chapter 10 Elder (set in `tools/art/crystal/elder.py`; palettes are dark, mid, s
 | elder | silver-blue "winter" palette (artistic interpretation) | Not a cultivar or a natural colour form: a pale silver-blue palette imagining the grove in winter, chosen for the game's legendary. Crystal: the pale green-gold crowns and the glow in the roots (mid slot) turn pale silver-blue, and the gold-olive shade, knots and root crevices (dark slot) turn slate blue. The white bark and the veins of light stay white. Palette swap only. | `#485880 #b0c8e0 #f8f8f8` |
 
 Botanical reference: [Wikipedia, Pando (tree)](https://en.wikipedia.org/wiki/Pando_(tree)) describes the aspen clone whose many stems share one root system, which the Elder is drawn after. Neither the Pando nor the Populus tremuloides page describes a blue colouring; the winter palette is an artistic interpretation.
+
+Chapter 11 nightshade line (set in `tools/art/crystal/nightshade.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| nightshade_sprout | var. lutea (natural form) | Atropa belladonna var. lutea, a rare natural variant with pale-yellow flowers and pale-yellow fruit; not a cultivar. Crystal: the dull-violet mid slot (the closed bud) turns pale yellow; the deep-green leaves and stem stay. Palette swap only. | `#386838 #d8d080 #f8f8f8` |
+| nightshade | var. lutea (natural form) | The same yellow-fruited form: the bells turn pale yellow. The berries are drawn in the shared outline black, which a sport cannot change, so they stay black; the real var. lutea's fruit is pale yellow, so the berries are a limit of the two colour slots, not a claim about the plant. The leaves stay deep green. | `#386838 #d8d080 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Atropa bella-donna](https://en.wikipedia.org/wiki/Atropa_belladonna) describes the ovate leaves, the bell-shaped flowers that are dull purple tinged yellow-green toward the base, the shiny black berries set in a larger stellate calyx, and the rare variant with pale-yellow flowers and pale yellow fruit called Atropa bella-donna var. lutea. It also states that the plant is toxic if eaten. The exact two-tone palettes are an artistic interpretation.
+
+Chapter 11 oleander (set in `tools/art/crystal/oleander.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| oleander | white-flowered garden form | Nerium oleander is common in cultivation in solid whites as well as pinks and reds, and white cultivars such as 'Mont Blanc' (double-flowered) and 'Petite White' are named. The sprite keeps the wild plant's single five-lobed flower, so it shows a generic white-flowered form rather than 'Mont Blanc' itself. Crystal: the pink mid slot turns a blush white, kept a step below the shared highlight white so the petals still read; the dark leathery green stays. Palette swap only. | `#306040 #e0c8d0 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Nerium](https://en.wikipedia.org/wiki/Nerium) describes the thick, leathery, dark-green, narrow lanceolate leaves in pairs or whorls of three, the flowers in clusters at the end of each branch, pink with a deeply five-lobed corolla in wild plants, white to dark red cultivars in cultivation, and the white cultivars 'Mont Blanc' and 'Petite White'. The blush tint of the white sport and the exact palettes are an artistic interpretation.
