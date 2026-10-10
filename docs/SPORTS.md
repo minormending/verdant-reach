@@ -256,3 +256,22 @@ Chapter 10 Elder (set in `tools/art/crystal/elder.py`; palettes are dark, mid, s
 | elder | silver-blue "winter" palette (artistic interpretation) | Not a cultivar or a natural colour form: a pale silver-blue palette imagining the grove in winter, chosen for the game's legendary. Crystal: the pale green-gold crowns and the glow in the roots (mid slot) turn pale silver-blue, and the gold-olive shade, knots and root crevices (dark slot) turn slate blue. The white bark and the veins of light stay white. Palette swap only. | `#485880 #b0c8e0 #f8f8f8` |
 
 Botanical reference: [Wikipedia, Pando (tree)](https://en.wikipedia.org/wiki/Pando_(tree)) describes the aspen clone whose many stems share one root system, which the Elder is drawn after. Neither the Pando nor the Populus tremuloides page describes a blue colouring; the winter palette is an artistic interpretation.
+
+Chapter 11 titan arum line (set in `tools/art/crystal/titan.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| corpse_corm | pale form (artistic interpretation) | Not a cultivar or a known natural colour form: Amorphophallus titanum has no recorded pale variant, and this pale palette is invented for the game. Crystal: the olive-tan corm and shoot (mid slot) turn pale cream, and the maroon-brown shade, skin marks and soil (dark slot) turn dusty mauve. Palette swap only. | `#887080 #d8d0b0 #f8f8f8` |
+| corpse_leaf | pale form (artistic interpretation) | The same invented pale form: the green leaflets and stalk turn pale sage, and the maroon-brown blotches and leaf shade turn dusty mauve. Palette swap only. | `#706078 #c0d0a8 #f8f8f8` |
+| titan_arum | pale form (artistic interpretation) | The same invented pale form: the maroon inside of the spathe turns dusty pink and the cream spadix and pale spathe outside turn a paler cream. Palette swap only. | `#a87088 #d8d0a0 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Amorphophallus titanum](https://en.wikipedia.org/wiki/Amorphophallus_titanum) describes the tuber (corm) as the largest of any flowering plant, the single leaf the size and shape of a small tree on a green-and-white patterned stalk that branches into three sections of many leaflets, and the spathe, deep green with cream specks outside and dark burgundy red or maroon inside, its ribbed sides forming a frilled edge. The page describes no colour variants; the pale sport is an artistic interpretation.
+
+Chapter 11 flame lily line (set in `tools/art/crystal/flamelily.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| flame_lily_tuber | Gloriosa superba 'Lutea' | 'Lutea' is the yellow-flowered cultivar. The tuber stage has no flower, so Crystal carries the yellow through the line: the rust tuber and leaf shade (dark slot) turn golden brown and the yellow-green shoot and leaves (mid slot) turn yellow. Palette swap only; the shoot colour is an interpretation. | `#987020 #d8d058 #f8f8f8` |
+| flame_lily | Gloriosa superba 'Lutea' | 'Lutea' has yellow flowers: the flame-red tepals (dark slot) turn deep gold and their wavy edges, the stamens and the leaves (mid slot) turn yellow, so the flower is all yellow. Palette swap only. | `#c88818 #e8d048 #f8f8f8` |
+
+Botanical references: [University of Wisconsin–Madison Extension, Gloriosa lily](https://hort.extension.wisc.edu/articles/gloriosa-lily-gloriosa-superba/) lists the cultivar 'Lutea' as having yellow flowers, and describes the red-brown, elongated, often forked tuberous rhizome, the leaf tips that taper into coiling, clinging tendrils, and the six widely separated, reflexed tepals with very wavy or curling margins. [Wikipedia, Gloriosa superba](https://en.wikipedia.org/wiki/Gloriosa_superba) describes the leaf-tip tendrils, the tepals with wavy margins that bend backwards, the brilliant yellow to red colouring and the six prominent stamens. The exact two-tone palettes are an artistic interpretation.

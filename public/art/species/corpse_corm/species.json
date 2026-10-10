@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "corpse_corm",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#683828", "#b0a058", "#f8f8f8"],
+  "sport": ["#181818", "#887080", "#d8d0b0", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release.",
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  }
+  "anim": { "intro": [[0, 6], [1, 12], [2, 6], [3, 16], [4, 8], [0, 8]], "idle": [[0, 140], [4, 10], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Amorphophallus titanum, https://en.wikipedia.org/wiki/Amorphophallus_titanum . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/titan.py" },
+  "notes": "Crystal rule. Amorphophallus titanum. BRACED: a huge round brown corm, half buried in a low mound of soil, wider than it is tall, with root feet gripping the ground on both sides; one stubby, mottled shoot rises from the dimple at its top, a thick pointed spike leaning toward the foe with its tip hooked over like a horn. Gesture: the corm pulses (it squashes, swells past its rest size, holds and settles); the soil stays fixed. A maroon-brown dark slot (the corm's shade and skin marks, the stalk's blotches, the spathe's inside) under a mid that turns from olive (corm and leaf) to cream-yellow (the spadix and the spathe's pale outside). Skin marks and blotches always join an edge or the shade, never an enclosed dark dot. Sport: a pale form, an artistic interpretation (no pale titan arum is known)."
 }
