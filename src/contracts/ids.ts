@@ -276,6 +276,16 @@ export const TILES = {
   grove_grass:    { walk: true, encounter: "grass" }, // tall pale grass and ferns: the Grove's encounter tile
   root_vein:      { walk: true },                // pale glowing roots leading toward the heart (group "root_vein")
   listening_clearing: { walk: true },            // mushrooms and moss round a glow: ring 2's step triggers only
+  // Chapter 11: the Council's rooms (decoration; the run's walk grid is frozen by ch11-environment.test.ts)
+  jar_shelf:      { walk: false },               // APOTHECARY: dark shelving of labelled jars and drying herbs
+  poison_bed:     { walk: false },               // APOTHECARY: foxglove and nightshade behind a low iron rail (group "poison_bed")
+  night_window:   { walk: false },               // SLEEPER: the house window glazed with the night, a crescent moon and stars
+  star_floor:     { walk: true },                // SLEEPER: deep night-blue slabs scattered with silver stars
+  moon_lantern:   { walk: false },               // SLEEPER: a crescent-moon lamp in a moss cushion of folded leaves
+  loam_floor:     { walk: true },                // ROTTER: crumbly maroon loam
+  rot_pool:       { walk: false },               // ROTTER: a steaming bog pool (group "rot_pool")
+  brazier:        { walk: false },               // KINDLER: an iron fire bowl
+  aspen_pillar:   { walk: false },               // KEEPER and lobby: a pale aspen column, gilded crown, carved crest (group "aspen_pillar")
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 

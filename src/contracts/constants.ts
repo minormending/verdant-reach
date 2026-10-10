@@ -79,6 +79,8 @@ export const AUTOTILE: Partial<Record<TileKey, string>> = {
   cracked_earth: "sand", desert_scrub: "sand", red_ledge: "sand", red_rock: "red_rock",
   // Chapter 10: the Grove's glowing roots join into lanes and run into the listening clearings.
   root_vein: "root_vein", listening_clearing: "root_vein",
+  // Chapter 11: raised beds and bog pools join into one mass; columns stack north-south.
+  poison_bed: "poison_bed", rot_pool: "rot_pool", aspen_pillar: "aspen_pillar",
 };
 /** Ground variation: `${key}~1.png`..`${key}~3.png` (if present) are picked by a
  *  position hash so large fields never look stamped. Base tile = variant 0. */
