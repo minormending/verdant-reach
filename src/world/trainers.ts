@@ -753,17 +753,17 @@ const ch10Trainers: TrainerDef[] = [
   trainer("shears_2", "SHEARS", "ADMIN", "shears", [
     T("bramble_berry", 55), T("holly", 56), T("stinging_nettle", 57), T("blackberry", 58),
   ], ch10Lines("shears_2"), { ai: "smart", music: "battle_rootstock" }),
-  trainer("calloway_2", "CALLOWAY", "ADMIN", "shears", [
+  trainer("calloway_2", "CALLOWAY", "ADMIN", "calloway", [
     { ...T("red_mangrove", 56), grafted: true }, T("lodgepole_pine", 55), T("ghost_pipe", 55),
     { ...T("saguaro", 57), grafted: true },
   ], ch10Lines("calloway_2"), { ai: "smart", music: "battle_rootstock" }),
-  trainer("wren_2", "WREN", "ADMIN", "researcher", [
+  trainer("wren_2", "WREN", "ADMIN", "wren", [
     T("moth_orchid", 54, ["wind_scatter", "moonbeam", "false_nectar", "long_bloom"]),
     T("ghost_pipe", 55, ["moonbeam", "root_siphon", "spore_cloud"]),
     T("red_cedar", 56, ["leaf_edge", "pale_touch", "sap_seal", "heartwood"]),
     T("quaking_aspen", 57, ["many_trunks", "pale_touch", "bark_skin", "sap_seal"]),
   ], ch10Lines("wren_2"), { ai: "smart", music: "battle_rootstock" }),
-  trainer("mercer", "MERCER", "ROOTSTOCK", "gentleman", [
+  trainer("mercer", "MERCER", "ROOTSTOCK", "mercer", [
     T("apple_tree", 58), T("wild_rose", 58), T("sugar_maple", 59), T("red_cedar", 59), T("dragon_tree", 60), T("quaking_aspen", 61),
   ], ch10Lines("mercer"), { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 3 }] }),
 ];

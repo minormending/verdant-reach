@@ -97,8 +97,7 @@ export const ch10Scripts: Scripts = {
       say("TODO(text): Mercer's graft falls away. The shared root still trembles.", "NARRATOR"),
       say("TODO(text): Plant the Centuryheart Seed here, where the alarm began.", "ROWAN"),
       { op: "takeItem", item: "centuryheart_seed" },
-      // centuryheart_sprouts uses the existing bloom still until the art pass.
-      { op: "still", image: "bloom" }, wait(30), { op: "shake", frames: 45 },
+      { op: "still", image: "centuryheart_sprouts" }, wait(30), { op: "shake", frames: 45 },
       say("TODO(text): The seed sprouts within the Elder's root.", "NARRATOR"),
       say("TODO(text): The alarm quiets through every pale trunk.", "NARRATOR"),
       // Mercer's win flag is set after battle return; refresh the conditional track now.

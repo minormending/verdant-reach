@@ -29,6 +29,7 @@
     "researcher": { "file": "researcher.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
     "reyes": { "file": "reyes.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
     "rook": { "file": "rook.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast9/portraits9.py" } },
+    "rowan": { "file": "rowan.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast10/portraits10.py" } },
     "sailor": { "file": "sailor.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },
     "schoolkid": { "file": "schoolkid.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
     "shears": { "file": "shears.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
