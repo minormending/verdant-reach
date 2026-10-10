@@ -49,6 +49,8 @@ export const MUSIC_TRIM: Partial<Record<MusicId, number>> = {
   thistledown: 1.12,       // -18.0 -> -17.0 (a picked figure and ticks, no kit)
   ridge: 1.10,             // -17.9 -> -17.1 (a pad and a slow bass, no drums)
   // canyon: -17.2 untrimmed (the gallop and drive carry it).
+  elder_grove: 1.20,       // -18.7 -> -17.1 (a drone and a soft tremble, no drums)
+  // battle_mercer: -17.7 untrimmed, level with battle_rootstock.
 };
 
 /** Per-effect gain: quiet UI blips up, the long hot ones down. */

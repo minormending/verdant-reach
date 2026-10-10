@@ -57,7 +57,8 @@ describe("Chapter 10 world", () => {
       expect([grid(m).w, grid(m).h]).toEqual(sizes[i]);
       expect(m.outdoor).toBe(!["arboretum_greenhouse", "council_hall"].includes(id));
     });
-    expect(WORLD.maps.elder_grove_heart.structures).toContainEqual({ key: "big_oak", x: 8, y: 7 });
+    // The Chapter 10 environment pass: the Elder's trunk replaces the big_oak stand-in.
+    expect(WORLD.maps.elder_grove_heart.structures).toContainEqual({ key: "elder_trunk", x: 8, y: 6 });
     expect(WORLD.maps.elder_grove_heart.musicWhen).toEqual([{ when: [{ flag: "beat_mercer", is: true }], music: "prologue_bloom" }]);
   });
 
@@ -201,13 +202,14 @@ describe("Chapter 10 world", () => {
         for (const move of q.moves ?? []) expect(DATA.species[q.species].learnset.some((m) => m.move === move && m.level <= q.level), `${id} ${q.species} ${move}`).toBe(true);
       });
       expect(t.ai).toBe("smart");
-      expect(t.music).toBe("battle_rootstock");
+      expect(t.music).toBe(id === "mercer" ? "battle_mercer" : "battle_rootstock"); // Mercer has his own battle theme
     }
     expect(WORLD.trainers.mercer.items).toEqual([{ item: "spring_water", qty: 3 }]);
     for (const id of CH10) for (const n of WORLD.maps[id].npcs.filter((q) => q.trainer)) {
       const t = WORLD.trainers[n.trainer!];
-      for (const text of [t.intro, t.defeat, t.after]) expect(text).toContain("TODO(text)");
+      for (const text of [t.intro, t.defeat, t.after]) expect(text).toMatch(/^(?!.*TODO)\S.*\S$/);
       if (t.id.startsWith("grunt_")) {
+        expect([t.className, t.name]).toEqual(["ROOTSTOCK", "GRUNT"]);
         expect(t.team).toHaveLength(2);
         expect(t.team.every((q) => q.level >= 51 && q.level <= 54)).toBe(true);
       }
