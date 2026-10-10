@@ -121,6 +121,8 @@ describe("Chapter 10 scripts", () => {
     expect(state.bag.centuryheart_seed).toBeUndefined();
     expect(events).toEqual(["still:bloom", "shake", "stillClear", "hide:mercer", "hide:rowan", "hide:grunt_heart_1", "hide:grunt_heart_2", "show:the_elder"]);
     expect(host.ctx.ui.say).toHaveBeenCalledWith(expect.stringMatching(/the QUICKENED don't go back to sleep\. They choose to stay awake\.$/), undefined);
+    expect(events).toEqual(["still:centuryheart_sprouts", "shake", "stillClear", "hide:mercer", "hide:rowan", "hide:grunt_heart_1", "hide:grunt_heart_2", "show:the_elder"]);
+    expect(host.ctx.ui.say).toHaveBeenCalledWith("TODO(text): The Quickened stay awake. They choose to stay awake.", { speaker: "NARRATOR" });
     await run("mercer");
     await run("mercer_after");
     await run("ch10_planting");

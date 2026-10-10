@@ -103,6 +103,9 @@ export const ch10Scripts: Scripts = {
       { op: "still", image: "bloom" }, wait(30), { op: "shake", frames: 45 },
       say("You press the seed in against the root. The coat splits. A green shoot rises."),
       say("The low hum you felt the night of the bloom fades away, trunk by trunk."),
+      { op: "still", image: "centuryheart_sprouts" }, wait(30), { op: "shake", frames: 45 },
+      say("TODO(text): The seed sprouts within the Elder's root.", "NARRATOR"),
+      say("TODO(text): The alarm quiets through every pale trunk.", "NARRATOR"),
       // Mercer's win flag is set after battle return; refresh the conditional track now.
       { op: "restoreMusic" },
       say("Across the region, the QUICKENED don't go back to sleep. They choose to stay awake."),

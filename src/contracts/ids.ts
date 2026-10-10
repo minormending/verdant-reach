@@ -369,6 +369,9 @@ export const CHARACTERS = [
   // Chapter 9
   "rook", "stone_botanist",
   "tumbleweed_roll",             // a rolling tumbleweed (static object; columns turn it 0/30/60 degrees)
+  // Chapter 10
+  "rowan", "council_warden",
+  "elder_root",                  // the Elder's glowing root knot (static object; column 0 rest, columns 1-2 pulse)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -382,6 +385,7 @@ export const TRAINER_PORTRAITS = [
   "signe", "skier", // Chapter 7
   "mercer", "wren", // Chapter 8
   "rook", // Chapter 9
+  "rowan", // Chapter 10
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -459,6 +463,7 @@ export const STILLS = [
   "rootstock_files", "crimson_lily", // Chapter 7
   "mercer_hub_map", // Chapter 8
   "dragon_trees", // Chapter 9
+  "centuryheart_sprouts", // Chapter 10
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 
