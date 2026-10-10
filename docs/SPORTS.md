@@ -239,3 +239,20 @@ Chapter 9 pitaya line (set in `tools/art/crystal/pitaya.py`; palettes are dark, 
 | dragon_fruit | yellow pitaya (Selenicereus megalanthus, a related species) | The same yellow pitaya: the fruit skin and the bract tips take yellow; the stem green and the white flower are unchanged. The real yellow pitaya's fruit is spiny and tuberculate rather than scaly, so the shared scale geometry is an interpretation. | `#3c9048 #e8d038 #f8f8f8` |
 
 Botanical references: [Wikipedia, Selenicereus undatus](https://en.wikipedia.org/wiki/Selenicereus_undatus) describes the climbing stems with generally three ribs and undulate, horny margins, small areoles with short spines, aerial roots, the scented nocturnal flowers with greenish-yellow outer tepals and white inner tepals, and the red fruit with large bracteoles. [Wikipedia, Selenicereus megalanthus](https://en.wikipedia.org/wiki/Selenicereus_megalanthus) describes the yellow-skinned, tuberculate, spiny fruit, the nocturnal funnel-shaped flowers and the three-ribbed stems with aerial roots, and contrasts its spiny fruit with S. undatus. The magenta tip of the cutting's young growth, the exact two-tone palettes and the yellow bract tips of the sport are an artistic interpretation.
+
+Chapter 10 aspen line (set in `tools/art/crystal/aspen.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| aspen_sucker | autumn-red colour form (natural colour variation, not a cultivar) | Populus tremuloides. Aspen leaves usually turn yellow to gold in autumn, but they rarely turn red, and red blushes are seen in some areas; each clone colours on its own schedule, so whole clones stand out on a hillside. This is a natural colour variation, not a cultivar or a genetically stable sport. Crystal: the sage leaves, stem shading and root runner (mid slot) turn red-orange, and the gold-olive leaf shade, knots and soil (dark slot) turn a deep red-brown. White stays white. | `#903828 #e09860 #f8f8f8` |
+| quaking_aspen | autumn-red colour form (natural colour variation, not a cultivar) | The same rare red autumn colouring: the golden crown turns red-orange over a deep red-brown shade. The white bark's shading shares the mid slot, so it takes a warm orange tint: an artifact of the two colour slots, not a claim about the bark. Palette swap only. | `#983020 #e88048 #f8f8f8` |
+
+Botanical references: [Wikipedia, Populus tremuloides](https://en.wikipedia.org/wiki/Populus_tremuloides) describes the smooth whitish bark marked with thick black horizontal scars and prominent black knots, the nearly round leaves with small rounded teeth on long flattened petioles that make them tremble, the shared root system of a clonal colony, and autumn leaves that are golden to yellow and rarely red (with red blushes occasionally seen in some areas, and neighbouring clones turning at different times). [Wikipedia, Pando (tree)](https://en.wikipedia.org/wiki/Pando_(tree)) describes one clone's tens of thousands of stems on a single root system. The exact two-tone palettes are an artistic interpretation.
+
+Chapter 10 Elder (set in `tools/art/crystal/elder.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| elder | silver-blue "winter" palette (artistic interpretation) | Not a cultivar or a natural colour form: a pale silver-blue palette imagining the grove in winter, chosen for the game's legendary. Crystal: the pale green-gold crowns and the glow in the roots (mid slot) turn pale silver-blue, and the gold-olive shade, knots and root crevices (dark slot) turn slate blue. The white bark and the veins of light stay white. Palette swap only. | `#485880 #b0c8e0 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Pando (tree)](https://en.wikipedia.org/wiki/Pando_(tree)) describes the aspen clone whose many stems share one root system, which the Elder is drawn after. Neither the Pando nor the Populus tremuloides page describes a blue colouring; the winter palette is an artistic interpretation.
