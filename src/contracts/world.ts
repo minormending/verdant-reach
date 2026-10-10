@@ -169,7 +169,7 @@ export interface TrainerDef {
   after: string;                // said when talked to afterwards
   ai: "basic" | "smart";
   items?: { item: ItemId; qty: number }[]; // leaders may use healing items
-  music?: "battle_trainer" | "battle_leader" | "battle_rootstock";
+  music?: "battle_trainer" | "battle_leader" | "battle_rootstock" | "battle_mercer";
   mark?: MarkId;                // leaders award a mark
 }
 

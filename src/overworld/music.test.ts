@@ -176,7 +176,7 @@ describe("conditional map music", () => {
     expect(ctx.state.flags).toMatchObject({ beat_mercer: true, centuryheart_planted: true });
     expect(ctx.audio.current()).toBe("prologue_bloom");
     expect(vi.mocked(ctx.audio.playMusic).mock.calls).toEqual([
-      ["rootstock_appears"], ["battle_rootstock"], ["rootstock_appears"], ["prologue_bloom"],
+      ["rootstock_appears"], ["battle_mercer"], ["rootstock_appears"], ["prologue_bloom"],
     ]);
   });
 

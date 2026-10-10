@@ -59,6 +59,8 @@ BUILDERS: list[tuple[str, str]] = [
     ("env9", "env9/build.py"),            # Chapter 8 Root Relay upper floors (after tiles and env4: props drawn over wall, cable_floor, paving)
     ("cast9", "cast9/build.py"),          # Chapter 9 ROOK, the stone botanist, the tumbleweed, ROOK portrait, FIG ROOT, RESIN MARK, dragon-trees still
     ("env10", "env10/build.py"),          # Chapter 9 desert, canyon and ridge tiles, Thistledown and Sanguine Ridge structures (after tiles: scrub sits on the sand colour)
+    ("cast10", "cast10/build.py"),        # Chapter 10 ROWAN, the Council warden, the Elder's root knot, ROWAN portrait, centuryheart-sprouts still
+    ("env11", "env11/build.py"),          # Chapter 10 Grove tiles, the Council hall, the Grove Gate and the Elder's trunk (after env10: the map review composes shipped tiles)
 ]
 
 

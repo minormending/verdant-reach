@@ -387,6 +387,40 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
       o5f2 a4 o6d4 | o6e2. d4 | o6c2 o5b4 a4 | o5g+2. r4 |`,
   },
 
+  // ------------------------------------------------------------------ elder grove
+  // The Elder Grove, a forest that is one creature: slow, reverent and
+  // watchful. D minor with a lydian E over B-flat (the trunks leaning in), a
+  // soft lead in long wide steps, a held low drone, and a whispering
+  // sixteenth tremble in the harmony: the quaking aspen leaves. No drums.
+  // Ends on A major, so the Grove never quite rests.
+  elder_grove: {
+    bpm: 70, harmony: "arp16", harmonyTone: "v3 @0 q3", bass: "drone", bassTone: "v11 q8", drums: "none",
+    chords: "Dm | Bb | F | C | Dm | Bb | Gm | A | Dm | F | Bb | C | Gm | Bb | Asus4 | A",
+    melody: `v9 @1 q8 ~10
+      o5a2 d4 f4 | o5f2. e4 | o5c2 a4 g4 | o5g1 |
+      o5a2 o6d2 | o6d4 c4 o5b-4 a4 | o5g2. f4 | o5e1 |
+      o5f4 a4 o6d4 e4 | o6f2 e4 c4 | o6d2 o5b-2 | o6c1 |
+      o5b-4 a4 g4 f4 | o5d2 f4 g4 | o5a2. d4 | o5c+1 |`,
+  },
+
+  // ------------------------------------------------------------------ battle mercer
+  // Mercer Thorne at the heart: the hardest fight in the game. A driving C
+  // minor with the Root Relay's three-note motif (g, a-flat, g) turned into a
+  // hammering opening figure, so his battle sounds like the network he
+  // seized. Sixteenth arpeggios, an octave bass and the heavy groove; the
+  // last two bars sit on G, the dominant, and the fight goes round again.
+  battle_mercer: {
+    bpm: 150, harmony: "arp16", harmonyTone: "v5 @1 q4", bass: "octave8", bassTone: "v14 q4", drums: "heavy", drumTone: "v9",
+    chords: "Cm | Cm | Ab | Bb | Cm | Cm | Fm | G | Cm | Eb | Ab | G | Fm | Ab | Db | G | Cm | Cm | Ab | Bb | Fm | Db | G | G",
+    melody: `${LEAD}
+      o5g8 a-8 g8 r8 c4 e-4 | o5g4. f8 e-4 d4 | o5e-8 f8 e-8 r8 a-4 c4 | o5d4. e-8 f4 b-4 |
+      o6c8 d8 c8 r8 o5g4 e-4 | o5f4. e-8 d4 c4 | o5a-4 g4 f4 e-4 | o5d2 o4b2 |
+      o5c4 e-4 g4 o6c4 | o6b-4. a-8 g4 e-4 | o6c4 o5a-4 e-4 c4 | o5d4 g4 b4 o6d4 |
+      o6c4. o5a-8 f4 c4 | o5e-4 a-4 o6c4 e-4 | o6d-4. c8 o5b-4 a-4 | o5g2 o6d2 |
+      o6e-8 d8 c8 o5b8 g4 o6c4 | o6e-4 d4 c4 g4 | o6a-4. g8 f4 e-4 | o6d4 f4 b-4 a-4 |
+      o6g4. f8 e-4 c4 | o6d-4 f4 a-4 g4 | o6f4 e-4 d4 o5b4 | o5g2 b4 o6d4 |`,
+  },
+
   // ------------------------------------------------------------------ slice end
   // Bittersweet, hopeful: F major with a borrowed B-flat minor sigh.
   slice_end: {

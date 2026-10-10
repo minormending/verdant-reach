@@ -53,14 +53,24 @@ const rings = ["elder_grove_1", "elder_grove_2", "elder_grove_3"] as const;
 const admins = { beat_shears_2: true, beat_calloway_2: true, beat_wren_2: true };
 
 describe("Chapter 10 scripts", () => {
-  it("wires the spoken TODO placeholders and scripted admin encounters", () => {
+  it("wires finished dialogue, one name per speaker, speaker-less narration and scripted admin encounters", () => {
+    const speakers = new Set<string>();
+    let narration = 0;
     for (const [id, cmds] of Object.entries(ch10Scripts)) {
       expect(WORLD.scripts[id]).toEqual(cmds);
       eachCmd(cmds, (c) => { if (c.op === "say") {
-        expect(c.text).toMatch(/^TODO\(text\): /);
-        expect(c.speaker).toBeTruthy();
+        expect(c.text).not.toMatch(/TODO/);
+        // Narration has no speaker, as in Chapters 5–9: "NARRATOR" would print "NARRATOR:".
+        if (c.speaker === undefined) { narration++; return; }
+        speakers.add(c.speaker);
+        if (id.startsWith("ch10_bram")) expect(c.speaker).toBe("BRAM");
+        if (id === "ch10_end" || id === "ch10_rowan") expect(c.speaker).toBe("ROWAN");
+        // The Elder never speaks in words.
+        if (id === "ch10_elder") expect(c.speaker).toBeUndefined();
       } });
     }
+    expect(narration).toBeGreaterThan(0);
+    expect([...speakers].sort()).toEqual(["BRAM", "DR. CALLOWAY", "GUARD", "MARKS WARDEN", "MERCER", "ROWAN", "SHEARS", "VISITOR", "WREN"]);
     for (const [i, id] of ["shears_2", "calloway_2", "wren_2"].entries()) {
       const map = WORLD.maps[rings[i]];
       expect(map.npcs.find((n) => n.id === id)).toMatchObject({ script: id });
@@ -110,8 +120,8 @@ describe("Chapter 10 scripts", () => {
     await run("mercer");
     expect(state.flags).toMatchObject({ beat_mercer: true, centuryheart_planted: true });
     expect(state.bag.centuryheart_seed).toBeUndefined();
-    expect(events).toEqual(["still:bloom", "shake", "stillClear", "hide:mercer", "hide:rowan", "hide:grunt_heart_1", "hide:grunt_heart_2", "show:the_elder"]);
-    expect(host.ctx.ui.say).toHaveBeenCalledWith("TODO(text): The Quickened stay awake. They choose to stay awake.", { speaker: "NARRATOR" });
+    expect(events).toEqual(["still:centuryheart_sprouts", "shake", "stillClear", "hide:mercer", "hide:rowan", "hide:grunt_heart_1", "hide:grunt_heart_2", "show:the_elder"]);
+    expect(host.ctx.ui.say).toHaveBeenCalledWith(expect.stringMatching(/the QUICKENED don't go back to sleep\. They choose to stay awake\.$/), undefined);
     await run("mercer");
     await run("mercer_after");
     await run("ch10_planting");

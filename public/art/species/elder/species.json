@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "elder",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#787020", "#e0d868", "#f8f8f8"],
+  "sport": ["#181818", "#485880", "#b0c8e0", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release.",
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  }
+  "anim": { "intro": [[0, 6], [1, 8], [2, 8], [3, 16], [4, 10], [0, 8]], "idle": [[0, 150], [1, 10], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Populus tremuloides and the Pando clone, https://en.wikipedia.org/wiki/Pando_(tree) . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/elder.py" },
+  "notes": "Crystal rule. Populus tremuloides (an aspen clone such as Pando). LOOMING: a grove that is one creature, four pale trunks of different heights leaning toward the foe, fused at the base into a thick knot of glowing pale roots twisted like rope (the focal part), roots spreading off both bottom edges; their golden crowns merge into one canopy that overhangs the foe. Gesture: the roots pulse, then the trunks and canopy lean in together, hold, rebound and settle; the root knot's outline and the trunks' feet stay fixed. The aspen family's deep gold-olive dark slot under a more luminous pale green-gold mid tone (the crowns and the glow in the roots); the white bark is white plus the mid tone. Sport: a pale silver-blue winter palette, an artistic interpretation, not a cultivar."
 }
