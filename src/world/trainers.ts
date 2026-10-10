@@ -873,10 +873,37 @@ const ch10Trainers: TrainerDef[] = [
   ], ch10Lines("mercer"), { ai: "smart", music: "battle_mercer", items: [{ item: "spring_water", qty: 3 }] }),
 ];
 
-// Chapter 11 (CH11.md §4). Narrative is supplied by the next wave.
-const ch11Lines = (id: string) => ({
-  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
-});
+// Chapter 11 (CH11.md §4). The seat scripts (scripts/ch11.ts) speak the
+// intro and after lines in the run; these cover the battle's defeat line and
+// any direct talk. Toxicity is only ever "toxic if eaten" (CH11.md §7.3).
+const CH11_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  belladonna: {
+    intro: "Look, don't touch. My NETTLES sting, and OLEANDER is toxic if eaten.",
+    defeat: "Noted, labelled and filed. Under \"lost\".",
+    after: "A NETTLE's hairs are tipped with silica. They snap off like tiny glass needles.",
+  },
+  mimi_osa: {
+    intro: "Quietly, now. Some of us are folded up for the night.",
+    defeat: "...Mm. Woken right up.",
+    after: "Touch a SENSITIVE PLANT and its leaflets fold shut. Leave it be, and they reopen.",
+  },
+  titus_arum: {
+    intro: "Hold your nose if you must. My TITAN ARUM won't take offence.",
+    defeat: "Ah. Thoroughly decomposed.",
+    after: "A TITAN ARUM's spike warms itself as it blooms. The heat helps spread the smell.",
+  },
+  pyra: {
+    intro: "Hot start! My CHILI's been simmering all morning!",
+    defeat: "Burned out! Wow. Okay. Wow.",
+    after: "Birds can't feel a CHILI's burn. They eat the fruit and scatter the seeds far and wide.",
+  },
+  rowan: {
+    intro: "The GROVE taught me patience. Let's see what it taught you.",
+    defeat: "...Well grown. Every one of them.",
+    after: "Every aspen in the GROVE shares one root. Odd. I always thought I stood alone.",
+  },
+};
+const ch11Lines = (id: string) => CH11_LINES[id];
 const council = { ai: "smart", music: "battle_leader", items: [{ item: "spring_water", qty: 2 }] } as const;
 const ch11Trainers: TrainerDef[] = [
   trainer("belladonna", "BELLADONNA", "APOTHECARY", "belladonna", [

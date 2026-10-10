@@ -160,7 +160,10 @@ describe("Chapter 11 Council world", () => {
       expect(trainer.ai).toBe("smart");
       expect(trainer.music).toBe(id === "rowan" ? "battle_keeper" : "battle_leader"); // the Keeper has his own battle theme
       expect(trainer.items).toEqual([{ item: "spring_water", qty: id === "rowan" ? 3 : 2 }]);
-      for (const [kind, text] of [["intro", trainer.intro], ["defeat", trainer.defeat], ["after", trainer.after]]) expect(text).toBe(`TODO(text): ${id} ${kind}`);
+      for (const text of [trainer.intro, trainer.defeat, trainer.after]) {
+        expect(text.trim().length).toBeGreaterThan(0);
+        expect(text).not.toMatch(/TODO|\{PLAYER\}/);
+      }
     }
   });
 });
