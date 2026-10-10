@@ -14,14 +14,18 @@
                   badge on the breast, a tall straight-sided ceremonial hat in
                   a darker green with a gold band, flaring a little at the
                   crown, and a red ledger of marks held at the waist.
-  elder_root      the Elder as an overworld object at the heart: a knot of
-                  pale aspen roots rising out of the ground, about the
-                  player's size, three pale shoots at its crown and a soft
-                  green-gold glow. Column 0 is the resting glow, columns 1-2
-                  the pulse (the veins in the roots light up and the glow
-                  spreads a pixel); every row is the same, so turning to face
-                  the player changes nothing. No face and no paired dark
-                  marks: the knot is all strands and light.
+  elder_root      the Elder as an overworld object at the heart: a gnarled
+                  tangle of five thick pale aspen roots, about the player's
+                  size, trailing out along the ground at both sides and
+                  twisting together into a knuckled knot, with the soil
+                  showing through the gaps between strands. Three small round
+                  golden aspen leaves on short stems sprout from the top and
+                  a soft green-gold glow sits in the crevices. Column 0 is the
+                  resting glow, columns 1-2 the pulse (the crevices brighten
+                  and motes of light rise); every row is the same, so turning
+                  to face the player changes nothing. No face and no paired
+                  dark marks: crevices are long and irregular, and the gaps
+                  never sit side by side.
 
 Silhouette checks: rowan is the only cast member in a hood, and his crook
 staff with its bell is pale and low (rook's is red-brown and forked, taller
@@ -245,60 +249,52 @@ WARDEN["held"] = {
 # =============================================================================
 # The Elder's root knot
 # =============================================================================
-ROOT_PAL = {"K": "#181818", "L": ASPEN_H, "M": "#e0dcc0", "D": "#bcb89c", "N": "#908c74",
-            "G": "#f0f0a8", "g": "#c0d878", "Q": "#506434", "V": "#f0f8a0", "x": "#c8e088", "o": "#f0f8c0"}
+ROOT_PAL = {"K": "#181818", "L": ASPEN_H, "M": "#dcd8bc", "D": "#9c9880",
+            "c": "#a8c860", "C": "#e8f890",                     # crevice glow: resting, pulse
+            "Y": "#f8d850", "y": "#c89830", "B": "#6c4818",      # golden aspen leaves, dark gold outline
+            "s": "#6c8838", "x": "#b8d878", "o": "#f8f8c0"}      # leaf stems, glow motes
 
-# The silhouette: a column of roots rising out of the soil, rounded at the
-# crown, swelling into a knot and flaring into three roots that dive back
-# into the ground (the gaps between them show the soil). Spans are inclusive
-# x ranges per row; the outline is added round them.
-KNOT_SPANS = {5: [(6, 10)], 6: [(5, 11)], 7: [(5, 11)], 8: [(4, 11)], 9: [(5, 12)], 10: [(4, 12)],
-              11: [(3, 12)], 12: [(3, 13)], 13: [(2, 13)],
-              14: [(0, 4), (6, 9), (11, 15)], 15: [(0, 1), (7, 8), (14, 15)]}
-# Three pale shoots spreading from the crown (no outline: thin and light).
-SHOOTS = [(3, 1, "G"), (4, 2, "g"), (5, 3, "g"), (6, 4, "g"), (8, 0, "G"), (8, 1, "G"), (8, 2, "g"), (8, 3, "g"),
-          (8, 4, "g"), (13, 1, "G"), (12, 2, "g"), (11, 3, "g"), (10, 4, "g")]
-MOTES_DIM = [(2, 6), (14, 8), (1, 11)]
-MOTES_LIT = [(2, 5), (14, 6), (1, 9), (15, 11), (5, 1), (11, 1), (0, 12)]
+# Drawn by hand, pixel by pixel. Five pale roots: two trail out along the
+# ground at the corners and climb as the outer legs, one climbs the middle,
+# and two cross over the crown in a knuckled knot; the soil shows through
+# the gaps between them (left under the crown, right lower down, so no two
+# gaps sit side by side). The dark slot (D) is each strand's shadow side
+# and the crevices where strands press together; the brightest crevices (c)
+# hold the Elder's green-gold glow, which pulses. Three small round golden
+# aspen leaves on short stems sprout from the top of the knot.
+ROOT_ROWS = [
+    ".B.....B.....B..",
+    "BYB...BYB...BYB.",
+    "BYyB..BYyB..ByYB",
+    ".BBs...Bs...sBB.",
+    "....s...s..s....",
+    "....KsKKsKsKK...",
+    "...KLLMMLMDLDK..",
+    "..KLMDcLLMMDLDK.",
+    "..KLDK.KLMDcLMDK",
+    ".KLMK..KLMDcLLDK",
+    ".KLDcDKLDcK.KLMK",
+    ".KLMcKKLMDK.KLDK",
+    "KLDKLDcLDK.KLMcK",
+    "LMDK.KLMDcKKLDKD",
+    "MDK.KLDKLMDKKMDL",
+    "DK..KDK.KLDK.KDD",
+]
+MOTES_DIM = [(14, 4), (1, 6)]
+MOTES_LIT = [(2, 4), (14, 4), (1, 6), (15, 7), (0, 9), (15, 3)]
 
 
 def root_frame(pulse: int):
-    g = [["."] * 16 for _ in range(16)]
-    body = {(x, y) for y, runs in KNOT_SPANS.items() for a, b in runs for x in range(a, b + 1)}
-    for x, y in body:
-        # The twist: diagonal strands, each lit on its left edge (L), pale
-        # across (M), turning into shade (D) and a crease (N) where the next
-        # strand wraps over it; the outer edges stay lit left, shaded right.
-        c = "LMMDN"[(x + y) % 5] if y < 14 else "M"
-        if (x - 1, y) not in body:
-            c = "L"
-        elif (x + 1, y) not in body and c != "N":
-            c = "D"
-        if pulse and c == "M" and (x + y) % 5 == 2:
-            c = "V"                                   # the glow runs up every strand
-        g[y][x] = c
-    for x, y in body:
-        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            q = (x + dx, y + dy)
-            if q not in body and 0 <= q[0] < 16 and 0 <= q[1] < 16:
-                g[q[1]][q[0]] = "K"
-    # The shoots get a dark green outline (hue-shifted, not black), so they
-    # read on grass without weighing as much as the knot.
-    shoot = {(x, y) for x, y, _ in SHOOTS}
-    for x, y in shoot:
-        for dx, dy in ((1, 0), (-1, 0), (0, -1)):
-            q = (x + dx, y + dy)
-            if q not in shoot and 0 <= q[0] < 16 and 0 <= q[1] < 16 and g[q[1]][q[0]] == ".":
-                g[q[1]][q[0]] = "Q"
-    for x, y, c in SHOOTS:
-        g[y][x] = "o" if pulse and c == "G" else c   # the shoot tips flare on the pulse
+    g = [list(r) for r in ROOT_ROWS]
     for x, y in MOTES_LIT if pulse else MOTES_DIM:
-        if g[y][x] == ".":
-            g[y][x] = "o" if pulse else "x"
+        assert g[y][x] == ".", (x, y)
+        g[y][x] = "o" if pulse else "x"
     out = Image.new("RGBA", (16, 16), ch.gbc.CLEAR)
     px = out.load()
     for y, row in enumerate(g):
         for x, c in enumerate(row):
+            if c == "c" and pulse:
+                c = "C"                                   # the crevice glow brightens on the pulse
             if c != ".":
                 px[x, y] = ch.gbc.hexc(ROOT_PAL[c])
     return out
