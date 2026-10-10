@@ -257,6 +257,22 @@ describe("music", () => {
     expect(a.chords.split("|").at(-1)!.trim()).toBe("E");
   });
 
+  // Chapter 10.
+  it("elder_grove: a drumless drone under a trembling sixteenth rustle, never resting", () => {
+    const a = ARRANGEMENTS.elder_grove;
+    expect([a.harmony, a.bass, a.drums]).toEqual(["arp16", "drone", "none"]);
+    expect(parseSong(MUSIC_DEFS.elder_grove).channels.noise).toBeUndefined();
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("A");
+  });
+
+  it("battle_mercer: opens on the Root Relay's g / a-flat / g motif over the heavy groove", () => {
+    const a = ARRANGEMENTS.battle_mercer;
+    expect(a.drums).toBe("heavy");
+    const p1 = parseSong(MUSIC_DEFS.battle_mercer).channels.p1!.events;
+    expect(p1.slice(0, 3).map((e) => e.midi! % 12)).toEqual([7, 8, 7]);       // g, a-flat, g
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("G");
+  });
+
   it("arranges a 3/4 chart correctly", () => {
     const def = arrange({ bpm: 100, meter: 3, chords: "C | G", melody: "c2. | d2. |", harmony: "waltz", bass: "half", drums: "soft" });
     const song = parseSong(def);

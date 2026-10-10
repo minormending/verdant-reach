@@ -11,7 +11,7 @@ export const groveEncounters: MapDef["encounters"] = { grass: { rate: 12, slots:
 ] } };
 
 export const elder_grove_2: MapDef = {
-  id: "elder_grove_2", name: "ELDER GROVE", outdoor: true, music: "sugarbush_grove",
+  id: "elder_grove_2", name: "ELDER GROVE", outdoor: true, music: "elder_grove",
   border: "tree", legend: GROVE_LEGEND,
   tiles: [
     "TTTTTTTTTTTTTTTNTTTTTTTTTTTTTT",

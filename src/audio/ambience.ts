@@ -31,6 +31,7 @@ export function ambienceFor(music: MusicId | null, tod: TimeOfDay): AmbienceKind
     case "thistledown": return night ? "night" : "town";
     case "canyon": return night ? "night" : "meadow";   // open air between the walls
     // ridge: none. Only the wind and the old trees.
+    case "elder_grove": return "forest";  // the Grove listens: a hush, the odd far bird
     // red_lake: none. The forced lake drowns out the birds.
     // hollow: none. Inside the trunk the drips are the only sound.
     case "prologue_bloom": return "night";

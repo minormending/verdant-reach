@@ -3,7 +3,7 @@ import type { MapDef } from "../../contracts";
 import { OUTDOOR, when } from "../build";
 
 export const elder_grove_3: MapDef = {
-  id: "elder_grove_3", name: "ELDER GROVE", outdoor: true, music: "sugarbush_grove",
+  id: "elder_grove_3", name: "ELDER GROVE", outdoor: true, music: "elder_grove",
   border: "tree", legend: OUTDOOR,
   tiles: [
     "TTTTTTTTTTTTTNTTTTTTTTTTTT",
