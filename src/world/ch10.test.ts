@@ -201,7 +201,7 @@ describe("Chapter 10 world", () => {
         for (const move of q.moves ?? []) expect(DATA.species[q.species].learnset.some((m) => m.move === move && m.level <= q.level), `${id} ${q.species} ${move}`).toBe(true);
       });
       expect(t.ai).toBe("smart");
-      expect(t.music).toBe("battle_rootstock");
+      expect(t.music).toBe(id === "mercer" ? "battle_mercer" : "battle_rootstock"); // Mercer has his own battle theme
     }
     expect(WORLD.trainers.mercer.items).toEqual([{ item: "spring_water", qty: 3 }]);
     for (const id of CH10) for (const n of WORLD.maps[id].npcs.filter((q) => q.trainer)) {

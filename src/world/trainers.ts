@@ -870,7 +870,7 @@ const ch10Trainers: TrainerDef[] = [
   ], ch10Lines("wren_2"), { ai: "smart", music: "battle_rootstock" }),
   trainer("mercer", "MERCER", "ROOTSTOCK", "mercer", [
     T("apple_tree", 58), T("wild_rose", 58), T("sugar_maple", 59), T("red_cedar", 59), T("dragon_tree", 60), T("quaking_aspen", 61),
-  ], ch10Lines("mercer"), { ai: "smart", music: "battle_rootstock", items: [{ item: "spring_water", qty: 3 }] }),
+  ], ch10Lines("mercer"), { ai: "smart", music: "battle_mercer", items: [{ item: "spring_water", qty: 3 }] }),
 ];
 
 export const TRAINERS: Record<string, TrainerDef> = Object.fromEntries(
