@@ -42,8 +42,12 @@ it.each([1, 42])("plays all 18 Chapter 11 milestones with a real loss and eight 
   const { createQuickened } = await import("../src/battle");
   const { randomStream } = await import("../src/engine/random");
   const input = createInput(() => {}), scenes = createSceneStack();
+  // Story stills resolve to a stub image so the ending's fellowship still is
+  // shown (the stub canvas ignores what it draws); every other asset is absent.
+  const still = {} as HTMLImageElement;
   const ctx = createGameContext({ input, scenes, assets: {
-    loadAll: async () => {}, exists: () => false, image: () => null,
+    loadAll: async () => {}, exists: () => false,
+    image: (path: string) => (path.startsWith("assets/stills/") ? still : null),
   } });
   // A saved Chapter 10 fixture supplies only the earlier chapter's state.
   // Every Council flag and ending milestone must be earned by the driver.

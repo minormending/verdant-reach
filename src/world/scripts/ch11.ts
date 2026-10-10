@@ -59,6 +59,7 @@ export const ch11Scripts: Scripts = {
   ch11_ending: [ifFlags({ council_run: true, beat_keeper: true }, [
     ifFlags({ game_cleared: false }, [
       { op: "showNpc", npc: "imogen" },
+      { op: "still", image: "fellowship" },
       say("TODO(text): DR. VALE arrives at the Herbarium to meet ROWAN.", "NARRATOR"),
       face("rowan", "right"), face("imogen", "left"),
       say("TODO(text): IMOGEN. We have spent too long apart.", "ROWAN VALE"),
@@ -68,7 +69,7 @@ export const ch11Scripts: Scripts = {
       say("TODO(text): {PLAYER}, you are now a Fellow of the Herbarium.", "ROWAN VALE"),
       say("TODO(text): Your Field Herbarium is the record of a new world.", "DR. VALE"),
     ]),
-    { op: "hallOfFame" }, { op: "credits" },
+    { op: "stillClear" }, { op: "hallOfFame" }, { op: "credits" },
     flag("game_cleared"), flag("council_run", false),
     { op: "fade", to: "black" },
     { op: "warp", to: "player_home", x: 2, y: 2, facing: "down" },

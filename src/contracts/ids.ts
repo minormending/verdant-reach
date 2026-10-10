@@ -389,6 +389,8 @@ export const CHARACTERS = [
   // Chapter 10
   "rowan", "council_warden",
   "elder_root",                  // the Elder's glowing root knot (static object; column 0 rest, columns 1-2 pulse)
+  // Chapter 11: the Council seats
+  "belladonna", "mimi_osa", "titus_arum", "pyra",
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -403,6 +405,7 @@ export const TRAINER_PORTRAITS = [
   "mercer", "wren", // Chapter 8
   "rook", // Chapter 9
   "rowan", // Chapter 10
+  "belladonna", "mimi_osa", "titus_arum", "pyra", // Chapter 11
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -483,6 +486,7 @@ export const STILLS = [
   "mercer_hub_map", // Chapter 8
   "dragon_trees", // Chapter 9
   "centuryheart_sprouts", // Chapter 10
+  "fellowship", // Chapter 11
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 
