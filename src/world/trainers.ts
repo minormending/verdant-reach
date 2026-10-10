@@ -724,14 +724,119 @@ const ch9Trainers: TrainerDef[] = [
   ], ch9Lines("rook"), { ai: "smart", music: "battle_leader", mark: "resin_mark", items: [{ item: "spring_water", qty: 2 }] }),
 ];
 
-// Chapter 10 (CH10.md §5); dialogue belongs to the story pass.
+// Chapter 10 (CH10.md §5): one set per trainer.
 // Balance (two mixed parties, 300 seeded trials per starter, no items):
 // Shears +2 throughout (76.1%); Calloway +1 throughout (75.2%);
 // Wren unchanged levels with explicit learned moves (76.1%);
 // Mercer +2 on his first five, +1 on the ace (56.8%, minimum 28.3%).
-const ch10Lines = (id: string) => ({
-  intro: `TODO(text): ${id} intro`, defeat: `TODO(text): ${id} defeat`, after: `TODO(text): ${id} after`,
-});
+const CH10_LINES: Record<string, { intro: string; defeat: string; after: string }> = {
+  r12_crag: {
+    intro: "Gorge after gorge out here. My legs have opinions!",
+    defeat: "My legs win the argument.",
+    after: "LODGEPOLE PINE cones can stay shut for years. A fire's heat melts their resin seal.",
+  },
+  r12_gorge: {
+    intro: "I climbed out of the desert to get here. So did all three of mine!",
+    defeat: "Dried right up.",
+    after: "A SAGUARO's roots run shallow and wide. They catch the rain before it soaks away.",
+  },
+  r12_kite: {
+    intro: "Up here, the wind decides who flies. Today it's me!",
+    defeat: "Blown off course.",
+    after: "A LARCH is a conifer that drops its needles every autumn. They turn gold first.",
+  },
+  r12_rook: {
+    intro: "Yes, ROOK. No relation. I'm named for the bird, and I watch them too!",
+    defeat: "Outflown.",
+    after: "SNOWDROP leaves have hardened tips. They push up through frozen ground.",
+  },
+  r12_sedge: {
+    intro: "A pond, up on the plateau! My water plants needed a holiday.",
+    defeat: "Sunk.",
+    after: "Red MANGROVE seeds sprout while still on the tree. Then they drop and float off.",
+  },
+  r12_heath: {
+    intro: "Last trainer before the COUNCIL. I'm the toughest weed on the road!",
+    defeat: "Pulled up, roots and all.",
+    after: "After a fire, FIREWEED can turn a whole blackened slope pink.",
+  },
+  grunt_arb_1: {
+    intro: "The gate's open. Just not to you. MR. THORNE's orders!",
+    defeat: "Closed... on me.",
+    after: "Some butterflies lay eggs only on NETTLES. Their caterpillars don't mind the sting.",
+  },
+  grunt_arb_2: {
+    intro: "Nobody bothers the boss while he works. Not botanists. Not the COUNCIL!",
+    defeat: "Snapped.",
+    after: "A FLYTRAP takes days to digest one fly. Then the trap opens again, hungry.",
+  },
+  grunt_arb_3: {
+    intro: "That gate's been shut longer than I've been alive. Now it's ours!",
+    defeat: "...Not ours, then.",
+    after: "LODGEPOLE PINES spring up thick after a fire. Whole forests, all the same age.",
+  },
+  grunt_g1_1: {
+    intro: "Stop staring at the trees! ...They're staring back, aren't they?",
+    defeat: "Stop LOOKING at me. Not you. Them.",
+    after: "These trunks creak when there's no wind at all. I don't like it in here.",
+  },
+  grunt_g1_2: {
+    intro: "SHEARS is up ahead, trimming. You're next on her list!",
+    defeat: "Trimmed.",
+    after: "RED CEDAR wood shrugs off rot. A fallen log can lie for a century.",
+  },
+  grunt_g2_1: {
+    intro: "These paths keep moving! I've walked past this tree six times!",
+    defeat: "Seven times, now.",
+    after: "Stand in a clearing and the trees shuffle. The doctor calls it \"fascinating\".",
+  },
+  grunt_g2_2: {
+    intro: "DR. CALLOWAY's busy. Measuring. Everything. Including you!",
+    defeat: "Measured and found wanting.",
+    after: "A FLYTRAP snaps shut in a split second. Sealing up tight takes it much longer.",
+  },
+  grunt_g3_1: {
+    intro: "Hear that? Nothing. Not a bird. Just the leaves, shivering.",
+    defeat: "Now I'm shivering.",
+    after: "Aspen leaves hang on flat stalks. The faintest breath of air sets them trembling.",
+  },
+  grunt_g3_2: {
+    intro: "WREN won't say what the trees are saying. Maybe you will!",
+    defeat: "Didn't think so.",
+    after: "I signed up for steady work. Now I'm in a forest that's one tree. Steady, it isn't.",
+  },
+  grunt_heart_1: {
+    intro: "The KEEPER stays put till the boss is finished. So do you!",
+    defeat: "He's not going to finish, is he.",
+    after: "They told us this was a rescue. It looks more like a cutting.",
+  },
+  grunt_heart_2: {
+    intro: "Not one step nearer the root! The graft has nearly taken!",
+    defeat: "Don't tell the boss.",
+    after: "A graft only takes if the living layers under the bark line up. The boss never misses.",
+  },
+  shears_2: {
+    intro: "You again. A persistent shoot. Persistence is easily cut.",
+    defeat: "...Inefficient. Again.",
+    after: "Cut a plant hard and it grows back stronger. I had not thought it applied to you.",
+  },
+  calloway_2: {
+    intro: "This forest takes centuries over everything. I won't.",
+    defeat: "...Noted. It would not be hurried. Nor, it seems, would you.",
+    after: "Burn an aspen grove and it regrows from the roots. No signal required. ...Annoying.",
+  },
+  wren_2: {
+    intro: "If you can make it quiet without a command, show me. Please.",
+    defeat: "...Maybe it never needed to be quiet. Maybe it needed to be heard.",
+    after: "An aspen clone is one plant, all the way down. Nothing in this grove grows alone.",
+  },
+  mercer: {
+    intro: "I'm sorry it's you. Truly. But I won't watch a blight take everything twice.",
+    defeat: "...So the wild wins. It always did.",
+    after: "I wanted them safe. One root, one rule. ...Perhaps safe was never mine to give.",
+  },
+};
+const ch10Lines = (id: string) => CH10_LINES[id];
 const ch10Trainers: TrainerDef[] = [
   trainer("r12_crag", "CRAG", "HIKER", "hiker", [T("lodgepole_pine", 50), T("lithops_bloom", 51)], ch10Lines("r12_crag")),
   trainer("r12_gorge", "GORGE", "HIKER", "hiker", [T("saguaro", 51), T("dragon_tree", 52), T("prickly_pear", 51)], ch10Lines("r12_gorge")),
@@ -739,17 +844,17 @@ const ch10Trainers: TrainerDef[] = [
   trainer("r12_rook", "ROOK", "BIRDWATCHER", "birdwatcher", [T("red_cedar", 52), T("moss_campion", 52), T("snowdrop", 53)], ch10Lines("r12_rook")),
   trainer("r12_sedge", "SEDGE", "GARDENER", "gardener", [T("red_mangrove", 52), T("bladderwort", 52)], ch10Lines("r12_sedge")),
   trainer("r12_heath", "HEATH", "GARDENER", "gardener", [T("fireweed", 53), T("dragon_fruit", 53), T("ghost_pipe", 52)], ch10Lines("r12_heath")),
-  trainer("grunt_arb_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 51), T("lodgepole_pine", 51)], ch10Lines("grunt_arb_1"), { music: "battle_rootstock" }),
-  trainer("grunt_arb_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 51), T("red_cedar", 51)], ch10Lines("grunt_arb_2"), { music: "battle_rootstock" }),
-  trainer("grunt_arb_3", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 51), T("lodgepole_pine", 51)], ch10Lines("grunt_arb_3"), { music: "battle_rootstock" }),
-  trainer("grunt_g1_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 52), T("lodgepole_pine", 52)], ch10Lines("grunt_g1_1"), { music: "battle_rootstock" }),
-  trainer("grunt_g1_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 52), T("red_cedar", 52)], ch10Lines("grunt_g1_2"), { music: "battle_rootstock" }),
-  trainer("grunt_g2_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 53), T("lodgepole_pine", 53)], ch10Lines("grunt_g2_1"), { music: "battle_rootstock" }),
-  trainer("grunt_g2_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 53), T("red_cedar", 53)], ch10Lines("grunt_g2_2"), { music: "battle_rootstock" }),
-  trainer("grunt_g3_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 54), T("lodgepole_pine", 54)], ch10Lines("grunt_g3_1"), { music: "battle_rootstock" }),
-  trainer("grunt_g3_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 54), T("red_cedar", 54)], ch10Lines("grunt_g3_2"), { music: "battle_rootstock" }),
-  trainer("grunt_heart_1", "GRUNT", "GRUNT", "grunt", [T("stinging_nettle", 54), T("lodgepole_pine", 54)], ch10Lines("grunt_heart_1"), { music: "battle_rootstock" }),
-  trainer("grunt_heart_2", "GRUNT", "GRUNT", "grunt", [T("venus_flytrap", 54), T("red_cedar", 54)], ch10Lines("grunt_heart_2"), { music: "battle_rootstock" }),
+  trainer("grunt_arb_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 51), T("lodgepole_pine", 51)], ch10Lines("grunt_arb_1"), { music: "battle_rootstock" }),
+  trainer("grunt_arb_2", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 51), T("red_cedar", 51)], ch10Lines("grunt_arb_2"), { music: "battle_rootstock" }),
+  trainer("grunt_arb_3", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 51), T("lodgepole_pine", 51)], ch10Lines("grunt_arb_3"), { music: "battle_rootstock" }),
+  trainer("grunt_g1_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 52), T("lodgepole_pine", 52)], ch10Lines("grunt_g1_1"), { music: "battle_rootstock" }),
+  trainer("grunt_g1_2", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 52), T("red_cedar", 52)], ch10Lines("grunt_g1_2"), { music: "battle_rootstock" }),
+  trainer("grunt_g2_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 53), T("lodgepole_pine", 53)], ch10Lines("grunt_g2_1"), { music: "battle_rootstock" }),
+  trainer("grunt_g2_2", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 53), T("red_cedar", 53)], ch10Lines("grunt_g2_2"), { music: "battle_rootstock" }),
+  trainer("grunt_g3_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 54), T("lodgepole_pine", 54)], ch10Lines("grunt_g3_1"), { music: "battle_rootstock" }),
+  trainer("grunt_g3_2", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 54), T("red_cedar", 54)], ch10Lines("grunt_g3_2"), { music: "battle_rootstock" }),
+  trainer("grunt_heart_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 54), T("lodgepole_pine", 54)], ch10Lines("grunt_heart_1"), { music: "battle_rootstock" }),
+  trainer("grunt_heart_2", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 54), T("red_cedar", 54)], ch10Lines("grunt_heart_2"), { music: "battle_rootstock" }),
   trainer("shears_2", "SHEARS", "ADMIN", "shears", [
     T("bramble_berry", 55), T("holly", 56), T("stinging_nettle", 57), T("blackberry", 58),
   ], ch10Lines("shears_2"), { ai: "smart", music: "battle_rootstock" }),

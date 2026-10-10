@@ -206,8 +206,9 @@ describe("Chapter 10 world", () => {
     expect(WORLD.trainers.mercer.items).toEqual([{ item: "spring_water", qty: 3 }]);
     for (const id of CH10) for (const n of WORLD.maps[id].npcs.filter((q) => q.trainer)) {
       const t = WORLD.trainers[n.trainer!];
-      for (const text of [t.intro, t.defeat, t.after]) expect(text).toContain("TODO(text)");
+      for (const text of [t.intro, t.defeat, t.after]) expect(text).toMatch(/^(?!.*TODO)\S.*\S$/);
       if (t.id.startsWith("grunt_")) {
+        expect([t.className, t.name]).toEqual(["ROOTSTOCK", "GRUNT"]);
         expect(t.team).toHaveLength(2);
         expect(t.team.every((q) => q.level >= 51 && q.level <= 54)).toBe(true);
       }

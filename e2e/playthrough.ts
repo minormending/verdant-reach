@@ -2027,7 +2027,7 @@ export async function chapter10() {
   const doorTexts = report.texts.length;
   const door = await trigger("ch10_council_door");
   beat("COUNCIL: the keepers have gone to the Grove", door && ow()?.mapId === "council_arboretum"
-    && report.texts.slice(doorTexts).some((t) => t.text.includes("Council has gone to the Grove")));
+    && report.texts.slice(doorTexts).some((t) => t.text.includes("GONE TO THE GROVE")));
   await talkTo("bram_arboretum");
   beat("BRAM: joins at the Arboretum", flag("bram_joined"));
   // Heal at the Arboretum, as a player would: it's also where a whiteout in the Grove returns.
