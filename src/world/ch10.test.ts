@@ -57,7 +57,8 @@ describe("Chapter 10 world", () => {
       expect([grid(m).w, grid(m).h]).toEqual(sizes[i]);
       expect(m.outdoor).toBe(!["arboretum_greenhouse", "council_hall"].includes(id));
     });
-    expect(WORLD.maps.elder_grove_heart.structures).toContainEqual({ key: "big_oak", x: 8, y: 7 });
+    // The Chapter 10 environment pass: the Elder's trunk replaces the big_oak stand-in.
+    expect(WORLD.maps.elder_grove_heart.structures).toContainEqual({ key: "elder_trunk", x: 8, y: 6 });
     expect(WORLD.maps.elder_grove_heart.musicWhen).toEqual([{ when: [{ flag: "beat_mercer", is: true }], music: "prologue_bloom" }]);
   });
 

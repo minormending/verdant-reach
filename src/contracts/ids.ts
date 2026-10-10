@@ -263,6 +263,12 @@ export const TILES = {
   red_rock:       { walk: false },               // red sandstone walls and outcrops (group "red_rock")
   red_ledge:      { walk: false, ledge: "down" }, // a red sandstone step: hop south only
   resin_floor:    { walk: true },                // Conservatory 8: dark-red flags with amber resin grout
+  // Chapter 10: the Elder Grove
+  aspen_tree:     { walk: false },               // pale aspen with a golden crown; the Grove's trees, borders and shifting lanes
+  grove_floor:    { walk: true },                // golden aspen leaf litter on dark loam
+  grove_grass:    { walk: true, encounter: "grass" }, // tall pale grass and ferns: the Grove's encounter tile
+  root_vein:      { walk: true },                // pale glowing roots leading toward the heart (group "root_vein")
+  listening_clearing: { walk: true },            // mushrooms and moss round a glow: ring 2's step triggers only
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -330,6 +336,10 @@ const STRUCTURE_SPECS = {
   adobe_house:        { w: 4, h: 3, door: { x: 1, y: 2 } }, // flat-roofed Thistledown adobe
   ridge_conservatory: { w: 6, h: 4, door: { x: 3, y: 3 } }, // Conservatory 8, set into the cliff
   windmill_pump:      { w: 2, h: 3 },                       // desert wind pump over a trough (scenery)
+  // Chapter 10: the Council Arboretum and the Elder Grove
+  council_hall:       { w: 6, h: 4, door: { x: 3, y: 3 } }, // the Council's pale-stone hall
+  grove_gate:         { w: 4, h: 2 },                       // a tower of the Grove Gate; a pair flanks the open gap (scenery)
+  elder_trunk:        { w: 4, h: 4 },                       // the Elder's vast pale trunk at the heart (scenery)
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
