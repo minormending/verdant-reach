@@ -1,21 +1,27 @@
 """Original Crystal-rule Cocos nucifera (coconut) as a roaming legendary:
 coconut.
 
-coconut (adult, single-stage legendary), REARING/displaying: a fibrous,
-husk-brown coconut rides a curling wave, its pointed end raised toward the
-foe like a prow. From its stalk end a young palm sprout rises and fans out
-three arching, pleated fronds: the big lead frond arches over the foe, one
-rises straight up and the rear one sweeps back over the wave's crest. The
-wave curls up behind the nut and over toward the foe; the sea runs in front
-of the nut, so the nut sits in the water, and the motion reads as travel.
+coconut (adult, single-stage legendary), REARING/displaying: a full,
+rounded husked coconut (a fat ovoid with a slightly three-sided shoulder)
+sits deep in a curling wave, its blunt point raised toward the foe like a
+prow, long black husk-fibre lines following its curve over a dark-slot
+shadow side. From its stalk end a young palm sprout rises and fans out
+three arching, pleated fronds with forked tips (a seedling's leaves are
+undivided); the big lead frond arches over the foe, the outer half of its
+edge split into leaflets so it reads as a palm, one rises straight up and
+the rear one sweeps back over the wave's crest. The wave curls up behind
+the nut and over toward the foe; the sea runs in front of the nut, so the
+nut sits in the water, and the motion reads as travel.
 
 Intro: it bobs on the wave and the fronds unfurl: the nut dips, its fronds
 furled tight; it rises on the swell while the fronds open, flare past the
 rest pose, and settle. The wave and the sea stay registered.
-Two tones: a palm-green dark slot (the fronds, the sea, the husk's fibre
-and shade) under a husk-brown mid (the nut, the frond pleats' light); the
-wave is the dark slot under white foam and the black outline.
-Faces: the nut is shown from the side, its husk fibre running along it; the
+Two tones: a palm-green dark slot (the fronds, the sea, the husk's shadow
+side and shoulder ridge) under a husk-brown mid (the nut, the frond
+midribs' light); the husk fibre is outline black; the wave is the dark slot
+under white foam and the black outline.
+Faces: the nut is shown from the side, its fibre lines long and running out
+to its outline; the
 three germination pores (two plugged "eyes" and one open pore) are on the
 far end, under the sprout, so the sprite never shows three dark spots; no
 enclosed dark dots anywhere (no_dots).
@@ -53,9 +59,9 @@ ANIM = {"intro": [[1, 12], [2, 6], [3, 16], [4, 10], [0, 8]],
 
 # ------------------------------------------------------------- the sea ----
 
-WAVE = [(-2.0, 58.0), (-2.0, 50.5), (6.0, 49.0), (14.0, 50.5), (22.0, 49.0), (30.0, 47.5), (36.0, 45.5),
-        (41.5, 42.5), (46.0, 38.0), (48.0, 32.0), (47.0, 27.5), (43.5, 25.0), (39.0, 24.8), (36.0, 23.0),
-        (38.0, 19.0), (42.5, 16.0), (48.0, 15.0), (52.0, 17.0), (54.0, 21.0), (55.0, 28.0), (56.0, 58.0)]
+WAVE = [(-2.0, 58.0), (-2.0, 51.5), (6.0, 50.0), (14.0, 51.0), (22.0, 49.5), (30.0, 47.5), (36.0, 45.5),
+        (42.0, 43.0), (47.0, 38.5), (49.5, 32.0), (48.5, 27.0), (44.5, 24.8), (39.5, 24.6), (36.0, 23.0),
+        (38.0, 19.0), (42.5, 16.0), (48.0, 15.0), (50.5, 16.5), (52.5, 20.5), (53.0, 28.0), (53.5, 58.0)]
 
 
 def wave(s):
@@ -108,44 +114,60 @@ def foam(s, wave_pid):
 
 # ------------------------------------------------------------- the nut ----
 
-def nut_poly(cx, cy, rx, ry, ang, point=0.35):
-    """A coconut in its husk seen from the side: an oval drawn out to a blunt
-    point at one end (the end away from the stalk), turned by `ang`
-    degrees."""
+def nut_poly(cx, cy, rx, ry, ang, point=0.35, facets=0.0):
+    """A coconut in its husk seen from the side: a fat ovoid drawn out to a
+    blunt point at one end (the end away from the stalk), slightly
+    three-sided (`facets`), turned by `ang` degrees."""
     pts = []
     ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
-    for k in range(80):
-        t = 2 * math.pi * k / 80
+    for k in range(96):
+        t = 2 * math.pi * k / 96
         x = math.cos(t)
         y = math.sin(t)
         r = 1.0 + point * max(0.0, -x) ** 3            # the point toward -x (the foe)
-        px_, py_ = rx * x * r, ry * y * (1.0 - 0.25 * max(0.0, -x) ** 2)
+        r *= 1.0 + facets * math.cos(3 * (t - 0.35))
+        px_, py_ = rx * x * r, ry * y * r * (1.0 - 0.22 * max(0.0, -x) ** 2)
         pts.append((cx + px_ * ca - py_ * sa, cy + px_ * sa + py_ * ca))
     return pts
 
 
-def nut(s, cx, cy):
-    """The husked nut: the husk-brown mid, a broad dark crescent on its
-    shaded underside, husk fibre running along it in short dark strokes that
-    grow out of the shade (never closed dots), a ridge along its top, and a
-    white glint on its lit top-left."""
-    ang = 12.0
-    m = s.poly(nut_poly(cx, cy, 11.8, 9.3, ang, point=0.28))
-    pid = s.part(m, base=2, k=3, line=0)
+NUT = (21.0, 40.0, 14.2, 11.4, 16.0)       # cx, cy, rx, ry, angle (the point raised toward the foe)
+
+
+def nut(s, cx, cy, shape=None, point=0.24):
+    """The husked nut, fat and slightly three-sided: the husk-brown mid on
+    its lit upper facet, a broad dark-slot shadow over its lower side, a
+    ridge in the dark slot along its shoulder between the facets, long black
+    husk-fibre lines following its curve from the point to the stalk end
+    (every one runs out to the outline; never a dot), a white rim and glint
+    on its lit top-left. Its pores are on the stalk end, under the sprout."""
+    _, _, rx, ry, ang = shape or NUT
+    m = s.poly(nut_poly(cx, cy, rx, ry, ang, point=point, facets=0.05))
+    pid = s.part(m, base=2, k=0, line=0)
     ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
 
     def P(u, v):          # nut coordinates (u along, v across, both -1..1) -> canvas
-        x, y = u * 11.3, v * 8.7
+        x, y = u * rx, v * ry
         return (cx + x * ca - y * sa, cy + x * sa + y * ca)
-    # the husk's fibre: strands running from the stalk end to the point,
-    # following the nut's curve, broken into lengths (never closed dots)
-    for c, u0, u1 in ((0.62, -0.75, 0.15), (0.62, 0.35, 0.85), (0.3, -0.85, -0.25), (0.3, 0.0, 0.8),
-                      (-0.05, -0.55, 0.45), (-0.4, 0.15, 0.75)):
-        pts = [P(u, c * math.sqrt(max(0.0, 1.0 - u * u)) * 0.95) for u in np.linspace(u0, u1, 18)]
-        s.decal(s.line1(pts), 1, on=[pid])
-    # glint on the lit shoulder
-    s.decal(s.line1([P(u, -0.72 * math.sqrt(1 - u * u)) for u in np.linspace(-0.6, -0.1, 8)]), 3, on=[pid])
-    rim_white(s, m, pid, 0.18)
+    yy, xx = np.mgrid[0:s.h, 0:s.w]
+    (tcx, tcy), = s.T([(cx, cy)])
+    X, Y = xx + 0.5 - tcx, yy + 0.5 - tcy
+    u = (X * ca + Y * sa) / rx
+    v = (-X * sa + Y * ca) / ry
+    # the shadow side: the lower facet, below the shoulder ridge
+    ridge_v = lambda uu: 0.18 - 0.12 * uu        # noqa: E731
+    s.decal(m & (v > ridge_v(u) + 0.05 + 0.25 * (1 - np.abs(u))), 1, on=[pid])
+    s.decal(m & (v > 0.15) & (u > 0.55), 1, on=[pid])
+    # the shoulder ridge between the lit facet and the shaded one
+    s.decal(s.line1([P(uu, ridge_v(uu) + 0.25 * (1 - abs(uu)) - 0.02) for uu in np.linspace(-1.1, 1.05, 30)]),
+            1, on=[pid])
+    # husk fibre: long black lines from the point, following the curve
+    for c, u0, u1 in ((-0.45, -0.98, 0.35), (0.05, -1.02, 0.7), (0.55, -0.85, 1.02), (0.85, -0.2, 0.95)):
+        pts = [P(uu, c * math.sqrt(max(0.0, 1.0 - uu * uu)) * 1.02) for uu in np.linspace(u0, u1, 30)]
+        s.decal(s.line1(pts), 0, on=[pid], lock=True)
+    # the lit facet: a white rim and a glint along the top-left
+    rim_white(s, m, pid, 0.32)
+    s.decal(s.line1([P(uu, -0.68 * math.sqrt(1 - uu * uu)) for uu in np.linspace(-0.55, 0.0, 10)]), 3, on=[pid])
     return pid, m
 
 
@@ -154,14 +176,14 @@ def nut(s, cx, cy):
 # the fronds, from the sprout's crown: (open tip, furled tip, width, bend,
 # ridge glints); the lead frond arches over the foe, the rear one sweeps back
 FRONDS = [
-    ((49.0, 5.0), (33.0, 2.0), 5.0, -0.30),       # rear, back over the crest
-    ((25.0, 0.5), (27.0, 0.5), 5.4, 0.18),        # up
-    ((1.5, 19.0), (21.0, 1.5), 6.6, 0.36),        # lead, arching over the foe
+    ((49.0, 5.0), (35.0, 2.0), 4.6, -0.30),       # rear, back over the crest
+    ((27.0, 1.5), (29.0, 1.5), 4.8, 0.18),        # up
+    ((2.5, 15.0), (22.0, 2.0), 7.0, 0.36),        # lead, arching over the foe, split into leaflets
 ]
-CROWN = (27.0, 29.0)
+CROWN = (29.5, 24.0)
 
 
-def frond(s, base, tip, w, bend):
+def frond(s, base, tip, w, bend, leaflets=False):
     """One young coconut leaf (a seedling's leaves are undivided): a long
     arching blade, pleated. The palm-green dark slot, its midrib catching
     the light in the mid tone, short black pleat folds running in from its
@@ -171,7 +193,7 @@ def frond(s, base, tip, w, bend):
     n = len(path)
     s.decal(s.line1(path[int(n * 0.1):int(n * 0.85)]), 2, on=[pid])
     # pleats: on the side of the blade away from the light
-    for i in range(int(n * 0.22), int(n * 0.82), max(4, n // 9)):
+    for i in range(int(n * 0.22), int(n * (0.42 if leaflets else 0.82)), max(4, n // 9)):
         (x0, y0), (x1, y1) = path[max(0, i - 1)], path[min(n - 1, i + 1)]
         ll = math.hypot(x1 - x0, y1 - y0) or 1.0
         nx, ny = -(y1 - y0) / ll, (x1 - x0) / ll
@@ -187,22 +209,38 @@ def frond(s, base, tip, w, bend):
     notch = s.stroke(path[int(n * 0.86):] + [(path[-1][0] * 2 - path[-3][0], path[-1][1] * 2 - path[-3][1])],
                      (0.6, 1.6), cap=False)
     s.erase(notch & (s.pid == pid))
+    if leaflets:
+        # the outer half of its shaded edge splits into leaflets: cuts from
+        # the edge in toward the midrib, slanting back toward the base
+        for t in (0.48, 0.6, 0.72):
+            i = int(n * t)
+            (x0, y0), (x1, y1) = path[i - 1], path[i + 1]
+            ll = math.hypot(x1 - x0, y1 - y0) or 1.0
+            nx, ny = -(y1 - y0) / ll, (x1 - x0) / ll
+            if nx + ny < 0:
+                nx, ny = -nx, -ny
+            tx, ty = (x1 - x0) / ll, (y1 - y0) / ll
+            px_, py_ = path[i]
+            cut = s.stroke([(px_ + nx * 1.6, py_ + ny * 1.6),
+                            (px_ + nx * (w * 0.75 + 1.5) - tx * 3.0, py_ + ny * (w * 0.75 + 1.5) - ty * 3.0)],
+                           (1.1, 2.1), cap=False)
+            s.erase(cut & (s.pid == pid))
     return pid, m
 
 
 def sprout(s, opening=1.0, dy=0.0):
     """The sprout's stalk out of the husk, and its three fronds fanning up."""
     cx, cy = CROWN[0], CROWN[1] - dy
-    m = s.stroke(bez([(28.5, 38.0 - dy), (28.0, 33.0 - dy), (cx, cy)], 20), (4.4, 3.2), cap=True)
+    m = s.stroke(bez([(31.0, 31.0 - dy), (30.5, 27.5 - dy), (cx, cy)], 20), (4.4, 3.2), cap=True)
     stalk = s.part(m, base=1, k=0, line=0)
     rim_white(s, m, stalk, 0.5)
-    for (ot, ft, w, bend) in FRONDS:
+    for n_, (ot, ft, w, bend) in enumerate(FRONDS):
         k = opening
         tx = ft[0] + (ot[0] - ft[0]) * k
         ty = ft[1] + (ot[1] - ft[1]) * k - dy
         if k > 1.0:                             # flare: the tips droop and spread further
             ty += (k - 1.0) * 10.0
-        frond(s, (cx, cy + 1.0), (tx, ty), w, bend * min(1.0, 0.35 + 0.65 * k))
+        frond(s, (cx, cy + 1.0), (tx, ty), w, bend * min(1.0, 0.35 + 0.65 * k), leaflets=n_ == 2 and k > 0.7)
 
 
 def coconut(s, fr=0):
@@ -210,7 +248,7 @@ def coconut(s, fr=0):
     s.ox = 0.0
     wp, _ = wave(s)
     spray(s)
-    nut(s, 22.0, 40.0 - bob)
+    nut(s, NUT[0], NUT[1] - bob)
     sprout(s, opening, bob)
     foam(s, wp)
 
@@ -231,15 +269,10 @@ def back():
     m = s.poly([(x, 38.0 - 1.5 * math.sin(x / 4.0)) for x in np.linspace(-2, 50, 30)] + [(50, 50), (-2, 50)])
     pid = s.part(m, base=1, k=0, line=0)
     s.decal(m & ~shift(m, 0, -1), 3, on=[pid])
-    nm = s.poly(nut_poly(22.0, 36.0, 17.0, 11.5, 12.0, point=0.15))
-    npid = s.part(nm, base=2, k=2, line=0)
-    for v in (-0.3, 0.15, 0.55):
-        s.decal(s.line1([(22.0 + u * 15.0, 36.0 + v * 10.0 + u * 2.0 - 2.0 * u * u * np.sign(v + 0.01))
-                         for u in np.linspace(-0.75, 0.7, 16)]), 1, on=[npid])
-    rim_white(s, nm, npid, 0.25)
-    for tip, w, bend in (((4.0, 6.0), 10.0, 0.25), ((46.0, 5.0), 10.0, -0.25), ((28.0, -2.0), 10.5, -0.12)):
-        frond(s, (25.0, 27.0), tip, w, bend)
-    sm = s.stroke(bez([(25.0, 31.0), (25.0, 27.0)], 10), 5.0, cap=True)
+    nut(s, 22.0, 35.0, shape=(0, 0, 18.0, 14.0, 4.0), point=0.08)
+    for tip, w, bend in (((4.0, 7.0), 9.0, 0.25), ((46.0, 6.0), 9.0, -0.25), ((29.0, 1.0), 9.5, -0.12)):
+        frond(s, (27.0, 21.0), tip, w, bend)
+    sm = s.stroke(bez([(28.0, 26.0), (27.0, 21.0)], 10), 5.0, cap=True)
     sp = s.part(sm, base=1, k=0, line=0)
     rim_white(s, sm, sp, 0.5)
     front_sea = s.poly([(x, 44.0 - 1.2 * math.sin(x / 3.0 + 1.0)) for x in np.linspace(-2, 50, 30)] + [(50, 50), (-2, 50)])
@@ -255,15 +288,15 @@ ICON = [
     "...1..31..1.....",
     "11..1.31.31..33.",
     "1331.1313...3311",
-    ".1131.111..31111",
+    ".1.1.1.11..31111",
     "....1111...11.11",
-    "...222211...1111",
-    "..2322222...1111",
-    ".232222222..1111",
-    ".22222222211.111",
-    "..122222111..111",
-    "...111111111111.",
-    "3311311113311311",
+    "...23322....1111",
+    "..2222222...1111",
+    ".22.222222..1111",
+    ".2222.22221.1111",
+    ".122222.2211.111",
+    "..1122222111.11.",
+    "3311111111133311",
     "1111111111111111",
 ]
 
@@ -279,13 +312,14 @@ def render():
     return fs, back(), [ic, hop(ic)]
 
 
-NOTES = ("Crystal rule. Cocos nucifera. REARING/displaying: a fibrous, husk-brown coconut rides a curling "
-         "wave, its pointed end raised toward the foe like a prow; from its stalk end a young palm sprout "
-         "fans out three arching, pleated fronds (the lead frond over the foe, one straight up, the rear "
-         "one back over the crest). The wave curls up behind the nut and over toward the foe; the sea runs "
+NOTES = ("Crystal rule. Cocos nucifera. REARING/displaying: a full, rounded husked coconut (a fat ovoid "
+         "with a slightly three-sided shoulder, long black fibre lines over a dark shadow side) sits deep in "
+         "a curling wave, its point raised toward the foe like a prow; from its stalk end a young palm sprout "
+         "fans out three arching, pleated, fork-tipped fronds (the lead frond over the foe, its edge split "
+         "into leaflets, one straight up, the rear one back over the crest). The wave curls up behind the nut and over toward the foe; the sea runs "
          "in front of the nut. Gesture: it bobs on the wave and the fronds unfurl (it dips with its fronds "
          "furled, rises on the swell as they open, flares and settles); the wave and the sea stay fixed. "
-         "A palm-green dark slot (fronds, sea, husk fibre and shade) under a husk-brown mid; the wave is the "
+         "A palm-green dark slot (fronds, sea, husk shadow) under a husk-brown mid; the wave is the "
          "dark slot under white foam. The nut is shown from the side, its germination pores turned away. "
          "Sport: 'Malayan Dwarf', yellow form (Malayan Yellow Dwarf).")
 

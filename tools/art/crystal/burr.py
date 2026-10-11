@@ -1,25 +1,27 @@
 """Original Crystal-rule Arctium (burdock) as a roaming legendary: burr.
 
-burr (adult, single-stage legendary), BRACED/clinging: a cluster of four
-round burdock burrs, every one bristling with hooked bracts, clings to a
-broad burdock leaf that it rides like a raft. The big lead burr is pushed
-forward toward the foe, the others heaped behind and above it, low and
-wide; a brush of thistle-purple florets crowns each burr. The leaf is
-broad and heart-based, its tip curving up toward the foe like a prow, its
-far edge curled up (the woolly pale underside showing) and its reddish
-stalk trailing off behind.
+burr (adult, single-stage legendary), BRACED/clinging: three big round
+burdock burrs cling to a broad burdock leaf that they ride like a raft. The
+lead burr, the biggest, rides high and forward on the leaf's prow, its tip
+curled up toward the foe; the other two trail behind it on the flat of the
+leaf. Each burr is a light ball with a clear black rim, and its silhouette
+is a halo of short black hooked spines, every tip curled into a J; a brush
+of thistle-purple florets on a dark collar of bracts crowns it. The leaf is
+heart-based, its far edge curled up (the woolly pale underside showing) and
+its reddish stalk trailing off behind.
 
 Intro: the hooks flex and it springs forward to cling: the hooks curl in
 and the cluster crouches, then it springs toward the foe with every hook
 flung straight out, clings with the hooks curled tight, and settles. The
 leaf raft stays registered.
-Two tones: a hook green-brown dark slot (the burrs, the leaf) under a
-thistle-purple mid (the floret tufts, the hooks' lit tips, the leaf's side
-veins and stalk); white is the leaf's pale midrib and woolly rim, the
-florets' tips, the sunlit hooks and the glints.
-Faces: each burr is a sphere packed with small outward-pointing hooks (a
-texture, never one dot or a slit), thin black hooks bristle from its rim,
-and no dark mark is enclosed (no_dots).
+Two tones: the leaf is the dark slot (a hook green-brown), with a light
+(white) midrib; the burrs are the light tone, a thistle mauve shared with
+the floret brushes, so they stand clear of the leaf. The bracts seen end-on
+are dark-slot hooks running in from each burr's rim (black in the shade);
+white is the leaf's midrib and woolly rim, the florets' tips and the glints.
+Faces: every dark mark on a burr runs in from its outline (never a dot or
+an island), the spines are J-shaped lines outside the rim, the seams where
+burrs overlap are curves, and no dark mark is enclosed (no_dots).
 Sport: the white-flowered form (burdock disk flowers are pinkish-purple,
 occasionally white); see docs/SPORTS.md.
 Self-score (docs/CREATURES.md section 9): 8.
@@ -41,9 +43,9 @@ from titan import preview  # noqa: E402
 
 TOOL = "tools/art/crystal/burr.py"
 SID = "burr"
-PAL = [BLACK, "#788838", "#d0a0d0", WHITE]
-# the white-flowered form: the florets (and the hooks' lit tips) turn white
-SPORT = [BLACK, "#788838", "#d0c8c0", WHITE]
+PAL = [BLACK, "#607030", "#d0a8c8", WHITE]
+# the white-flowered form: the florets (and the burrs, which share their slot) turn off-white
+SPORT = [BLACK, "#607030", "#d0c8b8", WHITE]
 
 # per front frame: (cluster dx, dy; squash; hook reach 0 = curled in ..
 # 1 = rest .. > 1 = flung straight; hook curl)
@@ -58,61 +60,62 @@ ANIM = {"intro": [[1, 12], [2, 5], [3, 16], [4, 10], [0, 8]],
         "idle": [[0, 140], [3, 8], [0, 6]]}
 
 # the burrs, back to front: (cx, cy, r)
-BURRS = [(46.0, 27.0, 6.6), (30.0, 19.5, 8.2), (38.0, 34.0, 8.8), (18.5, 33.5, 10.6)]
+BURRS = [(46.5, 32.5, 6.6), (34.5, 35.0, 9.6), (16.0, 25.0, 11.5)]
 
 
 # ------------------------------------------------------------- a burr -----
 
 def burr(s, cx, cy, r, reach=1.0, curl=1.0, sq=1.0, tuft=True, seed=0):
-    """One burr: a sphere packed with hooked bracts. The dark slot body with
-    a black crescent on its shaded bottom-right and a white glint on its lit
-    shoulder; the bracts are short curved hooks, light (mid tone) on the lit
-    side and black on the shaded side, each running out to the rim; a ring
-    of thin black hooks bristles out of the outline, each curling at its
-    tip. A brush of purple florets with white tips crowns it."""
+    """One burr: a sphere packed with hooked bracts, in the light tone with a
+    clear black rim, and a halo of short black hooked spines bristling from
+    the whole rim, every tip curled into a J, so the ball's edge is spiky.
+    A dark-slot shade crescent on its bottom-right has a sawtooth inner edge
+    (the bracts' tips catching the light), small white hook-glints curl over
+    its lit side, and a white glint sits on its shoulder. A brush of purple
+    florets crowns it."""
     ry = r * sq
     cy2 = cy + (r - ry)
+    # the halo first (the ball covers the spines' roots): black hooked
+    # spines, radial, each tip turned back into a J
+    n = max(12, int(r * 1.3))
+    hook = np.zeros((s.h, s.w), bool)
+    for k in range(n):
+        a = 2 * math.pi * (k + 0.5 * (seed % 2)) / n + 0.12
+        if tuft and math.sin(a) < -0.8:
+            continue
+        ex, ey = math.cos(a), math.sin(a)
+        L = 2.6 + 1.6 * reach
+        p0 = (cx + ex * (r - 0.5), cy2 + ey * (ry - 0.5))
+        p1 = (cx + ex * (r + L), cy2 + ey * (ry + L))
+        p2 = (p1[0] - ey * 1.6 * curl, p1[1] + ex * 1.6 * curl)
+        p3 = (p2[0] - ex * 1.3 * curl, p2[1] - ey * 1.3 * curl)
+        hook |= s.line1([p0, p1, p2, p3] if curl > 0.4 else [p0, p1])
+    s.ink(hook, 0)
     body = s.ellipse(cx, cy2, r, ry)
-    pid = s.part(body, base=1, k=0, line=0)
+    pid = s.part(body, base=2, k=0, line=0)
     yy, xx = np.mgrid[0:s.h, 0:s.w]
     (tcx, tcy), = s.T([(cx, cy2)])
     du, dv = (xx + 0.5 - tcx) / r, (yy + 0.5 - tcy) / ry
-    # the bracts: a packed lattice of small hooks pointing outward, light
-    # (mid tone, white at the lit top-left) on the lit side, black on the
-    # shaded side
-    sp = 3.2
-    for j in range(-4, 5):
-        for i in range(-4, 5):
-            u = (i + 0.5 * (j % 2)) * sp / r
-            v = j * sp * 0.87 / ry
-            rr = math.hypot(u, v)
-            if rr > 0.86 or rr < 0.12:
-                continue
-            ex, ey = u / rr, v / rr
-            x0, y0 = cx + u * r, cy2 + v * ry
-            p1 = (x0 + ex * 1.4, y0 + ey * 1.4)
-            p2 = (p1[0] - ey * 1.0 * curl, p1[1] + ex * 1.0 * curl)
-            d = ex * rr + ey * rr
-            tone = 3 if d < -0.55 else 2 if d < 0.15 else 0
-            s.decal(s.line1([(x0, y0), p1, p2]), tone, on=[pid], lock=True)
-    # the shade crescent and the glint
-    s.decal(body & ~shift(body, -2, -2) & ((du + dv) > 0.3), 0, on=[pid])
     rad, ang = np.hypot(du, dv), np.arctan2(dv, du)
-    s.decal(body & (rad > 0.5) & (rad < 0.8) & (ang > -2.55) & (ang < -2.05), 3, on=[pid])
-    # the rim hooks: thin black spikes out of the outline, tips curling
-    n = max(10, int(r * 1.6))
-    hook = np.zeros_like(body)
-    for k in range(n):
-        a = 2 * math.pi * (k + 0.5 * (seed % 2)) / n + 0.2
-        if tuft and math.sin(a) < -0.6:
-            continue
+    # the shade crescent on the bottom-right
+    s.decal(body & ((du + dv) * 0.7071 > 0.62) & (rad > 0.75), 1, on=[pid])
+    # the bracts seen end-on: hooked spines running in from the rim all the
+    # way round (each joins the outline, so none is an island), dark-slot on
+    # the lit side and black in the shade; the middle of the ball stays clean
+    m_ = max(16, int(r * 2.2))
+    for k in range(m_):
+        a = 2 * math.pi * (k + 0.5) / m_ + 0.12 + 0.2 * seed
         ex, ey = math.cos(a), math.sin(a)
-        L = 1.6 + 1.8 * reach
-        p0 = (cx + ex * (r + 0.6), cy2 + ey * (ry + 0.6))
-        p1 = (cx + ex * (r + L), cy2 + ey * (ry + L))
+        r0 = 0.62 if k % 2 else 0.74
+        p0 = (cx + ex * r * 1.02, cy2 + ey * ry * 1.02)
+        p1 = (cx + ex * r * r0, cy2 + ey * ry * r0)
         p2 = (p1[0] - ey * 1.2 * curl, p1[1] + ex * 1.2 * curl)
-        hook |= s.line1([p0, p1, p2] if curl > 0.4 else [p0, p1])
-    s.post.append((hook, 0))
+        shade = (ex + ey) > 0.35
+        if (ex + ey) < -1.05 and k % 2:
+            continue                                  # the lit shoulder stays clean
+        s.decal(s.line1([p0, p1, p2]), 0 if shade else 1, on=[pid], lock=True)
+    rim_white(s, body, pid, 0.26)
+    s.decal(body & (rad > 0.4) & (rad < 0.72) & (ang > -2.55) & (ang < -2.05), 3, on=[pid])
     if tuft:
         florets(s, cx - r * 0.15, cy2 - ry * 0.86, r)
     return pid
@@ -136,7 +139,9 @@ def florets(s, x, y, r):
     top = m & ~shift(m, 0, -1)
     yy, xx = np.mgrid[0:s.h, 0:s.w]
     (tx, _), = s.T([(x + lean, y)])
-    s.decal(top & shift(m, 0, 1) & (xx < tx + 1), 3, on=[pid])
+    s.decal(top & shift(m, 0, 1) & (xx < tx + 3), 3, on=[pid])
+    # the collar of bracts hugging the brush's base
+    s.decal(m & ~shift(m, 0, 2), 1, on=[pid])
     # a dark-slot split between the florets, run up from the base
     s.decal(s.line1([(x + 0.3, y + 1.0), (x + lean * 0.5 + 0.3, y + 1.5 - h * 0.6)]), 1, on=[pid])
     return pid
@@ -144,35 +149,29 @@ def florets(s, x, y, r):
 
 # ----------------------------------------------------------- the leaf -----
 
-LEAF = [(53.0, 48.0), (50.5, 52.0), (41.0, 54.0), (28.0, 55.0), (16.0, 53.5), (8.5, 49.5), (3.5, 43.0),
-        (1.0, 35.0), (4.5, 37.5), (9.5, 41.5), (18.0, 44.0), (30.0, 43.8), (42.0, 43.5), (50.0, 44.0),
-        (54.5, 45.3), (51.5, 47.0)]
+LEAF = [(53.0, 48.0), (50.5, 52.5), (40.0, 54.5), (28.0, 55.0), (17.0, 53.5), (9.5, 50.0), (4.5, 44.5),
+        (2.0, 37.0), (1.5, 29.0), (3.0, 21.5), (6.0, 26.0), (8.0, 33.0), (11.5, 39.5), (16.0, 44.5),
+        (24.0, 46.3), (34.0, 46.5), (44.0, 46.0), (51.0, 46.3), (54.5, 47.0), (51.5, 48.0)]
 
 
 def leaf_raft(s):
-    """The broad burdock leaf it rides like a raft: seen from the front and
-    a little above, its tip curving up toward the foe like a prow, its
-    heart-shaped base at the back with the stalk trailing off behind (the
-    reddish petiole, in the mid tone). The dark slot with a wavy margin, a
-    pale midrib, purple-tinged side veins, the far edge curled up to show
-    the woolly pale underside, and black under the near edge."""
+    """The broad burdock leaf it rides like a raft, mostly the dark slot: seen
+    from the front and a little above, its tip curled high toward the foe
+    like a prow, its heart-shaped base at the back with the reddish stalk
+    trailing off behind (the mid tone). A light midrib (white), the far edge
+    curled up to show the woolly pale underside, black under the near edge."""
     path = bez(LEAF + LEAF[:1], 14)
-    pts = []
-    for i, (x, y) in enumerate(path):
-        pts.append((x, y))
-    stalk = s.stroke(bez([(50.0, 46.0), (54.0, 44.5), (57.5, 43.5)], 12), (3.2, 2.6), cap=False)
+    stalk = s.stroke(bez([(50.0, 46.5), (54.0, 45.0), (57.5, 44.0)], 12), (3.2, 2.6), cap=False)
     sp = s.part(stalk, base=2, k=1, line=0)
     s.decal(stalk & ~shift(stalk, 0, -1), 3, on=[sp])
-    m = s.poly(pts)
+    m = s.poly(path)
     pid = s.part(m, base=1, k=0, line=0)
     yy, xx = np.mgrid[0:s.h, 0:s.w]
     top = m & ~shift(m, 0, -1)
     left = m & ~shift(m, -1, 0)
     s.decal((top | (shift(top, 0, 1) & m) | (left & (xx < 8))) & (xx < 52), 3, on=[pid])
     s.decal(shift(top, 0, 2) & m & (xx > 9) & (xx < 50), 0, on=[pid])
-    s.decal(s.line1(bez([(50.0, 48.0), (30.0, 49.5), (12.0, 47.0), (4.5, 39.0)], 40)), 3, on=[pid])
-    for x0, x1, dy in ((44.0, 38.0, 4.5), (36.0, 29.5, 4.5), (27.0, 20.5, 4.0), (16.0, 11.5, 3.0)):
-        s.decal(s.line1([(x0, 49.3), (x1, 49.3 + dy)]), 2, on=[pid])
+    s.decal(s.line1(bez([(50.0, 49.0), (30.0, 50.5), (13.0, 48.0), (5.5, 40.0), (3.8, 31.0), (4.0, 26.0)], 40)), 3, on=[pid])
     bot = m & ~shift(m, 0, 1)
     s.decal(shift(bot, 0, -1) & m & (xx > 6), 0, on=[pid])
     return pid, m
@@ -210,7 +209,7 @@ def back():
     top = m & ~shift(m, 0, -1)
     s.decal(top | (shift(top, 0, 1) & m), 3, on=[pid])
     s.decal(shift(top, 0, 2) & m, 0, on=[pid])
-    for k, (cx, cy, r) in enumerate([(9.0, 33.0, 8.0), (36.0, 22.0, 9.0), (19.0, 26.0, 10.5), (30.0, 35.0, 11.0)]):
+    for k, (cx, cy, r) in enumerate([(8.0, 37.0, 7.5), (20.0, 34.0, 10.0), (33.0, 22.0, 12.5)]):
         burr(s, cx, cy, r, seed=k + 1)
     return finish(s, open_bottom=True)
 
@@ -218,16 +217,16 @@ def back():
 # the burr cluster with purple tufts on the leaf raft
 ICON = [
     "...2.2..........",
-    "..23222...2.2...",
-    "...222...23222..",
-    "..111111..222...",
-    ".131.1.1111111..",
-    "131.1.1.1.1.1.1.",
-    "11.1.1.1.13.1.11",
-    "1.1.1.1.11.1.1.1",
-    "11.1.1.1.1.1.1.1",
-    ".1.1.1.11.1.1.1.",
-    "3.11111..11111..",
+    "..23222.........",
+    "k..222..k.2.2...",
+    ".k22222k.23222..",
+    ".233222.k.222..k",
+    "k2322222.22222k.",
+    ".22222221222221.",
+    "k2222221.222211k",
+    ".1222211k1221111",
+    "3.11111.k.1111.k",
+    "3...k.k...k.k...",
     "33333333333333..",
     ".1111111111111..",
 ]
@@ -244,15 +243,14 @@ def render():
     return fs, back(), [ic, hop(ic)]
 
 
-NOTES = ("Crystal rule. Arctium (burdock). BRACED/clinging: a cluster of four round burdock burrs, every "
-         "one bristling with hooked bracts and crowned by a tuft of thistle-purple florets, clings to a broad "
-         "burdock leaf it rides like a raft; the big lead burr is pushed toward the foe, the others heaped "
-         "behind and above it. The leaf is broad and heart-based with a wavy margin and pale veins, its tip "
-         "toward the foe and its far edge curled up. Gesture: the hooks flex and it springs forward to "
-         "cling (the hooks curl in and it crouches, springs at the foe with the hooks flung straight, clings "
-         "with them curled tight and settles); the leaf raft stays fixed. A hook green-brown dark slot (the "
-         "burrs, the leaf) under a thistle-purple mid (the florets, the hooks' lit tips). Sport: the "
-         "white-flowered form.")
+NOTES = ("Crystal rule. Arctium (burdock). BRACED/clinging: three big round burdock burrs cling to a broad "
+         "burdock leaf they ride like a raft; the lead burr rides high and forward on the leaf's prow, curled "
+         "up toward the foe, the other two trail behind. Each burr is a light ball with a clear black rim and "
+         "a halo of short black hooked spines (J-tipped), crowned by a brush of thistle-purple florets. "
+         "Gesture: the hooks flex and it springs forward to cling (the hooks curl in and it crouches, springs "
+         "at the foe with the hooks flung straight, clings with them curled tight and settles); the leaf raft "
+         "stays fixed. The leaf is the hook green-brown dark slot with a pale midrib; the burrs and florets "
+         "share the light thistle mauve. Sport: the white-flowered form.")
 
 
 def build():

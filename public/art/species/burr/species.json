@@ -1,8 +1,8 @@
 {
   "format": "verdant.species/1",
   "id": "burr",
-  "palette": ["#181818", "#788838", "#d0a0d0", "#f8f8f8"],
-  "sport": ["#181818", "#788838", "#d0c8c0", "#f8f8f8"],
+  "palette": ["#181818", "#607030", "#d0a8c8", "#f8f8f8"],
+  "sport": ["#181818", "#607030", "#d0c8b8", "#f8f8f8"],
   "frames": {
     "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
     "back": ["back.png"],
@@ -11,5 +11,5 @@
   "anim": { "intro": [[1, 12], [2, 5], [3, 16], [4, 10], [0, 8]], "idle": [[0, 140], [3, 8], [0, 6]] },
   "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Arctium, https://en.wikipedia.org/wiki/Arctium . No sprite from any other game was copied, traced or imported.",
   "source": { "kind": "generated", "tool": "tools/art/crystal/burr.py" },
-  "notes": "Crystal rule. Arctium (burdock). BRACED/clinging: a cluster of four round burdock burrs, every one bristling with hooked bracts and crowned by a tuft of thistle-purple florets, clings to a broad burdock leaf it rides like a raft; the big lead burr is pushed toward the foe, the others heaped behind and above it. The leaf is broad and heart-based with a wavy margin and pale veins, its tip toward the foe and its far edge curled up. Gesture: the hooks flex and it springs forward to cling (the hooks curl in and it crouches, springs at the foe with the hooks flung straight, clings with them curled tight and settles); the leaf raft stays fixed. A hook green-brown dark slot (the burrs, the leaf) under a thistle-purple mid (the florets, the hooks' lit tips). Sport: the white-flowered form."
+  "notes": "Crystal rule. Arctium (burdock). BRACED/clinging: three big round burdock burrs cling to a broad burdock leaf they ride like a raft; the lead burr rides high and forward on the leaf's prow, curled up toward the foe, the other two trail behind. Each burr is a light ball with a clear black rim and a halo of short black hooked spines (J-tipped), crowned by a brush of thistle-purple florets. Gesture: the hooks flex and it springs forward to cling (the hooks curl in and it crouches, springs at the foe with the hooks flung straight, clings with them curled tight and settles); the leaf raft stays fixed. The leaf is the hook green-brown dark slot with a pale midrib; the burrs and florets share the light thistle mauve. Sport: the white-flowered form."
 }
