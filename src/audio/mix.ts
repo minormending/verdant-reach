@@ -53,6 +53,9 @@ export const MUSIC_TRIM: Partial<Record<MusicId, number>> = {
   // battle_mercer: -17.7 untrimmed, level with battle_rootstock.
   council: 1.15,           // -18.4 -> -17.2 (a pad, a march bass and ticks)
   battle_keeper: 1.10,     // -17.7 -> -16.9 (near battle_leader)
+  seed_vault: 1.29,        // -19.3 -> -17.1 (a pad, a pulse and ticks)
+  ancient_ridge: 1.17,     // -18.4 -> -17.0 (a pad over a drone, no drums)
+  battle_legend: 1.10,     // -17.6 -> -16.8 (near battle_keeper)
 };
 
 /** Per-effect gain: quiet UI blips up, the long hot ones down. */

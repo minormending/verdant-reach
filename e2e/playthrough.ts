@@ -2461,7 +2461,7 @@ export async function postgame() {
   await nav("seed_vault_entrance");
   await atNight(async () => {
     beat("METHUSELAH RIDGE: climb under the night clock", await nav("methuselah_ridge")
-      && ow()?.mapId === "methuselah_ridge" && ctx().timeOfDay() === "night" && ctx().audio.current() === "route_night");
+      && ow()?.mapId === "methuselah_ridge" && ctx().timeOfDay() === "night" && ctx().audio.current() === "ancient_ridge");
     const before = report.battles.length;
     const talked = await talkTo("methuselah");
     const fight = report.battles.slice(before).find((b) => b.request.wild?.species === "methuselah");

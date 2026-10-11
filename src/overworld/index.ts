@@ -51,6 +51,9 @@ import { visitedGlideMaps, visitedTownFlag } from "./glide";
 import { continuePosition } from "./continue";
 import { burrPlacement, burrTileSafe, meetingRoamer, moveRoamers, recoverWanderers, wandererFree, WANDERER_LEVEL } from "./roaming";
 
+/** Wild battles that get the legendary theme: the Wanderers and METHUSELAH (post-game). */
+const LEGEND_BATTLES: ReadonlySet<string> = new Set(["tumbleweed", "coconut", "burr", "methuselah"]);
+
 export interface OverworldOpts {
   /** "new": run WORLD.newGame.script; "continue": run the map's onEnter. */
   mode?: "new" | "continue" | "none";
@@ -1077,7 +1080,8 @@ class Overworld implements Scene {
   async battle(req: BattleRequest): Promise<BattleOutcome> {
     const ctx = this.ctx;
     const trainer = req.trainer ? ctx.world.trainers[req.trainer] : undefined;
-    ctx.audio.playMusic(req.kind === "trainer" ? trainer?.music ?? "battle_trainer" : "battle_wild");
+    ctx.audio.playMusic(req.kind === "trainer" ? trainer?.music ?? "battle_trainer"
+      : req.wanderer || (req.wild && LEGEND_BATTLES.has(req.wild.species)) ? "battle_legend" : "battle_wild");
     ctx.audio.playSfx("encounter");
     this.player.bumpAnim = 0;
     await this.transition.run(req.kind === "trainer" ? "trainer" : "wild");

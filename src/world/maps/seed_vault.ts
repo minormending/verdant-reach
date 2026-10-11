@@ -1,4 +1,4 @@
-// POSTGAME.md §1/§4: the northern vault, using existing terrain and music.
+// POSTGAME.md §1/§4: the northern vault (its own "seed_vault" theme; the archive keeps "herbarium") and the ridge ("ancient_ridge").
 import type { MapDef, SpeciesId } from "../../contracts";
 import { LEGEND, OUTDOOR, pickups, when } from "../build";
 
@@ -9,7 +9,7 @@ function encounters(species: SpeciesId[], minLevel: number, maxLevel: number): M
 }
 
 export const seed_vault_entrance: MapDef = {
-  id: "seed_vault_entrance", name: "SEED VAULT", outdoor: false, music: "sugarbush_grove",
+  id: "seed_vault_entrance", name: "SEED VAULT", outdoor: false, music: "seed_vault",
   border: "void", legend: { ...LEGEND, R: "stairs_up" },
   legendWhen: [{ when: when({ diary_read: false }), legend: { R: "wall" } },
     { when: when({ game_cleared: false }), legend: { R: "wall", u: "wall" } }],
@@ -35,7 +35,7 @@ export const seed_vault_entrance: MapDef = {
 };
 
 export const seed_vault_b1: MapDef = {
-  id: "seed_vault_b1", name: "SEED VAULT B1", outdoor: false, dark: true, music: "sugarbush_grove",
+  id: "seed_vault_b1", name: "SEED VAULT B1", outdoor: false, dark: true, music: "seed_vault",
   border: "void", legend: LEGEND,
   // Three ice crossings alternate their stopping ends. Sideways movement
   // is possible only at a stop; the ice solver must not branch mid-slide.
@@ -69,7 +69,7 @@ export const seed_vault_b1: MapDef = {
 };
 
 export const seed_vault_b2: MapDef = {
-  id: "seed_vault_b2", name: "SEED VAULT B2", outdoor: false, music: "sugarbush_grove",
+  id: "seed_vault_b2", name: "SEED VAULT B2", outdoor: false, music: "seed_vault",
   border: "void", legend: LEGEND,
   // Two stones fill two pits. Each stone has a north pocket for retreat
   // after Continue resets it above an already-filled pit. ROOT BRIDGE is
@@ -132,7 +132,7 @@ export const seed_vault_b3: MapDef = {
 };
 
 export const methuselah_ridge: MapDef = {
-  id: "methuselah_ridge", name: "METHUSELAH RIDGE", outdoor: true, music: "route", ambient: "mist",
+  id: "methuselah_ridge", name: "METHUSELAH RIDGE", outdoor: true, music: "ancient_ridge", ambient: "mist",
   border: "cliff", legend: OUTDOOR,
   tiles: [
     "AAAAAAAAAAAAAAAA",

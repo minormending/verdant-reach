@@ -437,6 +437,7 @@ export const MUSIC = [
   "thistledown", "canyon", "ridge", // Chapter 9
   "elder_grove", "battle_mercer", // Chapter 10
   "council", "battle_keeper", // Chapter 11
+  "seed_vault", "ancient_ridge", "battle_legend", // Post-game
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 
