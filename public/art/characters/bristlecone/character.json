@@ -1,0 +1,10 @@
+{
+  "format": "verdant.character/1",
+  "id": "bristlecone",
+  "sheet": "sheet.png",
+  "frame": [16, 16],
+  "rows": ["down", "up", "left", "right"],
+  "columns": ["stand", "stepA", "stepB"],
+  "credits": "Original hand-pixelled post-game environment for Verdant Reach; no copied or traced game art.",
+  "source": { "kind": "generated", "tool": "tools/art/envpg/buildings.py" }
+}

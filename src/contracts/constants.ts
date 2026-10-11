@@ -81,6 +81,11 @@ export const AUTOTILE: Partial<Record<TileKey, string>> = {
   root_vein: "root_vein", listening_clearing: "root_vein",
   // Chapter 11: raised beds and bog pools join into one mass; columns stack north-south.
   poison_bed: "poison_bed", rot_pool: "rot_pool", aspen_pillar: "aspen_pillar",
+  // Post-game: the portal flanks are cliff to their neighbours (so they show only once the
+  // spur's stair breaks the rock); vault walls, roots and the desk join into one mass; racks
+  // share uprights; frosted rims surround the vault's ice.
+  vault_portal: "cliff", vault_wall: "vault_wall", root_wall: "vault_wall", reading_desk: "vault_wall",
+  vault_ice: "vault_ice", seed_rack: "seed_rack",
 };
 /** Ground variation: `${key}~1.png`..`${key}~3.png` (if present) are picked by a
  *  position hash so large fields never look stamped. Base tile = variant 0. */

@@ -74,8 +74,11 @@ const STATES: Record<string, Record<string, boolean>[]> = {
   methuselah_ridge: [{}],
 };
 
-// METHUSELAH's tree stands on the open summit behind the NPC at (7,3): its
-// footprint is the only cell change in the pass (listed and checked below).
+// METHUSELAH's tree stands on the summit behind the NPC at (7,3), so the NPC
+// reads as its living base: its footprint (three crest cells that were cliff
+// and six open scree cells, none on a route) is the only cell change in the
+// pass, listed here and checked below. The vault's stand-in bookshelves become
+// seed racks, which keep their class (solid, interactable).
 const TREE = { key: "methuselah_tree", x: 6, y: 0 } as const;
 const inTree = (id: MapId) => (x: number, y: number) =>
   id === "methuselah_ridge" && x >= TREE.x && x < TREE.x + 3 && y >= TREE.y && y < TREE.y + 3;
@@ -148,6 +151,12 @@ describe("post-game environment keeps the post-game", () => {
     const m = WORLD.maps.methuselah_ridge, rt = runtime("methuselah_ridge");
     const npc = m.npcs.find((n) => n.id === "methuselah")!;
     expect([npc.x, npc.y]).toEqual([7, 3]);
+    // The tree is scenery on the summit's crest, directly behind the NPC.
+    expect(m.structures).toEqual([TREE]);
+    for (let y = TREE.y; y < TREE.y + 3; y++) for (let x = TREE.x; x < TREE.x + 3; x++) {
+      expect(isWalkable(rt, x, y), `tree ${x},${y}`).toBe(false);
+    }
+    expect(npc.sprite).toBe("bristlecone");
     const r = reach("methuselah_ridge", {}, { x: 7, y: 12 });
     expect(r.has("7,4"), "talk cell").toBe(true);
     expect(r.has("7,13"), "the way down").toBe(true);
