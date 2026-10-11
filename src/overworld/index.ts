@@ -248,7 +248,7 @@ class Overworld implements Scene {
     const hitch = this.ctx.state.burrHitch;
     if (hitch?.map === id && def.outdoor && /^route_\d+$/.test(id) && wandererFree(this.ctx.state, "burr")
       && burrTileSafe(this.map, hitch.x, hitch.y) && !p.occupies(hitch.x, hitch.y) && !this.npcAt(hitch.x, hitch.y)) {
-      const burr = { id: "burr", sprite: "item_pickup" as const, x: hitch.x, y: hitch.y, facing: hitch.facing };
+      const burr = { id: "burr", sprite: "burr_hitch" as const, x: hitch.x, y: hitch.y, facing: hitch.facing };
       this.npcs.push(new Actor(burr.id, burr.sprite, burr.x, burr.y, burr.facing, burr));
     } else if (hitch) delete this.ctx.state.burrHitch;
     this.camera.snap();

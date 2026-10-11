@@ -63,6 +63,7 @@ BUILDERS: list[tuple[str, str]] = [
     ("env11", "env11/build.py"),          # Chapter 10 Grove tiles, the Council hall, the Grove Gate and the Elder's trunk (after env10: the map review composes shipped tiles)
     ("cast11", "cast11/build.py"),        # Chapter 11 the four Council seats (BELLADONNA, MIMI OSA, TITUS ARUM, PYRA), their portraits, the fellowship still
     ("env12", "env12/build.py"),          # Chapter 11 Council room tiles (after env11: props sit on shipped floors; the map review composes the Grove's litter and roots)
+    ("castpg", "castpg/build.py"),        # Post-game BURR hitching a ride, the Centuryheart sprout, the OLD DIARY icon, the Methuselah still (after tiles: the review stands them on shipped tiles)
 ]
 
 

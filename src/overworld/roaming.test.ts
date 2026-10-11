@@ -159,7 +159,7 @@ describe("BURR hitch placement", () => {
     ["up", 2, 3], ["down", 2, 1], ["left", 3, 2], ["right", 1, 2],
   ] as [Dir, number, number][])("appears exactly behind a player facing %s", (facing, x, y) => {
     expect(burrPlacement(free(), map(), { x: 2, y: 2, facing }, () => false, () => 0))
-      .toMatchObject({ id: "burr", sprite: "item_pickup", x, y, facing });
+      .toMatchObject({ id: "burr", sprite: "burr_hitch", x, y, facing });
   });
   it("rolls a seeded 1/8 chance on outdoor route entry only", () => {
     const state = free(), runtime = map(), player = { x: 2, y: 2, facing: "right" as const };

@@ -87,7 +87,7 @@ export function burrPlacement(
   const { dx, dy } = DIRS[player.facing];
   const x = player.x - dx, y = player.y - dy;
   if (!burrTileSafe(map, x, y) || occupied(x, y)) return null;
-  return { id: "burr", sprite: "item_pickup", x, y, facing: player.facing, movement: "static" };
+  return { id: "burr", sprite: "burr_hitch", x, y, facing: player.facing, movement: "static" };
 }
 
 /** Capture/wilt wins over fleeing; sleep, trapping and flinching cannot delay the escape. */
