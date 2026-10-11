@@ -2494,7 +2494,8 @@ export async function postgame() {
   await nav("fellowship_hall");
   beat("COUNCIL REMATCH: record a second team without credits", idle() && ow()?.mapId === "fellowship_hall"
     && (ctx().state.hallOfFame?.length ?? 0) === fame + 1 && !flag("council_run") && !flag("council_rematch")
-    && !report.texts.slice(ending).some((t) => /reconcile|Fellow of the Herbarium|You wake at home/.test(t.text)));
+    && report.texts.slice(ending).some((t) => t.speaker === "ROWAN" && /HALL OF FAME/.test(t.text))
+    && !report.texts.slice(ending).some((t) => /You sent me a NOTE|By the word of the COUNCIL|You wake at home/.test(t.text)));
 }
 
 /** Free a slot with real cabinet STORE input, keeping the helper in slot 0. */

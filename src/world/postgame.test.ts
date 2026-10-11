@@ -7,7 +7,7 @@ import { continuePosition } from "../overworld/continue";
 import { reachableBoulderTiles, solveBoulderPuzzle } from "../overworld/uproot";
 import { WORLD } from "./index";
 import { POSTGAME_MAPS } from "./maps/seed_vault";
-import { cloneRematch } from "./rematches";
+import { cloneRematch, REMATCH_LINES } from "./rematches";
 import { canReach, checkPostgameAccess, flood, grid, reachablePostgameMaps, validateWorld } from "./validate";
 
 const entrance = { x: 11, y: 17 }, lower = { x: 11, y: 2 };
@@ -59,7 +59,7 @@ describe("post-game world access", () => {
     for (const id of ["pg_centuryheart", "pg_wanderers", "pg_diary", "pg_methuselah", "pg_council_rematch"]) expect(WORLD.scripts[id]).toBeDefined();
     const cmd = WORLD.scripts.pg_methuselah[0];
     expect(cmd.op).toBe("if");
-    if (cmd.op === "if") expect(cmd.then[0]).toMatchObject({ op: "ifTime", time: ["night"], else: [{ op: "say", text: "TODO(text): It's only an old tree." }] });
+    if (cmd.op === "if") expect(cmd.then[0]).toMatchObject({ op: "ifTime", time: ["night"], else: [{ op: "say", text: expect.stringContaining("only an old tree") }] });
   });
 
   it("places the one-time diary pickup in the archive", () => {
@@ -150,7 +150,12 @@ describe("Council rematch trainers", () => {
       for (const member of rematch.team) for (const move of member.moves ?? []) {
         expect(DATA.species[member.species].learnset.filter((l) => l.level <= member.level).map((l) => l.move)).toContain(move);
       }
-      for (const kind of ["intro", "defeat", "after"] as const) expect(rematch[kind]).toBe(`TODO(text): ${id}_rematch ${kind}`);
+      expect(REMATCH_LINES[rematch.id]).toBeDefined();
+      for (const kind of ["intro", "defeat", "after"] as const) {
+        expect(rematch[kind]).toBe(REMATCH_LINES[rematch.id][kind]);
+        expect(rematch[kind]).not.toMatch(/TODO|NARRATOR/);
+        expect(rematch[kind]).not.toBe(base[kind]);
+      }
     }
     expect(WORLD.trainers.rowan_rematch.prize).toBe(5000);
   });

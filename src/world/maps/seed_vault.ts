@@ -31,7 +31,10 @@ export const seed_vault_entrance: MapDef = {
     { x: 6, y: 11, to: "route_9", toX: 6, toY: 1, facing: "down" },
     { x: 3, y: 8, to: "seed_vault_b1", toX: 11, toY: 17, facing: "up" },
     { x: 6, y: 0, to: "methuselah_ridge", toX: 7, toY: 12, facing: "up" },
-  ], npcs: [], signs: [], triggers: [],
+  ], npcs: [], signs: [
+    { x: 1, y: 2, text: "SEED VAULT. Seeds are dried, sealed and stored cold. Kept that way, many stay alive for decades." },
+    { x: 12, y: 2, text: "SAFETY COPIES. Each drawer below backs up seeds stored somewhere else. Kept just in case." },
+  ], triggers: [],
 };
 
 export const seed_vault_b1: MapDef = {
@@ -127,7 +130,11 @@ export const seed_vault_b3: MapDef = {
   ], structures: [],
   warps: [{ x: 7, y: 12, to: "seed_vault_b2", toX: 20, toY: 3, facing: "down" }],
   npcs: pickups([{ item: "old_diary", x: 7, y: 2 }]).map((n) => ({ ...n, visibleWhen: when({ game_cleared: true }) })),
-  signs: [], triggers: [],
+  signs: [
+    { x: 2, y: 5, text: "DRAWER: OAK. Empty. A card: \"ACORNS die if dried out. Kept growing outdoors instead.\"" },
+    { x: 13, y: 5, text: "A sprouting log. Every few years, a few seeds from each packet are grown to check they still live." },
+    { x: 2, y: 8, text: "DEPOSITS, LAST CENTURY. Page after page in one neat hand: A. FENNIMORE." },
+  ], triggers: [],
   encounters: encounters(["nightshade", "oleander", "sensitive_plant", "prayer_plant", "titan_arum", "flame_lily", "great_oak", "giant_water_lily"], 63, 66),
 };
 

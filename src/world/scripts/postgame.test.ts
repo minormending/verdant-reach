@@ -67,11 +67,17 @@ function setup(time: TimeOfDay = "day") {
 }
 
 describe("post-game story events", () => {
-  it("registers every script with TODO dialogue and existing operations", () => {
+  it("registers every script with finished dialogue and existing operations", () => {
+    // Narration has no speaker; everyone else uses one name per character.
+    const speakers = new Set(["BELLADONNA", "MIMI OSA", "TITUS ARUM", "PYRA", "ROWAN", "VALE", "FENNIMORE"]);
     for (const [id, cmds] of Object.entries(postgameScripts)) {
       expect(WORLD.scripts[id]).toEqual(cmds);
       eachCmd(cmds, (cmd) => {
-        if (cmd.op === "say") expect(cmd.text).toMatch(/^TODO\(text\): /);
+        if (cmd.op === "say") {
+          expect(cmd.text.trim().length).toBeGreaterThan(0);
+          expect(cmd.text).not.toMatch(/TODO|\{PLAYER\}|NARRATOR/);
+          if (cmd.speaker !== undefined) expect(speakers).toContain(cmd.speaker);
+        }
         expect(cmd.op).not.toBe("credits");
         expect(cmd.op).not.toBe("endSlice");
       });
@@ -137,7 +143,7 @@ describe("post-game story events", () => {
     expect(isWalkable(entrance, ridgeExit.x, ridgeExit.y)).toBe(true);
     await run(hook);
     expect(state.bag.old_diary).toBe(1);
-    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("song of the last Quickening"))).toHaveLength(1);
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("song of the last QUICKENING"))).toHaveLength(1);
     expect(vi.mocked(host.ctx.ui.say).mock.calls.at(-1)?.[0]).toContain("at night");
   });
 
@@ -147,7 +153,8 @@ describe("post-game story events", () => {
     await enter("methuselah_ridge");
     await run("pg_methuselah");
     expect(host.battle).not.toHaveBeenCalled();
-    expect(host.ctx.ui.say).toHaveBeenCalledWith("TODO(text): It's only an old tree.", undefined);
+    expect(host.ctx.ui.say).toHaveBeenCalledOnce();
+    expect(host.ctx.ui.say).toHaveBeenCalledWith(expect.stringContaining("only an old tree"), undefined);
   });
 
   it("requires diary_read for the night battle", async () => {
