@@ -41,8 +41,12 @@ it.each([1, 42])("plays all 24 post-game milestones, including the five +8 remat
   const { createQuickened } = await import("../src/battle");
   const { randomStream } = await import("../src/engine/random");
   const input = createInput(() => {}), scenes = createSceneStack();
+  // Story stills resolve to a stub image so Methuselah's night still is shown
+  // (the stub canvas ignores what it draws); every other asset is absent.
+  const still = {} as HTMLImageElement;
   const ctx = createGameContext({ input, scenes, assets: {
-    loadAll: async () => {}, exists: () => false, image: () => null,
+    loadAll: async () => {}, exists: () => false,
+    image: (path: string) => (path.startsWith("assets/stills/") ? still : null),
   } });
   ctx.state.flags = {
     game_cleared: true, ch10_done: true, ch10_arrived: true, got_starter: true,

@@ -66,9 +66,11 @@ export const postgameScripts: Scripts = {
   ], [say("Grandfather's song is open on my desk. I keep humming it. Can't help it.", FEN),
     say("METHUSELAH RIDGE, up the SEED VAULT's north stair. And go at night.", FEN)])])],
   pg_methuselah: [ifFlags({ game_cleared: true, diary_read: true }, [ifNight([
+    { op: "still", image: "methuselah_night" },
     say("The old bristlecone is mostly bare, silvered wood. One strip of bark still lives."),
     say("Under the stars, its needles stir. There's no wind."),
     say("Down in the rock, something hums. Low and slow, like a song you almost remember."),
+    { op: "stillClear" },
     { op: "wildBattle", species: "methuselah", level: 70, canLose: true },
   ], [say("A twisted bristlecone, grey with age. In daylight, it's only an old tree.")])])],
   pg_council_rematch: [ifFlags({ game_cleared: true, council_run: false }, [
