@@ -2234,8 +2234,8 @@ export async function chapter11() {
     const rolling = await advance(1000, () => credits !== null);
     const ending = report.texts.slice(endingTexts).filter((t) => t.map === "fellowship_hall");
     beat("THE HERBARIUM: reconciliation and fellowship", rolling
-      && ending.some((t) => t.text.includes("ROWAN and IMOGEN reconcile"))
-      && ending.some((t) => t.text.includes("Fellow of the Herbarium"))
+      && ending.some((t) => t.text.includes("two VALES laugh"))
+      && ending.some((t) => t.text.includes("FELLOW of the HERBARIUM"))
       && ending.some((t) => t.text.includes("record of a new world")));
     await sleep(3000); // a few seconds of scrolling in game time, at any speed
     const stillRolling = credits !== null && stack().at(-1) === credits && !flag("game_cleared");

@@ -273,6 +273,21 @@ describe("music", () => {
     expect(a.chords.split("|").at(-1)!.trim()).toBe("G");
   });
 
+  // Chapter 11.
+  it("council: stately A minor over a march bass and soft ticks, waiting on E", () => {
+    const a = ARRANGEMENTS.council;
+    expect([a.harmony, a.bass, a.drums]).toEqual(["pad", "march", "tick"]);
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("E");
+  });
+
+  it("battle_keeper: a G minor drive that turns to D major (F-sharp) and hangs on D", () => {
+    const a = ARRANGEMENTS.battle_keeper;
+    expect([a.harmony, a.drums]).toEqual(["arp16", "drive"]);
+    const pcs = new Set(parseSong(MUSIC_DEFS.battle_keeper).channels.p1!.events.map((e) => e.midi! % 12));
+    expect(pcs.has(6)).toBe(true);                                   // F-sharp
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("D");
+  });
+
   it("arranges a 3/4 chart correctly", () => {
     const def = arrange({ bpm: 100, meter: 3, chords: "C | G", melody: "c2. | d2. |", harmony: "waltz", bass: "half", drums: "soft" });
     const song = parseSong(def);

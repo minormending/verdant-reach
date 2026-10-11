@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import type { Button, GameContext, Scene } from "../contracts";
 import { SCREEN_H, SCREEN_W } from "../contracts";
 import { createSceneStack } from "../engine/core";
-import { measureText } from "./font";
+import { CREDITS } from "../world/credits";
+import { measureText, wrapText } from "./font";
 import { CREDITS_DURATION_TICKS, CREDITS_TICKS_PER_PIXEL, rollCredits } from "./credits";
 
 function setup() {
@@ -56,10 +57,10 @@ describe("credits", () => {
       }
       drawText.mockClear();
     }
-    expect(shown).toEqual(new Set([
-      "VERDANT REACH", "BELLADONNA", "MIMI OSA", "TITUS ARUM", "PYRA", "ROWAN VALE",
-      "DR. VALE", "THANK YOU FOR", "PLAYING",
-    ]));
+    expect(shown).toEqual(new Set(CREDITS.flatMap((entry) => wrapText(entry, 18))));
+    for (const name of ["VERDANT REACH", "DR. IMOGEN VALE", "BRAM", "BELLADONNA", "ROWAN VALE", "THANK YOU FOR", "PLAYING"]) {
+      expect(shown).toContain(name);
+    }
     expect(scenes.top()).toBe(scene);
     tick();
     await promise;

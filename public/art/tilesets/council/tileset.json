@@ -1,0 +1,81 @@
+{
+  "format": "verdant.tileset/1",
+  "id": "council",
+  "name": "The Council",
+  "tileSize": 16,
+  "sheet": "sheet.png",
+  "columns": 16,
+  "tiles": {
+    "jar_shelf": { "base": 0 },
+    "night_window": { "base": 1 },
+    "star_floor": { "base": 2, "alts": [3, 4, 5] },
+    "loam_floor": { "base": 6, "alts": [7, 8, 9] },
+    "moon_lantern": { "base": [10, 11] },
+    "brazier": { "base": [12, 13] },
+    "poison_bed": {
+      "base": 16,
+      "masks": {
+        "0": 32,
+        "1": 33,
+        "2": 34,
+        "3": 35,
+        "4": 36,
+        "5": 37,
+        "6": 38,
+        "7": 39,
+        "8": 40,
+        "9": 41,
+        "10": 42,
+        "11": 43,
+        "12": 44,
+        "13": 45,
+        "14": 46,
+        "15": 47
+      }
+    },
+    "rot_pool": {
+      "base": [48, 49],
+      "masks": {
+        "0": [64, 80],
+        "1": [65, 81],
+        "2": [66, 82],
+        "3": [67, 83],
+        "4": [68, 84],
+        "5": [69, 85],
+        "6": [70, 86],
+        "7": [71, 87],
+        "8": [72, 88],
+        "9": [73, 89],
+        "10": [74, 90],
+        "11": [75, 91],
+        "12": [76, 92],
+        "13": [77, 93],
+        "14": [78, 94],
+        "15": [79, 95]
+      }
+    },
+    "aspen_pillar": {
+      "base": 96,
+      "masks": {
+        "0": 112,
+        "1": 113,
+        "2": 114,
+        "3": 115,
+        "4": 116,
+        "5": 117,
+        "6": 118,
+        "7": 119,
+        "8": 120,
+        "9": 121,
+        "10": 122,
+        "11": 123,
+        "12": 124,
+        "13": 125,
+        "14": 126,
+        "15": 127
+      }
+    }
+  },
+  "credits": "Original hand-pixelled Chapter 11 environment for Verdant Reach; no copied or traced game art.",
+  "source": { "kind": "generated", "tool": "tools/art/env12/tilesets.py" }
+}

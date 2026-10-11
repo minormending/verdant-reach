@@ -61,6 +61,8 @@ BUILDERS: list[tuple[str, str]] = [
     ("env10", "env10/build.py"),          # Chapter 9 desert, canyon and ridge tiles, Thistledown and Sanguine Ridge structures (after tiles: scrub sits on the sand colour)
     ("cast10", "cast10/build.py"),        # Chapter 10 ROWAN, the Council warden, the Elder's root knot, ROWAN portrait, centuryheart-sprouts still
     ("env11", "env11/build.py"),          # Chapter 10 Grove tiles, the Council hall, the Grove Gate and the Elder's trunk (after env10: the map review composes shipped tiles)
+    ("cast11", "cast11/build.py"),        # Chapter 11 the four Council seats (BELLADONNA, MIMI OSA, TITUS ARUM, PYRA), their portraits, the fellowship still
+    ("env12", "env12/build.py"),          # Chapter 11 Council room tiles (after env11: props sit on shipped floors; the map review composes the Grove's litter and roots)
 ]
 
 

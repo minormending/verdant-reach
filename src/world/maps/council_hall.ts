@@ -3,19 +3,22 @@ import { LEGEND, when } from "../build";
 
 export const council_hall: MapDef = {
   id: "council_hall", name: "COUNCIL HALL", outdoor: false, music: "herbarium",
-  border: "void", legend: { ...LEGEND, N: "stairs_up" },
+  // The Council's grand foyer: a living root runs over golden litter from the
+  // door to the stair, between aspen columns; the heal counter (west) and
+  // the market counter (east) are unchanged.
+  border: "void", legend: { ...LEGEND, N: "stairs_up", I: "aspen_pillar", ":": "root_vein", ";": "grove_floor" },
   tiles: [
     "WWWWWWWNWWWWWWWW",
-    "WPPiiiiiiiiiKKKW",
-    "WgggiiiiiiiwwwwW",
-    "WCCCiiiiiiiCCCCW",
-    "WiiiiiiiiiiiiiiW",
-    "WiiiiiiiiiiiiiiW",
-    "WPiiiiiiiiiiiiPW",
-    "WiiiiirrrriiiiiW",
-    "WiiiiirrrriiiiiW",
-    "WiiiiirrrriiiiiW",
-    "WiiiiiiiiiiiiiiW",
+    "WPPiii;:;iiiKKKW",
+    "Wgggii;:;iiwwwwW",
+    "WCCCii;:;iiCCCCW",
+    "Wiiiii;:;iiiiiiW",
+    "WiiiIi;:;iIiiiiW",
+    "WPiiIi;:;iIiiiPW",
+    "Wiiiii;:;iiiiiiW",
+    "WPiiIi;:;iIiiiPW",
+    "WiiiIi;:;iIiiiiW",
+    "Wiiiii;:;iiiiiiW",
     "WWWWWWWEWWWWWWWW",
   ],
   legendWhen: [{ when: when({ ch10_done: false }), legend: { N: "wall" } }],

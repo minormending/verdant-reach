@@ -93,15 +93,17 @@ function setup() {
 }
 
 describe("Chapter 11 scripts", () => {
-  it("wires TODO dialogue and uses the existing credits and recovery ops", () => {
+  it("wires finished dialogue and uses the existing credits and recovery ops", () => {
+    const speakers = new Set(["BELLADONNA", "MIMI OSA", "TITUS ARUM", "PYRA", "ROWAN", "VALE"]);
     for (const [id, cmds] of Object.entries(ch11Scripts)) {
       expect(WORLD.scripts[id]).toEqual(cmds);
       eachCmd(cmds, (c) => {
         expect(c.op).not.toBe("endSlice");
         if (c.op === "say") {
-          expect(c.text).toMatch(/^TODO\(text\): /);
-          expect(c.speaker).toBeTruthy();
-          expect(c.speaker).toBe(c.speaker?.toUpperCase());
+          expect(c.text.trim().length).toBeGreaterThan(0);
+          expect(c.text).not.toMatch(/TODO|\{PLAYER\}|NARRATOR/);
+          // Narration has no speaker; everyone else uses one name per character.
+          if (c.speaker !== undefined) expect(speakers).toContain(c.speaker);
         }
         if (c.op === "warp") expect(walkable(grid(WORLD.maps[c.to]), c.x, c.y)).toBe(true);
       });
@@ -197,8 +199,8 @@ describe("Chapter 11 scripts", () => {
     ]]);
     expect(host.setNpcVisible).toHaveBeenCalledWith("imogen", true);
     const texts = vi.mocked(host.ctx.ui.say).mock.calls.map(([text]) => text);
-    const reconcile = texts.findIndex((t) => t.includes("ROWAN and IMOGEN reconcile"));
-    const fellowship = texts.findIndex((t) => t.includes("Fellow of the Herbarium"));
+    const reconcile = texts.findIndex((t) => t.includes("two VALES laugh"));
+    const fellowship = texts.findIndex((t) => t.includes("FELLOW of the HERBARIUM"));
     const record = texts.findIndex((t) => t.includes("record of a new world"));
     expect(reconcile).toBeGreaterThan(-1);
     expect(fellowship).toBeGreaterThan(reconcile);
@@ -211,7 +213,7 @@ describe("Chapter 11 scripts", () => {
     expect(host.credits).toHaveBeenCalledOnce();
     expect(state.hallOfFame).toHaveLength(1);
     expect(vi.mocked(host.ctx.ui.say).mock.calls.slice(boxes).map(([text]) => text))
-      .not.toContain(expect.stringContaining("Fellow of the Herbarium"));
+      .not.toContain(expect.stringContaining("FELLOW of the HERBARIUM"));
     expect(host.endSlice).not.toHaveBeenCalled();
   });
 
@@ -253,7 +255,7 @@ describe("Chapter 11 scripts", () => {
     expect(host.battle).toHaveBeenCalledTimes(10);
     expect(vi.mocked(host.battle).mock.calls.slice(5).map(([req]) => req.trainer)).toEqual(TRAINERS.map((id) => `${id}_rematch`));
     expect(state.bag.rain_jar).toBe(3);
-    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([t]) => t.includes("ROWAN and IMOGEN reconcile"))).toHaveLength(1);
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([t]) => t.includes("two VALES laugh"))).toHaveLength(1);
     expect(state.flags.game_cleared).toBe(true);
     expect(state.flags.council_run).toBe(false);
     expect(state.position.map).toBe("fellowship_hall");

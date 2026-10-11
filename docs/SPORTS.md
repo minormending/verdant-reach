@@ -256,3 +256,54 @@ Chapter 10 Elder (set in `tools/art/crystal/elder.py`; palettes are dark, mid, s
 | elder | silver-blue "winter" palette (artistic interpretation) | Not a cultivar or a natural colour form: a pale silver-blue palette imagining the grove in winter, chosen for the game's legendary. Crystal: the pale green-gold crowns and the glow in the roots (mid slot) turn pale silver-blue, and the gold-olive shade, knots and root crevices (dark slot) turn slate blue. The white bark and the veins of light stay white. Palette swap only. | `#485880 #b0c8e0 #f8f8f8` |
 
 Botanical reference: [Wikipedia, Pando (tree)](https://en.wikipedia.org/wiki/Pando_(tree)) describes the aspen clone whose many stems share one root system, which the Elder is drawn after. Neither the Pando nor the Populus tremuloides page describes a blue colouring; the winter palette is an artistic interpretation.
+
+Chapter 11 nightshade line (set in `tools/art/crystal/nightshade.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| nightshade_sprout | var. lutea (natural form) | Atropa belladonna var. lutea, a rare natural variant with pale-yellow flowers and pale-yellow fruit; not a cultivar. Crystal: the dull-violet mid slot (the closed bud) turns pale yellow; the deep-green leaves and stem stay. Palette swap only. | `#386838 #d8d080 #f8f8f8` |
+| nightshade | var. lutea (natural form) | The same yellow-fruited form: the bells turn pale yellow. The berries are drawn in the shared outline black, which a sport cannot change, so they stay black; the real var. lutea's fruit is pale yellow, so the berries are a limit of the two colour slots, not a claim about the plant. The leaves stay deep green. | `#386838 #d8d080 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Atropa bella-donna](https://en.wikipedia.org/wiki/Atropa_belladonna) describes the ovate leaves, the bell-shaped flowers that are dull purple tinged yellow-green toward the base, the shiny black berries set in a larger stellate calyx, and the rare variant with pale-yellow flowers and pale yellow fruit called Atropa bella-donna var. lutea. It also states that the plant is toxic if eaten. The exact two-tone palettes are an artistic interpretation.
+
+Chapter 11 oleander (set in `tools/art/crystal/oleander.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| oleander | white-flowered garden form | Nerium oleander is common in cultivation in solid whites as well as pinks and reds, and white cultivars such as 'Mont Blanc' (double-flowered) and 'Petite White' are named. The sprite keeps the wild plant's single five-lobed flower, so it shows a generic white-flowered form rather than 'Mont Blanc' itself. Crystal: the pink mid slot turns a blush white, kept a step below the shared highlight white so the petals still read; the dark leathery green stays. Palette swap only. | `#306040 #e0c8d0 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Nerium](https://en.wikipedia.org/wiki/Nerium) describes the thick, leathery, dark-green, narrow lanceolate leaves in pairs or whorls of three, the flowers in clusters at the end of each branch, pink with a deeply five-lobed corolla in wild plants, white to dark red cultivars in cultivation, and the white cultivars 'Mont Blanc' and 'Petite White'. The blush tint of the white sport and the exact palettes are an artistic interpretation.
+Chapter 11 mimosa line (set in `tools/art/crystal/mimosa.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| mimosa_sprout | white pom-pom form (artistic interpretation) | Not a cultivar or a documented colour form: the Mimosa pudica reference describes only pale pink or purple flower heads, so a white-headed sensitive plant is imagined for the sport. Crystal: the pink mid slot (the shoot, petioles and the closed bud) turns a pale cream-white, and the fresh-green dark slot (leaflets, the bud's bracts, the mound) turns a cooler sage green. White highlights stay white. Palette swap only. | `#589858 #e8e0d8 #f8f8f8` |
+| sensitive_plant | white pom-pom form (artistic interpretation) | The same imagined white form: the three fluffy flower heads turn cream-white. The prickly stems and petioles share the mid slot, so they turn cream as well: an artifact of the two colour slots, not a claim about the plant. The feathery leaves take the sage green. | `#589858 #e8e0d8 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Mimosa pudica](https://en.wikipedia.org/wiki/Mimosa_pudica) describes the bipinnately compound leaves (one or two pinna pairs, 10–26 leaflets per pinna) whose leaflets fold inward and droop when touched and reopen minutes later, the slender, prickly stems that become creeping or trailing with age, and the stalked, globose pale pink or purple flower heads with pink to lavender filaments. It describes no white-flowered form, so the sport is an artistic interpretation, as are the exact two-tone palettes.
+
+Chapter 11 prayer plant (set in `tools/art/crystal/prayer.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| prayer_plant | var. kerchoveana (rabbit's foot) | Maranta leuconeura var. kerchoveana, a naturally occurring variety (RHS Award of Garden Merit) with dark blotches between the leaf veins and light green undersides; the base palette follows var. erythroneura (the herringbone plant: strong red veining on dark green leaves, deep red undersides). Crystal: the red-pink mid slot (the herringbone veins and the raised leaves' undersides) turns light green, and the deep-green dark slot (the blades and stalks) turns a fresh leaf green, so the black blotches along each midrib read as kerchoveana's dark marks. White stays white. Palette swap only. | `#6c9850 #c8e0a0 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Maranta leuconeura](https://en.wikipedia.org/wiki/Maranta_leuconeura) describes the oval leaves that lie flat by day and rise upright at night "as if in prayer", and the two naturally occurring varieties: var. kerchoveana, with dark blotches between the veins and light green undersides, and var. erythroneura, with strong red veining on dark green leaves and deep red undersides. The exact two-tone palettes, and the light green taken by the sport's veins (which share the undersides' slot), are an artistic interpretation.
+Chapter 11 titan arum line (set in `tools/art/crystal/titan.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| corpse_corm | pale form (artistic interpretation) | Not a cultivar or a known natural colour form: Amorphophallus titanum has no recorded pale variant, and this pale palette is invented for the game. Crystal: the olive-tan corm and shoot (mid slot) turn pale cream, and the maroon-brown shade, skin marks and soil (dark slot) turn dusty mauve. Palette swap only. | `#887080 #d8d0b0 #f8f8f8` |
+| corpse_leaf | pale form (artistic interpretation) | The same invented pale form: the green leaflets and stalk turn pale sage, and the maroon-brown blotches and leaf shade turn dusty mauve. Palette swap only. | `#706078 #c0d0a8 #f8f8f8` |
+| titan_arum | pale form (artistic interpretation) | The same invented pale form: the maroon inside of the spathe turns dusty pink and the cream spadix and pale spathe outside turn a paler cream. Palette swap only. | `#a87088 #d8d0a0 #f8f8f8` |
+
+Botanical reference: [Wikipedia, Amorphophallus titanum](https://en.wikipedia.org/wiki/Amorphophallus_titanum) describes the tuber (corm) as the largest of any flowering plant, the single leaf the size and shape of a small tree on a green-and-white patterned stalk that branches into three sections of many leaflets, and the spathe, deep green with cream specks outside and dark burgundy red or maroon inside, its ribbed sides forming a frilled edge. The page describes no colour variants; the pale sport is an artistic interpretation.
+
+Chapter 11 flame lily line (set in `tools/art/crystal/flamelily.py`; palettes are dark, mid, shared white):
+
+| Species | Sport | Real cultivar / reference | Sport palette (dark, mid, light) |
+|---|---|---|---|
+| flame_lily_tuber | Gloriosa superba 'Lutea' | 'Lutea' is the yellow-flowered cultivar. The tuber stage has no flower, so Crystal carries the yellow through the line: the rust tuber and leaf shade (dark slot) turn golden brown and the yellow-green shoot and leaves (mid slot) turn yellow. Palette swap only; the shoot colour is an interpretation. | `#987020 #d8d058 #f8f8f8` |
+| flame_lily | Gloriosa superba 'Lutea' | 'Lutea' has yellow flowers: the flame-red tepals (dark slot) turn deep gold and their wavy edges, the stamens and the leaves (mid slot) turn yellow, so the flower is all yellow. Palette swap only. | `#c88818 #e8d048 #f8f8f8` |
+
+Botanical references: [University of Wisconsin–Madison Extension, Gloriosa lily](https://hort.extension.wisc.edu/articles/gloriosa-lily-gloriosa-superba/) lists the cultivar 'Lutea' as having yellow flowers, and describes the red-brown, elongated, often forked tuberous rhizome, the leaf tips that taper into coiling, clinging tendrils, and the six widely separated, reflexed tepals with very wavy or curling margins. [Wikipedia, Gloriosa superba](https://en.wikipedia.org/wiki/Gloriosa_superba) describes the leaf-tip tendrils, the tepals with wavy margins that bend backwards, the brilliant yellow to red colouring and the six prominent stamens. The exact two-tone palettes are an artistic interpretation.
