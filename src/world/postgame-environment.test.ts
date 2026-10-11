@@ -85,13 +85,15 @@ const inTree = (id: MapId) => (x: number, y: number) =>
 
 const MAPS: MapId[] = ["route_9", "seed_vault_entrance", "seed_vault_b1", "seed_vault_b2", "seed_vault_b3", "methuselah_ridge"];
 
+// Re-pinned at integration: the vault and ridge maps play their own post-game
+// music, and the writer's five rack signs (entrance and archive) are included.
 const GAMEPLAY: Record<string, string> = {
   route_9: "44dbd517424a5c9703339e7e8844cfdc5131eb87d6560725a06badabe6bdf42d",
-  seed_vault_entrance: "f1129b107ae05dbc43d28b586830f60ae188606e13e0eeb75a46d54887feb423",
-  seed_vault_b1: "d2a253b941568315d8bde078fe75b6bde204d3d13a3249c1c9a594286094e5d1",
-  seed_vault_b2: "542eb385192a987e6ff1ae613173327fb2c3ddba9528a618f88595c6ff412b5f",
-  seed_vault_b3: "26f55307ae97be7b90e7de343e65083477380775ec4851695050c5f9ded036b4",
-  methuselah_ridge: "e34a6c4be2117c80536b28fcbb4c1771a325bdb7b20e0cbe79b9a3181b335097",
+  seed_vault_entrance: "70fffc144841a09694f390ecf95de2ebbb6a2be725365b13cdace85fde597876",
+  seed_vault_b1: "bc575ad41a83a1bcb0a62b8dcc742d44c5e8b1e132ee93c1074dbb55990209ff",
+  seed_vault_b2: "51321ef8985e2df311b87e9dd7d0b68ed7595cee3a16521a25f3c7b19541cc4e",
+  seed_vault_b3: "05be4b1471e14a41f57c27cd46717f7302534827b0ce320bb39b6350344e3f3c",
+  methuselah_ridge: "b8664a4072cd7468916ddd6754ada0c08af711c86737f23fd788fa2b332f23bd",
 };
 
 // Per map, one digest of the behaviour grid for each entry of STATES.
