@@ -32,7 +32,7 @@ export const elder_grove_heart: MapDef = {
   structures: [{ key: "elder_trunk", x: 8, y: 6 }],
   warps: [{ x: 10, y: 19, to: "elder_grove_3", toX: 13, toY: 1, facing: "down" }],
   npcs: [
-    { id: "centuryheart_sprout", sprite: "potted_plant", x: 11, y: 10, facing: "down",
+    { id: "centuryheart_sprout", sprite: "centuryheart_sprout", x: 11, y: 10, facing: "down",
       script: "pg_centuryheart", visibleWhen: when({ game_cleared: true, got_centuryheart: false }) },
     { id: "mercer", sprite: "mercer", x: 10, y: 11, facing: "down", script: "mercer", visibleWhen: when({ centuryheart_planted: false }) },
     { id: "rowan", sprite: "rowan", x: 4, y: 8, facing: "right", script: "ch10_rowan", visibleWhen: when({ centuryheart_planted: false }) },
