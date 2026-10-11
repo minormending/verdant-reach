@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "nightshade_sprout",
+  "palette": ["#181818", "#386838", "#9878a8", "#f8f8f8"],
+  "sport": ["#181818", "#386838", "#d8d080", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 8], [1, 10], [2, 6], [3, 16], [4, 10], [0, 8]], "idle": [[0, 140], [4, 10], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Atropa belladonna, https://en.wikipedia.org/wiki/Atropa_belladonna . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/nightshade.py" },
+  "notes": "Crystal rule. Atropa belladonna. BRACED: a low, wide, dark green sprout of soft oval leaves crouched over its own black shadow pool; the big lead leaf raised across the front like a shield, the head leaf leaning at the foe, and one closed dull-purple bell bud hanging on a curved stalk below the lead leaf. Gesture: the bud swings on its stalk while the lead leaf lifts, then settles; the stem, the other leaves and the shadow stay fixed. A deep green dark slot (leaves, stems, calyces, the bells' green base) under a dull violet mid tone (the bells and the bud); the berries are the outline black with white glints. Sport: Atropa belladonna var. lutea, the rare natural form with pale-yellow flowers and fruit (the black berries cannot change in a sport, so only the flowers turn pale yellow)."
+}

@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "flame_lily",
+  "palette": ["#181818", "#d03020", "#c8d040", "#f8f8f8"],
+  "sport": ["#181818", "#c88818", "#e8d048", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 4], [1, 8], [2, 6], [3, 6], [4, 14], [1, 8], [0, 8]], "idle": [[0, 120], [1, 8], [2, 8], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Gloriosa superba, https://en.wikipedia.org/wiki/Gloriosa_superba . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/flamelily.py" },
+  "notes": "Crystal rule. Gloriosa superba. LUNGING: the climbing vine arches from its forked tuber toward the foe and thrusts out its flower: six long tepals swept back and up like flames, red with wavy yellow edges, and six long curved stamens flung toward the foe; a second, smaller flower climbs behind and tendril-tipped leaves grip the air. Gesture: the petals flicker (the tepals' tips lick up and back in a wave, hold and settle); vine, leaves and tuber stay fixed. A flame-red dark slot (the tepals, the tuber's rust, the leaf shade) under a yellow-green mid (the tepals' wavy edges, the stamens, the leaves and shoot). Sport: the all-yellow form, Gloriosa superba 'Lutea'."
+}

@@ -63,6 +63,11 @@ export const SPECIES_IDS = [
   "lithops_pebble", "lithops_pair", "lithops_bloom",
   // Chapter 10
   "aspen_sucker", "quaking_aspen", "elder",
+  // Chapter 11 (CH11.md §2 order)
+  "nightshade_sprout", "nightshade", "oleander",
+  "mimosa_sprout", "sensitive_plant", "prayer_plant",
+  "corpse_corm", "corpse_leaf", "titan_arum",
+  "flame_lily_tuber", "flame_lily",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 
@@ -110,6 +115,8 @@ export const MAP_IDS = [
   // Chapter 10 (CH10.md §4 order).
   "route_12", "council_arboretum", "arboretum_greenhouse", "elder_grove_1",
   "elder_grove_2", "elder_grove_3", "elder_grove_heart", "council_hall",
+  // Chapter 11 (CH11.md §3).
+  "council_1", "council_2", "council_3", "council_4", "keeper_hall", "fellowship_hall",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -269,6 +276,16 @@ export const TILES = {
   grove_grass:    { walk: true, encounter: "grass" }, // tall pale grass and ferns: the Grove's encounter tile
   root_vein:      { walk: true },                // pale glowing roots leading toward the heart (group "root_vein")
   listening_clearing: { walk: true },            // mushrooms and moss round a glow: ring 2's step triggers only
+  // Chapter 11: the Council's rooms (decoration; the run's walk grid is frozen by ch11-environment.test.ts)
+  jar_shelf:      { walk: false },               // APOTHECARY: dark shelving of labelled jars and drying herbs
+  poison_bed:     { walk: false },               // APOTHECARY: foxglove and nightshade behind a low iron rail (group "poison_bed")
+  night_window:   { walk: false },               // SLEEPER: the house window glazed with the night, a crescent moon and stars
+  star_floor:     { walk: true },                // SLEEPER: deep night-blue slabs scattered with silver stars
+  moon_lantern:   { walk: false },               // SLEEPER: a crescent-moon lamp in a moss cushion of folded leaves
+  loam_floor:     { walk: true },                // ROTTER: crumbly maroon loam
+  rot_pool:       { walk: false },               // ROTTER: a steaming bog pool (group "rot_pool")
+  brazier:        { walk: false },               // KINDLER: an iron fire bowl
+  aspen_pillar:   { walk: false },               // KEEPER and lobby: a pale aspen column, gilded crown, carved crest (group "aspen_pillar")
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -382,6 +399,8 @@ export const CHARACTERS = [
   // Chapter 10
   "rowan", "council_warden",
   "elder_root",                  // the Elder's glowing root knot (static object; column 0 rest, columns 1-2 pulse)
+  // Chapter 11: the Council seats
+  "belladonna", "mimi_osa", "titus_arum", "pyra",
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -396,6 +415,7 @@ export const TRAINER_PORTRAITS = [
   "mercer", "wren", // Chapter 8
   "rook", // Chapter 9
   "rowan", // Chapter 10
+  "belladonna", "mimi_osa", "titus_arum", "pyra", // Chapter 11
   "player_back", // 48x48 back view used on the player's side
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
@@ -412,6 +432,7 @@ export const MUSIC = [
   "relay_seized", // Chapter 8
   "thistledown", "canyon", "ridge", // Chapter 9
   "elder_grove", "battle_mercer", // Chapter 10
+  "council", "battle_keeper", // Chapter 11
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 
@@ -475,6 +496,7 @@ export const STILLS = [
   "mercer_hub_map", // Chapter 8
   "dragon_trees", // Chapter 9
   "centuryheart_sprouts", // Chapter 10
+  "fellowship", // Chapter 11
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

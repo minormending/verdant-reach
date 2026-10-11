@@ -23,6 +23,53 @@ function memoryStorage() {
 }
 
 describe("save", () => {
+  it("migrates a pre-Council v1 save without inventing Hall of Fame entries", () => {
+    const storage = memoryStorage();
+    const old = newGameState({ world });
+    old.playerName = "SAGE";
+    old.flags.ch10_done = true;
+    storage.setItem(SAVE_KEY, JSON.stringify({ v: 1, savedAt: 42, gameId: "old", state: old }));
+    const save = createSave(() => old, storage, () => newGameState({ world }));
+    expect(save.read()).toEqual(old);
+    expect(save.read()).not.toHaveProperty("hallOfFame");
+    const loaded = save.read()!;
+    loaded.hallOfFame = [[{ species: "great_oak", level: 66, nickname: "ACORN" }]];
+    const updatedSave = createSave(() => loaded, storage);
+    updatedSave.write();
+    expect(updatedSave.read()!.hallOfFame).toEqual(loaded.hallOfFame);
+    expect(updatedSave.read()!.flags.ch10_done).toBe(true);
+  });
+
+  it("round-trips multiple clears, preserving team order and optional nicknames", () => {
+    const storage = memoryStorage();
+    const state = newGameState({ world });
+    state.playerName = "SAGE";
+    state.hallOfFame = [
+      [{ species: "great_oak", level: 66, nickname: "ACORN" }, { species: "dandelion", level: 60 }],
+      [{ species: "dandelion", level: 100 }],
+    ];
+    const save = createSave(() => state, storage);
+    save.write();
+    expect(save.read()).toEqual(state);
+    expect(save.read()!.hallOfFame![0][1]).not.toHaveProperty("nickname");
+    state.hallOfFame = [];
+    save.write();
+    expect(save.read()!.hallOfFame).toEqual([]);
+  });
+
+  it("drops malformed Hall of Fame records while retaining complete valid teams", () => {
+    const fallback = newGameState({ world });
+    const valid = [{ species: "great_oak", level: 66, nickname: "ACORN", hp: 40 }];
+    const loaded = normalizeState({ ...fallback, hallOfFame: [
+      null, "junk", [{ species: "unknown", level: 60 }],
+      [{ species: "great_oak", level: 0 }], [{ species: "great_oak", level: 101 }],
+      [{ species: "great_oak", level: 60.5 }], [{ species: "great_oak", level: 60, nickname: 5 }],
+      Array(7).fill({ species: "great_oak", level: 60 }), valid,
+    ] }, fallback)!;
+    expect(loaded.hallOfFame).toEqual([[{ species: "great_oak", level: 66, nickname: "ACORN" }]]);
+    expect(normalizeState({ ...fallback, hallOfFame: {} }, fallback)).not.toHaveProperty("hallOfFame");
+  });
+
   it("round-trips a player rafting on water and keeps older saves unmounted", () => {
     const storage = memoryStorage();
     const state = newGameState({ world });

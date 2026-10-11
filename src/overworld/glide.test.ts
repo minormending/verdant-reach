@@ -224,3 +224,17 @@ describe("Chapter 10 SEED GLIDE visits", () => {
     expect(glideLanding(WORLD, state, "council_arboretum")).toBeUndefined();
   });
 });
+
+
+describe("Chapter 11 SEED GLIDE visits", () => {
+  it.each(["council_1", "council_2", "council_3", "council_4", "keeper_hall", "fellowship_hall"] as MapId[])("infers Arboretum visits from %s while keeping glide unavailable indoors", (map) => {
+    const state = fresh();
+    state.bag.glider_seed = 1;
+    state.position.map = map;
+    expect(visitedGlideMaps(state)).toHaveLength(11);
+    expect(canGlide(state, WORLD.maps[map], false)).toBe(false);
+    state.position.map = "player_home";
+    state.heal.map = map;
+    expect(glideLanding(WORLD, state, "council_arboretum")).toBeDefined();
+  });
+});

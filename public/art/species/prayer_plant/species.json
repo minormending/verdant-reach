@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "prayer_plant",
+  "palette": ["#181818", "#285c38", "#e86078", "#f8f8f8"],
+  "sport": ["#181818", "#6c9850", "#c8e0a0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 10], [2, 6], [3, 20], [4, 8], [0, 10]], "idle": [[0, 140], [1, 10], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Maranta leuconeura, https://en.wikipedia.org/wiki/Maranta_leuconeura . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/prayer.py" },
+  "notes": "Crystal rule. Maranta leuconeura (after var. erythroneura). BRACED: a low, wide clump of broad oval leaves; two lie open on the ground as feet, two are half raised as arms, and two stand upright in the middle, folded and pressed together like praying hands, tilted at the foe. Open leaves show deep green blades with red-pink herringbone veins and elongated dark green blotches along the midrib; raised leaves show red-pink undersides. Gesture: night falls and the arm leaves rise and fold up beside the praying pair (the lead foot leaf lifts halfway) until the clump stands in prayer, hold, then open again; the praying pair and the stalks stay fixed. Sport: var. kerchoveana, the green form with dark blotches and light green undersides."
+}

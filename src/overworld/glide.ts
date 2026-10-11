@@ -13,7 +13,7 @@ export const visitedTownFlag = (map: MapId): string => `visited_${map}`;
 export function visitedGlideMaps(state: TravelState): MapId[] {
   let furthest = 0; // Fallowfield is home, including the prologue on its roof.
   const fromMap = (map: MapId): number => {
-    if (map === "council_arboretum" || map === "council_hall" || map === "arboretum_greenhouse" || map.startsWith("elder_grove_")) return 10;
+    if (map.startsWith("council_") || map === "keeper_hall" || map === "fellowship_hall" || map === "arboretum_greenhouse" || map.startsWith("elder_grove_")) return 10;
     if (map === "route_12") return 9;
     if (map === "sanguine_ridge" || map.startsWith("sanguine_")) return 9;
     if (map === "thistledown" || map.startsWith("thistledown_") || map === "route_11") return 8;

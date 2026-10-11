@@ -10,6 +10,7 @@ import { DATA } from "../../data";
 import { WORLD } from "../../world";
 import { chooseFoeAction } from "./ai";
 import { active, canContinue, createBattleState, doSwitch, firstHealthy, resolveTurn, sendOutFoe } from "./battle";
+import { simulateTrainerRun } from "./simulate";
 import { seeded } from "./rng";
 import { attackStats, typeEffectiveness } from "./damage";
 import type { Quickened } from "../../contracts";
@@ -117,6 +118,27 @@ const MILESTONES_R10: Record<string, Milestone> = Object.fromEntries(
   }),
 );
 const THIRD_STARTER: Record<Line, SpeciesId> = { oak: "great_oak", chili: "red_chili", lily: "giant_water_lily" };
+
+// Same Chapter 10 party cores, raised to about 60 for the Council.
+const CH11_PARTIES: Omit<Milestone, "trainer">[] = [
+  { starterLevel: 60, extras: [["fireweed", 60], ["bladderwort", 59], ["dragon_tree", 59], ["larch", 59], ["edelweiss", 59]] },
+  { starterLevel: 60, extras: [["skunk_cabbage", 60], ["larch", 59], ["lithops_bloom", 59], ["red_mangrove", 59], ["edelweiss", 59]] },
+];
+const CH11_RUN = ["belladonna", "mimi_osa", "titus_arum", "pyra", "rowan"];
+
+function councilRate(line: Line, core: Omit<Milestone, "trainer">, ids: string[], delta = 0, n = 300): number {
+  const rng = seeded(99);
+  let wins = 0;
+  for (let i = 0; i < n; i++) {
+    const party = [createQuickened(DATA, THIRD_STARTER[line], core.starterLevel, rng),
+      ...core.extras.map(([sp, lv]) => createQuickened(DATA, sp, lv, rng))];
+    const trainers = ids.map((id) => ({ ...WORLD.trainers[id],
+      team: WORLD.trainers[id].team.map((t) => ({ ...t, level: t.level + delta })) }));
+    if (simulateTrainerRun({ data: DATA, party, trainers, rng, foeItems: false,
+      playerAction: (s) => greedy(active(s, 0), active(s, 1)) }).won) wins++;
+  }
+  return wins / n;
+}
 
 // Route 4, the Palm House, Route 5 and the Conservatory 3 juniors: ordinary
 // fights. With a mid-chapter party they should be comfortable wins.
@@ -316,6 +338,34 @@ describe.skipIf(Object.keys(WORLD.trainers).length === 0)("story battle balance"
       }
     });
   }
+
+  // Chapter 11's balance amendment allows bag healing between rooms.
+  for (const id of CH11_RUN) {
+    it(`Chapter 11: ${id} occupies its prescribed band with every starter above 25%`, () => {
+      const rates = CH11_PARTIES.flatMap((p) => (["oak", "chili", "lily"] as Line[])
+        .map((l) => councilRate(l, p, [id])));
+      const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
+      console.log(`CH11 ${id}: mean ${(mean * 100).toFixed(1)}%; cores oak/chili/lily: ${rates.map((r) => (r * 100).toFixed(1)).join(", ")}`);
+      expect(mean).toBeGreaterThanOrEqual(id === "rowan" ? 0.50 : 0.60);
+      expect(mean).toBeLessThanOrEqual(id === "rowan" ? 0.62 : 0.75);
+      for (const [i, rate] of rates.entries()) {
+        const label = `${id}, core ${Math.floor(i / 3) + 1}, ${["oak", "chili", "lily"][i % 3]}`;
+        expect(rate, label).toBeGreaterThan(0.25);
+      }
+    });
+  }
+
+  // A healed run is about the product of five per-fight odds (each 50-75%), so the
+  // per-fight bands are the difficulty target; the run floor only guards against a wall.
+  it("Chapter 11: healed Council run exceeds 8% for every starter with both cores", () => {
+    const rates = CH11_PARTIES.flatMap((core) => (["oak", "chili", "lily"] as Line[])
+      .map((line) => councilRate(line, core, CH11_RUN)));
+    console.log(`CH11 healed run: cores oak/chili/lily: ${rates.map((r) => (r * 100).toFixed(1)).join(", ")}`);
+    for (const [i, rate] of rates.entries()) {
+      const label = `core ${Math.floor(i / 3) + 1}, ${["oak", "chili", "lily"][i % 3]}`;
+      expect(rate, label).toBeGreaterThan(0.08);
+    }
+  });
 
   for (const [area, { ids, m }] of Object.entries(CH4_TRAINERS)) {
     it(`${area} trainers: comfortable with every starter`, () => {

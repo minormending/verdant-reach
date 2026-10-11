@@ -41,13 +41,15 @@ function gameplay(id: MapId): string {
 // and the dialogue pass wrote the sign and NPC strings (all intended).
 const FROZEN: [MapId, string, string][] = [
   ["route_12", "339f396ccdc018ea3f95724a4e96f0d206cdba2ff11e9a710d4b644a025dde01", "5174f3c7838af35ab1e2d26aa677a554efbaa15b93954bb11b8448f37e7e6d77"],
-  ["council_arboretum", "f4722c9b6a76e50916b2d9d8534437801d886afae6759441bdd3d4e9fb7d3885", "f47d68e470eadb52b41e87e3efe0ca1c0b7e0d48644e13212e07931664b976f0"],
+  // Re-pinned on ch11: Chapter 11 turns the hall door into the Council entrance.
+  ["council_arboretum", "d1acef7cf87bc659326f9ace97cf9832cd01551df25d048243b03ae173f1c8a3", "f47d68e470eadb52b41e87e3efe0ca1c0b7e0d48644e13212e07931664b976f0"],
   ["arboretum_greenhouse", "2e36479270136138c4ee49f5612ec3ce290bc9eaaee24aefd48708798c8e99ab", "7842ea36364692b6e923afa8e8e80906d45e5e19f2520aced6536917938bec15"],
   ["elder_grove_1", "846f7889efa74e46b0e8d7c928a7d790ff3866e8d4e3b64973b5214aecfddca5", "dff6785501c66c059fa5938afb12f0e7457eb9e66220d42b9604ba2686da2bda"],
   ["elder_grove_2", "4cdec02b50fe4a58f380b993a8fc404a962e708566632314f7307c3c92f59f2c", "a3e4c41491946cec6b32148bed2b9698895a239ed57d7a73aa0ab3610001dd1e"],
   ["elder_grove_3", "8ce16f4bb5e966a0489d6cfe6720a2292c93e18f857ece94b5b06621769ea260", "03279a5b830a08c49184da302c70c99d6d395df39d09563fbd44c968f091ea78"],
   ["elder_grove_heart", "de90d5890c27474a8f7360e7f3208fc3fd679b325698d1e5d1e814da31456b00", "dbce4f004ee6f50a6189a436a5970ad64d1b4ec2390435fc4eea1c6e4f5aa5fb"],
-  ["council_hall", "ba50bc6cb026e3c57d183536c4b60ed1dc78b88140d2ff4096e7b9baead77848", "12cc1fa9d187e6ef08b750b46654ff534d10248662a77b761ed91bc3510afa3e"],
+  // Re-pinned on ch11: Chapter 11 builds the lobby out (stairs to the Council, heal and market counters).
+  ["council_hall", "ed3f84752815fe7ca4f4266f374f0c5f56117e96f8e801ab64fb914ace79a3c8", "12cc1fa9d187e6ef08b750b46654ff534d10248662a77b761ed91bc3510afa3e"],
 ];
 
 function runtime(id: MapId, flags: Record<string, boolean> = {}): MapRuntime {

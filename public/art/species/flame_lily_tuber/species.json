@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "flame_lily_tuber",
+  "palette": ["#181818", "#a84830", "#b8c840", "#f8f8f8"],
+  "sport": ["#181818", "#987020", "#d8d058", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 12], [2, 6], [3, 16], [4, 10], [0, 8]], "idle": [[0, 130], [4, 10], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Gloriosa superba, https://en.wikipedia.org/wiki/Gloriosa_superba . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/flamelily.py" },
+  "notes": "Crystal rule. Gloriosa superba. COILED: a forked, rust-brown tuber lying on the ground like an upturned V (the two planted feet); from the fork a climbing green shoot rises in an S, with alternate lance-shaped leaves whose tips run out into coiling tendrils, and its top pulled back over the body and curled into a big tendril spiral. Gesture: the tendril curls (the coil loosens and reaches for the foe, then whips tight, holds and settles); the tuber, shoot and leaves stay fixed. A flame-red dark slot (the tepals, the tuber's rust, the leaf shade) under a yellow-green mid (the tepals' wavy edges, the stamens, the leaves and shoot). Sport: the all-yellow form, Gloriosa superba 'Lutea'."
+}

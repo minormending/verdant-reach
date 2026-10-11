@@ -35,6 +35,8 @@ export interface GameState {
   rivalName: string;
   money: number;
   party: Quickened[];           // max 6
+  /** One snapshot per Council clear, in party order. Older saves have no history. */
+  hallOfFame?: { species: SpeciesId; level: number; nickname?: string }[][];
   box: Quickened[];             // specimen cabinet storage
   bag: Record<string, number>;  // ItemId -> qty
   flags: Record<string, boolean>;

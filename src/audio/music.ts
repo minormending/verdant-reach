@@ -421,6 +421,39 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
       o6g4. f8 e-4 c4 | o6d-4 f4 a-4 g4 | o6f4 e-4 d4 o5b4 | o5g2 b4 o6d4 |`,
   },
 
+  // ------------------------------------------------------------------ council
+  // The Council's seat rooms and the Keeper's hall: ceremonial and tense, the
+  // quiet before each of the last fights. A minor in stately half notes that
+  // climb by fourths, a reedy lead over a held pad, a slow march bass and soft
+  // ticks. Ends on E (the dominant), always waiting for the next door.
+  council: {
+    bpm: 96, harmony: "pad", harmonyTone: "v4 @1 q8 ~6", bass: "march", bassTone: "v12 q5", drums: "tick", drumTone: "v4", fillEvery: 0,
+    chords: "Am | Am | F | G | Am | Am | Dm | E | F | G | Am | Em | F | Dm | E | E",
+    melody: `${THIN}
+      o5e2 a4 o6c4 | o5b2 a4 e4 | o5f2 a4 o6c4 | o5b2. g4 |
+      o5a4 o6c4 e4 d4 | o6c2 o5a4 e4 | o5f4 a4 o6d4 c4 | o5b1 |
+      o5c4 f4 a4 o6c4 | o6d2 o5b4 g4 | o6c4 o5b4 a4 e4 | o5g2. e4 |
+      o5f4 a4 o6c4 f4 | o6e2 d4 f4 | o6e2 d4 o5b4 | o5g+2. r4 |`,
+  },
+
+  // ------------------------------------------------------------------ battle keeper
+  // ROWAN VALE, the Keeper: the final battle of the main story. Noble and
+  // driving G minor at a gallop of sixteenths: a lead that climbs the triad
+  // like the Grove's trunks reaching up, a turn to D major (the harmonic
+  // minor's F-sharp) for the hope in it, octave bass and the drive groove.
+  // The last two bars hang on D before the fight goes round again.
+  battle_keeper: {
+    bpm: 160, harmony: "arp16", harmonyTone: "v5 @1 q4", bass: "octave8", bassTone: "v14 q4", drums: "drive", drumTone: "v8",
+    chords: "Gm | Gm | Eb | F | Gm | Gm | Cm | D | Eb | F | Gm | Dm | Eb | Cm | D | D | Gm | Bb | Eb | F | Cm | Eb | D | D",
+    melody: `${LEAD}
+      o5d4 g4 b-4 o6d4 | o6c4. o5b-8 a4 g4 | o5b-4 o6e-4 d4 c4 | o5a2 f4 a4 |
+      o5g4 b-4 o6d4 g4 | o6f4. e-8 d4 c4 | o6e-4 g4 c4 e-4 | o6d2 o5f+2 |
+      o5g4 b-4 o6e-4 g4 | o6f4. e-8 d4 c4 | o6d4 o5b-4 g4 b-4 | o5a2 f4 d4 |
+      o5e-4 g4 b-4 o6e-4 | o6d4 c4 o5g4 e-4 | o5f+4 a4 o6d4 f+4 | o6a2. r4 |
+      o6g4. f8 d4 o5b-4 | o6d4 f4 b-4 f4 | o6g4 e-4 b-4 g4 | o6a2 f4 c4 |
+      o6e-4. d8 c4 o5g4 | o5b-4 o6e-4 g4 e-4 | o6f+4 a4 f+4 d4 | o5a2 f+4 d4 |`,
+  },
+
   // ------------------------------------------------------------------ slice end
   // Bittersweet, hopeful: F major with a borrowed B-flat minor sigh.
   slice_end: {

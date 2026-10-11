@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "sensitive_plant",
+  "palette": ["#181818", "#48a040", "#f0a0c8", "#f8f8f8"],
+  "sport": ["#181818", "#589858", "#e8e0d8", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 8], [1, 8], [2, 8], [3, 14], [4, 10], [0, 8]], "idle": [[0, 130], [1, 8], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Mimosa pudica, https://en.wikipedia.org/wiki/Mimosa_pudica . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/mimosa.py" },
+  "notes": "Crystal rule. Mimosa pudica. REARING: a sprawling plant, prickly pink stems arching up from a low tangle of leaves, one rising high at the foe with the biggest fluffy pink pom-pom flower head, two smaller pom-poms on lower stems; feathery leaves spread wide, some open and some folded shut. Gesture: the leaflets fold shut in a wave running from the lead leaf to the rear, each leaf reopening as it passes; stems and pom-poms stay fixed. Fresh leaf green in the dark slot (leaflets, rachises), pom-pom pink as the mid tone (stems, petioles, buds, flower heads). Sport: a white pom-pom form, an artistic interpretation (no white form is described in the reference)."
+}

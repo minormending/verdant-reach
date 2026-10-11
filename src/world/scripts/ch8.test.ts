@@ -25,7 +25,7 @@ function setup(map: MapId = "glasshouse_city", outcome: BattleOutcome = "won") {
   } as unknown as GameContext;
   const host: ScriptHost = {
     ctx, mapId: () => map, map: () => WORLD.maps[map], createQuickened,
-    healParty: vi.fn(), battle: vi.fn(async () => outcome), whiteout: vi.fn(async () => {}),
+    healParty: vi.fn(), battle: vi.fn(async () => outcome), whiteout: vi.fn(async () => {}), credits: vi.fn(async () => {}),
     warp: vi.fn(async () => {}), movePlayer: vi.fn(async () => {}),
     moveNpc: vi.fn(async (id, path) => { events.push(`move:${id}:${path.length}`); }),
     face: vi.fn(), setNpcVisible: vi.fn((id, visible) => {

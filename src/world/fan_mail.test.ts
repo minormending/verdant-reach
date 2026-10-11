@@ -35,6 +35,7 @@ function setup() {
     showSpecies: vi.fn(), hideSpecies: vi.fn(), restoreMusic: vi.fn(),
     nameEntry: vi.fn(async () => ""),
     endSlice: vi.fn(async () => {}),
+    credits: vi.fn(async () => {}),
   };
   const talk = async (map: MapId, npc: string) => {
     state.position.map = map;

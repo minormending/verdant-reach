@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "titan_arum",
+  "palette": ["#181818", "#701830", "#e0d080", "#f8f8f8"],
+  "sport": ["#181818", "#a87088", "#d8d0a0", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png", "front__6.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 12], [2, 8], [3, 6], [4, 18], [5, 10], [0, 8]], "idle": [[0, 150], [5, 10], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Amorphophallus titanum, https://en.wikipedia.org/wiki/Amorphophallus_titanum . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/titan.py" },
+  "notes": "Crystal rule. Amorphophallus titanum. LOOMING: a towering cream-yellow spadix rising in a C and leaning over the foe, out of a huge frilled spathe whose open mouth shows its deep maroon, ribbed inner wall; outside, the spathe is pale and ribbed. Gesture: the spathe unfurls (wrapped tight round the spadix, it opens, overshoots wide, holds and settles); the spadix stays fixed. A maroon-brown dark slot (the corm's shade and skin marks, the stalk's blotches, the spathe's inside) under a mid that turns from olive (corm and leaf) to cream-yellow (the spadix and the spathe's pale outside). Skin marks and blotches always join an edge or the shade, never an enclosed dark dot. Sport: a pale form, an artistic interpretation (no pale titan arum is known)."
+}
