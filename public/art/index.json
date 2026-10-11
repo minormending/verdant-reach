@@ -154,8 +154,10 @@
     "relay_upper": ["sheet.png"],
     "ridge": ["sheet.png"],
     "rose": ["sheet.png"],
+    "summit": ["sheet.png"],
     "terrain": ["sheet.png"],
     "town": ["sheet.png"],
+    "vault": ["sheet.png"],
     "water": ["sheet.png"]
   },
   "structures": {
@@ -189,6 +191,7 @@
     "lodge": ["structure.png"],
     "market": ["structure.png"],
     "market_large": ["structure.png"],
+    "methuselah_tree": ["structure.png"],
     "night_conservatory": ["structure.png"],
     "nursery_garden": ["structure.png"],
     "palm_house": ["structure.png"],
@@ -210,6 +213,7 @@
     "birdwatcher": ["sheet.png"],
     "boulder": ["sheet.png"],
     "bram": ["sheet.png"],
+    "bristlecone": ["sheet.png"],
     "brother_saguaro": ["sheet.png"],
     "burr_hitch": ["sheet.png"],
     "calloway": ["sheet.png"],

@@ -64,6 +64,7 @@ BUILDERS: list[tuple[str, str]] = [
     ("cast11", "cast11/build.py"),        # Chapter 11 the four Council seats (BELLADONNA, MIMI OSA, TITUS ARUM, PYRA), their portraits, the fellowship still
     ("env12", "env12/build.py"),          # Chapter 11 Council room tiles (after env11: props sit on shipped floors; the map review composes the Grove's litter and roots)
     ("castpg", "castpg/build.py"),        # Post-game BURR hitching a ride, the Centuryheart sprout, the OLD DIARY icon, the Methuselah still (after tiles: the review stands them on shipped tiles)
+    ("envpg", "envpg/build.py"),          # Post-game Seed Vault and Methuselah Ridge tiles, the oldest bristlecone and its base (after tiles: the Route 9 portal copies the shipped cliff)
 ]
 
 

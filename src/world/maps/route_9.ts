@@ -6,11 +6,12 @@ export const route_9: MapDef = {
   border: "larch_tree",
   // Larch forest (T), then the scree slope (+, rock, turf terraces and ledges), then the snowy pass
   // (? snow and n snow grass, both grass encounters) between cliffs (A); a trodden scree track crosses it.
-  legend: { ...OUTDOOR, T: "larch_tree", "+": "scree", n: "snow_grass", Z: "stairs_down" },
-  // Post-game: the Seed Vault stair (Z, 6,0) is a cliff until the game is cleared.
+  legend: { ...OUTDOOR, T: "larch_tree", "+": "scree", n: "snow_grass", Z: "stairs_down", V: "vault_portal" },
+  // Post-game: the Seed Vault stair (Z, 6,0) is a cliff until the game is cleared. Its flanks (V)
+  // are cliff too until then; once the stair opens they show the vault's concrete portal.
   legendWhen: [{ when: when({ game_cleared: false }), legend: { Z: "cliff" } }],
   tiles: [
-    "AAAAAAZAAAAAAA++AAAAAAAAAAAAAA",
+    "AAAAAVZVAAAAAA++AAAAAAAAAAAAAA",
     "AAA????A??AAA?++???AAAA?????AA",
     "AA???nnn????A?++????AA???nnn?A",
     "A???nnnnn?????++nn????nnnnnn?A",

@@ -1,4 +1,4 @@
-// POSTGAME.md §1/§4: the northern vault (its own "seed_vault" theme; the archive keeps "herbarium") and the ridge ("ancient_ridge").
+// POSTGAME.md §1/§4: the northern vault and its summit, on their own tiles (tools/art/envpg); the vault has its own "seed_vault" theme (the archive keeps "herbarium") and the ridge "ancient_ridge".
 import type { MapDef, SpeciesId } from "../../contracts";
 import { LEGEND, OUTDOOR, pickups, when } from "../build";
 
@@ -10,21 +10,23 @@ function encounters(species: SpeciesId[], minLevel: number, maxLevel: number): M
 
 export const seed_vault_entrance: MapDef = {
   id: "seed_vault_entrance", name: "SEED VAULT", outdoor: false, music: "seed_vault",
-  border: "void", legend: { ...LEGEND, R: "stairs_up" },
-  legendWhen: [{ when: when({ diary_read: false }), legend: { R: "wall" } },
-    { when: when({ game_cleared: false }), legend: { R: "wall", u: "wall" } }],
+  // A cold vestibule: frosted concrete, receiving racks, a steel grating
+  // runner (g) from the door to the ridge stair.
+  border: "void", legend: { ...LEGEND, R: "stairs_up", W: "vault_wall", t: "vault_floor", K: "seed_rack", g: "hideout_floor" },
+  legendWhen: [{ when: when({ diary_read: false }), legend: { R: "vault_wall" } },
+    { when: when({ game_cleared: false }), legend: { R: "vault_wall", u: "vault_wall" } }],
   tiles: [
     "WWWWWWRWWWWWWW",
-    "WttttttttttttW",
-    "WKttttttttttKW",
-    "WKttttttttttKW",
-    "WttttttttttttW",
-    "WttttttttttttW",
-    "WttttttttttttW",
-    "WttttttttttttW",
-    "WttutttttttttW",
-    "WttttttttttttW",
-    "WttttttttttttW",
+    "WtttttgttttttW",
+    "WKttttgtttttKW",
+    "WKttttgtttttKW",
+    "WtttttgttttttW",
+    "WtttttgttttttW",
+    "WtttttgttttttW",
+    "WtttttgttttttW",
+    "WttuttgttttttW",
+    "WtttttgttttttW",
+    "WtttttgttttttW",
     "WWWWWWEWWWWWWW",
   ], structures: [],
   warps: [
@@ -39,7 +41,7 @@ export const seed_vault_entrance: MapDef = {
 
 export const seed_vault_b1: MapDef = {
   id: "seed_vault_b1", name: "SEED VAULT B1", outdoor: false, dark: true, music: "seed_vault",
-  border: "void", legend: LEGEND,
+  border: "void", legend: { ...LEGEND, W: "vault_wall", t: "vault_floor", "?": "vault_rime", "{": "vault_ice" },
   // Three ice crossings alternate their stopping ends. Sideways movement
   // is possible only at a stop; the ice solver must not branch mid-slide.
   tiles: [
@@ -73,31 +75,32 @@ export const seed_vault_b1: MapDef = {
 
 export const seed_vault_b2: MapDef = {
   id: "seed_vault_b2", name: "SEED VAULT B2", outdoor: false, music: "seed_vault",
-  border: "void", legend: LEGEND,
+  // The collapsed storage hall: roots (R) break in through the walls.
+  border: "void", legend: { ...LEGEND, W: "vault_wall", R: "root_wall", t: "vault_floor", "?": "vault_rime" },
   // Two stones fill two pits. Each stone has a north pocket for retreat
   // after Continue resets it above an already-filled pit. ROOT BRIDGE is
   // needed between the pit crossings; none of the barriers can be bypassed.
   tiles: [
-    "WWWWWWWWWWWWWWWWWWWWWWWW",
-    "W??????WWtttWttWW??????W",
-    "W??????WWtttWttWW???u??W",
-    "W??????WWtttWttWW??????W",
+    "WWWWRWWWWWWWWWWWWWWRWWRW",
+    "W??????WWtttWttRW??????W",
+    "W??????RWtttRttWW???u??W",
+    "W??????WWtttWttWR??????W",
     "WttttttWWtttWttWWttttttW",
-    "WttttttWWtttWttWWttttttW",
-    "WttttttWWtttWttWWttttttW",
-    "WttttttWWtttWttWWttttttW",
-    "WttttttWWtttWttWWttttttW",
-    "WtttttttWtttWtttWttttttW",
+    "WttttttWRtttWttWWttttttW",
+    "WttttttWWtttWttWRttttttW",
+    "RttttttRWtttWttWWttttttW",
+    "WttttttWWtttRttWWttttttW",
+    "WtttttttWtttRtttRttttttW",
     "Wtttttttøttt<tttøttttttW",
-    "WtttttttWtttWtttWttttttW",
+    "WtttttttRtttRtttWttttttW",
+    "WttttttWWtttRttRWttttttR",
     "WttttttWWtttWttWWttttttW",
-    "WttttttWWtttWttWWttttttW",
-    "WttttttWWtttWttWWttttttW",
-    "WttttttWWtttWttWWttttttW",
+    "WttttttWWtttWttWRttttttW",
+    "WttttttRWtttWttWWttttttW",
+    "W??????WWtttRttWW??????W",
+    "W??U???WRtttWttWW??????W",
     "W??????WWtttWttWW??????W",
-    "W??U???WWtttWttWW??????W",
-    "W??????WWtttWttWW??????W",
-    "WWWWWWWWWWWWWWWWWWWWWWWW",
+    "WRWWWWWWWWWWWWWWWWWWWWWW",
   ], structures: [],
   warps: [
     { x: 3, y: 17, to: "seed_vault_b1", toX: 11, toY: 3, facing: "down" },
@@ -111,9 +114,10 @@ export const seed_vault_b2: MapDef = {
 
 export const seed_vault_b3: MapDef = {
   id: "seed_vault_b3", name: "FROZEN ARCHIVE", outdoor: false, music: "herbarium",
-  border: "void", legend: LEGEND,
+  // Racks of sealed seed boxes (K) and the reading desk (D) where the diary lies.
+  border: "void", legend: { ...LEGEND, W: "vault_wall", t: "vault_floor", "?": "vault_rime", K: "seed_rack", D: "reading_desk" },
   tiles: [
-    "WWWWWWWWWWWWWWWW",
+    "WWWWWWWDWWWWWWWW",
     "WKKKKttttttKKKKW",
     "W??????????????W",
     "W??????????????W",
@@ -140,25 +144,27 @@ export const seed_vault_b3: MapDef = {
 
 export const methuselah_ridge: MapDef = {
   id: "methuselah_ridge", name: "METHUSELAH RIDGE", outdoor: true, music: "ancient_ridge", ambient: "mist",
-  border: "cliff", legend: OUTDOOR,
+  // A bare dolomite summit above the cloud deck: crags (A) and wind-shaped
+  // bristlecones (T) on the rim, a scree track (:) up to the oldest tree.
+  border: "cloud_sea", legend: { ...OUTDOOR, A: "dolomite_rock", T: "bristlecone_shrub", "?": "dolomite_scree", ":": "scree", "@": "dolomite_scree" },
   tiles: [
-    "AAAAAAAAAAAAAAAA",
-    "A??????????????A",
-    "A??????????????A",
+    "AAAATA@@@AATAAAA",
+    "A?????@@@??????A",
+    "A?????@@@??????A",
+    "A?????::::?????A",
+    "A?????::::?????A",
+    "A?????::::?????T",
+    "A?????::::?????A",
+    "A?????::::?????A",
+    "T?????::::?????A",
     "A?????::::?????A",
     "A?????::::?????A",
     "A?????::::?????A",
     "A?????::::?????A",
-    "A?????::::?????A",
-    "A?????::::?????A",
-    "A?????::::?????A",
-    "A?????::::?????A",
-    "A?????::::?????A",
-    "A?????::::?????A",
-    "AAAAAAA:AAAAAAAA",
-  ], structures: [],
+    "AAAATAA:AATAAAAA",
+  ], structures: [{ key: "methuselah_tree", x: 6, y: 0 }],
   warps: [{ x: 7, y: 13, to: "seed_vault_entrance", toX: 6, toY: 1, facing: "down" }],
-  npcs: [{ id: "methuselah", sprite: "potted_plant", x: 7, y: 3, facing: "down", script: "pg_methuselah",
+  npcs: [{ id: "methuselah", sprite: "bristlecone", x: 7, y: 3, facing: "down", script: "pg_methuselah",
     visibleWhen: when({ game_cleared: true, diary_read: true }) }],
   signs: [], triggers: [],
   encounters: encounters(["larch", "holly", "moss_campion", "red_cedar"], 63, 66),
