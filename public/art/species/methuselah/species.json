@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "methuselah",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#2c5040", "#b8b0c8", "#f8f8f8"],
+  "sport": ["#181818", "#306030", "#c8b8a0", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release.",
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  }
+  "anim": { "intro": [[0, 6], [1, 12], [2, 6], [3, 16], [4, 12], [0, 8]], "idle": [[0, 150], [1, 10], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Pinus longaeva, https://en.wikipedia.org/wiki/Pinus_longaeva . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/methuselah.py" },
+  "notes": "Crystal rule. Pinus longaeva (Great Basin bristlecone pine). LOOMING: a gnarled, wind-twisted trunk of bare, polished silver deadwood on spreading root feet, splitting into contorted limbs: the lead limb reaches out over the foe, the leader ends in a bare dead snag at the top, a rear limb climbs to the right. One living strip of bark spirals up the trunk into the lead limb (outline and mid: scaly black fissures). The living limbs end in dense bottlebrush tufts of short dark needles with small purple cones; frost glints on the deadwood. Gesture: frost glints travel up the deadwood while the needle tufts sway out over the foe, hold, rebound and settle; trunk, roots and snag stay fixed. Weathered silver-lilac mid over a needle green-black dark slot; the polish is white streaks along the grain. Sport: Pinus aristata (Rocky Mountain bristlecone), a close relative's palette."
 }
