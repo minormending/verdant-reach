@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "coconut",
+  "palette": ["#181818", "#387858", "#c89048", "#f8f8f8"],
+  "sport": ["#181818", "#688830", "#e0c048", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[1, 12], [2, 6], [3, 16], [4, 10], [0, 8]], "idle": [[0, 130], [4, 10], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Cocos nucifera, https://en.wikipedia.org/wiki/Coconut . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/coconut.py" },
+  "notes": "Crystal rule. Cocos nucifera. REARING/displaying: a full, rounded husked coconut (a fat ovoid with a slightly three-sided shoulder, long black fibre lines over a dark shadow side) sits deep in a curling wave, its point raised toward the foe like a prow; from its stalk end a young palm sprout fans out three arching, pleated, fork-tipped fronds (the lead frond over the foe, its edge split into leaflets, one straight up, the rear one back over the crest). The wave curls up behind the nut and over toward the foe; the sea runs in front of the nut. Gesture: it bobs on the wave and the fronds unfurl (it dips with its fronds furled, rises on the swell as they open, flares and settles); the wave and the sea stay fixed. A palm-green dark slot (fronds, sea, husk shadow) under a husk-brown mid; the wave is the dark slot under white foam. The nut is shown from the side, its germination pores turned away. Sport: 'Malayan Dwarf', yellow form (Malayan Yellow Dwarf)."
+}

@@ -29,6 +29,10 @@ export interface Quickened {
   seed?: { steps: number };
 }
 
+export type RoamerId = "tumbleweed" | "coconut";
+export type WandererId = RoamerId | "burr";
+export interface WandererHealth { hp: number; status: StatusId | null }
+
 export interface GameState {
   version: 1;
   playerName: string;
@@ -40,6 +44,12 @@ export interface GameState {
   box: Quickened[];             // specimen cabinet storage
   bag: Record<string, number>;  // ItemId -> qty
   flags: Record<string, boolean>;
+  roamers: Record<RoamerId, WandererHealth & { map: MapId }>;
+  burr: WandererHealth;
+  /** Local calendar day on which a wanderer wilted; it recovers on a later day. */
+  wandererWilted?: Partial<Record<WandererId, string>>;
+  /** Temporary hitch location, retained by SAVE / CONTINUE until the next map entry. */
+  burrHitch?: { map: MapId; x: number; y: number; facing: Dir };
   marks: MarkId[];
   herbarium: { seen: SpeciesId[]; caught: SpeciesId[] };
   position: { map: MapId; x: number; y: number; facing: Dir };
@@ -64,6 +74,8 @@ export interface BattleRequest {
   kind: "wild" | "trainer";
   trainer?: TrainerId;
   wild?: { species: SpeciesId; level: number; sport?: boolean }; // omitted: normal random sport roll
+  /** Persistent legendary wild encounter; flees after its first complete turn. */
+  wanderer?: WandererId;
   canLose?: boolean;            // story battles (rival #1): no whiteout on loss
   backdrop?: "grass" | "bog" | "water" | "indoor" | "night" | "glasshouse";
 }

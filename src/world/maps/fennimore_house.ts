@@ -26,7 +26,7 @@ export const fennimore_house: MapDef = {
   structures: [],
   warps: [{ x: 4, y: 7, to: "hedgerow", toX: 13, toY: 8, facing: "down" }],
   npcs: [
-    { id: "fennimore", sprite: "fennimore", x: 5, y: 3, facing: "down", movement: "static", script: "fennimore" },
+    { id: "fennimore", sprite: "fennimore", x: 5, y: 3, facing: "down", movement: "static", script: "pg_fennimore" },
   ],
   signs: [
     { x: 1, y: 1, text: "FIELD NOTES, VOLS. 1 to 50. Volume 51 is still blank." },

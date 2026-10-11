@@ -33,7 +33,8 @@ function gameplay(id: MapId): string {
 // frozen before the dressing pass.
 const FROZEN: [MapId, string, string][] = [
   ["route_10", "f4170cbaa0444b577e3d6ddd0b9e27a2c87140bb936b036f6fcde2f0e504854f", "a51689675d7b437f21975da4369568a29eb997396b6e10701d8a865f3c9c8dfe"],
-  ["thistledown", "15bb77944cbf1629be08935b28cffa0a4924e3fb63ee2a6fa8098d7df67afcbc", "ab97e4c31a6e757201e3cb09a55357147a11595d4a273ba06f755047fee8f12b"],
+  // Re-pinned on postgame: the Route 11 arrivals moved one tile inward so BURR has a free tile (BUGHUNT_POSTGAME 3).
+  ["thistledown", "54376205c1850cc040915f0181297f176c99054876e54af3db8604d3a153acf4", "ab97e4c31a6e757201e3cb09a55357147a11595d4a273ba06f755047fee8f12b"],
   ["thistledown_greenhouse", "e47adb4dc906a94a2f0a8037eff88687ed26d69c3ac3727da56e8f43f27c2234", "7842ea36364692b6e923afa8e8e80906d45e5e19f2520aced6536917938bec15"],
   ["thistledown_market", "a559396e41e304f9d7db087e3b73d053ec685ea2b00f33129f5370dfaf705627", "9034e68187715ea45ec6240e58fe652786fcc270d09db3362678e46b1e232167"],
   ["thistledown_house", "c2dfce242a1a5a1762fe9b0e317bd06f7dedfecc3fc746e32922000f06854eeb", "5be59d365acb8d35446f682c6d314fffd5db5846ab8c6eb021e6bacd98a82aa0"],

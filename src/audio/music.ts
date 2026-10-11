@@ -454,6 +454,51 @@ export const ARRANGEMENTS: Record<MusicId, Arrangement> = {
       o6e-4. d8 c4 o5g4 | o5b-4 o6e-4 g4 e-4 | o6f+4 a4 f+4 d4 | o5a2 f+4 d4 |`,
   },
 
+  // ------------------------------------------------------------------ seed vault
+  // The Seed Vault under the northern peaks: cold, clean and patient. B minor
+  // over a slow pad and a ticking pulse, like machinery keeping the world's
+  // seeds frozen; a reedy lead climbs to the raised A-sharp and waits on F#.
+  seed_vault: {
+    bpm: 84, harmony: "pad", harmonyTone: "v5 @1 q8 ~6", bass: "pulse", bassTone: "v14 q4", drums: "tick", drumTone: "v5", fillEvery: 0,
+    chords: "Bm | Bm | G | F#m | Bm | Bm | Em | F# | G | A | Bm | F#m | G | Em | F# | F#",
+    melody: `${THIN}
+      o5b2 f+2 | o5d4 f+4 b2 | o5g2. a4 | o5f+1 |
+      o5b4 o6c+4 d2 | o6f+2 e4 d4 | o6e2 o5b4 g4 | o5a+1 |
+      o5g4 b4 o6d4 g4 | o6e2. c+4 | o6d2 o5b2 | o6c+2 o5a4 f+4 |
+      o5g4 b4 o6d2 | o6e2 d4 o5b4 | o5a+2 o6c+2 | o6f+2. r4 |`,
+  },
+
+  // ------------------------------------------------------------------ ancient ridge
+  // Methuselah Ridge, above the clouds: the oldest living thing. Very slow D
+  // minor over a drone, no drums, long held notes; it ends hanging on A so
+  // the loop never quite settles, like a tree that has not finished growing.
+  ancient_ridge: {
+    bpm: 66, harmony: "pad", harmonyTone: "v4 @1 q8 ~8", bass: "drone", bassTone: "v11 q8", drums: "none",
+    chords: "Dm | C | Dm | Am | Bb | F | C | Dm | Dm | Bb | C | Am | Gm | Bb | A | A",
+    melody: `v10 @1 q8 ~12
+      o5d2. e4 | o5f2 e2 | o5d1 | o5c2 o4a2 |
+      o5d2 f2 | o5a2. g4 | o5g2 e2 | o5f1 |
+      o5a2 o6d2 | o6d2. c4 | o6c2 o5g2 | o5a1 |
+      o5g2 b-2 | o6d2 c4 o5b-4 | o5a2 c+2 | o5e2. r4 |`,
+  },
+
+  // ------------------------------------------------------------------ battle legend
+  // A Wanderer or METHUSELAH: the post-game's legendary battles. E minor at a
+  // run, octave bass and a rock beat, with a Phrygian F-major bar for the
+  // strangeness of it and a turn to B major (D-sharp); a second, higher half
+  // brings the F bar back before it hangs on B and loops.
+  battle_legend: {
+    bpm: 166, harmony: "arp16", harmonyTone: "v5 @1 q4", bass: "octave8", bassTone: "v14 q4", drums: "rock", drumTone: "v8",
+    chords: "Em | Em | F | Em | Em | C | D | B | Am | C | Em | B | C | D | B | B | Em | G | Am | C | F | D | B | B",
+    melody: `${LEAD}
+      o5e4 g4 b4 o6e4 | o6d4. c8 o5b4 g4 | o5a4 o6c4 f4 e4 | o6e2 o5b2 |
+      o5g4 b4 o6e4 g4 | o6g4. e8 c4 e4 | o6d4 f+4 a4 f+4 | o6d+2 o5b2 |
+      o5a4 o6c4 e4 a4 | o6g4. e8 c4 o5g4 | o5b4 o6e4 g4 b4 | o6a2 f+4 d+4 |
+      o6e4 g4 c4 e4 | o6f+4 a4 d4 f+4 | o6d+4 f+4 b4 a4 | o6f+2. r4 |
+      o6e4. d8 o5b4 g4 | o5b4 o6d4 g4 d4 | o6e4 c4 a4 e4 | o6g2 e4 c4 |
+      o6f4. e8 c4 o5a4 | o5a4 o6d4 f+4 a4 | o6b4 a4 f+4 d+4 | o6f+2 o5b2 |`,
+  },
+
   // ------------------------------------------------------------------ slice end
   // Bittersweet, hopeful: F major with a borrowed B-flat minor sigh.
   slice_end: {

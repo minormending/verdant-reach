@@ -49,6 +49,10 @@ import {
 import { runStartMenu } from "./startMenu";
 import { visitedGlideMaps, visitedTownFlag } from "./glide";
 import { continuePosition } from "./continue";
+import { burrPlacement, burrTileSafe, meetingRoamer, moveRoamers, recoverWanderers, wandererFree, WANDERER_LEVEL } from "./roaming";
+
+/** Wild battles that get the legendary theme: the Wanderers and METHUSELAH (post-game). */
+const LEGEND_BATTLES: ReadonlySet<string> = new Set(["tumbleweed", "coconut", "burr", "methuselah"]);
 
 export interface OverworldOpts {
   /** "new": run WORLD.newGame.script; "continue": run the map's onEnter. */
@@ -224,6 +228,11 @@ class Overworld implements Scene {
       def = fallback ?? EMPTY_MAP;
       id = def.id;
     }
+    const changed = this.mapId !== undefined && this.mapId !== id;
+    if (changed) {
+      Object.assign(this.ctx.state, moveRoamers(this.ctx.state, this.ctx.data, this.ctx.rng, new Date()));
+      delete this.ctx.state.burrHitch;
+    } else Object.assign(this.ctx.state, recoverWanderers(this.ctx.state, this.ctx.data, new Date()));
     this.map = buildMap(def);
     refreshLegend(this.map, this.ctx.state.flags);
     this.mapId = id;
@@ -232,6 +241,16 @@ class Overworld implements Scene {
     // Fresh actors on every entry reset UPROOT puzzles to their authored layout.
     this.npcs = (def.npcs ?? []).map((n) => new Actor(n.id, n.sprite, n.x, n.y, n.facing, n));
     this.follower.place(x, y, facing);
+    if (changed) {
+      const burr = burrPlacement(this.ctx.state, this.map, p, this.occupiedForPlayer, this.ctx.rng);
+      if (burr) this.ctx.state.burrHitch = { map: id, x: burr.x, y: burr.y, facing: burr.facing };
+    }
+    const hitch = this.ctx.state.burrHitch;
+    if (hitch?.map === id && def.outdoor && /^route_\d+$/.test(id) && wandererFree(this.ctx.state, "burr")
+      && burrTileSafe(this.map, hitch.x, hitch.y) && !p.occupies(hitch.x, hitch.y) && !this.npcAt(hitch.x, hitch.y)) {
+      const burr = { id: "burr", sprite: "burr_hitch" as const, x: hitch.x, y: hitch.y, facing: hitch.facing };
+      this.npcs.push(new Actor(burr.id, burr.sprite, burr.x, burr.y, burr.facing, burr));
+    } else if (hitch) delete this.ctx.state.burrHitch;
     this.camera.snap();
     this.effects.clear();
     this.ambientOverride = null;
@@ -776,6 +795,16 @@ class Overworld implements Scene {
     const def = npc.def;
     if (!def) return;
     this.player.bumpAnim = 0;
+    if (npc.id === "burr") {
+      Object.assign(this.ctx.state, recoverWanderers(this.ctx.state, this.ctx.data, new Date()));
+      this.npcs = this.npcs.filter((n) => n !== npc);
+      delete this.ctx.state.burrHitch;
+      if (wandererFree(this.ctx.state, "burr")) {
+        const r = await this.battle({ kind: "wild", wild: { species: "burr", level: WANDERER_LEVEL }, wanderer: "burr" });
+        if (r === "lost") await this.whiteout();
+      }
+      return;
+    }
     if (def.trainer) {
       await this.trainerTalk(npc, def.trainer);
       return;
@@ -1051,7 +1080,8 @@ class Overworld implements Scene {
   async battle(req: BattleRequest): Promise<BattleOutcome> {
     const ctx = this.ctx;
     const trainer = req.trainer ? ctx.world.trainers[req.trainer] : undefined;
-    ctx.audio.playMusic(req.kind === "trainer" ? trainer?.music ?? "battle_trainer" : "battle_wild");
+    ctx.audio.playMusic(req.kind === "trainer" ? trainer?.music ?? "battle_trainer"
+      : req.wanderer || (req.wild && LEGEND_BATTLES.has(req.wild.species)) ? "battle_legend" : "battle_wild");
     ctx.audio.playSfx("encounter");
     this.player.bumpAnim = 0;
     await this.transition.run(req.kind === "trainer" ? "trainer" : "wild");
@@ -1070,7 +1100,10 @@ class Overworld implements Scene {
   }
 
   async wildEncounter(species: SpeciesId, level: number, kind: EncounterKind) {
-    const r = await this.battle({ kind: "wild", wild: { species, level }, backdrop: this.backdrop(kind) });
+    Object.assign(this.ctx.state, recoverWanderers(this.ctx.state, this.ctx.data, new Date()));
+    const wanderer = meetingRoamer(this.ctx.state, this.mapId, kind, this.ctx.rng);
+    const r = await this.battle({ kind: "wild", wild: { species: wanderer ?? species, level: wanderer ? WANDERER_LEVEL : level },
+      ...(wanderer ? { wanderer } : {}), backdrop: this.backdrop(kind) });
     if (r === "lost") await this.whiteout();
   }
 

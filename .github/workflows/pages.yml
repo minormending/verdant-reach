@@ -50,7 +50,7 @@ jobs:
       - run: npm ci
       - name: Install the e2e browser
         run: npx playwright install --with-deps chromium
-      - name: Full playthrough (205 beats through the ending, headless)
+      - name: Full playthrough (229 beats through the post-game, headless)
         run: npm run e2e
       - name: Keep the report
         if: always()

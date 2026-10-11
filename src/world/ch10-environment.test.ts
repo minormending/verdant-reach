@@ -47,9 +47,11 @@ const FROZEN: [MapId, string, string][] = [
   ["elder_grove_1", "846f7889efa74e46b0e8d7c928a7d790ff3866e8d4e3b64973b5214aecfddca5", "dff6785501c66c059fa5938afb12f0e7457eb9e66220d42b9604ba2686da2bda"],
   ["elder_grove_2", "4cdec02b50fe4a58f380b993a8fc404a962e708566632314f7307c3c92f59f2c", "a3e4c41491946cec6b32148bed2b9698895a239ed57d7a73aa0ab3610001dd1e"],
   ["elder_grove_3", "8ce16f4bb5e966a0489d6cfe6720a2292c93e18f857ece94b5b06621769ea260", "03279a5b830a08c49184da302c70c99d6d395df39d09563fbd44c968f091ea78"],
-  ["elder_grove_heart", "de90d5890c27474a8f7360e7f3208fc3fd679b325698d1e5d1e814da31456b00", "dbce4f004ee6f50a6189a436a5970ad64d1b4ec2390435fc4eea1c6e4f5aa5fb"],
+  // Re-pinned on postgame: the post-game adds the Centuryheart sprout NPC (on its own sprite since the post-game art pass).
+  ["elder_grove_heart", "43f621fa4b9513eb70c2540f1d91cd50422894cea85a8030cf72093c5272a616", "dbce4f004ee6f50a6189a436a5970ad64d1b4ec2390435fc4eea1c6e4f5aa5fb"],
   // Re-pinned on ch11: Chapter 11 builds the lobby out (stairs to the Council, heal and market counters).
-  ["council_hall", "ed3f84752815fe7ca4f4266f374f0c5f56117e96f8e801ab64fb914ace79a3c8", "12cc1fa9d187e6ef08b750b46654ff534d10248662a77b761ed91bc3510afa3e"],
+  // Re-pinned on postgame: the post-game adds ROWAN, who releases the Wanderers.
+  ["council_hall", "d40821a555a6b5a3d10b16c71f7c32d9474c2987ff61c0d609532c8c2ac51d4a", "12cc1fa9d187e6ef08b750b46654ff534d10248662a77b761ed91bc3510afa3e"],
 ];
 
 function runtime(id: MapId, flags: Record<string, boolean> = {}): MapRuntime {

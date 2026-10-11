@@ -5,6 +5,10 @@ import type { GrowthTrigger } from "../contracts";
 import { wrapText } from "../ui/font";
 
 const species = Object.values(DATA.species);
+// Explicit legendary/gift exceptions; keep ordinary species in their bands.
+const LEGENDARY_TOTALS: Partial<Record<(typeof SPECIES_IDS)[number], number>> = {
+  elder: 640, centuryheart: 600, tumbleweed: 580, coconut: 580, burr: 580, methuselah: 620,
+};
 
 function growthLevel(t: GrowthTrigger): number | null {
   return t.kind === "vigor" || t.kind === "vigor_day" || t.kind === "vigor_night" ? t.level : null;
@@ -80,7 +84,7 @@ describe("species", () => {
     for (const s of species) {
       const t = total(s.id);
       expect(t, s.id).toBeGreaterThanOrEqual(240);
-      expect(t, s.id).toBeLessThanOrEqual(s.id === "elder" ? 640 : 530);
+      expect(t, s.id).toBeLessThanOrEqual(LEGENDARY_TOTALS[s.id] ?? 530);
       expect(s.catchRate).toBeGreaterThanOrEqual(3);
       expect(s.catchRate).toBeLessThanOrEqual(255);
     }
@@ -173,7 +177,7 @@ describe("pollination", () => {
   it("breedable species have valid groups shared by their line; legendaries cannot set seed", () => {
     const byLine = new Map<string, string>();
     for (const s of species) {
-      if (s.id === "elder") expect(s.pollination, s.id).toEqual([]);
+      if (LEGENDARY_TOTALS[s.id]) expect(s.pollination, s.id).toEqual([]);
       else expect(s.pollination?.length, s.id).toBeGreaterThan(0);
       for (const g of s.pollination!) expect(POLLINATION_GROUPS, s.id).toContain(g);
       const key = JSON.stringify(s.pollination);

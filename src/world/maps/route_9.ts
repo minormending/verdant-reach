@@ -1,15 +1,18 @@
 import type { MapDef } from "../../contracts";
-import { OUTDOOR } from "../build";
+import { OUTDOOR, when } from "../build";
 
 export const route_9: MapDef = {
   id: "route_9", name: "ROUTE 9", outdoor: true, music: "alpine", ambient: "mist",
   border: "larch_tree",
   // Larch forest (T), then the scree slope (+, rock, turf terraces and ledges), then the snowy pass
   // (? snow and n snow grass, both grass encounters) between cliffs (A); a trodden scree track crosses it.
-  legend: { ...OUTDOOR, T: "larch_tree", "+": "scree", n: "snow_grass" },
+  legend: { ...OUTDOOR, T: "larch_tree", "+": "scree", n: "snow_grass", Z: "stairs_down", V: "vault_portal" },
+  // Post-game: the Seed Vault stair (Z, 6,0) is a cliff until the game is cleared. Its flanks (V)
+  // are cliff too until then; once the stair opens they show the vault's concrete portal.
+  legendWhen: [{ when: when({ game_cleared: false }), legend: { Z: "cliff" } }],
   tiles: [
-    "AAAAAAAAAAAAAA++AAAAAAAAAAAAAA",
-    "AAA???AA??AAA?++???AAAA?????AA",
+    "AAAAAVZVAAAAAA++AAAAAAAAAAAAAA",
+    "AAA????A??AAA?++???AAAA?????AA",
     "AA???nnn????A?++????AA???nnn?A",
     "A???nnnnn?????++nn????nnnnnn?A",
     "A????nnn????++++???????nnnn??A",
@@ -67,6 +70,7 @@ export const route_9: MapDef = {
   ],
   structures: [],
   warps: [
+    { x: 6, y: 0, to: "seed_vault_entrance", toX: 6, toY: 10, facing: "up" },
     { x: 14, y: 55, to: "cedarhallow", toX: 17, toY: 2, facing: "down" },
     { x: 14, y: 0, to: "larchmere", toX: 17, toY: 28, facing: "up" },
     { x: 15, y: 0, to: "larchmere", toX: 18, toY: 28, facing: "up" },

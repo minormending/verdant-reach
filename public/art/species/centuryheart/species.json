@@ -1,0 +1,15 @@
+{
+  "format": "verdant.species/1",
+  "id": "centuryheart",
+  "palette": ["#181818", "#285860", "#98c0b8", "#f8f8f8"],
+  "sport": ["#181818", "#705078", "#d0d8b8", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 12], [2, 6], [3, 16], [4, 12], [0, 8]], "idle": [[0, 150], [4, 10], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Puya raimondii, https://en.wikipedia.org/wiki/Puya_raimondii . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/centuryheart.py" },
+  "notes": "Crystal rule. Puya raimondii (Queen of the Andes). REARING / displaying: a huge, dense rosette of stiff, sword-like silver-blue leaves radiating from one hub like a dragon's frill, the near (foe) side long and low, the far side higher; the lowest leaves droop to the ground as two feet; out of the centre rises a tight, pale bud column scaled with bracts, curving back then forward so its tip leans over the foe. Black spines hook out, spaced wide, along the top edges of the outer leaves. Gesture: the frill draws in, fans out wide and holds while a glint runs up the bud column, then it settles; the column, the hub and the grounded leaves stay fixed. Silver blue-green mid over a deep teal dark slot (keels, inner rosette, soil); the wax is white streaks. Sport: the flowering colouring (greenish-white with purple), an artistic interpretation."
+}

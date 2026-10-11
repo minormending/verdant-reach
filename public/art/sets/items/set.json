@@ -19,6 +19,7 @@
     "glider_seed": { "file": "glider_seed.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast5/icons5.py" } },
     "lily_raft": { "file": "lily_raft.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast6/icons6.py" } },
     "neem_spray": { "file": "neem_spray.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
+    "old_diary": { "file": "old_diary.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/castpg/itemspg.py" } },
     "plant_food": { "file": "plant_food.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },
     "pruning_shears": { "file": "pruning_shears.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } },
     "rain_jar": { "file": "rain_jar.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/items.py" } },

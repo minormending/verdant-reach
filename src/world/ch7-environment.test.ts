@@ -12,7 +12,8 @@ const sha = async (s: string) => Array.from(new Uint8Array(await crypto.subtle.d
 // Warps, triggers, NPCs (positions, sprites, scripts, trainers, sight), hidden
 // items, door cells, encounter tables, music and the existing flag swaps.
 const GAMEPLAY: [MapId, string][] = [
-  ["route_9", "6f3883aebb21379ea1e5bb4e02738527ed1bacab02cd17079c4563acab73e3de"],
+  // Re-pinned on postgame: the Seed Vault spur (warp 6,0, gated stair Z) is added after the game is cleared.
+  ["route_9", "dcf4c15ab28df833054143cf479f3726fb6c71be5b15837fbfbd552ea8a19aaa"],
   ["larchmere", "ea60b0d9886e6e5e3f49c1f961c8e6a0fe233174b31b56f72740675d735231b3"],
   ["larchmere_greenhouse", "12c566075d59282f9dcf4753afee2c324e2b13234ac884e3efa1438baf19ffc9"],
   ["larchmere_market", "d9fdff3f4da4ee4862d2f8abe0a730af7248296fc4d5aea53c980fc54be31043"],

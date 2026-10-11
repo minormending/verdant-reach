@@ -68,6 +68,8 @@ export const SPECIES_IDS = [
   "mimosa_sprout", "sensitive_plant", "prayer_plant",
   "corpse_corm", "corpse_leaf", "titan_arum",
   "flame_lily_tuber", "flame_lily",
+  // Post-game (POSTGAME.md §2 table order; single-stage gifts and legendaries)
+  "centuryheart", "tumbleweed", "coconut", "burr", "methuselah",
 ] as const;
 export type SpeciesId = (typeof SPECIES_IDS)[number];
 
@@ -117,6 +119,8 @@ export const MAP_IDS = [
   "elder_grove_2", "elder_grove_3", "elder_grove_heart", "council_hall",
   // Chapter 11 (CH11.md §3).
   "council_1", "council_2", "council_3", "council_4", "keeper_hall", "fellowship_hall",
+  // Post-game (POSTGAME.md §4); Fennimore keeps his existing interior.
+  "seed_vault_entrance", "seed_vault_b1", "seed_vault_b2", "seed_vault_b3", "methuselah_ridge",
 ] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
@@ -286,6 +290,20 @@ export const TILES = {
   rot_pool:       { walk: false },               // ROTTER: a steaming bog pool (group "rot_pool")
   brazier:        { walk: false },               // KINDLER: an iron fire bowl
   aspen_pillar:   { walk: false },               // KEEPER and lobby: a pale aspen column, gilded crown, carved crest (group "aspen_pillar")
+  // Post-game: the Seed Vault, Methuselah Ridge and the Route 9 spur (decoration; every cell's
+  // behaviour is frozen by postgame-environment.test.ts, so each tile acts like the one it replaced)
+  vault_portal:   { walk: false },               // Route 9: the spur's flanks; cliff until the stair opens, then the vault's concrete portal (group "cliff")
+  vault_wall:     { walk: false },               // frosted board-marked concrete, a conduit pipe on the face (group "vault_wall")
+  root_wall:      { walk: false },               // B2: the vault wall cracked open by roots (group "vault_wall")
+  vault_floor:    { walk: true },                // poured concrete slabs, hoar frost in the joints
+  vault_rime:     { walk: true, encounter: "grass" }, // feathery rime crusted on the concrete: the vault's encounter tile
+  vault_ice:      { walk: true, slide: true },   // an ice sheet over the concrete (group "vault_ice")
+  seed_rack:      { walk: false, interact: true }, // steel racks of sealed, labelled seed boxes (group "seed_rack")
+  reading_desk:   { walk: false },               // B3: the archive's desk, lamp and ledger against the north wall (group "vault_wall")
+  dolomite_scree: { walk: true, encounter: "grass" }, // pale summit chips and moss campion cushions: the ridge's encounter tile
+  dolomite_rock:  { walk: false },               // pale dolomite boulders: the summit's rim
+  bristlecone_shrub: { walk: false },            // a small wind-sculpted bristlecone on the rim
+  cloud_sea:      { walk: false },               // the cloud deck below the summit (the ridge's border)
 } as const satisfies Record<string, TileProps>;
 export type TileKey = keyof typeof TILES;
 
@@ -357,6 +375,8 @@ const STRUCTURE_SPECS = {
   council_hall:       { w: 6, h: 4, door: { x: 3, y: 3 } }, // the Council's pale-stone hall
   grove_gate:         { w: 4, h: 2 },                       // a tower of the Grove Gate; a pair flanks the open gap (scenery)
   elder_trunk:        { w: 4, h: 4 },                       // the Elder's vast pale trunk at the heart (scenery)
+  // Post-game: Methuselah Ridge
+  methuselah_tree:    { w: 3, h: 3 },                       // the oldest bristlecone; the methuselah NPC below it is its living base (scenery)
 } as const satisfies Record<string, StructureSpec>;
 export interface StructureSpec { w: number; h: number; door?: { x: number; y: number } }
 export const STRUCTURES: Record<keyof typeof STRUCTURE_SPECS, StructureSpec> = STRUCTURE_SPECS;
@@ -401,6 +421,10 @@ export const CHARACTERS = [
   "elder_root",                  // the Elder's glowing root knot (static object; column 0 rest, columns 1-2 pulse)
   // Chapter 11: the Council seats
   "belladonna", "mimi_osa", "titus_arum", "pyra",
+  // Post-game
+  "burr_hitch",                  // BURR hitching a ride on a leaf scrap (columns 1-2 hop)
+  "centuryheart_sprout",         // the second Centuryheart sprout (static object; column 0 rest, columns 1-2 shimmer)
+  "bristlecone",                 // METHUSELAH's living base under its tree (static object; columns 1-2 a frost glint)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -433,6 +457,7 @@ export const MUSIC = [
   "thistledown", "canyon", "ridge", // Chapter 9
   "elder_grove", "battle_mercer", // Chapter 10
   "council", "battle_keeper", // Chapter 11
+  "seed_vault", "ancient_ridge", "battle_legend", // Post-game
 ] as const;
 export type MusicId = (typeof MUSIC)[number];
 
@@ -459,6 +484,7 @@ export type StatusId = (typeof STATUSES)[number];
 
 /** Item ids the world/story scripts rely on. The data agent may add more. */
 export const REQUIRED_ITEMS = [
+  "old_diary",             // Fennimore's grandfather's archive diary
   "terrarium_pod", "glass_pod",               // capture
   "water_flask", "spring_water", "rain_jar",  // healing: small / medium / full
   "compost",                                  // revive a wilted Quickened
@@ -497,6 +523,7 @@ export const STILLS = [
   "dragon_trees", // Chapter 9
   "centuryheart_sprouts", // Chapter 10
   "fellowship", // Chapter 11
+  "methuselah_night", // Post-game
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

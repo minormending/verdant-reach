@@ -9,8 +9,8 @@ plant. You're a junior botanist. The night a once-a-century flower blooms,
 certain plants across the valley wake up, and your job is to catalogue the
 QUICKENED. Then you find out who woke them, and why.
 
-The **main story is complete**: the Prologue through Chapter 11 (the Council),
-ending with the Hall of Fame, the credits and the start of the post-game, a few hours of play. The story bible lives in
+The **whole game is complete**: the Prologue through Chapter 11 (the Council),
+the Hall of Fame and credits, and a post-game of legendaries, a hidden dungeon and Council rematches. The story bible lives in
 [docs/story/](docs/story/).
 
 ## Play
@@ -38,7 +38,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
 
 ## What's in the slice
 
-- **80 hand-composed maps.**
+- **85 hand-composed maps.**
   - Fallowfield's farms and windmill, Hedgerow's lanes, brick-and-bramble Bramblegate, and autumnal Sugarbush.
   - The Night Meadow, and the Sugarbush Grove dungeon.
   - **Glasshouse City** under its vast glass dome: the Root Relay, the Nursery Garden, the tropical Palm House, the big market, and the Route 4 orchard on the way in.
@@ -49,9 +49,10 @@ night. Add `?time=morning|day|night` to the URL to override it.
   - **Chapter 9:** Route 10's dry scrub country, the desert-edge town of Thistledown in tumbleweed country, Route 11's red canyon switchbacks, and Sanguine Ridge, crowned by ancient dragon's blood trees.
   - **Chapter 10:** Route 12, a broken plateau of gorges that tests every field move (the game's Victory Road); the Council Arboretum before the sealed Grove Gate; the three rings of the Elder Grove, a forest that is one creature, whose lanes shift as it listens; and its heart.
   - **Chapter 11:** the Council of the Arboretum, five seats taken in one run: BELLADONNA's poison-garden apothecary, MIMI OSA's moonlit sleep garden, TITUS ARUM's steaming rot house, PYRA's brazier hall, and the Keeper's Hall of ROWAN VALE. Win all five and the story ends in the Herbarium.
+  - **The post-game:** the Seed Vault, a frozen seed bank under the northern peaks reached by a new spur off Route 9 (dark ice corridors, a root-broken storage hall and the Frozen Archive), and Methuselah Ridge, a bare summit above the clouds where the oldest bristlecone wakes only at night.
   - Eight Conservatory puzzles: Hollis's lever-gated hedge maze, Nell's bog valves, Flora's rose-trellis maze, Morrow's dark Conservatory (the safe path shows only in the lantern's light), Brother Saguaro's boulder puzzle, Captain Reyes's raft-and-lever pools, Signe's ice-slide floor and Valerian Rook's boulder pits, where pushed boulders fill the pits to make a path.
-- **129 trainers.** Leaders HOLLIS (Wood), NELL PITCHER (Bug), FLORA VANCE (Bloom, the difficulty spike), MORROW (Ghost), BROTHER SAGUARO (Thorn), CAPTAIN REYES (Water), SIGNE (Frost) and VALERIAN ROOK (Dragon, the hardest), Rootstock's admins DR. CALLOWAY and WREN, rematches with SHEARS, CALLOWAY and WREN in the Grove, MERCER THORNE himself at the heart, the Council (BELLADONNA, MIMI OSA, TITUS ARUM, PYRA and the Keeper, ROWAN VALE), rival BRAM ×5 (the fourth time with a graft-collared partner, the fifth a friendly rematch), and ROOTSTOCK grunts with their admin SHEARS. Staged cutscenes use camera pans, flashes and ambience.
-- **125 species (including THE ELDER, the legendary at the Grove's heart), 115 moves and 9 types.** Every species is a real plant that grows through its real life stages, poses as a creature in battle and has an idle animation. Every Herbarium entry contains a fact-checked true fact and shows where the species is FOUND.
+- **134 trainers.** Leaders HOLLIS (Wood), NELL PITCHER (Bug), FLORA VANCE (Bloom, the difficulty spike), MORROW (Ghost), BROTHER SAGUARO (Thorn), CAPTAIN REYES (Water), SIGNE (Frost) and VALERIAN ROOK (Dragon, the hardest), Rootstock's admins DR. CALLOWAY and WREN, rematches with SHEARS, CALLOWAY and WREN in the Grove, MERCER THORNE himself at the heart, the Council (BELLADONNA, MIMI OSA, TITUS ARUM, PYRA and the Keeper, ROWAN VALE) and their +8 post-game rematches, rival BRAM ×5 (the fourth time with a graft-collared partner, the fifth a friendly rematch), and ROOTSTOCK grunts with their admin SHEARS. Staged cutscenes use camera pans, flashes and ambience.
+- **130 species (including THE ELDER at the Grove's heart; the three roaming Wanderers TUMBLEWEED, COCONUT and BURR; the mythical METHUSELAH; and the CENTURYHEART, a gift that takes a century to flower), 120 moves and 9 types.** Every species is a real plant that grows through its real life stages, poses as a creature in battle and has an idle animation. Every Herbarium entry contains a fact-checked true fact and shows where the species is FOUND.
 - **Systems:**
   - Crystal-style battles with a modern feel: the physical/special split, statuses, weather, critical captures, SUPER/WEAK hints, and 40 move-animation families.
   - Catching with nicknames, and growth (evolution) by level, by time of day and by friendship.
@@ -63,10 +64,11 @@ night. Add `?time=morning|day|night` to the URL to override it.
   - Saving, whiteout, real-time day and night with lamp-lit nights, and ambient particles (pollen, leaves, fireflies, mist).
   - **Side content:** fifteen side quests tracked in a NOTES log, a market trade (swap a vanilla vine for the trader's POLLY, which blooms into a vanilla orchid on arrival), 39 hidden items, and berry and rose-hip bushes that regrow each real day.
   - **Your lead Quickened follows you** around the overworld (toggle in OPTIONS).
-  - **Seventeen illustrated stills** at key story moments.
-- **An original chiptune soundtrack:** 38 tracks, jingles, sound effects, a cry per species, and ambient wind, bird and cricket beds, all synthesised live with WebAudio.
+  - **Eighteen illustrated stills** at key story moments.
+  - **Roaming legendaries:** TUMBLEWEED roams the dry routes and COCONUT the sea, fleeing after one turn with their damage kept between meetings; BURR hitches a ride, popping up on the tile behind you.
+- **An original chiptune soundtrack:** 41 tracks, jingles, sound effects, a cry per species, and ambient wind, bird and cricket beds, all synthesised live with WebAudio.
 - **Art:** all hand-built pixel art, stored as swappable bundles in `public/art/` (a folder of PNGs plus JSON per creature, tileset, structure and character; format in [docs/ART.md](docs/ART.md)). Every species follows the Crystal rule (shared black outline and white highlights, two species tones, a per-species entrance animation; [docs/CREATURES.md](docs/CREATURES.md)). Art packs override any subset: try `?art=classic` for the pre-Crystal sprites or `?art=traced` for the original photo-traced ones.
-  - 125 species with idle animations, true back views and a real-cultivar shiny ("sport") palette each ([docs/SPORTS.md](docs/SPORTS.md)), to the creature design guide in `docs/CREATURES.md`.
+  - 130 species with idle animations, true back views and a real-cultivar shiny ("sport") palette each ([docs/SPORTS.md](docs/SPORTS.md)), to the creature design guide in `docs/CREATURES.md`.
   - Autotiled environments with ground variation.
   - Unique characters with weighted walk cycles, and trainer portraits.
   - Title art.
@@ -78,10 +80,10 @@ night. Add `?time=morning|day|night` to the URL to override it.
 | | |
 |---|---|
 | `npm run typecheck` | strict TypeScript |
-| `npm test` | vitest: 1419 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
+| `npm test` | vitest: 1562 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
 | `?dev=<module>` | isolated dev scenes: `battle`, `screens`, `audio` (jukebox), `ui`, `overworld`, `world`, and `art` (the **Art Lab**: browse and live-swap every art bundle) |
 | `?dev=world&play=1&map=<id>&flags=a,b&species=<id>&level=<n>` | drop into any story state |
-| `npm run e2e` | headless full playthrough (205 beats through the ending into the post-game, about 35 minutes; first use: `npx playwright install chromium`). CI runs it before every deploy. |
+| `npm run e2e` | headless full playthrough (229 beats through the ending and the whole post-game, about 38 minutes; first use: `npx playwright install chromium`). CI runs it before every deploy. |
 
 The art lives in `public/art/` and the game reads it directly: edit a PNG,
 reload, and it's in the game. The Python tools in `tools/art/` (Pillow +
@@ -103,4 +105,4 @@ Contracts shared by all modules: `src/contracts/`.
 
 - **The audio was mixed by measurement only.** Levels were set with offline renders; a human listening pass is still worthwhile.
 - **Balance comes from simulation and automated play** (`src/battle/logic/balance.test.ts`, `e2e/`). Human play-testing should still tune feel.
-- **Scope:** the post-game is built on a feature branch and lands here once its art and dialogue are finished. A modern restyle (a wider 320×180 screen with new art) is in progress on the `restyle` branch.
+- **Scope:** the story bible is fully built. A modern restyle (a wider 320×180 screen with new art) is in progress on the `restyle` branch.

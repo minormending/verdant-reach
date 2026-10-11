@@ -14,9 +14,9 @@ it for fun, to practise engineering management and planning.
 - **Live site:** https://minormending.github.io/verdant-reach/. It deploys
   automatically on every push to `main` (`.github/workflows/pages.yml` runs the
   tests, the build and the headless playthrough, and deploys only if all pass).
-- **Scope so far:** the whole main story, the Prologue through Chapter 11 (the
-  Council, the ending and the credits). The story bible is in `docs/story/`;
-  the post-game lives on a feature branch until its art and dialogue are finished.
+- **Scope:** the whole game, the Prologue through Chapter 11 (the Council, the
+  ending and the credits) and the post-game (`docs/POSTGAME.md`). The story
+  bible is in `docs/story/`.
 
 ## Commands
 
@@ -24,10 +24,10 @@ it for fun, to practise engineering management and planning.
 npm ci
 npm run dev                 # http://localhost:5173
 npm run typecheck           # strict tsc
-npm test                    # vitest, about 1420 tests: data, world validation, puzzles, balance, art bundles
+npm test                    # vitest, about 1560 tests: data, world validation, puzzles, balance, art bundles
 npm run build               # typecheck + production bundle (relative base, for GitHub Pages)
 npx playwright install chromium # first use: install the e2e browser
-npm run e2e                 # headless full playthrough, 205 beats, speed 8, seed 1, daytime
+npm run e2e                 # headless full playthrough, 229 beats, speed 8, seed 1, daytime
 npm run e2e -- --seed 42    # replay another RNG seed (unsigned 32-bit integer)
 npm run art:index           # REQUIRED after adding, removing or renaming any file under public/art/
 
@@ -60,7 +60,7 @@ leave `git status` clean (the generators are deterministic).
 | Art runtime (resolves logical asset paths to bundles), the Art Lab | `src/art/` |
 | **All art, as swappable bundles** | `public/art/` (format: **docs/ART.md**) |
 | Art generators and tools (Python) | `tools/art/` |
-| Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 205 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
+| Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 229 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
 
 The e2e runner fixes time to day and defaults to `--seed 1`. It prints the seed
 and records it in the report; use `--seed N` to reproduce another run. Dev URLs

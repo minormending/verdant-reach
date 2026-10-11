@@ -15,6 +15,7 @@
     { "id": "rose_hip", "name": "Rose Hip", "pocket": "items", "price": 200, "description": "Full of vitamin C. Cures any status.", "effect": { "kind": "cure_status" }, "usableInBattle": true, "usableInField": true },
     { "id": "ember_ash", "name": "Ember Ash", "pocket": "items", "price": 3000, "description": "Fire opens some sealed pine cones.", "effect": { "kind": "none" }, "usableInBattle": false, "usableInField": true },
     { "id": "cold_snap", "name": "Cold Snap", "pocket": "items", "price": 0, "description": "Many bulbs need cold to flower.", "effect": { "kind": "none" }, "usableInBattle": false, "usableInField": true },
+    { "id": "old_diary", "name": "Old Diary", "pocket": "key", "price": 0, "description": "FENNIMORE's grandfather's diary.", "effect": { "kind": "none" }, "usableInBattle": false, "usableInField": false },
     { "id": "fig_root", "name": "Fig Root", "pocket": "key", "price": 0, "description": "Living roots that grow into bridges.", "effect": { "kind": "none" }, "usableInBattle": false, "usableInField": false },
     { "id": "relay_keycard", "name": "Keycard", "pocket": "key", "price": 0, "description": "ODELL's pass to every RELAY floor.", "effect": { "kind": "none" }, "usableInBattle": false, "usableInField": false },
     { "id": "lily_raft", "name": "Lily Raft", "pocket": "key", "price": 0, "description": "A giant lily pad. Rides on water.", "effect": { "kind": "none" }, "usableInBattle": false, "usableInField": false },

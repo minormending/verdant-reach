@@ -45,10 +45,10 @@ describe("UPROOT progression validation", () => {
       const entrance = continuePosition(WORLD, { map: room.id, x: -1, y: -1, facing: "up" });
       const blocked = new Set(room.npcs.map((n) => key(n.x, n.y)));
       const reached = reachableBoulderTiles(buildMap(room), [], entrance, { occupied: (x, y) => blocked.has(key(x, y)) });
-      // Required Route 12 root bridges and pits legitimately gate its far exit.
+      // Required Route 12 and Seed Vault B2 crossings gate their far exits.
       // Continue must still leave a way back before any field action.
       expect(room.warps.some((exit) => reached.has(key(exit.x, exit.y))), `${room.id} retreat`).toBe(true);
-      if (room.id !== "route_12") for (const exit of room.warps) expect(reached.has(key(exit.x, exit.y)), `${room.id} exit ${exit.x},${exit.y}`).toBe(true);
+      if (!["route_12", "seed_vault_b2"].includes(room.id)) for (const exit of room.warps) expect(reached.has(key(exit.x, exit.y)), `${room.id} exit ${exit.x},${exit.y}`).toBe(true);
     }
   });
 

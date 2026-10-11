@@ -3,7 +3,10 @@
 // survive "NEW GAME" and apply at the title screen.
 
 import type { GameContext, GameState, MapId } from "../contracts";
-import { MAP_IDS, SPECIES_IDS } from "../contracts";
+import { MAP_IDS, SPECIES_IDS, STATUSES } from "../contracts";
+import { DATA } from "../data";
+import { freshWanderers, ROAMER_MAPS, WANDERERS, wandererMaxHp } from "../overworld/roaming";
+import { todayISO } from "../overworld/progress";
 
 export const SAVE_KEY = "verdant-reach-save";
 export const OPTIONS_KEY = "verdant-reach-options";
@@ -142,6 +145,8 @@ export function newGameState(ctx: Pick<GameContext, "world">): GameState {
     box: [],
     bag: {},
     flags: {},
+    ...freshWanderers(DATA),
+    wandererWilted: {},
     marks: [],
     herbarium: { seen: [], caught: [] },
     position: { map: s.map, x: s.x, y: s.y, facing: s.facing },
@@ -150,6 +155,29 @@ export function newGameState(ctx: Pick<GameContext, "world">): GameState {
     options: loadOptions(),
     harvested: {},
   };
+}
+
+/** Additive v1 migration: old saves receive unreleased, healthy wanderers. */
+function cleanWanderers(raw: Partial<GameState>): Pick<GameState, "roamers" | "burr" | "wandererWilted" | "burrHitch"> {
+  const next = { ...freshWanderers(DATA), wandererWilted: {} } as Pick<GameState, "roamers" | "burr" | "wandererWilted" | "burrHitch">;
+  for (const id of WANDERERS) {
+    const r = id === "burr" ? raw.burr : raw.roamers?.[id];
+    const hp = Number.isInteger(r?.hp) && r!.hp >= 0 ? Math.min(r!.hp, wandererMaxHp(DATA, id)) : wandererMaxHp(DATA, id);
+    const status = r?.status && STATUSES.includes(r.status) ? r.status : null;
+    if (id === "burr") next.burr = { hp, status };
+    else {
+      const map = raw.roamers?.[id]?.map;
+      next.roamers[id] = { hp, status, map: map && (ROAMER_MAPS[id] as readonly MapId[]).includes(map) ? map : ROAMER_MAPS[id][0] };
+    }
+    if (hp === 0) {
+      const day = raw.wandererWilted?.[id];
+      next.wandererWilted![id] = typeof day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : todayISO();
+    }
+  }
+  const hitch = raw.burrHitch;
+  if (hitch && MAP_IDS.includes(hitch.map) && Number.isInteger(hitch.x) && Number.isInteger(hitch.y)
+    && ["up", "down", "left", "right"].includes(hitch.facing)) next.burrHitch = { ...hitch };
+  return next;
 }
 
 /** Fill in anything missing from an older or hand-edited save. */
@@ -170,6 +198,7 @@ export function normalizeState(raw: unknown, fallback: GameState): GameState | n
     box: cleanSeeds(arr(r.box, [])),
     bag: obj(r.bag, {}),
     flags: obj(r.flags, {}),
+    ...cleanWanderers(r),
     marks: arr(r.marks, []),
     herbarium: {
       seen: arr(r.herbarium?.seen, []),

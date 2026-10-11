@@ -288,6 +288,31 @@ describe("music", () => {
     expect(a.chords.split("|").at(-1)!.trim()).toBe("D");
   });
 
+  // Post-game.
+  it("seed_vault: B minor pad over a ticking pulse, with the raised A-sharp, waiting on F#", () => {
+    const a = ARRANGEMENTS.seed_vault;
+    expect([a.harmony, a.bass, a.drums]).toEqual(["pad", "pulse", "tick"]);
+    const pcs = new Set(parseSong(MUSIC_DEFS.seed_vault).channels.p1!.events.map((e) => e.midi! % 12));
+    expect(pcs.has(10)).toBe(true);                                  // A-sharp
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("F#");
+  });
+
+  it("ancient_ridge: slow D minor over a drone with no drums, hanging on A", () => {
+    const a = ARRANGEMENTS.ancient_ridge;
+    expect([a.harmony, a.bass, a.drums]).toEqual(["pad", "drone", "none"]);
+    expect(a.bpm).toBeLessThanOrEqual(70);
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("A");
+  });
+
+  it("battle_legend: an E minor run with a Phrygian F bar and a turn to B major (D-sharp)", () => {
+    const a = ARRANGEMENTS.battle_legend;
+    expect([a.harmony, a.bass, a.drums]).toEqual(["arp16", "octave8", "rock"]);
+    expect(a.chords.split("|").map((c) => c.trim())).toContain("F");
+    const pcs = new Set(parseSong(MUSIC_DEFS.battle_legend).channels.p1!.events.map((e) => e.midi! % 12));
+    expect(pcs.has(3)).toBe(true);                                   // D-sharp
+    expect(a.chords.split("|").at(-1)!.trim()).toBe("B");
+  });
+
   it("arranges a 3/4 chart correctly", () => {
     const def = arrange({ bpm: 100, meter: 3, chords: "C | G", melody: "c2. | d2. |", harmony: "waltz", bass: "half", drums: "soft" });
     const song = parseSong(def);

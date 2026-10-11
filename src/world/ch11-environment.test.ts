@@ -33,8 +33,10 @@ function gameplay(id: MapId): string {
 
 // Re-pinned at integration: the seat rooms now play the "council" theme and
 // the Council and ROWAN stand on their own sprites (gameplay unchanged).
+// council_hall re-pinned on postgame: the post-game ROWAN (pg_wanderers)
+// stands in the lobby at (10,7) once game_cleared is set.
 const FROZEN: [MapId, string][] = [
-  ["council_hall", "ccec4d2a8891235fbe108c22210131988d15a06ba85d5a9775fcefc78b866db2"],
+  ["council_hall", "6230ae235b3a84d7dd6339eb6a6a2166fdeacb77163a22a2a696d405bd784a47"],
   ["council_1", "7f5d478118c7a9438761d3a21ec87667b4d2ad1c5d35aae05f27e5529b6a8e78"],
   ["council_2", "94343372cc28d4287defaa32be24edd1200144a2bcf7704bc1ef253d90da37f8"],
   ["council_3", "2bed6660dba6562fa90043e2324844953e86c6e537bd8e748102ddd3395b5ee2"],
@@ -134,7 +136,8 @@ describe("Chapter 11 environment keeps the Council run", () => {
       expect(r.has("7,0"), `stair ch10_done=${flags.ch10_done}`).toBe(flags.ch10_done);
       expect(reach("council_hall", flags, { x: 7, y: 1 }).has("7,10"), "back from council_1").toBe(true);
     }
-    expect(m.npcs.map((n) => [n.id, n.x, n.y])).toEqual([["keeper", 2, 2], ["clerk", 13, 2]]);
+    // Post-game: ROWAN (pg_wanderers) joins the lobby once game_cleared is set.
+    expect(m.npcs.map((n) => [n.id, n.x, n.y])).toEqual([["rowan", 10, 7], ["keeper", 2, 2], ["clerk", 13, 2]]);
   });
 
   it("keeps the fellowship room's arrival, NPCs and exit open", () => {
