@@ -405,6 +405,9 @@ export const CHARACTERS = [
   "elder_root",                  // the Elder's glowing root knot (static object; column 0 rest, columns 1-2 pulse)
   // Chapter 11: the Council seats
   "belladonna", "mimi_osa", "titus_arum", "pyra",
+  // Post-game
+  "burr_hitch",                  // BURR hitching a ride on a leaf scrap (columns 1-2 hop)
+  "centuryheart_sprout",         // the second Centuryheart sprout (static object; column 0 rest, columns 1-2 shimmer)
 ] as const;
 export type CharacterKey = (typeof CHARACTERS)[number];
 
@@ -502,6 +505,7 @@ export const STILLS = [
   "dragon_trees", // Chapter 9
   "centuryheart_sprouts", // Chapter 10
   "fellowship", // Chapter 11
+  "methuselah_night", // Post-game
 ] as const;
 export type StillKey = (typeof STILLS)[number];
 

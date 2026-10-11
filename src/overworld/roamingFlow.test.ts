@@ -101,7 +101,7 @@ describe("roaming overworld wiring", () => {
     const ctx = context(), scene = sceneFor(ctx);
     scene.loadMap("route_10", 2, 2, "up");
     const burr = scene.npcs.find((n) => n.id === "burr")!;
-    expect(burr).toMatchObject({ sprite: "item_pickup", x: 2, y: 3 });
+    expect(burr).toMatchObject({ sprite: "burr_hitch", x: 2, y: 3 });
     expect(ctx.state.burrHitch).toEqual({ map: "route_10", x: 2, y: 3, facing: "up" });
     await scene.talk(burr);
     expect(scene.battle).toHaveBeenCalledWith({ kind: "wild", wild: { species: "burr", level: 60 }, wanderer: "burr" });
