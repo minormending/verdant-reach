@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "burr",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#788838", "#d0a0d0", "#f8f8f8"],
+  "sport": ["#181818", "#788838", "#d0c8c0", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release.",
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  }
+  "anim": { "intro": [[1, 12], [2, 5], [3, 16], [4, 10], [0, 8]], "idle": [[0, 140], [3, 8], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Arctium, https://en.wikipedia.org/wiki/Arctium . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/burr.py" },
+  "notes": "Crystal rule. Arctium (burdock). BRACED/clinging: a cluster of four round burdock burrs, every one bristling with hooked bracts and crowned by a tuft of thistle-purple florets, clings to a broad burdock leaf it rides like a raft; the big lead burr is pushed toward the foe, the others heaped behind and above it. The leaf is broad and heart-based with a wavy margin and pale veins, its tip toward the foe and its far edge curled up. Gesture: the hooks flex and it springs forward to cling (the hooks curl in and it crouches, springs at the foe with the hooks flung straight, clings with them curled tight and settles); the leaf raft stays fixed. A hook green-brown dark slot (the burrs, the leaf) under a thistle-purple mid (the florets, the hooks' lit tips). Sport: the white-flowered form."
 }

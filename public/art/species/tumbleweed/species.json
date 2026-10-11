@@ -1,70 +1,15 @@
 {
   "format": "verdant.species/1",
   "id": "tumbleweed",
-  "palette": [
-    "#181818",
-    "#707078",
-    "#b8b8c0",
-    "#f8f8f8"
-  ],
-  "sport": [
-    "#181818",
-    "#786848",
-    "#c0b080",
-    "#f8f8f8"
-  ],
+  "palette": ["#181818", "#985830", "#d8b870", "#f8f8f8"],
+  "sport": ["#181818", "#a83838", "#a8c070", "#f8f8f8"],
   "frames": {
-    "front": [
-      "front.png",
-      "front__2.png",
-      "front__3.png"
-    ],
-    "back": [
-      "back.png"
-    ],
-    "icon": [
-      "icon.png",
-      "icon__2.png"
-    ]
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
   },
-  "credits": "Placeholder (no art yet).",
-  "source": {
-    "kind": "generated",
-    "tool": "tools/art/placeholder.py"
-  },
-  "notes": "PLACEHOLDER: replace with real Crystal-rule art before release.",
-  "anim": {
-    "intro": [
-      [
-        0,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        2,
-        12
-      ],
-      [
-        1,
-        8
-      ],
-      [
-        0,
-        1
-      ]
-    ],
-    "idle": [
-      [
-        0,
-        120
-      ],
-      [
-        1,
-        10
-      ]
-    ]
-  }
+  "anim": { "intro": [[1, 10], [2, 8], [3, 12], [4, 10], [0, 8]], "idle": [[0, 140], [4, 8], [0, 6]] },
+  "credits": "Original geometry drawn for Verdant Reach under the Crystal rule (docs/CREATURES.md). Botanical reference: Salsola tragus, https://en.wikipedia.org/wiki/Salsola_tragus . No sprite from any other game was copied, traced or imported.",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/tumbleweed.py" },
+  "notes": "Crystal rule. Salsola tragus. LUNGING mid-roll: a big, airy ball of dried, wiry, branching stems, sun-bleached straw tan, rolling at the foe. An open lattice: the near stems arc over the ball in the light tone (lit top-left, russet on the shaded side), the far stems show through the gaps in the dark slot, and the background shows between them; spine-tipped sprigs bristle from the rim. A cloud of dust trails off behind its foot and seeds scatter behind it (the motion cue). Gesture: it rolls in and bounces once, scattering seeds (the lattice turns anticlockwise toward the foe, hops, lands squashed in a burst of dust, rebounds and settles); the trailing seeds stay fixed. A russet-brown dark slot under a straw-tan mid. Sport: the young plant's green, red-striped colouring."
 }
