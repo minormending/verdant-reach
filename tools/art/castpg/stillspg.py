@@ -5,10 +5,12 @@
                     galaxy, stands the oldest bristlecone: a squat, flared,
                     wind-twisted trunk of bare silver deadwood with its grain
                     spiralling up it, one dead spire stabbing at the stars and
-                    one dead limb reaching left. A single strip of living
-                    rust-red bark climbs the trunk's right side to the one
-                    living limb, which the wind has combed out to the right;
-                    it carries the bottlebrush tufts of dark needles. A faint
+                    one dead limb reaching left. One narrow strip of living
+                    rust-red bark spirals with the grain from the left root
+                    across the trunk's face and out of its right flank into
+                    the living limb, whose branches end in short, thick
+                    bottlebrush foxtails of dark needles, two of them
+                    standing up against the stars. A faint
                     frost-light traces the deadwood's edges and grain and
                     lifts off it in motes: the tree is waking. Small in the
                     lower left, the player stands with their back to us,
@@ -176,8 +178,28 @@ TRUNK = [(64, 97), (72, 95), (78, 92), (82, 87), (84, 81), (81, 75), (80, 69), (
 SPIRE = [(91, 56), (87, 46), (91, 36), (88, 27), (93, 17), (96, 7)]          # the dead spire, zigzagging up
 DEAD_LIMB = [(85, 62), (75, 57), (67, 49), (58, 46), (51, 38), (47, 30), (43, 28)]
 STUB = [(96, 54), (103, 44), (105, 37)]
-LIVE_LIMB = [(105, 66), (115, 60), (125, 55), (134, 49), (143, 45), (152, 41)]
-LIVE_TWIG = [(125, 56), (130, 61), (137, 62)]
+# The twist runs up and to the right: the grain (and the one living strip
+# of bark that follows it) climbs from the left root across the trunk's face
+# and leaves its right flank at the living limb. U_STRIP is that strip's
+# grain line.
+def grain(cv):
+    # Rounded by the trunk: the lines bow as they wrap, steepening near the edges.
+    return cv.xx * 0.8 - (100 - cv.yy) * 0.6 + 3.0 * np.sin(cv.yy * 0.11)
+
+
+U_STRIP = 56.2
+# The living limb and its branches, each tip ending in a foxtail.
+LIVE_LIMBS = [  # (polyline, base width, tip width)
+    ([(101, 58), (112, 51), (120, 44)], 6, 4),
+    ([(120, 44), (117, 35), (113, 28)], 3, 2),
+    ([(120, 44), (128, 39), (132, 33)], 3, 2),
+    ([(112, 51), (126, 49), (140, 44)], 4, 2),
+    ([(126, 49), (136, 55), (144, 56)], 2, 2),
+]
+FOXTAILS = [  # (base x, y, angle, length): short, thick and upturned
+    (113, 29, 98, 10), (132, 34, 72, 10), (140, 45, 38, 11), (144, 57, 12, 10),
+    (115, 48, 64, 7),                   # a younger foxtail on the limb itself
+]
 
 
 def deadwood(cv):
@@ -193,7 +215,7 @@ def deadwood(cv):
     wood = trunk | spire | dead | stub | snags | roots
     # The twist: broad bands of grain spiralling up the trunk and the spire,
     # lighter and darker in turn, with a dark crease between each.
-    u = cv.xx * 0.8 + (100 - cv.yy) * 0.6
+    u = grain(cv)
     band = np.floor(u / 6).astype(int) % 3
     cv.fill(wood, "dw2")
     cv.fill(wood & (band == 0), "dw1")
@@ -222,64 +244,83 @@ def deadwood(cv):
     return wood
 
 
-def living(cv):
-    """The one strip of living bark: up the right flank of the trunk and out
-    along the living limb, a narrow rust band with darker furrows."""
-    strip = cv.m_poly([(110, 95), (118, 95), (112, 89), (108, 83), (109, 76), (109, 70), (106, 64), (102, 64),
-                       (104, 70), (104, 77), (104, 84), (107, 90)])
-    lb = limb(cv, LIVE_LIMB, 7, 3) | limb(cv, LIVE_TWIG, 3, 2)
-    bark = strip | lb
+def living(cv, wood):
+    """The one strip of living bark: a narrow rust band that follows a single
+    grain line from the left root up across the trunk's face, spiralling with
+    the twist, and runs out of the right flank into the living limb and its
+    branches."""
+    u = grain(cv)
+    # Narrow where it turns away round the trunk, widest across its face.
+    width = 1.2 + 0.8 * np.clip(1 - np.abs(cv.yy - 76) / 22, 0, 1)
+    strip = wood & (np.abs(u - U_STRIP) < width) & (cv.yy >= 55) & (cv.xx >= 56)
+    branches = np.zeros_like(wood)
+    for pts, w0, w1 in LIVE_LIMBS:
+        branches |= limb(cv, pts, w0, w1)
+    bark = strip | branches
     cv.fill(bark, "rb1")
     cv.fill(bark & ~np.roll(bark, 1, 0), "rb0")
     cv.fill(bark & ~np.roll(bark, 1, 1), "rb0")
     cv.fill(bark & ~np.roll(bark, -1, 0), "rb2")
     cv.fill(bark & ~np.roll(bark, -1, 1), "rb2")
-    for pts in ([(108, 92), (106, 86), (106, 78), (106, 70)], [(110, 64), (120, 58), (130, 53), (140, 48)]):
-        cv.fill(cv.m_line(pts) & bark, "rb2")
-    for x, y in ((107, 74), (107, 82), (116, 61), (128, 54)):
-        cv.px(x, y, "rb0")
+    # Furrows along the strip, following the grain.
+    cv.fill(strip & (np.abs(u - U_STRIP - 0.5) < 0.35) & (cv.yy % 5 != 0), "rb2")
+    # Where the strip turns round the trunk's edges it drops into the
+    # deadwood's shade.
+    cv.fill(strip & ~np.roll(wood, -2, 1), "rb2")
+    for pts in ([(104, 57), (112, 52), (119, 46)], [(114, 51), (126, 50), (136, 46)]):
+        cv.fill(cv.m_line(pts) & branches, "rb2")
     return bark
 
 
-def tuft(cv, bx, by, angle, length, thick=5):
-    """A bottlebrush: short stiff needles packed all round a twig tip,
-    curving upward at the end. Each needle is a short stroke angled toward
-    the tip; the upper side is lit (tips catch the starlight on the left),
-    the underside sinks into shadow."""
+def foxtail(cv, bx, by, angle, length, thick=9):
+    """A bristlecone foxtail: a short, thick cylinder of stiff needles packed
+    all round a twig tip, curling up at the end. Needles are short strokes
+    angled toward the tip, one every pixel along the twig on each side, in
+    alternating lengths so the silhouette bristles like a bottlebrush. The
+    upper side catches the starlight, the underside sinks into shadow, and
+    rings of needles cross the core."""
     a = math.radians(angle)
     ux, uy = math.cos(a), -math.sin(a)
-    nx, ny = uy, -ux                      # the normal, pointing up for a rightward twig
-    if ny > 0:
+    nx, ny = -uy, ux                       # a normal; make it the upper side
+    if ny > 0 or (ny == 0 and nx > 0):
         nx, ny = -nx, -ny
-    steps = int(length * 2)
-    core = np.zeros((144, 160), bool)
+    steps = int(length)
+    pts = []
     for k in range(steps + 1):
         t = k / steps
-        bend = 2.0 * t * t                # the tip curls upward
-        cx, cy = bx + ux * length * t, by + uy * length * t - bend
-        r = thick / 2 * (1 - 0.35 * t * t)
-        core |= cv.m_ellipse(cx, cy, r * 0.55, r * 0.55)
-        if k % 2:
-            continue
-        for side, cols in ((1, ("nd1", "nd0")), (-1, ("nd2", "nd3"))):
-            ex = cx + (nx * side * 0.9 + ux * 0.45) * r
-            ey = cy + (ny * side * 0.9 + uy * 0.45) * r
-            cv.line([(cx, cy), (ex, ey)], cols[0])
-            if side == 1 and (k // 2) % 2 == 0 and t < 0.9:
-                cv.px(ex, ey, cols[1])
-            if side == -1:
-                cv.px(ex, ey, cols[1])
+        pts.append((bx + ux * length * t, by + uy * length * t - 1.5 * t * t, t))
+    core = np.zeros((144, 160), bool)
+    for cx, cy, t in pts:
+        r = (thick / 2) * (1 - 0.3 * t ** 3)
+        core |= cv.m_ellipse(cx, cy, r - 1.6, r - 1.6)
+    for k, (cx, cy, t) in enumerate(pts):
+        r = (thick / 2) * (1 - 0.3 * t ** 3)
+        for side, body_c, tip_c in ((1, "nd1", "nd0"), (-1, "nd2", "nd3")):
+            L = r + (0.6 if (k + (side > 0)) % 2 else -0.4)
+            ex = cx + (nx * side * 0.92 + ux * 0.4) * L
+            ey = cy + (ny * side * 0.92 + uy * 0.4) * L
+            cv.line([(cx, cy), (ex, ey)], body_c)
+            if side < 0 or k % 2 == 0:
+                cv.px(ex, ey, tip_c)
+    # The tip: a tuft of needles fanning forward.
+    tx, ty, _ = pts[-1]
+    for d in (-0.5, 0, 0.5):
+        ex = tx + (ux + nx * d) * 2.5
+        ey = ty + (uy + ny * d) * 2.5
+        cv.line([(tx, ty), (ex, ey)], "nd1" if d >= 0 else "nd2")
     cv.fill(core, "nd2")
-    cv.checker(core & ~np.roll(core, 1, 0), "nd1")
+    along = (cv.xx - bx) * ux + (cv.yy - by) * uy
+    cv.fill(core & (np.floor(along).astype(int) % 2 == 0) & ~np.roll(np.roll(core, round(-ny * 2), 0),
+                                                                    round(-nx * 2), 1), "nd1")
+    cv.fill(core & ~np.roll(np.roll(core, round(ny * 2), 0), round(nx * 2), 1), "nd3")
+    return core
 
 
 def needles(cv):
-    # Upturned foxtails along the living limb, combed toward the right by the
-    # wind; the lowest ones on the twig droop.
-    for bx, by, ang, L in ((113, 60, 50, 9), (120, 57, 58, 11), (127, 54, 36, 10), (133, 51, 62, 9),
-                           (139, 48, 32, 11), (146, 44, 52, 9), (151, 41, 24, 8), (129, 61, 12, 9),
-                           (135, 63, -8, 8)):
-        tuft(cv, bx, by, ang, L)
+    out = np.zeros((144, 160), bool)
+    for bx, by, ang, L in FOXTAILS:
+        out |= foxtail(cv, bx, by, ang, L)
+    return out
 
 
 def frost_light(cv, wood):
@@ -361,9 +402,9 @@ def methuselah_night():
     ranges(cv)
     summit(cv)
     wood = deadwood(cv)
-    living(cv)
+    bark = living(cv, wood)
     needles(cv)
-    frost_light(cv, wood)
+    frost_light(cv, wood & ~bark)
     player(cv)
     return cv.image()
 
