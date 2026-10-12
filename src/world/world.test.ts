@@ -21,6 +21,12 @@ describe("world data", () => {
     expect(trainers.length).toBe(8);
     for (const t of trainers) expect(t.className, t.id).toBe(t.portrait.toUpperCase());
   });
+  it("never gives MOSS the cat a fur colour (the shared cat sprite may be recoloured)", () => {
+    const lines: string[] = [];
+    eachCmd(WORLD.scripts.r2_forager, (c) => { if (c.op === "say") lines.push(c.text); });
+    expect(lines.some((t) => /cat/i.test(t))).toBe(true);
+    for (const t of lines) expect(t).not.toMatch(/ginger|tabby|orange|black|grey|gray|tortoiseshell|calico/i);
+  });
   it("passes every structural check", () => {
     expect(validateWorld(WORLD)).toEqual([]);
   });

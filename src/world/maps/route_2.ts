@@ -101,7 +101,7 @@ export const route_2: MapDef = {
 export const scripts: Scripts = {
   r2_forager: [
     ifFlags({ quest_lost_cat_started: true, moss_found: false }, [
-      say("A cat? Ginger, fluffy? Something's been mewing behind that log by the pool."),
+      say("A lost cat? Something's been mewing behind that log by the pool."),
     ]),
     say("Fiddleheads are young fern fronds, coiled tight like the scroll of a violin."),
     say("They uncurl as they grow. These ones uncurl to slap you. Times have changed!"),
