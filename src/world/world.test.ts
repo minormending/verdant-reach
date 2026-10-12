@@ -15,6 +15,12 @@ describe("world data", () => {
       expect(walkable(grid(town), landing.x, landing.y)).toBe(true);
     }
   });
+  it("labels anglers, sailors, divers and skiers with their own trainer class", () => {
+    const roles = ["angler", "sailor", "diver", "skier"];
+    const trainers = Object.values(WORLD.trainers).filter((t) => roles.includes(t.portrait));
+    expect(trainers.length).toBe(8);
+    for (const t of trainers) expect(t.className, t.id).toBe(t.portrait.toUpperCase());
+  });
   it("passes every structural check", () => {
     expect(validateWorld(WORLD)).toEqual([]);
   });
