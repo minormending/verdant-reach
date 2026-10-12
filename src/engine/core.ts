@@ -22,7 +22,8 @@ export function createCanvas(): { canvas: HTMLCanvasElement; g: CanvasRenderingC
   return { canvas, g };
 }
 
-const KEYMAP: Record<string, Button> = {
+/** Keyboard codes to buttons (also read by the guidebook's controls table). */
+export const KEYMAP: Record<string, Button> = {
   ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
   KeyW: "up", KeyS: "down", KeyA: "left", KeyD: "right",
   KeyZ: "a", Space: "a", KeyJ: "a",
