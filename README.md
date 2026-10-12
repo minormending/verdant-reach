@@ -1,6 +1,6 @@
 # Verdant Reach
 
-**[▶ Play in your browser](https://minormending.github.io/verdant-reach/)**: keyboard, or touch on phones and tablets.
+**[▶ Play in your browser](https://minormending.github.io/verdant-reach/)**: keyboard, game controller, or touch on phones and tablets.
 
 **[Guidebook](https://minormending.github.io/verdant-reach/guide.html)**: the official strategy guide, with a walkthrough, every map, wild plant, item and trainer, and the full Field Herbarium, generated from the game's own data ([docs/GUIDE.md](docs/GUIDE.md)).
 
@@ -26,13 +26,20 @@ npm run dev
 Then open http://localhost:5173. For a production build, run `npm run build`
 and serve `dist/` with any static server.
 
-| Button | Keys |
-|---|---|
-| Move | Arrows / WASD (hold **B** to run) |
-| A | Z, Space, J |
-| B | X, Esc, Backspace, K |
-| START (menu) | Enter |
-| SELECT | Shift |
+| Button | Keys | Controller |
+|---|---|---|
+| Move | Arrows / WASD (hold **B** to run) | D-pad (or left stick) |
+| A | Z, Space, J | A: the right face button |
+| B | X, Esc, Backspace, K | B: the bottom face button |
+| START (menu) | Enter | START / + |
+| SELECT | Shift | SELECT / − |
+
+**Game controllers** work through the browser's Gamepad API: press a button on
+the controller once the page is open. Buttons follow the Game Boy's layout by
+position (A right, B bottom), so Nintendo-layout pads such as the 8BitDo Zero 2
+(in any of its modes) and the Switch Pro Controller match their labels; on an
+Xbox-layout pad, A is the button marked B. Browsers don't let a controller
+start sound, so press a key or click once if the game is silent.
 
 On phones and tablets, an on-screen D-pad and buttons appear automatically.
 Press **F** (or the corner button) for fullscreen. Time of day follows your

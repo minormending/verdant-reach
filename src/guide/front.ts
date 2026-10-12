@@ -5,6 +5,7 @@
 import type { Button, GrowthTrigger, ItemId, TypeId } from "../contracts";
 import { SPECIES_IDS, TIME_OF_DAY, TYPES, uiPath } from "../contracts";
 import { KEYMAP } from "../engine/core";
+import { PAD_LABELS } from "../engine/gamepad";
 import { FIELD_MOVE_FX } from "../overworld/fieldmove";
 import { typeEffectiveness } from "../battle/logic/damage";
 import { SPORT_ODDS } from "../battle/logic/stats";
@@ -64,9 +65,11 @@ function controls(): HTMLElement {
     ["SELECT", ["select"], ""],
   ];
   const keysFor = (bs: Button[]) => [...new Set(Object.entries(KEYMAP).filter(([, b]) => bs.includes(b)).map(([k]) => KEY_NAMES[k] ?? k))];
-  return h("table.controls", h("tbody", rows.map(([label, bs, what]) => h("tr",
-    h("th", label), h("td", keysFor(bs).map((k) => h("kbd", k))), h("td.small", what),
-  ))));
+  return h("table.controls",
+    h("thead", h("tr", h("th", ""), h("th", "Keyboard"), h("th", "Controller"), h("th", ""))),
+    h("tbody", rows.map(([label, bs, what]) => h("tr",
+      h("th", label), h("td", keysFor(bs).map((k) => h("kbd", k))), h("td.small", PAD_LABELS[bs[0]]), h("td.small", what),
+    ))));
 }
 
 const GROWTH_EXAMPLE_KINDS: GrowthTrigger["kind"][] = ["vigor", "vigor_day", "vigor_night", "tending", "item", "cross_pollination"];

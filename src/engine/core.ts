@@ -5,6 +5,7 @@
 import { FPS, SCREEN_H, SCREEN_W } from "../contracts";
 import type { Assets, Button, Input, Scene, SceneStack } from "../contracts";
 import { createArtAssets } from "../art";
+import { readGamepads } from "./gamepad";
 
 export function createCanvas(): { canvas: HTMLCanvasElement; g: CanvasRenderingContext2D } {
   const canvas = document.getElementById("screen") as HTMLCanvasElement;
@@ -31,35 +32,58 @@ export const KEYMAP: Record<string, Button> = {
   Enter: "start", ShiftLeft: "select", ShiftRight: "select",
 };
 
-export function createInput(onFirstInput: () => void): Input & { endFrame(): void } {
-  const held = new Set<Button>();
+/**
+ * Keyboard (and the touch controls, which synthesise key events) plus any
+ * game controllers (src/engine/gamepad.ts). `poll` reads the controllers at
+ * the start of each step; `endFrame` consumes the step's press edges.
+ */
+export function createInput(
+  onFirstInput: () => void,
+  readPads: () => Set<Button> = readGamepads,
+): Input & { endFrame(): void; poll(): void } {
+  const keys = new Set<Button>();
+  let pad = new Set<Button>();
   const down = new Set<Button>();
   const holdFrames = new Map<Button, number>();
+  const isHeld = (b: Button) => keys.has(b) || pad.has(b);
   let unlocked = false;
   addEventListener("keydown", (e) => {
     const b = KEYMAP[e.code];
     if (!b) return;
     e.preventDefault();
     if (!unlocked) { unlocked = true; onFirstInput(); }
-    if (!held.has(b)) down.add(b);
-    held.add(b);
+    if (!isHeld(b)) down.add(b);
+    keys.add(b);
   });
   addEventListener("keyup", (e) => {
     const b = KEYMAP[e.code];
-    if (b) { held.delete(b); holdFrames.delete(b); }
+    if (!b) return;
+    keys.delete(b);
+    if (!isHeld(b)) holdFrames.delete(b);
   });
-  addEventListener("blur", () => { held.clear(); holdFrames.clear(); });
+  addEventListener("blur", () => { keys.clear(); holdFrames.clear(); });
   return {
     pressed: (b) => down.has(b),
-    held: (b) => held.has(b),
+    held: isHeld,
     repeat: (b) => {
       if (down.has(b)) return true;
       const n = holdFrames.get(b) ?? 0;
-      return held.has(b) && n > 18 && n % 6 === 0;
+      return isHeld(b) && n > 18 && n % 6 === 0;
+    },
+    poll() {
+      const now = readPads();
+      let pressedAny = false;
+      for (const b of now) if (!isHeld(b)) { down.add(b); pressedAny = true; }
+      const before = pad;
+      pad = now;
+      for (const b of before) if (!isHeld(b)) holdFrames.delete(b);
+      // Browsers don't count a controller press as a user gesture, so audio may
+      // stay locked until a key or tap; asking again on each press is harmless.
+      if (pressedAny) onFirstInput();
     },
     endFrame() {
       down.clear();
-      for (const b of held) holdFrames.set(b, (holdFrames.get(b) ?? 0) + 1);
+      for (const b of new Set([...keys, ...pad])) holdFrames.set(b, (holdFrames.get(b) ?? 0) + 1);
     },
   };
 }
@@ -124,6 +148,7 @@ export function runLoop(
   let acc = 0;
   let last = performance.now();
   const update = () => {
+    input.poll();
     scenes.top()?.update(step);
     input.endFrame();
     onTick(step);
