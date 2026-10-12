@@ -6,13 +6,14 @@ export const route_9: MapDef = {
   border: "larch_tree",
   // Larch forest (T), then the scree slope (+, rock, turf terraces and ledges), then the snowy pass
   // (? snow and n snow grass, both grass encounters) between cliffs (A); a trodden scree track crosses it.
-  legend: { ...OUTDOOR, T: "larch_tree", "+": "scree", n: "snow_grass", Z: "stairs_down", V: "vault_portal" },
+  legend: { ...OUTDOOR, T: "larch_tree", "+": "scree", n: "snow_grass", Z: "stairs_down", V: "vault_portal", "&": "sign" },
   // Post-game: the Seed Vault stair (Z, 6,0) is a cliff until the game is cleared. Its flanks (V)
   // are cliff too until then; once the stair opens they show the vault's concrete portal.
-  legendWhen: [{ when: when({ game_cleared: false }), legend: { Z: "cliff" } }],
+  // The vault's sign post (&, 7,1) is cliff until then too, so it only appears with the stair.
+  legendWhen: [{ when: when({ game_cleared: false }), legend: { Z: "cliff", "&": "cliff" } }],
   tiles: [
     "AAAAAVZVAAAAAA++AAAAAAAAAAAAAA",
-    "AAA????A??AAA?++???AAAA?????AA",
+    "AAA????&??AAA?++???AAAA?????AA",
     "AA???nnn????A?++????AA???nnn?A",
     "A???nnnnn?????++nn????nnnnnn?A",
     "A????nnn????++++???????nnnn??A",
@@ -83,7 +84,9 @@ export const route_9: MapDef = {
     { id: "mountaineer", sprite: "hiker", x: 8, y: 39, facing: "down", script: "q_lost_climber" },
   ],
   hidden: [{ x: 8, y: 8, item: "climber_pack" }, { x: 23, y: 11, item: "rain_jar" }],
-  signs: [{ x: 13, y: 53, text: "ROUTE 9: THE LARCH PASS. North to LARCHMERE. Mind the scree!" }], triggers: [],
+  signs: [{ x: 13, y: 53, text: "ROUTE 9: THE LARCH PASS. North to LARCHMERE. Mind the scree!" },
+    // Signs can't be hidden: before the stair opens this reads off the bare cliff, so the text suits both.
+    { x: 7, y: 1, text: "SEED VAULT. Seeds of the REACH, kept cold and dry, just in case. Open to FELLOWS." }], triggers: [],
   encounters: { grass: { rate: 10, slots: [
     { species: "larch_seedling", weight: 25, minLevel: 32, maxLevel: 33 },
     { species: "campion_cushion", weight: 25, minLevel: 29, maxLevel: 29 },

@@ -92,7 +92,9 @@ export const glasshouse_greenhouse = greenhouseMap(
 
 export const scripts: Scripts = {
   greenhouse_heal: [
-    say("Welcome to the GREENHOUSE! Water, light and warm soil for weary QUICKENED."),
+    ifFlags({ game_cleared: true }, [
+      say("Welcome back, FELLOW! Water, light and warm soil, same as ever. Even for you."),
+    ], [say("Welcome to the GREENHOUSE! Water, light and warm soil for weary QUICKENED.")]),
     { op: "yesno", prompt: "Shall I tend to your QUICKENED?", yes: [
       say("Into the light they go..."),
       { op: "heal" },

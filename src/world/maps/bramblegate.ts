@@ -130,7 +130,10 @@ export const scripts: Scripts = {
       say("No mark, no meadow. Not with things the way they are."),
     ]),
   ],
-  bg_pip: [
+  bg_pip: [ifFlags({ game_cleared: true }, [
+    say("<PLAYER>! FELLOW <PLAYER>! The SEED VAULT's open! Do you know what's IN a seed vault?"),
+    say("Seeds! Kept cold and dry, lots of seeds stay alive for decades. Some for centuries!"),
+  ], [
     ifFlags({ beat_hollis: true }, [
       say("<PLAYER>! A real PRESSED MARK! Can I smell it?"),
       say("Bramble canes root where their tips touch soil. That's how a bramble walks!"),
@@ -138,7 +141,7 @@ export const scripts: Scripts = {
       say("<PLAYER>! It's me, PIP! I walked here. It took ages!"),
       say("Blackberries aren't true berries! Each bump is its own tiny fruit!"),
     ]),
-  ],
+  ])],
   bg_hedgelayer: [
     ifFlags({ beat_hollis: true }, [
       say("Did HOLLIS's maze turn you round? He says that's half the lesson."),

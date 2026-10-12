@@ -88,7 +88,8 @@ const MAPS: MapId[] = ["route_9", "seed_vault_entrance", "seed_vault_b1", "seed_
 // Re-pinned at integration: the vault and ridge maps play their own post-game
 // music, and the writer's five rack signs (entrance and archive) are included.
 const GAMEPLAY: Record<string, string> = {
-  route_9: "44dbd517424a5c9703339e7e8844cfdc5131eb87d6560725a06badabe6bdf42d",
+  // Re-pinned on pg-polish: the SEED VAULT sign post at 7,1 (cliff until game_cleared) is deliberate.
+  route_9: "e071572886b61f0cfd529717be36d5111621c0899fc205184ab060ca39718986",
   seed_vault_entrance: "70fffc144841a09694f390ecf95de2ebbb6a2be725365b13cdace85fde597876",
   seed_vault_b1: "bc575ad41a83a1bcb0a62b8dcc742d44c5e8b1e132ee93c1074dbb55990209ff",
   seed_vault_b2: "51321ef8985e2df311b87e9dd7d0b68ed7595cee3a16521a25f3c7b19541cc4e",
@@ -99,7 +100,8 @@ const GAMEPLAY: Record<string, string> = {
 // Per map, one digest of the behaviour grid for each entry of STATES.
 const CELLS: Record<string, string[]> = {
   route_9: ["37b922de68478f98188d8028184c82f006c040730adbf612b8c40d20ba3d299b",
-    "1caf46aac315f2cbedf7d207a7ccdf1e12be95957ce9a8513cd47e321225bfe4"],
+    // Re-pinned on pg-polish: 7,1 stays solid but becomes the interactable SEED VAULT sign post (deliberate).
+    "3346e97b8e8e2ab47e448ded2d4eb2d56c126e66d16194f001eb3f46d589469e"],
   seed_vault_entrance: ["c3a667ac96289c02a181d236492fb6bf703a2a35d281b2cea08c8df781bd36e5",
     "0f2966f1e290ca7a0e52e0ed2a69d62b5d02c83371aa037bc4722b80fb3e4933",
     "c3a667ac96289c02a181d236492fb6bf703a2a35d281b2cea08c8df781bd36e5",

@@ -42,7 +42,8 @@ const FROZEN: [MapId, string][] = [
   ["council_3", "2bed6660dba6562fa90043e2324844953e86c6e537bd8e748102ddd3395b5ee2"],
   ["council_4", "d04f6f3579ce4b604bc32efb0692518ec1545493cf648de7e3ab00393e4bb7fc"],
   ["keeper_hall", "42c91d20d585b6d06bf0ebfa2e8c17f37a8e9722bb1326ed0eeb5672a8736718"],
-  ["fellowship_hall", "0b9ffb1cdce7d90ce37dd2d124c188f09b2fcce516be914cca95d9f1a9641837"],
+  // Re-pinned on pg-polish: ROWAN and IMOGEN talk through pg_fellowship_* wrappers (deliberate; they still call ch11_ending in a run).
+  ["fellowship_hall", "403c2253f953af477384febcbcf7585058068c4e2ae9918197814a31a33efb79"],
 ];
 
 function runtime(id: MapId, flags: Record<string, boolean> = {}): MapRuntime {
