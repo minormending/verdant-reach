@@ -37,6 +37,10 @@ The vault (each tile behaves exactly like the stand-in it replaces):
   against the archive's north wall, a reading lamp under a green shade, an
   open ledger in its warm pool, labelled drawers.
 
+- sign_snow (Route 9's spur sign; solid, interactable like `sign`): the
+  shipped wooden sign, its flat grass ground swapped pixel for pixel for the
+  shipped snow, so it stands on the snowfield.
+
 The summit:
 - dolomite_scree (the stand-in snow: grass encounters): pale dolomite chips
   with cushions of moss campion in flower.
@@ -56,12 +60,12 @@ import numpy as np
 from PIL import Image
 
 import kit
-from kit import Canvas, ascii_canvas, shipped
+from kit import Canvas, ascii_canvas, shipped, shipped_image
 
 TILESETS: dict[str, dict[str, Image.Image]] = {"vault": {}, "summit": {}}
 ORDER = {
     "vault": ["vault_floor", "vault_rime", "reading_desk", "vault_wall", "root_wall", "vault_ice", "seed_rack",
-              "vault_portal"],
+              "vault_portal", "sign_snow"],
     "summit": ["dolomite_scree", "cloud_sea", "dolomite_rock", "bristlecone_shrub"],
 }
 NAMES = {"vault": "The Seed Vault", "summit": "Methuselah Ridge"}
@@ -480,6 +484,30 @@ def portal_flank(mask):
     return cv
 
 
+def sign_snow():
+    """The shipped sign on the shipped snow: its ground is the flat grass
+    colour, which becomes the snow beneath it (the post's feet stay)."""
+    sign, snow = (np.asarray(shipped_image(k)) for k in ("sign", "snow"))
+    ground = (sign[..., :3] == np.array([152, 208, 96])).all(-1)
+    assert ground.sum() > 64, "the shipped sign no longer stands on flat grass"
+    out = sign.copy()
+    out[ground] = snow[ground]
+    # At most four colours per 8x8 quadrant, as the shipped sign keeps them:
+    # first the snow's minor shades fold into its main one, then (as tiles.py
+    # folds the sign) the wood's mid shadow folds into its outline.
+    shades, counts = np.unique(snow.reshape(-1, 4), axis=0, return_counts=True)
+    flat = shades[counts.argmax()]
+    wood_mid, wood_dark = np.array([136, 80, 48, 255]), np.array([72, 40, 24, 255])
+    for qy in (0, 8):
+        for qx in (0, 8):
+            q, g = out[qy:qy + 8, qx:qx + 8], ground[qy:qy + 8, qx:qx + 8]
+            if len(np.unique(q.reshape(-1, 4), axis=0)) > 4:
+                q[g] = flat
+            if len(np.unique(q.reshape(-1, 4), axis=0)) > 4:
+                q[(q == wood_mid).all(-1)] = wood_dark
+    return Image.fromarray(out)
+
+
 def vault_portal(mask):
     if mask in (7, 9):
         return portal_flank(mask)
@@ -714,6 +742,7 @@ def build():
             v[f"{key}@{m}"] = fn(m).image()
     # The portal: the shipped cliff (base = mask 15, and mask 11) until the
     # stair opens beside it; only the two flank masks are new pixels.
+    v["sign_snow"] = sign_snow()
     v["vault_portal"] = vault_portal(15).image()
     for m in (7, 9, 11):
         v[f"vault_portal@{m}"] = vault_portal(m).image()

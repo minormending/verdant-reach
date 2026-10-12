@@ -22,7 +22,7 @@ TILESETS: dict[str, tuple[str, list[str]]] = {
         "tree", "maple_tree", "tapped_maple", "hedge",
     ]),
     "town": ("Town and farm", [
-        "sign", "mailbox", "lamp_post", "barrel", "crate", "bench", "gate_open",
+        "sign", "sign_snow", "mailbox", "lamp_post", "barrel", "crate", "bench", "gate_open",
         "garden_plot", "crops", "scarecrow", "haybale",
         "fence", "stone_wall",
     ]),
