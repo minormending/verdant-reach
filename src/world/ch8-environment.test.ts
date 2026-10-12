@@ -32,7 +32,8 @@ function gameplay(id: MapId): string {
 // relay_seized musicWhen and the roof's MERCER uses his own sprite (both
 // intended); everything else is as frozen before the dressing pass.
 const GAMEPLAY: [MapId, string][] = [
-  ["glasshouse_relay", "a6b37710010ad3a50a6c8ed84db3146438c440e6b7e36199c095d8a1f110204a"],
+  // Re-pinned on fixes: the lobby WREN hides once she has left with MERCER (mercer_left).
+  ["glasshouse_relay", "287a90b64e69f9087b4c03ba985ba90b611df9ceb13bee36f6aca17dd77dc7b2"],
   ["relay_2f", "abda73cd3c68b755968e015be9f0a64af1b852ad0d652ddc01c243d36a986ce7"],
   ["relay_3f", "84916ca3f21575e72c5b57071aefc653a83d10f64cf6df9707527c5f7590918f"],
   ["relay_roof", "2d859404a557e8c4f9f54af55731507f5cad59ff30d0729a54f499417b75ff61"],
