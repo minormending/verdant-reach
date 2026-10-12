@@ -2,6 +2,8 @@
 
 **[▶ Play in your browser](https://minormending.github.io/verdant-reach/)**: keyboard, or touch on phones and tablets.
 
+**[Guidebook](https://minormending.github.io/verdant-reach/guide.html)**: the official strategy guide, with a walkthrough, every map, wild plant, item and trainer, and the full Field Herbarium, generated from the game's own data ([docs/GUIDE.md](docs/GUIDE.md)).
+
 ![Verdant Reach: battles, the Field Herbarium, story stills and the creature roster](docs/showcase/round3.png)
 
 A Game Boy Color–style monster collector in which every creature is a real
