@@ -105,7 +105,10 @@ export const scripts: Scripts = {
     say("QUICKENED. Lots. Don't go out there without a partner."),
     movePlayer("down"),
   ],
-  ff_lookout: [
+  ff_lookout: [ifFlags({ game_cleared: true }, [
+    say("Visitors on the lane now! Botanists come all this way to see where the FELLOW grew up."),
+    say("I tell them it's the soil. Nobody argues with soil."),
+  ], [
     ifFlags({ got_pods: true }, [
       ifFlags({ beat_hollis: true }, [
         say("A PRESSED MARK from HOLLIS! He doesn't hand those out for good manners."),
@@ -120,7 +123,7 @@ export const scripts: Scripts = {
         say("The tomatoes leaned in to listen. Not normal."),
       ]),
     ]),
-  ],
+  ])],
   ff_farmer: [
     say("This plot's lying fallow. A season off, so the soil gets its breath back."),
     ifNight(
@@ -128,7 +131,10 @@ export const scripts: Scripts = {
       [say("Clover goes in next. Its roots pull nitrogen out of thin air. Free fertiliser!")],
     ),
   ],
-  ff_elder: [
+  ff_elder: [ifFlags({ game_cleared: true }, [
+    say("The heart bloomed and the woods listened. Now they've plenty to say back."),
+    say("FENNIMORE's grandfather knew more of the old song than anyone. Wrote it down, they say."),
+  ], [
     ifFlags({ got_pods: true }, [
       say("FENNIMORE wrote to VALE? Then he's worried. He only writes when he's worried."),
     ], [
@@ -138,18 +144,24 @@ export const scripts: Scripts = {
       ),
       say("The old songs had it: the heart blooms and the woods listen."),
     ]),
-  ],
-  ff_kid: [
+  ])],
+  ff_kid: [ifFlags({ game_cleared: true }, [
+    say("Are you a FELLOW now? Does that mean you're the boss of all the plants?"),
+    say("Mum says no. The plants say no too."),
+  ], [
     ifFlags({ got_starter: true }, [
       say("Is that a QUICKENED? Can it do tricks? Can it do a backflip?"),
     ], [
       say("Mum says don't trample the flowers. Now the flowers say it too!"),
     ]),
-  ],
-  ff_miller: [
+  ])],
+  ff_miller: [ifFlags({ game_cleared: true }, [
+    say("The wind's back, the sails turn, and the loft grain's stopped sprouting. Thank goodness."),
+    say("Seeds can wait years for the right moment. Turns out my loft isn't it."),
+  ], [
     say("No wind all week, and the sails won't turn. Can't grind a thing."),
     say("Meanwhile the grain in the loft keeps sprouting. Every seed's in a hurry."),
-  ],
+  ])],
   ff_pip: [
     say("I'm PIP! I know a fact about every plant in FALLOWFIELD. Well, most."),
     say("Water lilies close up at dusk and open at dawn. Like going to bed!"),

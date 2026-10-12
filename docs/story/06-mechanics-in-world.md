@@ -39,7 +39,7 @@ white ball).
 | Strength | **Uproot** | Roots really can split rock |
 | Surf | **Raft** | Ride a giant lily pad |
 | Fly | **Seed Glide** | The Javan cucumber's gliding seed |
-| Flash | **Glow** | Uses the **Foxfire Lantern** key item: a jar of glowing fungus. Fungi are scenery, not creatures (decision Q7). |
+| Flash | **Glow** | Uses the **Foxfire Jar** key item (`foxfire_lantern`): a jar of glowing fungus. Fungi are scenery, not creatures (decision Q7). |
 | Whirlpool / Waterfall | **Root Bridge** | Living root bridges are a real thing |
 
 ## Move flavour (examples)

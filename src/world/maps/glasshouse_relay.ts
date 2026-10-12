@@ -57,7 +57,8 @@ export const glasshouse_relay: MapDef = {
       visibleWhen: when({ ch8_started: true, beat_wren: false }) },
     // The open day (docs/CH4_IDS.md): the director, WREN and FLORA wait by the desk.
     { id: "relay_director", sprite: "researcher", x: 5, y: 4, facing: "right", movement: "static", script: "ch4_director", visibleWhen: when({ ch8_takeover: false }) },
-    { id: "wren", sprite: "wren", x: 11, y: 4, facing: "left", movement: "static", script: "q_relay_sensors", visibleWhen: when({ ch8_takeover: false }) },
+    // WREN leaves with MERCER from the roof in Chapter 8 (mercer_left) and doesn't come back.
+    { id: "wren", sprite: "wren", x: 11, y: 4, facing: "left", movement: "static", script: "q_relay_sensors", visibleWhen: when({ ch8_takeover: false, mercer_left: false }) },
     { id: "flora", sprite: "flora_vance", x: 13, y: 3, facing: "left", movement: "static", script: "ch4_flora_relay",
       visibleWhen: when({ relay_listened: false, ch8_takeover: false }) },
     { id: "listener", sprite: "researcher", x: 2, y: 2, facing: "up", movement: "static", script: "rl_listener", visibleWhen: when({ ch8_takeover: false }) },

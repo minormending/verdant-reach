@@ -27,7 +27,7 @@ npm run typecheck           # strict tsc
 npm test                    # vitest, about 1560 tests: data, world validation, puzzles, balance, art bundles
 npm run build               # typecheck + production bundle (relative base, for GitHub Pages)
 npx playwright install chromium # first use: install the e2e browser
-npm run e2e                 # headless full playthrough, 229 beats, speed 8, seed 1, daytime
+npm run e2e                 # headless full playthrough, 216 beats, speed 8, seed 1, daytime
 npm run e2e -- --seed 42    # replay another RNG seed (unsigned 32-bit integer)
 npm run art:index           # REQUIRED after adding, removing or renaming any file under public/art/
 
@@ -60,7 +60,7 @@ leave `git status` clean (the generators are deterministic).
 | Art runtime (resolves logical asset paths to bundles), the Art Lab | `src/art/` |
 | **All art, as swappable bundles** | `public/art/` (format: **docs/ART.md**) |
 | Art generators and tools (Python) | `tools/art/` |
-| Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 229 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
+| Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 216 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
 
 The e2e runner fixes time to day and defaults to `--seed 1`. It prints the seed
 and records it in the report; use `--seed N` to reproduce another run. Dev URLs

@@ -35,10 +35,7 @@ it.each([1, 42])("plays all 18 Chapter 11 milestones with a real loss and eight 
   vi.stubGlobal("document", { getElementById: canvas, createElement: canvas });
   const { createInput, createSceneStack } = await import("../src/engine/core");
   const { createGameContext } = await import("../src/engine/context");
-  const { createTitleScene } = await import("../src/ui/title");
-  // Preload Continue's dynamic module before advancing a synthetic clock;
-  // module IO must not race the driver's wall-clock deadline.
-  await import("../src/overworld");
+  const { createOverworldScene } = await import("../src/overworld");
   const { createQuickened } = await import("../src/battle");
   const { randomStream } = await import("../src/engine/random");
   const input = createInput(() => {}), scenes = createSceneStack();
@@ -49,7 +46,8 @@ it.each([1, 42])("plays all 18 Chapter 11 milestones with a real loss and eight 
     loadAll: async () => {}, exists: () => false,
     image: (path: string) => (path.startsWith("assets/stills/") ? still : null),
   } });
-  // A saved Chapter 10 fixture supplies only the earlier chapter's state.
+  // A Chapter 10 fixture supplies only the earlier chapter's state; the game
+  // plays straight on from ROWAN's call in the Arboretum.
   // Every Council flag and ending milestone must be earned by the driver.
   ctx.state.flags = { ch10_done: true, ch10_arrived: true, got_starter: true };
   ctx.state.position = { map: "council_arboretum", x: 15, y: 15, facing: "up" };
@@ -60,9 +58,7 @@ it.each([1, 42])("plays all 18 Chapter 11 milestones with a real loss and eight 
   ];
   ctx.state.bag.spring_water = 3; // the deliberate loss must decline available medicine
   ctx.state.options.textSpeed = "fast";
-  ctx.save.write();
-  expect(ctx.save.read()?.flags.ch10_done).toBe(true);
-  scenes.push(createTitleScene(ctx));
+  scenes.push(createOverworldScene(ctx, { mode: "continue" }));
   const field = () => scenes.all()[0] as unknown as { player: { facing: string } };
   Object.assign(window, { __vr: { ctx, scenes }, __t: {
     hold: async () => {}, step: async () => {}, info: () => ({ f: field().player.facing }),
@@ -78,7 +74,7 @@ it.each([1, 42])("plays all 18 Chapter 11 milestones with a real loss and eight 
     e2e.report.frame.samples++;
   }, 16);
   try {
-    // Let the title's fade finish before pressing START, like the full suite.
+    // Let the overworld fade in and its onEnter settle first.
     await vi.advanceTimersByTimeAsync(1000);
     const task = e2e.chapter11();
     await vi.advanceTimersByTimeAsync(600_000);

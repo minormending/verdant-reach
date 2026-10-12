@@ -130,6 +130,39 @@ describe("roaming overworld wiring", () => {
     expect(resumed.npcs.some((n) => n.id === "burr")).toBe(false);
     expect(ctx.state.burrHitch).toBeUndefined();
   });
+  it("keeps a won roll when the arrival tile is the exit warp, and BURR hops on behind a few steps in", () => {
+    const ctx = context(), scene = sceneFor(ctx);
+    const r11 = ctx.world.maps.route_11;
+    Object.assign(r11, { tiles: ["......", "......", "......"], legend: { ".": "grass" }, encounters: undefined,
+      warps: [{ x: 0, y: 1, to: "route_10", toX: 1, toY: 1, facing: "right" }] });
+    scene.loadMap("route_11", 1, 1, "right");
+    expect(scene.npcs.some((n) => n.id === "burr")).toBe(false);
+    expect(ctx.state.burrHitch).toBeUndefined();
+    ctx.rng = vi.fn(() => 0.999); // no second roll: the entry's roll stands
+    const step = (x: number) => { scene.player.x = x; scene.player.facing = "right"; scene.onArrive(); };
+    step(2); step(3);
+    expect(scene.npcs.some((n) => n.id === "burr")).toBe(false);
+    step(4);
+    expect(scene.npcs.find((n) => n.id === "burr")).toMatchObject({ sprite: "burr_hitch", x: 3, y: 1 });
+    expect(ctx.state.burrHitch).toEqual({ map: "route_11", x: 3, y: 1, facing: "right" });
+    step(5);
+    expect(scene.npcs.filter((n) => n.id === "burr")).toHaveLength(1);
+  });
+  it("forgets a pending hitch on leaving the route, and never rolls one on a lost entry roll", () => {
+    const ctx = context(), scene = sceneFor(ctx);
+    const r11 = ctx.world.maps.route_11;
+    Object.assign(r11, { tiles: ["......", "......", "......"], legend: { ".": "grass" }, encounters: undefined,
+      warps: [{ x: 0, y: 1, to: "route_10", toX: 1, toY: 1, facing: "right" }] });
+    scene.loadMap("route_11", 1, 1, "right");
+    scene.loadMap("player_home", 2, 2, "up");
+    scene.loadMap("route_11", 1, 1, "right"); // rng 0 again: a fresh pending roll
+    ctx.rng = vi.fn(() => 0.999);
+    scene.loadMap("player_home", 2, 2, "up");
+    scene.loadMap("route_11", 1, 1, "right"); // this entry's roll is lost
+    for (const x of [2, 3, 4, 5]) { scene.player.x = x; scene.player.facing = "right"; scene.onArrive(); }
+    expect(scene.npcs.some((n) => n.id === "burr")).toBe(false);
+    expect(ctx.state.burrHitch).toBeUndefined();
+  });
   it("does not put BURR on an authored visible NPC or on a solid tile", () => {
     const ctx = context(), scene = sceneFor(ctx);
     ctx.world.maps.route_10.npcs.push({ id: "occupant", sprite: "hiker", x: 2, y: 3, facing: "up" });

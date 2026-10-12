@@ -9,8 +9,9 @@
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
 // grunt, rival 3 and the shears, the NURSERY (boarding two, a seed, sprouting),
 // WREN's posts, PRUNE on ROUTE 5, FLORA and the chapter end. `check:fanmail`
-// delivers FAN MAIL before the end card, or from a post-chapter jump-in.
-// Chapter 5 continues from that save, crosses ROUTE 6, visits the BURNT STAND
+// delivers FAN MAIL before the chapter end, or from a post-chapter jump-in.
+// Every chapter plays straight on into the next (no title round-trip).
+// Chapter 5 crosses ROUTE 6, visits the BURNT STAND
 // and THE HOLLOW, completes both quests and beats MORROW in the dark garden.
 // Chapter 6 crosses the ford and sea, pushes SAGUARO's boulders, restores the
 // Lantern Tree, completes both coastal quests and beats REYES in the pools.
@@ -22,7 +23,7 @@
 // a caught living stone, fills ROOK's pits and returns for ROOT BRIDGE.
 // Chapter 10 bridges ROUTE 12's three gorges, fills its pits, joins BRAM,
 // listens through the shifting Grove, defeats the admins and MERCER, plants
-// the Centuryheart Seed and challenges the repeatable Elder before the card.
+// the Centuryheart Seed and challenges the repeatable Elder before ROWAN's call.
 // Chapter 11 loses midway through the Council to prove the run resets, then
 // defeats all four seats and ROWAN, skips the credits and wakes at home.
 // Post-game earns the Centuryheart, releases and meets Wanderers, explores
@@ -1222,16 +1223,16 @@ async function chapter4(_opts: { boost: number; starter: "oak" | "chili" | "lily
     await expectFlag("FLORA VANCE: rose mark", "beat_flora", `marks=${JSON.stringify(st().marks ?? "")}`);
   }
 
-  // Leaving the CONSERVATORY with the mark: VALE's call, the save offer, the end card.
+  // Leaving the CONSERVATORY with the mark: VALE's call, then on into Chapter 5.
   await nav("glasshouse_conservatory");
   const o = ow()!;
   const exit = o.map.def.warps.find((w) => w.to === "glasshouse_city");
   if (!exit) { beat("chapter end", false, "no conservatory exit"); return; }
-  await untilEndCard(async () => {
+  await untilChapterEnd(async () => {
     await walkToQuiet(exit.x, exit.y - 1);
     await goto(exit.x, exit.y, false);
     await T().hold(KEY.down, 250);
-  });
+  }, "ch4_done", "Chapter 4");
   beat("chapter 4 done", flag("ch4_done"));
 }
 
@@ -1240,23 +1241,6 @@ async function chapter4(_opts: { boost: number; starter: "oak" | "chili" | "lily
 // ---------------------------------------------------------------------------
 
 async function chapter5() {
-  // The Chapter 4 end card saves before returning to the title. Restore that
-  // save through START, CONTINUE and its summary, just as check:continue does.
-  const saved = ctx().save.read();
-  if (!saved?.flags["ch4_done"]) {
-    beat("CONTINUE after Chapter 4", false, "no Chapter 4 save");
-    return;
-  }
-  await press("start");
-  await sleep(700);
-  await press("a");
-  await sleep(700);
-  await press("a");
-  const continued = await waitFor(() => !!ow(), 15000);
-  await sleep(1500);
-  if (!continued) { beat("CONTINUE after Chapter 4", false, "no overworld"); return; }
-  await settle();
-  beat("CONTINUE after Chapter 4", flag("ch4_done") && ow()?.mapId === saved.position.map);
   ctx().state.options.textSpeed = "fast";
   const st = () => ctx().state;
   const bag = (item: ItemId) => st().bag[item] ?? 0;
@@ -1340,11 +1324,11 @@ async function chapter5() {
 
   const exit = ow()?.map.def.warps.find((w) => w.to === "cedarhallow");
   if (!exit) { beat("chapter 5 done: GLIDER SEED", false, "no conservatory exit"); return; }
-  await untilEndCard(async () => {
+  await untilChapterEnd(async () => {
     await walkToQuiet(exit.x, exit.y - 1);
     await goto(exit.x, exit.y, false);
     await T().hold(KEY.down, 250);
-  }, "Chapter 5");
+  }, "ch5_done", "Chapter 5");
   beat("chapter 5 done: GLIDER SEED", flag("ch5_done") && flag("slice_done") && bag("glider_seed") === 1);
 }
 
@@ -1353,21 +1337,6 @@ async function chapter5() {
 // ---------------------------------------------------------------------------
 
 async function chapter6() {
-  const saved = ctx().save.read();
-  if (!saved?.flags["ch5_done"]) {
-    beat("CONTINUE after Chapter 5", false, "no Chapter 5 save");
-    return;
-  }
-  await press("start");
-  await sleep(700);
-  await press("a");
-  await sleep(700);
-  await press("a");
-  const continued = await waitFor(() => !!ow(), 15000);
-  await sleep(1500);
-  if (!continued) { beat("CONTINUE after Chapter 5", false, "no overworld"); return; }
-  await settle();
-  beat("CONTINUE after Chapter 5", flag("ch5_done") && ow()?.mapId === saved.position.map);
   ctx().state.options.textSpeed = "fast";
   const st = () => ctx().state;
   const bag = (item: ItemId) => st().bag[item] ?? 0;
@@ -1455,7 +1424,7 @@ async function chapter6() {
   beat("the Lantern Tree: fireflies return", flag("lantern_healed") && bag("cactus_sap") === 0
     && report.texts.slice(healing).some((t) => /fireflies come back/i.test(t.text)));
   // Complete the market trade before REYES: the next harbour entry after her
-  // battle immediately runs Vale's call and the Chapter 6 end card.
+  // battle immediately runs Vale's call and the Chapter 6 end.
   await nav("saltmarsh_market");
   await talkTo("trader");
   beat("HAND POLLINATOR: POLLY grows into VANILLA", flag("quest_hand_pollinator_done")
@@ -1474,11 +1443,11 @@ async function chapter6() {
 
   const exit = ow()?.map.def.warps.find((w) => w.to === "saltmarsh_harbour");
   if (!exit) { beat("chapter 6 done", false, "no conservatory exit"); return; }
-  await untilEndCard(async () => {
+  await untilChapterEnd(async () => {
     await walkToQuiet(exit.x, exit.y - 1);
     await goto(exit.x, exit.y, false);
     await T().hold(KEY.down, 250);
-  }, "Chapter 6");
+  }, "ch6_done", "Chapter 6");
   beat("chapter 6 done", flag("ch6_done") && flag("slice_done"));
 }
 
@@ -1487,21 +1456,6 @@ async function chapter6() {
 // ---------------------------------------------------------------------------
 
 async function chapter7() {
-  const saved = ctx().save.read();
-  if (!saved?.flags["ch6_done"]) {
-    beat("CONTINUE after Chapter 6", false, "no Chapter 6 save");
-    return;
-  }
-  await press("start");
-  await sleep(700);
-  await press("a");
-  await sleep(700);
-  await press("a");
-  const continued = await waitFor(() => !!ow(), 15000);
-  await sleep(1500);
-  if (!continued) { beat("CONTINUE after Chapter 6", false, "no overworld"); return; }
-  await settle();
-  beat("CONTINUE after Chapter 6", flag("ch6_done") && ow()?.mapId === saved.position.map);
   ctx().state.options.textSpeed = "fast";
   const st = () => ctx().state;
   const bag = (item: ItemId) => st().bag[item] ?? 0;
@@ -1606,13 +1560,12 @@ async function chapter7() {
 
   const exit = ow()?.map.def.warps.find((w) => w.to === "larchmere");
   if (!exit) { beat("chapter 7 done", false, "no conservatory exit"); return; }
-  await untilEndCard(async () => {
+  await untilChapterEnd(async () => {
     await walkToQuiet(exit.x, exit.y - 1);
     await goto(exit.x, exit.y, false);
     await T().hold(KEY.down, 250);
-  }, "Chapter 7");
-  beat("chapter 7 done: VALE's confession and the silent RELAY", flag("ch7_done") && flag("slice_done")
-    && ctx().save.read()?.flags["ch7_done"] === true);
+  }, "ch7_done", "Chapter 7");
+  beat("chapter 7 done: VALE's confession and the silent RELAY", flag("ch7_done") && flag("slice_done"));
 }
 
 // ---------------------------------------------------------------------------
@@ -1620,21 +1573,6 @@ async function chapter7() {
 // ---------------------------------------------------------------------------
 
 async function chapter8() {
-  const saved = ctx().save.read();
-  if (!saved?.flags["ch7_done"]) {
-    beat("CONTINUE after Chapter 7", false, "no Chapter 7 save");
-    return;
-  }
-  await press("start");
-  await sleep(700);
-  await press("a");
-  await sleep(700);
-  await press("a");
-  const continued = await waitFor(() => !!ow(), 15000);
-  await sleep(1500);
-  if (!continued) { beat("CONTINUE after Chapter 7", false, "no overworld"); return; }
-  await settle();
-  beat("CONTINUE after Chapter 7", flag("ch7_done") && ow()?.mapId === saved.position.map);
   ctx().state.options.textSpeed = "fast";
   const st = () => ctx().state;
   const bag = (item: ItemId) => st().bag[item] ?? 0;
@@ -1712,17 +1650,16 @@ async function chapter8() {
   const money = st().money, rain = bag("rain_jar");
   const exit = ow()?.map.def.warps.find((w) => w.to === "glasshouse_relay");
   if (!exit) { beat("chapter 8 done", false, "no SERVER HALL exit"); return; }
-  // Lobby onEnter awards the reward and immediately calls ch8_end. Avoid
-  // nav/settle here: they would mash past the card while waiting for idle.
-  await untilEndCard(async () => {
+  // Lobby onEnter awards the reward and immediately calls ch8_end; check the
+  // reward before reading VALE's call through.
+  await untilChapterEnd(async () => {
     await walkToQuiet(exit.x, exit.y - 1);
     await goto(exit.x, exit.y, false);
     await advance(400, () => flag("relay_reward"));
     beat("ROOT RELAY: ODELL's thanks and reward", flag("relay_reward")
       && st().money === money + 3000 && bag("rain_jar") === rain + 2);
-  }, "Chapter 8");
-  beat("chapter 8 done: VALE's call to SANGUINE RIDGE", flag("ch8_done") && flag("slice_done")
-    && ctx().save.read()?.flags["ch8_done"] === true);
+  }, "ch8_done", "Chapter 8");
+  beat("chapter 8 done: VALE's call to SANGUINE RIDGE", flag("ch8_done") && flag("slice_done"));
 }
 
 // ---------------------------------------------------------------------------
@@ -1761,21 +1698,6 @@ export async function bridgeRoute11Gap(): Promise<boolean> {
 }
 
 async function chapter9() {
-  const saved = ctx().save.read();
-  if (!saved?.flags["ch8_done"]) {
-    beat("CONTINUE after Chapter 8", false, "base playthrough did not reach the Chapter 8 save/card");
-    return;
-  }
-  await press("start");
-  await sleep(700);
-  await press("a");
-  await sleep(700);
-  await press("a");
-  const continued = await waitFor(() => !!ow(), 15000);
-  await sleep(1500);
-  if (!continued) { beat("CONTINUE after Chapter 8", false, "no overworld"); return; }
-  await settle();
-  beat("CONTINUE after Chapter 8", flag("ch8_done") && ow()?.mapId === saved.position.map);
   ctx().state.options.textSpeed = "fast";
   const st = () => ctx().state;
   const bag = (item: ItemId) => st().bag[item] ?? 0;
@@ -1843,26 +1765,13 @@ async function chapter9() {
 
   const exit = ow()?.map.def.warps.find((w) => w.to === "sanguine_ridge");
   if (!exit) { beat("chapter 9 done", false, "no conservatory exit"); return; }
-  await untilEndCard(async () => {
+  await untilChapterEnd(async () => {
     await walkToQuiet(exit.x, exit.y - 1);
     await goto(exit.x, exit.y, false);
     await T().hold(KEY.down, 250);
-  }, "Chapter 9");
-  beat("chapter 9 done: VALE's call to the COUNCIL ARBORETUM", flag("ch9_done") && flag("slice_done")
-    && ctx().save.read()?.flags["ch9_done"] === true);
+  }, "ch9_done", "Chapter 9");
+  beat("chapter 9 done: VALE's call to the COUNCIL ARBORETUM", flag("ch9_done") && flag("slice_done"));
 
-  // Leaving ROOK fires ch9_end immediately. Continue its real save before
-  // returning to the canyon; there is no flag bypass to postpone the card.
-  await press("start");
-  await sleep(700);
-  await press("a");
-  await sleep(700);
-  await press("a");
-  const resumed = await waitFor(() => !!ow(), 15000);
-  await sleep(1500);
-  if (!resumed) { beat("CONTINUE after Chapter 9", false, "no overworld"); return; }
-  await settle();
-  beat("CONTINUE after Chapter 9", flag("ch9_done") && bag("fig_root") === 1 && ow()?.mapId === "sanguine_ridge");
   await nav("route_11");
   beat("ROOT BRIDGE: span ROUTE 11's gap", await bridgeRoute11Gap());
   const hiddenRain = bag("rain_jar");
@@ -2098,11 +2007,9 @@ export async function chapter10() {
   await nav("elder_grove_2");
   if (!(await solveGroveLanes(false))) issue("grove-return", "could not listen back through ring 2");
   await nav("elder_grove_1");
-  // Arboretum onEnter fires ch10_end immediately; don't let nav/settle
-  // mash through the card while waiting for an idle overworld.
-  await untilEndCard(async () => { await goto(15, 29, false); }, "Chapter 10");
-  beat("chapter 10 done: ROWAN reopens the Council", flag("ch10_done") && flag("slice_done")
-    && ctx().save.read()?.flags["ch10_done"] === true);
+  // Arboretum onEnter fires ch10_end immediately: ROWAN opens the COUNCIL.
+  await untilChapterEnd(async () => { await goto(15, 29, false); }, "ch10_done", "Chapter 10");
+  beat("chapter 10 done: ROWAN reopens the Council", flag("ch10_done") && flag("slice_done"));
 }
 
 // ---------------------------------------------------------------------------
@@ -2110,21 +2017,10 @@ export async function chapter10() {
 // ---------------------------------------------------------------------------
 
 export async function chapter11() {
-  const saved = ctx().save.read();
-  if (!saved?.flags.ch10_done) {
-    beat("CONTINUE after Chapter 10", false, "no Chapter 10 save");
-    return;
-  }
-  await press("start");
-  await sleep(700);
-  await press("a");
-  await sleep(700);
-  await press("a");
-  const continued = await waitFor(() => !!ow(), 15000);
-  await sleep(1500);
-  if (!continued) { beat("CONTINUE after Chapter 10", false, "no overworld"); return; }
+  // Chapter 10 plays straight on: ROWAN's doors, not the title screen.
   await settle();
-  beat("CONTINUE after Chapter 10", flag("ch10_done") && ow()?.mapId === saved.position.map);
+  beat("Chapter 11 picks up in the ARBORETUM", flag("ch10_done") && ow()?.mapId === "council_arboretum");
+  if (!ow()) return;
   ctx().state.options.textSpeed = "fast";
 
   // Compress party training when the story helper is enabled, as earlier
@@ -2634,32 +2530,16 @@ function counter(line: string) {
   return ({ oak: "chili", chili: "lily", lily: "oak" } as Record<string, string>)[line] ?? "chili";
 }
 
-/** Start the chapter-end chain, then mash through the save offer to the
- *  TO BE CONTINUED card and the title screen. */
-async function untilEndCard(start: () => Promise<void>, chapter?: string) {
+/** Start the chapter-end chain and read VALE's call through. The game is one
+ *  continuous story: the chapter flag is set, the map's own music comes back
+ *  and play goes on in the overworld, with no end card and no title. */
+async function untilChapterEnd(start: () => Promise<void>, done: string, chapter: string) {
   await start();
-  // Mash until the end card is up (it plays "slice_end" over the overworld),
-  // snapshot it, then press through to the title.
-  let sawCard = false;
-  for (let i = 0; i < 600; i++) {
-    await sleep(140);
-    if (!sawCard && ctx().audio.current() === "slice_end") {
-      sawCard = true;
-      await sleep(4000); // fade in from white, then the title types itself out
-      beat(chapter ? `${chapter}: TO BE CONTINUED card` : "TO BE CONTINUED card", flag("slice_done"));
-      await sleep(1500); // the card ignores input for its first 4 s
-    }
-    if (sawCard) {
-      if (!ow() && stack().length === 1) break; // title is up
-      await press("a");
-      await sleep(1500);
-      continue;
-    }
-    hookScenes();
-    await press(pendingNo ? "b" : "a");
-  }
-  await sleep(2000);
-  beat(chapter ? `${chapter}: back at the title` : "back at the title", !ow() && stack().length >= 1);
+  await advance(600, () => flag(done) && idle());
+  const o = ow() as (Ow & { musicFor(def: unknown): string }) | null;
+  const music = o ? o.musicFor(o.map.def) : null;
+  beat(`${chapter}: plays straight on, no title screen`, flag(done) && !!o && ctx().audio.current() === music,
+    `map=${o?.mapId ?? "none"} music=${ctx().audio.current()} expected=${music}`);
 }
 
 // ---------------------------------------------------------------------------

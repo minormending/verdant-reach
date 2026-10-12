@@ -82,7 +82,7 @@ export const scripts: Scripts = {
     ], [
       say("Here for FLORA? She's on the stage, at the heart of the roses."),
       say("The levers swing the trellis gates. One lever never does the whole job."),
-      say("Her QUICKENED are BLOOM types. Lovely, and vicious. Bring fire."),
+      say("Her QUICKENED are BLOOM types. Lovely, and vicious. Bring FROST, BUG or THORN."),
     ]),
   ],
   rgc_gate: [

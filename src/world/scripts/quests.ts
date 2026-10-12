@@ -383,7 +383,7 @@ const relaySensors: ScriptCmd[] = [
       fresh: [
         say("That pulse! I haven't slept. I don't think I want to.", "WREN"),
         say("Three of our listening posts went quiet right after it.", "WREN"),
-        say("One on ROUTE 4 by the river. One in the city square.", "WREN"),
+        say("One on ROUTE 4, up on the rise by the city. One in the city square.", "WREN"),
         say("And one in the PALM HOUSE, in all that steam.", "WREN"),
         say("Could you check them? Face a post and press A. It reads itself.", "WREN"),
         say("I'd go, but DR. ODELL has me rewriting the logs. Again.", "WREN"),
@@ -391,7 +391,7 @@ const relaySensors: ScriptCmd[] = [
       ],
       going: [
         ifFlags(allSensors, relaySensorsReward, [
-          say("ROUTE 4's river, the city square and the PALM HOUSE.", "WREN"),
+          say("ROUTE 4's rise, the city square and the PALM HOUSE.", "WREN"),
           say("Read all three posts, then come back. I'll put the kettle on.", "WREN"),
         ]),
       ],
@@ -588,7 +588,7 @@ const shrineOfferingsCheck: ScriptCmd[] = [
     completeQuest("shrine_offerings"),
     say("Old trees remember who's gentle with them. So do old women.", "KEEPER"),
   ], [
-    say("Three shrines, back in the dark rooms. Your FOXFIRE will show the way.", "KEEPER"),
+    say("Three shrines, back in the dark rooms. Your FOXFIRE JAR will show the way.", "KEEPER"),
     say("Come back once you've sat with all three.", "KEEPER"),
   ]),
 ];
@@ -597,7 +597,7 @@ const shrineOfferings: ScriptCmd[] = [
     byQuest("shrine_offerings", {
       fresh: [
         say("There are three little shrines in the dark rooms past this hall.", "KEEPER"),
-        say("Take your FOXFIRE to each one, and sit with it a while.", "KEEPER"),
+        say("Take your FOXFIRE JAR to each one, and sit with it a while.", "KEEPER"),
         say("My knees won't manage those steps any more. I'd be grateful.", "KEEPER"),
         startQuest("shrine_offerings"),
         ...shrineOfferingsCheck,
@@ -605,7 +605,7 @@ const shrineOfferings: ScriptCmd[] = [
       going: shrineOfferingsCheck,
       finished: [
         say("The shrines are tended. I can hear the tree settle at night.", "KEEPER"),
-        say("Keep your FOXFIRE close. The old roads run further than you'd think.", "KEEPER"),
+        say("Keep your FOXFIRE JAR close. The old roads run further than you'd think.", "KEEPER"),
       ],
     }),
   ], [
@@ -616,7 +616,7 @@ const SHRINE_CARVINGS = ["a pine cone, its scales spread open", "a fern, still c
 const shrineOffering = (n: number): ScriptCmd[] => [
   ifFlags({ got_lantern: true, quest_shrine_offerings_started: true }, [
     ifFlags({ [`shrine_${n}_offered`]: false }, [
-      say(`The FOXFIRE lights a carved post. Its carving: ${SHRINE_CARVINGS[n - 1]}.`),
+      say(`The FOXFIRE JAR lights a carved post. Its carving: ${SHRINE_CARVINGS[n - 1]}.`),
       wait(20),
       say("<PLAYER> sits quietly by the shrine for a while."),
       { op: "sfx", id: "pulse" },

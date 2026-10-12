@@ -1,13 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Dir, GameState, WandererId } from "../contracts";
+import type { Dir, GameState, MapId, WandererId } from "../contracts";
 import { DATA } from "../data";
 import { seeded } from "../battle/logic/rng";
 import { newGameState } from "../save";
 import { WORLD } from "../world";
-import { buildMap, refreshLegend, warpAt } from "./map";
+import { fieldMoveFlag, fieldMoveOf } from "./fieldmove";
+import { buildMap, DIRS, filledPitFlag, isWalkable, refreshLegend, warpAt } from "./map";
+import { tryRaftMove } from "./raft";
 import { rollEncounter } from "./encounters";
 import {
-  burrPlacement, burrTileSafe, finishWandererBattle, meetingRoamer, moveRoamers, recoverWanderers,
+  BURR_CATCH_UP_STEPS, burrCatchUp, burrPlacement, burrRoll, burrTileSafe, finishWandererBattle, meetingRoamer, moveRoamers, recoverWanderers,
   ROAMER_MAPS, wandererFlees, wandererFree, wandererHealth, wandererMaxHp, WANDERERS,
 } from "./roaming";
 
@@ -192,5 +194,101 @@ describe("BURR hitch placement", () => {
       const state = finishWandererBattle(free(), id, { hp: 0, status: null }, outcome, day);
       expect(burrPlacement(state, map(), { x: 2, y: 2, facing: "up" }, () => false, () => 0)).toBeNull();
     }
+  });
+});
+
+describe("BURR on every route entry", () => {
+  // Post-game flags: every chapter done, the Wanderers released.
+  const cleared = (): GameState => {
+    const state = free();
+    for (let n = 4; n <= 10; n++) state.flags[`ch${n}_done`] = true;
+    return state;
+  };
+  const routes = Object.values(WORLD.maps).filter((m) => m.outdoor && /^route_\d+$/.test(m.id));
+  const entries = Object.values(WORLD.maps).flatMap((from) => from.warps
+    .filter((w) => routes.some((r) => r.id === w.to))
+    .map((w) => ({ from: from.id, to: w.to, x: w.toX, y: w.toY, facing: (w.facing ?? "down") as Dir })));
+
+  /** The route as a post-game player finds it: every bramble pruned, gap bridged and pit filled. */
+  function opened(state: GameState, to: MapId) {
+    const runtime = buildMap(WORLD.maps[to]);
+    refreshLegend(runtime, state.flags);
+    for (const c of runtime.fieldCells ?? []) {
+      const ch = Array.from(runtime.def.tiles[c.y])[c.x];
+      const move = fieldMoveOf(runtime.legendOverride?.[ch] ?? runtime.def.legend[ch]);
+      if (move) state.flags[fieldMoveFlag(move, to, c.x, c.y)] = true;
+    }
+    for (const c of runtime.pitCells ?? []) state.flags[filledPitFlag(to, c.x, c.y)] = true;
+    refreshLegend(runtime, state.flags);
+    return runtime;
+  }
+
+  /** Walk up to BURR_CATCH_UP_STEPS steps (raft allowed, warps avoided) and look for a catch-up tile. */
+  function catchUpSpot(state: GameState, to: MapId, start: { x: number; y: number; facing: Dir }, follower: boolean) {
+    const runtime = opened(state, to);
+    const npcs = new Set(WORLD.maps[to].npcs.map((n) => `${n.x},${n.y}`));
+    const blocked = (x: number, y: number) => npcs.has(`${x},${y}`);
+    const startRafting = !isWalkable(runtime, start.x, start.y);
+    const seen = new Set<string>();
+    let frontier = [{ ...start, rafting: startRafting, steps: 0 }];
+    while (frontier.length) {
+      const next: typeof frontier = [];
+      for (const s of frontier) for (const dir of Object.keys(DIRS) as Dir[]) {
+        const move = tryRaftMove(runtime, s.x, s.y, dir, s.rafting, true, blocked);
+        if (move.kind === "blocked" || warpAt(runtime, move.x, move.y)) continue;
+        const steps = Math.min(BURR_CATCH_UP_STEPS, s.steps + 1);
+        const at = { x: move.x, y: move.y, facing: dir };
+        if (steps >= BURR_CATCH_UP_STEPS) {
+          const { dx, dy } = DIRS[dir];
+          // A walking follower fills the tile just behind; BURR may then land one further back.
+          const occupied = (x: number, y: number) => blocked(x, y) || (follower && x === at.x - dx && y === at.y - dy);
+          const burr = burrCatchUp(state, runtime, steps, at, occupied);
+          if (burr) return burr;
+        }
+        const k = `${move.x},${move.y},${dir},${steps},${move.rafting}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        next.push({ ...at, rafting: move.rafting, steps });
+      }
+      frontier = next;
+    }
+    return null;
+  }
+
+  it("covers every outdoor route", () => {
+    expect(routes.length).toBeGreaterThanOrEqual(12);
+    for (const r of routes) expect(entries.some((e) => e.to === r.id), r.id).toBe(true);
+  });
+  it.each(entries.map((e) => [`${e.from} -> ${e.to} (${e.x},${e.y})`, e] as const))(
+    "can place BURR behind the player after arriving %s", (_, entry) => {
+      const state = cleared();
+      const runtime = opened(state, entry.to);
+      // The 1/8 roll is kept even when the arrival tile behind is the exit warp.
+      expect(burrRoll(state, runtime, () => 0)).toBe(true);
+      const now = burrPlacement(state, runtime, entry, () => false, () => 0);
+      if (now) expect(burrTileSafe(runtime, now.x, now.y)).toBe(true);
+      for (const follower of [false, true]) {
+        const later = catchUpSpot(state, entry.to, entry, follower);
+        expect(later, `follower: ${follower}`).not.toBeNull();
+        expect(burrTileSafe(runtime, later!.x, later!.y)).toBe(true);
+      }
+    });
+  it("waits for the catch-up steps and for BURR to be free", () => {
+    const state = cleared(), runtime = map();
+    const at = { x: 2, y: 1, facing: "up" as const };
+    expect(burrCatchUp(state, runtime, BURR_CATCH_UP_STEPS - 1, at, () => false)).toBeNull();
+    expect(burrCatchUp(state, runtime, BURR_CATCH_UP_STEPS, at, () => false)).toMatchObject({ id: "burr", x: 2, y: 2 });
+    // A follower on the tile just behind: BURR lands one further back.
+    expect(burrCatchUp(state, runtime, BURR_CATCH_UP_STEPS, at, (x, y) => x === 2 && y === 2)).toMatchObject({ x: 2, y: 3 });
+    state.flags.wanderer_caught_burr = true;
+    expect(burrCatchUp(state, runtime, BURR_CATCH_UP_STEPS, at, () => false)).toBeNull();
+  });
+  it("only rolls on a free outdoor route, at 1/8", () => {
+    const state = cleared(), runtime = buildMap(WORLD.maps.route_1);
+    expect(burrRoll(state, runtime, () => 0.124999)).toBe(true);
+    expect(burrRoll(state, runtime, () => 0.125)).toBe(false);
+    const town = buildMap(WORLD.maps.fallowfield), rng = vi.fn(() => 0);
+    expect(burrRoll(state, town, rng)).toBe(false);
+    expect(rng).not.toHaveBeenCalled();
   });
 });

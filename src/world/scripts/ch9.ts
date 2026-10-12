@@ -113,8 +113,6 @@ export const ch9Scripts: Scripts = {
       say("Whatever happens, <PLAYER>... Bring the seed.", "VALE"),
       flag("ch9_done"),
       flag("slice_done"),
-      wait(60),
-      { op: "endSlice" },
     ]),
   ],
   ch9_gh_visitor: [

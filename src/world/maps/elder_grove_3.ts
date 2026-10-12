@@ -41,8 +41,9 @@ export const elder_grove_3: MapDef = {
     { x: 13, y: 0, to: "elder_grove_heart", toX: 10, toY: 18, facing: "up" },
   ],
   npcs: [
-    { id: "grunt_g3_1", sprite: "grunt", x: 7, y: 20, facing: "right", trainer: "grunt_g3_1", sight: 1 },
-    { id: "grunt_g3_2", sprite: "grunt", x: 21, y: 13, facing: "left", trainer: "grunt_g3_2", sight: 1 },
+    // ROOTSTOCK leaves the GROVE with MERCER once the CENTURYHEART is planted (as at the heart).
+    { id: "grunt_g3_1", sprite: "grunt", x: 7, y: 20, facing: "right", trainer: "grunt_g3_1", sight: 1, visibleWhen: when({ centuryheart_planted: false }) },
+    { id: "grunt_g3_2", sprite: "grunt", x: 21, y: 13, facing: "left", trainer: "grunt_g3_2", sight: 1, visibleWhen: when({ centuryheart_planted: false }) },
     { id: "wren_2", sprite: "wren", x: 11, y: 3, facing: "down", script: "wren_2" },
     { id: "bram_ring_3", sprite: "bram", x: 15, y: 3, facing: "left", script: "ch10_bram_heal", visibleWhen: when({ bram_joined: true, beat_mercer: false }) },
   ],

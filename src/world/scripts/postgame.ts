@@ -72,6 +72,11 @@ export const postgameScripts: Scripts = {
     say("Down in the rock, something hums. Low and slow, like a song you almost remember."),
     { op: "stillClear" },
     { op: "wildBattle", species: "methuselah", level: 70, canLose: true },
+    // As with the ELDER, a loss is no whiteout: the team mends where it stands.
+    { op: "ifLastBattle", result: "lost", then: [
+      { op: "heal" },
+      say("The low hum in the rock steadies your team. The old pine waits."),
+    ] },
   ], [say("A twisted bristlecone, grey with age. In daylight, it's only an old tree.")])])],
   pg_council_rematch: [ifFlags({ game_cleared: true, council_run: false }, [
     ...COUNCIL_RUN_FLAGS.map((f) => flag(f, false)),
@@ -108,4 +113,26 @@ export const postgameScripts: Scripts = {
     say("Another team for the HALL OF FAME. The HERBARIUM keeps every one.", "ROWAN"),
     say("On a proper sheet, with the date! ...Not pressed. Don't worry. Just written down.", "VALE"),
   ])],
+  // The fellowship room's NPCs: the ending (or rematch ending) during a run,
+  // a few words once it's over. The map's onEnter still runs ch11_ending.
+  pg_fellowship_rowan: [ifFlags({ council_run: true }, [call("ch11_ending")], [ifFlags({ game_cleared: true }, [
+    face("rowan", "toPlayer"),
+    ifFlags({ wanderers_free: true }, [
+      say("Any sign of the WANDERERS? ...Don't tell me where. I'm practising not knowing.", "ROWAN"),
+    ], [
+      say("Three plants slipped out of the GROVE GATE. Find me in the hall. You should hear it.", "ROWAN"),
+    ]),
+    say("The KEEPER's seat will be here. So will I. Come back when you've grown.", "ROWAN"),
+  ])])],
+  pg_fellowship_imogen: [ifFlags({ council_run: true }, [call("ch11_ending")], [ifFlags({ game_cleared: true }, [
+    face("imogen", "toPlayer"),
+    ifFlags({ got_centuryheart: false }, [
+      say("Have you been back to the ELDER's heart? Seeds do surprise you. That one more than most.", "VALE"),
+    ], [ifFlags({ diary_read: false }, [
+      say("FENNIMORE rang. Half his grandfather's diary is in the SEED VAULT, he says.", "VALE"),
+    ], [
+      say("FENNIMORE's humming again. He won't tell me the tune. He says you'd know.", "VALE"),
+    ])]),
+    say("And I found the sandwiches! In my coat. ...Whose coat is this?", "VALE"),
+  ])])],
 };

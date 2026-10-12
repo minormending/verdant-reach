@@ -207,11 +207,14 @@ export const storyScripts: Scripts = {
   vale_talk: [
     face("vale", "toPlayer"),
     ifFlags({ got_pods: true }, [
-      ifFlags({ beat_hollis: true }, [
+      ifFlags({ game_cleared: true }, [
+        say("FELLOW <PLAYER>! Have you heard? The SEED VAULT's open, at the top of ROUTE 9.", VALE),
+        say("And BRAM wrote. He and his father are planting a garden. Mixed beds. One of everything.", VALE),
+      ], [ifFlags({ beat_hollis: true }, [
         say("A PRESSED MARK! It's going above my diploma.", VALE),
       ], [
         say("HOLLIS is in BRAMBLEGATE. ROUTE 2, west of HEDGEROW.", VALE),
-      ]),
+      ])]),
       { op: "yesno", prompt: "Rest your QUICKENED here?", yes: [
         say("Under the grow lamps they go.", VALE),
         { op: "heal" },

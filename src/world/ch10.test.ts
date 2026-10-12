@@ -49,6 +49,16 @@ function search(edges: Map<string, string[]>, starts: string[]) {
 }
 
 describe("Chapter 10 world", () => {
+  it("clears every ROOTSTOCK grunt from the GROVE once the CENTURYHEART is planted", () => {
+    for (const id of ["elder_grove_1", "elder_grove_2", "elder_grove_3", "elder_grove_heart"] as const) {
+      const grunts = WORLD.maps[id].npcs.filter((n) => n.sprite === "grunt");
+      expect(grunts.length, id).toBe(2);
+      for (const n of grunts) {
+        expect(checkCond(n.visibleWhen, { bram_joined: true }), n.id).toBe(true);
+        expect(checkCond(n.visibleWhen, { bram_joined: true, beat_mercer: true, centuryheart_planted: true }), n.id).toBe(false);
+      }
+    }
+  });
   it("appends eight maps in the prescribed order and sizes", () => {
     expect(MAP_IDS.slice(MAP_IDS.indexOf("route_12"), MAP_IDS.indexOf("council_1"))).toEqual(CH10);
     const sizes = [[40, 36], [34, 28], [11, 9], [30, 30], [30, 30], [26, 26], [20, 20], [16, 12]];

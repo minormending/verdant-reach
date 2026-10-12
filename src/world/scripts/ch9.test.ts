@@ -34,11 +34,7 @@ function setup(initialMap: MapId = "thistledown", outcome: BattleOutcome = "won"
     emote: vi.fn(async () => {}), wait: vi.fn(async () => {}),
     showSpecies: vi.fn(), hideSpecies: vi.fn(), restoreMusic: vi.fn(), nameEntry: vi.fn(async () => ""),
     toast: vi.fn(),
-    endSlice: vi.fn(async () => {
-      expect(state.flags).toMatchObject({ beat_rook: true, got_fig_root: true, ch9_done: true, slice_done: true });
-      expect(state.marks).toContain("resin_mark");
-      expect(state.bag.fig_root).toBe(1);
-    }),
+    endSlice: vi.fn(async () => {}), // chapters play on: never called
   };
   const run = async (id: string) => {
     try { await runScript(host, id); }
@@ -119,8 +115,9 @@ describe("Chapter 9 scripts", () => {
     expect(state.bag.fig_root).toBe(1);
     expect(host.endSlice).not.toHaveBeenCalled();
     await enter("sanguine_ridge");
-    expect(host.endSlice).toHaveBeenCalledOnce();
-    expect(events.at(-1)).toBe("abort:endSlice");
+    expect(state.flags).toMatchObject({ ch9_done: true, slice_done: true });
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("seen at the COUNCIL ARBORETUM")).length).toBe(1);
+    expect(events.some((e) => e.startsWith("abort:"))).toBe(false);
     await enter("thistledown");
     await run("rival_5");
     await run("rook");
@@ -128,7 +125,8 @@ describe("Chapter 9 scripts", () => {
     await enter("sanguine_ridge");
     await run("ch9_end");
     expect(host.battle).toHaveBeenCalledTimes(2);
-    expect(host.endSlice).toHaveBeenCalledOnce();
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("seen at the COUNCIL ARBORETUM")).length).toBe(1);
+    expect(host.endSlice).not.toHaveBeenCalled();
     expect(state.bag.fig_root).toBe(1);
     expect(state.marks).toEqual(["resin_mark"]);
     expect(vi.mocked(host.ctx.audio.playJingle).mock.calls.filter(([id]) => id === "mark")).toHaveLength(1);
@@ -229,7 +227,7 @@ describe("Chapter 9 scripts", () => {
     expect(state.bag.fig_root).toBeUndefined();
     await run("ch9_rook_after");
     await run("ch9_end");
-    expect(host.endSlice).not.toHaveBeenCalled();
+    expect(state.flags.ch9_done).not.toBe(true);
     vi.mocked(host.battle).mockResolvedValue("won");
     await run("rook");
     await run("rook");

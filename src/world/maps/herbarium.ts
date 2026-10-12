@@ -86,7 +86,10 @@ export const scripts: Scripts = {
     say("<PLAYER>! Not that way. The greenhouse, through the arch!", "VALE"),
     movePlayer("up"),
   ],
-  herb_aide: [
+  herb_aide: [ifFlags({ game_cleared: true }, [
+    say("The seedlings don't watch the door any more. They lean toward the light, like plants should."),
+    say("Bit dull, honestly. I miss it."),
+  ], [
     ifFlags({ theft_seen: true }, [
       ifFlags({ got_pods: true }, [
         say("The last seedling still turns to watch the door. I think it's waiting too."),
@@ -98,7 +101,7 @@ export const scripts: Scripts = {
       say("I water these three every morning. Today they'd all turned to face the door."),
       say("Seedlings lean toward light, not doors. It's called phototropism. Usually."),
     ]),
-  ],
+  ])],
   herb_archivist: [
     ifFlags({ got_starter: true }, [
       say("Pressing a leaf for your HERBARIUM? Flat, dry, then labelled."),

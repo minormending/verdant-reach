@@ -433,15 +433,15 @@ const ch5Trainers: TrainerDef[] = [
 // coverage for Reyes. balance.test.ts checks both mixed parties, every starter,
 // and the mean bands (80.6% / 69.8%, no player or foe items in the model).
 const ch6Trainers: TrainerDef[] = [
-  trainer("angler_reed", "REED", "HIKER", "angler", [T("cattail", 25), T("sundew", 26)], ch6Lines("angler_reed")),
-  trainer("angler_moss", "MOSS", "HIKER", "angler", [T("pitcher_plant", 26)], ch6Lines("angler_moss")),
+  trainer("angler_reed", "REED", "ANGLER", "angler", [T("cattail", 25), T("sundew", 26)], ch6Lines("angler_reed")),
+  trainer("angler_moss", "MOSS", "ANGLER", "angler", [T("pitcher_plant", 26)], ch6Lines("angler_moss")),
   trainer("birder_tern", "TERN", "BIRDWATCHER", "birdwatcher", [T("mangrove_propagule", 24), T("white_clover", 26)], ch6Lines("birder_tern")),
   trainer("grunt_dock_1", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 27), T("fireweed", 27)], ch6Lines("grunt_dock_1"), { music: "battle_rootstock" }),
   trainer("grunt_dock_2", "GRUNT", "ROOTSTOCK", "grunt", [T("venus_flytrap", 27), T("sugar_maple", 28)], ch6Lines("grunt_dock_2"), { music: "battle_rootstock" }),
-  trainer("sailor_kelp", "KELP", "HIKER", "sailor", [T("seagrass_shoot", 27), T("lily_pad", 28)], ch6Lines("sailor_kelp")),
-  trainer("sailor_brine", "BRINE", "HIKER", "sailor", [T("eelgrass", 29)], ch6Lines("sailor_brine")),
-  trainer("diver_coral", "CORAL", "GARDENER", "diver", [T("mangrove_sapling", 28), T("cattail", 28)], ch6Lines("diver_coral")),
-  trainer("diver_shoal", "SHOAL", "GARDENER", "diver", [T("seagrass_shoot", 28), T("giant_water_lily", 29)], ch6Lines("diver_shoal")),
+  trainer("sailor_kelp", "KELP", "SAILOR", "sailor", [T("seagrass_shoot", 27), T("lily_pad", 28)], ch6Lines("sailor_kelp")),
+  trainer("sailor_brine", "BRINE", "SAILOR", "sailor", [T("eelgrass", 29)], ch6Lines("sailor_brine")),
+  trainer("diver_coral", "CORAL", "DIVER", "diver", [T("mangrove_sapling", 28), T("cattail", 28)], ch6Lines("diver_coral")),
+  trainer("diver_shoal", "SHOAL", "DIVER", "diver", [T("seagrass_shoot", 28), T("giant_water_lily", 29)], ch6Lines("diver_shoal")),
   trainer("jr_spine", "SPINE", "JR.GARDENER", "gardener", [T("pear_pad", 28), T("padded_cactus", 29)], ch6Lines("jr_spine")),
   trainer("jr_needle", "NEEDLE", "JR.GARDENER", "gardener", [T("stinging_nettle", 29), T("padded_cactus", 29)], ch6Lines("jr_needle")),
   trainer("saguaro", "SAGUARO", "WARDEN", "brother_saguaro", [
@@ -523,8 +523,8 @@ const ch7Lines = (id: string) => CH7_LINES[id];
 const ch7Trainers: TrainerDef[] = [
   trainer("climber_ridge", "RIDGE", "HIKER", "hiker", [T("larch_seedling", 33), T("holly", 34)], ch7Lines("climber_ridge")),
   trainer("climber_scree", "SCREE", "HIKER", "hiker", [T("campion_mound", 34)], ch7Lines("climber_scree")),
-  trainer("skier_frost", "FROST", "BIRDWATCHER", "skier", [T("peppermint", 34), T("edelweiss_bud", 33)], ch7Lines("skier_frost")),
-  trainer("skier_drift", "DRIFT", "BIRDWATCHER", "skier", [T("snowdrop_shoot", 34), T("larch", 35)], ch7Lines("skier_drift")),
+  trainer("skier_frost", "FROST", "SKIER", "skier", [T("peppermint", 34), T("edelweiss_bud", 33)], ch7Lines("skier_frost")),
+  trainer("skier_drift", "DRIFT", "SKIER", "skier", [T("snowdrop_shoot", 34), T("larch", 35)], ch7Lines("skier_drift")),
   trainer("grunt_lodge", "GRUNT", "ROOTSTOCK", "grunt", [T("stinging_nettle", 35), T("venus_flytrap", 35)], ch7Lines("grunt_lodge"), { music: "battle_rootstock" }),
   trainer("grunt_b1_1", "GRUNT", "ROOTSTOCK", "grunt", [T("fireweed", 36), T("sugar_maple", 36)], ch7Lines("grunt_b1_1"), { music: "battle_rootstock" }),
   trainer("grunt_b1_2", "GRUNT", "ROOTSTOCK", "grunt", [T("red_mangrove", 36), T("bladderwort", 36)], ch7Lines("grunt_b1_2"), { music: "battle_rootstock" }),

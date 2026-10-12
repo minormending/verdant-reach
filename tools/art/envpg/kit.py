@@ -183,6 +183,19 @@ def ascii_canvas(rows, key):
 _R = None
 
 
+def shipped_image(stem: str) -> Image.Image:
+    """A shipped tile (base bundles only) as an RGBA image, for tiles whose
+    colours are not on the named-colour canvas (e.g. 'snow')."""
+    global _R
+    if _R is None:
+        from artkit.resolve import Resolver
+        _R = Resolver()
+    im = _R.image(f"assets/tiles/{stem}.png")
+    if im is None:
+        raise ValueError(f"missing shipped tile {stem}")
+    return im.convert("RGBA") if isinstance(im, Image.Image) else Image.fromarray(np.asarray(im))
+
+
 def shipped(stem: str) -> Canvas:
     """A shipped tile (base bundles only) as a named-colour canvas, e.g. 'basalt_floor'."""
     global _R

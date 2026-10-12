@@ -46,15 +46,16 @@ function setup() {
   const leaveConservatory = async () => {
     const exit = WORLD.maps.glasshouse_conservatory.warps[0];
     state.position.map = exit.to;
-    await expect(runScript(host, WORLD.maps[exit.to].onEnter!)).rejects.toThrow("endSlice");
+    // The chapter end plays on in the city: no end card, no title round-trip.
+    await runScript(host, WORLD.maps[exit.to].onEnter!);
     expect(state.flags.ch4_done).toBe(true);
-    expect(host.endSlice).toHaveBeenCalledOnce();
+    expect(host.endSlice).not.toHaveBeenCalled();
   };
   return { state, host, talk, leaveConservatory };
 }
 
 describe("FAN MAIL", () => {
-  it("completes on FLORA's stage before the end card, rewarding only once", async () => {
+  it("completes on FLORA's stage before the chapter end, rewarding only once", async () => {
     const { state, host, talk, leaveConservatory } = setup();
     state.flags.relay_listened = true;
     await talk("glasshouse_city", "fan");
@@ -87,7 +88,7 @@ describe("FAN MAIL", () => {
     expect(state.bag.signed_photo).toBe(1);
   });
 
-  it("keeps the usual end card and allows starting the quest afterwards", async () => {
+  it("keeps the usual chapter end and allows starting the quest afterwards", async () => {
     const { state, talk, leaveConservatory } = setup();
     state.flags.relay_listened = true;
     await talk("glasshouse_conservatory", "flora");
@@ -101,7 +102,7 @@ describe("FAN MAIL", () => {
     expect(state.money).toBe(money + 1000);
   });
 
-  it("leaves an accepted letter deliverable after skipping it before the end card", async () => {
+  it("leaves an accepted letter deliverable after skipping it before the chapter end", async () => {
     const { state, talk, leaveConservatory } = setup();
     state.flags.relay_listened = true;
     await talk("glasshouse_city", "fan");

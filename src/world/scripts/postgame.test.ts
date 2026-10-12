@@ -182,6 +182,32 @@ describe("post-game story events", () => {
   });
 });
 
+describe("METHUSELAH loss", () => {
+  it("heals the wilted team on the ridge with a narration line, like the ELDER", async () => {
+    const { state, host, run, enter } = setup("night");
+    state.flags.diary_read = true;
+    await enter("methuselah_ridge");
+    vi.mocked(host.battle).mockImplementation(async () => {
+      for (const q of state.party) q.hp = 0;
+      return "lost";
+    });
+    await run("pg_methuselah");
+    expect(host.healParty).toHaveBeenCalledOnce();
+    expect(state.party.every((q) => q.hp === q.stats.hp)).toBe(true);
+    expect(host.whiteout).not.toHaveBeenCalled();
+    expect(state.position.map).toBe("methuselah_ridge");
+    expect(host.ctx.ui.say).toHaveBeenLastCalledWith(expect.stringContaining("The old pine waits"), undefined);
+  });
+  it.each(["won", "caught", "fled"] as const)("does not heal after %s", async (outcome) => {
+    const { state, host, run, enter } = setup("night");
+    state.flags.diary_read = true;
+    await enter("methuselah_ridge");
+    vi.mocked(host.battle).mockResolvedValue(outcome);
+    await run("pg_methuselah");
+    expect(host.healParty).not.toHaveBeenCalled();
+  });
+});
+
 describe("Council rematch run", () => {
   it("starts fresh from the actual entry hook, closes the return door, and cannot reset an active run", async () => {
     const { state, run, enter } = setup();
@@ -288,5 +314,82 @@ describe("Council rematch run", () => {
     expect(host.battle).toHaveBeenCalledTimes(10);
     expect(host.credits).not.toHaveBeenCalled();
     expect(host.healParty).not.toHaveBeenCalled();
+  });
+});
+
+describe("post-game polish: the fellowship room and town NPCs", () => {
+  const hook = (map: MapId, npc: string) => WORLD.maps[map].npcs.find((n) => n.id === npc)!.script!;
+  const said = (host: ScriptHost) => vi.mocked(host.ctx.ui.say).mock.calls.map(([text]) => text);
+
+  it.each(["rowan", "imogen"])("fellowship %s still plays the first ending during a run", async (npc) => {
+    const { state, host, run } = setup();
+    state.flags = { ch10_done: true, council_run: true, beat_keeper: true };
+    await run(hook("fellowship_hall", npc));
+    expect(state.flags).toMatchObject({ game_cleared: true, council_run: false });
+    expect(host.credits).toHaveBeenCalledOnce();
+    expect(state.hallOfFame).toHaveLength(1);
+    expect(said(host)).toContainEqual(expect.stringContaining("FELLOW of the HERBARIUM"));
+    expect(state.position.map).toBe("player_home");
+  });
+
+  it.each(["rowan", "imogen"])("fellowship %s still reaches the rematch ending during a rematch run", async (npc) => {
+    const { state, host, run } = setup();
+    Object.assign(state.flags, { council_run: true, council_rematch: true, beat_keeper: true });
+    await run(hook("fellowship_hall", npc));
+    expect(state.flags).toMatchObject({ council_run: false, council_rematch: false });
+    expect(state.hallOfFame).toHaveLength(1);
+    expect(host.credits).not.toHaveBeenCalled();
+    expect(said(host)).toContainEqual(expect.stringContaining("HALL OF FAME"));
+  });
+
+  it("fellowship NPCs stay silent outside a run before game_cleared", async () => {
+    const { state, host, run } = setup();
+    state.flags = { ch10_done: true };
+    const before = structuredClone(state);
+    for (const npc of ["rowan", "imogen"]) await run(hook("fellowship_hall", npc));
+    expect(state).toEqual(before);
+    expect(host.ctx.ui.say).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{}, "Three plants slipped out", "Seeds do surprise you"],
+    [{ wanderers_free: true, got_centuryheart: true }, "practising not knowing", "half his grandfather's diary"],
+    [{ wanderers_free: true, got_centuryheart: true, diary_read: true }, "practising not knowing", "humming again"],
+  ])("fellowship ROWAN and IMOGEN talk after the run (%o)", async (flags, rowan, imogen) => {
+    const { state, host, run } = setup();
+    Object.assign(state.flags, flags);
+    const before = structuredClone(state);
+    await run(hook("fellowship_hall", "rowan"));
+    await run(hook("fellowship_hall", "imogen"));
+    expect(state).toEqual(before);
+    const text = said(host);
+    expect(text.slice(0, 2).join(" ")).toContain(rowan);
+    expect(text.slice(2).join(" ").toLowerCase()).toContain(imogen.toLowerCase());
+    expect(text.at(-1)).toContain("sandwiches");
+    expect(host.credits).not.toHaveBeenCalled();
+  });
+
+  // [map, npc, flags before the ending, an old line, the post-game line, offers a heal]
+  const TOWN: [MapId, string, Record<string, boolean>, string, string, boolean][] = [
+    ["herbarium", "vale", { got_starter: true, got_pods: true, beat_hollis: true }, "above my diploma", "SEED VAULT's open", true],
+    ["herbarium", "aide", { theft_seen: true, got_pods: true }, "still turns to watch the door", "don't watch the door", false],
+    ["player_home", "june", { got_starter: true }, "Back for a breather?", "under my roof", true],
+    ["fallowfield", "lookout", { got_pods: true, beat_hollis: true }, "PRESSED MARK from HOLLIS", "Visitors on the lane", false],
+    ["fallowfield", "elder", { got_pods: true }, "FENNIMORE wrote to VALE", "more of the old song", false],
+    ["fallowfield", "kid", { got_starter: true }, "backflip", "boss of all the plants", false],
+    ["fallowfield", "miller", {}, "No wind all week", "The wind's back", false],
+    ["bramblegate", "pip", { pip_demo_done: true, beat_hollis: true }, "A real PRESSED MARK", "SEED VAULT's open", false],
+    ["bramblegate_greenhouse", "keeper", {}, "Welcome to the GREENHOUSE", "Welcome back, FELLOW", true],
+  ];
+  it.each(TOWN)("%s %s speaks its old line before game_cleared and a new one after", async (map, npc, flags, old, fresh, heals) => {
+    for (const cleared of [false, true]) {
+      const { state, host, run } = setup();
+      state.flags = { ...flags, game_cleared: cleared };
+      await run(hook(map, npc));
+      const text = said(host).join(" ");
+      expect(text).toContain(cleared ? fresh : old);
+      expect(text).not.toContain(cleared ? old : fresh);
+      expect(host.ctx.ui.yesNo).toHaveBeenCalledTimes(heals ? 1 : 0);
+    }
   });
 });

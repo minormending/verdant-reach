@@ -168,6 +168,15 @@ describe("Chapter 8 world", () => {
     }
   });
 
+  it("keeps WREN out of the lobby once she has left with MERCER", async () => {
+    const m = WORLD.maps.glasshouse_relay;
+    const s = setup({ ch8_started: true, beat_wren: true, broadcast_off: true, mercer_seen: true, mercer_left: true, ch8_done: true });
+    await s.run(m.onEnter!);
+    for (const n of m.npcs.filter((q) => ["relay_director", "wren", "listener", "reception", "tech"].includes(q.id))) {
+      expect(checkCond(n.visibleWhen, s.state.flags), n.id).toBe(n.id !== "wren");
+    }
+  });
+
   it("uses broadcast flavour for three city NPCs and restores their old dialogue", async () => {
     for (const id of ["gc_researcher", "gc_gardener", "gc_resident"]) {
       for (const started of [false, true]) for (const beaten of [false, true]) {

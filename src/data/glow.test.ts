@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { REQUIRED_ITEMS } from "../contracts";
 import { ITEMS } from "./items";
 
-it("defines the required FOXFIRE LANTERN as an automatic key item", () => {
+it("defines the required FOXFIRE JAR as an automatic key item", () => {
   expect(REQUIRED_ITEMS).toContain("foxfire_lantern");
   expect(ITEMS.foxfire_lantern).toMatchObject({
     name: "Foxfire Jar", pocket: "key", price: 0,

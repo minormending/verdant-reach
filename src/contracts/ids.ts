@@ -293,6 +293,7 @@ export const TILES = {
   // Post-game: the Seed Vault, Methuselah Ridge and the Route 9 spur (decoration; every cell's
   // behaviour is frozen by postgame-environment.test.ts, so each tile acts like the one it replaced)
   vault_portal:   { walk: false },               // Route 9: the spur's flanks; cliff until the stair opens, then the vault's concrete portal (group "cliff")
+  sign_snow:      { walk: false, interact: true }, // a sign standing on snow (Route 9's spur); behaves exactly like `sign`
   vault_wall:     { walk: false },               // frosted board-marked concrete, a conduit pipe on the face (group "vault_wall")
   root_wall:      { walk: false },               // B2: the vault wall cracked open by roots (group "vault_wall")
   vault_floor:    { walk: true },                // poured concrete slabs, hoar frost in the joints

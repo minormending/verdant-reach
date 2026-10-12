@@ -45,14 +45,17 @@ export const scripts: Scripts = {
   ],
   home_june: [
     ifFlags({ got_starter: true }, [
-      ifFlags({ theft_seen: true, got_pods: false }, [
+      ifFlags({ game_cleared: true }, [
+        say("A FELLOW of the HERBARIUM, under my roof! I've told the whole village. Twice.", "JUNE"),
+        say("Now sit. FELLOW or not, your QUICKENED look parched.", "JUNE"),
+      ], [ifFlags({ theft_seen: true, got_pods: false }, [
         say("Someone stole from VALE? From VALE? Brave or daft. Usually both.", "JUNE"),
       ], [
         ifNight(
           [say("Out this late? Your QUICKENED look parched.", "JUNE")],
           [say("Back for a breather? Your QUICKENED look parched.", "JUNE")],
         ),
-      ]),
+      ])]),
       { op: "yesno", prompt: "Let JUNE water them?", yes: [
         say("Rainwater from the barrel. Softer than tap water, and plants can tell.", "JUNE"),
         { op: "heal" },

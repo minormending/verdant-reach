@@ -842,7 +842,7 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
     }
     map.tiles.forEach((row, y) => [...row].forEach((_, x) => {
       const t = g.tile(x, y);
-      if ((t === "sign" || t === "mailbox") && !signAt.has(`${x},${y}`)) errs.push(`${where} ${t} at ${x},${y} has no text`);
+      if ((t === "sign" || t === "sign_snow" || t === "mailbox") && !signAt.has(`${x},${y}`)) errs.push(`${where} ${t} at ${x},${y} has no text`);
     }));
 
     // NPCs

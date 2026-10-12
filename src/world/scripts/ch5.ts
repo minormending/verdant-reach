@@ -145,7 +145,7 @@ export const ch5Scripts: Scripts = {
         say("You'll need a light. Ask the keeper in THE HOLLOW.", "MORROW"),
         say("I'm MORROW. I keep the CONSERVATORY. Come when you can see in the dark.", "MORROW"),
       ], [
-        say("You carry FOXFIRE already. Good. The dark won't stop you.", "MORROW"),
+        say("You carry a FOXFIRE JAR. Good. The dark won't stop you.", "MORROW"),
         say("I'm MORROW. I keep the CONSERVATORY. Come and find me there.", "MORROW"),
       ]),
       // From (34,11), down to the east-west lane, then toward town at x28.
@@ -223,8 +223,7 @@ export const ch5Scripts: Scripts = {
       say("And keep that seed close. Closer than close. Mind how you go.", "VALE"),
       flag("ch5_done"),
       flag("slice_done"),
-      wait(60),
-      { op: "endSlice" },
+      { op: "restoreMusic" },
     ]),
   ],
 };

@@ -31,6 +31,10 @@ and dialogue as `say("TODO(text): …")`.
      - Each time the player enters an outdoor route map, there's a 1-in-8
        chance it appears **on the tile behind the player** as an NPC
        (`burr`, sprite `item_pickup` stand-in).
+     - Arriving, that tile is usually the exit warp, so a won roll is kept:
+       BURR hops on behind the player after their first 3 steps on that
+       route, as soon as a safe tile behind them (or behind their follower)
+       is free.
      - Talking to it starts its battle. If it's fled, it hops off to a
        later map. If it's caught, it's gone.
    - All three: level 60. They **flee after the first turn** (Crystal's
@@ -118,7 +122,9 @@ and dialogue as `say("TODO(text): …")`.
     its first turn, if it isn't caught or wilted;
   - HP and status write back afterwards.
 - **BURR:** a separate hook on outdoor map entry (1/8, seeded), placing a
-  temporary NPC behind the player, if that tile is walkable and free.
+  temporary NPC behind the player, if that tile is walkable and free;
+  otherwise after the player's first 3 steps on that route
+  (`BURR_CATCH_UP_STEPS`), on the first safe free tile up to 2 behind them.
 - **Tests:** movement is seeded and can land on the player's new map; the flee rule; HP
   persistence; caught means gone; wilted means back the next day; BURR's
   placement only on free walkable tiles; save and Continue.
