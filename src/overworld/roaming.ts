@@ -79,15 +79,50 @@ export function burrTileSafe(map: MapRuntime, x: number, y: number): boolean {
   });
 }
 
+/** Steps on the new map before a deferred BURR catches up (POSTGAME.md §1.2). */
+export const BURR_CATCH_UP_STEPS = 3;
+
+/** The once-per-entry 1/8 roll on an outdoor route; the RNG is only drawn when BURR is free there. */
+export function burrRoll(state: State, map: MapRuntime, rng: () => number): boolean {
+  return !!map.def.outdoor && /^route_\d+$/.test(map.def.id) && wandererFree(state, "burr") && rng() < 1 / 8;
+}
+
+/**
+ * BURR on the first safe, free tile straight behind the player, up to `reach`
+ * tiles back (2 lets it land just behind a walking follower).
+ */
+export function burrBehind(
+  map: MapRuntime, player: { x: number; y: number; facing: Dir }, occupied: (x: number, y: number) => boolean, reach = 1,
+): NpcDef | null {
+  const { dx, dy } = DIRS[player.facing];
+  for (let d = 1; d <= reach; d++) {
+    const x = player.x - dx * d, y = player.y - dy * d;
+    if (burrTileSafe(map, x, y) && !occupied(x, y)) {
+      return { id: "burr", sprite: "burr_hitch", x, y, facing: player.facing, movement: "static" };
+    }
+  }
+  return null;
+}
+
+/**
+ * On arrival the tile behind the player is usually the exit warp, so a won
+ * roll whose arrival tile is unsafe is kept: BURR catches up behind the
+ * player after BURR_CATCH_UP_STEPS steps on that map (see burrCatchUp).
+ */
 export function burrPlacement(
   state: State, map: MapRuntime, player: { x: number; y: number; facing: Dir },
   occupied: (x: number, y: number) => boolean, rng: () => number,
 ): NpcDef | null {
-  if (!map.def.outdoor || !/^route_\d+$/.test(map.def.id) || !wandererFree(state, "burr") || rng() >= 1 / 8) return null;
-  const { dx, dy } = DIRS[player.facing];
-  const x = player.x - dx, y = player.y - dy;
-  if (!burrTileSafe(map, x, y) || occupied(x, y)) return null;
-  return { id: "burr", sprite: "burr_hitch", x, y, facing: player.facing, movement: "static" };
+  return burrRoll(state, map, rng) ? burrBehind(map, player, occupied) : null;
+}
+
+/** After a step on a map with a pending hitch: place BURR behind the player once enough steps are taken. */
+export function burrCatchUp(
+  state: State, map: MapRuntime, steps: number, player: { x: number; y: number; facing: Dir },
+  occupied: (x: number, y: number) => boolean,
+): NpcDef | null {
+  if (steps < BURR_CATCH_UP_STEPS || !wandererFree(state, "burr")) return null;
+  return burrBehind(map, player, occupied, 2);
 }
 
 /** Capture/wilt wins over fleeing; sleep, trapping and flinching cannot delay the escape. */

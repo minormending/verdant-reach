@@ -49,7 +49,7 @@ import {
 import { runStartMenu } from "./startMenu";
 import { visitedGlideMaps, visitedTownFlag } from "./glide";
 import { continuePosition } from "./continue";
-import { burrPlacement, burrTileSafe, meetingRoamer, moveRoamers, recoverWanderers, wandererFree, WANDERER_LEVEL } from "./roaming";
+import { burrBehind, burrCatchUp, burrRoll, burrTileSafe, meetingRoamer, moveRoamers, recoverWanderers, wandererFree, WANDERER_LEVEL } from "./roaming";
 
 /** Wild battles that get the legendary theme: the Wanderers and METHUSELAH (post-game). */
 const LEGEND_BATTLES: ReadonlySet<string> = new Set(["tumbleweed", "coconut", "burr", "methuselah"]);
@@ -134,6 +134,8 @@ class Overworld implements Scene {
   fieldHop: { species: SpeciesId; sport: boolean; x: number; y: number; t: number } | null = null;
   /** Full-screen story illustration over the map (still / stillClear). */
   still: { key: StillKey; img: ArtImage } | null = null;
+  /** BURR's roll won on this map but the arrival tile was unsafe; counts the player's steps here. */
+  burrPending: { map: MapId; steps: number } | null = null;
   toasts: { kind: ToastKind; title: string; at: number }[] = [];
 
   constructor(private ctx: GameContext, private opts: OverworldOpts) {
@@ -242,8 +244,13 @@ class Overworld implements Scene {
     this.npcs = (def.npcs ?? []).map((n) => new Actor(n.id, n.sprite, n.x, n.y, n.facing, n));
     this.follower.place(x, y, facing);
     if (changed) {
-      const burr = burrPlacement(this.ctx.state, this.map, p, this.occupiedForPlayer, this.ctx.rng);
-      if (burr) this.ctx.state.burrHitch = { map: id, x: burr.x, y: burr.y, facing: burr.facing };
+      this.burrPending = null;
+      if (burrRoll(this.ctx.state, this.map, this.ctx.rng)) {
+        const burr = burrBehind(this.map, p, this.occupiedForPlayer);
+        // Arriving, the tile behind is usually the exit warp: BURR catches up after a few steps.
+        if (burr) this.ctx.state.burrHitch = { map: id, x: burr.x, y: burr.y, facing: burr.facing };
+        else this.burrPending = { map: id, steps: 0 };
+      }
     }
     const hitch = this.ctx.state.burrHitch;
     if (hitch?.map === id && def.outdoor && /^route_\d+$/.test(id) && wandererFree(this.ctx.state, "burr")
@@ -563,6 +570,7 @@ class Overworld implements Scene {
     // Every step: nursery boarders grow, and seeds in the party count down.
     nurseryStep(st, this.ctx.data, this.ctx.rng);
     seedStep(st.party);
+    this.burrStep();
     const w = warpAt(this.map, p.x, p.y);
     if (w && (!isMatWarp(this.map, p.x, p.y) || p.facing === "down")) {
       this.walking = false;
@@ -591,6 +599,19 @@ class Overworld implements Scene {
       this.walking = false;
       void this.flow(() => this.wildEncounter(enc.species, enc.level, enc.kind));
     }
+  }
+
+  /** A won BURR roll whose arrival tile was unsafe: it hops on behind the player a few steps in. */
+  private burrStep() {
+    const pending = this.burrPending;
+    if (!pending || pending.map !== this.mapId) return;
+    pending.steps++;
+    if (warpAt(this.map, this.player.x, this.player.y)) return;
+    const burr = burrCatchUp(this.ctx.state, this.map, pending.steps, this.player, this.occupiedForNpc);
+    if (!burr) return;
+    this.burrPending = null;
+    this.ctx.state.burrHitch = { map: this.mapId, x: burr.x, y: burr.y, facing: burr.facing };
+    this.npcs.push(new Actor(burr.id, burr.sprite, burr.x, burr.y, burr.facing, burr));
   }
 
   private updateNpcs() {
