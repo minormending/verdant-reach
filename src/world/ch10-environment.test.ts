@@ -44,9 +44,12 @@ const FROZEN: [MapId, string, string][] = [
   // Re-pinned on ch11: Chapter 11 turns the hall door into the Council entrance.
   ["council_arboretum", "d1acef7cf87bc659326f9ace97cf9832cd01551df25d048243b03ae173f1c8a3", "f47d68e470eadb52b41e87e3efe0ca1c0b7e0d48644e13212e07931664b976f0"],
   ["arboretum_greenhouse", "2e36479270136138c4ee49f5612ec3ce290bc9eaaee24aefd48708798c8e99ab", "7842ea36364692b6e923afa8e8e80906d45e5e19f2520aced6536917938bec15"],
-  ["elder_grove_1", "846f7889efa74e46b0e8d7c928a7d790ff3866e8d4e3b64973b5214aecfddca5", "dff6785501c66c059fa5938afb12f0e7457eb9e66220d42b9604ba2686da2bda"],
-  ["elder_grove_2", "4cdec02b50fe4a58f380b993a8fc404a962e708566632314f7307c3c92f59f2c", "a3e4c41491946cec6b32148bed2b9698895a239ed57d7a73aa0ab3610001dd1e"],
-  ["elder_grove_3", "8ce16f4bb5e966a0489d6cfe6720a2292c93e18f857ece94b5b06621769ea260", "03279a5b830a08c49184da302c70c99d6d395df39d09563fbd44c968f091ea78"],
+  // Re-pinned on fixes: the ring grunts leave once the CENTURYHEART is planted (visibleWhen).
+  ["elder_grove_1", "9cc0ab1dcd0c947a90bf7f6918a07ace83342b7e07559dbae5facdd243edc7e7", "dff6785501c66c059fa5938afb12f0e7457eb9e66220d42b9604ba2686da2bda"],
+  // Re-pinned on fixes: the ring grunts leave once the CENTURYHEART is planted (visibleWhen).
+  ["elder_grove_2", "5fd1ca926f7bdc5ad1fbd65302d0f9f176ccaa89bc1fc1f093a6bd6f3de618e7", "a3e4c41491946cec6b32148bed2b9698895a239ed57d7a73aa0ab3610001dd1e"],
+  // Re-pinned on fixes: the ring grunts leave once the CENTURYHEART is planted (visibleWhen).
+  ["elder_grove_3", "7b4a1e0fbaecb758a0a26672dca0e1804ef483fcde117d4c9845243dca38933a", "03279a5b830a08c49184da302c70c99d6d395df39d09563fbd44c968f091ea78"],
   // Re-pinned on postgame: the post-game adds the Centuryheart sprout NPC (on its own sprite since the post-game art pass).
   ["elder_grove_heart", "43f621fa4b9513eb70c2540f1d91cd50422894cea85a8030cf72093c5272a616", "dbce4f004ee6f50a6189a436a5970ad64d1b4ec2390435fc4eea1c6e4f5aa5fb"],
   // Re-pinned on ch11: Chapter 11 builds the lobby out (stairs to the Council, heal and market counters).
