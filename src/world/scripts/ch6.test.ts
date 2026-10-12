@@ -45,9 +45,7 @@ function setup(map: MapId = "saltmarsh_harbour", outcome: BattleOutcome = "won",
     camera: vi.fn(async () => {}), cameraReset: vi.fn(async () => {}),
     emote: vi.fn(async () => {}), wait: vi.fn(async () => {}),
     showSpecies: vi.fn(), hideSpecies: vi.fn(), restoreMusic: vi.fn(), nameEntry: vi.fn(async () => ""),
-    endSlice: vi.fn(async () => {
-      expect(state.flags).toMatchObject({ beat_reyes: true, ch6_done: true, slice_done: true });
-    }),
+    endSlice: vi.fn(async () => {}), // chapters play on: never called
   };
   return { state, host, events, run: async (id: string) => {
     try { await runScript(host, id); }
@@ -198,9 +196,11 @@ describe("Chapter 6 scripts", () => {
     expect(host.battle).toHaveBeenCalledTimes(2);
     await run("ch6_town_enter");
     expect(state.flags).toMatchObject({ ch6_done: true, slice_done: true });
-    expect(host.endSlice).toHaveBeenCalledOnce();
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("BLOOM LAKE has turned red")).length).toBe(1);
+    expect(host.restoreMusic).toHaveBeenCalled();
     await run("ch6_town_enter");
-    expect(host.endSlice).toHaveBeenCalledOnce();
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("BLOOM LAKE has turned red")).length).toBe(1);
+    expect(host.endSlice).not.toHaveBeenCalled();
   });
 
   it("does not heal the tree with a flag alone or consume sap without its story flag", async () => {

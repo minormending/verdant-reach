@@ -224,8 +224,7 @@ export const ch6Scripts: Scripts = {
       say("And keep that seed close, all the way to LARCHMERE. Please.", "VALE"),
       flag("ch6_done"),
       flag("slice_done"),
-      wait(60),
-      { op: "endSlice" },
+      { op: "restoreMusic" },
     ]),
   ],
   ch6_gh_visitor: [

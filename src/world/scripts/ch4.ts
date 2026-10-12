@@ -372,7 +372,6 @@ export const ch4Scripts: Scripts = {
     say("Keep yours close. And mind how you go.", VALE),
     flag("ch4_done"),
     flag("slice_done"),
-    wait(60),
-    { op: "endSlice" },
+    { op: "restoreMusic" },
   ],
 };

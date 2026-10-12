@@ -170,8 +170,6 @@ export const ch8Scripts: Scripts = {
       say("He says the CENTURYHEART is dying. \"As it must,\" he writes. Go and hear him out.", "VALE"),
       flag("ch8_done"),
       flag("slice_done"),
-      wait(60),
-      { op: "endSlice" },
     ]),
   ],
 };

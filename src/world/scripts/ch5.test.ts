@@ -39,9 +39,7 @@ function setup(map: MapId = "burnt_stand", outcome: BattleOutcome = "won") {
     camera: vi.fn(async () => {}), cameraReset: vi.fn(async () => {}),
     emote: vi.fn(async () => {}), wait: vi.fn(async () => {}),
     showSpecies: vi.fn(), hideSpecies: vi.fn(), restoreMusic: vi.fn(), nameEntry: vi.fn(async () => ""),
-    endSlice: vi.fn(async () => {
-      expect(state.flags).toMatchObject({ beat_morrow: true, ch5_done: true, slice_done: true });
-    }),
+    endSlice: vi.fn(async () => {}), // chapters play on: never called
   };
   return { state, host, events, run: async (id: string) => {
     try { await runScript(host, id); }
@@ -163,7 +161,10 @@ describe("Chapter 5 scripts", () => {
       expect(state.flags.beat_morrow ?? false).toBe(outcome === "won");
       expect(state.marks.includes("pipe_mark")).toBe(outcome === "won");
       await run("ch5_end");
-      expect(host.endSlice).toHaveBeenCalledTimes(outcome === "won" ? 1 : 0);
+      // The chapter plays on: no end card, and the town's music comes back after VALE's call.
+      expect(host.endSlice).not.toHaveBeenCalled();
+      expect(state.flags.ch5_done ?? false).toBe(outcome === "won");
+      expect(host.restoreMusic).toHaveBeenCalledTimes(outcome === "won" ? 1 : 0);
       expect(state.bag.glider_seed ?? 0).toBe(outcome === "won" ? 1 : 0);
       await run("ch5_end");
       expect(state.bag.glider_seed ?? 0).toBe(outcome === "won" ? 1 : 0);

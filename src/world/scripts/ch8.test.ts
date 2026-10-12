@@ -39,10 +39,7 @@ function setup(map: MapId = "glasshouse_city", outcome: BattleOutcome = "won") {
     emote: vi.fn(async () => {}), wait: vi.fn(async () => {}),
     showSpecies: vi.fn(), hideSpecies: vi.fn(), restoreMusic: vi.fn(), nameEntry: vi.fn(async () => ""),
     toast: vi.fn(),
-    endSlice: vi.fn(async () => {
-      expect(state.flags).toMatchObject({ beat_wren: true, broadcast_off: true, mercer_seen: true,
-        relay_reward: true, ch8_done: true, slice_done: true });
-    }),
+    endSlice: vi.fn(async () => {}), // chapters play on: never called
   };
   return { state, host, events, visibility,
     enter: (id: MapId) => { map = id; visibility.clear(); },
@@ -150,8 +147,10 @@ describe("Chapter 8 scripts", () => {
     await run(WORLD.maps.glasshouse_relay.onEnter!);
     expect(state.bag.rain_jar).toBe(2);
     expect(state.money).toBe(money + 3000);
-    expect(host.endSlice).toHaveBeenCalledOnce();
-    expect(events.at(-1)).toBe("abort:endSlice");
+    expect(state.flags).toMatchObject({ ch8_done: true, slice_done: true });
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("VALERIAN ROOK, at SANGUINE RIDGE")).length).toBe(1);
+    expect(host.endSlice).not.toHaveBeenCalled();
+    expect(events.some((e) => e.startsWith("abort:"))).toBe(false);
     const lines = vi.mocked(host.ctx.ui.say).mock.calls.map(([text]) => text);
     const reward = lines.findIndex((text) => text.includes("two RAIN JARS and $3000"));
     const call = lines.findIndex((text) => text.includes("MERCER has the RELAY's map of the hubs"));
@@ -251,7 +250,7 @@ describe("Chapter 8 scripts", () => {
     Object.assign(s.state.flags, CLEARED);
     s.enter("glasshouse_relay");
     await s.run("ch8_end");
-    expect(s.host.endSlice).not.toHaveBeenCalled();
+    expect(s.state.flags.ch8_done).not.toBe(true);
     await s.run("ch8_reward"); await s.run("ch8_reward");
     expect(s.state.bag.rain_jar).toBe(2);
     expect(s.state.money).toBe(money + 3000);
@@ -259,7 +258,9 @@ describe("Chapter 8 scripts", () => {
     await s.run("ch8_end"); await s.run("ch8_reward");
     expect(s.state.bag.rain_jar).toBe(2);
     expect(s.state.money).toBe(money + 3000);
-    expect(s.host.endSlice).toHaveBeenCalledOnce();
+    expect(s.state.flags.ch8_done).toBe(true);
+    expect(vi.mocked(s.host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("VALERIAN ROOK, at SANGUINE RIDGE"))).toHaveLength(1);
+    expect(s.host.endSlice).not.toHaveBeenCalled();
   });
 
   it("hides Mercer and Wren during departure and after a roof reload", async () => {

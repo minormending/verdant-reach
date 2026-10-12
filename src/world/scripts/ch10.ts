@@ -134,7 +134,7 @@ export const ch10Scripts: Scripts = {
   ch10_end: [ifFlags({ beat_mercer: true, ch10_done: false }, [
     say("ROWAN meets you at the ARBORETUM and unbars the COUNCIL HALL doors."),
     say("The GROVE is safe. The COUNCIL is open again. Come when you're ready.", "ROWAN"),
-    flag("ch10_done"), flag("slice_done"), wait(60), { op: "endSlice" },
+    flag("ch10_done"), flag("slice_done"),
   ])],
   ch10_gh_visitor: [say("Every aspen in the GROVE is one tree, they say. One root system, thousands of trunks.", "VISITOR")],
   ch10_rowan: [say("MERCER's cutting into the ELDER's root to graft it. Please. Stop him.", "ROWAN")],

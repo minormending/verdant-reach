@@ -208,8 +208,7 @@ export const ch7Scripts: Scripts = {
       say("Will you go and find out why? Carefully, <PLAYER>. Please.", "VALE"),
       flag("ch7_done"),
       flag("slice_done"),
-      wait(60),
-      { op: "endSlice" },
+      { op: "restoreMusic" },
     ]),
   ],
   ch7_lodge_keeper: [

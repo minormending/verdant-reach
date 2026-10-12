@@ -36,10 +36,7 @@ function setup(map: MapId = "larchmere", outcome: BattleOutcome = "won") {
     emote: vi.fn(async () => {}), wait: vi.fn(async () => {}),
     showSpecies: vi.fn(), hideSpecies: vi.fn(), restoreMusic: vi.fn(), nameEntry: vi.fn(async () => ""),
     toast: vi.fn(),
-    endSlice: vi.fn(async () => {
-      expect(state.flags).toMatchObject({ beat_signe: true, got_cold_snap_signe: true, ch7_done: true, slice_done: true });
-      expect(state.marks).toContain("snowdrop_mark");
-    }),
+    endSlice: vi.fn(async () => {}), // chapters play on: never called
   };
   return { state, host, events, run: async (id: string) => {
     try { await runScript(host, id); }
@@ -157,10 +154,12 @@ describe("Chapter 7 scripts", () => {
     expect(host.battle).toHaveBeenCalledTimes(battles + 1);
     await run("ch7_town_enter");
     expect(state.flags).toMatchObject({ ch7_done: true, slice_done: true });
-    expect(host.endSlice).toHaveBeenCalledOnce();
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("I knew MERCER THORNE")).length).toBe(1);
+    expect(host.restoreMusic).toHaveBeenCalled();
     await run("ch7_town_enter");
     await run("ch7_end");
-    expect(host.endSlice).toHaveBeenCalledOnce();
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("I knew MERCER THORNE")).length).toBe(1);
+    expect(host.endSlice).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -222,10 +221,11 @@ describe("Chapter 7 scripts", () => {
     state.flags.beat_signe = true;
     state.marks.push("snowdrop_mark");
     await run("ch7_end");
-    expect(host.endSlice).not.toHaveBeenCalled();
+    expect(state.flags.ch7_done).not.toBe(true);
     await run("ch7_signe_after");
     await run("ch7_end");
-    expect(host.endSlice).toHaveBeenCalledOnce();
+    expect(state.flags.ch7_done).toBe(true);
+    expect(host.endSlice).not.toHaveBeenCalled();
   });
 
   it("bounces the locked Conservatory door onto a clear map tile", async () => {

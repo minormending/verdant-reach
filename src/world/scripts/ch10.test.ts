@@ -34,9 +34,7 @@ function setup(outcome: BattleOutcome = "won") {
     camera: vi.fn(async () => {}), cameraReset: vi.fn(async () => {}),
     emote: vi.fn(async () => {}), wait: vi.fn(async () => {}),
     showSpecies: vi.fn(), hideSpecies: vi.fn(), restoreMusic: vi.fn(), nameEntry: vi.fn(async () => ""), toast: vi.fn(),
-    endSlice: vi.fn(async () => {
-      expect(state.flags).toMatchObject({ beat_mercer: true, ch10_done: true, slice_done: true });
-    }),
+    endSlice: vi.fn(async () => {}), // chapters play on: never called
   };
   const run = async (id: string) => {
     try { await runScript(host, id); }
@@ -138,7 +136,9 @@ describe("Chapter 10 scripts", () => {
     await enter("council_arboretum");
     await enter("council_arboretum");
     await run("ch10_end");
-    expect(host.endSlice).toHaveBeenCalledOnce();
+    expect(state.flags).toMatchObject({ ch10_done: true, slice_done: true });
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("The COUNCIL is open again")).length).toBe(1);
+    expect(host.endSlice).not.toHaveBeenCalled();
     vi.mocked(host.movePlayer).mockClear();
     await run("ch10_council_door");
     expect(host.movePlayer).not.toHaveBeenCalled();
@@ -275,13 +275,13 @@ describe("Chapter 10 scripts", () => {
     await run("ch10_end");
     await enter("council_arboretum");
     expect(state.flags.ch10_done).not.toBe(true);
-    expect(host.endSlice).not.toHaveBeenCalled();
     state.flags.beat_mercer = true;
     await enter("council_arboretum");
     expect(state.flags).toMatchObject({ ch10_done: true, slice_done: true });
     await enter("council_arboretum");
     await run("ch10_end");
-    expect(host.endSlice).toHaveBeenCalledOnce();
+    expect(vi.mocked(host.ctx.ui.say).mock.calls.filter(([text]) => text.includes("The COUNCIL is open again")).length).toBe(1);
+    expect(host.endSlice).not.toHaveBeenCalled();
   });
 
   it("bounces gates onto clear tiles", () => {

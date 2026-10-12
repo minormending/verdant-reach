@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { ScriptCmd } from "../../contracts";
+import { WORLD } from "../index";
 import { eachCmd } from "../validate";
 import { act1Scripts } from "./act1";
 import { ch4Scripts } from "./ch4";
@@ -55,12 +56,22 @@ describe("chapter 4 scripts", () => {
     expect(closed[closed.length - 1]).toEqual({ op: "movePlayer", path: ["down"] });
   });
 
-  it("ends the chapter with ch4_done set before the end card", () => {
+  it("ends the chapter with ch4_done set, then plays on into Chapter 5 with the map's music", () => {
     const all = ops([...ch4Scripts.ch4_end, ...ch4Scripts.ch4_vale_call]);
     const done = all.findIndex((c) => c.op === "setFlag" && c.flag === "ch4_done");
-    const end = all.findIndex((c) => c.op === "endSlice");
     expect(done).toBeGreaterThanOrEqual(0);
-    expect(end).toBeGreaterThan(done);
+    expect(all.some((c) => c.op === "endSlice")).toBe(false);
+    // VALE's call swaps in prologue_bloom; the city's own track comes back after it.
+    const music = all.findIndex((c) => c.op === "music");
+    const restore = all.map((c) => c.op).lastIndexOf("restoreMusic");
+    expect(restore).toBeGreaterThan(Math.max(done, music));
+  });
+});
+
+describe("one continuous game", () => {
+  it("never drops to the title between chapters: no script shows the TO BE CONTINUED card", () => {
+    const ending = Object.entries(WORLD.scripts).filter(([, cmds]) => has(cmds, (c) => c.op === "endSlice")).map(([id]) => id);
+    expect(ending).toEqual([]);
   });
 });
 

@@ -223,8 +223,7 @@ export const ch5Scripts: Scripts = {
       say("And keep that seed close. Closer than close. Mind how you go.", "VALE"),
       flag("ch5_done"),
       flag("slice_done"),
-      wait(60),
-      { op: "endSlice" },
+      { op: "restoreMusic" },
     ]),
   ],
 };
