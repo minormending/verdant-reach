@@ -70,6 +70,9 @@ async function boot() {
     await assets.loadAll([uiPath("title_logo")]);
     // The whole art registry: every bundle (and any legacy file not yet migrated).
     await assets.loadAll(undefined, (d, t) => loading.progress(d, t));
+    // ?tilelab=1 (the Tile Lab's "Walk around" button): apply its saved tile
+    // overrides in memory. Without the param this module is never loaded.
+    if (new URLSearchParams(location.search).has("tilelab")) await (await import("./tilelab/hook")).applyStoredTileLab();
     await loading.finish();
     scenes.pop();
 
