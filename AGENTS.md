@@ -24,7 +24,7 @@ it for fun, to practise engineering management and planning.
 npm ci
 npm run dev                 # http://localhost:5173
 npm run typecheck           # strict tsc
-npm test                    # vitest, about 1560 tests: data, world validation, puzzles, balance, art bundles
+npm test                    # vitest, about 1670 tests: data, world validation, puzzles, balance, art bundles
 npm run build               # typecheck + production bundle (relative base, for GitHub Pages)
 npx playwright install chromium # first use: install the e2e browser
 npm run e2e                 # headless full playthrough, 216 beats, speed 8, seed 1, daytime
@@ -60,6 +60,7 @@ leave `git status` clean (the generators are deterministic).
 | Art runtime (resolves logical asset paths to bundles), the Art Lab | `src/art/` |
 | **All art, as swappable bundles** | `public/art/` (format: **docs/ART.md**) |
 | Art generators and tools (Python) | `tools/art/` |
+| The strategy guide page (`guide.html`), generated from the game's data; walkthrough prose in `src/guide/walkthrough/` (docs/GUIDE.md) | `src/guide/` |
 | Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 216 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
 
 The e2e runner fixes time to day and defaults to `--seed 1`. It prints the seed

@@ -95,7 +95,7 @@ export const PART_2: Section[] = [
       { p: "Win and he gives you the **PIPE MARK**. He tells you about the ELDER: root and fungus joined into one forest-wide nerve, and something at its heart that has been listening since the LONG BLOOM. \"Not angry. Afraid.\"" },
       { p: "Step outside and a telephone rings: DR. VALE. The LANTERN TREE at SALTMARSH HARBOUR has gone dark, CAPTAIN REYES won't battle until it's well, and someone has been asking about your seed at the docks. She has posted you a **GLIDER SEED**." },
       { item: "glider_seed", note: "Unlocks SEED GLIDE. Outdoors, pick GLIDE from the menu to fly to any town you've visited. CEDARHALLOW, and every town you've visited, is a landing." },
-      { tip: "Each chapter ends with a save prompt and a TO BE CONTINUED card that returns you to the title screen. Say YES to save, then choose CONTINUE to pick up exactly where you left off.", title: "Chapter end" },
+      { tip: "Chapters run straight on into the next, with no break or save prompt. The game never saves on its own, so open the menu and SAVE whenever you reach a new town or before a big battle.", title: "Chapter end" },
       { checklist: [
         "Beat the 4 trainers on ROUTE 6 and find its 2 hidden items",
         "Catch a GHOST STALK on ROUTE 6 at night",
@@ -122,8 +122,8 @@ export const PART_2: Section[] = [
       { map: "route_7" },
       { p: "ROUTE 7 is a salt-marsh estuary. A boardwalk runs straight south, crossing two tidal channels on wooden bridges, with salt flats and tall grass to either side. Just keep heading south to reach SALTMARSH HARBOUR." },
       { list: [
-        "HIKER REED stands just west of the boardwalk in the north section and will step out as you pass.",
-        "HIKER MOSS waits on the east side, between the two channels. He's off the boardwalk, so you can skip him.",
+        "ANGLER REED stands just west of the boardwalk in the north section and will step out as you pass.",
+        "ANGLER MOSS waits on the east side, between the two channels. He's off the boardwalk, so you can skip him.",
         "BIRDWATCHER TERN is beside the boardwalk in the south section.",
       ] },
       { tip: "The grass here has PROPAGULE, CATTAIL, SUNDEW, PEAR PAD, SEAGRASS TIP and MINT SPRIG. Catch a **PROPAGULE**: the SEAGRASS SURVEY on ROUTE 8 needs a MANGROVE, and this is the easiest place to find one. Two hidden items: a SPRING WATER by the reeds in the north-west, and a GLASS POD in the south-east.", title: "Worth catching" },
@@ -251,7 +251,7 @@ export const PART_2: Section[] = [
       { list: [
         "**Forest:** HIKER RIDGE waits beside the track. The MOUNTAINEER stands in a clearing on the west side.",
         "**Scree:** HIKER SCREE, with a single MOSS MOUND (frost/wood). Fire hits it for four times damage.",
-        "**Snow:** BIRDWATCHER FROST stands on the west side of the pass and BIRDWATCHER DRIFT on the east, higher up.",
+        "**Snow:** SKIER FROST stands on the west side of the pass and SKIER DRIFT on the east, higher up.",
       ] },
       { tip: "**LOST CLIMBER** (MOUNTAINEER, ROUTE 9): a gust tore her pack away up in the snow. It's hidden near the top of the pass, in the snow on the **west** side, about eight rows below the LARCHMERE exit. Press A on the sparkle to dig out the CLIMBER PACK, then take it back down to her. Reward: 2 RAIN JARS and a COLD SNAP. You can find the pack before she asks; it still counts. A second hidden item, a RAIN JAR, is in the snow grass on the east side of the pass.", title: "Side quest: Lost Climber" },
       { item: "climber_pack", note: "A key item. Take it to the MOUNTAINEER in the forest clearing." },

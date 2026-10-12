@@ -12,8 +12,9 @@ certain plants across the valley wake up, and your job is to catalogue the
 QUICKENED. Then you find out who woke them, and why.
 
 The **whole game is complete**: the Prologue through Chapter 11 (the Council),
-the Hall of Fame and credits, and a post-game of legendaries, a hidden dungeon and Council rematches. The story bible lives in
-[docs/story/](docs/story/).
+the Hall of Fame and credits, and a post-game of legendaries, a hidden dungeon and Council rematches. The chapters run
+straight on, one into the next, and after the credits the town, the Herbarium and the Council have new things to say.
+The story bible lives in [docs/story/](docs/story/).
 
 ## Play
 
