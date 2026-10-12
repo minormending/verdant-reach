@@ -175,7 +175,7 @@ catchable starts.
 | `ranger_flint`, `ranger_shale` | BIRDWATCHER / `birdwatcher` | route_11 | flint: dragon_fruit 45, saguaro 45 · shale: lithops_bloom 46 |
 | `rival_5_oak`, `rival_5_chili`, `rival_5_lily` | RIVAL / `bram` | route_11 (script battle, `canLose: true`) | blackberry 46, dandelion_clock 46, sugar_maple 47, red_cedar 47, + the countering starter's stage 3 at **49, not grafted** |
 | `jr_ember`, `jr_scale` | JR.GARDENER / `gardener` | the conservatory | ember: snapdragon_sprout 47, dragon_sapling 47 · scale: pitaya_cutting 47, lithops_pair 48 |
-| `rook` | WARDEN / `hollis` (portrait stand-in) | the conservatory | snapdragon 49, dragon_fruit 50, lithops_bloom 50, **dragon_tree 53 (ace)**. Smart AI, 2 spring_water, `battle_leader`, mark `resin_mark`. |
+| `rook` | WARDEN / `hollis` (portrait stand-in) | the conservatory | snapdragon 48, dragon_fruit 48, lithops_bloom 48, **dragon_tree 51 (ace)**. Smart AI, 2 spring_water, `battle_leader`, mark `resin_mark`. |
 
 **Balance** (extend `balance.test.ts`, with sim parties of Chapter 5–9
 catches at about level 49):
