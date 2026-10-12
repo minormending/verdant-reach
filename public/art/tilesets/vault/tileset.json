@@ -9,6 +9,7 @@
     "vault_floor": { "base": 0, "alts": [1, 2, 3] },
     "vault_rime": { "base": 4, "alts": [5, 6] },
     "reading_desk": { "base": 7 },
+    "sign_snow": { "base": 8 },
     "vault_wall": {
       "base": 16,
       "masks": {
