@@ -19,12 +19,13 @@ describe("dev loop speed", () => {
     const update = vi.fn();
     const draw = vi.fn();
     const endFrame = vi.fn();
+    const poll = vi.fn();
     const tick = vi.fn();
     const scene = { update, draw };
     runLoop({ fillRect: vi.fn() } as unknown as CanvasRenderingContext2D,
       { top: () => scene, all: () => [scene] } as Parameters<typeof runLoop>[1],
-      { endFrame } as Parameters<typeof runLoop>[2], tick);
-    return { update, draw, endFrame, tick, frame: (ms: number) => frame(ms) };
+      { endFrame, poll } as Parameters<typeof runLoop>[2], tick);
+    return { update, draw, endFrame, poll, tick, frame: (ms: number) => frame(ms) };
   }
 
   it.each([2, 8, 16])("runs %i fixed updates then one draw", (speed) => {
@@ -32,6 +33,7 @@ describe("dev loop speed", () => {
     l.frame(17);
     expect(l.update).toHaveBeenCalledTimes(speed);
     expect(l.endFrame).toHaveBeenCalledTimes(speed);
+    expect(l.poll).toHaveBeenCalledTimes(speed);
     expect(l.tick).toHaveBeenCalledTimes(speed);
     expect(l.update).toHaveBeenCalledWith(1000 / 60);
     expect(l.draw).toHaveBeenCalledTimes(1);
