@@ -62,6 +62,7 @@ export class Lab {
       const res: Installed = await installLab(this.reg, this.state);
       this.base = res.base;
       this.plans = res.plans;
+      this.editedKeys = new Set([...effectiveEdits(this.state).keys(), ...Object.keys(this.state.edits)]);
       this.artVersion++;
       this.emit("art");
     }).catch((e: unknown) => { console.error("[tilelab] install failed", e); this.emit("art"); });
@@ -132,7 +133,9 @@ export class Lab {
 
   tilesets(): string[] { return this.reg.bundles("tilesets").map((v) => v.id); }
 
-  edited(key: string): boolean { return effectiveEdits(this.state).has(key) || !!this.state.edits[key]; }
+  /** Keys with a swap (on or off) or a mapping, as of the last install. */
+  private editedKeys = new Set<string>();
+  edited(key: string): boolean { return this.editedKeys.has(key); }
 
   mapsUsing(key: string): MapId[] { return [...(this.usage.keys.get(key as TileKey)?.maps.keys() ?? [])]; }
 

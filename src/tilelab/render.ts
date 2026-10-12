@@ -58,7 +58,7 @@ export function drawHighlights(g: CanvasRenderingContext2D, cells: { x: number; 
   g.save();
   g.fillStyle = "rgba(0, 229, 255, 0.22)";
   g.strokeStyle = "#00e5ff";
-  g.lineWidth = Math.max(1, zoom);
+  g.lineWidth = Math.max(1, Math.floor(zoom / 2));
   for (const p of cells) {
     const x = (p.x + MAP_MARGIN) * t, y = (p.y + MAP_MARGIN) * t;
     g.fillRect(x, y, t, t);

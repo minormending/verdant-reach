@@ -95,6 +95,7 @@ export function createSheets(lab: Lab, toast: (msg: string) => void): HTMLElemen
   // ---- (c) the external sheet mapper ------------------------------------------------
   let slot: Slot = { kind: "base", frame: 1 };
   let blockNext = false;
+  let pickerZoom = 2;
   const mapping = () => lab.state.mapping;
 
   function setMapping(img: Rgba, data: SheetMapping) {
@@ -196,7 +197,8 @@ export function createSheets(lab: Lab, toast: (msg: string) => void): HTMLElemen
       return map;
     };
     const picker = sheetPicker(m.image, {
-      zoom: 2,
+      zoom: pickerZoom,
+      onZoom: (z) => { pickerZoom = z; },
       labels,
       chosen: () => {
         if (!key) return [];

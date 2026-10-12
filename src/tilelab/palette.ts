@@ -117,6 +117,7 @@ export function createPalette(lab: Lab, toast: (msg: string) => void, openMap: (
   // ---- the selected tile's card --------------------------------------------------
 
   let pickSheet: { img: Rgba; name: string } | null = null;
+  let pickerZoom = 2;
 
   function setEdit(key: TileKey, e: TileEdit | null) {
     void lab.update((s) => {
@@ -200,7 +201,8 @@ export function createPalette(lab: Lab, toast: (msg: string) => void, openMap: (
       const blockBtn = h<HTMLButtonElement>("button.tl-btn.small", { type: "button", "aria-pressed": "false", hidden: !auto }, "Next click: 4x4 mask block");
       blockBtn.addEventListener("click", () => { block = !block; blockBtn.setAttribute("aria-pressed", String(block)); });
       const p = sheetPicker(ps.img, {
-        zoom: 2,
+        zoom: pickerZoom,
+        onZoom: (z) => { pickerZoom = z; },
         hint: auto ? "Click: base · shift-click: frame 2 · or use a 4x4 block for the masks" : "Click: base · shift-click: frame 2",
         onPick(cell, ev) {
           const cur = lab.state.edits[key];

@@ -13,6 +13,8 @@ export interface PickerOptions {
   /** Cells to outline (the current slot's assignment). */
   chosen?: () => readonly number[];
   onPick(cell: number, e: MouseEvent): void;
+  /** Told when the zoom changes (so a re-created picker can keep it). */
+  onZoom?(zoom: number): void;
   /** Shown under the sheet. */
   hint?: string;
 }
@@ -94,6 +96,7 @@ export function sheetPicker(img: Rgba, opts: PickerOptions): Picker {
     const b = h<HTMLButtonElement>("button.tl-btn.small", { type: "button", "aria-pressed": String(z === zoom) }, `${z}x`);
     b.addEventListener("click", () => {
       zoom = z;
+      opts.onZoom?.(z);
       for (const o of zooms.querySelectorAll("button")) o.setAttribute("aria-pressed", String(o === b));
       redraw();
     });
