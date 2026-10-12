@@ -383,7 +383,7 @@ const relaySensors: ScriptCmd[] = [
       fresh: [
         say("That pulse! I haven't slept. I don't think I want to.", "WREN"),
         say("Three of our listening posts went quiet right after it.", "WREN"),
-        say("One on ROUTE 4 by the river. One in the city square.", "WREN"),
+        say("One on ROUTE 4, up on the rise by the city. One in the city square.", "WREN"),
         say("And one in the PALM HOUSE, in all that steam.", "WREN"),
         say("Could you check them? Face a post and press A. It reads itself.", "WREN"),
         say("I'd go, but DR. ODELL has me rewriting the logs. Again.", "WREN"),
@@ -391,7 +391,7 @@ const relaySensors: ScriptCmd[] = [
       ],
       going: [
         ifFlags(allSensors, relaySensorsReward, [
-          say("ROUTE 4's river, the city square and the PALM HOUSE.", "WREN"),
+          say("ROUTE 4's rise, the city square and the PALM HOUSE.", "WREN"),
           say("Read all three posts, then come back. I'll put the kettle on.", "WREN"),
         ]),
       ],

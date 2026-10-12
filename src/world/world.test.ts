@@ -45,6 +45,18 @@ describe("world data", () => {
       for (const def of team) expect(hit(atk, def), `${atk} vs ${def.join("/")}`).toBeGreaterThanOrEqual(1);
     }
   });
+  it("puts LISTENING POST 1 where WREN says: up on ROUTE 4's rise, at the city end, not by the river", () => {
+    const m = WORLD.maps.route_4;
+    const post = m.triggers.find((t) => t.script === "q_relay_sensors_post_1")!;
+    const city = m.warps.find((w) => w.to === "glasshouse_city")!;
+    const river = Math.max(...m.tiles.map((row) => row.indexOf("~")).filter((x) => x >= 0 && x < 30));
+    expect(post.x - river).toBeGreaterThanOrEqual(10);
+    expect(city.x - post.x).toBeLessThanOrEqual(10);
+    const lines: string[] = [];
+    eachCmd(WORLD.scripts.q_relay_sensors, (c) => { if (c.op === "say" && /ROUTE 4/.test(c.text)) lines.push(c.text); });
+    expect(lines.length).toBeGreaterThan(0);
+    for (const t of lines) { expect(t).toMatch(/rise/); expect(t).not.toMatch(/river/); }
+  });
   it("passes every structural check", () => {
     expect(validateWorld(WORLD)).toEqual([]);
   });
