@@ -26,7 +26,7 @@ export interface MapDef {
   id: MapId;
   name: string;                 // shown on entry, e.g. "ROUTE 1"
   outdoor: boolean;             // outdoor maps get the night tint
-  /** Black outside player/lamppost light; the bag's FOXFIRE LANTERN expands player light. */
+  /** Black outside player/lamppost light; the bag's FOXFIRE JAR (foxfire_lantern) expands player light. */
   dark?: boolean;
   music: MusicId;
   /** Conditional map tracks. First match wins; otherwise use `music`. */

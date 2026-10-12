@@ -112,7 +112,7 @@ describe("Chapter 5 scripts", () => {
     await run("ch5_morrow_burnt");
     const dialogue = vi.mocked(host.ctx.ui.say).mock.calls.map(([text]) => text).join(" ");
     expect(dialogue.includes("Ask the keeper")).toBe(!lantern);
-    expect(dialogue.includes("You carry FOXFIRE already")).toBe(lantern);
+    expect(dialogue.includes("You carry a FOXFIRE JAR. Good.")).toBe(lantern);
     expect(state.flags.morrow_returned).toBe(true);
     expect(host.setNpcVisible).toHaveBeenCalledWith("morrow_bs", false);
   });
