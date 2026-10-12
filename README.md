@@ -93,6 +93,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
 | `npm test` | vitest: 1562 tests, including world validation, puzzle solvability, trainer-blocking and a boss-balance simulation |
 | `?dev=<module>` | isolated dev scenes: `battle`, `screens`, `audio` (jukebox), `ui`, `overworld`, `world`, and `art` (the **Art Lab**: browse and live-swap every art bundle) |
 | `?dev=world&play=1&map=<id>&flags=a,b&species=<id>&level=<n>` | drop into any story state |
+| `/tilelab.html` | the **Tile Lab**: every map under the current tiles; swap one tile, a whole sheet, an art pack or any external tileset, export it as an art pack, and walk around with it (`index.html?tilelab=1`); docs/ART.md § Tile Lab |
 | `npm run e2e` | headless full playthrough (216 beats through the ending and the whole post-game, about 38 minutes; first use: `npx playwright install chromium`). CI runs it before every deploy. |
 
 The art lives in `public/art/` and the game reads it directly: edit a PNG,

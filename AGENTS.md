@@ -61,6 +61,7 @@ leave `git status` clean (the generators are deterministic).
 | **All art, as swappable bundles** | `public/art/` (format: **docs/ART.md**) |
 | Art generators and tools (Python) | `tools/art/` |
 | The strategy guide page (`guide.html`), generated from the game's data; walkthrough prose in `src/guide/walkthrough/` (docs/GUIDE.md) | `src/guide/` |
+| The Tile Lab page (`tilelab.html`): every map under the current tiles, tile and tileset swaps, pack export (docs/ART.md §12) | `src/tilelab/` |
 | Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 216 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
 
 The e2e runner fixes time to day and defaults to `--seed 1`. It prints the seed

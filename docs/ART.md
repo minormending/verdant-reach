@@ -270,6 +270,9 @@ These are owned by the pipeline; see the tooling section it adds below.
 - `tools/art/art.py`: a CLI to list, validate, explode a tileset into
   per-tile PNGs, repack, swap, re-palette, start a new species from a
   template, and make contact sheets.
+- `tilelab.html`, the **Tile Lab**: every map under the current tiles, with
+  single-tile, whole-sheet, pack and external-sheet swaps, exported as a
+  pack (§12).
 - `?dev=art`, the **Art Lab** in the browser:
   - browse every bundle with palette swatches, a sport toggle, animation
     previews and a 4x4 autotile mask preview;
@@ -391,3 +394,97 @@ of its classic folder into `species/` with `source.kind` set to `edited`.
   - `"anim": null` on the traced species, which have a single front frame;
   - credits in `packs/traced/CREDITS.md`.
 - Try it with `?art=traced`.
+
+## 12. The Tile Lab (`tilelab.html`)
+
+A page for trying tileset swaps on the whole world before committing to
+them: `npm run dev`, then http://localhost:5173/tilelab.html (the build
+emits `dist/tilelab.html`; `?art=<id>` works as everywhere). Everything is in
+memory and in IndexedDB (`verdant.tilelab`); nothing is written to
+`public/art/` until you install an export.
+
+**Look.** The atlas draws every map with the game's own renderer (the
+guide's `renderMap`: autotile masks, ground variation, legends, structures,
+characters), lazily as cards scroll into view. Filter by name or id, by
+tileset, or to the maps that use the selected tile. Click a card for the
+large view: zoom 1–4x (keys `1`–`4`), drag to pan, `[` / `]` for the
+previous / next map. Hovering names the tile under the cursor; clicking
+selects it. The header's story state (New game, Game cleared) and the
+view's per-map `legendWhen` flags change what the maps show. **Hold to
+compare** (or hold `C`) shows the art without the lab's changes.
+
+**Tiles tab.** Every `TileKey`, grouped by the tileset that owns it, with
+its usage (maps and cells from the rows, `legend`, `legendWhen`, the border,
+and field-move or filled-pit results). A tile's card shows its base, frame
+2, alts and, for autotiled keys, all 16 masks as a 4x4 grid (undrawn masks
+dimmed: they fall back to the base). Selecting a tile highlights its cells
+on the maps.
+
+**Swap one tile.** Drop or choose a PNG on the tile's card:
+
+| Upload | Becomes |
+|---|---|
+| 16x16 | the base (tick *Also use it for every alt and mask* to drop the old alts and masks) |
+| 32x16 | base frames 1 and 2 |
+| 64x64 (autotiled keys) | masks 0–15 as a 4x4 grid, row by row (mask *m* at column `m % 4`, row `m / 4`); mask 15 also becomes the base |
+| 128x64 (autotiled keys) | two such grids side by side: frames 1 and 2 |
+| any other 16px grid | a sheet to pick from: click a cell for the base, shift-click for frame 2, or *4x4 mask block* |
+
+*Show the swap* turns one tile's swap off and on (A/B); *Reset tile* removes it.
+
+**Swap a whole tileset** (Tilesets tab):
+- **Packs:** tick installed packs to preview them under the edits.
+- **Replace sheet:** drop a PNG laid out like the tileset's current sheet
+  (same width; *Download current* gives a template). Every key reads its
+  old cells from the new sheet.
+- **Map an external sheet:** load any 16px-grid tileset, select a game tile,
+  pick a slot (base, frame 2, alt, or a mask in the 4x4 slot grid) and click
+  a cell; masks advance in order, and *4x4 block* assigns masks 0–15 from a
+  block. Right-click a slot to clear it. Unmapped tiles keep the current
+  art (the list shows them); by default a mapped tile's unmapped alts and
+  masks show its new base. *Save mapping JSON* / *Load mapping JSON*
+  (`verdant.tilelab-mapping/1`: the sheet's size and, per key, cell lists
+  for `base`, `alts` and `masks`).
+
+Precedence per key: a single-tile swap, then the mapping, then a replaced
+sheet, then the current art.
+
+**Export** (Changes & export tab) writes `<id>.zip`:
+
+```
+README.md                      how to install it (below)
+<id>/pack.json
+<id>/tilesets/<tileset>/tileset.json   tiles.<key> for each overridden key (§8)
+<id>/tilesets/<tileset>/sheet.png      only those keys' images (every image of the key)
+tiles/<tileset>/<stem>.png     per-tile PNGs, named as `art.py explode` names them
+tilelab-mapping.json           the external-sheet mapping, if any
+```
+
+A replaced sheet is exported whole (its cells line up), with extra rows for
+any edited keys and `tiles` naming every key of that tileset, because a pack
+layer that defines `tiles` reads its own sheet. Before writing, the pack is
+checked with `src/art/validate.ts` (the same rules as `npm test`). To try
+it: copy `<id>/` to `public/art/packs/<id>/`, run `npm run art:index`, open
+`?art=<id>` and run `npm test`. To bake it into the base tilesets instead,
+use the `tiles/` PNGs with `art.py`: `explode <tileset> /tmp/t`, delete the
+stems the README lists (dropped alts and masks), copy `tiles/<tileset>/*.png`
+over, `pack /tmp/t <tileset>`, then `npm run art:index`.
+
+**Walk around with these tiles** opens `index.html?tilelab=1`: at boot the
+game loads the lab's saved state from IndexedDB and applies it in memory
+(`src/tilelab/hook.ts`, imported only when the param is present). On the
+dev server the large view's *Walk here* opens
+`?tilelab=1&dev=world&play=1&map=<id>` with the view's flags.
+
+**Code.** `src/tilelab/`: pure, unit-tested modules (`tiles.ts` edits and
+mask grids, `usage.ts`, `mapping.ts`, `plan.ts` edits to tileset overrides,
+`pack.ts` export and validation, `zip.ts` a store-only ZIP writer with
+CRC-32 and stored-zlib PNG encoding), and the page (`install.ts` puts a plan
+into an `ArtRegistry` as lab-layer patches plus an in-memory sheet,
+`store.ts`, `app.ts`, `atlas.ts`, `palette.ts`, `sheets.ts`, `changes.ts`).
+
+**Limitations.** Thumbnails are downscaled (smoothly) to fit; the large view
+is pixel-exact. Maps draw a still frame (frame 1) of animated tiles. The
+story presets set only `game_cleared`; other flags are per map in the large
+view. Structures, characters and species are out of scope (use the Art Lab).
+
