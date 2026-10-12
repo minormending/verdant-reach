@@ -6,7 +6,8 @@ import { defineConfig } from "vite";
 // runtime asset path is already relative ("assets/..."); only index.html's
 // root-absolute links need Vite's rewriting.
 //
-// Two pages: the game (index.html) and the guidebook (guide.html, docs/GUIDE.md).
+// Three pages: the game (index.html), the guidebook (guide.html, docs/GUIDE.md)
+// and the Tile Lab (tilelab.html, docs/ART.md § Tile Lab).
 export default defineConfig(({ command }) => ({
   base: command === "build" ? "./" : "/",
   build: {
@@ -14,6 +15,7 @@ export default defineConfig(({ command }) => ({
       input: {
         main: fileURLToPath(new URL("./index.html", import.meta.url)),
         guide: fileURLToPath(new URL("./guide.html", import.meta.url)),
+        tilelab: fileURLToPath(new URL("./tilelab.html", import.meta.url)),
       },
     },
   },
