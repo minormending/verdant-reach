@@ -72,6 +72,11 @@ export const postgameScripts: Scripts = {
     say("Down in the rock, something hums. Low and slow, like a song you almost remember."),
     { op: "stillClear" },
     { op: "wildBattle", species: "methuselah", level: 70, canLose: true },
+    // As with the ELDER, a loss is no whiteout: the team mends where it stands.
+    { op: "ifLastBattle", result: "lost", then: [
+      { op: "heal" },
+      say("The low hum in the rock steadies your team. The old pine waits."),
+    ] },
   ], [say("A twisted bristlecone, grey with age. In daylight, it's only an old tree.")])])],
   pg_council_rematch: [ifFlags({ game_cleared: true, council_run: false }, [
     ...COUNCIL_RUN_FLAGS.map((f) => flag(f, false)),

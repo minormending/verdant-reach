@@ -182,6 +182,32 @@ describe("post-game story events", () => {
   });
 });
 
+describe("METHUSELAH loss", () => {
+  it("heals the wilted team on the ridge with a narration line, like the ELDER", async () => {
+    const { state, host, run, enter } = setup("night");
+    state.flags.diary_read = true;
+    await enter("methuselah_ridge");
+    vi.mocked(host.battle).mockImplementation(async () => {
+      for (const q of state.party) q.hp = 0;
+      return "lost";
+    });
+    await run("pg_methuselah");
+    expect(host.healParty).toHaveBeenCalledOnce();
+    expect(state.party.every((q) => q.hp === q.stats.hp)).toBe(true);
+    expect(host.whiteout).not.toHaveBeenCalled();
+    expect(state.position.map).toBe("methuselah_ridge");
+    expect(host.ctx.ui.say).toHaveBeenLastCalledWith(expect.stringContaining("The old pine waits"), undefined);
+  });
+  it.each(["won", "caught", "fled"] as const)("does not heal after %s", async (outcome) => {
+    const { state, host, run, enter } = setup("night");
+    state.flags.diary_read = true;
+    await enter("methuselah_ridge");
+    vi.mocked(host.battle).mockResolvedValue(outcome);
+    await run("pg_methuselah");
+    expect(host.healParty).not.toHaveBeenCalled();
+  });
+});
+
 describe("Council rematch run", () => {
   it("starts fresh from the actual entry hook, closes the return door, and cannot reset an active run", async () => {
     const { state, run, enter } = setup();
