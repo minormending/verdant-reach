@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { MAP_IDS, SPECIES_IDS, STRUCTURES, TILES } from "../contracts";
 import { WORLD } from "./index";
+import { DATA } from "../data";
+import { TYPE_CHART } from "../data/typeChart";
 import type { Cond, MapDef, TileKey } from "../contracts";
 import { checkProgressWithoutPrune, eachCmd, flood, grid, prunable, validateWorld, walkable, wrapText, expandTokens } from "./validate";
 
@@ -26,6 +28,22 @@ describe("world data", () => {
     eachCmd(WORLD.scripts.r2_forager, (c) => { if (c.op === "say") lines.push(c.text); });
     expect(lines.some((t) => /cat/i.test(t))).toBe(true);
     for (const t of lines) expect(t).not.toMatch(/ginger|tabby|orange|black|grey|gray|tortoiseshell|calico/i);
+  });
+  it.each([
+    ["bgc_guide", "hollis"], ["sbc_guide", "nell"], ["rgc_guide", "flora"],
+  ] as const)("%s's type tip is true against %s's team", (script, leader) => {
+    const lines: string[] = [];
+    eachCmd(WORLD.scripts[script], (c) => { if (c.op === "say") lines.push(c.text); });
+    const tip = lines.find((t) => /Bring /.test(t))!;
+    const named = Object.keys(TYPE_CHART).filter((t) => new RegExp(`\\b${t}\\b`, "i").test(tip.split("Bring ")[1]));
+    expect(named.length, tip).toBeGreaterThan(0);
+    const team = WORLD.trainers[leader].team.map((m) => DATA.species[m.species].types);
+    const hit = (atk: string, def: readonly string[]) => def.reduce((x, d) => x * ((TYPE_CHART as Record<string, Record<string, number>>)[atk][d] ?? 1), 1);
+    for (const atk of named) {
+      // Super effective against the type the guide names, and never resisted by anyone on the team.
+      expect(hit(atk, [team[0][0]]), `${atk} vs ${team[0][0]}`).toBe(2);
+      for (const def of team) expect(hit(atk, def), `${atk} vs ${def.join("/")}`).toBeGreaterThanOrEqual(1);
+    }
   });
   it("passes every structural check", () => {
     expect(validateWorld(WORLD)).toEqual([]);

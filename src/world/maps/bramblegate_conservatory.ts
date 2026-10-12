@@ -79,7 +79,7 @@ export const scripts: Scripts = {
     ], [
       say("Here to see HOLLIS? He waits at the heart of his hedge maze."),
       say("The levers move the hedge gates. Watch which ones open, and which close."),
-      say("His QUICKENED are WOOD types. Patient, and they hit back. Bring fire."),
+      say("His QUICKENED are WOOD types. Patient, and they hit back. Bring FIRE or FROST."),
     ]),
   ],
   bgc_gate: [
