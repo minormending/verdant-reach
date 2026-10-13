@@ -370,7 +370,7 @@ nothing when no art changed.
 
 ### The `classic` pack
 
-`packs/classic/` is a snapshot of all 65 species as they were before the
+`packs/classic/` is a snapshot of the original 65 species (the roster then; there are now 130) as they were before the
 Crystal-rule rollout (frames, palette, sport and notes copied from the base
 bundles, `source: {kind: "imported", from: "base art before the Crystal-rule
 rollout"}`, and `"anim": null` so the base's intros don't leak into the old

@@ -183,7 +183,7 @@ concurrency:
     <thead><tr><th>Blocker</th><th>Where it shows</th><th>Typical cause</th></tr></thead>
     <tbody>
       <tr><td>A failing unit test</td><td>build / Test</td><td>A data or map edit broke a band, a digest or the validator</td></tr>
-      <tr><td>A release-check offender</td><td>build / Release gate</td><td><code>TODO(text)</code> dialogue or placeholder art merged from a feature branch</td></tr>
+      <tr><td>A release-check offender</td><td>build / Release gate</td><td><code>TODO&#40;text)</code> dialogue or placeholder art merged from a feature branch</td></tr>
       <tr><td>A type error or bundling error</td><td>build / Build</td><td>Strict TypeScript; a missing import; a new page not wired into the build</td></tr>
       <tr><td>A failed beat</td><td>e2e / Full playthrough</td><td>A story change the robot does not know about, or a real soft-lock</td></tr>
       <tr><td>Any issue, even with all beats OK</td><td>e2e / Full playthrough</td><td>A <code>console.error</code>, a missing asset, overlong text, a long task</td></tr>
@@ -258,7 +258,7 @@ jq '.texts[-20:]' last-report.json              # the last 20 lines of dialogue<
   branch chapter
   checkout chapter
   commit id: "maps, trainers, story"
-  commit id: "TODO(text) stand-ins"
+  commit id: "TODO&#40;text) stand-ins"
   branch env-pass
   checkout env-pass
   commit id: "environment art"
