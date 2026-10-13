@@ -69,6 +69,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
   - **Choose to play as a boy or a girl:** DR. VALE asks Crystal-style before you give your name, and your choice is the sprite you walk and battle with.
   - Crystal-style battles with a modern feel: the physical/special split, statuses, weather, critical captures, SUPER/WEAK hints, and 40 move-animation families.
   - Catching with nicknames, and growth (evolution) by level, by time of day and by friendship.
+  - **Route rematches:** talk again to any of the 43 route trainers you've beaten and they ask for a rematch. Each rematch you win raises their team one more level (+1, +2, …, capped at 100); plants grow into their next stages as they pass the levels. Rematches pay EXP only, no prize money.
   - **The Nursery Garden:** board two plants that share a pollination group and they set a SEED, which sprouts in your party as you walk.
   - **Field moves:** PRUNE clears brambles, opening shortcuts and hidden stashes across the old routes. RAFT rides a giant lily pad across water, UPROOT pushes boulders with a Quickened's roots, and ROOT BRIDGE grows a living fig root across narrow gorges.
   - **Item growth:** EMBER ASH opens a sealed lodgepole cone, the way real fire-cones need fire to release their seed, and a COLD SNAP wakes a snowdrop bulb that needs a winter before it grows. The FOXFIRE LANTERN lights dark maps.

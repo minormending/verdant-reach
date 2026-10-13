@@ -730,6 +730,62 @@ export const COUNTER: Record&lt;StarterLine, StarterLine&gt; = { oak: "chili", c
     copies each trainer as <code>&lt;id&gt;_rematch</code>, every member 8 levels higher, with fresh copies of move and
     item lists and new lines (Rowan's prize becomes $5000).</p>
 
+  <h4 id="battle-route-rematches">Route rematches</h4>
+  <p>Route trainers can be fought again as often as you like. Talking to a beaten one on an outdoor map shows its
+    <code>after</code> line, then asks "Up for a rematch? We've been growing!" (the overworld side is in
+    <a href="#world-rematches">the world section</a>). Saying YES sends a <code>BattleRequest</code> whose
+    <code>trainerDef</code> holds a team built for that fight alone; the battle scene uses it instead of
+    <code>world.trainers[id]</code>, so the AI, items, music, portrait and <code>defeat</code> line are the trainer's own.</p>
+  <pre><code class="lang-ts">export function buildRematch(data: GameData, trainer: TrainerDef, wins: number): TrainerDef {
+  const bonus = Math.max(0, Math.floor(wins)) + 1;
+  return {
+    ...trainer,
+    prize: 0,
+    team: trainer.team.map((member) =&gt; {
+      const level = Math.min(MAX_LEVEL, member.level + bonus);
+      return { ...member, level, species: rematchSpecies(data, member.species, level),
+        ...(member.moves ? { moves: [...member.moves] } : {}) };
+    }),
+    // …
+  };
+}</code></pre>
+  <ul>
+    <li><strong>Levels.</strong> <code>wins</code> is the count of rematches won (<code>state.trainerRematches</code>), so
+      the first rematch is +1, the next +2, and a loss retries at the same level. Every member is capped at
+      <code>MAX_LEVEL</code> (100).</li>
+    <li><strong>No prize money.</strong> <code>prize: 0</code>, so <code>trainerVictory</code> skips the "got $N for
+      winning" line. EXP is awarded as usual for the higher levels. First battles still use the shared TrainerDef and pay.</li>
+    <li><strong>Growth.</strong> <code>rematchSpecies</code> follows the line's <code>growsInto</code> chain as far as
+      the new level allows, so a stage-1 plant far enough above both triggers fields as stage 3. Level triggers
+      (<code>vigor</code>, <code>vigor_day</code>, <code>vigor_night</code>) use their level and ignore the time of day;
+      the others use one explicit table.</li>
+    <li><strong>Moves.</strong> A member without <code>moves</code> stays without them, so <code>createQuickened</code>
+      picks the level-appropriate set for the new species. Hand-picked moves are kept (copied).</li>
+  </ul>
+  <table>
+    <thead><tr><th>Stage</th><th>Real trigger</th><th>Rematch growth level</th></tr></thead>
+    <tbody>
+      <tr><td>CLOVER SPROUT</td><td>tending</td><td>36 (the fallback)</td></tr>
+      <tr><td>MAPLE SAPLING</td><td>tending</td><td>36</td></tr>
+      <tr><td>APPLE SAPLING</td><td>tending</td><td>36</td></tr>
+      <tr><td>VANILLA VINE</td><td>cross-pollination</td><td>36</td></tr>
+      <tr><td>LODGEPOLE CONE</td><td>EMBER ASH</td><td>26 (the seedling grows at 32)</td></tr>
+      <tr><td>SNOWDROP BULB</td><td>COLD SNAP</td><td>34 (the shoot grows at 36)</td></tr>
+    </tbody>
+  </table>
+  <details class="advanced"><summary>Advanced: rematch invariants</summary>
+    <ul>
+      <li><strong>Never mutate the shared TrainerDef.</strong> <code>buildRematch</code> copies the team, move lists and
+        items on every call; a test builds a rematch for every eligible trainer and compares the base with a
+        <code>structuredClone</code> taken before.</li>
+      <li><strong>Same id.</strong> The rematch keeps the trainer's id, so the seeded battle stream
+        (<code>trainer:&lt;id&gt;</code>) simply continues, and <code>beat_&lt;id&gt;</code> is already set.</li>
+      <li><strong>The growth table is complete and ordered.</strong> <code>REMATCH_GROWTH_LEVEL</code> in
+        <a data-src="src/world/rematches.ts">rematches.ts</a> must name every non-level trigger in the species data
+        (a test fails on a new one), and every line must grow at strictly rising levels.</li>
+    </ul>
+  </details>
+
   <!-- ===================================================================== -->
   <h3 id="battle-whiteout">Losing: whiteout</h3>
 

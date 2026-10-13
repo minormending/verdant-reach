@@ -66,6 +66,7 @@ export interface SaveEnvelope {
   class Systems {
     harvested: id to date
     nursery: slots, steps, seedReady
+    trainerRematches: id to wins
   }
   GameState *-- Postgame
   GameState *-- Systems</pre>
@@ -86,6 +87,7 @@ export interface SaveEnvelope {
       <tr><td><code>options</code></td><td>Text speed, follower, battle animations</td><td>Cleaned; toggles default to on</td></tr>
       <tr><td><code>harvested</code></td><td>Berry bush id to the date it was last picked</td><td>Only well-formed <code>YYYY-MM-DD</code> entries are kept</td></tr>
       <tr><td><code>nursery</code></td><td>Up to 2 boarders, a step counter, a seed flag</td><td>Optional; damaged parts fall back to fresh values</td></tr>
+      <tr><td><code>trainerRematches</code></td><td>Route rematches won, per trainer id; the next rematch is +(wins + 1) levels</td><td>Optional; missing means none won. Only whole, non-negative counts are kept (<code>cleanTrainerRematches</code>)</td></tr>
       <tr><td><code>hallOfFame</code></td><td>One party snapshot per Council clear</td><td>Optional; only whole valid teams are kept, never a fabricated clear</td></tr>
       <tr><td><code>roamers</code>, <code>burr</code>, <code>wandererWilted</code>, <code>burrHitch</code></td><td>Wanderer HP, status, location; the wilt date; BURR's hitch spot</td><td>Missing: healthy, unreleased Wanderers at their first map</td></tr>
     </tbody>
@@ -98,7 +100,7 @@ export interface SaveEnvelope {
       <li><code>version: 1</code> is a literal type, so code can't accidentally write another number into the state; the real format version lives on the envelope.</li>
       <li>Records (<code>bag</code>, <code>flags</code>, <code>harvested</code>) rather than arrays keep JSON small and lookups O(1), and make "missing" mean "zero" or "false" for free.</li>
       <li>Some things are derived rather than stored (quest step ticks, which towns SEED GLIDE offers, a Wanderer's max HP), so they can't disagree with the data after a change. Party members do store their computed <code>stats</code>, which the battle code keeps current.</li>
-      <li>Optional fields (<code>hallOfFame</code>, <code>nursery</code>, <code>rafting</code>, <code>burrHitch</code>) are only added by <code>normalizeState</code> when the stored value is present and valid, so an old save never gains, say, an empty Hall of Fame that would read as a clear.</li>
+      <li>Optional fields (<code>hallOfFame</code>, <code>nursery</code>, <code>rafting</code>, <code>burrHitch</code>, <code>trainerRematches</code>) are only added by <code>normalizeState</code> when the stored value is present and valid, so an old save never gains, say, an empty Hall of Fame that would read as a clear.</li>
     </ul>
   </details>
 
@@ -184,7 +186,7 @@ export interface SaveEnvelope {
 
   <p>Notice the pattern: compare against the one value that means "new behaviour" (<code>=== "girl"</code>), so missing, misspelled and hand-edited values all fall back to the old behaviour. Read sites agree: <code>playerArt(state)</code> in <a data-src="src/contracts/constants.ts">constants.ts</a> also treats anything but <code>"girl"</code> as the boy.</p>
 
-  <p>Bigger structures get a dedicated cleaner: <code>cleanNursery</code>, <code>cleanSeeds</code>, <code>cleanHarvested</code>, <code>cleanHallOfFame</code>, <code>cleanWanderers</code>. Each keeps what is well formed and replaces the rest with fresh values.</p>
+  <p>Bigger structures get a dedicated cleaner: <code>cleanNursery</code>, <code>cleanSeeds</code>, <code>cleanHarvested</code>, <code>cleanHallOfFame</code>, <code>cleanWanderers</code>, <code>cleanTrainerRematches</code>. Each keeps what is well formed and replaces the rest with fresh values.</p>
 
   <p><code>migrate()</code> is where a real version change would go. Today it only rejects envelopes it can't understand:</p>
 

@@ -288,6 +288,7 @@ export const ifNight = (then: ScriptCmd[], els: ScriptCmd[]): ScriptCmd =&gt;
       <li><strong>Marks are awarded once, by one owner.</strong> After a won leader battle, <code>trainerBattle</code> gives the trainer's <code>mark</code> only if no script anywhere contains a <code>giveMark</code> for it (<code>scriptsAwardMark</code> scans all scripts on each win). So if a leader's scene gives the mark itself, the engine stays out of the way.</li>
       <li><strong><code>ifLastBattle</code> only sees battles in this run.</strong> A trainer who spots you from the grass fights outside any script, so there is no "last battle" for a later script to read; use the <code>beat_&lt;trainer&gt;</code> flag instead.</li>
       <li><strong><code>fled</code> and <code>caught</code></strong> only come from wild battles. A <code>wildBattle</code> with <code>canLose</code> needs branches for every outcome that matters, or the scene continues as if nothing happened.</li>
+      <li><strong>Scripted fights never rematch.</strong> A trainer named by any <code>battle</code> op is a story fight, so <code>rematchTrainerIds</code> leaves it out. Route rematches are not a script op: they run in the trainer NPC flow (<a href="#world-rematches">route rematches</a>).</li>
       <li><strong>After every battle</strong> the overworld sets 3 grace steps, restores the map music and fades back in, except after a non-<code>canLose</code> loss, where whiteout fades in instead.</li>
     </ul>
   </details>
