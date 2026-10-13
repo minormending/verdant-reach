@@ -78,6 +78,9 @@ async function boot() {
     // ?tilelab=1 (the Tile Lab's "Walk around" button): apply its saved tile
     // overrides in memory. Without the param this module is never loaded.
     if (new URLSearchParams(location.search).has("tilelab")) await (await import("./tilelab/hook")).applyStoredTileLab();
+    // ?trainerlab=1 (the Trainer Editor's "Play with these trainers"): use its
+    // saved trainer edits in memory. Without the param this module is never loaded.
+    if (new URLSearchParams(location.search).has("trainerlab")) await (await import("./trainereditor/hook")).applyStoredTrainerEdits();
     await loading.finish();
     scenes.pop();
 
