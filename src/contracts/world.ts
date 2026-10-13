@@ -155,6 +155,11 @@ export type ScriptCmd =
   | { op: "credits" }                                     // scrolling cast; B skips, then script continues
   | { op: "hallOfFame" }                                  // append a snapshot of this clear's party
   | { op: "endSlice" }                                    // "to be continued" card -> title
+  /**
+   * Stop the current script, like `return`: inside a script reached by `call`
+   * the caller carries on after the `call`. (Whiteout, `endSlice` and a crashed
+   * battle are the only hard stops; they abort every script in the run.)
+   */
   | { op: "end" };
 
 export interface TrainerDef {

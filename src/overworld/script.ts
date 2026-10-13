@@ -68,6 +68,7 @@ export interface ScriptHost {
 export class ScriptAbort extends Error {
   constructor(reason: string) { super(reason); }
 }
+/** Thrown by `end`: stops the current script only. `call` and `runScript` catch it. */
 class ScriptEnd extends Error {}
 
 export interface ScriptState {
@@ -396,6 +397,9 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
       st.depth++;
       try {
         await exec(host, resolve(host, cmd.script), st);
+      } catch (e) {
+        // `end` in a called script returns to the caller; aborts still stop everything.
+        if (!(e instanceof ScriptEnd)) throw e;
       } finally {
         st.depth--;
       }
@@ -452,8 +456,10 @@ async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise<
     case "end":
       throw new ScriptEnd();
     default: {
-      const unknown = cmd as { op?: string };
-      console.warn(`[script] unknown op "${unknown.op}"`);
+      // Compile-time exhaustiveness: a new ScriptCmd op without a case fails typecheck here.
+      const unknown: never = cmd;
+      // Runtime safety net for data the types can't see (the validator rejects it too).
+      console.warn(`[script] unknown op "${(unknown as { op?: string }).op}"`);
     }
   }
 }

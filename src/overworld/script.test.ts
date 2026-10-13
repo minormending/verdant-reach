@@ -331,6 +331,37 @@ describe("script interpreter", () => {
     expect(state.flags.static_sport_done).toBeUndefined();
   });
 
+  it("ends only the current script: a called script's end returns to its caller", async () => {
+    const { host, state, said, ctx } = setup();
+    ctx.world.scripts.helper = [
+      { op: "say", text: "helper" },
+      { op: "if", when: [{ flag: "stop_early", is: true }], then: [{ op: "end" }] },
+      { op: "say", text: "helper rest" },
+    ];
+    try {
+      state.flags.stop_early = true;
+      await runScript(host, [{ op: "call", script: "helper" }, { op: "say", text: "caller rest" }]);
+      expect(said).toEqual(["helper", "caller rest"]);
+      // The same script run on its own (as a talk script) just stops.
+      said.length = 0;
+      await runScript(host, "helper");
+      expect(said).toEqual(["helper"]);
+      // A top-level end still stops the rest of its own list.
+      said.length = 0;
+      await runScript(host, [{ op: "say", text: "a" }, { op: "end" }, { op: "say", text: "b" }]);
+      expect(said).toEqual(["a"]);
+    } finally { delete ctx.world.scripts.helper; }
+  });
+
+  it("still stops every caller on a hard stop inside a called script", async () => {
+    const { host, said, ctx } = setup({ battles: ["lost"] });
+    ctx.world.scripts.fight = [{ op: "battle", trainer: "hollis" }];
+    try {
+      await expect(runScript(host, [{ op: "call", script: "fight" }, { op: "say", text: "after" }])).rejects.toThrow("whiteout");
+    } finally { delete ctx.world.scripts.fight; }
+    expect(said).not.toContain("after");
+  });
+
   it("calls normal whiteout recovery and aborts the remaining script", async () => {
     const { host, said } = setup();
     await expect(runScript(host, [

@@ -123,6 +123,14 @@ describe("encounters with the round-3 species", () => {
 
 describe("validator self-check (round 3)", () => {
   const clone = () => structuredClone(WORLD);
+  it("catches commands after an end, which never run", () => {
+    const w = clone();
+    w.scripts.zz_end_ok = [{ op: "if", when: [{ flag: "x", is: true }], then: [{ op: "say", text: "Hi." }, { op: "end" }] }, { op: "say", text: "Bye." }];
+    w.scripts.zz_end_dead = [{ op: "yesno", prompt: "Go?", yes: [{ op: "end" }, { op: "say", text: "Never." }], no: [] }];
+    const errs = validateWorld(w);
+    expect(errs).toContain(`[script zz_end_dead] commands after "end" never run`);
+    expect(errs.join("\n")).not.toMatch(/zz_end_ok/);
+  });
   it("catches hidden items that can't be found", () => {
     const w = clone();
     // route_1 3,0 is in the tree line; 9,0 is the warp.
