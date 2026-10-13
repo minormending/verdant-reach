@@ -335,17 +335,20 @@ export function createUiKit(ctx: GameContext): UiKit & {
       });
     },
 
-    choose(options: string[], opts?: { prompt?: string; x?: number; y?: number; cancel?: boolean }): Promise<number> {
+    choose(options: string[], opts?: { prompt?: string; x?: number; y?: number; cancel?: boolean; onCursor?: (index: number) => void }): Promise<number> {
       if (options.length === 0) return Promise.resolve(-1);
       const prior = opts?.prompt ? null : lingering();
       return ctx.scenes.run<number>((done) => {
         const box = opts?.prompt ? new TextBox(format(opts.prompt), hooks, { waitLast: false }) : null;
         const menu = new Menu(options.map(format), sfx, { x: opts?.x, y: opts?.y, cancel: opts?.cancel ?? true });
+        let cursor = menu.index;
+        opts?.onCursor?.(cursor);
         const scene: Scene = {
           transparent: true,
           update() {
             if (box && !box.finished) { box.update(ctx.input); return; }
             const r = menu.update(ctx.input);
+            if (menu.index !== cursor) opts?.onCursor?.(cursor = menu.index);
             if (r !== null) {
               if (box) last = { lines: box.visible(), at: now() };
               done(r);

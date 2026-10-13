@@ -158,8 +158,9 @@ export interface UiKit {
   wrap(text: string, maxCols: number): string[];
   /** Text box at the bottom of the screen; resolves after the last page. */
   say(text: string, opts?: { speaker?: string; autoClose?: boolean }): Promise<void>;
-  /** Menu of options; resolves with the chosen index, or -1 if cancelled (B). */
-  choose(options: string[], opts?: { prompt?: string; x?: number; y?: number; cancel?: boolean }): Promise<number>;
+  /** Menu of options; resolves with the chosen index, or -1 if cancelled (B).
+   *  `onCursor` hears the highlighted index as the cursor moves (and once when the menu opens). */
+  choose(options: string[], opts?: { prompt?: string; x?: number; y?: number; cancel?: boolean; onCursor?: (index: number) => void }): Promise<number>;
   yesNo(prompt: string): Promise<boolean>;
 }
 
