@@ -678,4 +678,7 @@ export const TRAINER_LINES: Record<string, Lines> = {
  * checked when this module loads (trainersFileErrors), so a bad edit fails
  * with the trainer and field.
  */
-export const TRAINERS = buildTrainers(file as unknown as TrainersFile, { data: DATA, lines: TRAINER_LINES });
+/** The shipped src/data/trainers.json, as parsed (the Trainer Editor's base). */
+export const TRAINERS_FILE = file as unknown as TrainersFile;
+
+export const TRAINERS = buildTrainers(TRAINERS_FILE, { data: DATA, lines: TRAINER_LINES });
