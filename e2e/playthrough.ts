@@ -1,7 +1,9 @@
-// Automated end-to-end playthrough of the slice, run in the browser against
-// the dev server (it drives the dev-only `window.__t` driver).
+// Automated end-to-end playthrough of the whole game, run in the browser
+// against the production e2e build (`vite build --mode e2e`) or the dev server;
+// it drives the `window.__t` driver that only those builds install.
 //
-//   npm run e2e                                        headless full playthrough
+//   npm run e2e                                        headless full playthrough (production build)
+//   npm run e2e -- --dev                               the same against the dev server
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
 //   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> post-game
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
