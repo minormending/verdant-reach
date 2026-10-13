@@ -223,3 +223,6 @@ export const WORLD: WorldData = {
   // Prologue: the observation deck at night, beside DR. VALE.
   newGame: { map: "herbarium_roof", x: 5, y: 6, facing: "up", script: "prologue" },
 };
+
+// Route rematches (outdoor trainers fought again, +1 level per rematch won).
+export { buildRematch, isRematchTrainer, rematchPrompt, rematchTrainerIds } from "./rematches";
