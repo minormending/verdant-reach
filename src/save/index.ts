@@ -2,7 +2,7 @@
 // play time and save date). Options are also kept on their own so they
 // survive "NEW GAME" and apply at the title screen.
 
-import type { GameContext, GameState, MapId } from "../contracts";
+import type { GameContext, GameState, MapId, PlayerLook } from "../contracts";
 import { MAP_IDS, SPECIES_IDS, STATUSES } from "../contracts";
 import { DATA } from "../data";
 import { freshWanderers, ROAMER_MAPS, WANDERERS, wandererMaxHp } from "../overworld/roaming";
@@ -11,7 +11,10 @@ import { todayISO } from "../overworld/progress";
 export const SAVE_KEY = "verdant-reach-save";
 export const OPTIONS_KEY = "verdant-reach-options";
 export const SAVE_VERSION = 1;
-export const DEFAULT_PLAYER_NAME = "ROWAN";
+/** NEW GAME's default name for each look (END on an empty name). Plant names, 7 letters at most. */
+export const DEFAULT_PLAYER_NAMES: Record<PlayerLook, string> = { boy: "SORREL", girl: "HAZEL" };
+/** Fallback for a save with no usable name. */
+export const DEFAULT_PLAYER_NAME = DEFAULT_PLAYER_NAMES.boy;
 export const DEFAULT_RIVAL_NAME = "BRAM";
 
 export interface SaveEnvelope {
@@ -139,6 +142,7 @@ export function newGameState(ctx: Pick<GameContext, "world">): GameState {
   return {
     version: 1,
     playerName: "",
+    playerLook: "boy",
     rivalName: DEFAULT_RIVAL_NAME,
     money: 3000,
     party: [],
@@ -191,6 +195,8 @@ export function normalizeState(raw: unknown, fallback: GameState): GameState | n
   return {
     version: 1,
     playerName: typeof r.playerName === "string" && r.playerName ? r.playerName : DEFAULT_PLAYER_NAME,
+    // Additive v1 migration: saves from before the look choice play as the boy.
+    playerLook: r.playerLook === "girl" ? "girl" : "boy",
     rivalName: typeof r.rivalName === "string" && r.rivalName ? r.rivalName : DEFAULT_RIVAL_NAME,
     money: typeof r.money === "number" && isFinite(r.money) ? Math.max(0, Math.floor(r.money)) : fallback.money,
     party: cleanSeeds(arr(r.party, []).slice(0, 6)),

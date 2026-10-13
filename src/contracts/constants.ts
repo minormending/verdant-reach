@@ -1,4 +1,5 @@
 import type { SpeciesId, TileKey, StructureKey, CharacterKey, TrainerPortraitKey } from "./ids";
+import type { PlayerLook } from "./runtime";
 
 /** Game Boy Color screen. Everything renders at this size, then integer-scales. */
 export const SCREEN_W = 160;
@@ -103,8 +104,21 @@ export const structurePath = (key: StructureKey) => `assets/structures/${key}.pn
 export const characterPath = (key: CharacterKey) => `assets/characters/${key}.png`;
 export const CHAR_ROWS = { down: 0, up: 1, left: 2, right: 3 } as const;
 
-/** Trainer battle picture: 56x56 PNG (player_back is 48x48). */
+/** Trainer battle picture: 56x56 PNG (the player's backs are 48x48). */
 export const portraitPath = (key: TrainerPortraitKey) => `assets/trainers/${key}.png`;
+
+/** The player's art for each look: the overworld sheet and the 48x48 battle back. */
+export const PLAYER_ART = {
+  boy: { character: "player", back: "player_back" },
+  girl: { character: "player_girl", back: "player_girl_back" },
+} as const satisfies Record<PlayerLook, { character: CharacterKey; back: TrainerPortraitKey }>;
+
+/** The player's art for the current state. Saves from before the choice play as the boy. */
+export const playerArt = (state: { playerLook?: PlayerLook } | null | undefined) =>
+  PLAYER_ART[state?.playerLook === "girl" ? "girl" : "boy"];
+
+/** A player back view (48x48, drawn on the player's side) rather than a 56x56 trainer front. */
+export const isPlayerBack = (key: TrainerPortraitKey) => key === PLAYER_ART.boy.back || key === PLAYER_ART.girl.back;
 
 /**
  * Species sprites:

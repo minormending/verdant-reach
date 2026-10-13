@@ -33,9 +33,14 @@ export type RoamerId = "tumbleweed" | "coconut";
 export type WandererId = RoamerId | "burr";
 export interface WandererHealth { hp: number; status: StatusId | null }
 
+/** How the player looks: chosen at NEW GAME (art via `playerArt` in constants.ts). */
+export type PlayerLook = "boy" | "girl";
+
 export interface GameState {
   version: 1;
   playerName: string;
+  /** Chosen at NEW GAME. Optional: saves from before the choice load as "boy". */
+  playerLook?: PlayerLook;
   rivalName: string;
   money: number;
   party: Quickened[];           // max 6

@@ -385,7 +385,7 @@ export type StructureKey = keyof typeof STRUCTURE_SPECS;
 
 /** Overworld character sheets (see ASSET CONVENTIONS in constants.ts). */
 export const CHARACTERS = [
-  "player", "vale", "bram", "fennimore", "hollis", "nell_pitcher",
+  "player", "player_girl", "vale", "bram", "fennimore", "hollis", "nell_pitcher",
   "shears", "grunt", "greenhouse_keeper", "shopkeeper", "pip",
   "villager_a", "villager_b", "elder", "kid",
   "gardener", "schoolkid", "birdwatcher", "hiker", "beekeeper", "florist",
@@ -442,6 +442,7 @@ export const TRAINER_PORTRAITS = [
   "rowan", // Chapter 10
   "belladonna", "mimi_osa", "titus_arum", "pyra", // Chapter 11
   "player_back", // 48x48 back view used on the player's side
+  "player_girl_back", // 48x48 back view for the girl player
 ] as const;
 export type TrainerPortraitKey = (typeof TRAINER_PORTRAITS)[number];
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameState, WorldData } from "../contracts";
 import {
-  OPTIONS_KEY, SAVE_KEY, battleAnimsOn, beginNewGameSession, createSave, followerOn, formatPlayTime, loadOptions,
+  DEFAULT_PLAYER_NAME, DEFAULT_PLAYER_NAMES, OPTIONS_KEY, SAVE_KEY, battleAnimsOn, beginNewGameSession, createSave, followerOn, formatPlayTime, loadOptions,
   newGameState, normalizeState, storeOptions,
 } from "./index";
 
@@ -23,6 +23,30 @@ function memoryStorage() {
 }
 
 describe("save", () => {
+  it("keeps the player's look, and loads saves from before the choice as the boy", () => {
+    const storage = memoryStorage();
+    const fallback = () => newGameState({ world });
+    expect(fallback().playerLook).toBe("boy");
+    const girl = fallback();
+    girl.playerName = "HAZEL";
+    girl.playerLook = "girl";
+    createSave(() => girl, storage, fallback).write();
+    expect(createSave(fallback, storage, fallback).read()!.playerLook).toBe("girl");
+
+    const old = fallback() as Partial<GameState>;
+    delete old.playerLook;
+    storage.setItem(SAVE_KEY, JSON.stringify({ v: 1, savedAt: 0, gameId: "old", state: old }));
+    expect(createSave(fallback, storage, fallback).read()!.playerLook).toBe("boy");
+    const junk = { ...fallback(), playerLook: "plant" } as unknown;
+    expect(normalizeState(junk, fallback())!.playerLook).toBe("boy");
+  });
+
+  it("defaults each look to a plant name that fits the 7-letter name entry", () => {
+    expect(DEFAULT_PLAYER_NAMES).toEqual({ boy: "SORREL", girl: "HAZEL" });
+    expect(DEFAULT_PLAYER_NAME).toBe("SORREL");
+    for (const n of Object.values(DEFAULT_PLAYER_NAMES)) expect(n.length).toBeLessThanOrEqual(7);
+  });
+
   it("migrates a pre-Council v1 save without inventing Hall of Fame entries", () => {
     const storage = memoryStorage();
     const old = newGameState({ world });
@@ -169,7 +193,8 @@ describe("save", () => {
     expect(partial.position.facing).toBe("down");
     expect(partial.money).toBe(0);
     expect(partial.bag).toEqual({});
-    expect(partial.playerName).toBe("ROWAN");
+    expect(partial.playerName).toBe(DEFAULT_PLAYER_NAME);
+    expect(partial.playerLook).toBe("boy");
     expect(normalizeState({ position: { map: "nowhere", x: 0, y: 0 } }, fallback())).toBeNull();
   });
 
