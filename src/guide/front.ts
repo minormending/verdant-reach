@@ -108,6 +108,7 @@ export function howToPlay(g: Guide): HTMLElement {
         h("p", "The night the Centuryheart blooms, plants across the valley wake. You catalogue these QUICKENED in your FIELD HERBARIUM: a plant you've met is sketched, one you've caught is pressed. Every page holds one true fact about the real plant."),
         h("p", `Time follows your real clock: morning ${TIME_OF_DAY.morningStart}:00–${TIME_OF_DAY.dayStart}:00, day until ${TIME_OF_DAY.nightStart}:00, then night. Some plants only appear by day or by night, and sun-lovers fight harder in daylight (photoperiod). Encounter tables in this guide show both.`),
         h("p", "A plant that loses a battle has WILTED. GREENHOUSES heal your party for free. Win the Pressed Mark at each of the eight CONSERVATORIES."),
+        h("p", "Rematch: +1 level per win, EXP only, no prize money. Talk again to a route trainer you've beaten and they'll ask for another battle (tagged in the map tables)."),
       ),
       h("div.card",
         h("h3", "Catching"),

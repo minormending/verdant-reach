@@ -2,6 +2,7 @@
 // the game's own data (map panels, boss cards, species and item cards).
 
 import type { ItemId, MapId, SpeciesId, TrainerDef } from "../contracts";
+import { isRematchTrainer } from "../world/rematches";
 import { h, inline, type Child } from "./dom";
 import { art, itemIcon, portrait, speciesFront, speciesIcon } from "./art";
 import type { Guide } from "./context";
@@ -251,6 +252,9 @@ function trainersTable(g: Guide, list: MapTrainer[]): HTMLElement {
           h("span.tname", h("span.tclass", first.className), " ", h("strong", first.name)),
           h("span.tteam", first.team.map((m) => h("span.mini", speciesIconMini(m.species), h("small", m.level)))),
           h("span.prize", range),
+          isRematchTrainer(g.world, first.id)
+            ? h("span.tag.rematch", { title: "Talk to them again after a win: +1 level per rematch won, EXP only, no prize money" }, "Rematch +1 per win")
+            : null,
         ),
         variants.length > 1
           ? variants.map((v) => h("div.variant", h("h6", variantLabel(g, v)), teamList(g, v), v.prize !== first.prize ? h("p.small", `Prize ${money(v.prize)}`) : null))
