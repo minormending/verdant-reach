@@ -173,6 +173,9 @@ Full roster review: `tools/art/review/roster_crystal.png`.
   a push deploys the site.
 - **Writing in the game:** an 18-column x 2-line text box, a warm and concise
   voice (docs/STYLE.md), and UPPER-CASE names in dialogue (DR. VALE, BRAM).
+  The player is a boy or a girl (`state.playerLook`), so keep lines about the
+  player neutral, and draw the player only through `playerArt(state)`
+  (`src/contracts/constants.ts`), never the `player` / `player_back` keys directly.
 - **Balance:** guarded by `src/battle/logic/balance.test.ts`. Keep it green.
   FLORA (Conservatory 3) is the early difficulty spike; ROOK is the hardest leader.
 - **Process safety:** stop only processes you started yourself. Never kill a
