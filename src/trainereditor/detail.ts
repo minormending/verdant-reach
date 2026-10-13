@@ -90,7 +90,9 @@ function strip(ctx: LevelContext, ed: Editor): HTMLElement {
 function checks(ed: Editor, row: CatalogRow, hooks: DetailHooks): HTMLElement {
   const e = ed.entry(row.id);
   const errs = ed.errorsFor(row.id);
-  const warns = e.team.flatMap((m, i) => memberWarnings(ed.data, row.id, m).filter((w) => w.kind !== "allowed").map((w) => `#${i + 1}: ${w.text}`));
+  const warnsOf = (team: typeof e.team) => team.flatMap((m, i) => memberWarnings(ed.data, row.id, m).filter((w) => w.kind !== "allowed").map((w) => `#${i + 1}: ${w.text}`));
+  const shippedWarns = new Set(warnsOf(ed.shipped(row.id).team));
+  const warns = warnsOf(e.team).map((w) => (shippedWarns.has(w) ? `${w} (as shipped)` : w));
   const all = ed.validation;
   const others = all.errors.length - errs.length;
   const lead = nextLeader(ed.rows, row);
