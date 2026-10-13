@@ -60,6 +60,9 @@ export function stateSummary(ctx: GameContext) {
   };
 }
 
+/** Shown when nothing was stored; never "saved the game". */
+export const SAVE_FAILED = "The save failed! Browser storage may be full or off.";
+
 type SaveApi = GameContext["save"] & { envelope?(): SaveEnvelope | null; meta?(): SaveMeta | null };
 
 /** START → SAVE. Returns true if the game was written. */
@@ -72,11 +75,10 @@ export async function saveDialog(ctx: GameContext, prompt = "Would you like to s
       if (!(await ctx.ui.yesNo("There is already a save file. Is it OK to overwrite?"))) return false;
     }
     await ctx.ui.say("SAVING… DON'T TURN OFF THE POWER.", { autoClose: true });
-    try {
-      ctx.save.write();
-    } catch (e) {
-      console.error("[save] write failed", e);
-      await ctx.ui.say("The save failed! There may be no room left in this browser's storage.");
+    // write() logs the cause and returns false: no storage (private mode,
+    // blocked site data), a full quota, or a save that doesn't read back.
+    if (!ctx.save.write()) {
+      await ctx.ui.say(SAVE_FAILED);
       return false;
     }
     ctx.audio.playSfx("save");

@@ -195,7 +195,8 @@ export interface GameContext {
   rng(): number;                // [0, 1)
   timeOfDay(): TimeOfDay;
   battle(req: BattleRequest): Promise<BattleOutcome>;
-  save: { write(): void; read(): GameState | null; exists(): boolean; clear(): void };
+  /** `write()` is true only if the save is really stored (false: no storage, full, or blocked). */
+  save: { write(): boolean; read(): GameState | null; exists(): boolean; clear(): void };
 }
 
 /** Battle-side weather is shared with move data. */

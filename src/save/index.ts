@@ -34,7 +34,7 @@ export interface SaveMeta {
   gameId: string;
 }
 
-type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+export type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 function defaultStorage(): StorageLike | null {
   try {
@@ -244,11 +244,25 @@ export function createSave(
     }
   };
   return {
+    /** True only if the save is stored: no storage (private mode, blocked), a full quota or a
+     * read-back mismatch is false, logged, and never throws. */
     write() {
       const state = getState();
       const env: SaveEnvelope = { v: SAVE_VERSION, savedAt: Date.now(), gameId: currentGameId, state };
-      storage?.setItem(SAVE_KEY, JSON.stringify(env));
+      if (!storage) {
+        console.error("[save] write failed: no storage available");
+        return false;
+      }
+      try {
+        const json = JSON.stringify(env);
+        storage.setItem(SAVE_KEY, json);
+        if (storage.getItem(SAVE_KEY) !== json) throw new Error("the stored save does not read back");
+      } catch (e) {
+        console.error("[save] write failed", e);
+        return false;
+      }
       storeOptions(state.options, storage);
+      return true;
     },
     read() {
       const env = readEnvelope();

@@ -104,14 +104,26 @@ export interface SaveEnvelope {
 
   <h3 id="save-flow">Writing and reading</h3>
 
-  <p><code>createSave(getState, storage, fallback)</code> returns the save service that the engine puts on <code>ctx.save</code>. <code>write()</code> wraps the current state in an envelope; <code>read()</code> unwraps, migrates and normalises.</p>
+  <p><code>createSave(getState, storage, fallback)</code> returns the save service that the engine puts on <code>ctx.save</code>. <code>write()</code> wraps the current state in an envelope, stores it and returns <code>true</code> only if it reads back; <code>read()</code> unwraps, migrates and normalises.</p>
 
   <pre><code class="lang-ts">return {
   write() {
     const state = getState();
     const env: SaveEnvelope = { v: SAVE_VERSION, savedAt: Date.now(), gameId: currentGameId, state };
-    storage?.setItem(SAVE_KEY, JSON.stringify(env));
+    if (!storage) {
+      console.error("[save] write failed: no storage available");
+      return false;
+    }
+    try {
+      const json = JSON.stringify(env);
+      storage.setItem(SAVE_KEY, json);
+      if (storage.getItem(SAVE_KEY) !== json) throw new Error("the stored save does not read back");
+    } catch (e) {
+      console.error("[save] write failed", e);
+      return false;
+    }
     storeOptions(state.options, storage);
+    return true;
   },
   read() {
     const env = readEnvelope();
@@ -142,10 +154,12 @@ export interface SaveEnvelope {
   end
   D->>P: SAVING... DON'T TURN OFF THE POWER.
   D->>S: write()
-  S->>LS: setItem(SAVE_KEY, JSON)
-  alt setItem throws (storage full)
-    D->>P: The save failed!
-  else ok
+  S->>LS: setItem(SAVE_KEY, JSON), then getItem to check
+  alt no storage, setItem throws, or it doesn't read back
+    S-->>D: false (logged)
+    D->>P: The save failed! Browser storage may be full or off.
+  else stored
+    S-->>D: true
     D->>P: PLAYER saved the game.
   end</pre>
 
@@ -212,8 +226,8 @@ function migrate(env: SaveEnvelope): SaveEnvelope | null {
   <table>
     <thead><tr><th>Situation</th><th>What happens</th></tr></thead>
     <tbody>
-      <tr><td>Accessing <code>localStorage</code> throws</td><td><code>defaultStorage()</code> returns <code>null</code>; every read finds no save; writes do nothing.</td></tr>
-      <tr><td><code>setItem</code> throws (quota)</td><td><code>write()</code> throws; <code>saveDialog</code> catches it, logs, and says "The save failed! There may be no room left in this browser's storage."</td></tr>
+      <tr><td>Accessing <code>localStorage</code> throws</td><td><code>defaultStorage()</code> returns <code>null</code>; every read finds no save; <code>write()</code> logs and returns <code>false</code>, and the dialog says "The save failed! Browser storage may be full or off."</td></tr>
+      <tr><td><code>setItem</code> throws (quota), or the save doesn't read back</td><td><code>write()</code> catches it, logs <code>[save] write failed</code> and returns <code>false</code>; the dialog shows the same failure line. <code>write()</code> never throws.</td></tr>
       <tr><td>Stored text isn't JSON</td><td><code>readEnvelope</code> warns and returns <code>null</code>: treated as no save.</td></tr>
       <tr><td>Envelope from a newer build (<code>v &gt; 1</code>)</td><td>Treated as no save.</td></tr>
       <tr><td>Position on an unknown map</td><td><code>read()</code> returns <code>null</code>.</td></tr>
@@ -223,7 +237,7 @@ function migrate(env: SaveEnvelope): SaveEnvelope | null {
 
   <details class="advanced"><summary>Advanced: failure modes worth knowing before you touch this</summary>
     <ul>
-      <li><strong>No storage, false success.</strong> When storage is <code>null</code>, <code>write()</code> is a silent no-op (<code>storage?.setItem</code>), so the dialog still says "saved the game". Only a throwing <code>setItem</code> is reported.</li>
+      <li><strong>No false success.</strong> "saved the game" (and the save sound) only follow a <code>write()</code> that returned <code>true</code>. Every save goes through <code>saveDialog</code>, so a new place that saves should call it, or at least check <code>write()</code>'s result, rather than assume the write landed. Options written to <code>OPTIONS_KEY</code> stay best-effort and silent.</li>
       <li><strong>CONTINUE can show and then do nothing.</strong> The title decides to show CONTINUE from <code>meta()</code>, which only needs a readable envelope. If <code>normalizeState</code> then rejects it (unknown map), <code>continueGame</code> quietly returns to the menu.</li>
       <li><strong>A newer save can be overwritten without warning.</strong> <code>envelope()</code> returns <code>null</code> for <code>v &gt; SAVE_VERSION</code>, so the overwrite prompt (which compares game ids) never fires. Only matters if a build with a higher version ships and is then rolled back.</li>
       <li><strong>Options have two homes.</strong> They are written into the save and to <code>OPTIONS_KEY</code>. On CONTINUE the title replaces the save's copy with <code>loadOptions()</code>, so the most recent options win, even if they were changed on the title screen of another game.</li>
