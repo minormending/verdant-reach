@@ -6,6 +6,7 @@ import { FPS, SCREEN_H, SCREEN_W } from "../contracts";
 import type { Assets, Button, Input, Scene, SceneStack } from "../contracts";
 import { createArtAssets } from "../art";
 import { readGamepads } from "./gamepad";
+import { testHooks } from "./testHooks";
 
 export function createCanvas(): { canvas: HTMLCanvasElement; g: CanvasRenderingContext2D } {
   const canvas = document.getElementById("screen") as HTMLCanvasElement;
@@ -143,7 +144,7 @@ export function runLoop(
   // `?timer` drives the loop with setTimeout (for embedded/hidden test panes
   // where requestAnimationFrame is throttled).
   const useTimer = typeof location !== "undefined" && new URLSearchParams(location.search).has("timer");
-  const requestedSpeed = import.meta.env.DEV && typeof location !== "undefined"
+  const requestedSpeed = testHooks() && typeof location !== "undefined"
     ? new URLSearchParams(location.search).get("speed") : null;
   const speed = requestedSpeed && /^\d+$/.test(requestedSpeed)
     && Number(requestedSpeed) >= 1 && Number(requestedSpeed) <= 16 ? Number(requestedSpeed) : 1;

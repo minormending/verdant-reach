@@ -220,9 +220,10 @@ npm run art:index           # REQUIRED after adding, removing or renaming any fi
         un-indexed file is invisible.</li>
       <li><strong>Lazy chunks.</strong> <code>main.ts</code> uses <code>import.meta.glob("./*/dev.ts")</code>
         and dynamic <code>import()</code>s (the title, new game, overworld, the Tile Lab hook, e2e), so these
-        become separate chunks loaded only when used. Code guarded by <code>import.meta.env.DEV</code> (the
+        become separate chunks loaded only when used. The test hooks (the
         <code>window.__vr</code> handle, the dev driver, <code>?e2e</code>, <code>?seed</code>,
-        <code>?speed</code>) is removed from production builds.</li>
+        <code>?speed</code>) are on only in the dev server and the e2e build (<code>--mode e2e</code>, which the
+        playthrough plays); the public production build ignores them and drops the playthrough chunk.</li>
     </ul>
   </details>
 

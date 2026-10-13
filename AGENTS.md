@@ -27,8 +27,9 @@ npm run typecheck           # strict tsc
 npm test                    # vitest, about 1670 tests: data, world validation, puzzles, balance, art bundles
 npm run build               # typecheck + production bundle (relative base, for GitHub Pages)
 npx playwright install chromium # first use: install the e2e browser
-npm run e2e                 # headless full playthrough, 217 beats, speed 8, seed 1, daytime
+npm run e2e                 # headless full playthrough of the production build, 217 beats, speed 8, seed 1, daytime
 npm run e2e -- --seed 42    # replay another RNG seed (unsigned 32-bit integer)
+npm run e2e -- --dev        # play the dev server instead (quicker to iterate; --no-build reuses dist-e2e/)
 npm run art:index           # REQUIRED after adding, removing or renaming any file under public/art/
 
 python3 -m venv .venv && .venv/bin/pip install -r tools/art/requirements.txt
@@ -65,9 +66,13 @@ leave `git status` clean (the generators are deterministic).
 | The developer docs page (`devdocs.html`): section fragments, Mermaid diagrams and live charts (docs/DEVDOCS.md, `src/devdocs/CONTRACT.md`) | `src/devdocs/` |
 | Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 217 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
 
-The e2e runner fixes time to day and defaults to `--seed 1`. It prints the seed
-and records it in the report; use `--seed N` to reproduce another run. Dev URLs
-also accept `?seed=N` (0–4294967295); production ignores it. Seeded battle and
+The e2e runner plays the production pipeline: `vite build --mode e2e` into
+the ignored `dist-e2e/`, served by `vite preview`. The test hooks it needs
+(`?speed`, `?seed`, `?e2e`, `window.__vr`/`__battle`/`__t`) are on only in the
+dev server and in that mode (`src/engine/testHooks.ts`), never in the public
+build. The runner fixes time to day and defaults to `--seed 1`. It prints the seed
+and records it in the report; use `--seed N` to reproduce another run. Dev and e2e URLs
+also accept `?seed=N` (0–4294967295); the public build ignores it. Seeded battle and
 driver-fixture streams are independent of cosmetic draws and NPC idle time.
 Without a seed, the game uses its usual randomness.
 

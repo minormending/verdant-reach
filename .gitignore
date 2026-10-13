@@ -15,3 +15,6 @@ __pycache__/
 
 # developer docs: local stand-in sections (devdocs.html?fixture=1)
 src/devdocs/fixture.local/
+
+# e2e: the production build the playthrough plays (npm run e2e)
+dist-e2e/

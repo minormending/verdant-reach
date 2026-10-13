@@ -1,8 +1,9 @@
 import { seeded, type Rng } from "../battle/logic/rng";
+import { testHooks } from "./testHooks";
 
-/** URL seeds are unsigned 32-bit integers, and never apply to production. */
+/** URL seeds are unsigned 32-bit integers, and never apply to the public production build. */
 export function devSeed(): number | null {
-  if (!import.meta.env.DEV || typeof location === "undefined") return null;
+  if (!testHooks() || typeof location === "undefined") return null;
   const value = new URLSearchParams(location.search).get("seed");
   if (value === null || !/^\d+$/.test(value)) return null;
   const seed = Number(value);

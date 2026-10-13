@@ -81,10 +81,10 @@
         PAUSED scene on top of the loading scene (whose <code>pop()</code> would then remove the wrong scene).</li>
       <li><strong>Audio unlock listeners</strong> go on <code>pointerup</code> and <code>touchend</code> because
         touch only grants audio permission on those events (see <a href="#platform-audio-unlock">the unlock rule</a>).</li>
-      <li><strong>Dev handles.</strong> In dev builds, <code>window.__vr = { ctx, scenes, pause }</code> exposes
-        the running game to the console and to the e2e driver, and <code>overworld/devDriver</code> installs
-        itself. <code>?e2e=&lt;suite&gt;</code> loads <code>e2e/playthrough</code> after boot. None of this exists
-        in production.</li>
+      <li><strong>Test handles.</strong> In the dev server and the e2e build (<code>vite build --mode e2e</code>),
+        <code>window.__vr = { ctx, scenes, pause }</code> exposes the running game to the console and to the e2e
+        driver, and <code>overworld/devDriver</code> installs itself. <code>?e2e=&lt;suite&gt;</code> loads
+        <code>e2e/playthrough</code> after boot. None of this exists in the public production build.</li>
       <li><strong>An unknown <code>?dev</code></strong> only warns and falls through to the title screen, so a
         typo never leaves you on a blank page.</li>
     </ul>
@@ -414,14 +414,14 @@
   <table>
     <thead><tr><th>Flag</th><th>Effect</th><th>Builds</th><th>Read in</th></tr></thead>
     <tbody>
-      <tr><td><code>?seed=N</code></td><td>Seeded, independent random streams (0–4294967295)</td><td>dev only</td><td><code>engine/random.ts</code></td></tr>
-      <tr><td><code>?speed=N</code></td><td>Run N update steps per frame (1–16)</td><td>dev only</td><td><code>engine/core.ts</code></td></tr>
+      <tr><td><code>?seed=N</code></td><td>Seeded, independent random streams (0–4294967295)</td><td>dev, e2e</td><td><code>engine/random.ts</code></td></tr>
+      <tr><td><code>?speed=N</code></td><td>Run N update steps per frame (1–16)</td><td>dev, e2e</td><td><code>engine/core.ts</code></td></tr>
       <tr><td><code>?timer</code></td><td>Drive the loop with <code>setTimeout</code> instead of <code>requestAnimationFrame</code>; also disables pause-on-blur</td><td>all</td><td><code>engine/core.ts</code>, <code>platform/index.ts</code></td></tr>
       <tr><td><code>?time=morning|day|night</code></td><td>Override the real clock</td><td>all</td><td><code>engine/context.ts</code>, <code>audio/ambience.ts</code></td></tr>
       <tr><td><code>?art=a,b</code></td><td>Activate art packs (e.g. <code>classic</code>, <code>traced</code>); empty value = none</td><td>all</td><td><code>art/registry.ts</code></td></tr>
       <tr><td><code>?touch=1</code> / <code>?touch=0</code></td><td>Force the on-screen controls on or off</td><td>all</td><td><code>platform/shell.ts</code></td></tr>
       <tr><td><code>?nopause</code></td><td>Never pause on focus loss</td><td>all</td><td><code>platform/index.ts</code></td></tr>
-      <tr><td><code>?e2e=&lt;suite&gt;</code></td><td>Run the automated playthrough; also disables pause-on-blur</td><td>dev only</td><td><code>main.ts</code></td></tr>
+      <tr><td><code>?e2e=&lt;suite&gt;</code></td><td>Run the automated playthrough; also disables pause-on-blur</td><td>dev, e2e</td><td><code>main.ts</code></td></tr>
       <tr><td><code>?tilelab=1</code></td><td>Apply the Tile Lab's saved tile overrides in memory</td><td>all</td><td><code>main.ts</code> → <code>tilelab/hook</code></td></tr>
     </tbody>
   </table>
@@ -433,7 +433,8 @@
         That is deliberate for the Art Lab ("Works in dev and in the production build"), but it means fixture
         code ships. Never put secrets or destructive actions in a dev scene.</li>
       <li><strong>Gating differs per flag.</strong> <code>?seed</code>, <code>?speed</code> and
-        <code>?e2e</code> are dev-only; <code>?time</code>, <code>?timer</code>, <code>?art</code>,
+        <code>?e2e</code> work only in the dev server and the e2e build (<code>testHooks()</code> in
+        <a data-src="src/engine/testHooks.ts">testHooks.ts</a>: <code>DEV</code> or <code>MODE === "e2e"</code>); <code>?time</code>, <code>?timer</code>, <code>?art</code>,
         <code>?touch</code> and <code>?nopause</code> also work on the live site, which is handy for bug reports
         ("does it happen with <code>?time=day</code>?").</li>
       <li><strong>Platform flags</strong> (<code>platformFlags</code>) switch off the shell for the

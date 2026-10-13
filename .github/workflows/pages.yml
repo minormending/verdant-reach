@@ -1,4 +1,4 @@
-# Typecheck, test, build, play the whole game headless (e2e), then deploy to GitHub Pages
+# Typecheck, test, build, play the whole production build headless (e2e), then deploy to GitHub Pages
 # on every push to main. The deploy waits for both the build and the playthrough.
 name: Deploy to GitHub Pages
 
@@ -50,7 +50,10 @@ jobs:
       - run: npm ci
       - name: Install the e2e browser
         run: npx playwright install --with-deps chromium
-      - name: Full playthrough (217 beats through the post-game, headless)
+      # Plays the production pipeline: e2e/run.mjs runs `vite build --mode e2e`
+      # (into dist-e2e/, with the test hooks that mode enables) and serves it
+      # with `vite preview`. Building here keeps this job parallel to `build`.
+      - name: Full playthrough of the production build (217 beats through the post-game, headless)
         run: npm run e2e
       - name: Keep the report
         if: always()

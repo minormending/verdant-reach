@@ -43,6 +43,7 @@ import { TILES } from "../src/contracts";
 import { createQuickened, healParty } from "../src/battle";
 import { active, type BattleState } from "../src/battle/logic/battle";
 import { devSeed, randomStream } from "../src/engine/random";
+import { testHooks } from "../src/engine/testHooks";
 import { Menu, TextBox } from "../src/screens/kit/widgets";
 import { Menu as FieldMenu } from "../src/ui/kit";
 import { glowField } from "../src/overworld/glow";
@@ -2189,12 +2190,12 @@ export async function glideTo(map: MapId): Promise<boolean> {
   } finally { FieldMenu.prototype.update = update; menuPlan = previousPlan; }
 }
 
-/** The URL ?time override is captured at boot. The e2e module is dev-only:
+/** The URL ?time override is captured at boot. The e2e module runs only in dev and e2e builds:
  * temporarily use the same GameContext clock seam for one event, restoring
  * it even on failure. Night affects the real ifTime interpreter, encounters,
  * lighting and map music; no story flag or map definition is changed. */
 export async function atNight<T>(visit: () => Promise<T>): Promise<T> {
-  if (!import.meta.env.DEV) throw new Error("The night beat requires a dev build");
+  if (!testHooks()) throw new Error("The night beat requires a dev or e2e build");
   const game = ctx(), clock = game.timeOfDay;
   game.timeOfDay = () => "night";
   try { return await visit(); }

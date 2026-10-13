@@ -349,7 +349,8 @@ if (map.warps.length) {
   <h3 id="testing-e2e">The headless full playthrough</h3>
 
   <p>The top of the pyramid is a robot that plays the whole game.
-  <code>npm run e2e</code> starts a private Vite dev server, opens the game in
+  <code>npm run e2e</code> builds the game through the production pipeline,
+  serves that build on a private port, opens it in
   headless Chromium through Playwright, and lets a script in
   <a data-src="e2e/playthrough.ts">e2e/playthrough.ts</a> press real keys from
   the title screen through Chapter 11, the credits and the post-game. It records
@@ -358,27 +359,43 @@ if (map.warps.length) {
   160x144 screenshot.</p>
 
   <pre class="mermaid">flowchart LR
-  RUN["e2e/run.mjs (Node)"] --> VITE["Vite createServer, port 0, e2e/vite.config.ts (no HMR)"]
+  RUN["e2e/run.mjs (Node)"] --> BUILD["vite build --mode e2e into dist-e2e/"]
+  BUILD --> VITE["vite preview, port 0"]
+  RUN -. "--dev" .-> DEV["Vite createServer, port 0, e2e/vite.config.ts (no HMR)"]
   RUN --> PW["Playwright Chromium, headless"]
   PW --> URL["URL: ?e2e=full and timer, speed, seed, time=day"]
-  URL --> MAIN["src/main.ts (dev only) imports e2e/playthrough.ts"]
+  URL --> MAIN["src/main.ts (dev and e2e builds) imports e2e/playthrough.ts"]
   MAIN --> AUTO["autorun: clear save, run the full suite"]
   AUTO --> REP["window.__e2e.report"]
   RUN -- "polls every second" --> REP
   RUN --> FILE["e2e/last-report.json"]</pre>
 
-  <p>The playthrough only exists in development builds: <code>src/main.ts</code>
-  imports it behind <code>import.meta.env.DEV</code>, so production never ships
-  it. It drives the game through a dev-only driver (<code>window.__t</code>, from
-  <a data-src="src/overworld/devDriver.ts">devDriver.ts</a>) and the scene stack
-  (<code>window.__vr</code>).</p>
+  <p><dfn>Production build, plus test hooks.</dfn> By default the runner calls
+  Vite's <code>build()</code> with <code>mode: "e2e"</code> and
+  <code>outDir: "dist-e2e"</code> (git-ignored), then serves that folder with
+  <code>preview()</code>. That is the same pipeline as <code>npm run build</code>
+  (bundling, chunk splitting, minification, the relative base), so a bug that
+  only exists in the shipped bundle fails the playthrough. The one difference is
+  the mode: the test hooks are on only when <code>import.meta.env.DEV</code> or
+  <code>import.meta.env.MODE === "e2e"</code>
+  (<a data-src="src/engine/testHooks.ts">testHooks.ts</a>): <code>?speed</code>,
+  <code>?seed</code>, <code>?e2e</code>, the scene stack
+  (<code>window.__vr</code>), the battle scene (<code>window.__battle</code>) and
+  the key driver (<code>window.__t</code>, from
+  <a data-src="src/overworld/devDriver.ts">devDriver.ts</a>). Vite replaces both
+  values at build time, so the public build (mode <code>production</code>)
+  ignores those parameters, and <code>src/main.ts</code> spells the check out
+  inline so that build drops the driver and the playthrough chunk entirely.
+  (<code>?time</code> and <code>?timer</code> work in every build.)</p>
 
   <h4 id="testing-e2e-flags">Flags: seed, speed and time</h4>
 
   <table>
     <thead><tr><th>Runner flag</th><th>Default</th><th>Effect</th></tr></thead>
     <tbody>
-      <tr><td><code>--speed N</code></td><td>8</td><td>Game ticks per frame, 1–16 (<code>?speed=N</code>, ignored in production)</td></tr>
+      <tr><td><code>--dev</code></td><td>off</td><td>Play the dev server (<code>createServer</code> with <a data-src="e2e/vite.config.ts">e2e/vite.config.ts</a>, no HMR) instead of the production build: no build step, quicker to iterate on</td></tr>
+      <tr><td><code>--no-build</code></td><td>off</td><td>Serve the existing <code>dist-e2e/</code> without rebuilding (not with <code>--dev</code>)</td></tr>
+      <tr><td><code>--speed N</code></td><td>8</td><td>Game ticks per frame, 1–16 (<code>?speed=N</code>, ignored by the public build)</td></tr>
       <tr><td><code>--seed N</code></td><td>1</td><td>RNG seed, 0–4294967295 (<code>?seed=N</code>); printed and stored in the report</td></tr>
       <tr><td><code>--headed</code></td><td>off</td><td>Show the browser window, to watch it play</td></tr>
       <tr><td><code>--allow-placeholders</code></td><td>off</td><td>Adds <code>&amp;allow&#84;odo</code>: tolerate dialogue that starts with <code>TODO&#40;text):</code> (feature branches only)</td></tr>
@@ -396,9 +413,10 @@ if (map.warps.length) {
   and <code>?e2e=check:&lt;name&gt;</code> for one targeted check from the
   <code>CHECKS</code> table instead of the full run.</p>
 
-  <pre><code class="lang-bash">npm run e2e                                   # what CI runs: speed 8, seed 1, headless
+  <pre><code class="lang-bash">npm run e2e                                   # what CI runs: the production build, speed 8, seed 1, headless
 npm run e2e -- --seed 42                      # another seed
-npm run e2e -- --speed 6 --seed 1 --headed    # watch it play</code></pre>
+npm run e2e -- --speed 6 --seed 1 --headed    # watch it play
+npm run e2e -- --dev                          # the dev server, for quick local debugging</code></pre>
 
   <aside class="note"><strong>Seeds.</strong> With a seed, battle rolls and the
   driver's fixtures (the helper's IVs) come from independent named streams
@@ -522,8 +540,9 @@ npm run e2e -- --speed 6 --seed 1 --headed    # watch it play</code></pre>
   failure, timeout and Ctrl-C alike. It holds <code>beats</code> (name, ok, time,
   map, position, new flags, note, screenshot as a data URL), <code>issues</code>,
   every line of dialogue in <code>texts</code>, every <code>battles</code> request
-  and outcome, frame-time stats, and <code>runner</code> (speed, seed, elapsed
-  time, runner issues). The exit code is 0 only when all of this holds:</p>
+  and outcome, frame-time stats, and <code>runner</code> (target
+  <code>production</code> or <code>dev</code>, speed, seed, elapsed time, runner
+  issues). The exit code is 0 only when all of this holds:</p>
 
   <pre><code class="lang-js">const failures = report.beats.filter((b) =&gt; !b.ok).length;
 if (report.beats.length !== 217) runnerIssues.push(`Expected all 217 beats; received ${report.beats.length}`);

@@ -33,6 +33,7 @@ import { playMoveFx } from "./movefx";
 import { frontPaths, SpritePlayback, type FrontKind } from "../screens/kit/idle";
 import { battleAnimsOn } from "../save";
 import { worldTime } from "../engine/time";
+import { testHooks } from "../engine/testHooks";
 import { effectivenessHint, FoeKnowledge, type EffHint } from "./hints";
 import { Flow } from "../screens/kit/flow";
 import { drawPod, drawSpecies, drawTiny, pad, preload, silhouette, speciesImage, TYPE_COLORS } from "../screens/kit/draw";
@@ -88,7 +89,7 @@ export function restoreState(state: GameState, before: GameState) {
 
 export function createBattleScene(ctx: GameContext, req: BattleRequest, done: (o: BattleOutcome) => void): Scene {
   const b = new BattleScene(ctx, req, done);
-  if (import.meta.env?.DEV) (window as unknown as { __battle?: BattleScene }).__battle = b;
+  if (testHooks()) (window as unknown as { __battle?: BattleScene }).__battle = b;
   return b;
 }
 

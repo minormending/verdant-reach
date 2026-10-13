@@ -30,7 +30,7 @@
   subgraph E2E["job: e2e, 90 min limit"]
     direction TB
     E1["checkout, Node 22, npm ci"] --> E2["playwright install --with-deps chromium"]
-    E2 --> E3["npm run e2e: 217 beats"]
+    E2 --> E3["npm run e2e: build --mode e2e, preview, 217 beats"]
     E3 --> E4["always: upload e2e-report artifact"]
   end
   BUILD --> DEPLOY["job: deploy, needs build and e2e"]
@@ -47,7 +47,7 @@
     <thead><tr><th>Job</th><th>Steps</th><th>Time limit</th><th>Needs</th></tr></thead>
     <tbody>
       <tr><td><code>build</code></td><td>checkout, setup Node 22 with the npm cache, <code>npm ci</code>, Test, Release gate, Build (typecheck and bundle), configure Pages, upload <code>dist</code> as the Pages artifact</td><td>GitHub's default</td><td>none</td></tr>
-      <tr><td><code>e2e</code></td><td>checkout, setup Node 22, <code>npm ci</code>, install Chromium with its system libraries, the full playthrough, keep <code>e2e/last-report.json</code> as the <code>e2e-report</code> artifact (even on failure)</td><td><code>timeout-minutes: 90</code></td><td>none</td></tr>
+      <tr><td><code>e2e</code></td><td>checkout, setup Node 22, <code>npm ci</code>, install Chromium with its system libraries, the full playthrough of the production build (the runner builds <code>dist-e2e/</code> itself, so the job stays parallel to <code>build</code>), keep <code>e2e/last-report.json</code> as the <code>e2e-report</code> artifact (even on failure)</td><td><code>timeout-minutes: 90</code></td><td>none</td></tr>
       <tr><td><code>deploy</code></td><td><code>actions/deploy-pages</code> in the <code>github-pages</code> environment</td><td>GitHub's default</td><td><code>[build, e2e]</code></td></tr>
     </tbody>
   </table>
@@ -133,27 +133,32 @@ concurrency:
   Git->>E: start
   B->>B: test, release-check, build
   B->>Git: upload-pages-artifact dist
-  E->>E: 217-beat playthrough
+  E->>E: vite build --mode e2e, then the 217-beat playthrough
   B-->>D: success
   E-->>D: success
   D->>P: deploy-pages publishes the artifact
   P-->>Dev: live at minormending.github.io/verdant-reach</pre>
 
-  <p>Dev-only code never reaches the site. The playthrough, the dev driver, the
-  <code>?seed</code> and <code>?speed</code> parameters and the <code>?dev=</code>
-  scenes are behind <code>import.meta.env.DEV</code>, which Vite sets to
-  <code>false</code> in a production build and then removes the dead code.</p>
+  <p>Test-only code never reaches the site. The playthrough, the dev driver and
+  the <code>?seed</code>, <code>?speed</code> and <code>?e2e</code> parameters are
+  on only when <code>import.meta.env.DEV</code> or <code>import.meta.env.MODE ===
+  "e2e"</code> (<a data-src="src/engine/testHooks.ts">testHooks.ts</a>). Vite
+  replaces both at build time, so in the Pages build (mode
+  <code>production</code>) the parameters are ignored and the playthrough chunk is
+  not emitted at all. The <code>?dev=</code> scenes are different: they are loaded
+  on demand in every build (the Art Lab works on the live site).</p>
 
   <details class="advanced"><summary>Advanced: what is actually deployed, and rolling back</summary>
     <p>The deploy job does not build anything. It publishes the artifact the
     <code>build</code> job uploaded, so the site is exactly the <code>dist/</code>
     that passed typecheck, tests and release-check in that run, and the
-    playthrough ran against the same commit's sources in parallel. Note that the
-    e2e job plays the <em>dev server</em> build, not <code>dist/</code>: a bug that
-    exists only in the production bundle (code behind
-    <code>import.meta.env.DEV</code>, the relative base) is not covered by the
-    playthrough. Open the live site after a release that touches boot, asset paths
-    or dev-only switches.</p>
+    playthrough ran against the same commit in parallel. The e2e job plays a
+    production build of that commit: <code>vite build --mode e2e</code> runs the
+    same bundling, chunk splitting, minification and relative base as
+    <code>dist/</code>, served by <code>vite preview</code>, so production-only bugs
+    fail the playthrough. It is not byte-for-byte the deployed artifact: the mode
+    differs, which switches on the test hooks (and only them). Open the live site
+    after a release that touches those hooks.</p>
     <p>To roll back, push a revert commit to <code>main</code>. It goes through the
     same gate, which is slower than clicking a button but means a rollback can
     never ship something untested.</p>
