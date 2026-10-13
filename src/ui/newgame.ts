@@ -63,8 +63,9 @@ export async function runNewGame(ctx: GameContext): Promise<void> {
           if (picked) { g.fillStyle = "#e8f0e0"; g.fillRect(x, 17, 42, 54); }
           // The look under the cursor steps in place; the other stands still.
           const col = picked ? [0, 1, 0, 2][Math.floor(frame / 16) % 4] : 0;
-          // Each 16x16 cell loses one blank column per side so the pair fits at 3x.
-          drawImagePath(g, ctx.assets, characterPath(PLAYER_ART[look].character), col * 16 + 1, 0, 14, 16, x, 20, 42, 48);
+          // Each 16x16 cell loses its two blank left columns so the pair fits at 3x
+          // (the girl's ponytail reaches the right edge).
+          drawImagePath(g, ctx.assets, characterPath(PLAYER_ART[look].character), col * 16 + 2, 0, 14, 16, x, 20, 42, 48);
         });
         g.globalAlpha = 1;
       } else if (portrait) {
