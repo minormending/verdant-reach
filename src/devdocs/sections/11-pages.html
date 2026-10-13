@@ -1,4 +1,4 @@
-<section id="pages" data-title="The other pages" data-summary="The guidebook, the Tile Lab and these developer docs: extra Vite pages built from the game's own modules, and the rule that the game must not depend on them.">
+<section id="pages" data-title="The other pages" data-summary="The guidebook, the Tile Lab, the Trainer Editor and these developer docs: extra Vite pages built from the game's own modules, and the rule that the game must not depend on them.">
   <h2>The other pages</h2>
 
   <p>The site serves more than the game. Beside <code>index.html</code> there are pages that import the game's own TypeScript modules and draw from them:</p>
@@ -7,6 +7,7 @@
     <tbody>
       <tr><td><code>guide.html</code>, the guidebook</td><td><code>src/guide/</code></td><td>Players: a strategy guide with a walkthrough, map panels, bosses and the Herbarium</td></tr>
       <tr><td><code>tilelab.html</code>, the Tile Lab</td><td><code>src/tilelab/</code></td><td>Artists: every map under the current tiles, tileset swaps, export as an art pack</td></tr>
+      <tr><td><code>trainereditor.html</code>, the Trainer Editor</td><td><code>src/trainereditor/</code></td><td>Designers: every trainer's team, moves, bag, prize and AI beside its map and wild plants, exported as <code>trainers.json</code></td></tr>
       <tr><td><code>devdocs.html</code>, these docs</td><td><code>src/devdocs/</code></td><td>Developers: this page, assembled from HTML fragments, with charts drawn from the game's data</td></tr>
     </tbody>
   </table>
@@ -17,6 +18,7 @@
     IDX["index.html (game)"]
     GD["guide.html"]
     TL["tilelab.html"]
+    TE["trainereditor.html"]
     DD["devdocs.html"]
   end
   subgraph Shared["Shared modules"]
@@ -38,6 +40,9 @@
   TL --> A
   TL --> O
   TL -->|"renderMap, h()"| GD
+  TE --> W
+  TE --> D
+  TE -->|"renderMap, indexer, walkthrough"| GD
   DD --> D
   W --> C
   A --> C</pre>
@@ -52,11 +57,13 @@
         main: fileURLToPath(new URL("./index.html", import.meta.url)),
         guide: fileURLToPath(new URL("./guide.html", import.meta.url)),
         tilelab: fileURLToPath(new URL("./tilelab.html", import.meta.url)),
+        // …
+        trainereditor: fileURLToPath(new URL("./trainereditor.html", import.meta.url)),
       },
     },
   },
 }));</code></pre>
-  <p><code>npm run build</code> then emits <code>dist/index.html</code>, <code>dist/guide.html</code> and <code>dist/tilelab.html</code> side by side. The developer docs page joins this list as one more entry. The base is relative (<code>./</code>), so every page works from the GitHub Pages subpath.</p>
+  <p><code>npm run build</code> then emits <code>dist/index.html</code>, <code>dist/guide.html</code> and <code>dist/tilelab.html</code> side by side. The developer docs and the Trainer Editor join this list as more entries. The base is relative (<code>./</code>), so every page works from the GitHub Pages subpath.</p>
   <p>When two entries import the same module, the bundler doesn't copy it into both. It moves the shared code into a <dfn>shared chunk</dfn>, a separate JS file that both pages load. The browser caches it, so opening the guide after playing doesn't download <code>src/world</code> again.</p>
   <pre class="mermaid">flowchart TB
   M["main entry chunk"] --> S1["shared: contracts, art, world, data, overworld"]
@@ -65,13 +72,17 @@
   T --> S2["shared: guide/mapRender, guide/dom"]
   G --> S2
   M -.->|"dynamic import, only with ?tilelab"| H["tilelab/hook chunk"]
+  M -.->|"dynamic import, only with ?trainerlab"| TH["trainereditor/hook chunk"]
   M -.->|"dynamic import, only with ?dev=art"| AL["art/dev + Art Lab chunk"]</pre>
 
   <h4 id="pages-vite-rule">The rule: the game must not depend on these pages</h4>
-  <p>The game must behave exactly the same whether or not any of these pages' code is loaded. Sharing goes one way: pages import game modules; game modules never import page modules. The single exception is opt-in and lazy:</p>
+  <p>The game must behave exactly the same whether or not any of these pages' code is loaded. Sharing goes one way: pages import game modules; game modules never import page modules. The exceptions are opt-in and lazy, one per lab page:</p>
   <pre><code class="lang-ts">// ?tilelab=1 (the Tile Lab's "Walk around" button): apply its saved tile
 // overrides in memory. Without the param this module is never loaded.
-if (new URLSearchParams(location.search).has("tilelab")) await (await import("./tilelab/hook")).applyStoredTileLab();</code></pre>
+if (new URLSearchParams(location.search).has("tilelab")) await (await import("./tilelab/hook")).applyStoredTileLab();
+// ?trainerlab=1 (the Trainer Editor's "Play with these trainers"): use its
+// saved trainer edits in memory. Without the param this module is never loaded.
+if (new URLSearchParams(location.search).has("trainerlab")) await (await import("./trainereditor/hook")).applyStoredTrainerEdits();</code></pre>
   <pre class="mermaid">flowchart TD
   B["boot(): createAssets()"] --> L["assets.loadAll()"]
   L --> Q{"URL has ?tilelab ?"}
@@ -83,10 +94,10 @@ if (new URLSearchParams(location.search).has("tilelab")) await (await import("./
   F --> DEV{"?dev= names a dev scene?"}
   DEV -->|"yes"| DS["import src/name/dev.ts"]
   DEV -->|"no"| TI["title screen"]</pre>
-  <aside class="warn">Never add a static <code>import</code> from <code>src/guide</code>, <code>src/tilelab</code> or <code>src/devdocs</code> to game code. It would pull page code (and its CSS) into the game bundle, and a bug on a page could then break the game. If a page needs something from the game, move it into a game module and import it from there.</aside>
+  <aside class="warn">Never add a static <code>import</code> from <code>src/guide</code>, <code>src/tilelab</code>, <code>src/trainereditor</code> or <code>src/devdocs</code> to game code. It would pull page code (and its CSS) into the game bundle, and a bug on a page could then break the game. If a page needs something from the game, move it into a game module and import it from there.</aside>
   <details class="advanced"><summary>Advanced: how the boundaries are enforced, and what to watch</summary>
     <ul>
-      <li><strong>Dynamic imports are separate chunks.</strong> <code>import("./tilelab/hook")</code> and <code>import.meta.glob("./*/dev.ts")</code> (non-eager) each become a chunk fetched only when that code path runs. Run <code>grep -rn "guide/\|tilelab/\|devdocs/" src</code> outside those folders: the only hit should be the hook line in <code>src/main.ts</code>.</li>
+      <li><strong>Dynamic imports are separate chunks.</strong> <code>import("./tilelab/hook")</code> and <code>import.meta.glob("./*/dev.ts")</code> (non-eager) each become a chunk fetched only when that code path runs. Run <code>grep -rn "guide/\|tilelab/\|trainereditor/\|devdocs/" src</code> outside those folders: the only hits should be the two hook lines in <code>src/main.ts</code>.</li>
       <li><strong>Dev-only code is removed in production.</strong> Branches guarded by <code>import.meta.env.DEV</code>, such as <code>guide.html?preview=atlas</code> and the docs' <code>?fixture=1</code>, are dead code in a production build (the Tile Lab's "Walk here" button is hidden there too).</li>
       <li><strong>Pure modules make sharing safe.</strong> <code>ArtCatalog</code>, <code>indexer.ts</code>, <code>plan.ts</code> and <code>pack.ts</code> touch no DOM and have no side effects at import time. A page can import them without starting anything. Watch for module-level side effects (a top-level <code>addEventListener</code>, a registry created on import) when you share a new module.</li>
       <li><strong>Separate storage keys.</strong> Each page keeps its own preferences (<code>verdant.guide.theme</code>, <code>verdant.tilelab.theme</code>, <code>verdant.tilelab.tab</code>). The one shared key is <code>verdant.artPacks</code>, deliberately, so a pack switched on in the Art Lab also shows in the guide.</li>
@@ -265,6 +276,31 @@ export function uncoveredMaps(sections: Section[]): string[] {
       <li><strong>A dependency-free ZIP.</strong> <code>zip.ts</code> writes store-only ZIPs (CRC-32, no compression, no ZIP64) and stored-block zlib streams, so PNGs can be encoded without a compressor. That keeps the zero-runtime-dependencies rule.</li>
       <li><strong>Storage can fail.</strong> Every IndexedDB call in <code>store.ts</code> resolves rather than throws. Without IndexedDB (private windows, blocked storage) the lab still works but forgets on reload. In the game, <code>applyStoredTileLab()</code> catches everything and carries on with the normal art.</li>
       <li><strong>Limits.</strong> Thumbnails are smoothly downscaled; the large view is pixel-exact. Maps draw frame 1 of animated tiles. Structures, characters and species are out of scope (use the <a href="#art-lab">Art Lab</a>).</li>
+    </ul>
+  </details>
+
+  <h3 id="pages-trainereditor">The Trainer Editor (<code>trainereditor.html</code>)</h3>
+  <p>The Trainer Editor edits the battle data in <a data-src="src/data/trainers.json">src/data/trainers.json</a>: teams, levels, moves, bags, prizes and AI. Beside each trainer it shows where the trainer stands (the guide's <code>renderMap</code> with the tile marked and the sight line shaded), the wild plants there and one warp away (the guide's indexer), its place in the walkthrough, a level strip against the wild plants and the next Conservatory leader, type coverage and rematch previews. Every check is the build's own: <code>trainersFileErrors</code> from <a data-src="src/world/trainerFile.ts">trainerFile.ts</a> runs on every edit, and stats, default moves and rematches come from the battle and world modules.</p>
+  <pre class="mermaid">sequenceDiagram
+  participant TE as Trainer Editor
+  participant DB as IndexedDB
+  participant DS as Dev server
+  participant G as Game tab
+  TE->>TE: edit, trainersFileErrors (live)
+  TE->>DB: saveEdits(edits)
+  TE->>TE: Export trainers.json (download)
+  TE->>DS: POST /__trainereditor/save (dev only)
+  DS->>DS: trainersFileErrors, write src/data/trainers.json
+  TE->>G: open index.html?trainerlab=1
+  G->>DB: loadEdits()
+  G->>G: buildTrainers, swap into WORLD.trainers</pre>
+  <p>Edits are whole trainer entries that differ from the shipped file, so a shipped change to another trainer still reaches the editor, and an edit that matches the shipped entry again simply disappears. The export is written by <code>formatTrainersFile</code>, the same canonical layout as the shipped file, so an export with no edits is byte-identical and a real edit is a small diff. Full docs: <code>docs/TRAINERS.md</code>.</p>
+  <details class="advanced"><summary>Advanced: the save endpoint, the game hook and their limits</summary>
+    <ul>
+      <li><strong>"Save to repo" only exists in the dev server.</strong> The <code>trainerEditorSave</code> plugin in <a data-src="vite.config.ts">vite.config.ts</a> has <code>apply: "serve"</code>, so builds and <code>vite preview</code> never install it, and the page hides the button outside <code>import.meta.env.DEV</code>. It refuses anything but a same-origin <code>POST</code> of JSON with the editor's <code>x-trainer-editor</code> header, caps the body at 2 MB, and validates through <code>server.ssrLoadModule</code>, so the server checks with exactly the modules and data the game loads. Writing the file triggers the dev server's reload; the page then prunes edits the new shipped file already contains.</li>
+      <li><strong>The hook swaps records in place.</strong> <code>WORLD.trainers</code> is the <code>TRAINERS</code> object every module reads, so <code>installTrainers</code> deletes and reassigns its keys rather than replacing the object. It runs at boot, before anything caches a trainer (the rematch eligibility cache is filled lazily). Edits that fail the checks are logged and the shipped trainers stay.</li>
+      <li><strong>Derived teams stay derived.</strong> The file never holds <code>*_rematch</code> ids; the Council rematches are rebuilt from the edited seats at +8, so editing BELLADONNA changes her post-game rematch too.</li>
+      <li><strong>Limits.</strong> Ids, names, classes, portraits, music, marks and dialogue are not edited on the page; the balance hint is a stat sum, not the balance simulation, so a leader change still needs <code>npm test</code>.</li>
     </ul>
   </details>
 

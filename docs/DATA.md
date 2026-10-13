@@ -111,7 +111,7 @@ test checks).
 Every trainer's battle data, in one ordered list (story order; the game's
 `TRAINERS` keeps this order). The dialogue (`intro`, `defeat`, `after`) stays
 in TypeScript, in the lines records of `src/world/trainers.ts`, joined by id.
-Edit it by hand or with the Trainer Editor (`trainereditor.html`, below).
+Edit it by hand or with the Trainer Editor (`trainereditor.html`, docs/TRAINERS.md).
 
 ```json
 {

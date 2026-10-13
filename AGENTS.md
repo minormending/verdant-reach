@@ -64,6 +64,7 @@ leave `git status` clean (the generators are deterministic).
 | Art generators and tools (Python) | `tools/art/` |
 | The strategy guide page (`guide.html`), generated from the game's data; walkthrough prose in `src/guide/walkthrough/` (docs/GUIDE.md) | `src/guide/` |
 | The Tile Lab page (`tilelab.html`): every map under the current tiles, tile and tileset swaps, pack export (docs/ART.md §12) | `src/tilelab/` |
+| The Trainer Editor page (`trainereditor.html`): edit teams, moves, bags, prizes and AI beside each trainer's map and wild plants, export or save `trainers.json`, play with the edits (`?trainerlab=1`) (docs/TRAINERS.md) | `src/trainereditor/` |
 | The developer docs page (`devdocs.html`): section fragments, Mermaid diagrams and live charts (docs/DEVDOCS.md, `src/devdocs/CONTRACT.md`) | `src/devdocs/` |
 | Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 218 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
 

@@ -87,7 +87,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
   - Unique characters with weighted walk cycles, and trainer portraits.
   - Title art.
   - Species were drawn from real-plant photo references; the photo credits are in `public/art/CREDITS.md`.
-- **Editable game data:** every species' stats, types, learnset, growth, catch rate and Herbarium page (with its fact's source) is plain JSON, one file per evolution line in `src/data/species/`; moves and items are in `src/data/moves.json` and `src/data/items.json` (format in [docs/DATA.md](docs/DATA.md)). Edit a number and the game, the data tests and the balance tests pick it up; art stays separate, so swapping an art pack never changes gameplay.
+- **Editable game data:** every species' stats, types, learnset, growth, catch rate and Herbarium page (with its fact's source) is plain JSON, one file per evolution line in `src/data/species/`; moves and items are in `src/data/moves.json` and `src/data/items.json`, and every trainer's team, moves, bag, prize and AI in `src/data/trainers.json` (format in [docs/DATA.md](docs/DATA.md)). Edit a number and the game, the data tests and the balance tests pick it up; art stays separate, so swapping an art pack never changes gameplay.
 
 ## Development
 
@@ -98,6 +98,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
 | `?dev=<module>` | isolated dev scenes: `battle`, `screens`, `audio` (jukebox), `ui`, `overworld`, `world`, and `art` (the **Art Lab**: browse and live-swap every art bundle) |
 | `?dev=world&play=1&map=<id>&flags=a,b&species=<id>&level=<n>` | drop into any story state |
 | `/tilelab.html` | the **Tile Lab**: every map under the current tiles; swap one tile, a whole sheet, an art pack or any external tileset, export it as an art pack, and walk around with it (`index.html?tilelab=1`); docs/ART.md § Tile Lab |
+| `/trainereditor.html` | the **Trainer Editor**: every trainer's team, levels, moves, bag, prize and AI, with its map, sight line and the wild plants there, live validation, a diff, export of `trainers.json` (and *Save to repo* on the dev server), and play with the edits (`index.html?trainerlab=1`); [docs/TRAINERS.md](docs/TRAINERS.md) |
 | `npm run e2e` | headless full playthrough of the **production build** (218 beats through the ending and the whole post-game, about 38 minutes; first use: `npx playwright install chromium`). It builds with `vite build --mode e2e` into `dist-e2e/` (the real bundle plus the test hooks only that mode enables) and serves it with `vite preview`; `--no-build` reuses that build, `--dev` plays the dev server instead. CI runs it before every deploy. |
 
 The art lives in `public/art/` and the game reads it directly: edit a PNG,
