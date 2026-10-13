@@ -33,12 +33,6 @@ import { legacyFileOf, logicalPath, parseLogical, SPECIES_FRAME_KINDS, speciesFr
 
 export const LAB_LAYER = "@lab";
 
-/** TEMPORARY (see `resolve`): the girl player's art borrows the boy's until her bundles land. */
-const ART_STAND_INS: Record<string, string> = {
-  "assets/characters/player_girl.png": "assets/characters/player.png",
-  "assets/trainers/player_girl_back.png": "assets/trainers/player_back.png",
-};
-
 export interface Layer {
   /** null = base tree; a pack id; or LAB_LAYER for in-memory patches. */
   pack: string | null;
@@ -195,9 +189,6 @@ export class ArtCatalog {
         out = { path, url: legacyFileOf(path), listed: this.legacy !== null, legacy: true };
       }
     }
-    // TEMPORARY stand-in until the girl player's art lands (branch art/player-girl): borrow the
-    // boy's sheet and back, only while no bundle provides hers. Delete this line and ART_STAND_INS.
-    if (!out && ART_STAND_INS[path]) out = this.resolve(ART_STAND_INS[path]);
     this.memo.set(path, out);
     return out;
   }

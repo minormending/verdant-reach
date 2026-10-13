@@ -2,7 +2,7 @@
 // Used for the player name, the rival (optional) and nicknames.
 
 import type { CharacterKey, GameContext, Scene, SpeciesId } from "../contracts";
-import { SCREEN_H, SCREEN_W, UI, characterPath, speciesPath } from "../contracts";
+import { SCREEN_H, SCREEN_W, UI, characterPath, playerArt, speciesPath } from "../contracts";
 import { drawImagePath } from "../engine/gfx";
 import { drawText, drawWindow } from "./kit";
 
@@ -122,7 +122,7 @@ export function nameEntry(ctx: GameContext, opts: NameEntryOpts): Promise<string
           const icon = speciesPath(opts.species, Math.floor(frame / 16) % 2 && ctx.assets.image(speciesPath(opts.species, "icon__2")) ? "icon__2" : "icon");
           drawImagePath(g, ctx.assets, icon, 0, 0, 16, 16, 8, 8, 32, 32);
         } else {
-          const sheet = characterPath(opts.sprite ?? "player");
+          const sheet = characterPath(opts.sprite ?? playerArt(ctx.state).character);
           const img = ctx.assets.image(sheet);
           const step = Math.floor(frame / 24) % 4;
           const colIdx = img && img.width >= 48 ? [0, 1, 0, 2][step] : 0;
