@@ -28,6 +28,11 @@
     "night_gardener": { "file": "night_gardener.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast5/portraits5.py" } },
     "orchardist": { "file": "orchardist.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
     "player_back": { "file": "player_back.png", "size": [48, 48], "source": { "kind": "generated", "tool": "tools/art/portraits.py" } },
+    "player_girl_back": {
+      "file": "player_girl_back.png",
+      "size": [48, 48],
+      "source": { "kind": "generated", "tool": "tools/art/castgirl/portraitsgirl.py" }
+    },
     "pyra": { "file": "pyra.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast11/portraits11.py" } },
     "researcher": { "file": "researcher.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast4/portraits4.py" } },
     "reyes": { "file": "reyes.png", "size": [56, 56], "source": { "kind": "generated", "tool": "tools/art/cast6/portraits6.py" } },

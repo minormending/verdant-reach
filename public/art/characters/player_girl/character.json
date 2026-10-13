@@ -1,0 +1,10 @@
+{
+  "format": "verdant.character/1",
+  "id": "player_girl",
+  "sheet": "sheet.png",
+  "frame": [16, 16],
+  "rows": ["down", "up", "left", "right"],
+  "columns": ["stand", "stepA", "stepB"],
+  "credits": "Hand-authored original pixel art for Verdant Reach (girl player generator, tools/art/castgirl).",
+  "source": { "kind": "generated", "tool": "tools/art/castgirl/charsgirl.py" }
+}
