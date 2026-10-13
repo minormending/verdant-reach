@@ -405,7 +405,7 @@ export function calcDamage(inp: DamageInput): DamageResult {
         <code>s.dormant[uid] = randInt(1, 3)</code>. On each attempt to act, <code>canAct</code> subtracts 1; when it
         reaches 0 the plant wakes <em>and acts that same turn</em>. A counter of 1 therefore costs no turns at all.
         The test "dormant lasts 1-3 turns" asserts exactly this (<code>skipped === turns - 1</code>), so it's
-        intended. The comment in <code>ids.ts</code> ("can't act for 1-3 turns") reads as if it were stricter.</li>
+        intended, and the comment in <code>ids.ts</code> says so: a 1–3 counter that skips 0–2 turns.</li>
       <li><strong>The counter lives on the battle, the status on the plant.</strong> A plant still DORMANT when a battle
         ends keeps the status; in the next battle there is no counter, so <code>canAct</code> rolls a fresh 1–3 and
         subtracts 1 straight away.</li>

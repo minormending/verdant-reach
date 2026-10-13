@@ -123,8 +123,10 @@
   <figure data-chart="species-by-type"><figcaption>Species per type: check where a new plant fills a gap.</figcaption></figure>
 
   <details class="advanced"><summary>Advanced: changing an existing species</summary>
-    <p>A Quickened's stats are recomputed from its species on load, so changing
-    base stats also changes creatures in players' existing saves. Ids are
+    <p>A Quickened's stats are stored in the save and recomputed from its species
+    only on level-up, growth and in the Nursery, so a base-stat change reaches
+    plants in players' existing saves at their next level-up or growth, not on
+    load (<a href="#data-runtime">stored stats</a>). Ids are
     forever: renaming one breaks saves (party, box, Herbarium) and art folders.
     Add a new id instead. The learnset order matters for the starting moves (all
     level-1 entries) and for trainers without explicit <code>moves</code>, whose

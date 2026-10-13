@@ -10,8 +10,9 @@ first re-run every generator.
 Generators are authoring tools, not the source of truth: public/art/ is.
 A regen reproduces every `source.kind: "generated"` bundle byte-identically
 and never touches `edited` or `imported` ones (artkit.emit enforces this).
-Exits non-zero on any validation error or a stale index; required paths that
-nobody provides yet are reported but only fail with --strict.
+The index is always rebuilt before validating, so it can't be stale here;
+exits non-zero on any validation error. Required paths that nobody provides
+yet are reported but only fail with --strict.
 
 To add a generator, append one line to BUILDERS: a name plus either a module
 with build() in tools/art/, or a script path run with this Python from the

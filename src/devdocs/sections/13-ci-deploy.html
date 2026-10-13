@@ -62,7 +62,8 @@ permissions:
   pages: write
   id-token: write
 
-# One deployment at a time; a newer push supersedes a queued one.
+# One run at a time: a newer push cancels any queued or running one
+# (cancel-in-progress), so only the newest commit deploys.
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -83,10 +84,9 @@ concurrency:
 
   <details class="advanced"><summary>Advanced: concurrency and timeouts</summary>
     <p><code>concurrency: { group: pages, cancel-in-progress: true }</code> means
-    at most one run of this workflow is active. The comment says a newer push
-    "supersedes a queued one", but with <code>cancel-in-progress: true</code> it
-    also cancels a run that is <em>already running</em>, including a playthrough
-    40 minutes in. Two pushes ten minutes apart therefore deploy only the second;
+    at most one run of this workflow is active, and a newer push cancels the
+    current one whether it is queued or <em>already running</em>, including a
+    playthrough 40 minutes in. Two pushes ten minutes apart therefore deploy only the second;
     the first shows as <em>cancelled</em>, not failed. That is what you want for a
     deploy, but it means a run that never finished proves nothing about its
     commit.</p>
