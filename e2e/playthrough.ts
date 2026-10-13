@@ -420,7 +420,7 @@ function safeJson(a: unknown) { try { return JSON.stringify(a); } catch { return
 const COLS = 18;
 function checkText(text: string, speaker?: string) {
   // Unbreakable words longer than a text-box line overflow the box.
-  const flat = text.replace(/<PLAYER>|\{PLAYER\}/g, "ROWAN").replace(/<RIVAL>|\{RIVAL\}/g, "BRAM");
+  const flat = text.replace(/<PLAYER>|\{PLAYER\}/g, "SORREL").replace(/<RIVAL>|\{RIVAL\}/g, "BRAM");
   for (const w of flat.split(/\s+/)) if (w.length > COLS) issue("text-overflow", `"${w}" (${w.length} cols) in: ${text}`);
   // ?allowTodo (runner --allow-placeholders) tolerates only the lead's "TODO(text):" dialogue
   // stand-ins on an unfinished chapter branch; every other placeholder still fails.
@@ -991,10 +991,15 @@ async function newGameFromTitle(): Promise<boolean> {
   await sleep(600);
   // A save makes CONTINUE the first entry; NEW GAME is found by moving up to the top... the e2e clears saves first.
   await press("a");
-  // Intro + name entry + prologue (the overworld starts in "new" mode).
+  // Intro + BOY/GIRL + name entry + prologue (the overworld starts in "new" mode).
+  // A takes the cursor's default, BOY, and END on an empty name takes his default name.
   await advance(300, () => !!ow());
   ctx().state.options.textSpeed = "fast";
   beat("intro done, prologue starts");
+  const st = ctx().state;
+  const asked = report.texts.some((t) => t.text.includes("Are you a boy?") && t.text.endsWith("BOY / GIRL"));
+  beat("NEW GAME: chose BOY, named SORREL", asked && st.playerLook === "boy" && st.playerName === "SORREL" && ow()?.player.sprite === "player",
+    `look=${st.playerLook} name=${st.playerName} sprite=${ow()?.player.sprite}`);
   await advance();
   await waitFor(() => idle(), 20000);
   return expectFlag("prologue + morning at home", "morning_done");
