@@ -79,6 +79,14 @@ describe("route rematch talk flow", () => {
     expect(h.battles[1].trainerDef!.team.map((m) => m.level)).toEqual(MILO.team.map((m) => m.level + 4));
   });
 
+  it("a crashed rematch (\"error\") is never counted", async () => {
+    const h = setup("route_1", "error");
+    await h.scene.trainerTalk(h.npc("schoolkid_milo"), "schoolkid_milo");
+    expect(h.battles).toHaveLength(1);
+    expect(h.state.trainerRematches).toBeUndefined();
+    expect(h.whiteout).not.toHaveBeenCalled();
+  });
+
   it("NO does nothing", async () => {
     const h = setup("route_1", "won", false);
     await h.scene.trainerTalk(h.npc("schoolkid_milo"), "schoolkid_milo");

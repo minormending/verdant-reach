@@ -16,6 +16,7 @@ export async function beatenTrainerTalk(host: ScriptHost, trainerId: string): Pr
   const result = await host.battle({
     kind: "trainer", trainer: trainerId, trainerDef: buildRematch(ctx.data, tr, wins), backdrop: host.backdrop?.(),
   });
+  // Only a win counts: a loss, or a crashed battle ("error"), retries at the same level.
   if (result === "won") ctx.state.trainerRematches = { ...ctx.state.trainerRematches, [trainerId]: wins + 1 };
   else if (result === "lost") await host.whiteout();
   return result;
