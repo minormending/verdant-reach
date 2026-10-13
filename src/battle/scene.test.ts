@@ -13,6 +13,7 @@ import { createOverworldScene } from "../overworld";
 import { WORLD } from "../world";
 import { type BattleEvent } from "./logic/battle";
 import { recoverWanderers, wandererHealth, wandererMaxHp } from "../overworld/roaming";
+import { buildRematch } from "../world/rematches";
 
 vi.mock("./hud", async (original) => ({
   ...await original<typeof import("./hud")>(), drawGraftCollarPlaceholder: vi.fn(),
@@ -374,5 +375,42 @@ describe("graft collar scene wiring", () => {
     expect(drawGraftCollarPlaceholder).not.toHaveBeenCalled();
     expect(foe.stats).toEqual(createQuickened(DATA, "great_oak", 27, seeded(1)).stats);
     expect(foe).not.toHaveProperty("grafted");
+  });
+});
+
+describe("route rematch payout", () => {
+  const route: TrainerDef = { ...FIXTURE_TRAINERS.dev_hollis, id: trainer.id, mark: undefined, prize: 120, team: [{ species: "oak_acorn", level: 5 }] };
+  const fight = (req: BattleRequest) => setup(req, {
+    rng: () => 0.5,
+    expUi: () => {},
+    prepare(ctx) {
+      ctx.world = { ...ctx.world, trainers: { [route.id]: route } } as GameContext["world"];
+      ctx.state.money = 1000;
+      ctx.state.party = [createQuickened(DATA, "great_oak", 50, seeded(10))];
+    },
+    choice: async (scene) => {
+      const moves = scene.s.sides[0].party[0].moves;
+      const best = moves.reduce((b, m, i) => (DATA.moves[m.id].power > DATA.moves[moves[b].id].power ? i : b), 0);
+      return { kind: "move", slot: best };
+    },
+  });
+
+  it("a first battle pays its prize; a rematch pays $0 with no prize line but still awards EXP", async () => {
+    const first = await fight({ kind: "trainer", trainer: route.id });
+    expect(first.outcome).toBe("won");
+    expect(first.ctx.state.money).toBe(1120);
+    expect(first.scene.say).toHaveBeenCalledWith(expect.stringContaining("got $120 for winning!"), "wait");
+
+    const rematch = await fight({ kind: "trainer", trainer: route.id, trainerDef: buildRematch(DATA, route, 0) });
+    expect(rematch.outcome).toBe("won");
+    expect(rematch.scene.s.sides[1].party[0].level).toBe(6);
+    expect(rematch.ctx.state.money).toBe(1000);
+    const said = vi.mocked(rematch.scene.say).mock.calls.map(([text]) => text);
+    expect(said.some((t) => /for winning/.test(t))).toBe(false);
+    expect(said.some((t) => t.includes(route.defeat))).toBe(true);
+    expect(rematch.scene.awardExp).toHaveBeenCalledOnce();
+    const oak = rematch.ctx.state.party[0];
+    expect(oak.exp).toBeGreaterThan(Math.floor(DATA.expForLevel(DATA.species.great_oak.growthRate, 50)));
+    expect(route.prize).toBe(120); // the shared TrainerDef still pays first battles
   });
 });

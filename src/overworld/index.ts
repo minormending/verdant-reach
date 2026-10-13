@@ -47,6 +47,7 @@ import {
   ScriptAbort, giveItem, harvest, itemName, quickenedName, runScript, trainerBattle, type ScriptHost, type ToastKind,
 } from "./script";
 import { runStartMenu } from "./startMenu";
+import { beatenTrainerTalk } from "./rematchFlow";
 import { visitedGlideMaps, visitedTownFlag } from "./glide";
 import { continuePosition } from "./continue";
 import { burrBehind, burrCatchUp, burrRoll, burrTileSafe, meetingRoamer, moveRoamers, recoverWanderers, wandererFree, WANDERER_LEVEL } from "./roaming";
@@ -1019,7 +1020,8 @@ class Overworld implements Scene {
       return;
     }
     if (this.ctx.state.flags[`beat_${trainerId}`]) {
-      await this.ctx.ui.say(tr.after);
+      // The after line; outdoor route trainers then offer a rematch.
+      await beatenTrainerTalk(this.host, trainerId);
       return;
     }
     await this.trainerEncounter(trainerId);
@@ -1100,7 +1102,7 @@ class Overworld implements Scene {
 
   async battle(req: BattleRequest): Promise<BattleOutcome> {
     const ctx = this.ctx;
-    const trainer = req.trainer ? ctx.world.trainers[req.trainer] : undefined;
+    const trainer = req.trainerDef ?? (req.trainer ? ctx.world.trainers[req.trainer] : undefined);
     ctx.audio.playMusic(req.kind === "trainer" ? trainer?.music ?? "battle_trainer"
       : req.wanderer || (req.wild && LEGEND_BATTLES.has(req.wild.species)) ? "battle_legend" : "battle_wild");
     ctx.audio.playSfx("encounter");

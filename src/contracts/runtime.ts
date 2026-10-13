@@ -5,7 +5,7 @@ import type {
   Button, Dir, ItemId, JingleId, MapId, MarkId, MoveId, MusicId, SfxId,
   SpeciesId, StatusId, TrainerId,
 } from "./ids";
-import type { TimeOfDay, WorldData } from "./world";
+import type { TimeOfDay, TrainerDef, WorldData } from "./world";
 
 /** One Quickened plant the player (or a trainer) owns. */
 export interface Quickened {
@@ -73,11 +73,17 @@ export interface GameState {
    *  they gain 1 exp per player step. `steps` counts toward the next seed check.
    *  `boardedLevel` remembers the level at boarding (the take-back fee is per level gained). */
   nursery?: { slots: (Quickened & { boardedLevel?: number })[]; steps: number; seedReady: boolean };
+  /** Rematches won against each outdoor route trainer (`rematchTrainerIds`). The next
+   *  rematch fields their team at +(wins + 1) levels. Optional: older saves have none. */
+  trainerRematches?: Record<TrainerId, number>;
 }
 
 export interface BattleRequest {
   kind: "wild" | "trainer";
   trainer?: TrainerId;
+  /** A team built for this fight only (a route rematch). Used instead of
+   *  `world.trainers[trainer]`, which stays untouched for first battles. */
+  trainerDef?: TrainerDef;
   wild?: { species: SpeciesId; level: number; sport?: boolean }; // omitted: normal random sport roll
   /** Persistent legendary wild encounter; flees after its first complete turn. */
   wanderer?: WandererId;

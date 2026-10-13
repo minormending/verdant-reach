@@ -285,3 +285,33 @@ describe("save migration (Round 4: nursery and seeds)", () => {
     expect(normalizeState({ ...fallback, nursery: [] }, fallback)!.nursery).toBeUndefined();
   });
 });
+
+describe("save migration: route rematch wins", () => {
+  const old = (extra: object = {}) => ({ v: 1, savedAt: 1, gameId: "g", state: {
+    version: 1, playerName: "SAGE", rivalName: "BRAM", money: 500, party: [], box: [], bag: {}, flags: { beat_schoolkid_milo: true },
+    marks: [], herbarium: { seen: [], caught: [] }, position: { map: "route_1", x: 1, y: 2, facing: "up" },
+    heal: { map: "player_home", x: 3, y: 5 }, playTimeMs: 10, options: { textSpeed: "mid" }, ...extra,
+  } });
+  const load = (env: object) => {
+    const storage = memoryStorage();
+    storage.setItem(SAVE_KEY, JSON.stringify(env));
+    return createSave(() => newGameState({ world }), storage, () => newGameState({ world })).read()!;
+  };
+
+  it("loads a save from before rematches with no counts (every next rematch is +1)", () => {
+    const loaded = load(old());
+    expect(loaded).not.toBeNull();
+    expect("trainerRematches" in loaded).toBe(false);
+    expect(newGameState({ world }).trainerRematches).toBeUndefined();
+  });
+
+  it("round-trips the counts and drops malformed entries", () => {
+    expect(load(old({ trainerRematches: { schoolkid_milo: 2, gardener_rosa: 0 } })).trainerRematches)
+      .toEqual({ schoolkid_milo: 2, gardener_rosa: 0 });
+    expect(load(old({ trainerRematches: { a: -1, b: 1.5, c: "3", d: null, e: 4 } })).trainerRematches).toEqual({ e: 4 });
+    expect("trainerRematches" in load(old({ trainerRematches: [1, 2] }))).toBe(false);
+    const fallback = newGameState({ world });
+    const state = { ...fallback, trainerRematches: { hiker_gus: 5 } } as GameState;
+    expect(normalizeState(JSON.parse(JSON.stringify(state)), fallback)!.trainerRematches).toEqual({ hiker_gus: 5 });
+  });
+});

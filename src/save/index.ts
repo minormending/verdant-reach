@@ -84,6 +84,14 @@ function cleanHarvested(raw: unknown): Record<string, string> | undefined {
   return out;
 }
 
+/** Additive v1 migration: rematch wins per trainer; keeps only whole, non-negative counts. */
+export function cleanTrainerRematches(raw: unknown): Record<string, number> | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const out: Record<string, number> = {};
+  for (const [id, n] of Object.entries(raw)) if (Number.isInteger(n) && (n as number) >= 0) out[id] = n as number;
+  return out;
+}
+
 /** Additive v1 migration: pre-Council saves have no history, never a fabricated clear. */
 function cleanHallOfFame(raw: unknown): GameState["hallOfFame"] {
   if (!Array.isArray(raw)) return undefined;
@@ -192,6 +200,7 @@ export function normalizeState(raw: unknown, fallback: GameState): GameState | n
   const arr = <T>(v: unknown, d: T[]): T[] => (Array.isArray(v) ? (v as T[]) : d);
   const obj = <T extends object>(v: unknown, d: T): T => (v && typeof v === "object" && !Array.isArray(v) ? (v as T) : d);
   const hallOfFame = cleanHallOfFame(r.hallOfFame);
+  const trainerRematches = cleanTrainerRematches(r.trainerRematches);
   return {
     version: 1,
     playerName: typeof r.playerName === "string" && r.playerName ? r.playerName : DEFAULT_PLAYER_NAME,
@@ -217,6 +226,7 @@ export function normalizeState(raw: unknown, fallback: GameState): GameState | n
     options: r.options ? cleanOptions(r.options, fallback.options) : fallback.options,
     harvested: cleanHarvested(r.harvested) ?? {},
     ...(r.nursery !== undefined && cleanNursery(r.nursery) ? { nursery: cleanNursery(r.nursery) } : {}),
+    ...(trainerRematches !== undefined ? { trainerRematches } : {}),
   };
 }
 

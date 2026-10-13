@@ -370,7 +370,8 @@ class BattleScene implements Scene {
     // Foe party
     let foeParty: Quickened[];
     if (req.kind === "trainer") {
-      const t = req.trainer ? ctx.world.trainers[req.trainer] : undefined;
+      // A rematch brings its own fresh team; first battles use the shared TrainerDef.
+      const t = req.trainerDef ?? (req.trainer ? ctx.world.trainers[req.trainer] : undefined);
       if (!t || t.team.length === 0) {
         console.error(`[battle] unknown or empty trainer "${req.trainer}"`);
         return "won";
