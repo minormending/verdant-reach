@@ -71,12 +71,12 @@ describe("createInput with a controller", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   function setup() {
-    const listeners = new Map<string, (e: { code: string; preventDefault(): void }) => void>();
+    const listeners = new Map<string, (e: { code: string; repeat?: boolean; preventDefault(): void }) => void>();
     vi.stubGlobal("addEventListener", (name: string, fn: (e: { code: string; preventDefault(): void }) => void) => listeners.set(name, fn));
     let now = new Set<Button>();
     const unlock = vi.fn();
     const input = createInput(unlock, () => new Set(now));
-    const key = (type: "keydown" | "keyup", code: string) => listeners.get(type)?.({ code, preventDefault() {} });
+    const key = (type: "keydown" | "keyup", code: string, repeat = false) => listeners.get(type)?.({ code, repeat, preventDefault() {} });
     const step = (buttons: Button[]) => { now = new Set(buttons); input.poll(); };
     return { input, step, key, unlock };
   }
@@ -99,6 +99,19 @@ describe("createInput with a controller", () => {
     step([]);
     expect(input.held("a")).toBe(false);
     expect(input.repeat("a")).toBe(false);
+  });
+
+  it("asks for the audio unlock on every new mapped key press, not just the first", () => {
+    const { key, unlock } = setup();
+    // Escape (B) is not a user gesture in Chrome, so the first press may not unlock audio.
+    key("keydown", "Escape");
+    expect(unlock).toHaveBeenCalledTimes(1);
+    key("keyup", "Escape");
+    key("keydown", "KeyZ");
+    expect(unlock).toHaveBeenCalledTimes(2);
+    key("keydown", "KeyZ", true); // auto-repeat
+    key("keydown", "KeyQ"); // unmapped
+    expect(unlock).toHaveBeenCalledTimes(2);
   });
 
   it("keyboard and controller holding the same button don't double-press or release each other", () => {

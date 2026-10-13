@@ -13,6 +13,11 @@ import {
   createLoadingScene, createPause, createShell, installErrorScreen, pauseOnFocusLoss, platformFlags,
 } from "./platform";
 
+// Dev server and e2e build only (see testHooks() in src/engine/testHooks.ts).
+// Spelled out rather than calling testHooks() so the public production build
+// drops the dev driver and the playthrough chunk entirely.
+const TEST_HOOKS = import.meta.env.DEV || import.meta.env.MODE === "e2e";
+
 const devModules = import.meta.glob<{ default: (ctx: GameContext) => Scene | Promise<Scene> }>("./*/dev.ts");
 
 async function boot() {
@@ -55,7 +60,7 @@ async function boot() {
     });
     if (flags.pauseOnBlur) pauseOnFocusLoss(pause, canvas);
 
-    if (import.meta.env.DEV) {
+    if (TEST_HOOKS) {
       (window as unknown as { __vr: unknown }).__vr = { ctx, scenes, pause };
       void import("./overworld/devDriver").then((m) => m.installDevDriver(scenes));
     }
@@ -89,8 +94,9 @@ async function boot() {
     }
     booted = true;
 
-    // Dev only: ?e2e=<suite> runs the automated playthrough (see e2e/README).
-    if (import.meta.env.DEV && params.get("e2e")) {
+    // Dev and e2e builds only: ?e2e=<suite> runs the automated playthrough
+    // (e2e/playthrough.ts, started by e2e/run.mjs; docs/DEVDOCS.md § testing).
+    if (TEST_HOOKS && params.get("e2e")) {
       const e2e = await import("../e2e/playthrough");
       (window as unknown as { __e2e: unknown }).__e2e = e2e;
       void e2e.autorun(params.get("e2e")!);

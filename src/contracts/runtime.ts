@@ -90,7 +90,13 @@ export interface BattleRequest {
   canLose?: boolean;            // story battles (rival #1): no whiteout on loss
   backdrop?: "grass" | "bog" | "water" | "indoor" | "night" | "glasshouse";
 }
-export type BattleOutcome = "won" | "lost" | "fled" | "caught";
+/**
+ * "error": the battle crashed. It never counts as a win: the battle scene puts
+ * the game state back as it was before the battle (nothing awarded, no
+ * `beat_<trainer>` flag), the overworld says the battle was called off, and a
+ * script that started it stops there (ScriptAbort), so it can be fought again.
+ */
+export type BattleOutcome = "won" | "lost" | "fled" | "caught" | "error";
 
 export interface Scene {
   /** If true, the scene below is drawn first (menus, text boxes over the map). */
@@ -153,7 +159,7 @@ export interface AudioService {
   playJingle(id: JingleId): Promise<void>; // pauses music, resumes after
   /** Species cry, synthesised per species id (deterministic). */
   playCry(species: SpeciesId): Promise<void>;
-  unlock(): void;               // call on first user input (autoplay policy)
+  unlock(): void;               // call on every user press until audio runs (autoplay policy); cheap once running
   setVolume(music: number, sfx: number): void;
 }
 
@@ -195,7 +201,8 @@ export interface GameContext {
   rng(): number;                // [0, 1)
   timeOfDay(): TimeOfDay;
   battle(req: BattleRequest): Promise<BattleOutcome>;
-  save: { write(): void; read(): GameState | null; exists(): boolean; clear(): void };
+  /** `write()` is true only if the save is really stored (false: no storage, full, or blocked). */
+  save: { write(): boolean; read(): GameState | null; exists(): boolean; clear(): void };
 }
 
 /** Battle-side weather is shared with move data. */

@@ -113,6 +113,8 @@ class Overworld implements Scene {
   walking = false;
   inputStep = false;
   grace = 0;
+  /** Trainers whose battle crashed on this visit: they stop spotting the player (talk to retry). */
+  calledOff = new Set<string>();
   started = false;
   dead = false;
   pendingEnter: ScriptId | null = null;
@@ -239,6 +241,7 @@ class Overworld implements Scene {
     this.map = buildMap(def);
     refreshLegend(this.map, this.ctx.state.flags);
     this.mapId = id;
+    this.calledOff.clear();
     const p = this.player;
     p.x = x; p.y = y; p.step = null; p.facing = facing; p.bumpAnim = 0;
     // Fresh actors on every entry reset UPROOT puzzles to their authored layout.
@@ -1032,6 +1035,8 @@ class Overworld implements Scene {
     await this.ctx.ui.say(tr.intro);
     const r = await trainerBattle(this.host, trainerId);
     if (r === "lost") await this.whiteout();
+    // A crash: no re-spotting loop. The trainer stays unbeaten and can be talked to.
+    if (r === "error") this.calledOff.add(trainerId);
   }
 
   /** Line of sight from undefeated trainers. Starts the encounter and returns true if spotted. */
@@ -1041,7 +1046,7 @@ class Overworld implements Scene {
     const flags = this.ctx.state.flags;
     for (const n of this.npcs) {
       const id = n.def?.trainer;
-      if (!id || flags[`beat_${id}`] || n.moving || !this.visible(n)) continue;
+      if (!id || flags[`beat_${id}`] || this.calledOff.has(id) || n.moving || !this.visible(n)) continue;
       const dist = inSight(this.map, n.x, n.y, n.facing, n.def?.sight ?? 4, p, (x, y) => !!this.npcAt(x, y));
       if (dist > 0) {
         this.walking = false;
@@ -1119,6 +1124,8 @@ class Overworld implements Scene {
     if (result === "lost" && !req.canLose) return result; // whiteout fades in
     this.playMapMusic();
     await this.fader.to("clear", 12);
+    // The battle crashed (logged as "[battle] crashed"); the state is as it was before it.
+    if (result === "error") await ctx.ui.say("Something wilted… The battle is off.");
     return result;
   }
 

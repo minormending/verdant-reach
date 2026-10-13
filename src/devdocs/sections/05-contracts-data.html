@@ -76,7 +76,7 @@ export const STATUSES = [
   "blight",    // poison-like: chip damage each turn
   "scorch",    // burn-like: chip damage, physical attack halved
   "frostbite", // freeze-like: can't act until thawed
-  "dormant",   // sleep-like: can't act for 1-3 turns
+  "dormant",   // sleep-like: a 1-3 counter; wakes and acts when it runs out, so it skips 0-2 turns
   "rootbound", // paralysis-like: speed down, may fail to act
 ] as const;
 export type StatusId = (typeof STATUSES)[number];</code></pre>
@@ -173,10 +173,10 @@ export type TrainerId = string;</code></pre>
         (<code>speciesFiles.test.ts</code> "only uses moves that exist", <code>world/validate.ts</code> for
         trainers), not by the type system. That is the trade-off for keeping 120 move ids out of the frozen
         contracts.</li>
-      <li>Some contract comments have fallen behind the code. <code>SPECIES_IDS</code> is still introduced as "The
-        playable roster (Prologue -&gt; Chapter 4)" although it now runs to the post-game, and
-        <code>GrowthTrigger</code>'s <code>cross_pollination</code> says "not reachable in slice" although NPC
-        trades now trigger it (<a href="#data-growth">growth</a>). Trust the code, not the comment.</li>
+      <li>Contract comments are part of the contract: keep them true when the code moves on. <code>SPECIES_IDS</code>
+        is "the whole roster (Prologue through the post-game)", and <code>GrowthTrigger</code>'s
+        <code>cross_pollination</code> fires on receipt from an NPC trade (<a href="#data-growth">growth</a>). When a
+        comment and the code disagree, the code (and its tests) win; fix the comment in the same change.</li>
     </ul>
   </details>
 
@@ -229,8 +229,7 @@ export type TrainerId = string;</code></pre>
         (<a data-src="src/battle/logic/stats.ts">stats.ts</a>) runs on level-up, on growth and in the Nursery. The
         save loader (<a data-src="src/save/index.ts">src/save/index.ts</a>) cleans seeds, the Nursery and
         wanderers, but it does not recompute stats. So a base-stat edit reaches a plant in an existing save at its
-        next level-up or growth, not on load. <code>docs/DATA.md</code> says stats are "computed from its species
-        on load". On this branch that is not what the code does.</li>
+        next level-up or growth, not on load. <code>docs/DATA.md</code> says the same.</li>
       <li><code>recalcStats</code> moves current HP by the change in max HP and keeps a healthy plant at 1 HP or
         more. A wilted plant (hp 0) stays at 0, so growing or levelling never revives one.</li>
       <li>Optional fields (<code>playerLook</code>, <code>nursery</code>, <code>hallOfFame</code>,
@@ -498,8 +497,8 @@ export function speciesLineErrors(file: string, d: SpeciesLineFile): string[] {
         fact. Checking the fact is a human review step.</li>
       <li><strong>Error lists, not first-error.</strong> Each function collects every problem, so one run of the
         tests shows all mistakes in a file at once.</li>
-      <li>Length limits differ slightly between the contract comments and the loaders (the <code>Item</code> type
-        says "&lt;= 12 chars", the item loader allows 13). The loader is what is enforced.</li>
+      <li>Length limits live in the loaders, which are what is enforced: species and move names are at most 12
+        characters, item names at most 13 (so "Terrarium Pod" fits). The contract comments repeat them.</li>
       <li>Adding a field to the JSON means adding it in three places: the <code>SpeciesLineFile</code> interface, the
         mapping in <code>load()</code> and (if shared) the <code>Species</code> contract. Forgetting the mapping step
         drops the field silently.</li>
@@ -599,7 +598,7 @@ export function speciesLineErrors(file: string, d: SpeciesLineFile): string[] {
   | { kind: "vigor_night"; level: number }               // level up at night
   | { kind: "tending"; friendship: number }              // friendship &gt;= value on level up
   | { kind: "item"; item: ItemId }                       // use item from the bag
-  | { kind: "cross_pollination" };                       // trade (not reachable in slice)</code></pre>
+  | { kind: "cross_pollination" };                       // on receipt from an NPC trade (the `trade` op)</code></pre>
 
   <table>
     <thead><tr><th>Trigger</th><th>Count</th><th>Examples on this branch</th><th>Where it fires</th></tr></thead>

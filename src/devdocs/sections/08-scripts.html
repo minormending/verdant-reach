@@ -32,7 +32,7 @@
   // …
   | { op: "battle"; trainer: TrainerId; canLose?: boolean } // sets flag `beat_&lt;trainer&gt;` on win
   | { op: "wildBattle"; species: SpeciesId; level: number; sport?: boolean; canLose?: boolean }
-  | { op: "ifLastBattle"; result: BattleOutcome; then: ScriptCmd[]; else?: ScriptCmd[] }
+  | { op: "ifLastBattle"; result: Exclude&lt;BattleOutcome, "error"&gt;; then: ScriptCmd[]; else?: ScriptCmd[] }
   // …
   | { op: "call"; script: ScriptId }
   // …
@@ -139,10 +139,10 @@ async function exec(host: ScriptHost, cmds: ScriptCmd[] | undefined, st: ScriptS
   <details class="advanced"><summary>Advanced: control flow, aborts and errors</summary>
     <ul>
       <li><strong><code>call</code> is a subroutine</strong> that shares the caller's state (<code>ScriptState</code>), so <code>ifLastBattle</code> after a <code>call</code> sees a battle fought inside it. Calls nest at most 16 deep, then throw.</li>
-      <li><strong><code>end</code> stops the whole run, callers included.</strong> It throws <code>ScriptEnd</code>, which only <code>runScript</code> catches; <code>call</code> doesn't. So an <code>end</code> inside a called script also ends the script that called it. Prefer an <code>if</code> around the rest of the script when you mean "return".</li>
-      <li><strong><code>ScriptAbort</code></strong> is thrown after a whiteout (a lost battle without <code>canLose</code>, or <code>call: "whiteout"</code>) and after <code>endSlice</code>. <code>flow()</code> swallows it quietly; any other error is logged with <code>console.error</code> and control still comes back. A broken script never freezes the game.</li>
+      <li><strong><code>end</code> stops only the current script, like <code>return</code>.</strong> It throws <code>ScriptEnd</code>, which <code>call</code> catches, so a called script that ends hands back to its caller, which carries on after the <code>call</code>; at the top level <code>runScript</code> catches it. That matters because many scripts are both called and run on their own (a talk script that an arrival scene also calls). The validator fails a command list with anything after an <code>end</code>, since it could never run. No story script uses <code>end</code> today; the once-only <code>if</code> pattern below does the same job.</li>
+      <li><strong><code>ScriptAbort</code> is the hard stop</strong>: it ends every script in the run, callers included. It is thrown after a whiteout (a lost battle without <code>canLose</code>, or <code>call: "whiteout"</code>), after <code>endSlice</code>, and after a battle that crashed (<a href="#scripts-battles">battles</a>). There is no script op for it. <code>flow()</code> swallows it quietly; any other error is logged with <code>console.error</code> and control still comes back. A broken script never freezes the game.</li>
       <li><strong>Unknown ops and ids warn, never crash.</strong> An unknown script id runs as an empty list; an unknown op logs and is skipped. The validator turns both into test failures, so they never ship.</li>
-      <li><strong>No compile-time exhaustiveness.</strong> <code>step</code> ends in a <code>default</code> that warns, so TypeScript won't tell you if you add an op to the union and forget its <code>case</code>. See the checklist below.</li>
+      <li><strong>Compile-time exhaustiveness.</strong> <code>step</code>'s <code>default</code> assigns the command to a <code>never</code>, so adding an op to the union without its <code>case</code> fails <code>npm run typecheck</code>. The <code>default</code> still warns at runtime for data the types can't see. The validator's walkers have no such check; see the checklist below.</li>
       <li><strong>Re-entrancy.</strong> <code>flow()</code> counts, so a script that triggers another flow (a warp with an <code>onEnter</code>) nests correctly; <code>settle()</code> runs only when the count returns to zero. A script warp made while the screen is already black defers the destination's <code>onEnter</code> until the script fades back in.</li>
     </ul>
   </details>
@@ -271,6 +271,7 @@ export const ifNight = (then: ScriptCmd[], els: ScriptCmd[]): ScriptCmd =&gt;
   MK -->|"no"| LB
   GM --> LB["lastBattle = result"]
   R -->|"lost, fled"| LB
+  R -->|"error (crashed)"| AB["ScriptAbort: no branch runs, nothing awarded"]
   LB --> L{"lost and not canLose?"}
   L -->|"yes"| WO["whiteout, ScriptAbort: the rest never runs"]
   L -->|"no"| NEXT["next command"]</pre>
@@ -287,6 +288,7 @@ export const ifNight = (then: ScriptCmd[], els: ScriptCmd[]): ScriptCmd =&gt;
     <ul>
       <li><strong>Marks are awarded once, by one owner.</strong> After a won leader battle, <code>trainerBattle</code> gives the trainer's <code>mark</code> only if no script anywhere contains a <code>giveMark</code> for it (<code>scriptsAwardMark</code> scans all scripts on each win). So if a leader's scene gives the mark itself, the engine stays out of the way.</li>
       <li><strong><code>ifLastBattle</code> only sees battles in this run.</strong> A trainer who spots you from the grass fights outside any script, so there is no "last battle" for a later script to read; use the <code>beat_&lt;trainer&gt;</code> flag instead.</li>
+      <li><strong>A crashed battle (<code>"error"</code>) stops the script</strong> with <code>ScriptAbort</code> before <code>lastBattle</code> is set, so neither branch of an <code>ifLastBattle</code> runs (a <code>canLose</code> rival scene doesn't carry on as a loss either) and the callers of a <code>call</code>ed battle script stop too. The battle scene has already put the state back as it was, so the scene can simply be started again. This relies on scenes setting their "done" flag <em>after</em> the battle, which every scene does today; <code>ifLastBattle</code> can't name <code>"error"</code> (the type excludes it).</li>
       <li><strong><code>fled</code> and <code>caught</code></strong> only come from wild battles. A <code>wildBattle</code> with <code>canLose</code> needs branches for every outcome that matters, or the scene continues as if nothing happened.</li>
       <li><strong>Scripted fights never rematch.</strong> A trainer named by any <code>battle</code> op is a story fight, so <code>rematchTrainerIds</code> leaves it out. Route rematches are not a script op: they run in the trainer NPC flow (<a href="#world-rematches">route rematches</a>).</li>
       <li><strong>After every battle</strong> the overworld sets 3 grace steps, restores the map music and fades back in, except after a non-<code>canLose</code> loss, where whiteout fades in instead.</li>

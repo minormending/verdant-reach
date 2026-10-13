@@ -68,8 +68,10 @@ shape. A mistake fails with the file and field, e.g.
 signature moves) and the balance tests (leader win-rate bands). A stat change
 that makes a leader too easy or too hard fails there, before it can ship.
 
-**Saves:** a Quickened's stats are computed from its species on load, so
-changing base stats also changes creatures in existing saves.
+**Saves:** a Quickened's stats are stored in the save, not computed on load.
+They are recomputed from its species only on level-up, growth and in the
+Nursery, so a base-stat change reaches a plant in an existing save at its next
+level-up or growth.
 
 ## Moves: `src/data/moves.json`
 

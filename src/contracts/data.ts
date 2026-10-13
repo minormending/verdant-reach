@@ -20,7 +20,7 @@ export type GrowthTrigger =
   | { kind: "vigor_night"; level: number }               // level up at night
   | { kind: "tending"; friendship: number }              // friendship >= value on level up
   | { kind: "item"; item: ItemId }                       // use item from the bag
-  | { kind: "cross_pollination" };                       // trade (not reachable in slice)
+  | { kind: "cross_pollination" };                       // on receipt from an NPC trade (the `trade` op)
 
 export interface Species {
   id: SpeciesId;
@@ -94,7 +94,7 @@ export type ItemEffect =
 
 export interface Item {
   id: ItemId;
-  name: string;                 // <= 12 chars
+  name: string;                 // <= 13 chars ("Terrarium Pod"; the item loader enforces it)
   pocket: "items" | "pods" | "key";
   price: number;                // 0 = can't be sold/bought
   description: string;

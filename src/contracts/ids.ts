@@ -7,7 +7,7 @@ export const TYPES = [
 ] as const;
 export type TypeId = (typeof TYPES)[number];
 
-/** The playable roster (Prologue -> Chapter 4). Lines evolve left to right. */
+/** The whole roster (Prologue through the post-game). Lines evolve left to right. */
 export const SPECIES_IDS = [
   // Starters
   "oak_acorn", "oak_sapling", "great_oak",                    // wood
@@ -479,7 +479,7 @@ export const STATUSES = [
   "blight",    // poison-like: chip damage each turn
   "scorch",    // burn-like: chip damage, physical attack halved
   "frostbite", // freeze-like: can't act until thawed
-  "dormant",   // sleep-like: can't act for 1-3 turns
+  "dormant",   // sleep-like: a 1-3 counter; wakes and acts when it runs out, so it skips 0-2 turns
   "rootbound", // paralysis-like: speed down, may fail to act
 ] as const;
 export type StatusId = (typeof STATUSES)[number];

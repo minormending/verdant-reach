@@ -106,7 +106,8 @@ export type ScriptCmd =
   | { op: "ifMarks"; marks: MarkId[]; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "battle"; trainer: TrainerId; canLose?: boolean } // sets flag `beat_<trainer>` on win
   | { op: "wildBattle"; species: SpeciesId; level: number; sport?: boolean; canLose?: boolean }
-  | { op: "ifLastBattle"; result: BattleOutcome; then: ScriptCmd[]; else?: ScriptCmd[] }
+  /** A crashed battle ("error") stops the script before any branch, so it can't be tested for. */
+  | { op: "ifLastBattle"; result: Exclude<BattleOutcome, "error">; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "heal" }                                        // full party heal + jingle
   | { op: "warp"; to: MapId; x: number; y: number; facing?: Dir }
   | { op: "movePlayer"; path: Dir[] }
@@ -154,6 +155,11 @@ export type ScriptCmd =
   | { op: "credits" }                                     // scrolling cast; B skips, then script continues
   | { op: "hallOfFame" }                                  // append a snapshot of this clear's party
   | { op: "endSlice" }                                    // "to be continued" card -> title
+  /**
+   * Stop the current script, like `return`: inside a script reached by `call`
+   * the caller carries on after the `call`. (Whiteout, `endSlice` and a crashed
+   * battle are the only hard stops; they abort every script in the run.)
+   */
   | { op: "end" };
 
 export interface TrainerDef {

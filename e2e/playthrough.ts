@@ -1,7 +1,9 @@
-// Automated end-to-end playthrough of the slice, run in the browser against
-// the dev server (it drives the dev-only `window.__t` driver).
+// Automated end-to-end playthrough of the whole game, run in the browser
+// against the production e2e build (`vite build --mode e2e`) or the dev server;
+// it drives the `window.__t` driver that only those builds install.
 //
-//   npm run e2e                                        headless full playthrough
+//   npm run e2e                                        headless full playthrough (production build)
+//   npm run e2e -- --dev                               the same against the dev server
 //   npx vite --config e2e/vite.config.ts --port 5190 --strictPort
 //   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> post-game
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
@@ -45,6 +47,7 @@ import { TILES } from "../src/contracts";
 import { createQuickened, healParty } from "../src/battle";
 import { active, type BattleState } from "../src/battle/logic/battle";
 import { devSeed, randomStream } from "../src/engine/random";
+import { testHooks } from "../src/engine/testHooks";
 import { Menu, TextBox } from "../src/screens/kit/widgets";
 import { Menu as FieldMenu } from "../src/ui/kit";
 import { glowField } from "../src/overworld/glow";
@@ -298,6 +301,8 @@ export function instrument() {
     report.battles.push(entry);
     entry.outcome = await battle(request);
     entry.turns = battleStates.get(request)?.turn;
+    // A crashed battle is never a pass, even where a beat accepts any outcome.
+    if (entry.outcome === "error") issue("battle-error", `${request.kind} ${request.trainer ?? request.wild?.species ?? "?"} crashed`);
     return entry.outcome;
   };
   const gameplayTasks = new GameplayTasks();
@@ -1533,7 +1538,7 @@ async function chapter7() {
   const lily = [...st().party, ...st().box].find((q) => q.species === "giant_water_lily"
     && q.metAt?.map === "bloom_lake" && q.metAt.level === 40);
   const lilyNpc = ow()?.npcs.find((n) => n.id === "crimson_lily");
-  beat("the CRIMSON LILY: one-off sport battle", flag("crimson_lily_done") && !!lilyBattle?.outcome
+  beat("the CRIMSON LILY: one-off sport battle", flag("crimson_lily_done") && !!lilyBattle?.outcome && lilyBattle.outcome !== "error"
     && !!lilyNpc && !ow()!.visible(lilyNpc)
     && (lilyBattle?.outcome !== "caught" || !!lily?.sport), `outcome=${lilyBattle?.outcome}, caught sport=${lily?.sport ?? false}`);
 
@@ -1924,7 +1929,7 @@ export async function challengeElder(): Promise<boolean> {
       const battles = report.battles.slice(before).filter((b) => b.request.wild?.species === "elder");
       const battle = battles[0];
       if (battles.length !== 1 || battle?.request.kind !== "wild"
-        || battle.request.wild?.level !== 60 || battle.request.canLose !== true || !battle.outcome
+        || battle.request.wild?.level !== 60 || battle.request.canLose !== true || !battle.outcome || battle.outcome === "error"
         || (st.bag.glass_pod ?? 0) >= pods
         || !report.texts.slice(texts).some((t) => t.text.toUpperCase().includes("USED GLASS POD"))) return fail("check 3");
       if (battle.outcome === "caught") return caught();
@@ -2211,12 +2216,12 @@ export async function glideTo(map: MapId): Promise<boolean> {
   } finally { FieldMenu.prototype.update = update; menuPlan = previousPlan; }
 }
 
-/** The URL ?time override is captured at boot. The e2e module is dev-only:
+/** The URL ?time override is captured at boot. The e2e module runs only in dev and e2e builds:
  * temporarily use the same GameContext clock seam for one event, restoring
  * it even on failure. Night affects the real ifTime interpreter, encounters,
  * lighting and map music; no story flag or map definition is changed. */
 export async function atNight<T>(visit: () => Promise<T>): Promise<T> {
-  if (!import.meta.env.DEV) throw new Error("The night beat requires a dev build");
+  if (!testHooks()) throw new Error("The night beat requires a dev or e2e build");
   const game = ctx(), clock = game.timeOfDay;
   game.timeOfDay = () => "night";
   try { return await visit(); }
@@ -2297,7 +2302,7 @@ export async function postgame() {
         const talked = await talkTo("burr");
         const fight = report.battles.slice(battles).find((b) => b.request.wanderer === "burr");
         hitch = behind && talked && fight?.request.wild?.species === "burr"
-          && fight.request.wild.level === 60 && !!fight.outcome && !ctx().state.burrHitch;
+          && fight.request.wild.level === 60 && !!fight.outcome && fight.outcome !== "error" && !ctx().state.burrHitch;
         break;
       }
       if (!(await nav("thistledown"))) break;
@@ -2391,7 +2396,7 @@ export async function postgame() {
     const talked = await talkTo("methuselah");
     const fight = report.battles.slice(before).find((b) => b.request.wild?.species === "methuselah");
     beat("METHUSELAH: a real level-70 battle", talked && fight?.request.kind === "wild"
-      && fight.request.wild?.level === 70 && fight.request.canLose === true && !!fight.outcome, fight?.outcome);
+      && fight.request.wild?.level === 70 && fight.request.canLose === true && !!fight.outcome && fight.outcome !== "error", fight?.outcome);
   });
 
   await glideTo("council_arboretum");

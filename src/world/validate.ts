@@ -8,7 +8,7 @@ import type { Ambient, Cond, Dir, MapDef, MapId, NpcDef, ScriptCmd, TileKey, Til
 import { POSTGAME_MAPS } from "./maps/seed_vault";
 import { pickupItem } from "./build";
 import { DATA } from "../data";
-import { WHITEOUT_SCRIPT } from "../overworld/script";
+import { childLists, WHITEOUT_SCRIPT } from "../overworld/script";
 import { glowField, glowLamps } from "../overworld/glow";
 import { buildMap, checkCond, refreshLegend, tileAt } from "../overworld/map";
 import { reachableBoulderTiles } from "../overworld/uproot";
@@ -1099,6 +1099,15 @@ export function validateWorld(world: WorldData, warnings: string[] = []): string
   if (!world.quests) warnings.push("WORLD.quests is not wired yet");
 
   for (const [sid, cmds] of Object.entries(world.scripts)) checkCmds(sid, cmds);
+  // `end` stops only the current script (in a called script the caller carries
+  // on), so anything after it in the same command list can never run.
+  const afterEnd = (sid: string, cmds: ScriptCmd[] | undefined) => {
+    if (!cmds) return;
+    const i = cmds.findIndex((c) => c.op === "end");
+    if (i >= 0 && i < cmds.length - 1) errs.push(`[script ${sid}] commands after "end" never run`);
+    for (const c of cmds) for (const list of childLists(c)) afterEnd(sid, list);
+  };
+  for (const [sid, cmds] of Object.entries(world.scripts)) afterEnd(sid, cmds);
   if (!world.scripts[world.newGame.script]) errs.push(`newGame script ${world.newGame.script} missing`);
 
   // npc ids used by scripts exist on some map

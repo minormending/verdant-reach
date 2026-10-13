@@ -3,7 +3,7 @@
 // the event log back and drives the menus.
 
 import type {
-  BattleOutcome, BattleRequest, GameContext, ItemId, MoveId, Quickened, Scene, SpeciesId, StatusId, TrainerDef,
+  BattleOutcome, BattleRequest, GameContext, GameState, ItemId, MoveId, Quickened, Scene, SpeciesId, StatusId, TrainerDef,
   TrainerPortraitKey, TypeId, Weather,
 } from "../contracts";
 import { PLAYER_ART, playerArt, portraitPath, speciesPath, TEXTBOX, UI, uiPath } from "../contracts";
@@ -33,6 +33,7 @@ import { playMoveFx } from "./movefx";
 import { frontPaths, SpritePlayback, type FrontKind } from "../screens/kit/idle";
 import { battleAnimsOn } from "../save";
 import { worldTime } from "../engine/time";
+import { testHooks } from "../engine/testHooks";
 import { effectivenessHint, FoeKnowledge, type EffHint } from "./hints";
 import { Flow } from "../screens/kit/flow";
 import { drawPod, drawSpecies, drawTiny, pad, preload, silhouette, speciesImage, TYPE_COLORS } from "../screens/kit/draw";
@@ -79,9 +80,16 @@ type Choice =
   | { kind: "caught" }
   | { kind: "pod_failed" };
 
+/** Put `state` back to `before` in place (other modules hold the object), keeping the play clock. */
+export function restoreState(state: GameState, before: GameState) {
+  const playTimeMs = state.playTimeMs;
+  for (const key of Object.keys(state)) delete (state as unknown as Record<string, unknown>)[key];
+  Object.assign(state, before, { playTimeMs });
+}
+
 export function createBattleScene(ctx: GameContext, req: BattleRequest, done: (o: BattleOutcome) => void): Scene {
   const b = new BattleScene(ctx, req, done);
-  if (import.meta.env?.DEV) (window as unknown as { __battle?: BattleScene }).__battle = b;
+  if (testHooks()) (window as unknown as { __battle?: BattleScene }).__battle = b;
   return b;
 }
 
@@ -141,11 +149,16 @@ class BattleScene implements Scene {
   update(): void {
     if (!this.started) {
       this.started = true;
+      // A crash must never count as a win (or award anything): put the game
+      // state back as it was before the battle and report "error".
+      const before = structuredClone(this.ctx.state);
       this.main().then(
         (o) => this.finish(o),
         (e) => {
           console.error("[battle] crashed", e);
-          this.finish(this.req.kind === "wild" ? "fled" : "won");
+          this.closeOverlays();
+          restoreState(this.ctx.state, before);
+          this.finish("error");
         },
       );
     }
@@ -162,6 +175,13 @@ class BattleScene implements Scene {
     if (this.finished) return;
     this.finished = true;
     this.done(o);
+  }
+
+  /** After a crash: close any screen the battle opened over itself (party, growth, learn). */
+  private closeOverlays() {
+    const scenes = this.ctx.scenes as GameContext["scenes"] & { all?(): Scene[] };
+    if (!scenes?.all?.().includes(this)) return;
+    while (scenes.top() && scenes.top() !== this) scenes.pop();
   }
 
   draw(g: CanvasRenderingContext2D): void {
@@ -374,7 +394,7 @@ class BattleScene implements Scene {
       const t = req.trainerDef ?? (req.trainer ? ctx.world.trainers[req.trainer] : undefined);
       if (!t || t.team.length === 0) {
         console.error(`[battle] unknown or empty trainer "${req.trainer}"`);
-        return "won";
+        return "error";
       }
       this.trainer = t;
       this.trainerName = fmt(ctx, `${t.className} ${t.name}`).toUpperCase().trim();
@@ -384,7 +404,7 @@ class BattleScene implements Scene {
     } else {
       if (!req.wild) {
         console.error("[battle] wild battle without a species");
-        return "fled";
+        return "error";
       }
       const foe = createQuickened(this.data, req.wanderer ?? req.wild.species, req.wanderer ? WANDERER_LEVEL : req.wild.level, ctx.rng);
       if (req.wanderer) {

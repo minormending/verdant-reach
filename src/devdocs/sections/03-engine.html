@@ -69,7 +69,7 @@
     <li><strong>Order inside one step:</strong> read controllers (<code>poll</code>), update the top scene,
       clear this step's press edges (<code>endFrame</code>), then the tick callback (play time, the error
       screen's tick count).</li>
-    <li><strong><code>?speed=N</code></strong> (dev only, 1–16) runs exactly N steps per drawn frame and ignores
+    <li><strong><code>?speed=N</code></strong> (dev and e2e builds only, 1–16) runs exactly N steps per drawn frame and ignores
       the clock; the e2e runner uses speed 8.</li>
     <li><strong><code>?timer</code></strong> schedules frames with <code>setTimeout(…, 1000 / FPS)</code>, because
       browsers throttle <code>requestAnimationFrame</code> in hidden or embedded panes.</li>
@@ -114,7 +114,7 @@
   pad --> edges
   edges --> api["Input: pressed, held, repeat"]
   api --> scene["top scene update()"]
-  km -. "first key" .-> unlock["audio.unlock()"]
+  km -. "every new key press" .-> unlock["audio.unlock()"]
   pb -. "every new pad press" .-> unlock</pre>
   <p>The keyboard map, also read by the guide's controls table (<a data-src="src/engine/core.ts#L26">core.ts</a>):</p>
   <pre><code class="lang-ts">export const KEYMAP: Record&lt;string, Button&gt; = {
@@ -363,10 +363,11 @@ export function worldTime(ctx: Pick&lt;GameContext, "world" | "state" | "timeOfD
     never change a critical hit. <a data-src="src/engine/random.ts">random.ts</a> in full:
   </p>
   <pre><code class="lang-ts">import { seeded, type Rng } from "../battle/logic/rng";
+import { testHooks } from "./testHooks";
 
-/** URL seeds are unsigned 32-bit integers, and never apply to production. */
+/** URL seeds are unsigned 32-bit integers, and never apply to the public production build. */
 export function devSeed(): number | null {
-  if (!import.meta.env.DEV || typeof location === "undefined") return null;
+  if (!testHooks() || typeof location === "undefined") return null;
   const value = new URLSearchParams(location.search).get("seed");
   if (value === null || !/^\d+$/.test(value)) return null;
   const seed = Number(value);
@@ -387,7 +388,7 @@ export function installDevRandom(): void {
   if (seed !== null) Math.random = randomStream(seed, "direct");
 }</code></pre>
   <pre class="mermaid">flowchart TB
-  seed["?seed=N (dev only)"] --> h["randomStream(seed, name): FNV-style hash of name, then mulberry32"]
+  seed["?seed=N (dev and e2e builds)"] --> h["randomStream(seed, name): FNV-style hash of name, then mulberry32"]
   h --> direct["'direct': replaces Math.random (particles, audio, save ids)"]
   h --> world["'world': ctx.rng (overworld: encounters, NPCs)"]
   h --> bt["'battle:trainer:ID' per trainer"]
@@ -411,8 +412,9 @@ export function installDevRandom(): void {
         stream every step, so the wild encounter you get depends on timing. Only the battle itself is
         isolated. A wild battle's stream is keyed by species and level, so two
         different encounters with the same species and level share a stream.</li>
-      <li><strong>Production ignores the seed</strong> (<code>import.meta.env.DEV</code> is false), so a seed in
-        a live URL does nothing. Without a seed, <code>ctx.rng</code> <em>is</em> <code>Math.random</code>.</li>
+      <li><strong>The public build ignores the seed</strong> (<code>testHooks()</code> is false: not
+        <code>DEV</code>, and the mode is <code>production</code>, not <code>e2e</code>), so a seed in a live URL
+        does nothing. Without a seed, <code>ctx.rng</code> <em>is</em> <code>Math.random</code>.</li>
       <li><strong>Adding a stream:</strong> call <code>randomStream(seed, "your-name")</code> once and pass the
         <code>Rng</code> down; pure logic should take an <code>Rng</code> parameter (as all of
         <code>battle/logic</code> does) so tests can use <code>seeded()</code> or <code>sequence()</code>.</li>

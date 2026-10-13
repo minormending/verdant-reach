@@ -123,8 +123,10 @@
   <figure data-chart="species-by-type"><figcaption>Species per type: check where a new plant fills a gap.</figcaption></figure>
 
   <details class="advanced"><summary>Advanced: changing an existing species</summary>
-    <p>A Quickened's stats are recomputed from its species on load, so changing
-    base stats also changes creatures in players' existing saves. Ids are
+    <p>A Quickened's stats are stored in the save and recomputed from its species
+    only on level-up, growth and in the Nursery, so a base-stat change reaches
+    plants in players' existing saves at their next level-up or growth, not on
+    load (<a href="#data-runtime">stored stats</a>). Ids are
     forever: renaming one breaks saves (party, box, Herbarium) and art folders.
     Add a new id instead. The learnset order matters for the starting moves (all
     level-1 entries) and for trainers without explicit <code>moves</code>, whose
@@ -486,19 +488,23 @@
     case "end":
       throw new ScriptEnd();
     default: {
-      const unknown = cmd as { op?: string };
-      console.warn(`[script] unknown op "${unknown.op}"`);
+      // Compile-time exhaustiveness: a new ScriptCmd op without a case fails typecheck here.
+      const unknown: never = cmd;
+      // Runtime safety net for data the types can't see (the validator rejects it too).
+      console.warn(`[script] unknown op "${(unknown as { op?: string }).op}"`);
     }
   }
 }</code></pre>
 
   <figure data-chart="script-ops"><figcaption>Every ScriptCmd op and how often the world's scripts use it.</figcaption></figure>
 
-  <details class="advanced"><summary>Advanced: nothing forces you to finish</summary>
-    <p>The <code>default</code> branch logs a warning instead of asserting
-    <code>never</code>, so TypeScript will <em>not</em> fail when you add a member
-    to the union and forget the interpreter case; the game will just warn and skip
-    it. The validator's <code>switch</code> has no default at all. Grep for an
+  <details class="advanced"><summary>Advanced: what the compiler does and doesn't check</summary>
+    <p>The interpreter is covered: the <code>default</code> branch assigns the
+    command to <code>never</code>, so <code>npm run typecheck</code> fails when you
+    add a member to the union and forget its <code>case</code> in
+    <code>step()</code>. The walkers and the validator are not: <code>childLists</code>
+    and <code>eachCmd</code> fall through for ops they don't list, and the
+    validator's <code>switch</code> has no default at all. Grep for an
     existing op of the same shape (for a branching op, <code>"ifNurserySeed"</code>)
     and visit every hit. The playthrough's console hook turns the runtime warning
     into a <code>console.warn</code> issue, so an unhandled op used in the story

@@ -535,22 +535,24 @@ const SPEED: Record&lt;TextSpeed, number&gt; = { slow: 1 / 4, mid: 1 / 2, fast: 
   participant Sh as touch controls
   participant W as window listeners
   participant Au as audio.unlock()
-  U->>In: first mapped keydown
-  In->>Au: onFirstInput() (once)
+  U->>In: mapped keydown (not auto-repeat)
+  In->>Au: onPress() on every new key press
   U->>Sh: pointerdown on a control
   Sh->>Au: onInteract()
   U->>W: pointerup or touchend anywhere
   W->>Au: unlock()
   U->>In: gamepad button press
-  In->>Au: onFirstInput() on every new pad press
+  In->>Au: onPress() on every new pad press
+  Au->>Au: already running? return at once
   Au->>Au: create Chip(new AudioContext) once, apply volumes
   Au->>Au: ctx.resume(), then start the current music and bed</pre>
   <p>
     <strong>Why a controller alone can't do it:</strong> a Gamepad API button press is not a user-activation
     event in browsers, so an <code>AudioContext</code> created or resumed from it stays suspended. The engine
-    still calls <code>onFirstInput()</code> on every new pad press (the comment in <code>createInput</code>
-    says "asking again on each press is harmless"), so once the player has pressed a key or tapped once, the
-    next pad press succeeds. A pad-only player hears nothing until then.
+    still calls <code>onPress()</code> on every new pad press, as it does on every new key press, so once the
+    player has pressed a key or tapped once, the next pad press succeeds. A pad-only player hears nothing until
+    then. Asking again is cheap: <code>unlock()</code> returns at once when the context is already
+    <code>"running"</code>.
   </p>
   <p>Touch is the other trap: mobile browsers grant permission on <code>pointerup</code>/<code>touchend</code>, not <code>pointerdown</code>, which is why <code>main.ts</code> adds those two window listeners:</p>
   <pre><code class="lang-ts">    // Touch only grants audio permission on pointerup/touchend, not pointerdown.
@@ -558,19 +560,19 @@ const SPEED: Record&lt;TextSpeed, number&gt; = { slow: 1 / 4, mid: 1 / 2, fast: 
     addEventListener("pointerup", unlock);
     addEventListener("touchend", unlock);</code></pre>
   <details class="advanced">
-    <summary>Advanced: suspend, resume and an Escape-key edge case</summary>
+    <summary>Advanced: suspend, resume and the Escape key</summary>
     <ul>
       <li><strong>Pause wins.</strong> <code>setAudioSuspended(audio, true)</code> suspends the context; while
         suspended, <code>unlock()</code> creates the chip if needed but does not resume it, so a tap during the
         PAUSED overlay can't start music under it.</li>
       <li><strong>After <code>resume()</code></strong> the service restarts the current music from the saved
         position and the ambience bed if it had none, which covers music requested while locked.</li>
-      <li><strong>Keyboard unlock is one-shot.</strong> <code>createInput</code> calls <code>onFirstInput</code>
-        only on the <em>first</em> mapped keydown. The HTML spec excludes the Escape key from user activation,
-        and Escape is mapped to B, so a keyboard-only player whose very first key is Escape may get a suspended
-        context that later key presses never resume (a click, tap or pad press would). If you touch this code,
-        consider calling <code>unlock()</code> on every trusted keydown until the context reports
-        <code>"running"</code>.</li>
+      <li><strong>Every press retries.</strong> The HTML spec excludes the Escape key from user activation, and
+        Escape is mapped to B, so a player's first key may create a context that stays suspended. That is why
+        <code>createInput</code> calls <code>onPress</code> on every new mapped keydown (auto-repeat excluded),
+        and the window listeners fire on every <code>pointerup</code>/<code>touchend</code>: the next real gesture
+        resumes it. Music can't start twice: each resolved <code>resume()</code> starts the current track only if
+        none is playing (<code>!music</code>), and once running, <code>unlock()</code> does nothing.</li>
       <li><strong>Without WebAudio</strong> (tests, very old browsers) <code>unlock()</code> returns early and the
         service stays a silent state machine; nothing else changes.</li>
     </ul>

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { GameState, WorldData } from "../contracts";
 import {
   DEFAULT_PLAYER_NAME, DEFAULT_PLAYER_NAMES, OPTIONS_KEY, SAVE_KEY, battleAnimsOn, beginNewGameSession, createSave, followerOn, formatPlayTime, loadOptions,
@@ -23,6 +23,19 @@ function memoryStorage() {
 }
 
 describe("save", () => {
+  it("reports whether a write was stored, and never throws", () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const state = newGameState({ world });
+    const storage = memoryStorage();
+    expect(createSave(() => state, storage).write()).toBe(true);
+    expect(storage.raw.has(SAVE_KEY)).toBe(true);
+    expect(createSave(() => state, null).write()).toBe(false);
+    const full = { ...memoryStorage(), setItem: () => { throw new Error("QuotaExceededError"); } };
+    expect(createSave(() => state, full).write()).toBe(false);
+    expect(errors).toHaveBeenCalledTimes(2);
+    errors.mockRestore();
+  });
+
   it("keeps the player's look, and loads saves from before the choice as the boy", () => {
     const storage = memoryStorage();
     const fallback = () => newGameState({ world });

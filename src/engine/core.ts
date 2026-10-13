@@ -6,6 +6,7 @@ import { FPS, SCREEN_H, SCREEN_W } from "../contracts";
 import type { Assets, Button, Input, Scene, SceneStack } from "../contracts";
 import { createArtAssets } from "../art";
 import { readGamepads } from "./gamepad";
+import { testHooks } from "./testHooks";
 
 export function createCanvas(): { canvas: HTMLCanvasElement; g: CanvasRenderingContext2D } {
   const canvas = document.getElementById("screen") as HTMLCanvasElement;
@@ -36,9 +37,14 @@ export const KEYMAP: Record<string, Button> = {
  * Keyboard (and the touch controls, which synthesise key events) plus any
  * game controllers (src/engine/gamepad.ts). `poll` reads the controllers at
  * the start of each step; `endFrame` consumes the step's press edges.
+ *
+ * `onPress` runs on every new mapped key or controller press (not on key
+ * auto-repeat): main.ts passes the audio unlock. Not every key counts as a
+ * user gesture (Chrome ignores Escape, which is B), so the unlock must be
+ * retried until audio is actually running; `unlock()` returns at once then.
  */
 export function createInput(
-  onFirstInput: () => void,
+  onPress: () => void,
   readPads: () => Set<Button> = readGamepads,
 ): Input & { endFrame(): void; poll(): void } {
   const keys = new Set<Button>();
@@ -46,12 +52,11 @@ export function createInput(
   const down = new Set<Button>();
   const holdFrames = new Map<Button, number>();
   const isHeld = (b: Button) => keys.has(b) || pad.has(b);
-  let unlocked = false;
   addEventListener("keydown", (e) => {
     const b = KEYMAP[e.code];
     if (!b) return;
     e.preventDefault();
-    if (!unlocked) { unlocked = true; onFirstInput(); }
+    if (!e.repeat) onPress();
     if (!isHeld(b)) down.add(b);
     keys.add(b);
   });
@@ -79,7 +84,7 @@ export function createInput(
       for (const b of before) if (!isHeld(b)) holdFrames.delete(b);
       // Browsers don't count a controller press as a user gesture, so audio may
       // stay locked until a key or tap; asking again on each press is harmless.
-      if (pressedAny) onFirstInput();
+      if (pressedAny) onPress();
     },
     endFrame() {
       down.clear();
@@ -139,7 +144,7 @@ export function runLoop(
   // `?timer` drives the loop with setTimeout (for embedded/hidden test panes
   // where requestAnimationFrame is throttled).
   const useTimer = typeof location !== "undefined" && new URLSearchParams(location.search).has("timer");
-  const requestedSpeed = import.meta.env.DEV && typeof location !== "undefined"
+  const requestedSpeed = testHooks() && typeof location !== "undefined"
     ? new URLSearchParams(location.search).get("speed") : null;
   const speed = requestedSpeed && /^\d+$/.test(requestedSpeed)
     && Number(requestedSpeed) >= 1 && Number(requestedSpeed) <= 16 ? Number(requestedSpeed) : 1;

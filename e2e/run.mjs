@@ -2,29 +2,46 @@ import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { setTimeout as sleep } from "node:timers/promises";
 import { chromium } from "playwright";
-import { createServer } from "vite";
+import { build, createServer, preview } from "vite";
+
+// By default the playthrough plays the production pipeline: `vite build --mode
+// e2e` (the real bundling, chunking, minification and relative base, plus the
+// test hooks that src/engine/testHooks.ts enables only in this mode) into its
+// own folder, served by `vite preview`. `--dev` plays the dev server instead
+// (quicker to iterate on), and `--no-build` reuses the last e2e build.
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
+const CONFIG = fileURLToPath(new URL("../vite.config.ts", import.meta.url));
+const E2E_OUT_DIR = "dist-e2e";
 
 const args = process.argv.slice(2);
 let speed = 8;
 let seed = 1;
 let headed = false;
+let dev = false;
+let reuseBuild = false;
 let allowTodo = false; // --allow-placeholders: tolerate TODO(text) dialogue (the chapter branches, until the writing pass)
 let timeoutMin = 0;
 let reportFile = "";
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--headed") headed = true;
+  else if (args[i] === "--dev") dev = true;
+  else if (args[i] === "--no-build") reuseBuild = true;
   else if (args[i] === "--allow-placeholders") allowTodo = true;
   else if (args[i] === "--timeout-min" && /^\d+$/.test(args[i + 1] ?? "")) timeoutMin = Number(args[++i]);
   else if (args[i] === "--speed" && /^\d+$/.test(args[i + 1] ?? "")) speed = Number(args[++i]);
   else if (args[i] === "--seed" && /^\d+$/.test(args[i + 1] ?? "")) seed = Number(args[++i]);
   else if (args[i] === "--report" && args[i + 1]) reportFile = args[++i]; // parallel runs: write elsewhere
   else {
-    console.error("Usage: npm run e2e -- [--speed N] [--seed N] [--headed] [--allow-placeholders] [--timeout-min N] [--report PATH] (speed: 1–16; seed: 0–4294967295)");
+    console.error("Usage: npm run e2e -- [--dev | --no-build] [--speed N] [--seed N] [--headed] [--allow-placeholders] [--timeout-min N] [--report PATH] (speed: 1–16; seed: 0–4294967295)");
     process.exit(1);
   }
 }
 if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
   console.error("--seed must be an integer from 0 to 4294967295");
+  process.exit(1);
+}
+if (dev && reuseBuild) {
+  console.error("--dev plays the dev server; --no-build applies only to the production build");
   process.exit(1);
 }
 if (!Number.isInteger(speed) || speed < 1 || speed > 16) {
@@ -67,14 +84,28 @@ function printProgress(current) {
 }
 
 try {
-  console.log(`Full playthrough: speed=${speed}, seed=${seed}, time=day, ${headed ? "headed" : "headless"}`);
-  // Port 0 lets the OS reserve a free port atomically. Vite's API keeps the
-  // server in this process: cleanup cannot target someone else's server.
-  server = await createServer({
-    configFile: fileURLToPath(new URL("./vite.config.ts", import.meta.url)),
-    server: { host: "127.0.0.1", port: 0, open: false },
-  });
-  await server.listen();
+  const target = dev ? "dev server" : `production build (${E2E_OUT_DIR}/)`;
+  console.log(`Full playthrough: ${target}, speed=${speed}, seed=${seed}, time=day, ${headed ? "headed" : "headless"}`);
+  // Port 0 lets the OS pick a free port. Vite's API keeps the server in this
+  // process: cleanup cannot target someone else's server.
+  if (dev) {
+    server = await createServer({
+      configFile: fileURLToPath(new URL("./vite.config.ts", import.meta.url)),
+      server: { host: "127.0.0.1", port: 0, open: false },
+    });
+    await server.listen();
+  } else {
+    if (!reuseBuild) {
+      console.log(`Building: vite build --mode e2e --outDir ${E2E_OUT_DIR}`);
+      await build({ root: ROOT, configFile: CONFIG, mode: "e2e", logLevel: "warn", build: { outDir: E2E_OUT_DIR, emptyOutDir: true } });
+      abort.signal.throwIfAborted();
+    }
+    server = await preview({
+      root: ROOT, configFile: CONFIG, mode: "e2e", logLevel: "warn",
+      build: { outDir: E2E_OUT_DIR },
+      preview: { host: "127.0.0.1", port: 0, open: false },
+    });
+  }
   abort.signal.throwIfAborted();
   const address = server.httpServer.address();
   if (!address || typeof address === "string") throw new Error("Vite did not bind a TCP port");
@@ -110,7 +141,7 @@ try {
   printProgress(report);
   for (const issue of runnerIssues) console.error(`RUNNER ISSUE: ${issue}`);
   report.seed = seed;
-  report.runner = { speed, seed, time: "day", headed, elapsedSeconds, issues: runnerIssues };
+  report.runner = { target: dev ? "dev" : "production", speed, seed, time: "day", headed, elapsedSeconds, issues: runnerIssues };
   try {
     await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
     console.log(`Report: ${fileURLToPath(reportPath)}`);
