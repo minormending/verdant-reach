@@ -32,7 +32,7 @@
   // …
   | { op: "battle"; trainer: TrainerId; canLose?: boolean } // sets flag `beat_&lt;trainer&gt;` on win
   | { op: "wildBattle"; species: SpeciesId; level: number; sport?: boolean; canLose?: boolean }
-  | { op: "ifLastBattle"; result: BattleOutcome; then: ScriptCmd[]; else?: ScriptCmd[] }
+  | { op: "ifLastBattle"; result: Exclude&lt;BattleOutcome, "error"&gt;; then: ScriptCmd[]; else?: ScriptCmd[] }
   // …
   | { op: "call"; script: ScriptId }
   // …
@@ -271,6 +271,7 @@ export const ifNight = (then: ScriptCmd[], els: ScriptCmd[]): ScriptCmd =&gt;
   MK -->|"no"| LB
   GM --> LB["lastBattle = result"]
   R -->|"lost, fled"| LB
+  R -->|"error (crashed)"| AB["ScriptAbort: no branch runs, nothing awarded"]
   LB --> L{"lost and not canLose?"}
   L -->|"yes"| WO["whiteout, ScriptAbort: the rest never runs"]
   L -->|"no"| NEXT["next command"]</pre>
@@ -287,6 +288,7 @@ export const ifNight = (then: ScriptCmd[], els: ScriptCmd[]): ScriptCmd =&gt;
     <ul>
       <li><strong>Marks are awarded once, by one owner.</strong> After a won leader battle, <code>trainerBattle</code> gives the trainer's <code>mark</code> only if no script anywhere contains a <code>giveMark</code> for it (<code>scriptsAwardMark</code> scans all scripts on each win). So if a leader's scene gives the mark itself, the engine stays out of the way.</li>
       <li><strong><code>ifLastBattle</code> only sees battles in this run.</strong> A trainer who spots you from the grass fights outside any script, so there is no "last battle" for a later script to read; use the <code>beat_&lt;trainer&gt;</code> flag instead.</li>
+      <li><strong>A crashed battle (<code>"error"</code>) stops the script</strong> with <code>ScriptAbort</code> before <code>lastBattle</code> is set, so neither branch of an <code>ifLastBattle</code> runs (a <code>canLose</code> rival scene doesn't carry on as a loss either) and the callers of a <code>call</code>ed battle script stop too. The battle scene has already put the state back as it was, so the scene can simply be started again. This relies on scenes setting their "done" flag <em>after</em> the battle, which every scene does today; <code>ifLastBattle</code> can't name <code>"error"</code> (the type excludes it).</li>
       <li><strong><code>fled</code> and <code>caught</code></strong> only come from wild battles. A <code>wildBattle</code> with <code>canLose</code> needs branches for every outcome that matters, or the scene continues as if nothing happened.</li>
       <li><strong>After every battle</strong> the overworld sets 3 grace steps, restores the map music and fades back in, except after a non-<code>canLose</code> loss, where whiteout fades in instead.</li>
     </ul>

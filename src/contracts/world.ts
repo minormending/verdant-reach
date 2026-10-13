@@ -106,7 +106,8 @@ export type ScriptCmd =
   | { op: "ifMarks"; marks: MarkId[]; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "battle"; trainer: TrainerId; canLose?: boolean } // sets flag `beat_<trainer>` on win
   | { op: "wildBattle"; species: SpeciesId; level: number; sport?: boolean; canLose?: boolean }
-  | { op: "ifLastBattle"; result: BattleOutcome; then: ScriptCmd[]; else?: ScriptCmd[] }
+  /** A crashed battle ("error") stops the script before any branch, so it can't be tested for. */
+  | { op: "ifLastBattle"; result: Exclude<BattleOutcome, "error">; then: ScriptCmd[]; else?: ScriptCmd[] }
   | { op: "heal" }                                        // full party heal + jingle
   | { op: "warp"; to: MapId; x: number; y: number; facing?: Dir }
   | { op: "movePlayer"; path: Dir[] }

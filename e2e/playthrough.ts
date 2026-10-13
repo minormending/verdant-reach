@@ -295,6 +295,8 @@ export function instrument() {
     report.battles.push(entry);
     entry.outcome = await battle(request);
     entry.turns = battleStates.get(request)?.turn;
+    // A crashed battle is never a pass, even where a beat accepts any outcome.
+    if (entry.outcome === "error") issue("battle-error", `${request.kind} ${request.trainer ?? request.wild?.species ?? "?"} crashed`);
     return entry.outcome;
   };
   const gameplayTasks = new GameplayTasks();
@@ -1509,7 +1511,7 @@ async function chapter7() {
   const lily = [...st().party, ...st().box].find((q) => q.species === "giant_water_lily"
     && q.metAt?.map === "bloom_lake" && q.metAt.level === 40);
   const lilyNpc = ow()?.npcs.find((n) => n.id === "crimson_lily");
-  beat("the CRIMSON LILY: one-off sport battle", flag("crimson_lily_done") && !!lilyBattle?.outcome
+  beat("the CRIMSON LILY: one-off sport battle", flag("crimson_lily_done") && !!lilyBattle?.outcome && lilyBattle.outcome !== "error"
     && !!lilyNpc && !ow()!.visible(lilyNpc)
     && (lilyBattle?.outcome !== "caught" || !!lily?.sport), `outcome=${lilyBattle?.outcome}, caught sport=${lily?.sport ?? false}`);
 
@@ -1900,7 +1902,7 @@ export async function challengeElder(): Promise<boolean> {
       const battles = report.battles.slice(before).filter((b) => b.request.wild?.species === "elder");
       const battle = battles[0];
       if (battles.length !== 1 || battle?.request.kind !== "wild"
-        || battle.request.wild?.level !== 60 || battle.request.canLose !== true || !battle.outcome
+        || battle.request.wild?.level !== 60 || battle.request.canLose !== true || !battle.outcome || battle.outcome === "error"
         || (st.bag.glass_pod ?? 0) >= pods
         || !report.texts.slice(texts).some((t) => t.text.toUpperCase().includes("USED GLASS POD"))) return fail("check 3");
       if (battle.outcome === "caught") return caught();
@@ -2273,7 +2275,7 @@ export async function postgame() {
         const talked = await talkTo("burr");
         const fight = report.battles.slice(battles).find((b) => b.request.wanderer === "burr");
         hitch = behind && talked && fight?.request.wild?.species === "burr"
-          && fight.request.wild.level === 60 && !!fight.outcome && !ctx().state.burrHitch;
+          && fight.request.wild.level === 60 && !!fight.outcome && fight.outcome !== "error" && !ctx().state.burrHitch;
         break;
       }
       if (!(await nav("thistledown"))) break;
@@ -2367,7 +2369,7 @@ export async function postgame() {
     const talked = await talkTo("methuselah");
     const fight = report.battles.slice(before).find((b) => b.request.wild?.species === "methuselah");
     beat("METHUSELAH: a real level-70 battle", talked && fight?.request.kind === "wild"
-      && fight.request.wild?.level === 70 && fight.request.canLose === true && !!fight.outcome, fight?.outcome);
+      && fight.request.wild?.level === 70 && fight.request.canLose === true && !!fight.outcome && fight.outcome !== "error", fight?.outcome);
   });
 
   await glideTo("council_arboretum");

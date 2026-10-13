@@ -84,7 +84,13 @@ export interface BattleRequest {
   canLose?: boolean;            // story battles (rival #1): no whiteout on loss
   backdrop?: "grass" | "bog" | "water" | "indoor" | "night" | "glasshouse";
 }
-export type BattleOutcome = "won" | "lost" | "fled" | "caught";
+/**
+ * "error": the battle crashed. It never counts as a win: the battle scene puts
+ * the game state back as it was before the battle (nothing awarded, no
+ * `beat_<trainer>` flag), the overworld says the battle was called off, and a
+ * script that started it stops there (ScriptAbort), so it can be fought again.
+ */
+export type BattleOutcome = "won" | "lost" | "fled" | "caught" | "error";
 
 export interface Scene {
   /** If true, the scene below is drawn first (menus, text boxes over the map). */

@@ -249,6 +249,47 @@ describe("script interpreter", () => {
     expect(said[said.length - 1]).toBe("w");
   });
 
+  it.each([false, true])("stops the script on a crashed trainer battle, awarding nothing (canLose: %s)", async (canLose) => {
+    const { host, state, said } = setup({ battles: ["error", "won"] });
+    const scene: ScriptCmd[] = [
+      { op: "battle", trainer: "hollis", canLose },
+      { op: "ifLastBattle", result: "won", then: [{ op: "say", text: "won" }, { op: "giveMoney", amount: 500 }],
+        else: [{ op: "say", text: "lost" }, { op: "setFlag", flag: "story_moved_on" }] },
+      { op: "say", text: "after" },
+    ];
+    await expect(runScript(host, scene)).rejects.toThrow("battle error");
+    expect(state.flags.beat_hollis).toBeUndefined();
+    expect(state.flags.story_moved_on).toBeUndefined();
+    expect(state.marks).toEqual([]);
+    expect(state.money).toBe(newGameState({ world }).money);
+    expect(said).toEqual([]);
+    expect(host.whiteout).not.toHaveBeenCalled();
+    // The same scene can be played again, and a real win then counts.
+    await runScript(host, scene);
+    expect(state.flags.beat_hollis).toBe(true);
+    expect(said).toEqual(["ROWAN received the BRAMBLE MARK!", "won", "after"]);
+  });
+
+  it("stops the script on a crashed scripted wild battle, as if it never began", async () => {
+    const { host, state } = setup({ battles: ["error"] });
+    await expect(runScript(host, [
+      { op: "wildBattle", species: "giant_water_lily", level: 40, sport: true, canLose: true },
+      { op: "setFlag", flag: "static_sport_done" },
+    ])).rejects.toThrow("battle error");
+    expect(state.flags.static_sport_done).toBeUndefined();
+    expect(host.whiteout).not.toHaveBeenCalled();
+  });
+
+  it("stops a calling script too when a battle in a called script crashes", async () => {
+    const { host, state, ctx } = setup({ battles: ["error"] });
+    ctx.world.scripts.fight = [{ op: "battle", trainer: "hollis" }];
+    try {
+      await expect(runScript(host, [{ op: "call", script: "fight" }, { op: "setFlag", flag: "after_fight" }])).rejects.toThrow("battle error");
+    } finally { delete ctx.world.scripts.fight; }
+    expect(state.flags.after_fight).toBeUndefined();
+    expect(state.flags.beat_hollis).toBeUndefined();
+  });
+
   it("whites out and stops the script on a loss that can't be lost", async () => {
     const { host, said } = setup({ battles: ["lost"] });
     await expect(runScript(host, [{ op: "battle", trainer: "hollis" }, { op: "say", text: "after" }])).rejects.toThrow("whiteout");

@@ -10,6 +10,7 @@ import { seeded } from "./logic/rng";
 import { createBattleScene } from "./scene";
 import { createSave, newGameState } from "../save";
 import { createOverworldScene } from "../overworld";
+import { createSceneStack } from "../engine/core";
 import { WORLD } from "../world";
 import { type BattleEvent } from "./logic/battle";
 import { recoverWanderers, wandererHealth, wandererMaxHp } from "../overworld/roaming";
@@ -374,5 +375,62 @@ describe("graft collar scene wiring", () => {
     expect(drawGraftCollarPlaceholder).not.toHaveBeenCalled();
     expect(foe.stats).toEqual(createQuickened(DATA, "great_oak", 27, seeded(1)).stats);
     expect(foe).not.toHaveProperty("grafted");
+  });
+});
+
+describe("a battle that crashes", () => {
+  function crashing(req: BattleRequest) {
+    vi.stubGlobal("window", {});
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const scenes = createSceneStack();
+    const ctx = {
+      data: DATA, rng: seeded(1), input: { pressed: () => false, held: () => false, repeat: () => false }, timeOfDay: () => "day",
+      world: { maps: {}, trainers: { [trainer.id]: trainer } }, scenes,
+      state: {
+        ...newGameState({ world: WORLD }),
+        party: [createQuickened(DATA, "great_oak", 27, seeded(10))],
+        position: { map: "route_1" }, playerName: "ROWAN", bag: { terrarium_pod: 3 }, money: 1000,
+      },
+      audio: { playSfx() {}, playMusic() {}, playCry() {}, async playJingle() {} },
+    } as unknown as GameContext;
+    const done = vi.fn();
+    const scene = createBattleScene(ctx, req, done) as unknown as SceneHarness & { update(dt: number): void };
+    scenes.push(scene as unknown as Parameters<typeof scenes.push>[0]);
+    return { ctx, scenes, scene, done, errors };
+  }
+
+  it.each([
+    { kind: "trainer" as const, trainer: trainer.id },
+    { kind: "trainer" as const, trainer: trainer.id, canLose: true },
+    { kind: "wild" as const, wild: { species: "elder" as const, level: 60 }, canLose: true },
+  ])("ends as error, never a win, with the game state as it was before: %j", async (req) => {
+    const { ctx, scenes, scene, done, errors } = crashing(req);
+    const before = structuredClone(ctx.state);
+    const overlay = { update() {}, draw() {}, exit: vi.fn() };
+    scene.main = async () => {
+      // Mid-battle progress that must not survive the crash.
+      ctx.state.party[0].hp = 1;
+      ctx.state.party[0].exp += 5000;
+      ctx.state.money += 900;
+      ctx.state.bag.terrarium_pod = 0;
+      ctx.state.flags[`beat_${trainer.id}`] = true;
+      ctx.state.herbarium.caught.push("elder");
+      ctx.state.playTimeMs = before.playTimeMs + 1234;
+      scenes.push(overlay); // e.g. the party screen, open over the battle
+      throw new Error("boom");
+    };
+    scene.update(1000 / 60);
+    await vi.waitFor(() => expect(done).toHaveBeenCalled());
+    expect(done).toHaveBeenCalledExactlyOnceWith("error");
+    expect(errors).toHaveBeenCalledWith("[battle] crashed", expect.any(Error));
+    expect(ctx.state).toEqual({ ...before, playTimeMs: before.playTimeMs + 1234 });
+    expect(overlay.exit).toHaveBeenCalledOnce();
+    expect(scenes.top()).toBe(scene);
+  });
+
+  it("reports an unknown trainer as an error, not a win", async () => {
+    const { scene, ctx } = crashing({ kind: "trainer", trainer: "nobody" });
+    await expect(scene.main()).resolves.toBe("error");
+    expect(ctx.state.flags.beat_nobody).toBeUndefined();
   });
 });

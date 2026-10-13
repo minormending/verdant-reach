@@ -160,7 +160,7 @@
       <tr><td><code>save</code></td><td><code>createSave(…)</code></td><td><code>write</code>, <code>read</code>, <code>exists</code>, <code>clear</code> against <code>localStorage</code>.</td></tr>
       <tr><td><code>rng</code></td><td>context</td><td><code>Math.random</code>, or the seeded <code>"world"</code> stream under <code>?seed</code>.</td></tr>
       <tr><td><code>timeOfDay</code></td><td>context</td><td>The real clock (morning/day/night), or <code>?time</code>.</td></tr>
-      <tr><td><code>battle</code></td><td>context</td><td>Runs a battle scene and resolves with <code>"won" | "lost" | "fled" | "caught"</code>.</td></tr>
+      <tr><td><code>battle</code></td><td>context</td><td>Runs a battle scene and resolves with <code>"won" | "lost" | "fled" | "caught"</code>, or <code>"error"</code> if it crashed.</td></tr>
     </tbody>
   </table>
   <pre><code class="lang-ts">export function createGameContext(deps: { input: Input; scenes: SceneStack; assets: Assets }): GameContext {

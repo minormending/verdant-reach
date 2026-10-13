@@ -111,10 +111,17 @@ export type BattleEvent =
         (<a data-src="src/battle/logic/rng.ts">rng.ts</a>: <code>randInt</code>, <code>chance</code>, <code>pct</code>,
         <code>seeded</code> mulberry32, <code>sequence</code> for scripted tests). Cosmetic randomness in
         <code>fx.ts</code> uses <code>Math.random()</code> on purpose, so particles never shift the battle stream.</li>
-      <li><strong>Crash policy.</strong> If <code>main()</code> throws, the scene logs and finishes with
-        <code>"fled"</code> for a wild battle and <code>"won"</code> for a trainer battle. It would rather skip a
-        story fight than soft-lock the game. A bug in a trainer battle can therefore look like a win (and set
-        <code>beat_&lt;id&gt;</code>), so check the console for <code>[battle] crashed</code>.</li>
+      <li><strong>Crash policy.</strong> A crash is never a win. The scene snapshots the game state
+        (<code>structuredClone</code>) before <code>main()</code> starts; if <code>main()</code> throws, it logs
+        <code>[battle] crashed</code>, closes any screen it had opened over itself, puts the state back in place
+        (<code>restoreState</code>: party, bag, money, Herbarium and flags as they were; only the play clock keeps
+        running) and finishes with <code>"error"</code>. An unknown trainer or a wild request without a species also
+        ends as <code>"error"</code>. The overworld then says "Something wilted… The battle is off.", no
+        <code>beat_&lt;id&gt;</code> flag or mark is set, and a script that started the battle stops there
+        (<a href="#scripts-battles">battles in scripts</a>), so the player can fight it again. A trainer whose battle
+        crashed stops spotting the player until the map is reloaded (talking to them still starts the fight), so a
+        repeatable crash can't trap the player in a loop. The e2e playthrough reports every <code>"error"</code> as
+        an issue.</li>
       <li><strong>Defensive lookups.</strong> <code>getSpecies</code>, <code>getMove</code> and <code>getItem</code> in
         <a data-src="src/battle/logic/lookup.ts">lookup.ts</a> return a plain fallback and warn once for unknown ids,
         a leftover from when data and battle were built in parallel. The data tests make that path unreachable in
@@ -127,7 +134,8 @@ export type BattleEvent =
 
   <p>Code asks for a battle with a <code>BattleRequest</code> (wild species and level, or a trainer id, plus
     <code>canLose</code>, an optional <code>wanderer</code> and a backdrop) and gets back a
-    <code>BattleOutcome</code>: <code>"won"</code>, <code>"lost"</code>, <code>"fled"</code> or <code>"caught"</code>.
+    <code>BattleOutcome</code>: <code>"won"</code>, <code>"lost"</code>, <code>"fled"</code> or <code>"caught"</code>
+    (or <code>"error"</code> if the battle crashed; see the crash policy above).
     The scene's <code>main()</code> is one async loop:</p>
   <pre><code class="lang-ts">    while (!outcome) {
       const choice = await this.chooseAction();
