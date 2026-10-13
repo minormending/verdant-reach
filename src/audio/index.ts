@@ -123,8 +123,9 @@ export function createAudio(): AudioService {
       });
     },
 
+    /** Safe to call on every press: returns at once when audio is already running. */
     unlock() {
-      if (typeof AudioContext === "undefined") return;
+      if (typeof AudioContext === "undefined" || running()) return;
       if (!chip) {
         try {
           chip = new Chip(new AudioContext({ latencyHint: "interactive" }));

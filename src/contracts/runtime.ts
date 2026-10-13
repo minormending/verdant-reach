@@ -153,7 +153,7 @@ export interface AudioService {
   playJingle(id: JingleId): Promise<void>; // pauses music, resumes after
   /** Species cry, synthesised per species id (deterministic). */
   playCry(species: SpeciesId): Promise<void>;
-  unlock(): void;               // call on first user input (autoplay policy)
+  unlock(): void;               // call on every user press until audio runs (autoplay policy); cheap once running
   setVolume(music: number, sfx: number): void;
 }
 

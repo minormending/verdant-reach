@@ -25,7 +25,7 @@
   M->>E: installDevRandom() (dev ?seed only)
   M->>E: createCanvas(), createSceneStack()
   M->>P: platformFlags(), installErrorScreen()
-  M->>E: createInput(onFirstInput = audio.unlock)
+  M->>E: createInput(onPress = audio.unlock)
   M->>A: createAssets() (starts fetching index.json)
   M->>E: createGameContext({ input, scenes, assets })
   M->>P: createShell(), createPause(), pauseOnFocusLoss()

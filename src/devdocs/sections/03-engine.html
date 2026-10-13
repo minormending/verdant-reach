@@ -114,7 +114,7 @@
   pad --> edges
   edges --> api["Input: pressed, held, repeat"]
   api --> scene["top scene update()"]
-  km -. "first key" .-> unlock["audio.unlock()"]
+  km -. "every new key press" .-> unlock["audio.unlock()"]
   pb -. "every new pad press" .-> unlock</pre>
   <p>The keyboard map, also read by the guide's controls table (<a data-src="src/engine/core.ts#L26">core.ts</a>):</p>
   <pre><code class="lang-ts">export const KEYMAP: Record&lt;string, Button&gt; = {
