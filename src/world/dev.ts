@@ -36,10 +36,12 @@ const COLORS: Partial<Record<TileKey, string>> = {
 /**
  * ?dev=world&play=new                         -> real new game from the prologue
  * ?dev=world&play=1&map=<id>&x=&y=&flags=a,b  -> drop into a map with flags set
+ *   (any play mode: &name=<NAME>, &look=girl to play as the girl)
  */
 function playtest(ctx: GameContext, params: URLSearchParams): Scene {
   const st = ctx.state;
-  st.playerName = params.get("name") || "ROWAN";
+  st.playerName = params.get("name") || "SORREL";
+  if (params.get("look") === "girl") st.playerLook = "girl";
   st.options.textSpeed = "fast";
   for (const f of (params.get("flags") ?? "").split(",").filter(Boolean)) st.flags[f] = true;
   if (params.get("play") === "new") return createOverworldScene(ctx, { mode: "new" });

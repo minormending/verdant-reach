@@ -3,7 +3,7 @@
 // stat window.
 
 import type { BattleRequest, GameContext, Quickened, StatusId, Stats, TrainerPortraitKey } from "../contracts";
-import { portraitPath, UI } from "../contracts";
+import { isPlayerBack, portraitPath, UI } from "../contracts";
 import { getSpecies, qName, STATUS_ABBR } from "./logic/lookup";
 import {
   drawExpBar, drawHpBar, drawImageOpts, drawLeaf, drawLevel, drawPod, drawStatusBadge, drawTextRight, drawTiny, pad,
@@ -484,7 +484,7 @@ function trainerPlaceholder(key: string, back: boolean): HTMLCanvasElement {
 }
 
 export function trainerImage(ctx: GameContext, key: TrainerPortraitKey): HTMLImageElement | HTMLCanvasElement {
-  const back = key === "player_back";
+  const back = isPlayerBack(key);
   const path = portraitPath(key);
   const img: HTMLImageElement | HTMLCanvasElement | undefined = ctx.assets.image(path);
   if (img) return img;
@@ -493,7 +493,7 @@ export function trainerImage(ctx: GameContext, key: TrainerPortraitKey): HTMLIma
 }
 
 export function drawTrainer(ctx: GameContext, g: CanvasRenderingContext2D, key: TrainerPortraitKey, x: number, y: number, opts: SpriteDrawOpts = {}) {
-  const back = key === "player_back";
+  const back = isPlayerBack(key);
   let img = trainerImage(ctx, key);
   if (opts.silhouette) img = silhouette(`trainer:${key}`, img, opts.silhouette);
   const size = back ? 48 : 56;

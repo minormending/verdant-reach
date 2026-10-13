@@ -112,3 +112,15 @@ describe("Continue position", () => {
     expect(resumed.player).toMatchObject({ ...saved, facing: "down" });
   });
 });
+
+describe("the player's overworld sprite", () => {
+  it("follows the saved look, and a save from before the choice walks as the boy", () => {
+    const { map, x, y } = WORLD.newGame;
+    const girl = context(map, x, y);
+    girl.state.playerLook = "girl";
+    expect((createOverworldScene(girl, { mode: "new" }) as TestScene).player.sprite).toBe("player_girl");
+    const old = context(map, x, y);
+    delete old.state.playerLook;
+    expect((createOverworldScene(old, { mode: "new" }) as TestScene).player.sprite).toBe("player");
+  });
+});

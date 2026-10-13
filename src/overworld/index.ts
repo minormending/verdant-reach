@@ -6,7 +6,7 @@ import type { ArtImage,
   Ambient, BattleOutcome, BattleRequest, Dir, GameContext, MapDef, MapId, Quickened, Scene, ScriptCmd, ScriptId,
   SpeciesId, StillKey,
 } from "../contracts";
-import { FIELD_MOVES, SCREEN_H, SCREEN_W, STRUCTURES, TILE, speciesPath, stillPath, tilePath } from "../contracts";
+import { FIELD_MOVES, SCREEN_H, SCREEN_W, STRUCTURES, TILE, playerArt, speciesPath, stillPath, tilePath } from "../contracts";
 import type { FieldMove } from "../contracts";
 import { followerOn } from "../save";
 import { createQuickened, healParty } from "../battle";
@@ -140,7 +140,7 @@ class Overworld implements Scene {
 
   constructor(private ctx: GameContext, private opts: OverworldOpts) {
     const pos = opts.mode === "continue" ? continuePosition(ctx.world, ctx.state.position) : ctx.state.position;
-    this.player = new Actor("player", "player", pos.x, pos.y, pos.facing);
+    this.player = new Actor("player", playerArt(ctx.state).character, pos.x, pos.y, pos.facing);
     this.host = this.makeHost();
     this.tiles = new TileLayer(ctx.assets);
     this.loadMap(pos.map, pos.x, pos.y, pos.facing, true);
@@ -1301,7 +1301,7 @@ class Overworld implements Scene {
         const title = o.kind === "player" ? "YOUR NAME?" : o.kind === "rival" ? "RIVAL'S NAME?" : "NICKNAME?";
         return nameEntry(ctx, {
           title, max: o.max, defaultName: o.defaultName,
-          sprite: o.kind === "rival" ? "bram" : o.kind === "player" ? "player" : undefined,
+          sprite: o.kind === "rival" ? "bram" : o.kind === "player" ? playerArt(ctx.state).character : undefined,
           species: o.species,
         });
       },

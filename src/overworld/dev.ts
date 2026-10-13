@@ -32,7 +32,8 @@ export default function devOverworld(ctx: GameContext): Scene {
   const q = new URLSearchParams(location.search);
   const mapParam = q.get("map") as MapId | null;
   const st = ctx.state;
-  st.playerName = st.playerName || "ROWAN";
+  st.playerName = st.playerName || "SORREL";
+  if (q.get("look") === "girl") st.playerLook = "girl";
   if (st.party.length === 0) {
     try {
       st.party.push(createQuickened(ctx.data, "oak_acorn", 8, ctx.rng));

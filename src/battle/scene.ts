@@ -6,7 +6,7 @@ import type {
   BattleOutcome, BattleRequest, GameContext, ItemId, MoveId, Quickened, Scene, SpeciesId, StatusId, TrainerDef,
   TrainerPortraitKey, TypeId, Weather,
 } from "../contracts";
-import { portraitPath, speciesPath, TEXTBOX, UI, uiPath } from "../contracts";
+import { PLAYER_ART, playerArt, portraitPath, speciesPath, TEXTBOX, UI, uiPath } from "../contracts";
 import { chooseFoeAction, type AiKind } from "./logic/ai";
 import {
   active, canContinue, canFight, createBattleState, doSwitch, firstHealthy, hasUsableMove, resolveTurn, sendOutFoe, targetsFoe,
@@ -107,7 +107,7 @@ class BattleScene implements Scene {
   /** Front-sprite playback per side (Crystal-style intros; the player's side shows a back sprite). */
   private playback: [SpritePlayback, SpritePlayback] = [new SpritePlayback(":battle0"), new SpritePlayback(":battle1")];
   private enemyTrainer: TrainerView = { key: "gardener", visible: false, dx: 0 };
-  private playerTrainer: TrainerView = { key: "player_back", visible: false, dx: 0 };
+  private playerTrainer: TrainerView = { key: PLAYER_ART.boy.back, visible: false, dx: 0 };
   private enemyHud: HudView = newHud();
   private playerHud: HudView = newHud();
   private podRows = { player: false, enemy: false, playerDx: 0, enemyDx: 0, t: 1 };
@@ -131,6 +131,7 @@ class BattleScene implements Scene {
     this.ui.tb.autoFrames = 45;
     this.backdrop = req.backdrop ?? (worldTime(ctx) === "night" ? "night" : "grass");
     this.knowledge = new FoeKnowledge([...ctx.state.herbarium.seen]);
+    this.playerTrainer.key = playerArt(ctx.state).back;
   }
 
   // -------------------------------------------------------------------------
@@ -179,7 +180,7 @@ class BattleScene implements Scene {
     this.drawSprite(g, this.enemy, "front", ENEMY_HOME, 56, 1);
     // Player side
     if (this.playerTrainer.visible) {
-      drawTrainer(this.ctx, g, "player_back", PLAYER_HOME.x + this.playerTrainer.dx, PLAYER_HOME.y);
+      drawTrainer(this.ctx, g, this.playerTrainer.key, PLAYER_HOME.x + this.playerTrainer.dx, PLAYER_HOME.y);
     }
     this.drawSprite(g, this.player, "back", PLAYER_HOME, 88, 0);
 
@@ -344,7 +345,7 @@ class BattleScene implements Scene {
     for (const q of this.s.sides[1].party) {
       for (const p of frontPaths(q.species)) paths.add(p);
     }
-    paths.add(portraitPath("player_back"));
+    paths.add(portraitPath(this.playerTrainer.key));
     for (const u of ["pod", "pod_open", "battle_ground"] as const) paths.add(uiPath(u));
     if (this.trainer) paths.add(portraitPath(this.trainer.portrait));
     try {

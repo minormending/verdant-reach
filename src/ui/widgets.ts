@@ -2,7 +2,7 @@
 // dialog, the trainer card, and the CONTINUE summary window.
 
 import type { GameContext, MarkId, Scene } from "../contracts";
-import { MARKS, SCREEN_H, SCREEN_W, UI, characterPath } from "../contracts";
+import { MARKS, SCREEN_H, SCREEN_W, UI, characterPath, playerArt } from "../contracts";
 import { drawImagePath, hasImage } from "../engine/gfx";
 import { currentSessionId, formatDate, formatPlayTime, type SaveEnvelope, type SaveMeta } from "../save";
 import { drawText, drawTextScaled, drawWindow } from "./kit";
@@ -154,7 +154,7 @@ export function trainerCard(ctx: GameContext): Promise<void> {
         g.fillStyle = UI.light;
         g.fillRect(114, 63, 36, 1);
         const col = [0, 1, 0, 2][Math.floor(frame / 30) % 4];
-        drawImagePath(g, ctx.assets, characterPath("player"), col * 16, 0, 16, 16, 116, 30, 32, 32);
+        drawImagePath(g, ctx.assets, characterPath(playerArt(st).character), col * 16, 0, 16, 16, 116, 30, 32, 32);
         drawText(g, "PRESSED MARKS", 12, 92, UI.dark);
         for (let i = 0; i < REGION_MARKS; i++) drawMarkSlot(g, ctx, MARKS[i] ?? null, 12 + i * 17, 106);
       },

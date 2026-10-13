@@ -3,7 +3,8 @@
 // CONTINUED card and the title screen.
 
 import type { GameContext, Scene } from "../contracts";
-import { SCREEN_H, SCREEN_W, UI } from "../contracts";
+import { SCREEN_H, SCREEN_W, UI, playerArt } from "../contracts";
+import { DEFAULT_PLAYER_NAME, DEFAULT_PLAYER_NAMES } from "../save";
 import { GLYPHS } from "./font";
 import { drawText, drawWindow } from "./kit";
 import { nameEntry } from "./nameEntry";
@@ -13,7 +14,7 @@ import { saveDialog, trainerCard } from "./widgets";
 const DEMOS = ["FONT", "TEXT BOX", "MENUS", "NAME ENTRY", "CARD", "SAVE", "TBC", "TITLE"] as const;
 
 export default function devUi(ctx: GameContext): Scene {
-  ctx.state.playerName = ctx.state.playerName || "ROWAN";
+  ctx.state.playerName = ctx.state.playerName || DEFAULT_PLAYER_NAME;
   ctx.state.money = 3210;
   ctx.state.marks = ["bramble_mark"];
   let mode: "menu" | "font" | "busy" = "menu";
@@ -48,7 +49,8 @@ export default function devUi(ctx: GameContext): Scene {
         break;
       }
       case "NAME ENTRY": {
-        const n = await nameEntry(ctx, { title: "YOUR NAME?", max: 7, defaultName: "ROWAN", sprite: "player" });
+        const look = ctx.state.playerLook ?? "boy";
+        const n = await nameEntry(ctx, { title: "YOUR NAME?", max: 7, defaultName: DEFAULT_PLAYER_NAMES[look], sprite: playerArt(ctx.state).character });
         await ctx.ui.say(`Name: ${n}`);
         const k = await nameEntry(ctx, { title: "NICKNAME?", max: 10, defaultName: "OAK ACORN", species: "oak_acorn" });
         await ctx.ui.say(`Nickname: ${k}`);
