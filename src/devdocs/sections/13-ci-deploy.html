@@ -30,7 +30,7 @@
   subgraph E2E["job: e2e, 90 min limit"]
     direction TB
     E1["checkout, Node 22, npm ci"] --> E2["playwright install --with-deps chromium"]
-    E2 --> E3["npm run e2e: 217 beats"]
+    E2 --> E3["npm run e2e: 218 beats"]
     E3 --> E4["always: upload e2e-report artifact"]
   end
   BUILD --> DEPLOY["job: deploy, needs build and e2e"]
@@ -133,7 +133,7 @@ concurrency:
   Git->>E: start
   B->>B: test, release-check, build
   B->>Git: upload-pages-artifact dist
-  E->>E: 217-beat playthrough
+  E->>E: 218-beat playthrough
   B-->>D: success
   E-->>D: success
   D->>P: deploy-pages publishes the artifact
@@ -172,7 +172,7 @@ concurrency:
   R -- no --> X
   R -- yes --> BL{"typecheck and vite build pass?"}
   BL -- no --> X
-  P --> E{"e2e: 217 beats, 0 failed, 0 issues, in time?"}
+  P --> E{"e2e: 218 beats, 0 failed, 0 issues, in time?"}
   E -- no --> X
   BL -- yes --> J{"both jobs green?"}
   E -- yes --> J
@@ -187,7 +187,7 @@ concurrency:
       <tr><td>A type error or bundling error</td><td>build / Build</td><td>Strict TypeScript; a missing import; a new page not wired into the build</td></tr>
       <tr><td>A failed beat</td><td>e2e / Full playthrough</td><td>A story change the robot does not know about, or a real soft-lock</td></tr>
       <tr><td>Any issue, even with all beats OK</td><td>e2e / Full playthrough</td><td>A <code>console.error</code>, a missing asset, overlong text, a long task</td></tr>
-      <tr><td>The wrong number of beats</td><td>e2e / Full playthrough</td><td>A beat was added or removed without updating the expected 217</td></tr>
+      <tr><td>The wrong number of beats</td><td>e2e / Full playthrough</td><td>A beat was added or removed without updating the expected 218</td></tr>
       <tr><td>Timeout</td><td>e2e</td><td>A hang the watchdog did not catch, or a very slow runner</td></tr>
     </tbody>
   </table>

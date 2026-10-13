@@ -10,7 +10,7 @@
   placeholder text or art reaches <code>main</code>.</p>
 
   <pre class="mermaid">flowchart TB
-  E2E["Headless playthrough: 1 run, 217 beats (npm run e2e)"]
+  E2E["Headless playthrough: 1 run, 218 beats (npm run e2e)"]
   WIDE["Whole-game checks: world validator, environment digests, balance bands, art bundles"]
   UNIT["Unit tests: about 1,670 vitest tests in 139 files, next to the code (npm test)"]
   RC["release-check: no placeholders on main"]
@@ -353,7 +353,7 @@ if (map.warps.length) {
   headless Chromium through Playwright, and lets a script in
   <a data-src="e2e/playthrough.ts">e2e/playthrough.ts</a> press real keys from
   the title screen through Chapter 11, the credits and the post-game. It records
-  217 <dfn>beats</dfn>: named checkpoints such as "starter: oak" or "HOLLIS:
+  218 <dfn>beats</dfn>: named checkpoints such as "starter: oak" or "HOLLIS:
   bramble mark", each with the new story flags, the map, the position and a
   160x144 screenshot.</p>
 
@@ -526,7 +526,7 @@ npm run e2e -- --speed 6 --seed 1 --headed    # watch it play</code></pre>
   time, runner issues). The exit code is 0 only when all of this holds:</p>
 
   <pre><code class="lang-js">const failures = report.beats.filter((b) =&gt; !b.ok).length;
-if (report.beats.length !== 217) runnerIssues.push(`Expected all 217 beats; received ${report.beats.length}`);
+if (report.beats.length !== 218) runnerIssues.push(`Expected all 218 beats; received ${report.beats.length}`);
 process.exitCode = failures === 0 &amp;&amp; report.issues.length === 0 &amp;&amp; runnerIssues.length === 0 ? 0 : 1;</code></pre>
 
   <aside class="tip">In a headed run, open the browser console:
@@ -560,10 +560,10 @@ process.exitCode = failures === 0 &amp;&amp; report.issues.length === 0 &amp;&am
   S -- yes --> J{"Stalled right after a jingle or cry, locally only?"}
   J -- yes --> AUD["Audio clock stuck: trust CI, restart the audio service"]
   J -- no --> BUG["Real bug: read the beat note, issues and the last texts"]</pre>
-    <p>The beat count 217 is written in several places: <code>e2e/run.mjs</code>,
+    <p>The beat count 218 is written in several places: <code>e2e/run.mjs</code>,
     <code>e2e/runner.test.ts</code>, the workflow step name, <code>AGENTS.md</code>
     and the README. Adding or removing a beat means updating all of them in the same
-    commit, or the runner reports "Expected all 217 beats".</p>
+    commit, or the runner reports "Expected all 218 beats".</p>
     <p>Before adding a <code>sleep</code> to make a beat pass, find what the beat
     is waiting <em>for</em> and wait on that state (<code>waitFor</code>,
     <code>advance(…, done)</code>). Fixed sleeps are the main source of

@@ -761,7 +761,7 @@ if (map.warps.length) {
 
   <details class="advanced"><summary>Advanced: what the validator does not prove, and performance</summary>
     <ul>
-      <li><strong>Static, optimistic scripts.</strong> The explorer takes every branch of every <code>if</code>, choice and battle as possible. It proves a path <em>exists</em>, not that a particular sequence of flags is consistent. Order-of-scenes bugs are what the 217-beat e2e playthrough is for.</li>
+      <li><strong>Static, optimistic scripts.</strong> The explorer takes every branch of every <code>if</code>, choice and battle as possible. It proves a path <em>exists</em>, not that a particular sequence of flags is consistent. Order-of-scenes bugs are what the 218-beat e2e playthrough is for.</li>
       <li><strong>Scripted movement.</strong> <code>movePlayer</code>, <code>moveNpc</code> and camera paths are not checked against walls.</li>
       <li><strong><code>legendWhen</code> walls.</strong> Ordinary reachability uses the base legend; flag-driven walls need their own puzzle test.</li>
       <li><strong>Trainer lines</strong> are only checked for over-long words, not the 3-page limit that <code>say</code> gets.</li>

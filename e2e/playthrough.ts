@@ -6,6 +6,8 @@
 //   open  http://localhost:5190/?timer&e2e=full&speed=8&seed=1&time=day   new game -> post-game
 //         http://localhost:5190/?timer&e2e=check:<name>   targeted checks (see CHECKS)
 //
+// After PIP's demo it rematches MILO on ROUTE 1 (his team at +1, a win
+// counted in trainerRematches); every other rematch question is answered NO.
 // Chapter 4 covers ROUTE 4, the dome, the closed CONSERVATORY, the RELAY, the
 // grunt, rival 3 and the shears, the NURSERY (boarding two, a seed, sprouting),
 // WREN's posts, PRUNE on ROUTE 5, FLORA and the chapter end. `check:fanmail`
@@ -217,6 +219,7 @@ function issue(kind: string, msg: string) {
 /** How to answer YES/NO prompts, by prompt text. Default: YES. */
 const answers: [RegExp, boolean][] = [
   [/nickname/i, false],
+  [/Up for a rematch/, false], // route rematches only in the rematch beat (rematchRoute1)
   [/change QUICKENED/i, false], // keep the helper in when a trainer sends out the next one
 ];
 
@@ -1041,6 +1044,8 @@ export async function storyPlaythrough(opts: { boost: number; starter: "oak" | "
     await expectFlag("pip's catching demo", "pip_demo_done");
   }
 
+  if (!st().trainerRematches?.schoolkid_milo) await rematchRoute1();
+
   if (!flag("theft_seen")) {
     await nav("herbarium");
     await settle();
@@ -1133,6 +1138,25 @@ export async function storyPlaythrough(opts: { boost: number; starter: "oak" | "
 // ---------------------------------------------------------------------------
 // Chapter 4: GLASSHOUSE CITY
 // ---------------------------------------------------------------------------
+
+/** Route rematch: beat MILO if needed, talk again, say YES, win against his team at +1. */
+async function rematchRoute1() {
+  const id = "schoolkid_milo";
+  await nav("route_1");
+  if (!flag(`beat_${id}`)) await talkTo("milo");
+  const base = ctx().world.trainers[id];
+  const before = report.battles.length;
+  const yes: [RegExp, boolean] = [/Up for a rematch/, true];
+  answers.unshift(yes);
+  try { await talkTo("milo"); } finally { answers.splice(answers.indexOf(yes), 1); }
+  const fight = report.battles.slice(before).find((b) => b.request.trainer === id);
+  const fielded = fight && battleStates.get(fight.request)?.sides[1].party.map((q) => q.level);
+  const levels = fielded ?? fight?.request.trainerDef?.team.map((m) => m.level);
+  const expected = base.team.map((m) => m.level + 1);
+  beat("ROUTE 1: MILO's rematch at +1", !!fight && fight.outcome === "won" && JSON.stringify(levels) === JSON.stringify(expected)
+    && ctx().state.trainerRematches?.[id] === 1 && base.team.every((m, i) => m.level === expected[i] - 1),
+    `levels=${JSON.stringify(levels)} expected=${JSON.stringify(expected)} outcome=${fight?.outcome} wins=${ctx().state.trainerRematches?.[id]}`);
+}
 
 async function chapter4(_opts: { boost: number; starter: "oak" | "chili" | "lily" }) {
   const st = () => ctx().state;
