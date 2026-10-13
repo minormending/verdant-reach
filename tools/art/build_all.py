@@ -65,6 +65,7 @@ BUILDERS: list[tuple[str, str]] = [
     ("env12", "env12/build.py"),          # Chapter 11 Council room tiles (after env11: props sit on shipped floors; the map review composes the Grove's litter and roots)
     ("castpg", "castpg/build.py"),        # Post-game BURR hitching a ride, the Centuryheart sprout, the OLD DIARY icon, the Methuselah still (after tiles: the review stands them on shipped tiles)
     ("envpg", "envpg/build.py"),          # Post-game Seed Vault and Methuselah Ridge tiles, the oldest bristlecone and its base (after tiles: the Route 9 portal copies the shipped cliff)
+    ("castgirl", "castgirl/build.py"),    # The girl player: her walk sheet and battle back view, in the boy player's colours (reads characters.CHARS["player"] and the portraits kit; never writes his files)
 ]
 
 

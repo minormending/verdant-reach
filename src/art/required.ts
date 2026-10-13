@@ -37,7 +37,7 @@ export function requiredPaths(): RequiredPath[] {
   }
   for (const key of CHARACTERS) out.push({ path: characterPath(key), group: "characters", size: [48, 64] });
   for (const key of TRAINER_PORTRAITS) {
-    out.push({ path: portraitPath(key), group: "portraits", size: key === "player_back" ? [48, 48] : [56, 56] });
+    out.push({ path: portraitPath(key), group: "portraits", size: key === "player_back" || key === "player_girl_back" ? [48, 48] : [56, 56] });
   }
   for (const id of REQUIRED_ITEMS) out.push({ path: itemIconPath(id), group: "items", size: [16, 16] });
   out.push({ path: uiPath("title"), group: "ui", size: [160, 144] });
