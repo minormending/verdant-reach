@@ -155,3 +155,54 @@ it.each(["-1", "1.5", "abc", "4294967296", "9007199254740993"])("rejects invalid
   expect(process.exit).toHaveBeenCalledWith(1);
   expect(console.error).toHaveBeenCalled();
 });
+
+/** --smoke: one page load per phase, each phase's beats tagged, then the page checks. */
+async function runSmokeMocked(options: { phaseBeats?: number; pageOk?: boolean; consoleError?: boolean } = {}) {
+  const phaseReport = (n: number) => ({ suite: "smoke:x", finished: true, beats: Array.from({ length: n }, (_, i) => ({ name: `b${i}`, t: i, ok: true })), issues: [], texts: [] });
+  const writeFile = vi.fn().mockResolvedValue(undefined);
+  const server = { httpServer: { address: () => ({ port: 43210 }) }, close: vi.fn().mockResolvedValue(undefined) };
+  const handlers: Record<string, (arg: unknown) => void> = {};
+  const page = {
+    on: vi.fn((event: string, fn: (arg: unknown) => void) => { handlers[event] = fn; }),
+    goto: vi.fn(async () => {
+      if (options.consoleError) handlers.console?.({ type: () => "error", text: () => "boom" });
+    }),
+    evaluate: vi.fn().mockResolvedValue(phaseReport(options.phaseBeats ?? 2)),
+    isClosed: () => false,
+  };
+  const browser = { newPage: vi.fn().mockResolvedValue(page), close: vi.fn().mockResolvedValue(undefined) };
+  const checkPages = vi.fn(async (_b: unknown, _o: string, out: { beats: unknown[] }) => {
+    out.beats.push({ name: "page", ok: options.pageOk ?? true, t: 0, newFlags: [], phase: "pages" });
+  });
+  vi.doMock("node:fs/promises", () => ({ writeFile }));
+  vi.doMock("vite", () => ({ createServer: vi.fn(), build: vi.fn().mockResolvedValue(undefined), preview: vi.fn().mockResolvedValue(server) }));
+  vi.doMock("playwright", () => ({ chromium: { launch: vi.fn().mockResolvedValue(browser) } }));
+  vi.doMock("./smoke-plan.mjs", () => ({ SMOKE_PHASES: [{ name: "story", beats: 2 }, { name: "continue", beats: 2 }], SMOKE_BEATS: 5, checkPages }));
+  process.argv.push("--smoke");
+  const runner = "./run.mjs";
+  await import(runner);
+  vi.doUnmock("./smoke-plan.mjs");
+  expect(server.close).toHaveBeenCalledOnce();
+  expect(browser.close).toHaveBeenCalledOnce();
+  return { saved: JSON.parse(writeFile.mock.calls[0][1]), page, checkPages, path: String(writeFile.mock.calls[0][0]) };
+}
+
+it("--smoke plays each phase in one tab, then the pages, into last-smoke-report.json", async () => {
+  const { saved, page, checkPages, path } = await runSmokeMocked();
+  expect(process.exitCode).toBe(0);
+  expect(page.goto.mock.calls.map((c) => c[0])).toEqual([
+    "http://127.0.0.1:43210/?e2e=smoke:story&timer&speed=8&seed=1&time=day",
+    "http://127.0.0.1:43210/?e2e=smoke:continue&timer&speed=8&seed=1&time=day",
+  ]);
+  expect(checkPages).toHaveBeenCalledOnce();
+  expect(saved.suite).toBe("smoke");
+  expect(saved.runner.suite).toBe("smoke");
+  expect(saved.beats.map((b: { phase: string }) => b.phase)).toEqual(["story", "story", "continue", "continue", "pages"]);
+  expect(saved.phases.map((p: { name: string }) => p.name)).toEqual(["story", "continue"]);
+  expect(path).toMatch(/e2e\/last-smoke-report\.json$/);
+});
+
+it.each([{ phaseBeats: 1 }, { pageOk: false }, { consoleError: true }])("--smoke fails a short phase, a failed page or a boot console error: %j", async (options) => {
+  await runSmokeMocked(options);
+  expect(process.exitCode).toBe(1);
+});
