@@ -136,7 +136,7 @@ async function boot() {
       h("div.reference", { id: "reference" }, refs.map((r) => r.el)),
       h("footer.foot",
         h("p", "Every table, picture and number on this page is generated from the game's own data and art, so the guide always matches the build."),
-        h("p", h("a", { href: "./" }, "Play Verdant Reach"), " · ", h("a", { href: "#top" }, "Back to top")),
+        h("p", h("a", { href: "./" }, "Play Verdant Reach"), " · ", h("a", { href: "./devdocs.html" }, "Developer docs"), " · ", h("a", { href: "#top" }, "Back to top")),
       ),
     ),
   );
