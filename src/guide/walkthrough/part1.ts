@@ -14,7 +14,7 @@ export const PART_1: Section[] = [
     part: "Prologue",
     title: "The Observation Deck",
     blocks: [
-      { p: "After you name yourself, the game opens on the **OBSERVATION DECK** on the HERBARIUM roof. It's your first evening shift, and DR. VALE has brought you up to watch the CENTURYHEART bloom on the far slope for the first time in a hundred years. This part is a cutscene: gold pollen drifts down the valley, and a low hum rises through the floor that only you seem to notice. There's nothing to collect and no way to go wrong." },
+      { p: "DR. VALE first asks whether you're a **BOY** or a **GIRL** (you play as the one you pick; the story is the same), then your name (BASIL or BRYONY by default, up to 7 letters). After that, the game opens on the **OBSERVATION DECK** on the HERBARIUM roof. It's your first evening shift, and DR. VALE has brought you up to watch the CENTURYHEART bloom on the far slope for the first time in a hundred years. This part is a cutscene: gold pollen drifts down the valley, and a low hum rises through the floor that only you seem to notice. There's nothing to collect and no way to go wrong." },
       { map: "herbarium_roof", note: "Always night. You can come back later by the stairs in the north-west corner of DR. VALE's lab." },
       { p: "When the scene fades out, you wake up at home the next morning." },
     ],

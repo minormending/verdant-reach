@@ -65,8 +65,8 @@ describe("NEW GAME: boy or girl", () => {
     expect(asked).toBeGreaterThan(said.indexOf("Our job is to catalogue them, and to understand them."));
     expect(said.indexOf("…what was your name again?")).toBeGreaterThan(asked);
     expect(ctx.state.playerLook).toBe("boy");
-    expect(named).toEqual([expect.objectContaining({ sprite: "player", defaultName: "SORREL", max: 7 })]);
-    expect(ctx.state.playerName).toBe("SORREL");
+    expect(named).toEqual([expect.objectContaining({ sprite: "player", defaultName: "BASIL", max: 7 })]);
+    expect(ctx.state.playerName).toBe("BASIL");
     expect(playerArt(ctx.state)).toEqual({ character: "player", back: "player_back" });
   });
 
@@ -75,8 +75,8 @@ describe("NEW GAME: boy or girl", () => {
     const { ctx, stack } = setup([1]);
     await play(ctx, stack);
     expect(ctx.state.playerLook).toBe("girl");
-    expect(named).toEqual([expect.objectContaining({ sprite: "player_girl", defaultName: "HAZEL" })]);
-    expect(ctx.state.playerName).toBe("HAZEL");
+    expect(named).toEqual([expect.objectContaining({ sprite: "player_girl", defaultName: "BRYONY" })]);
+    expect(ctx.state.playerName).toBe("BRYONY");
     expect(playerArt(ctx.state)).toEqual({ character: "player_girl", back: "player_girl_back" });
   });
 

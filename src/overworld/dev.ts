@@ -32,7 +32,7 @@ export default function devOverworld(ctx: GameContext): Scene {
   const q = new URLSearchParams(location.search);
   const mapParam = q.get("map") as MapId | null;
   const st = ctx.state;
-  st.playerName = st.playerName || "SORREL";
+  st.playerName = st.playerName || "BASIL";
   if (q.get("look") === "girl") st.playerLook = "girl";
   if (st.party.length === 0) {
     try {

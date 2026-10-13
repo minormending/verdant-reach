@@ -12,7 +12,7 @@ export const SAVE_KEY = "verdant-reach-save";
 export const OPTIONS_KEY = "verdant-reach-options";
 export const SAVE_VERSION = 1;
 /** NEW GAME's default name for each look (END on an empty name). Plant names, 7 letters at most. */
-export const DEFAULT_PLAYER_NAMES: Record<PlayerLook, string> = { boy: "SORREL", girl: "HAZEL" };
+export const DEFAULT_PLAYER_NAMES: Record<PlayerLook, string> = { boy: "BASIL", girl: "BRYONY" };
 /** Fallback for a save with no usable name. */
 export const DEFAULT_PLAYER_NAME = DEFAULT_PLAYER_NAMES.boy;
 export const DEFAULT_RIVAL_NAME = "BRAM";

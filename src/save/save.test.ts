@@ -28,7 +28,7 @@ describe("save", () => {
     const fallback = () => newGameState({ world });
     expect(fallback().playerLook).toBe("boy");
     const girl = fallback();
-    girl.playerName = "HAZEL";
+    girl.playerName = "BRYONY";
     girl.playerLook = "girl";
     createSave(() => girl, storage, fallback).write();
     expect(createSave(fallback, storage, fallback).read()!.playerLook).toBe("girl");
@@ -42,8 +42,8 @@ describe("save", () => {
   });
 
   it("defaults each look to a plant name that fits the 7-letter name entry", () => {
-    expect(DEFAULT_PLAYER_NAMES).toEqual({ boy: "SORREL", girl: "HAZEL" });
-    expect(DEFAULT_PLAYER_NAME).toBe("SORREL");
+    expect(DEFAULT_PLAYER_NAMES).toEqual({ boy: "BASIL", girl: "BRYONY" });
+    expect(DEFAULT_PLAYER_NAME).toBe("BASIL");
     for (const n of Object.values(DEFAULT_PLAYER_NAMES)) expect(n.length).toBeLessThanOrEqual(7);
   });
 
