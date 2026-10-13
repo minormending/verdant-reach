@@ -12,3 +12,6 @@ __pycache__/
 
 # local python env for tools/art
 .venv/
+
+# developer docs: local stand-in sections (devdocs.html?fixture=1)
+src/devdocs/fixture.local/
