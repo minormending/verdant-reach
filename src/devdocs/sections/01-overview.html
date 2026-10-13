@@ -14,21 +14,24 @@
     The scope is the whole game: the Prologue through Chapter 11 (the Council, the ending and the credits) plus
     a post-game. The live site is <code>https://minormending.github.io/verdant-reach/</code>, and it deploys
     automatically on every push to <code>main</code>. The workflow
-    (<a data-src=".github/workflows/pages.yml">pages.yml</a>) has three jobs: <em>build</em> runs the tests, the
-    release gate and the production build; <em>e2e</em> plays the whole game headless; <em>deploy</em> waits for
-    both.
+    (<a data-src=".github/workflows/pages.yml">pages.yml</a>) has four jobs: <em>changes</em> decides whether the
+    push can affect the game; <em>build</em> runs the tests, the release gate and the production build;
+    <em>smoke</em> plays the most important paths headless in a few minutes (skipped when only docs and tool
+    pages changed); <em>deploy</em> waits for them. The whole game is played headless every night
+    (<a data-src=".github/workflows/playthrough.yml">playthrough.yml</a>; see <a href="#ci-nightly">CI and deploy</a>).
   </p>
   <pre class="mermaid">flowchart LR
-  push["push to main"] --> build
-  push --> e2e
+  push["push to main"] --> changes["job: changes"]
+  push --> build
   subgraph build["job: build"]
     ci1["npm ci"] --> test["npm test"] --> gate["npm run release-check"] --> bundle["npm run build"] --> upload["upload dist"]
   end
-  subgraph e2e["job: e2e"]
-    ci2["npm ci"] --> pw["playwright install chromium"] --> play["npm run e2e (218 beats)"]
+  changes -- "game files changed" --> smoke
+  subgraph smoke["job: smoke"]
+    ci2["npm ci"] --> pw["playwright install chromium"] --> play["npm run e2e:smoke (26 beats)"]
   end
   build --> deploy["job: deploy (GitHub Pages)"]
-  e2e --> deploy</pre>
+  smoke -- "or skipped: fast lane" --> deploy</pre>
   <aside class="note">
     Because a push to <code>main</code> is a release, the team rule is that <code>npm run typecheck</code>,
     <code>npm test</code> and <code>npm run build</code> all pass before you push. The release gate

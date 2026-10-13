@@ -1,25 +1,28 @@
-<section id="ci" data-title="CI and deploy" data-summary="The GitHub Actions pipeline, the Pages deploy, what blocks it, how to read a failed run, branches and commit style.">
+<section id="ci" data-title="CI and deploy" data-summary="The GitHub Actions pipelines, the fast lane, the smoke-tested Pages deploy, the nightly playthrough, what blocks a deploy, how to read a failed run, branches and commit style.">
   <h2>CI and deploy</h2>
 
   <p><dfn>CI</dfn> (continuous integration) is a machine that runs the checks on
   every change so nobody has to remember to. <dfn>CD</dfn> (continuous deployment)
-  is the step after: if the checks pass, publish. Verdant Reach has one workflow,
-  <a data-src=".github/workflows/pages.yml">.github/workflows/pages.yml</a>, that
-  does both. Every push to <code>main</code> is tested, played through headless
-  and, only if everything passes, deployed to
-  <code>https://minormending.github.io/verdant-reach/</code>.</p>
+  is the step after: if the checks pass, publish. Verdant Reach has two workflows.
+  <a data-src=".github/workflows/pages.yml">.github/workflows/pages.yml</a> does
+  both CI and CD: every push to <code>main</code> is unit-tested, built,
+  smoke-tested in a headless browser and, only if everything passes, deployed to
+  <code>https://minormending.github.io/verdant-reach/</code>.
+  <a data-src=".github/workflows/playthrough.yml">.github/workflows/playthrough.yml</a>
+  plays the whole game every night and never deploys.</p>
 
-  <aside class="warn">The workflow runs <strong>only</strong> on pushes to
-  <code>main</code> and on a manual run (<code>workflow_dispatch</code>). There is
-  no pull-request or feature-branch trigger. Your branch is checked by you,
-  locally, before you merge; CI is the final gate, not a safety net for untested
-  branches.</aside>
+  <aside class="warn">The deploy workflow runs <strong>only</strong> on pushes to
+  <code>main</code> and on a manual run (<code>workflow_dispatch</code>); the
+  playthrough runs on a schedule and on a manual run. There is no pull-request or
+  feature-branch trigger. Your branch is checked by you, locally, before you
+  merge; CI is the final gate, not a safety net for untested branches.</aside>
 
   <h3 id="ci-pipeline">The pipeline</h3>
 
   <pre class="mermaid">flowchart LR
-  PUSH["push to main, or manual run"] --> BUILD
-  PUSH --> E2E
+  PUSH["push to main, or manual run"] --> CH
+  PUSH --> BUILD
+  CH["job: changes, fast lane or smoke?"] -- "smoke=true" --> SMOKE
   subgraph BUILD["job: build"]
     direction TB
     B1["checkout, Node 22, npm ci"] --> B2["Test: npm test"]
@@ -27,28 +30,32 @@
     B3 --> B4["Build: npm run build"]
     B4 --> B5["configure-pages, upload-pages-artifact dist"]
   end
-  subgraph E2E["job: e2e, 90 min limit"]
+  subgraph SMOKE["job: smoke, 30 min limit"]
     direction TB
     E1["checkout, Node 22, npm ci"] --> E2["playwright install --with-deps chromium"]
-    E2 --> E3["npm run e2e: build --mode e2e, preview, 218 beats"]
-    E3 --> E4["always: upload e2e-report artifact"]
+    E2 --> E3["npm run e2e:smoke: build --mode e2e, preview, 26 beats"]
+    E3 --> E4["always: upload smoke-report artifact"]
   end
-  BUILD --> DEPLOY["job: deploy, needs build and e2e"]
-  E2E --> DEPLOY
+  CH --> DEPLOY
+  BUILD --> DEPLOY["job: deploy, needs changes, build and smoke"]
+  SMOKE -- "success, or skipped by the fast lane" --> DEPLOY
   DEPLOY --> SITE["GitHub Pages"]</pre>
 
   <p>A <dfn>job</dfn> is a group of steps that runs on its own fresh virtual
   machine (<code>ubuntu-latest</code>). Steps inside a job run in order and stop
   at the first failure. Jobs run in parallel unless one <dfn>needs</dfn> another.
-  Here <code>build</code> and <code>e2e</code> start together, and
-  <code>deploy</code> waits for both.</p>
+  Here <code>changes</code> and <code>build</code> start together;
+  <code>smoke</code> starts once <code>changes</code> has decided (in seconds),
+  so it too runs alongside <code>build</code>; <code>deploy</code> waits for all
+  three.</p>
 
   <table>
     <thead><tr><th>Job</th><th>Steps</th><th>Time limit</th><th>Needs</th></tr></thead>
     <tbody>
+      <tr><td><code>changes</code></td><td>a tree-only checkout, then <a href="#ci-fast-lane">the fast-lane decision</a> in plain <code>git</code> and <code>gh</code>; outputs <code>smoke=true</code> or <code>false</code> and writes the reason and the changed files to the run summary</td><td>GitHub's default</td><td>none</td></tr>
       <tr><td><code>build</code></td><td>checkout, setup Node 22 with the npm cache, <code>npm ci</code>, Test, Release gate, Build (typecheck and bundle), configure Pages, upload <code>dist</code> as the Pages artifact</td><td>GitHub's default</td><td>none</td></tr>
-      <tr><td><code>e2e</code></td><td>checkout, setup Node 22, <code>npm ci</code>, install Chromium with its system libraries, the full playthrough of the production build (the runner builds <code>dist-e2e/</code> itself, so the job stays parallel to <code>build</code>), keep <code>e2e/last-report.json</code> as the <code>e2e-report</code> artifact (even on failure)</td><td><code>timeout-minutes: 90</code></td><td>none</td></tr>
-      <tr><td><code>deploy</code></td><td><code>actions/deploy-pages</code> in the <code>github-pages</code> environment</td><td>GitHub's default</td><td><code>[build, e2e]</code></td></tr>
+      <tr><td><code>smoke</code></td><td>only if <code>changes</code> said <code>smoke=true</code>: checkout, setup Node 22, <code>npm ci</code>, install Chromium with its system libraries, <a href="#testing-smoke">the smoke test</a> of the production build (the runner builds <code>dist-e2e/</code> itself, so the job stays parallel to <code>build</code>), keep <code>e2e/last-smoke-report.json</code> as the <code>smoke-report</code> artifact (even on failure)</td><td><code>timeout-minutes: 30</code></td><td><code>changes</code></td></tr>
+      <tr><td><code>deploy</code></td><td><code>actions/deploy-pages</code> in the <code>github-pages</code> environment</td><td>GitHub's default</td><td><code>[changes, build, smoke]</code></td></tr>
     </tbody>
   </table>
 
@@ -68,8 +75,20 @@ concurrency:
   group: pages
   cancel-in-progress: true
 # …
+  smoke:
+    needs: changes
+    if: needs.changes.outputs.smoke == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+# …
   deploy:
-    needs: [build, e2e]
+    needs: [changes, build, smoke]
+    if: &gt;-
+      ${{ !cancelled()
+      &amp;&amp; needs.changes.result == 'success'
+      &amp;&amp; needs.build.result == 'success'
+      &amp;&amp; (needs.smoke.result == 'success'
+      || (needs.smoke.result == 'skipped' &amp;&amp; needs.changes.outputs.smoke == 'false')) }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -80,13 +99,94 @@ concurrency:
 
   <p>The permissions are the minimum Pages needs: read the code, write Pages, and
   an OIDC token (<code>id-token: write</code>) that proves to Pages the artifact
-  came from this workflow.</p>
+  came from this workflow. The <code>changes</code> job sets its own,
+  <code>contents: read</code> and <code>actions: read</code>, to look up this
+  workflow's past runs.</p>
+
+  <h3 id="ci-fast-lane">The fast lane</h3>
+
+  <p>Some files can't change how the game plays: the docs, the guidebook, the
+  developer docs, the Tile Lab, the Trainer Editor and the art review sheets. A
+  push that changes <em>only</em> those takes the <dfn>fast lane</dfn>: the
+  <code>smoke</code> job is skipped and the site deploys as soon as
+  <code>build</code> (unit tests, release-check and the bundle) passes. The
+  <code>changes</code> job compares the push's previous tip,
+  <code>github.event.before</code>, with <code>github.sha</code> and matches every
+  changed path against this list:</p>
+
+  <table>
+    <thead><tr><th>Path</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td><code>docs/**</code>, any <code>*.md</code></td><td>Docs, the README, AGENTS.md, the docs contract</td></tr>
+      <tr><td><code>src/guide/**</code>, <code>guide.html</code></td><td>The guidebook</td></tr>
+      <tr><td><code>src/devdocs/**</code>, <code>devdocs.html</code></td><td>These developer docs</td></tr>
+      <tr><td><code>src/tilelab/**</code>, <code>tilelab.html</code></td><td>The Tile Lab</td></tr>
+      <tr><td><code>src/trainereditor/**</code>, <code>trainereditor.html</code></td><td>The Trainer Editor</td></tr>
+      <tr><td><code>tools/art/review/**</code></td><td>Art review sheets</td></tr>
+    </tbody>
+  </table>
+
+  <p>Why these are safe: the game never imports the guidebook or the developer
+  docs, and it loads the Tile Lab and Trainer Editor hooks
+  (<code>src/tilelab/hook.ts</code>, <code>src/trainereditor/hook.ts</code>) only
+  behind <code>?tilelab</code> and <code>?trainerlab</code>, the opt-in "walk
+  around" and "play with these trainers" links (<a data-src="src/main.ts">src/main.ts</a>).
+  The build job still runs every unit test, including these pages' own, and the
+  bundle. Keep it that way: game code that a tool page needs belongs in the game's
+  folders, never the other way round.</p>
+
+  <pre class="mermaid">flowchart TB
+  E{"push event?"} -- "no: manual run" --> SM["run the smoke test"]
+  E -- yes --> F{"force-push?"}
+  F -- yes --> SM
+  F -- no --> Z{"before missing or all zeros?"}
+  Z -- yes --> SM
+  Z -- no --> P{"before fetched and passed this workflow?"}
+  P -- no --> SM
+  P -- yes --> D{"diff before..sha empty?"}
+  D -- yes --> SM
+  D -- no --> L{"every path on the list?"}
+  L -- no --> SM
+  L -- yes --> FL["fast lane: skip smoke"]</pre>
+
+  <details class="advanced"><summary>Advanced: before, skipped needs and the deploy condition</summary>
+    <p><strong><code>github.event.before</code></strong> is the branch's tip before
+    the push. On the very first push of a branch it is forty zeros, and on a
+    manual run there is no push event at all, so both run the smoke test. After a
+    force-push, <code>before</code> may not be an ancestor of the new tip (and the
+    event's <code>forced</code> is true), so that runs it too. A push of several
+    commits is diffed as a whole, <code>before</code> to <code>sha</code>, so one
+    game change among them sends the whole push through the smoke test. The diff
+    uses <code>--no-renames</code>, so a moved file counts at both its old and new
+    path.</p>
+    <p><strong>A base that never passed.</strong> Diffing against
+    <code>before</code> alone would leak: push A changes the game, push B (docs
+    only) arrives and cancels A's run, and B's fast lane would deploy A's game
+    change untested. So the job also asks the API whether a run of this workflow
+    for <code>before</code> succeeded (<code>gh api …/workflows/pages.yml/runs?head_sha=…&amp;status=success</code>);
+    if it failed, was cancelled or can't be checked, the smoke test runs. By
+    induction every deployed commit is then either smoke-tested or differs from a
+    deployed one only in the list above. An empty diff (an empty commit pushed to
+    retry) also runs it.</p>
+    <p><strong>Skipped needs.</strong> A job whose <code>needs</code> include a
+    skipped or failed job is itself skipped unless its <code>if:</code> uses a
+    status function. That is why <code>deploy</code> starts with
+    <code>!cancelled()</code> (not <code>always()</code>, which would still deploy
+    a run cancelled by a newer push) and then states the rule itself: build
+    succeeded, and smoke succeeded or was skipped. A skipped smoke counts only when
+    <code>changes</code> succeeded and said <code>smoke=false</code>: if
+    <code>changes</code> fails, <code>smoke</code> is skipped too, and that must
+    never deploy. That is the only reason <code>deploy</code> needs
+    <code>changes</code>. <code>smoke</code>'s own <code>if:</code> has no status
+    function, so it gets the implicit <code>success()</code> and runs only when
+    <code>changes</code> succeeded and chose it.</p>
+  </details>
 
   <details class="advanced"><summary>Advanced: concurrency and timeouts</summary>
     <p><code>concurrency: { group: pages, cancel-in-progress: true }</code> means
     at most one run of this workflow is active, and a newer push cancels the
     current one whether it is queued or <em>already running</em>, including a
-    playthrough 40 minutes in. Two pushes ten minutes apart therefore deploy only the second;
+    smoke test halfway through. Two pushes a minute apart therefore deploy only the second;
     the first shows as <em>cancelled</em>, not failed. That is what you want for a
     deploy, but it means a run that never finished proves nothing about its
     commit.</p>
@@ -94,17 +194,18 @@ concurrency:
   participant A as push A
   participant GH as Actions, group pages
   participant B as push B
-  A->>GH: run A starts build and e2e
+  A->>GH: run A starts build and smoke
   B->>GH: run B queued
   GH-->>A: run A cancelled
-  GH->>GH: run B runs build and e2e
+  GH->>GH: run B runs build and smoke
   GH->>GH: run B deploys</pre>
-    <p>There are two timeouts on the playthrough. The runner's own limit is
-    <code>max(75, 360 / speed)</code> minutes, so 75 at the default speed 8; the
-    job's limit is 90. The runner times out first, which matters: it still writes
-    the report and the <code>if: always()</code> upload keeps it. If the job limit
-    fired first, GitHub would kill the process and the report would be lost. Keep
-    the job limit above the runner's.</p>
+    <p>There are two timeouts on each browser test. The smoke test's runner
+    limit is 20 minutes and its job's is 30; the full playthrough's runner limit
+    is <code>max(75, 360 / speed)</code> minutes, so 75 at the default speed 8,
+    and its job's is 90. The runner times out first, which matters: it still
+    writes the report and the <code>if: always()</code> upload keeps it. If the
+    job limit fired first, GitHub would kill the process and the report would be
+    lost. Keep each job limit above its runner's.</p>
     <p>Each job runs <code>npm ci</code> on a clean machine with the
     <code>package-lock.json</code> versions, Node 22 and Linux. A test that passes
     on your Mac but depends on a newer Node, the local time zone or a file you
@@ -125,7 +226,7 @@ concurrency:
   participant Dev as developer
   participant Git as GitHub main
   participant B as build job
-  participant E as e2e job
+  participant E as smoke job
   participant D as deploy job
   participant P as Pages site
   Dev->>Git: git push origin main
@@ -133,30 +234,31 @@ concurrency:
   Git->>E: start
   B->>B: test, release-check, build
   B->>Git: upload-pages-artifact dist
-  E->>E: vite build --mode e2e, then the 218-beat playthrough
+  E->>E: vite build --mode e2e, then the 26-beat smoke test
   B-->>D: success
   E-->>D: success
   D->>P: deploy-pages publishes the artifact
   P-->>Dev: live at minormending.github.io/verdant-reach</pre>
 
-  <p>Test-only code never reaches the site. The playthrough, the dev driver and
+  <p>Test-only code never reaches the site. The playthrough, the smoke suite, the dev driver and
   the <code>?seed</code>, <code>?speed</code> and <code>?e2e</code> parameters are
   on only when <code>import.meta.env.DEV</code> or <code>import.meta.env.MODE ===
   "e2e"</code> (<a data-src="src/engine/testHooks.ts">testHooks.ts</a>). Vite
   replaces both at build time, so in the Pages build (mode
-  <code>production</code>) the parameters are ignored and the playthrough chunk is
-  not emitted at all. The <code>?dev=</code> scenes are different: they are loaded
+  <code>production</code>) the parameters are ignored and the playthrough and
+  smoke chunks are not emitted at all. The <code>?dev=</code> scenes are different: they are loaded
   on demand in every build (the Art Lab works on the live site).</p>
 
   <details class="advanced"><summary>Advanced: what is actually deployed, and rolling back</summary>
     <p>The deploy job does not build anything. It publishes the artifact the
     <code>build</code> job uploaded, so the site is exactly the <code>dist/</code>
-    that passed typecheck, tests and release-check in that run, and the
-    playthrough ran against the same commit in parallel. The e2e job plays a
-    production build of that commit: <code>vite build --mode e2e</code> runs the
+    that passed typecheck, tests and release-check in that run, and the smoke
+    test ran against the same commit in parallel (or the fast lane showed the
+    commit differs from a deployed one only in docs and tool pages). The smoke
+    job plays a production build of that commit: <code>vite build --mode e2e</code> runs the
     same bundling, chunk splitting, minification and relative base as
     <code>dist/</code>, served by <code>vite preview</code>, so production-only bugs
-    fail the playthrough. It is not byte-for-byte the deployed artifact: the mode
+    fail the smoke test. It is not byte-for-byte the deployed artifact: the mode
     differs, which switches on the test hooks (and only them). Open the live site
     after a release that touches those hooks.</p>
     <p>To roll back, push a revert commit to <code>main</code>. It goes through the
@@ -166,9 +268,10 @@ concurrency:
 
   <h3 id="ci-blockers">What blocks a deploy</h3>
 
-  <p>Because <code>deploy</code> needs both jobs, <em>any</em> red step anywhere
+  <p>Because <code>deploy</code> needs every job, <em>any</em> red step anywhere
   stops the site from changing. The live site keeps serving the last good
-  build.</p>
+  build. The nightly playthrough never blocks a deploy; a red night is a bug to
+  fix on <code>main</code> (see <a href="#ci-nightly">below</a>).</p>
 
   <pre class="mermaid">flowchart TB
   P["push to main"] --> T{"npm test passes?"}
@@ -177,9 +280,11 @@ concurrency:
   R -- no --> X
   R -- yes --> BL{"typecheck and vite build pass?"}
   BL -- no --> X
-  P --> E{"e2e: 218 beats, 0 failed, 0 issues, in time?"}
+  P --> C{"changes: fast lane?"}
+  C -- yes --> J
+  C -- no --> E{"smoke: 26 beats, 0 failed, 0 issues, in time?"}
   E -- no --> X
-  BL -- yes --> J{"both jobs green?"}
+  BL -- yes --> J{"build green, smoke green or skipped?"}
   E -- yes --> J
   J -- yes --> OK["deploy"]
   J -- "cancelled by a newer push" --> X</pre>
@@ -190,12 +295,45 @@ concurrency:
       <tr><td>A failing unit test</td><td>build / Test</td><td>A data or map edit broke a band, a digest or the validator</td></tr>
       <tr><td>A release-check offender</td><td>build / Release gate</td><td><code>TODO&#40;text)</code> dialogue or placeholder art merged from a feature branch</td></tr>
       <tr><td>A type error or bundling error</td><td>build / Build</td><td>Strict TypeScript; a missing import; a new page not wired into the build</td></tr>
-      <tr><td>A failed beat</td><td>e2e / Full playthrough</td><td>A story change the robot does not know about, or a real soft-lock</td></tr>
-      <tr><td>Any issue, even with all beats OK</td><td>e2e / Full playthrough</td><td>A <code>console.error</code>, a missing asset, overlong text, a long task</td></tr>
-      <tr><td>The wrong number of beats</td><td>e2e / Full playthrough</td><td>A beat was added or removed without updating the expected 218</td></tr>
-      <tr><td>Timeout</td><td>e2e</td><td>A hang the watchdog did not catch, or a very slow runner</td></tr>
+      <tr><td>A failed beat</td><td>smoke / Smoke test</td><td>A story change the robot does not know about, a real soft-lock, or a page that no longer renders its key content</td></tr>
+      <tr><td>Any issue, even with all beats OK</td><td>smoke / Smoke test</td><td>A <code>console.error</code> (also while the game boots, and on the other pages), a missing asset, overlong text, a long task</td></tr>
+      <tr><td>A fixture error</td><td>smoke / Smoke test, and build / Test (<code>fixtures.test.ts</code>)</td><td>A story change broke a prepared state's assumptions: a renamed flag, a moved NPC, a trainer that is no longer rematchable</td></tr>
+      <tr><td>The wrong number of beats</td><td>smoke / Smoke test</td><td>A phase gained or lost a beat without updating <code>SMOKE_PHASES</code></td></tr>
+      <tr><td>Timeout</td><td>smoke</td><td>A hang the watchdog did not catch, or a very slow runner</td></tr>
+      <tr><td>A failed <code>changes</code> job</td><td>changes</td><td>git or the API failed outright: nothing deploys; re-run the workflow</td></tr>
     </tbody>
   </table>
+
+  <h3 id="ci-nightly">The nightly playthrough</h3>
+
+  <p><a data-src=".github/workflows/playthrough.yml">playthrough.yml</a> runs
+  <code>npm run e2e</code>, the full 218-beat playthrough of the production
+  build, every night at 07:23 UTC (<code>cron: "23 7 * * *"</code>: late night in
+  the Americas, and off the top of the hour, when GitHub's scheduler is busiest),
+  and whenever someone presses <em>Run workflow</em> on its Actions page. It
+  keeps <code>e2e/last-report.json</code> as the <code>e2e-report</code> artifact
+  and never deploys. Its <code>concurrency</code> group, <code>playthrough</code>,
+  is its own, so it never cancels or waits on a deploy; with
+  <code>cancel-in-progress: false</code> a manual run queues behind a running
+  one instead of cancelling it most of the way through.</p>
+
+  <aside class="tip">Before a risky release (a chapter, a map rework, battle or
+  save changes), run the full playthrough yourself: <code>npm run e2e</code>
+  locally, or the Playthrough workflow on <code>main</code> right after the
+  merge. The smoke test covers the first hour of the game and the shared
+  systems; only the full run reaches the late chapters and the post-game.</aside>
+
+  <details class="advanced"><summary>Advanced: what the nightly run catches, and what it doesn't</summary>
+    <p>The nightly run plays whatever <code>main</code> is at that moment, so a
+    red night means some commit since the last green night broke a late beat
+    that the smoke test doesn't reach. The site is already live by then: fix
+    forward with a small commit, the same as any other bug on <code>main</code>.
+    <code>gh run list --workflow playthrough.yml</code> shows which night first
+    went red, which narrows the commits to bisect.</p>
+    <p>GitHub runs scheduled workflows only from the default branch, and turns
+    them off in a public repository after 60 days without activity; a push
+    re-enables them.</p>
+  </details>
 
   <h3 id="ci-failed">Reading a failed run</h3>
 
@@ -207,10 +345,12 @@ concurrency:
 
   <pre><code class="lang-bash">gh run list --workflow pages.yml --limit 5      # find the run
 gh run view &lt;run-id&gt; --log-failed               # only the failed steps' logs
-gh run download &lt;run-id&gt; --name e2e-report      # last-report.json
+gh run download &lt;run-id&gt; --name smoke-report    # last-smoke-report.json (a deploy run)
+gh run list --workflow playthrough.yml --limit 5
+gh run download &lt;run-id&gt; --name e2e-report      # last-report.json (a nightly run)
 
 # Which beats failed, and what went wrong?
-jq '.beats[] | select(.ok | not) | {name, note, map, pos}' last-report.json
+jq '.beats[] | select(.ok | not) | {phase, name, note, map, pos}' last-report.json   # phase: smoke only
 jq '.issues' last-report.json
 jq '.runner' last-report.json                   # speed, seed, elapsed, runner issues
 jq '.texts[-20:]' last-report.json              # the last 20 lines of dialogue</code></pre>
@@ -219,11 +359,11 @@ jq '.texts[-20:]' last-report.json              # the last 20 lines of dialogue<
   RED["Which step is red?"] --> TST["build / Test"]
   RED --> GATE["build / Release gate"]
   RED --> BLD["build / Build"]
-  RED --> PLAY["e2e / Full playthrough"]
+  RED --> PLAY["smoke / Smoke test, or the nightly playthrough"]
   TST --> TST1["Read the failing test name, run npx vitest run that-file locally"]
   GATE --> GATE1["Each offender line is path:line:column, fix or keep it on the branch"]
   BLD --> BLD1["Run npm run build locally, fix the type error"]
-  PLAY --> P1["Download e2e-report, list failed beats and issues"]
+  PLAY --> P1["Download smoke-report or e2e-report, list failed beats and issues"]
   P1 --> P2["Rerun locally with the same --seed, --headed to watch"]</pre>
 
   <aside class="tip">Each beat in the report carries a screenshot
@@ -233,14 +373,16 @@ jq '.texts[-20:]' last-report.json              # the last 20 lines of dialogue<
   <details class="advanced"><summary>Advanced: reproducing a CI failure</summary>
     <p>The report's <code>runner.seed</code> and <code>runner.speed</code> are the
     whole input. <code>npm run e2e -- --seed &lt;seed&gt; --speed &lt;speed&gt;</code>
-    replays the same battles. If it passes locally and fails in CI, compare
+    replays the same battles (<code>npm run e2e:smoke</code> for a smoke
+    failure: the same seed and speed). If it passes locally and fails in CI, compare
     <code>runner.elapsedSeconds</code> and the <code>frame</code> stats: a much
     slower CI run points at timing, not logic. If it fails locally right after a
     jingle and passes in CI, see the stalled audio clock under
     <a href="#testing-e2e-report">the playthrough</a>.</p>
     <p>A manual re-run from the Actions page (or a <code>workflow_dispatch</code>)
-    rebuilds and redeploys the same commit; it does not need a new push. Use it for
-    a timing flake, never to "try again" on a deterministic failure.</p>
+    rebuilds and redeploys the same commit, always with the smoke test; it does
+    not need a new push. Use it for a timing flake, never to "try again" on a
+    deterministic failure.</p>
   </details>
 
   <h3 id="ci-branches">Branches and the release rule</h3>
@@ -288,7 +430,10 @@ jq '.texts[-20:]' last-report.json              # the last 20 lines of dialogue<
   <ol>
     <li><code>npm run typecheck</code>, <code>npm test</code> and <code>npm run build</code> pass.</li>
     <li><code>npm run release-check</code> prints <code>release-check: OK</code>.</li>
-    <li><code>npm run e2e</code> passes without <code>--allow-placeholders</code> if gameplay changed.</li>
+    <li><code>npm run e2e:smoke</code> passes if gameplay changed, and
+      <code>npm run e2e</code> passes without <code>--allow-placeholders</code>
+      before a risky release (story, maps, battles, saving), or run the
+      Playthrough workflow by hand.</li>
     <li>If art changed: <code>build_all.py --regen</code> leaves <code>git status</code> clean.</li>
     <li>The README's scope and features, and <code>AGENTS.md</code> where commands or counts changed, are updated in the same merge.</li>
   </ol>
@@ -320,7 +465,7 @@ runner, its tests, the workflow, AGENTS.md and the README.</code></pre>
   </ul>
 
   <details class="advanced"><summary>Advanced: why the gate is on main, not on branches</summary>
-    <p>The playthrough is too slow to run on every branch push, and feature
+    <p>The browser tests are too slow to run on every branch push, and feature
     branches are allowed to be unfinished (that is what
     <code>--allow-placeholders</code> is for). Putting the full gate on
     <code>main</code> only keeps CI cheap and the rule simple: what is on

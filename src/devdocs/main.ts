@@ -363,7 +363,7 @@ function cover(sections: Built[]): HTMLElement {
     ["Canvas 2D", "160×144 Game Boy Color screen, integer-scaled"],
     ["Zero runtime dependencies", "the shipped game imports nothing"],
     ["Vitest", "pure-logic tests next to the code"],
-    ["Playwright", "a headless full playthrough before every deploy"],
+    ["Playwright", "a headless smoke test before every deploy, the full playthrough nightly"],
     ["Python + Pillow", "deterministic art generators in tools/art/"],
     ["GitHub Pages", "deployed by CI on every push to main"],
   ];

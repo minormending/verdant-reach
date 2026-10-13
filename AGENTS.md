@@ -13,7 +13,15 @@ it for fun, to practise engineering management and planning.
   **Zero runtime dependencies.**
 - **Live site:** https://minormending.github.io/verdant-reach/. It deploys
   automatically on every push to `main` (`.github/workflows/pages.yml` runs the
-  tests, the build and the headless playthrough, and deploys only if all pass).
+  tests, release-check, the build and the smoke test, and deploys only if all
+  pass). **Deploys run the smoke test; the full playthrough is nightly:** run it
+  by hand with `npm run e2e` or the Playthrough workflow
+  (`.github/workflows/playthrough.yml`, *Run workflow*) before risky releases.
+  A push that changes only docs and tool pages (`docs/**`, `*.md`, `src/guide/**`,
+  `src/devdocs/**`, `src/tilelab/**`, `src/trainereditor/**`, their `.html`
+  pages, `tools/art/review/**`) skips the smoke test (the fast lane). Keep game
+  code out of those folders: the game may load `src/tilelab/hook.ts` and
+  `src/trainereditor/hook.ts` only behind `?tilelab` / `?trainerlab`.
 - **Scope:** the whole game, the Prologue through Chapter 11 (the Council, the
   ending and the credits) and the post-game (`docs/POSTGAME.md`). The story
   bible is in `docs/story/`.
@@ -30,6 +38,7 @@ npx playwright install chromium # first use: install the e2e browser
 npm run e2e                 # headless full playthrough of the production build, 218 beats, speed 8, seed 1, daytime
 npm run e2e -- --seed 42    # replay another RNG seed (unsigned 32-bit integer)
 npm run e2e -- --dev        # play the dev server instead (quicker to iterate; --no-build reuses dist-e2e/)
+npm run e2e:smoke           # the deploy gate: 26 beats, about 2 minutes (new game to rival 1, save/continue, rematch, leader, whiteout, other pages)
 npm run art:index           # REQUIRED after adding, removing or renaming any file under public/art/
 
 python3 -m venv .venv && .venv/bin/pip install -r tools/art/requirements.txt
@@ -67,6 +76,7 @@ leave `git status` clean (the generators are deterministic).
 | The Trainer Editor page (`trainereditor.html`): edit teams, moves, bags, prizes and AI beside each trainer's map and wild plants, export or save `trainers.json`, play with the edits (`?trainerlab=1`) (docs/TRAINERS.md) | `src/trainereditor/` |
 | The developer docs page (`devdocs.html`): section fragments, Mermaid diagrams and live charts (docs/DEVDOCS.md, `src/devdocs/CONTRACT.md`) | `src/devdocs/` |
 | Automated full playthrough | `e2e/` (`npm run e2e`; first use: `npx playwright install chromium`; 218 beats, report in ignored `e2e/last-report.json`; `npm run e2e -- --speed 6 --seed 1 --headed` to watch) |
+| Smoke test (the deploy gate) | `e2e/smoke.ts` (in-page phases), `e2e/smoke-plan.mjs` (phases, beat counts, page checks), `e2e/fixtures.ts` (prepared states, checked against the world data, also by `npm test`); `npm run e2e:smoke`, report in ignored `e2e/last-smoke-report.json` |
 
 The e2e runner plays the production pipeline: `vite build --mode e2e` into
 the ignored `dist-e2e/`, served by `vite preview`. The test hooks it needs
