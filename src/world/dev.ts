@@ -40,7 +40,7 @@ const COLORS: Partial<Record<TileKey, string>> = {
  */
 function playtest(ctx: GameContext, params: URLSearchParams): Scene {
   const st = ctx.state;
-  st.playerName = params.get("name") || "SORREL";
+  st.playerName = params.get("name") || "BASIL";
   if (params.get("look") === "girl") st.playerLook = "girl";
   st.options.textSpeed = "fast";
   for (const f of (params.get("flags") ?? "").split(",").filter(Boolean)) st.flags[f] = true;
