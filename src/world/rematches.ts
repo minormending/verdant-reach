@@ -116,8 +116,8 @@ export const isRematchTrainer = (world: WorldData, id: string): boolean => remat
  */
 export const REMATCH_FALLBACK_LEVEL = 36;
 export const REMATCH_GROWTH_LEVEL: Partial<Record<SpeciesId, number>> = {
-  clover_sprout: 36,   // tending -> WHITE CLOVER (final stage): the fallback
-  maple_sapling: 36,   // tending -> SUGAR MAPLE; MAPLE SAMARA grew at 12
+  clover_sprout: 17,   // tending -> WHITE CLOVER (final stage); trainers field WHITE CLOVER from Lv 17
+  maple_sapling: 26,   // tending -> SUGAR MAPLE; MAPLE SAMARA grew at 12, trainers field SUGAR MAPLE from Lv 26
   apple_sapling: 36,   // tending -> APPLE TREE; APPLE PIP grew at 18
   vanilla_vine: 36,    // cross-pollination -> VANILLA ORCHID (final stage)
   lodgepole_cone: 26,  // EMBER ASH -> LODGEPOLE SEEDLING, which becomes a pine at 32; wild cones are Lv 20-24

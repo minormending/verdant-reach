@@ -71,13 +71,27 @@ describe("rematch growth levels", () => {
     expect(nonLevel.length).toBeGreaterThan(0);
   });
 
-  it("uses 36 unless the next stage grows by level first", () => {
+  it("uses 36 unless an earlier level is appropriate", () => {
+    // The lowest level any trainer fields each species at: the evolved form's
+    // first appearance is the "appropriate" level for a non-level trigger.
+    const firstSeen = new Map<SpeciesId, number>();
+    for (const t of Object.values(WORLD.trainers)) for (const q of t.team) {
+      firstSeen.set(q.species, Math.min(firstSeen.get(q.species) ?? Infinity, q.level));
+    }
     for (const s of nonLevel) {
+      const level = REMATCH_GROWTH_LEVEL[s.id]!;
       const next = DATA.species[s.growsInto!.species];
       const t = next.growsInto?.trigger;
       const nextLevel = t && "level" in t ? t.level : null;
-      if (nextLevel === null || nextLevel > REMATCH_FALLBACK_LEVEL) expect(REMATCH_GROWTH_LEVEL[s.id], s.id).toBe(REMATCH_FALLBACK_LEVEL);
+      const seen = firstSeen.get(next.id);
+      if (level === REMATCH_FALLBACK_LEVEL) continue;
+      // Earlier than 36 only to stay below the next stage's level, or to match
+      // where trainers already field the grown form.
+      expect(level < REMATCH_FALLBACK_LEVEL, s.id).toBe(true);
+      expect((nextLevel !== null && level < nextLevel) || (seen !== undefined && level <= seen), s.id).toBe(true);
     }
+    expect(REMATCH_GROWTH_LEVEL.clover_sprout).toBe(17);
+    expect(REMATCH_GROWTH_LEVEL.maple_sapling).toBe(26);
     expect(REMATCH_GROWTH_LEVEL.lodgepole_cone).toBeLessThan(32);
     expect(REMATCH_GROWTH_LEVEL.snowdrop_bulb).toBeLessThan(36);
   });
@@ -99,7 +113,8 @@ describe("rematch growth levels", () => {
     expect(rematchGrowthLevel(DATA, "oak_acorn")).toBe(16);
     expect(rematchGrowthLevel(DATA, "sunflower_bud")).toBe(24); // vigor_day
     expect(rematchGrowthLevel(DATA, "moonflower_vine")).toBe(22); // vigor_night
-    expect(rematchGrowthLevel(DATA, "maple_sapling")).toBe(36); // tending
+    expect(rematchGrowthLevel(DATA, "maple_sapling")).toBe(26); // tending: trainers field SUGAR MAPLE from Lv 26
+    expect(rematchGrowthLevel(DATA, "apple_sapling")).toBe(36); // tending: the 36 fallback
     expect(rematchGrowthLevel(DATA, "great_oak")).toBeNull();
   });
 
@@ -108,8 +123,8 @@ describe("rematch growth levels", () => {
     expect(rematchSpecies(DATA, "oak_acorn", 16)).toBe("oak_sapling");
     const finalAt = rematchGrowthLevel(DATA, "oak_sapling")!;
     expect(rematchSpecies(DATA, "oak_acorn", finalAt)).toBe("great_oak");
-    expect(rematchSpecies(DATA, "maple_samara", 35)).toBe("maple_sapling");
-    expect(rematchSpecies(DATA, "maple_samara", 36)).toBe("sugar_maple");
+    expect(rematchSpecies(DATA, "maple_samara", 25)).toBe("maple_sapling");
+    expect(rematchSpecies(DATA, "maple_samara", 26)).toBe("sugar_maple");
     expect(rematchSpecies(DATA, "lodgepole_cone", 32)).toBe("lodgepole_pine");
     expect(rematchSpecies(DATA, "snowdrop_bulb", 35)).toBe("snowdrop_shoot");
     expect(rematchSpecies(DATA, "snowdrop_bulb", 36)).toBe("snowdrop");
