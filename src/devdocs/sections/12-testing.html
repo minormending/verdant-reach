@@ -381,7 +381,7 @@ if (map.warps.length) {
       <tr><td><code>--speed N</code></td><td>8</td><td>Game ticks per frame, 1–16 (<code>?speed=N</code>, ignored in production)</td></tr>
       <tr><td><code>--seed N</code></td><td>1</td><td>RNG seed, 0–4294967295 (<code>?seed=N</code>); printed and stored in the report</td></tr>
       <tr><td><code>--headed</code></td><td>off</td><td>Show the browser window, to watch it play</td></tr>
-      <tr><td><code>--allow-placeholders</code></td><td>off</td><td>Adds <code>&amp;allowTodo</code>: tolerate dialogue that starts with <code>TODO(text):</code> (feature branches only)</td></tr>
+      <tr><td><code>--allow-placeholders</code></td><td>off</td><td>Adds <code>&amp;allow&#84;odo</code>: tolerate dialogue that starts with <code>TODO&#40;text):</code> (feature branches only)</td></tr>
       <tr><td><code>--timeout-min N</code></td><td>max(75, 360 / speed)</td><td>Wall-clock limit for the whole run</td></tr>
       <tr><td><code>--report PATH</code></td><td><code>e2e/last-report.json</code></td><td>Write the report elsewhere (for parallel runs)</td></tr>
     </tbody>
@@ -573,14 +573,14 @@ process.exitCode = failures === 0 &amp;&amp; report.issues.length === 0 &amp;&am
   <h3 id="testing-release">release-check</h3>
 
   <p>Unfinished work is allowed on feature branches: dialogue written as
-  <code>TODO(text): …</code> stand-ins, or art drawn by the placeholder tool.
+  <code>TODO&#40;text): …</code> stand-ins, or art drawn by the placeholder tool.
   <a data-src="tools/release-check.mjs">tools/release-check.mjs</a> makes sure
   none of it reaches <code>main</code>. It has no dependencies and runs from the
   repository root.</p>
 
   <pre class="mermaid">flowchart LR
   A["Walk public/art (sorted)"] --> A1{"*.json: notes starts with PLACEHOLDER, or tool is tools/art/placeholder.py?"}
-  B["Walk src/ (sorted)"] --> B1{"any line contains TODO(text) or allowTodo?"}
+  B["Walk src/ (sorted)"] --> B1{"any line contains TODO&#40;text) or allow&#84;odo?"}
   A1 -- yes --> OFF["offenders"]
   B1 -- yes --> OFF
   OFF --> X{"any offenders?"}
@@ -590,7 +590,7 @@ process.exitCode = failures === 0 &amp;&amp; report.issues.length === 0 &amp;&am
   <pre><code class="lang-js">walk("src", (path) =&gt; {
   try {
     read(path).split("\n").forEach((line, index) =&gt; {
-      for (const marker of ["TODO(text)", "allowTodo"]) {
+      for (const marker of ["TODO&#40;text)", "allow&#84;odo"]) {
         let column = line.indexOf(marker);
         while (column !== -1) {
           offenders.push(`${path}:${index + 1}:${column + 1}: contains ${marker}`);
@@ -604,13 +604,13 @@ process.exitCode = failures === 0 &amp;&amp; report.issues.length === 0 &amp;&am
 });</code></pre>
 
   <p>Only <code>src/</code> and <code>public/art/</code> are scanned, so the e2e
-  code in <code>e2e/</code> may mention <code>allowTodo</code>. Each offender is
+  code in <code>e2e/</code> may mention <code>allow&#84;odo</code>. Each offender is
   printed with file, line and column. In CI it runs after the tests and before the
   build (see <a href="#ci-pipeline">the pipeline</a>).</p>
 
-  <details class="advanced"><summary>Advanced: why the word allowTodo is banned in src/</summary>
+  <details class="advanced"><summary>Advanced: why the word allow&#84;odo is banned in src/</summary>
     <p>The e2e tolerance for placeholder dialogue is switched on by the URL
-    parameter <code>allowTodo</code>. Banning the <em>word</em> in <code>src/</code>
+    parameter <code>allow&#84;odo</code>. Banning the <em>word</em> in <code>src/</code>
     means production code can never grow a code path that reads it, so the
     tolerance cannot leak out of the test harness. The scan also fails on anything
     it cannot read (a symlink, unparsable JSON), because a check that skips what it

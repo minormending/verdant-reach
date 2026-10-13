@@ -119,8 +119,13 @@ async function renderOne(d: Diagram): Promise<void> {
     btn.addEventListener("click", () => openViewer(el, svgSize(el), d.title));
     d.box.classList.remove("failed", "pending");
     d.box.replaceChildren(btn);
-    // A diagram wider than its box starts scrolled to the middle (where trees have their root).
-    if (d.box.scrollWidth > d.box.clientWidth) d.box.scrollLeft = (d.box.scrollWidth - d.box.clientWidth) / 2;
+    // A diagram wider than its box: left-to-right charts and sequence diagrams
+    // start at their left edge, where reading starts; top-down trees start
+    // scrolled to the middle, where their root is.
+    if (d.box.scrollWidth > d.box.clientWidth) {
+      const readsLeftToRight = /^\s*(?:(?:flowchart|graph)\s+LR\b|sequenceDiagram|gitGraph|timeline|gantt)/.test(d.source);
+      d.box.scrollLeft = readsLeftToRight ? 0 : (d.box.scrollWidth - d.box.clientWidth) / 2;
+    }
   } catch (e) {
     console.error(`[devdocs] Mermaid could not draw a diagram in "${d.title}":`, e);
     fallback(d, `This diagram has a syntax error (${e instanceof Error ? e.message.split("\n")[0] : "Mermaid refused it"}); its source follows.`);
