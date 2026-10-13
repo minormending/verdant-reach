@@ -2428,26 +2428,32 @@ export async function postgame() {
     && !report.texts.slice(ending).some((t) => /You sent me a NOTE|By the word of the COUNCIL|You wake at home/.test(t.text)));
 }
 
-/** Free a slot with real cabinet STORE input, keeping the helper in slot 0. */
+/**
+ * Free a slot with real cabinet STORE input, keeping the helper in slot 0.
+ * The menus are driven by timed key presses, which a slow CI machine can
+ * outrun, so a failed attempt backs out to the overworld and tries again.
+ */
 export async function makePartyRoom(): Promise<boolean> {
   if (ctx().state.party.length < 6) return true;
   const st = ctx().state;
   const last = st.party.at(-1)!;
-  if (!(await walkTo(1, 4))) return false; // shared GREENHOUSE cabinet layout
-  await face("up");
-  await press("a");
-  await sleep(700);
-  await press("a"); // cabinet greeting -> menu
-  await sleep(700);
-  await press("a"); // STORE -> party list
-  await sleep(700);
-  for (let i = 0; i < st.party.length - 1; i++) { await press("down", 60); await sleep(140); }
-  for (let i = 0; i < 6 && st.party.includes(last); i++) { await press("a"); await sleep(700); }
-  for (let i = 0; i < 8 && !idle(); i++) { await press("b"); await sleep(400); }
-  await settle();
-  const ok = st.party.length < 6 && st.box.includes(last);
-  if (!ok) issue("cabinet", "could not store a party member before the story catch");
-  return ok;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (!(await walkTo(1, 4))) return false; // shared GREENHOUSE cabinet layout
+    await face("up");
+    await press("a");
+    await sleep(700);
+    await press("a"); // cabinet greeting -> menu
+    await sleep(700);
+    await press("a"); // STORE -> party list
+    await sleep(700);
+    for (let i = 0; i < st.party.length - 1; i++) { await press("down", 60); await sleep(140); }
+    for (let i = 0; i < 6 && st.party.includes(last); i++) { await press("a"); await sleep(700); }
+    for (let i = 0; i < 8 && !idle(); i++) { await press("b"); await sleep(400); }
+    await settle();
+    if (st.party.length < 6 && st.box.includes(last)) return true;
+  }
+  issue("cabinet", "could not store a party member before the story catch");
+  return false;
 }
 
 /** Open the real field-item party picker and drive the growth with A input.
