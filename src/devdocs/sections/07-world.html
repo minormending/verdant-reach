@@ -9,7 +9,7 @@
   subgraph data["src/world (data)"]
     M["maps/*.ts MapDef objects"]
     S["scripts/*.ts ScriptCmd lists"]
-    T["trainers.ts"]
+    T["trainers.ts + data/trainers.json"]
     B["build.ts helpers"]
   end
   B --> M

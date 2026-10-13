@@ -308,8 +308,9 @@
 
   <h3 id="recipes-trainer">Add a trainer</h3>
 
-  <p>A <dfn>trainer</dfn> is an NPC who battles. The definition (team, prize,
-  lines) lives in <a data-src="src/world/trainers.ts">src/world/trainers.ts</a>;
+  <p>A <dfn>trainer</dfn> is an NPC who battles. The battle data (team, prize,
+  bag, AI, music) lives in <a data-src="src/data/trainers.json">src/data/trainers.json</a>,
+  the lines in <a data-src="src/world/trainers.ts">src/world/trainers.ts</a>;
   the map only places them. The engine runs the whole encounter: it spots the
   player in the trainer's <dfn>line of sight</dfn>, says the intro, battles, and
   sets <code>beat_&lt;id&gt;</code> on a win.</p>
@@ -324,10 +325,12 @@
   Beaten --> Beaten: talk shows the after line</pre>
 
   <ol>
-    <li><strong>Define</strong> it with the <code>trainer()</code> helper in the
-      right chapter's array in <code>trainers.ts</code>. The prize defaults to
-      the top level x 20, the AI to <code>basic</code>, the music to
-      <code>battle_trainer</code>.</li>
+    <li><strong>Define</strong> it: an entry in <code>trainers.json</code> (in
+      story order; <code>ai</code> is usually <code>basic</code> and
+      <code>music</code> <code>battle_trainer</code>; leave <code>prize</code>
+      out for the top level x 20) and its lines in the chapter's lines record in
+      <code>trainers.ts</code>, under the same id. The Trainer Editor
+      (<a href="#pages">trainereditor.html</a>) edits the JSON with the same checks.</li>
     <li><strong>Place</strong> an NPC with <code>trainer: "&lt;id&gt;"</code> and
       a <code>sight</code> (default 4 tiles) facing an open lane.</li>
     <li><strong>Leaders</strong> also get <code>mark</code>, usually
@@ -338,11 +341,20 @@
       trainer.</li>
   </ol>
 
-  <pre><code class="lang-ts">trainer("hiker_dale", "DALE", "HIKER", "hiker", [T("unfurling_fern", 19), T("holly", 20), T("bramble_berry", 20)], {
-  intro: "Nobody's walked this lane in months. Who sent you?",
-  defeat: "Lost my footing!",
-  after: "Holly grows fewer prickles up high, where nothing can nibble it.",
-}),</code></pre>
+  <pre><code class="lang-json">// src/data/trainers.json
+    { "id": "hiker_dale", "name": "DALE", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "unfurling_fern", "level": 19 },
+        { "species": "holly", "level": 20 },
+        { "species": "bramble_berry", "level": 20 }
+      ] },</code></pre>
+
+  <pre><code class="lang-ts">// src/world/trainers.ts
+  hiker_dale: {
+    intro: "Nobody's walked this lane in months. Who sent you?",
+    defeat: "Lost my footing!",
+    after: "Holly grows fewer prickles up high, where nothing can nibble it.",
+  },</code></pre>
 
   <pre><code class="lang-ts">// src/world/maps/route_5.ts
 { id: "dale", sprite: "hiker", x: 20, y: 14, facing: "left", trainer: "hiker_dale", sight: 3 },</code></pre>
@@ -350,6 +362,7 @@
   <table>
     <thead><tr><th>Mistake</th><th>Caught by</th></tr></thead>
     <tbody>
+      <tr><td>A JSON entry with an unknown species, move, item, portrait or mark, a level outside 1-100, more than four moves or six members, or no lines</td><td><code>trainersFileErrors</code> when <code>trainers.ts</code> loads (<a data-src="src/world/trainerFile.test.ts">trainerFile.test.ts</a>)</td></tr>
       <tr><td>Unknown species, item or mark; empty team; id mismatch</td><td>Validator, trainers block</td></tr>
       <tr><td>Intro, defeat or after line has a word over 18 columns</td><td>Validator</td></tr>
       <tr><td>The NPC names a trainer that does not exist</td><td>Validator: <code>trainer … missing</code></td></tr>

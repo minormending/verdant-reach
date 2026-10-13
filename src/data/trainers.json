@@ -1,0 +1,738 @@
+{
+  "format": "verdant.trainers/1",
+  "trainers": [
+    { "id": "schoolkid_milo", "name": "MILO", "className": "SCHOOLKID", "portrait": "schoolkid", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "dandelion_bud", "level": 4 }
+      ] },
+    { "id": "gardener_rosa", "name": "ROSA", "className": "GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "sunflower_seedling", "level": 5 },
+        { "species": "dandelion_bud", "level": 6 }
+      ] },
+    { "id": "birdwatcher_alder", "name": "ALDER", "className": "BIRDWATCHER", "portrait": "birdwatcher", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "dandelion_bud", "level": 6 },
+        { "species": "fern_fiddlehead", "level": 6 }
+      ] },
+    { "id": "beekeeper_mae", "name": "MAE", "className": "BEEKEEPER", "portrait": "beekeeper", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "sunflower_seedling", "level": 6 },
+        { "species": "pumpkin_blossom", "level": 7 }
+      ] },
+    { "id": "hiker_gus", "name": "GUS", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "fern_fiddlehead", "level": 9 },
+        { "species": "nettle_sprout", "level": 10 }
+      ] },
+    { "id": "florist_petra", "name": "PETRA", "className": "FLORIST", "portrait": "florist", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "bramble_blossom", "level": 9 },
+        { "species": "sunflower_bud", "level": 12 }
+      ] },
+    { "id": "birdwatcher_owen", "name": "OWEN", "className": "BIRDWATCHER", "portrait": "birdwatcher", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "moonflower_seed", "level": 10 },
+        { "species": "moonflower_vine", "level": 12 }
+      ] },
+    { "id": "jr_hazel", "name": "HAZEL", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "bramble_blossom", "level": 7 },
+        { "species": "fern_fiddlehead", "level": 8 }
+      ] },
+    { "id": "jr_linden", "name": "LINDEN", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "pumpkin_blossom", "level": 8 },
+        { "species": "bramble_blossom", "level": 8 }
+      ] },
+    { "id": "jr_sorrel", "name": "SORREL", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "sundew_rosette", "level": 13 },
+        { "species": "unfurling_fern", "level": 14 }
+      ] },
+    { "id": "jr_tansy", "name": "TANSY", "className": "SCHOOLKID", "portrait": "schoolkid", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "flytrap_seedling", "level": 13 },
+        { "species": "sundew_rosette", "level": 14 }
+      ] },
+    { "id": "hollis", "name": "HOLLIS", "className": "WARDEN", "portrait": "hollis", "ai": "smart", "music": "battle_leader", "prize": 1100, "mark": "bramble_mark",
+      "items": [{ "item": "water_flask", "qty": 2 }],
+      "team": [
+        { "species": "fern_fiddlehead", "level": 8, "moves": ["vine_lash", "curl_up", "sap_drain"] },
+        { "species": "bramble_berry", "level": 10, "moves": ["thorn_jab", "vine_lash", "burr_hitch", "sap_seal"] }
+      ] },
+    { "id": "nell", "name": "NELL", "className": "WARDEN", "portrait": "nell_pitcher", "ai": "smart", "music": "battle_leader", "prize": 1700, "mark": "sundew_mark",
+      "items": [{ "item": "spring_water", "qty": 2 }],
+      "team": [
+        { "species": "flytrap_seedling", "level": 13 },
+        { "species": "sundew_rosette", "level": 14 },
+        { "species": "young_flytrap", "level": 16 }
+      ] },
+    { "id": "grunt_r3", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "nettle_sprout", "level": 9 },
+        { "species": "bramble_blossom", "level": 10 }
+      ] },
+    { "id": "grunt_grove_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "nettle_sprout", "level": 11 },
+        { "species": "maple_samara", "level": 12 }
+      ] },
+    { "id": "grunt_grove_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "bramble_berry", "level": 12 },
+        { "species": "nettle_sprout", "level": 12 }
+      ] },
+    { "id": "grunt_grove_3", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "maple_samara", "level": 12 },
+        { "species": "maple_sapling", "level": 13 }
+      ] },
+    { "id": "shears", "name": "SHEARS", "className": "ADMIN", "portrait": "shears", "ai": "smart", "music": "battle_rootstock", "prize": 1400,
+      "team": [
+        { "species": "bramble_berry", "level": 12 },
+        { "species": "maple_sapling", "level": 14 }
+      ] },
+    { "id": "rival_1_oak", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 300,
+      "team": [
+        { "species": "oak_acorn", "level": 5 }
+      ] },
+    { "id": "rival_2_oak", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 1500,
+      "team": [
+        { "species": "bramble_berry", "level": 11 },
+        { "species": "dandelion", "level": 13 },
+        { "species": "oak_sapling", "level": 14 }
+      ] },
+    { "id": "rival_3_oak", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 2200,
+      "note": "Rival 3 (GLASSHOUSE NURSERY): the collared starter is forced past its growth level. Balance (data): 18/19/21 and an all-attack set (the collar leaves no room to rest) keep the counter-starter fight hard but winnable; see balance.test.ts.",
+      "team": [
+        { "species": "bramble_berry", "level": 18 },
+        { "species": "dandelion", "level": 19 },
+        { "species": "oak_sapling", "level": 21, "moves": ["acorn_drop", "splinter", "vine_lash", "bark_skin"] }
+      ] },
+    { "id": "rival_1_chili", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 300,
+      "team": [
+        { "species": "chili_blossom", "level": 5 }
+      ] },
+    { "id": "rival_2_chili", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 1500,
+      "team": [
+        { "species": "bramble_berry", "level": 11 },
+        { "species": "dandelion", "level": 13 },
+        { "species": "green_chili", "level": 14 }
+      ] },
+    { "id": "rival_3_chili", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 2200,
+      "note": "Rival 3 (GLASSHOUSE NURSERY): the collared starter is forced past its growth level. Balance (data): 18/19/21 and an all-attack set (the collar leaves no room to rest) keep the counter-starter fight hard but winnable; see balance.test.ts.",
+      "team": [
+        { "species": "bramble_berry", "level": 18 },
+        { "species": "dandelion", "level": 19 },
+        { "species": "green_chili", "level": 21, "moves": ["chili_burst", "smoulder", "seed_burst", "capsaicin"] }
+      ] },
+    { "id": "rival_1_lily", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 300,
+      "team": [
+        { "species": "lily_seedpod", "level": 5 }
+      ] },
+    { "id": "rival_2_lily", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 1500,
+      "team": [
+        { "species": "bramble_berry", "level": 11 },
+        { "species": "dandelion", "level": 13 },
+        { "species": "lily_pad", "level": 14 }
+      ] },
+    { "id": "rival_3_lily", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 2200,
+      "note": "Rival 3 (GLASSHOUSE NURSERY): the collared starter is forced past its growth level. Balance (data): 18/19/21 and an all-attack set (the collar leaves no room to rest) keep the counter-starter fight hard but winnable; see balance.test.ts.",
+      "team": [
+        { "species": "bramble_berry", "level": 18 },
+        { "species": "dandelion", "level": 19 },
+        { "species": "lily_pad", "level": 21, "moves": ["undertow", "cold_mist", "pad_slap", "sap_drain"] }
+      ] },
+    { "id": "orchardist_russet", "name": "RUSSET", "className": "ORCHARDIST", "portrait": "orchardist", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "apple_pip", "level": 16 },
+        { "species": "white_clover", "level": 17 }
+      ] },
+    { "id": "beekeeper_clem", "name": "CLEM", "className": "BEEKEEPER", "portrait": "beekeeper", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "dandelion", "level": 16 },
+        { "species": "sunflower_bud", "level": 17 }
+      ] },
+    { "id": "schoolkid_tam", "name": "TAM", "className": "SCHOOLKID", "portrait": "schoolkid", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "mint_sprig", "level": 15 },
+        { "species": "rose_bud", "level": 15 },
+        { "species": "apple_pip", "level": 16 }
+      ] },
+    { "id": "birdwatcher_kit", "name": "KIT", "className": "BIRDWATCHER", "portrait": "birdwatcher", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "maple_sapling", "level": 16 },
+        { "species": "foxglove", "level": 18 }
+      ] },
+    { "id": "hiker_ford", "name": "FORD", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "holly_seedling", "level": 17 },
+        { "species": "stinging_nettle", "level": 18 },
+        { "species": "cattail", "level": 19 }
+      ] },
+    { "id": "researcher_lin", "name": "LIN", "className": "RESEARCHER", "portrait": "researcher", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "orchid_keiki", "level": 15 },
+        { "species": "monstera_cutting", "level": 17 }
+      ] },
+    { "id": "florist_amaryl", "name": "AMARYL", "className": "FLORIST", "portrait": "florist", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "lotus_seed", "level": 17 },
+        { "species": "orchid_spike", "level": 18 }
+      ] },
+    { "id": "gardener_ivy", "name": "IVY", "className": "GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "peppermint", "level": 19 },
+        { "species": "white_clover", "level": 19 },
+        { "species": "wild_rose", "level": 20 }
+      ] },
+    { "id": "hiker_dale", "name": "DALE", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "unfurling_fern", "level": 19 },
+        { "species": "holly", "level": 20 },
+        { "species": "bramble_berry", "level": 20 }
+      ] },
+    { "id": "jr_posy", "name": "POSY", "className": "ARRANGER", "portrait": "arranger", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "wild_rose", "level": 18 },
+        { "species": "orchid_spike", "level": 18 }
+      ] },
+    { "id": "jr_wexley", "name": "WEXLEY", "className": "GENTLEMAN", "portrait": "gentleman", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "sunflower_bud", "level": 18 },
+        { "species": "white_clover", "level": 19 }
+      ] },
+    { "id": "flora", "name": "FLORA", "className": "WARDEN", "portrait": "flora_vance", "ai": "smart", "music": "battle_leader", "prize": 2200, "mark": "rose_mark",
+      "note": "Balance (data): the spike. Clover controls (root snare, crits), the rose hits hard, and the MOTH ORCHID sets up SUN TRACK with bloom, ghost (vs wood) and water-drain (vs fire) cover, plus one SPRING WATER. See balance.test.ts.",
+      "items": [{ "item": "spring_water", "qty": 1 }],
+      "team": [
+        { "species": "white_clover", "level": 19, "moves": ["lucky_leaf", "sap_drain", "root_snare", "vine_lash"] },
+        { "species": "wild_rose", "level": 20, "moves": ["rose_thorn", "pollen_puff", "perfume", "vine_lash"] },
+        { "species": "moth_orchid", "level": 22, "moves": ["wind_scatter", "moonbeam", "sun_track", "velamen"] }
+      ] },
+    { "id": "lumberjack_hale", "name": "HALE", "className": "LUMBERJACK", "portrait": "lumberjack", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "maple_sapling", "level": 21 },
+        { "species": "holly", "level": 22 }
+      ] },
+    { "id": "lumberjack_birch", "name": "BIRCH", "className": "LUMBERJACK", "portrait": "lumberjack", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "pumpkin", "level": 22 }
+      ] },
+    { "id": "forager_sage", "name": "SAGE", "className": "FORAGER", "portrait": "forager", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "moonflower_vine", "level": 20 },
+        { "species": "skunk_cabbage_shoot", "level": 21 }
+      ] },
+    { "id": "forager_ash", "name": "ASH", "className": "FORAGER", "portrait": "forager", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "fireweed_fluff", "level": 21 },
+        { "species": "sundew", "level": 22 }
+      ] },
+    { "id": "grunt_bs_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 23 },
+        { "species": "fireweed_shoot", "level": 23 }
+      ] },
+    { "id": "grunt_bs_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "bramble_berry", "level": 23 },
+        { "species": "lodgepole_cone", "level": 24 }
+      ] },
+    { "id": "grunt_bs_3", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "venus_flytrap", "level": 24 },
+        { "species": "foxglove", "level": 24 }
+      ] },
+    { "id": "rival_4_oak", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 2700,
+      "note": "Chapter 5 teams are fixed by CH5_IDS.md §C. Balance: retain every prescribed level, but use explicit early moves on Rival 4 and physical Ghost attacks on MORROW. The natural late movesets wall older mixed parties; balance.test.ts guards both older and Ch. 5 catches.",
+      "team": [
+        { "species": "blackberry", "level": 25, "moves": ["thorn_jab", "bristle", "sap_seal"] },
+        { "species": "dandelion", "level": 25, "moves": ["pollen_puff", "quick_snap", "perfume"] },
+        { "species": "sugar_maple", "level": 26, "moves": ["samara_spin", "sugar_rush", "sap_seal"] },
+        { "species": "great_oak", "level": 27, "moves": ["acorn_drop", "splinter", "vine_lash", "bark_skin"], "grafted": true }
+      ] },
+    { "id": "rival_4_chili", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 2700,
+      "note": "Chapter 5 teams are fixed by CH5_IDS.md §C. Balance: retain every prescribed level, but use explicit early moves on Rival 4 and physical Ghost attacks on MORROW. The natural late movesets wall older mixed parties; balance.test.ts guards both older and Ch. 5 catches.",
+      "team": [
+        { "species": "blackberry", "level": 25, "moves": ["thorn_jab", "bristle", "sap_seal"] },
+        { "species": "dandelion", "level": 25, "moves": ["pollen_puff", "quick_snap", "perfume"] },
+        { "species": "sugar_maple", "level": 26, "moves": ["samara_spin", "sugar_rush", "sap_seal"] },
+        { "species": "red_chili", "level": 27, "moves": ["chili_burst", "smoulder", "seed_burst", "capsaicin"], "grafted": true }
+      ] },
+    { "id": "rival_4_lily", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 2700,
+      "note": "Chapter 5 teams are fixed by CH5_IDS.md §C. Balance: retain every prescribed level, but use explicit early moves on Rival 4 and physical Ghost attacks on MORROW. The natural late movesets wall older mixed parties; balance.test.ts guards both older and Ch. 5 catches.",
+      "team": [
+        { "species": "blackberry", "level": 25, "moves": ["thorn_jab", "bristle", "sap_seal"] },
+        { "species": "dandelion", "level": 25, "moves": ["pollen_puff", "quick_snap", "perfume"] },
+        { "species": "sugar_maple", "level": 26, "moves": ["samara_spin", "sugar_rush", "sap_seal"] },
+        { "species": "giant_water_lily", "level": 27, "moves": ["undertow", "cold_mist", "pad_slap", "sap_drain"], "grafted": true }
+      ] },
+    { "id": "jr_nightshade", "name": "VESPER", "className": "NIGHT GARDENER", "portrait": "night_gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "moonflower_vine", "level": 23 },
+        { "species": "ghostpipe_stalk", "level": 23 }
+      ] },
+    { "id": "jr_lantern", "name": "LUMEN", "className": "NIGHT GARDENER", "portrait": "night_gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "foxglove", "level": 24 },
+        { "species": "ghostpipe_nodding", "level": 24 }
+      ] },
+    { "id": "morrow", "name": "MORROW", "className": "WARDEN", "portrait": "morrow", "ai": "smart", "music": "battle_leader", "prize": 2800, "mark": "pipe_mark",
+      "note": "Chapter 5 teams are fixed by CH5_IDS.md §C. Balance: retain every prescribed level, but use explicit early moves on Rival 4 and physical Ghost attacks on MORROW. The natural late movesets wall older mixed parties; balance.test.ts guards both older and Ch. 5 catches.",
+      "items": [{ "item": "spring_water", "qty": 1 }],
+      "team": [
+        { "species": "ghostpipe_nodding", "level": 24, "moves": ["pale_touch", "night_fold"] },
+        { "species": "moonflower", "level": 26, "moves": ["pale_touch", "unfurl"] },
+        { "species": "ghost_pipe", "level": 29, "moves": ["moonbeam", "rot_touch", "night_fold"] }
+      ] },
+    { "id": "angler_reed", "name": "REED", "className": "ANGLER", "portrait": "angler", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "cattail", "level": 25 },
+        { "species": "sundew", "level": 26 }
+      ] },
+    { "id": "angler_moss", "name": "MOSS", "className": "ANGLER", "portrait": "angler", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "pitcher_plant", "level": 26 }
+      ] },
+    { "id": "birder_tern", "name": "TERN", "className": "BIRDWATCHER", "portrait": "birdwatcher", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "mangrove_propagule", "level": 24 },
+        { "species": "white_clover", "level": 26 }
+      ] },
+    { "id": "grunt_dock_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 27 },
+        { "species": "fireweed", "level": 27 }
+      ] },
+    { "id": "grunt_dock_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "venus_flytrap", "level": 27 },
+        { "species": "sugar_maple", "level": 28 }
+      ] },
+    { "id": "sailor_kelp", "name": "KELP", "className": "SAILOR", "portrait": "sailor", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "seagrass_shoot", "level": 27 },
+        { "species": "lily_pad", "level": 28 }
+      ] },
+    { "id": "sailor_brine", "name": "BRINE", "className": "SAILOR", "portrait": "sailor", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "eelgrass", "level": 29 }
+      ] },
+    { "id": "diver_coral", "name": "CORAL", "className": "DIVER", "portrait": "diver", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "mangrove_sapling", "level": 28 },
+        { "species": "cattail", "level": 28 }
+      ] },
+    { "id": "diver_shoal", "name": "SHOAL", "className": "DIVER", "portrait": "diver", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "seagrass_shoot", "level": 28 },
+        { "species": "giant_water_lily", "level": 29 }
+      ] },
+    { "id": "jr_spine", "name": "SPINE", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "pear_pad", "level": 28 },
+        { "species": "padded_cactus", "level": 29 }
+      ] },
+    { "id": "jr_needle", "name": "NEEDLE", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "stinging_nettle", "level": 29 },
+        { "species": "padded_cactus", "level": 29 }
+      ] },
+    { "id": "saguaro", "name": "SAGUARO", "className": "WARDEN", "portrait": "brother_saguaro", "ai": "smart", "music": "battle_leader", "mark": "cactus_mark",
+      "note": "Chapter 6 teams from CH6.md §5. Balance changes: Saguaro's prescribed 30/31/33 become 35/36/38; Reyes's ace moves from 34 to 35. Explicit moves retain signature setup/healing, with Ghost/Bloom coverage for Saguaro and gentler Water + Wood/Frost coverage for Reyes. balance.test.ts checks both mixed parties, every starter, and the mean bands (80.6% / 69.8%, no player or foe items in the model).",
+      "items": [{ "item": "spring_water", "qty": 1 }],
+      "team": [
+        { "species": "padded_cactus", "level": 34, "moves": ["glochid_spray", "vine_lash", "sun_track"] },
+        { "species": "prickly_pear", "level": 35, "moves": ["pale_bloom", "sunbeam", "sun_track"] },
+        { "species": "saguaro_column", "level": 37, "moves": ["thorn_lash", "root_tap", "water_store", "sun_track"] }
+      ] },
+    { "id": "jr_tide", "name": "TIDE", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "seagrass_shoot", "level": 30 },
+        { "species": "lily_pad", "level": 30 }
+      ] },
+    { "id": "jr_current", "name": "CURRENT", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "mangrove_sapling", "level": 31 },
+        { "species": "eelgrass", "level": 31 }
+      ] },
+    { "id": "reyes", "name": "REYES", "className": "WARDEN", "portrait": "reyes", "ai": "smart", "music": "battle_leader", "mark": "mangrove_mark",
+      "note": "Chapter 6 teams from CH6.md §5. Balance changes: Saguaro's prescribed 30/31/33 become 35/36/38; Reyes's ace moves from 34 to 35. Explicit moves retain signature setup/healing, with Ghost/Bloom coverage for Saguaro and gentler Water + Wood/Frost coverage for Reyes. balance.test.ts checks both mixed parties, every starter, and the mean bands (80.6% / 69.8%, no player or foe items in the model).",
+      "items": [{ "item": "spring_water", "qty": 2 }],
+      "team": [
+        { "species": "eelgrass", "level": 32, "moves": ["dew_drop", "cold_mist", "sap_drain"] },
+        { "species": "mangrove_sapling", "level": 32, "moves": ["undertow", "cold_mist", "stilt_roots"] },
+        { "species": "giant_water_lily", "level": 33, "moves": ["undertow", "pad_slap", "sap_drain"] },
+        { "species": "red_mangrove", "level": 35, "moves": ["dew_drop", "sap_spout", "cold_mist", "stilt_roots"] }
+      ] },
+    { "id": "climber_ridge", "name": "RIDGE", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "larch_seedling", "level": 33 },
+        { "species": "holly", "level": 34 }
+      ] },
+    { "id": "climber_scree", "name": "SCREE", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "campion_mound", "level": 34 }
+      ] },
+    { "id": "skier_frost", "name": "FROST", "className": "SKIER", "portrait": "skier", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "peppermint", "level": 34 },
+        { "species": "edelweiss_bud", "level": 33 }
+      ] },
+    { "id": "skier_drift", "name": "DRIFT", "className": "SKIER", "portrait": "skier", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "snowdrop_shoot", "level": 34 },
+        { "species": "larch", "level": 35 }
+      ] },
+    { "id": "grunt_lodge", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 35 },
+        { "species": "venus_flytrap", "level": 35 }
+      ] },
+    { "id": "grunt_b1_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "fireweed", "level": 36 },
+        { "species": "sugar_maple", "level": 36 }
+      ] },
+    { "id": "grunt_b1_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "red_mangrove", "level": 36 },
+        { "species": "bladderwort", "level": 36 }
+      ] },
+    { "id": "grunt_b1_3", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "prickly_pear", "level": 37 },
+        { "species": "foxglove", "level": 36 }
+      ] },
+    { "id": "jr_flurry", "name": "FLURRY", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "edelweiss", "level": 38 },
+        { "species": "snowdrop_shoot", "level": 38 }
+      ] },
+    { "id": "jr_hoarfrost", "name": "HOARFROST", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "campion_mound", "level": 39 },
+        { "species": "holly", "level": 39 }
+      ] },
+    { "id": "calloway", "name": "CALLOWAY", "className": "ADMIN", "portrait": "calloway", "ai": "smart", "music": "battle_rootstock",
+      "note": "Tuning: ghost_pipe 38→40 (+2), lodgepole_pine 39→40 (+1), red_mangrove 41→42 (+1). Explicit moves retain a special Ghost attack and a real fire attack on the pine; the mangrove carries the coverage used by Reyes. Mean win: 75.1%.",
+      "items": [{ "item": "spring_water", "qty": 1 }],
+      "team": [
+        { "species": "ghost_pipe", "level": 40, "moves": ["pale_bloom", "root_siphon", "spore_cloud", "petal_storm"] },
+        { "species": "lodgepole_pine", "level": 40, "moves": ["leaf_edge", "ember_seed", "serotiny"] },
+        { "species": "red_mangrove", "level": 42, "moves": ["flood", "sap_spout", "cold_mist", "stilt_roots"], "grafted": true }
+      ] },
+    { "id": "signe", "name": "SIGNE", "className": "WARDEN", "portrait": "signe", "ai": "smart", "music": "battle_leader", "mark": "snowdrop_mark",
+      "note": "Tuning: every member is -1 from CH7.md §5 (40/41/41/43 → 39/40/40/42). Explicit moves soften repeated healing and Bloom coverage while preserving signature Frost play. Mean win: 62.8%; every party/starter exceeds 25%.",
+      "items": [{ "item": "spring_water", "qty": 2 }],
+      "team": [
+        { "species": "edelweiss", "level": 39, "moves": ["frost_bloom", "sunbeam", "woolly_coat"] },
+        { "species": "moss_campion", "level": 40, "moves": ["cold_mist", "sap_drain", "cushion"] },
+        { "species": "larch", "level": 40, "moves": ["needle_drop", "frost_needle", "evergreen"] },
+        { "species": "snowdrop", "level": 42, "moves": ["thaw_bloom", "sap_drain", "sun_track"] }
+      ] },
+    { "id": "grunt_r0_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 41 },
+        { "species": "foxglove", "level": 41 }
+      ] },
+    { "id": "grunt_r0_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "bramble_berry", "level": 41 },
+        { "species": "venus_flytrap", "level": 42 }
+      ] },
+    { "id": "grunt_r1_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "fireweed", "level": 42 },
+        { "species": "holly", "level": 42 }
+      ] },
+    { "id": "grunt_r1_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "sugar_maple", "level": 42 },
+        { "species": "lodgepole_pine", "level": 43 }
+      ] },
+    { "id": "grunt_r2_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "pitcher_plant", "level": 42 },
+        { "species": "bladderwort", "level": 43 }
+      ] },
+    { "id": "grunt_r2_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "prickly_pear", "level": 43 },
+        { "species": "sundew", "level": 43 }
+      ] },
+    { "id": "grunt_r2_3", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "red_mangrove", "level": 43 },
+        { "species": "ghost_pipe", "level": 43 }
+      ] },
+    { "id": "grunt_r3_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "saguaro", "level": 44 }
+      ] },
+    { "id": "grunt_r3_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "moth_orchid", "level": 43 },
+        { "species": "larch", "level": 44 }
+      ] },
+    { "id": "wren", "name": "WREN", "className": "ADMIN", "portrait": "wren", "ai": "smart", "music": "battle_rootstock",
+      "note": "Wren tuning from CH8.md §5: every level -2 (44/45/45/48 → 42/43/43/46). Explicit learned moves soften late-game damage while retaining orchid healing, fungal drain, maple sap and cedar defence. Mean: 75.5%; min: 38.0%.",
+      "items": [{ "item": "spring_water", "qty": 2 }],
+      "team": [
+        { "species": "moth_orchid", "level": 42, "moves": ["wind_scatter", "moonbeam", "false_nectar", "long_bloom"] },
+        { "species": "ghost_pipe", "level": 43, "moves": ["moonbeam", "root_siphon", "spore_cloud"] },
+        { "species": "sugar_maple", "level": 43, "moves": ["samara_spin", "sap_spout", "hoarfrost", "sugar_rush"] },
+        { "species": "red_cedar", "level": 46, "moves": ["leaf_edge", "pale_touch", "heartwood", "sap_seal"] }
+      ] },
+    { "id": "drifter_dune", "name": "DUNE", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "prickly_pear", "level": 43 },
+        { "species": "lithops_pair", "level": 42 }
+      ] },
+    { "id": "drifter_mesa", "name": "MESA", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "saguaro", "level": 44 }
+      ] },
+    { "id": "botanist_sage2", "name": "SAGE", "className": "GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "pitaya_cutting", "level": 43 },
+        { "species": "foxglove", "level": 43 }
+      ] },
+    { "id": "botanist_rue", "name": "RUE", "className": "GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "lithops_pair", "level": 43 },
+        { "species": "dandelion_clock", "level": 43 }
+      ] },
+    { "id": "climber_red", "name": "RED", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "snapdragon_sprout", "level": 44 },
+        { "species": "larch", "level": 45 }
+      ] },
+    { "id": "climber_ochre", "name": "OCHRE", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "dragon_sapling", "level": 45 }
+      ] },
+    { "id": "ranger_flint", "name": "FLINT", "className": "BIRDWATCHER", "portrait": "birdwatcher", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "dragon_fruit", "level": 45 },
+        { "species": "saguaro", "level": 45 }
+      ] },
+    { "id": "ranger_shale", "name": "SHALE", "className": "BIRDWATCHER", "portrait": "birdwatcher", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "lithops_bloom", "level": 46 }
+      ] },
+    { "id": "rival_5_oak", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 4900,
+      "note": "Rival 5: all levels unchanged. Explicit learned moves replace late-game coverage and healing on the clock/maple/cedar, and reuse Rival 4's starter moves without its collar. Mean win 81.3%, minimum 41.7% (balance.test.ts).",
+      "team": [
+        { "species": "blackberry", "level": 46 },
+        { "species": "dandelion_clock", "level": 46, "moves": ["wind_scatter", "sunbeam", "perfume"] },
+        { "species": "sugar_maple", "level": 47, "moves": ["samara_spin", "sap_spout", "sugar_rush", "hoarfrost"] },
+        { "species": "red_cedar", "level": 47, "moves": ["leaf_edge", "pale_touch", "sap_seal", "heartwood"] },
+        { "species": "great_oak", "level": 49, "moves": ["acorn_drop", "splinter", "vine_lash", "bark_skin"] }
+      ] },
+    { "id": "rival_5_chili", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 4900,
+      "note": "Rival 5: all levels unchanged. Explicit learned moves replace late-game coverage and healing on the clock/maple/cedar, and reuse Rival 4's starter moves without its collar. Mean win 81.3%, minimum 41.7% (balance.test.ts).",
+      "team": [
+        { "species": "blackberry", "level": 46 },
+        { "species": "dandelion_clock", "level": 46, "moves": ["wind_scatter", "sunbeam", "perfume"] },
+        { "species": "sugar_maple", "level": 47, "moves": ["samara_spin", "sap_spout", "sugar_rush", "hoarfrost"] },
+        { "species": "red_cedar", "level": 47, "moves": ["leaf_edge", "pale_touch", "sap_seal", "heartwood"] },
+        { "species": "red_chili", "level": 49, "moves": ["chili_burst", "smoulder", "seed_burst", "capsaicin"] }
+      ] },
+    { "id": "rival_5_lily", "name": "BRAM", "className": "RIVAL", "portrait": "bram", "ai": "smart", "music": "battle_trainer", "prize": 4900,
+      "note": "Rival 5: all levels unchanged. Explicit learned moves replace late-game coverage and healing on the clock/maple/cedar, and reuse Rival 4's starter moves without its collar. Mean win 81.3%, minimum 41.7% (balance.test.ts).",
+      "team": [
+        { "species": "blackberry", "level": 46 },
+        { "species": "dandelion_clock", "level": 46, "moves": ["wind_scatter", "sunbeam", "perfume"] },
+        { "species": "sugar_maple", "level": 47, "moves": ["samara_spin", "sap_spout", "sugar_rush", "hoarfrost"] },
+        { "species": "red_cedar", "level": 47, "moves": ["leaf_edge", "pale_touch", "sap_seal", "heartwood"] },
+        { "species": "giant_water_lily", "level": 49, "moves": ["undertow", "cold_mist", "pad_slap", "sap_drain"] }
+      ] },
+    { "id": "jr_ember", "name": "EMBER", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "snapdragon_sprout", "level": 47 },
+        { "species": "dragon_sapling", "level": 47 }
+      ] },
+    { "id": "jr_scale", "name": "SCALE", "className": "JR.GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "pitaya_cutting", "level": 47 },
+        { "species": "lithops_pair", "level": 48 }
+      ] },
+    { "id": "rook", "name": "ROOK", "className": "WARDEN", "portrait": "rook", "ai": "smart", "music": "battle_leader", "mark": "resin_mark",
+      "note": "Rook: levels -1/-2/-2/-2 (49/50/50/53 → 48/48/48/51). Explicit learned moves keep Dragon Snap, Night Bloom, Stone Window and Dragon Resin, while removing repeated healing and broad late-game coverage. Raising only snapdragon from 47 to 48 gives mean win 58.6%, minimum 30.7%; harder than Signe (62.8%) and Flora (61.2%) under balance.test.ts's milestone model.",
+      "items": [{ "item": "spring_water", "qty": 2 }],
+      "team": [
+        { "species": "snapdragon", "level": 48, "moves": ["dragon_snap", "red_resin", "perfume"] },
+        { "species": "dragon_fruit", "level": 48, "moves": ["night_bloom", "spine_volley", "nectar_lure"] },
+        { "species": "lithops_bloom", "level": 48, "moves": ["thorn_lash", "stone_window", "bristle"] },
+        { "species": "dragon_tree", "level": 51, "moves": ["dragon_resin", "sap_seal", "bark_skin"] }
+      ] },
+    { "id": "r12_crag", "name": "CRAG", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "lodgepole_pine", "level": 50 },
+        { "species": "lithops_bloom", "level": 51 }
+      ] },
+    { "id": "r12_gorge", "name": "GORGE", "className": "HIKER", "portrait": "hiker", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "saguaro", "level": 51 },
+        { "species": "dragon_tree", "level": 52 },
+        { "species": "prickly_pear", "level": 51 }
+      ] },
+    { "id": "r12_kite", "name": "KITE", "className": "BIRDWATCHER", "portrait": "birdwatcher", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "larch", "level": 51 },
+        { "species": "edelweiss", "level": 52 }
+      ] },
+    { "id": "r12_rook", "name": "ROOK", "className": "BIRDWATCHER", "portrait": "birdwatcher", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "red_cedar", "level": 52 },
+        { "species": "moss_campion", "level": 52 },
+        { "species": "snowdrop", "level": 53 }
+      ] },
+    { "id": "r12_sedge", "name": "SEDGE", "className": "GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "red_mangrove", "level": 52 },
+        { "species": "bladderwort", "level": 52 }
+      ] },
+    { "id": "r12_heath", "name": "HEATH", "className": "GARDENER", "portrait": "gardener", "ai": "basic", "music": "battle_trainer",
+      "team": [
+        { "species": "fireweed", "level": 53 },
+        { "species": "dragon_fruit", "level": 53 },
+        { "species": "ghost_pipe", "level": 52 }
+      ] },
+    { "id": "grunt_arb_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 51 },
+        { "species": "lodgepole_pine", "level": 51 }
+      ] },
+    { "id": "grunt_arb_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "venus_flytrap", "level": 51 },
+        { "species": "red_cedar", "level": 51 }
+      ] },
+    { "id": "grunt_arb_3", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 51 },
+        { "species": "lodgepole_pine", "level": 51 }
+      ] },
+    { "id": "grunt_g1_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 52 },
+        { "species": "lodgepole_pine", "level": 52 }
+      ] },
+    { "id": "grunt_g1_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "venus_flytrap", "level": 52 },
+        { "species": "red_cedar", "level": 52 }
+      ] },
+    { "id": "grunt_g2_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 53 },
+        { "species": "lodgepole_pine", "level": 53 }
+      ] },
+    { "id": "grunt_g2_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "venus_flytrap", "level": 53 },
+        { "species": "red_cedar", "level": 53 }
+      ] },
+    { "id": "grunt_g3_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 54 },
+        { "species": "lodgepole_pine", "level": 54 }
+      ] },
+    { "id": "grunt_g3_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "venus_flytrap", "level": 54 },
+        { "species": "red_cedar", "level": 54 }
+      ] },
+    { "id": "grunt_heart_1", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "stinging_nettle", "level": 54 },
+        { "species": "lodgepole_pine", "level": 54 }
+      ] },
+    { "id": "grunt_heart_2", "name": "GRUNT", "className": "ROOTSTOCK", "portrait": "grunt", "ai": "basic", "music": "battle_rootstock",
+      "team": [
+        { "species": "venus_flytrap", "level": 54 },
+        { "species": "red_cedar", "level": 54 }
+      ] },
+    { "id": "shears_2", "name": "SHEARS", "className": "ADMIN", "portrait": "shears", "ai": "smart", "music": "battle_rootstock",
+      "note": "Chapter 10 (CH10.md §5). Balance (two mixed parties, 300 seeded trials per starter, no items): Shears +2 throughout (76.1%); Calloway +1 throughout (75.2%); Wren unchanged levels with explicit learned moves (76.1%); Mercer +2 on his first five, +1 on the ace (56.8%, minimum 28.3%).",
+      "team": [
+        { "species": "bramble_berry", "level": 55 },
+        { "species": "holly", "level": 56 },
+        { "species": "stinging_nettle", "level": 57 },
+        { "species": "blackberry", "level": 58 }
+      ] },
+    { "id": "calloway_2", "name": "CALLOWAY", "className": "ADMIN", "portrait": "calloway", "ai": "smart", "music": "battle_rootstock",
+      "note": "Chapter 10 (CH10.md §5). Balance (two mixed parties, 300 seeded trials per starter, no items): Shears +2 throughout (76.1%); Calloway +1 throughout (75.2%); Wren unchanged levels with explicit learned moves (76.1%); Mercer +2 on his first five, +1 on the ace (56.8%, minimum 28.3%).",
+      "team": [
+        { "species": "red_mangrove", "level": 56, "grafted": true },
+        { "species": "lodgepole_pine", "level": 55 },
+        { "species": "ghost_pipe", "level": 55 },
+        { "species": "saguaro", "level": 57, "grafted": true }
+      ] },
+    { "id": "wren_2", "name": "WREN", "className": "ADMIN", "portrait": "wren", "ai": "smart", "music": "battle_rootstock",
+      "note": "Chapter 10 (CH10.md §5). Balance (two mixed parties, 300 seeded trials per starter, no items): Shears +2 throughout (76.1%); Calloway +1 throughout (75.2%); Wren unchanged levels with explicit learned moves (76.1%); Mercer +2 on his first five, +1 on the ace (56.8%, minimum 28.3%).",
+      "team": [
+        { "species": "moth_orchid", "level": 54, "moves": ["wind_scatter", "moonbeam", "false_nectar", "long_bloom"] },
+        { "species": "ghost_pipe", "level": 55, "moves": ["moonbeam", "root_siphon", "spore_cloud"] },
+        { "species": "red_cedar", "level": 56, "moves": ["leaf_edge", "pale_touch", "sap_seal", "heartwood"] },
+        { "species": "quaking_aspen", "level": 57, "moves": ["many_trunks", "pale_touch", "bark_skin", "sap_seal"] }
+      ] },
+    { "id": "mercer", "name": "MERCER", "className": "ROOTSTOCK", "portrait": "mercer", "ai": "smart", "music": "battle_mercer",
+      "note": "Chapter 10 (CH10.md §5). Balance (two mixed parties, 300 seeded trials per starter, no items): Shears +2 throughout (76.1%); Calloway +1 throughout (75.2%); Wren unchanged levels with explicit learned moves (76.1%); Mercer +2 on his first five, +1 on the ace (56.8%, minimum 28.3%).",
+      "items": [{ "item": "spring_water", "qty": 3 }],
+      "team": [
+        { "species": "apple_tree", "level": 58 },
+        { "species": "wild_rose", "level": 58 },
+        { "species": "sugar_maple", "level": 59 },
+        { "species": "red_cedar", "level": 59 },
+        { "species": "dragon_tree", "level": 60 },
+        { "species": "quaking_aspen", "level": 61 }
+      ] },
+    { "id": "belladonna", "name": "BELLADONNA", "className": "APOTHECARY", "portrait": "belladonna", "ai": "smart", "music": "battle_leader",
+      "items": [{ "item": "spring_water", "qty": 2 }],
+      "team": [
+        { "species": "stinging_nettle", "level": 61, "moves": ["pitfall", "hook_thorns", "sting_hairs", "allelopathy"] },
+        { "species": "stinging_nettle", "level": 62, "moves": ["pitfall", "thorn_lash", "spine_volley", "thorn_jab"] },
+        { "species": "oleander", "level": 56 },
+        { "species": "stinging_nettle", "level": 62, "moves": ["allelopathy", "thorn_lash", "root_snare", "spine_volley"] }
+      ] },
+    { "id": "mimi_osa", "name": "MIMI OSA", "className": "SLEEPER", "portrait": "mimi_osa", "ai": "smart", "music": "battle_leader",
+      "items": [{ "item": "spring_water", "qty": 2 }],
+      "team": [
+        { "species": "moonflower", "level": 58, "moves": ["sunbeam", "moonbeam", "pale_bloom", "spore_cloud"] },
+        { "species": "ghost_pipe", "level": 64, "moves": ["petal_storm", "perfume", "wither", "spore_cloud"] },
+        { "species": "moonflower", "level": 64, "moves": ["petal_storm", "pale_bloom", "pollen_puff", "wither"] },
+        { "species": "sensitive_plant", "level": 65, "moves": ["leaf_gale", "sunbeam", "sap_drain", "spore_cloud"] }
+      ] },
+    { "id": "titus_arum", "name": "TITUS ARUM", "className": "ROTTER", "portrait": "titus_arum", "ai": "smart", "music": "battle_leader",
+      "items": [{ "item": "spring_water", "qty": 2 }],
+      "team": [
+        { "species": "bladderwort", "level": 62, "moves": ["digest", "pitfall", "dew_drop", "pad_slap"] },
+        { "species": "pitcher_plant", "level": 64 },
+        { "species": "corpse_leaf", "level": 57 },
+        { "species": "titan_arum", "level": 65 }
+      ] },
+    { "id": "pyra", "name": "PYRA", "className": "KINDLER", "portrait": "pyra", "ai": "smart", "music": "battle_leader",
+      "items": [{ "item": "spring_water", "qty": 2 }],
+      "team": [
+        { "species": "red_chili", "level": 63, "moves": ["seed_burst", "petal_storm", "capsaicin", "leaf_edge"] },
+        { "species": "fireweed", "level": 61, "moves": ["unfurl", "pollen_puff", "wind_scatter", "ember_seed"] },
+        { "species": "flame_lily", "level": 62, "moves": ["petal_storm", "pollen_puff", "climbing_flame", "wildfire"] },
+        { "species": "lodgepole_pine", "level": 63, "moves": ["vine_lash", "sap_spout", "timber", "sap_seal"] }
+      ] },
+    { "id": "rowan", "name": "ROWAN VALE", "className": "KEEPER", "portrait": "rowan", "ai": "smart", "music": "battle_keeper",
+      "items": [{ "item": "spring_water", "qty": 3 }],
+      "team": [
+        { "species": "quaking_aspen", "level": 65, "moves": ["many_trunks", "root_tap", "sap_drain", "old_growth"] },
+        { "species": "red_cedar", "level": 63, "moves": ["vine_lash", "leaf_edge", "sap_seal", "timber"] },
+        { "species": "dragon_tree", "level": 65, "moves": ["old_growth", "vine_lash", "sap_seal", "leaf_gale"] },
+        { "species": "moss_campion", "level": 65, "moves": ["sunbeam", "vine_lash", "photosynthesise", "curl_up"] },
+        { "species": "sacred_lotus", "level": 66, "moves": ["perfume", "dew_drop", "petal_storm", "undertow"] },
+        { "species": "great_oak", "level": 65, "moves": ["acorn_drop", "photosynthesise", "leaf_edge", "root_snare"] }
+      ] }
+  ]
+}

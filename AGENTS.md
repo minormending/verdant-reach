@@ -57,6 +57,7 @@ leave `git status` clean (the generators are deterministic).
 | Engine, overworld, battle, menus | `src/engine`, `src/overworld`, `src/battle`, `src/screens`, `src/ui` |
 | Game data as JSON (format: **docs/DATA.md**): species and their Herbarium pages, one file per line | `src/data/species/<line>.json` (every Herbarium page holds one TRUE plant fact with its `source`) |
 | Moves and items | `src/data/moves.json`, `src/data/items.json` |
+| Trainer battle data (teams, levels, moves, bags, prizes; dialogue stays in `src/world/trainers.ts`) | `src/data/trainers.json` (docs/DATA.md § Trainers) |
 | Maps, story scripts, trainers | `src/world/` (`validate.ts` proves reachability, no soft-locks and text fit) |
 | Art runtime (resolves logical asset paths to bundles), the Art Lab | `src/art/` |
 | **All art, as swappable bundles** | `public/art/` (format: **docs/ART.md**) |

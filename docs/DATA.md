@@ -105,3 +105,62 @@ test checks).
 | `pocket` | `items`, `pods` or `key`. |
 | `price` | Whole number; 0 means it can't be bought or sold. |
 | `effect` | `heal` (`amount`), `heal_full`, `revive` (`fraction`), `cure_status` (optional `status`), `pod` (`catchMultiplier`), `restore_pp` (`amount`) or `none` (key items, growth items). |
+
+## Trainers: `src/data/trainers.json`
+
+Every trainer's battle data, in one ordered list (story order; the game's
+`TRAINERS` keeps this order). The dialogue (`intro`, `defeat`, `after`) stays
+in TypeScript, in the lines records of `src/world/trainers.ts`, joined by id.
+Edit it by hand or with the Trainer Editor (`trainereditor.html`, below).
+
+```json
+{
+  "format": "verdant.trainers/1",
+  "trainers": [
+    { "id": "hollis", "name": "HOLLIS", "className": "WARDEN", "portrait": "hollis", "ai": "smart", "music": "battle_leader", "prize": 1100, "mark": "bramble_mark",
+      "items": [{ "item": "water_flask", "qty": 2 }],
+      "team": [
+        { "species": "fern_fiddlehead", "level": 8, "moves": ["vine_lash", "curl_up", "sap_drain"] },
+        { "species": "bramble_berry", "level": 10, "moves": ["thorn_jab", "vine_lash", "burr_hitch", "sap_seal"] }
+      ] }
+  ]
+}
+```
+
+| Field | Rule |
+|---|---|
+| `id` | lower_snake_case, unique. It must have lines in `src/world/trainers.ts` under the same key, or (for a rival's starter variant, `rival_4_oak`) under its battle's key (`rival_4`). Every lines key must be used. Ids ending `_rematch` are reserved: the build derives them. |
+| `name` / `className` | 1–12 / 1–14 characters, upper case as in dialogue. |
+| `portrait` | One of `TRAINER_PORTRAITS` (src/contracts/ids.ts), not the player's backs. |
+| `ai` | `basic` or `smart` (always written out). |
+| `music` | `battle_trainer`, `battle_leader`, `battle_rootstock`, `battle_mercer` or `battle_keeper` (always written out). |
+| `prize` | **Only where it differs from the default rule**: an entry without `prize` pays the highest team level x 20 (`defaultPrize`), so changing levels keeps a route trainer's prize in step. Leaders, admins and BRAM state theirs. |
+| `mark` | Optional; one of `MARKS`, each awarded by at most one trainer (the Conservatory leaders). |
+| `items` | Optional bag: `{ item, qty }` with a known item, qty at least 1, each item once. |
+| `note` | Optional designer's note (balance rationale). The game ignores it; the editor shows it. |
+| `team` | 1–6 members: `species` (known), `level` (1–100), optional `moves` (1–4 unique known moves; omitted = the engine's default, the last four learned with at least two attacks, `movesAtLevel`), optional `grafted: true` (a graft collar: stats from five levels lower). |
+
+**Derived, not stored.** The Council rematches (`belladonna_rematch` and the
+rest) are built from the five seats at +8 levels by `councilRematches`
+(src/world/rematches.ts), with their own lines there. Route rematches are built
+per fight by `buildRematch`. BRAM's three starter variants per battle are
+stored as separate entries (`rival_2_oak`, `_chili`, `_lily`), since their
+teams differ; `STARTER_SPECIES` and `COUNTER` stay in `trainers.ts`.
+
+**How it loads:** `src/world/trainers.ts` imports the file (inlined at build
+time) and builds `TRAINERS` with `buildTrainers` (src/world/trainerFile.ts),
+which first runs `trainersFileErrors` against the game data and the lines. A
+mistake fails with the trainer and field, e.g.
+`trainers.json: trainers[0] schoolkid_milo: team[0]: unknown species triffid`.
+The file is kept in the canonical layout `formatTrainersFile` writes (one
+trainer per block, one member per line), and `trainerFile.test.ts` checks that,
+so an unchanged export from the editor is byte-identical.
+
+**What guards an edit:** the file checks above, then `npm test`: the world
+validator (text fit, references), the balance tests (leader win-rate bands)
+and the chapter tests that pin story teams.
+
+**The growth rule (a warning, not an error):** species stay at or past the
+level their previous stage grows at (a SUNFLOWER BUD no lower than the level a
+SEEDLING becomes one), unless the story says otherwise: a `grafted` member (BRAM's
+graft collar) is forced past its growth on purpose. The editor flags the rest.

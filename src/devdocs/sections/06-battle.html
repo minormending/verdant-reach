@@ -691,7 +691,9 @@ export function distributeExp(party: Quickened[], participants: Set&lt;string&gt
   <!-- ===================================================================== -->
   <h3 id="battle-trainers">Trainers, rivals and rematches</h3>
 
-  <p>Every trainer is a <code>TrainerDef</code> in <a data-src="src/world/trainers.ts">src/world/trainers.ts</a>
+  <p>Every trainer is a <code>TrainerDef</code> in the <code>TRAINERS</code> record of
+    <a data-src="src/world/trainers.ts">src/world/trainers.ts</a>, built from the battle data in
+    <a data-src="src/data/trainers.json">src/data/trainers.json</a> and the dialogue kept in TypeScript
     (the world section covers placement):</p>
   <pre><code class="lang-ts">export interface TrainerDef {
   id: TrainerId;
@@ -715,9 +717,9 @@ export function distributeExp(party: Quickened[], participants: Set&lt;string&gt
       the fixed trainer DVs 9/8/8/8, no sport, and the listed <code>moves</code> if given (else the level-appropriate
       set). A <code>grafted</code> member (one wearing a graft collar, like Bram's starter) keeps its level, moves and EXP value but uses the
       stats of a plant five levels lower.</li>
-    <li><strong>Prize and defaults.</strong> The <code>trainer()</code> helper sets <code>prize</code> to the team's
-      top level × 20, <code>ai</code> to basic and music to <code>battle_trainer</code> unless overridden. The prize is
-      paid in <code>trainerVictory</code>.</li>
+    <li><strong>Prize and defaults.</strong> Each JSON entry names its <code>ai</code> and <code>music</code>; an entry
+      without a <code>prize</code> gets the team's top level × 20 (<code>defaultPrize</code> in
+      <a data-src="src/world/trainerFile.ts">trainerFile.ts</a>). The prize is paid in <code>trainerVictory</code>.</li>
     <li><strong>After the win.</strong> The script layer (<code>trainerBattle</code> in
       <a data-src="src/overworld/script.ts">script.ts</a>) sets the flag <code>beat_&lt;trainerId&gt;</code> and awards
       the trainer's <code>mark</code> if no script awards it.</li>
