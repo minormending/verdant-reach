@@ -1,0 +1,622 @@
+<section id="testing" data-title="Testing" data-summary="The test pyramid: vitest by area, the balance simulator, environment digests, the world validator, the headless playthrough and release-check.">
+  <h2>Testing</h2>
+
+  <p>Verdant Reach has no QA team, so the tests stand in for one. They are
+  organised as a <dfn>test pyramid</dfn>: many small, fast tests at the bottom
+  that check one function at a time, a middle layer of checks that sweep the
+  whole game's data (every map, every boss, every art bundle), and at the top a
+  single slow test that plays the entire game from NEW GAME to the post-game in
+  a real browser. A separate gate, <code>release-check</code>, makes sure no
+  placeholder text or art reaches <code>main</code>.</p>
+
+  <pre class="mermaid">flowchart TB
+  E2E["Headless playthrough: 1 run, 217 beats (npm run e2e)"]
+  WIDE["Whole-game checks: world validator, environment digests, balance bands, art bundles"]
+  UNIT["Unit tests: about 1,670 vitest tests in 139 files, next to the code (npm test)"]
+  RC["release-check: no placeholders on main"]
+  E2E --- WIDE
+  WIDE --- UNIT
+  RC -.-|gate in CI| WIDE</pre>
+
+  <p>Why this shape? A unit test that fails names the broken function in a
+  second. The playthrough takes most of an hour and only tells you <em>where</em>
+  the game got stuck, so it is the last line of defence, not the first. If the
+  playthrough is the only test that catches a bug, a cheaper test is missing.</p>
+
+  <table>
+    <thead><tr><th>Command</th><th>What it runs</th><th>When to run it</th></tr></thead>
+    <tbody>
+      <tr><td><code>npm run typecheck</code></td><td>Strict <code>tsc --noEmit</code> over the whole repo</td><td>Every change</td></tr>
+      <tr><td><code>npm test</code></td><td><code>vitest run --testTimeout=20000</code>: every <code>*.test.ts</code> in <code>src/</code>, <code>e2e/</code> and <code>tools/</code></td><td>Every change</td></tr>
+      <tr><td><code>npm run release-check</code></td><td><a data-src="tools/release-check.mjs">tools/release-check.mjs</a></td><td>Before merging to <code>main</code></td></tr>
+      <tr><td><code>npm run build</code></td><td>Typecheck, then the Vite production bundle</td><td>Every change</td></tr>
+      <tr><td><code>npm run e2e</code></td><td><a data-src="e2e/run.mjs">e2e/run.mjs</a>: the full playthrough in headless Chromium</td><td>Story, map, battle or UI-flow changes; always before a release</td></tr>
+    </tbody>
+  </table>
+
+  <figure data-chart="content-counts"><figcaption>How much there is to test: species, moves, items, maps, trainers, scripts, and test files by area.</figcaption></figure>
+
+  <h3 id="testing-unit">Unit tests by area</h3>
+
+  <p>A <dfn>unit test</dfn> checks one piece of pure logic (a function with no
+  screen, no clock and no browser) against known inputs. Tests live next to the
+  code they test, as <code>foo.test.ts</code> beside <code>foo.ts</code>. There
+  is no <code>vitest.config.ts</code> at the root, so Vitest reads
+  <code>vite.config.ts</code> and uses its default pattern: any
+  <code>*.test.ts</code> anywhere in the repository (outside
+  <code>node_modules</code>) runs in <code>npm test</code>, including the
+  playthrough's own unit tests in <code>e2e/</code>.</p>
+
+  <table>
+    <thead><tr><th>Area</th><th>Test files</th><th>What they protect</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td>Data</td><td>13 in <code>src/data/</code></td><td>The JSON files load, every id is defined once, names fit, stat totals sit in bands, every move in a learnset exists, every Herbarium page has a fact and a source</td><td><a data-src="src/data/speciesFiles.test.ts">speciesFiles.test.ts</a>, <a data-src="src/data/dataFiles.test.ts">dataFiles.test.ts</a>, <a data-src="src/data/data.test.ts">data.test.ts</a>, <code>chapterN.test.ts</code></td></tr>
+      <tr><td>Battle logic</td><td>19 in <code>src/battle/</code></td><td>Damage, capture odds, EXP, the foe AI, growth, items, and the balance bands</td><td><a data-src="src/battle/logic/damage.test.ts">damage.test.ts</a>, <a data-src="src/battle/logic/capture.test.ts">capture.test.ts</a>, <a data-src="src/battle/logic/balance.test.ts">balance.test.ts</a></td></tr>
+      <tr><td>World validation</td><td>38 in <code>src/world/</code></td><td>The validator passes on the real world; each chapter's maps and scripts do what the plan says; environment passes changed nothing that matters</td><td><a data-src="src/world/world.test.ts">world.test.ts</a>, <a data-src="src/world/validate.test.ts">validate.test.ts</a>, <code>scripts/chN.test.ts</code>, <code>chN-environment.test.ts</code></td></tr>
+      <tr><td>Puzzles and field moves</td><td>Split between <code>src/world/</code> and <code>src/overworld/</code></td><td>Ice slides, rafting, boulder pits, root bridges, dark rooms, lever puzzles stay solvable</td><td><a data-src="src/world/puzzles.test.ts">puzzles.test.ts</a>, <a data-src="src/overworld/ice.test.ts">ice.test.ts</a>, <a data-src="src/world/uproot.test.ts">uproot.test.ts</a></td></tr>
+      <tr><td>Art bundles</td><td>3 in <code>src/art/</code></td><td>Every logical asset path resolves at the right size; <code>index.json</code> matches the folders; each tile key belongs to one tileset</td><td><a data-src="src/art/bundles.test.ts">bundles.test.ts</a></td></tr>
+      <tr><td>UI flows</td><td>27 in <code>src/overworld/</code>, 7 in <code>src/screens/</code>, 3 in <code>src/ui/</code></td><td>Multi-step flows (Nursery, trade, raft, growth items, the START menu, NEW GAME, credits) run to the end with scripted input</td><td><a data-src="src/overworld/nurseryFlow.test.ts">nurseryFlow.test.ts</a>, <a data-src="src/screens/flows/growth.test.ts">growth.test.ts</a>, <a data-src="src/ui/newgame.test.ts">newgame.test.ts</a></td></tr>
+      <tr><td>The playthrough's own parts</td><td>8 in <code>e2e/</code></td><td>The runner's exit codes, the battle driver, the detectors and the field-input helpers, without a browser</td><td><a data-src="e2e/detectors.test.ts">detectors.test.ts</a>, <a data-src="e2e/runner.test.ts">runner.test.ts</a>, <a data-src="e2e/field-input.test.ts">field-input.test.ts</a></td></tr>
+      <tr><td>Everything else</td><td>engine, save, audio, guide, Tile Lab, tools</td><td>Seeded randomness, save round trips, the guide's indexer, Tile Lab packing, the release gate</td><td><a data-src="src/save/save.test.ts">save.test.ts</a>, <a data-src="src/guide/indexer.test.ts">indexer.test.ts</a>, <a data-src="tools/release-check.test.ts">release-check.test.ts</a></td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">flowchart LR
+  subgraph real["Real game data, imported directly"]
+    DATA["DATA (src/data)"]
+    WORLD["WORLD (src/world)"]
+    ART["public/art on disk"]
+  end
+  DATA --> T1["data and balance tests"]
+  WORLD --> T2["validator and chapter tests"]
+  DATA --> T2
+  ART --> T3["bundle tests"]
+  FIX["Small fixtures and fakes"] --> T4["engine, script and flow tests"]</pre>
+
+  <p>Most tests import the <em>real</em> <code>DATA</code> and <code>WORLD</code>
+  rather than mocks. That makes them closer to integration tests: when someone
+  edits a map, the tests run against that edit. Tests that need a broken world on
+  purpose copy it first with <code>structuredClone(WORLD)</code> and then damage
+  the copy, as in <a data-src="src/world/validate.test.ts">validate.test.ts</a>:</p>
+
+  <pre><code class="lang-ts">it.each(["bramble_bush", "root_gap", "pit"] as TileKey[])("rejects conditional %s on Route 11", (tile) =&gt; {
+  const world = structuredClone(WORLD);
+  const map = world.maps.route_11;
+  map.tiles[28] = "AAAAAAAAAAAAAggAAAAAAAAAAAAA";
+  map.legend = { ...map.legend, g: "dirt" };
+  map.legendWhen = [{ when: [{ flag: "rival_5_done", is: true }], legend: { g: tile } }];
+  expect(validateWorld(world)).toContain(
+    `[route_11] legendWhen must not introduce field-move or pit tiles (${tile})`,
+  );
+});</code></pre>
+
+  <aside class="tip">When you add a new check, also add a test that proves it
+  <em>fires</em>: break a cloned world and expect the exact error. A check that
+  never fails is easy to break without noticing.</aside>
+
+  <details class="advanced"><summary>Advanced: running the overworld without a browser</summary>
+    <p>The UI-flow tests and <code>e2e/field-input.test.ts</code> run the real
+    overworld scene, modal screens and script interpreter in Node. They stub only
+    the browser globals the engine touches (<code>location</code>,
+    <code>addEventListener</code>, <code>KeyboardEvent</code>,
+    <code>document.getElementById</code>), use <code>vi.useFakeTimers()</code>,
+    and pass an assets object whose <code>image()</code> returns
+    <code>null</code>. Drawing and audio are skipped; everything else is the
+    shipping code. This is why the engine reads <code>location.search</code>
+    defensively and why scenes must not assume an image has loaded.</p>
+    <p>Because tests share module-level state (the <code>WORLD</code> object is a
+    singleton), a test must never mutate <code>WORLD</code> directly. Clone it.
+    Tests that reset modules between cases (<code>vi.resetModules()</code>) do so
+    because <code>e2e/playthrough.ts</code> keeps its report and hooks at module
+    level.</p>
+    <p>Test time is dominated by the balance simulations (thousands of seeded
+    battles) and the validator's floods. The 20-second per-test timeout in
+    <code>npm test</code> exists for them; if a new whole-game test needs more,
+    make it cheaper rather than raising the timeout.</p>
+  </details>
+
+  <h3 id="testing-balance">The balance simulator and its bands</h3>
+
+  <p>Difficulty is tested, not eyeballed. <a data-src="src/battle/logic/balance.test.ts">balance.test.ts</a>
+  plays each important battle hundreds of times with a party that a typical
+  player would have at that point in the story, and checks that the win rate
+  falls inside a <dfn>band</dfn>: a minimum and maximum agreed in the chapter
+  plan. If someone makes FLORA too easy or MERCER impossible, the test fails
+  before the change ships.</p>
+
+  <pre class="mermaid">flowchart TB
+  M["Milestone: trainer id, starter level, extra party members"] --> L{"For each starter: oak, chili, lily"}
+  L --> P["Build the party with createQuickened, seeded(99)"]
+  P --> F["Build the foe team at its real stats and moves"]
+  F --> B["Battle: greedy player vs the trainer's AI, up to 300 turns"]
+  B --> R{"Repeat n times (usually 300)"}
+  R --> W["Win rate = wins / n"]
+  W --> C["Compare with the band: floor per starter, mean min and max"]</pre>
+
+  <p>The simulated player uses a <code>greedy</code> policy: always the move with
+  the best expected damage (power x STAB x type x stat ratio x accuracy). It
+  never heals or switches on purpose, so the rates are <em>pessimistic</em>: a
+  real player does better. The Council runs use <a data-src="src/battle/logic/simulate.ts">simulateTrainerRun</a>,
+  which chains several fights and heals between rooms, as the bag allows in the
+  real game:</p>
+
+  <pre><code class="lang-ts">export function simulateTrainerRun(opts: {
+  data: GameData;
+  party: Quickened[];
+  trainers: TrainerDef[];
+  rng: Rng;
+  playerAction: (battle: BattleState) =&gt; Action;
+  // …
+}): { won: boolean; completed: number; turns: number } {
+  let completed = 0, turns = 0;
+  for (const trainer of opts.trainers) {
+    if (completed &gt; 0) healParty(opts.party, opts.data);
+    if (!canContinue(opts.party)) return { won: false, completed, turns };
+    // …
+  }
+  return { won: true, completed, turns };
+}</code></pre>
+
+  <table>
+    <thead><tr><th>Battle</th><th>Band (mean win rate)</th><th>Also required</th></tr></thead>
+    <tbody>
+      <tr><td>Early leaders and rivals (HOLLIS, SHEARS, rival 2, NELL, rival 3, rival 4)</td><td>no mean band</td><td>Every starter above 25%</td></tr>
+      <tr><td>FLORA (the early spike)</td><td>below 75%</td><td>Every starter above 25%</td></tr>
+      <tr><td>MORROW</td><td>above FLORA's mean, below 88%</td><td>Every starter above 25%</td></tr>
+      <tr><td>SAGUARO / REYES</td><td>72–90% / 65–75%</td><td>REYES harder than SAGUARO</td></tr>
+      <tr><td>CALLOWAY / SIGNE</td><td>70–82% / 62–72%</td><td>SIGNE harder than CALLOWAY</td></tr>
+      <tr><td>WREN</td><td>68–80%</td><td></td></tr>
+      <tr><td>ROOK / rival 5</td><td>58–70% / 70–85%</td><td>ROOK harder than rival 5, SIGNE and FLORA (the hardest leader)</td></tr>
+      <tr><td>Chapter 10 admins / MERCER</td><td>70–82% / 55–68%</td><td>MERCER harder than FLORA and ROOK</td></tr>
+      <tr><td>Council seats / ROWAN</td><td>60–75% / 50–62%</td><td>Every starter and party core above 25%</td></tr>
+      <tr><td>Whole healed Council run</td><td>no mean band</td><td>Above 8% for every starter and core</td></tr>
+      <tr><td>Post-game Keeper rematch</td><td>43–62%</td><td>Every rate above 25%</td></tr>
+      <tr><td>Chapter 4 route trainers and juniors</td><td>no mean band</td><td>Every starter above 60% ("comfortable")</td></tr>
+    </tbody>
+  </table>
+
+  <aside class="warn">If a band fails after your change, do not widen the band to
+  make it pass. Retune the trainer (levels, moves, items) or your change. A band
+  only moves with a decision recorded in the chapter plan, and the commit body
+  must say why.</aside>
+
+  <details class="advanced"><summary>Advanced: determinism and what shifts the rates</summary>
+    <p>Every rate is computed from <code>seeded(99)</code>, so the same code gives
+    the same numbers on every machine; the test logs them (<code>console.log</code>)
+    so you can compare before and after. The flip side: anything that changes the
+    <em>order or number</em> of random draws (a new accuracy roll, an AI that rolls
+    once more per turn, a new secondary effect) shifts every rate a little even if
+    the mechanic is balance-neutral. A rate that moves by a point or two is noise
+    of this kind; a rate that moves by ten is a real change.</p>
+    <p>The relational checks (ROOK below SIGNE and FLORA, MERCER below the earlier
+    spikes) encode the difficulty curve itself, so you cannot pass by moving every
+    leader together. The single-fight fixtures give neither side items
+    (<code>foeItems: {}</code>), because the sim player cannot use them either;
+    only the Council run allows bag healing between rooms.</p>
+    <p>The balance file is the slowest part of <code>npm test</code>. When adding a
+    milestone, prefer reusing an existing party core and <code>n = 200</code> to
+    <code>300</code>; fewer than about 120 battles gives rates too noisy for a
+    ten-point band.</p>
+  </details>
+
+  <h3 id="testing-environment">Environment digest tests</h3>
+
+  <p>Each late chapter had an <dfn>environment pass</dfn>: an art round that
+  replaced the stand-in tiles of finished maps with new scenery (cable runs in
+  the Relay, sandstone in the canyon, frost in the Seed Vault). Such a pass must
+  change how a map <em>looks</em> but never how it <em>plays</em>. The
+  <code>*-environment.test.ts</code> files in <code>src/world/</code>
+  (Chapters 6 to 11 and the post-game) enforce that.</p>
+
+  <p>They work by taking a <dfn>digest</dfn>: a projection of each map down to
+  the parts that affect gameplay, turned into a JSON string and hashed with
+  SHA-256. The expected hash was recorded from the stand-in maps before the pass.
+  If any gameplay field changes, the hash changes and the test fails.</p>
+
+  <pre class="mermaid">flowchart LR
+  MAP["WORLD.maps[id]"] --> G["gameplay(id): warps, triggers, NPCs, hidden items, doors, encounters, music, onEnter, healPoint, flag swaps, size"]
+  G --> J["JSON.stringify"]
+  J --> H["SHA-256"]
+  H --> Q{"equals the pinned digest?"}
+  Q -- yes --> OK["pass: only looks changed"]
+  Q -- no --> FAIL["fail: gameplay changed"]</pre>
+
+  <p>From <a data-src="src/world/ch8-environment.test.ts">ch8-environment.test.ts</a>:</p>
+
+  <pre><code class="lang-ts">// Warps, triggers, NPCs (positions, sprites, scripts, trainers, sight), hidden
+// items, door cells, encounter tables, music and the existing flag swaps.
+function gameplay(id: MapId): string {
+  const m = WORLD.maps[id];
+  const legendWhen = (m.legendWhen ?? []).filter((o) =&gt; !isBannerSwap(o.legend));
+  return JSON.stringify({
+    warps: m.warps, triggers: m.triggers, npcs: m.npcs, hidden: m.hidden ?? [],
+    // …
+    outdoor: m.outdoor, size: [m.tiles[0].length, m.tiles.length],
+  });
+}
+
+// Digests re-pinned after the lead's merge: the lobby and 2F/3F gained the
+// relay_seized musicWhen and the roof's MERCER uses his own sprite (both
+// intended); everything else is as frozen before the dressing pass.
+const GAMEPLAY: [MapId, string][] = [
+  // Re-pinned on fixes: the lobby WREN hides once she has left with MERCER (mercer_left).
+  ["glasshouse_relay", "287a90b64e69f9087b4c03ba985ba90b611df9ceb13bee36f6aca17dd77dc7b2"],
+  // …
+];</code></pre>
+
+  <p>Some files go further. <a data-src="src/world/postgame-environment.test.ts">postgame-environment.test.ts</a>
+  also freezes <em>what every cell does</em> in each flag state. It maps every
+  tile to a <dfn>role</dfn> (walkable or solid, slide, encounter, water, ledge,
+  field move, pit, exit mat, lamp, interact), so a cosmetic swap such as
+  <code>wall</code> to <code>vault_wall</code> keeps its role and passes, while
+  a new solid tile in a corridor fails. Others check one puzzle "cell for cell"
+  or prove every trainer still sees down an open lane.</p>
+
+  <p><strong>Re-pinning needs a reason.</strong> Sometimes a gameplay change is
+  intended (a bug fix moves an NPC). Then you update the digest, and you write a
+  comment above it saying what changed and why, as in the example above. A bare
+  new hash with no comment tells a reviewer nothing and hides accidental
+  changes made in the same commit.</p>
+
+  <details class="advanced"><summary>Advanced: debugging a digest failure</summary>
+    <p>A hash says <em>that</em> something changed, not <em>what</em>. To find it,
+    log <code>gameplay(id)</code> on your branch and on the commit before your
+    change (check that commit out in a separate worktree), and diff the two JSON
+    strings.</p>
+    <p>Watch for a subtle trap: <code>JSON.stringify</code> keeps the order in
+    which properties were written. Rewriting a warp as
+    <code>{ to, x, y, toX, toY }</code> instead of <code>{ x, y, to, toX, toY }</code>
+    changes the digest although the game behaves the same. Keep the existing
+    property order when you touch frozen maps.</p>
+    <p>Files that allow an intended cosmetic change exclude it explicitly rather
+    than re-pinning: Chapter 8 filters out the lobby's banner swap
+    (<code>isBannerSwap</code>), and the post-game file hashes METHUSELAH as its
+    potted-plant stand-in (<code>RESKIN</code>). Prefer that pattern when the
+    change really is cosmetic, because it keeps the rest of the digest strict.</p>
+  </details>
+
+  <h3 id="testing-validator">The world validator as a test</h3>
+
+  <p><a data-src="src/world/validate.ts">validate.ts</a> is a static checker for
+  the whole world: it never runs the game, it reads <code>WORLD</code> and returns
+  a list of human-readable error strings. One test in
+  <a data-src="src/world/world.test.ts">world.test.ts</a> turns it into a gate:</p>
+
+  <pre><code class="lang-ts">it("passes every structural check", () =&gt; {
+  expect(validateWorld(WORLD)).toEqual([]);
+});</code></pre>
+
+  <p>Because the result is a list of strings, a failure prints every problem at
+  once, each prefixed with where it is: <code>[route_4] warp lands on solid
+  glasshouse_city 6,13</code>. The same checker runs in the browser in the world
+  dev scene (<code>?dev=world</code>, <a data-src="src/world/dev.ts">src/world/dev.ts</a>),
+  which lists them and tints unreachable tiles red.</p>
+
+  <pre class="mermaid">flowchart TB
+  S["Post-game access gates"] --> E["Collect entry points: new game, warp arrivals, scripted warps"]
+  E --> GL["Glide landings: walkable, reachable, outdoors"]
+  GL --> PM["Per map: rows and legend, structures, warps and doors, signs, NPCs, encounters"]
+  PM --> RE["Reachability from every entry, scenery must not cut the map"]
+  RE --> SL["Soft-lock: every reachable tile can still reach a warp"]
+  SL --> PG["Progression gates: each key item obtainable before it is needed"]
+  PG --> SC["Scripts: text fits, ids exist, warps land on floor"]
+  SC --> TR["Trainers: species, items, marks, text fits"]</pre>
+
+  <table>
+    <thead><tr><th>Check family</th><th>Examples of errors</th></tr></thead>
+    <tbody>
+      <tr><td>Shape</td><td>row lengths differ; a legend character has no tile; bad music id</td></tr>
+      <tr><td>Warps and doors</td><td>warp lands on solid; a door has no way back; the exit does not land below the door; an interior warp is not on <code>mat_exit</code> or stairs</td></tr>
+      <tr><td>Actors</td><td>an NPC stands on solid ground, a warp or a door; an NPC "has nothing to say"; a missing script or trainer</td></tr>
+      <tr><td>Encounters</td><td>tall grass with no grass table; a table empty at night</td></tr>
+      <tr><td>Reachability</td><td>a map "has no way in"; a <dfn>soft-lock</dfn> (a tile you can reach but never leave)</td></tr>
+      <tr><td>Progression</td><td>a room that needs the PRUNING SHEARS, FIG ROOT, FOXFIRE JAR, LILY RAFT or SAXIFRAGE before that item can be had</td></tr>
+      <tr><td>Text</td><td>a word longer than 18 columns; a <code>say</code> longer than 3 pages</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code class="lang-ts">// soft-lock: from every reachable tile some warp must still be reachable,
+// both before the PRUNING SHEARS (brambles solid) and after (brambles cut).
+if (map.warps.length) {
+  for (const [gg, from, when] of [[g, flood(g, starts), "before PRUNE"], [gp, reach, "with PRUNE"]] as const) {
+    // …
+    const canExit = canReach(exits, map.warps);
+    for (const k of from) {
+      if (!canExit.has(k)) {
+        errs.push(`${where} soft-lock ${when}: no exit from ${k}`);
+        break;
+      }
+    }
+  }
+} else errs.push(`${where} has no warps`);</code></pre>
+
+  <details class="advanced"><summary>Advanced: the validator's movement model</summary>
+    <p>The validator has its own model of movement (<code>grid</code>,
+    <code>walkable</code>, <code>flood</code>, <code>canReach</code>): one-way
+    ledges, ice that slides to a stop, rafting on water, root bridges, boulder
+    pits. It must agree with the overworld's real rules in
+    <code>src/overworld/</code>. When you add a movement mechanic, update both and
+    add a test that compares them; <code>validate.test.ts</code> already checks that
+    the reverse search <code>canReach</code> agrees with forward <code>flood</code>
+    for every start and target on small grids.</p>
+    <p><code>canReach</code> is a single reverse flood from the exits, which made
+    the soft-lock check about 35 times faster than flooding from every tile. Any
+    rule that is not symmetric (ledges, ice) must be reversed correctly there.</p>
+    <p>Warnings (the optional second argument) are for content that is allowed to
+    be unfinished, such as a quest script not wired yet. They never fail the test.</p>
+  </details>
+
+  <h3 id="testing-e2e">The headless full playthrough</h3>
+
+  <p>The top of the pyramid is a robot that plays the whole game.
+  <code>npm run e2e</code> starts a private Vite dev server, opens the game in
+  headless Chromium through Playwright, and lets a script in
+  <a data-src="e2e/playthrough.ts">e2e/playthrough.ts</a> press real keys from
+  the title screen through Chapter 11, the credits and the post-game. It records
+  217 <dfn>beats</dfn>: named checkpoints such as "starter: oak" or "HOLLIS:
+  bramble mark", each with the new story flags, the map, the position and a
+  160x144 screenshot.</p>
+
+  <pre class="mermaid">flowchart LR
+  RUN["e2e/run.mjs (Node)"] --> VITE["Vite createServer, port 0, e2e/vite.config.ts (no HMR)"]
+  RUN --> PW["Playwright Chromium, headless"]
+  PW --> URL["URL: ?e2e=full and timer, speed, seed, time=day"]
+  URL --> MAIN["src/main.ts (dev only) imports e2e/playthrough.ts"]
+  MAIN --> AUTO["autorun: clear save, run the full suite"]
+  AUTO --> REP["window.__e2e.report"]
+  RUN -- "polls every second" --> REP
+  RUN --> FILE["e2e/last-report.json"]</pre>
+
+  <p>The playthrough only exists in development builds: <code>src/main.ts</code>
+  imports it behind <code>import.meta.env.DEV</code>, so production never ships
+  it. It drives the game through a dev-only driver (<code>window.__t</code>, from
+  <a data-src="src/overworld/devDriver.ts">devDriver.ts</a>) and the scene stack
+  (<code>window.__vr</code>).</p>
+
+  <h4 id="testing-e2e-flags">Flags: seed, speed and time</h4>
+
+  <table>
+    <thead><tr><th>Runner flag</th><th>Default</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td><code>--speed N</code></td><td>8</td><td>Game ticks per frame, 1–16 (<code>?speed=N</code>, ignored in production)</td></tr>
+      <tr><td><code>--seed N</code></td><td>1</td><td>RNG seed, 0–4294967295 (<code>?seed=N</code>); printed and stored in the report</td></tr>
+      <tr><td><code>--headed</code></td><td>off</td><td>Show the browser window, to watch it play</td></tr>
+      <tr><td><code>--allow-placeholders</code></td><td>off</td><td>Adds <code>&amp;allowTodo</code>: tolerate dialogue that starts with <code>TODO(text):</code> (feature branches only)</td></tr>
+      <tr><td><code>--timeout-min N</code></td><td>max(75, 360 / speed)</td><td>Wall-clock limit for the whole run</td></tr>
+      <tr><td><code>--report PATH</code></td><td><code>e2e/last-report.json</code></td><td>Write the report elsewhere (for parallel runs)</td></tr>
+    </tbody>
+  </table>
+
+  <p>Time of day is not a flag: the runner always passes <code>time=day</code>,
+  so encounters and tint are the same on every run. The one beat that needs night
+  (METHUSELAH on the ridge) wraps itself in <code>atNight()</code>, which swaps
+  the game's clock function and restores it afterwards. URL-only knobs exist for
+  manual runs: <code>&amp;boost=&lt;level&gt;</code> (the helper's level, default
+  48, <code>0</code> plays with only the starter), <code>&amp;starter=oak|chili|lily</code>,
+  and <code>?e2e=check:&lt;name&gt;</code> for one targeted check from the
+  <code>CHECKS</code> table instead of the full run.</p>
+
+  <pre><code class="lang-bash">npm run e2e                                   # what CI runs: speed 8, seed 1, headless
+npm run e2e -- --seed 42                      # another seed
+npm run e2e -- --speed 6 --seed 1 --headed    # watch it play</code></pre>
+
+  <aside class="note"><strong>Seeds.</strong> With a seed, battle rolls and the
+  driver's fixtures (the helper's IVs) come from independent named streams
+  (<code>randomStream(seed, "e2e:fixtures")</code>), so how long the robot waited
+  for a wandering NPC cannot change a damage roll. Same seed, same battles.</aside>
+
+  <h4 id="testing-e2e-beats">Beats</h4>
+
+  <p>The story is written as a chain of guarded steps. Each step is skipped if its
+  flag is already set, so a run can also resume from a dev jump-in
+  (<code>?dev=world&amp;play=1&amp;flags=…</code>):</p>
+
+  <pre><code class="lang-ts">if (!flag("got_seed")) {
+  await nav("fennimore_house");
+  await talkTo("fennimore");
+  await expectFlag("fennimore gives the seed", "got_seed");
+}</code></pre>
+
+  <p><code>nav</code> finds a route through warps and walks it; <code>talkTo</code>
+  walks next to an NPC, faces it and presses A; <code>advance</code> mashes through
+  dialogue, menus and battles until the overworld is idle again;
+  <code>expectFlag</code> records a beat that passes only if the flag is set.
+  Here is one beat end to end:</p>
+
+  <pre class="mermaid">sequenceDiagram
+  participant P as playthrough.ts
+  participant D as driver (window.__t)
+  participant G as game
+  participant R as report
+  participant N as run.mjs
+  P->>P: nav fennimore_house, BFS over warps
+  P->>D: step up, down, left, right
+  D->>G: keydown and keyup events
+  G-->>P: map changes to fennimore_house
+  P->>D: talkTo fennimore, face and press A
+  G->>R: ui.say hooked, line logged and text checked
+  loop advance until idle
+    P->>D: press A
+    P->>P: watchdog samples the state signature
+  end
+  G->>G: script sets got_seed
+  P->>R: beat fennimore gives the seed, ok, new flags, screenshot
+  N->>R: page.evaluate reads window.__e2e.report
+  N-->>N: prints OK and the beat name</pre>
+
+  <h4 id="testing-e2e-battle">The battle driver</h4>
+
+  <p>Battles are fought by the same menus a player uses. When the battle opens its
+  FIGHT / BAG / QUICKENED / RUN menu, a hook decides the target and
+  <code>advance</code> presses arrows until the cursor is there. The choices come
+  from <a data-src="e2e/battle-driver.ts">e2e/battle-driver.ts</a>:</p>
+
+  <ul>
+    <li><code>strongestMove</code> scores every legal move with the game's own
+      <code>calcDamage</code> (type chart, STAB, weather, stages) at a fixed roll,
+      so it never consumes a random number and cannot change the battle's
+      outcome by thinking.</li>
+    <li><code>healingItem</code> uses medicine only when HP is below a third, and
+      only medicine the story already gave: the driver never creates items.</li>
+  </ul>
+
+  <p>To keep the story moving, the run adds an over-levelled helper (level 48 by
+  default, flagged <code>e2e</code>) after the starter and heals it between beats.
+  The playthrough tests the story flow, not the difficulty; the
+  <a href="#testing-balance">balance bands</a> test difficulty.</p>
+
+  <h4 id="testing-e2e-detectors">Detectors</h4>
+
+  <p>A playthrough that silently waits forever is useless, so
+  <a data-src="e2e/detectors.ts">e2e/detectors.ts</a> and the instrumentation in
+  <code>playthrough.ts</code> turn trouble into <dfn>issues</dfn> in the report.
+  Any issue fails the run, even if every beat passed.</p>
+
+  <table>
+    <thead><tr><th>Detector</th><th>Fires when</th><th>Issue kind</th></tr></thead>
+    <tbody>
+      <tr><td><code>ProgressWatchdog</code> (the soft-lock detector)</td><td>The state signature (scenes, dialogue progress, battle HP and PP, map, position, flags, finished operations) has not changed for 12 s of wall-clock time</td><td><code>soft-lock?</code></td></tr>
+      <tr><td><code>AdvanceBudget</code></td><td>Too many presses: the caller's ordinary limit, or 3000 in one battle</td><td><code>advance-timeout</code></td></tr>
+      <tr><td><code>GameplayTasks</code></td><td>A main-thread task over 120 ms during play (boot and asset loads excluded)</td><td><code>long-task</code></td></tr>
+      <tr><td><code>checkText</code></td><td>A word over 18 columns, a placeholder word (TODO, lorem, undefined, NaN…), an unreplaced token, a lower-case speaker</td><td><code>text-overflow</code>, <code>text-placeholder</code>, <code>text-token</code>, <code>text-style</code></td></tr>
+      <tr><td>Console and error hooks</td><td><code>console.error</code> / <code>console.warn</code>, a missing asset, an uncaught error or rejection</td><td><code>console.error</code>, <code>missing-asset</code>, <code>uncaught</code>, <code>rejection</code></td></tr>
+      <tr><td>Story helpers</td><td>No route, an unreachable trigger, a missing NPC, an unsolved puzzle</td><td><code>nav</code>, <code>trigger</code>, <code>missing-npc</code>, <code>talk-failed</code>, <code>puzzle</code>…</td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Watching
+  Watching --> Watching: signature changed, reset the timer
+  Watching --> Reported: unchanged for 12 s
+  Reported --> Watching: signature changes again
+  Reported --> [*]: advance returns false, issue soft-lock?</pre>
+
+  <pre><code class="lang-ts">export class ProgressWatchdog {
+  private signature: string | undefined;
+  private changedAt = 0;
+  private reported = false;
+
+  sample(signature: string, wallTime: number): boolean {
+    if (signature !== this.signature) {
+      this.signature = signature;
+      this.changedAt = wallTime;
+      this.reported = false;
+    }
+    if (!this.reported &amp;&amp; wallTime - this.changedAt &gt;= NO_PROGRESS_MS) {
+      this.reported = true;
+      return true;
+    }
+    return false;
+  }
+}</code></pre>
+
+  <p>The signature deliberately leaves out things that tick even when the game is
+  stuck (blinking cursors, idle animation clocks). It includes a counter that goes
+  up each time a tracked operation (a <code>say</code>, a menu, a jingle, a cry)
+  starts or finishes, so a long jingle is progress but a jingle that never ends is
+  not.</p>
+
+  <h4 id="testing-e2e-report">The report</h4>
+
+  <p>The runner writes <code>e2e/last-report.json</code> (git-ignored) on success,
+  failure, timeout and Ctrl-C alike. It holds <code>beats</code> (name, ok, time,
+  map, position, new flags, note, screenshot as a data URL), <code>issues</code>,
+  every line of dialogue in <code>texts</code>, every <code>battles</code> request
+  and outcome, frame-time stats, and <code>runner</code> (speed, seed, elapsed
+  time, runner issues). The exit code is 0 only when all of this holds:</p>
+
+  <pre><code class="lang-js">const failures = report.beats.filter((b) =&gt; !b.ok).length;
+if (report.beats.length !== 217) runnerIssues.push(`Expected all 217 beats; received ${report.beats.length}`);
+process.exitCode = failures === 0 &amp;&amp; report.issues.length === 0 &amp;&amp; runnerIssues.length === 0 ? 0 : 1;</code></pre>
+
+  <aside class="tip">In a headed run, open the browser console:
+  <code>__e2e.summary()</code> prints the beats and issues without images, and
+  <code>__e2e.sheet()</code> overlays a contact sheet of the beat screenshots
+  (click to close).</aside>
+
+  <details class="advanced"><summary>Advanced: flakiness and how to triage it</summary>
+    <p>The playthrough is deterministic in its <em>choices</em> but not in its
+    <em>timing</em>. Its waits and its 12-second watchdog are wall-clock time,
+    because Web Audio (cries and jingles) always plays on the real clock whatever
+    <code>?speed</code> says. Two known causes make a correct build fail:</p>
+    <ul>
+      <li><strong>Machine load.</strong> On a busy machine, a long boss fight or a
+        map load can starve the page long enough for the watchdog or the overall
+        timeout to fire. A stall seen once at a late leader was load; the rerun
+        passed.</li>
+      <li><strong>A stalled audio clock hangs jingles.</strong> <code>playJingle</code>
+        and <code>playCry</code> resolve only when the audio engine's scheduler
+        sees <code>AudioContext.currentTime</code> pass the end of the song. If the
+        headless browser's audio context reports <code>running</code> but its clock
+        never advances (seen on a Mac whose audio service was stuck), the promise
+        never resolves, the heal or "caught" jingle never ends, and the watchdog
+        reports <code>soft-lock?</code> right after it. The detector test pins this
+        on purpose: "An audio promise that never resolves still reports a lock."
+        Restarting the machine's audio service fixes it; until then, rely on CI.</li>
+    </ul>
+    <pre class="mermaid">flowchart TB
+  F["e2e failed"] --> S{"Same seed, rerun: fails at the same beat?"}
+  S -- no --> LOAD["Timing: check machine load, rerun on CI"]
+  S -- yes --> J{"Stalled right after a jingle or cry, locally only?"}
+  J -- yes --> AUD["Audio clock stuck: trust CI, restart the audio service"]
+  J -- no --> BUG["Real bug: read the beat note, issues and the last texts"]</pre>
+    <p>The beat count 217 is written in several places: <code>e2e/run.mjs</code>,
+    <code>e2e/runner.test.ts</code>, the workflow step name, <code>AGENTS.md</code>
+    and the README. Adding or removing a beat means updating all of them in the same
+    commit, or the runner reports "Expected all 217 beats".</p>
+    <p>Before adding a <code>sleep</code> to make a beat pass, find what the beat
+    is waiting <em>for</em> and wait on that state (<code>waitFor</code>,
+    <code>advance(…, done)</code>). Fixed sleeps are the main source of
+    load-sensitivity.</p>
+  </details>
+
+  <h3 id="testing-release">release-check</h3>
+
+  <p>Unfinished work is allowed on feature branches: dialogue written as
+  <code>TODO(text): …</code> stand-ins, or art drawn by the placeholder tool.
+  <a data-src="tools/release-check.mjs">tools/release-check.mjs</a> makes sure
+  none of it reaches <code>main</code>. It has no dependencies and runs from the
+  repository root.</p>
+
+  <pre class="mermaid">flowchart LR
+  A["Walk public/art (sorted)"] --> A1{"*.json: notes starts with PLACEHOLDER, or tool is tools/art/placeholder.py?"}
+  B["Walk src/ (sorted)"] --> B1{"any line contains TODO(text) or allowTodo?"}
+  A1 -- yes --> OFF["offenders"]
+  B1 -- yes --> OFF
+  OFF --> X{"any offenders?"}
+  X -- yes --> FAIL["release-check: FAILED, exit 1"]
+  X -- no --> OK["release-check: OK"]</pre>
+
+  <pre><code class="lang-js">walk("src", (path) =&gt; {
+  try {
+    read(path).split("\n").forEach((line, index) =&gt; {
+      for (const marker of ["TODO(text)", "allowTodo"]) {
+        let column = line.indexOf(marker);
+        while (column !== -1) {
+          offenders.push(`${path}:${index + 1}:${column + 1}: contains ${marker}`);
+          column = line.indexOf(marker, column + marker.length);
+        }
+      }
+    });
+  } catch (error) {
+    offenders.push(`${path}: cannot check source: ${error.message}`);
+  }
+});</code></pre>
+
+  <p>Only <code>src/</code> and <code>public/art/</code> are scanned, so the e2e
+  code in <code>e2e/</code> may mention <code>allowTodo</code>. Each offender is
+  printed with file, line and column. In CI it runs after the tests and before the
+  build (see <a href="#ci-pipeline">the pipeline</a>).</p>
+
+  <details class="advanced"><summary>Advanced: why the word allowTodo is banned in src/</summary>
+    <p>The e2e tolerance for placeholder dialogue is switched on by the URL
+    parameter <code>allowTodo</code>. Banning the <em>word</em> in <code>src/</code>
+    means production code can never grow a code path that reads it, so the
+    tolerance cannot leak out of the test harness. The scan also fails on anything
+    it cannot read (a symlink, unparsable JSON), because a check that skips what it
+    does not understand is a check that can be bypassed.</p>
+    <p><a data-src="tools/release-check.test.ts">release-check.test.ts</a> spawns
+    the real script with <code>node</code> in a temporary directory, so the test
+    covers the CLI's exit code and output, not just its helpers.</p>
+  </details>
+</section>

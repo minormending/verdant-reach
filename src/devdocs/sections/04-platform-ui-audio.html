@@ -1,0 +1,578 @@
+<section id="platform" data-title="Platform, UI and audio" data-summary="The page shell (scaling, touch, fullscreen, pause, errors, loading), the bitmap UI (font, text box, menus, naming, title, new game, options) and the chip synth.">
+  <h2>Platform, UI and audio</h2>
+  <p>
+    Three layers sit between the engine and the player. <code>src/platform</code> is the page around the
+    canvas: how big it is, the touch controls, fullscreen, pausing, the error card and the loading screen.
+    <code>src/ui</code> is everything drawn with the bitmap font: the text box, menus, the naming screen, the
+    title and the NEW GAME intro. <code>src/audio</code> is a small chip synthesiser that plays every note of
+    music and every sound effect live.
+  </p>
+
+  <h3 id="platform-shell">The page shell</h3>
+  <p>
+    <a data-src="src/platform/shell.ts">createShell(canvas, onInteract)</a> builds the DOM around the canvas:
+    a <code>#vr-bezel</code> frame, a hidden <code>#vr-safe</code> probe whose padding is
+    <code>env(safe-area-inset-*)</code> (so the layout can read notch insets), the fullscreen button
+    <code>#vr-fs</code>, and the touch controls. Every resize, orientation change, fullscreen change and
+    <code>devicePixelRatio</code> change re-runs one <code>apply()</code> that computes a layout and positions
+    everything. Only <code>main.ts</code> imports the platform layer, through
+    <a data-src="src/platform/index.ts">src/platform/index.ts</a>.
+  </p>
+  <pre class="mermaid">flowchart LR
+  ev["resize, orientationchange, fullscreenchange, DPR change, touch mode change"] --> apply["apply()"]
+  apply --> safe["read safe-area insets from #vr-safe"]
+  safe --> layout["computeLayout: vw, vh, dpr, touch, safe"]
+  layout --> canvas["canvas left/top/width/height"]
+  layout --> bezel["#vr-bezel (or hidden)"]
+  layout --> touch["touch.place() + setVisible()"]
+  layout --> fs["#vr-fs position"]
+  layout --> dataset["html data-layout: desktop, portrait or landscape"]</pre>
+  <p>
+    <strong>Fullscreen</strong> toggles from the button or the F key (not with a modifier, not on auto-repeat),
+    using the standard API with <code>webkit</code> fallbacks and <code>navigationUI: "hide"</code>. The
+    button is hidden where fullscreen isn't supported, and a denied request is swallowed.
+  </p>
+  <p>
+    <code>platformFlags()</code> decides two things from the URL: the shell is off for the
+    <code>?dev=world</code> overview (a plain document), and pause-on-blur is off under <code>?timer</code>,
+    <code>?nopause</code> and <code>?e2e</code>.
+  </p>
+
+  <h3 id="platform-layout">Layout and integer scaling</h3>
+  <p>
+    The 160×144 canvas is scaled by a whole number so each game pixel is a perfect square. The subtle part is
+    <em>which</em> pixels: the scale is counted in <strong>device pixels</strong>, not CSS pixels. At a
+    <code>devicePixelRatio</code> of 1.25, a CSS scale of 3 would be 3.75 device pixels per game pixel, and
+    rows would alternate between 3 and 4 pixels tall. <a data-src="src/platform/layout.ts">layout.ts</a> is
+    pure maths (no DOM), so it is unit-tested:
+  </p>
+  <pre><code class="lang-ts">/** Largest integer device-pixel scale that fits the area (at least 1). */
+export function integerScale(availW: number, availH: number, dpr: number): number {
+  const s = Math.floor(Math.min((availW * dpr) / GB_W, (availH * dpr) / GB_H) + 1e-6);
+  return Math.max(1, s);
+}
+
+/** Snap a CSS coordinate to the device-pixel grid. */
+export const snap = (v: number, dpr: number) =&gt; Math.round(v * dpr) / dpr;
+
+/** Centre a scaled screen inside an area, snapped to device pixels. */
+export function placeScreen(area: Rect, scale: number, dpr: number): Rect {
+  const w = (GB_W * scale) / dpr;
+  const h = (GB_H * scale) / dpr;
+  return { x: snap(area.x + (area.w - w) / 2, dpr), y: snap(area.y + (area.h - h) / 2, dpr), w, h };
+}</code></pre>
+  <pre class="mermaid">flowchart TB
+  start["computeLayout(input)"] --> t{"touch controls shown?"}
+  t -->|no| desk["desktop: 8px margin, centred, bezel = clamp(slack - 6, 0, 22), shown if at least 6"]
+  t -->|yes| o{"taller than wide?"}
+  o -->|portrait| por["controls get the lower part: clamp(38% of vh, 230, 460) px, screen top-aligned above, shrink control art until it fits"]
+  o -->|landscape| lan["D-pad left column, A/B right column, try control sizes and keep the one giving the biggest screen scale"]
+  por --> fsr["fullscreen button rect"]
+  lan --> fsr
+  desk --> fsr</pre>
+  <details class="advanced">
+    <summary>Advanced: layout invariants and a duplicate resize path</summary>
+    <ul>
+      <li><strong>Controls never cover the screen.</strong> <a data-src="src/platform/layout.test.ts">layout.test.ts</a>
+        uses <code>overlaps()</code> to check this across viewport sizes; run it after any change to the
+        constants.</li>
+      <li><strong>The <code>1e-6</code> epsilon</strong> stops floating-point error (for example
+        <code>480 * 1.5 / 160</code>) from dropping a whole scale step.</li>
+      <li><strong>Landscape on tablets</strong> (short side at least 600px) keeps the control unit at least 4,
+        so buttons never shrink below thumb size to win one screen scale step.</li>
+      <li><strong>Two resize handlers.</strong> <code>createCanvas</code> in <code>engine/core.ts</code> also
+        listens to <code>resize</code> and sets a CSS-pixel integer scale. With the shell on, the shell's
+        handler is registered later and overrides it on every resize; with the shell off (the world overview),
+        the engine's simpler fit is what you get. If you change one, check the other.</li>
+      <li><strong>DPR watching</strong> uses a <code>matchMedia("(resolution: …dppx)")</code> query that
+        re-arms itself after each change, because there is no <code>devicepixelratiochange</code> event
+        (moving a window between monitors, or browser zoom).</li>
+    </ul>
+  </details>
+
+  <h3 id="platform-touch">Touch controls</h3>
+  <p>
+    On touch devices, <a data-src="src/platform/touch.ts">touch.ts</a> draws a D-pad, A and B, and START and
+    SELECT pills as small pixel-art canvases. Each control synthesises the same <code>KeyboardEvent</code>s the
+    keyboard does, so the engine sees a key press and cannot tell a tap from a key:
+  </p>
+  <pre><code class="lang-ts">export const TOUCH_KEYS = {
+  up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight",
+  a: "KeyZ", b: "KeyX", start: "Enter", select: "ShiftLeft",
+} as const;
+
+export function sendKey(code: string, type: "keydown" | "keyup") {
+  dispatchEvent(new KeyboardEvent(type, { code, bubbles: true, cancelable: true }));
+}</code></pre>
+  <pre class="mermaid">sequenceDiagram
+  participant F as finger
+  participant D as D-pad element
+  participant W as window
+  participant I as engine input
+  F->>D: pointerdown (captured)
+  D->>D: onInteract() (audio unlock), dpadDirection()
+  D->>W: keydown ArrowLeft (synthetic), vibrate 6 ms
+  W->>I: KEYMAP: left held, pressed this step
+  F->>D: pointermove into the up arm
+  D->>W: keyup ArrowLeft, keydown ArrowUp
+  F->>D: pointerup
+  D->>W: keyup ArrowUp</pre>
+  <ul>
+    <li><strong>The D-pad takes one pointer</strong> and lets the thumb slide between directions. The direction
+      is the dominant axis from the pad's centre, with a dead zone of 12% of its size.</li>
+    <li><strong>Buttons count pointers</strong>, so two fingers on A send one keydown and one keyup.</li>
+    <li><strong>When the pad shows:</strong> <code>isTouchDevice()</code> (<code>?touch=1|0</code> wins, else
+      a coarse pointer, or touch points with no hover). A first <code>touchstart</code> on a hybrid laptop
+      brings it up; a <em>trusted</em> key press from a real keyboard hides it until the next tap.</li>
+  </ul>
+  <details class="advanced">
+    <summary>Advanced: synthetic events and stuck keys</summary>
+    <ul>
+      <li><strong>Synthetic events are untrusted</strong> (<code>isTrusted === false</code>). That is how the
+        shell tells a real keyboard from the touch pad, and also why a tap cannot unlock audio through the key
+        path: the controls call <code>onInteract()</code> (the audio unlock) on <code>pointerdown</code>, and
+        <code>main.ts</code> calls it again on window <code>pointerup</code>/<code>touchend</code>, which is when
+        mobile browsers actually grant permission.</li>
+      <li><strong>Hiding releases everything.</strong> <code>setVisible(false)</code> runs each control's release
+        function (sending keyups), so switching to a keyboard mid-press can't leave a direction held.
+        <code>releaseAll()</code> exists for the same purpose but nothing outside <code>touch.ts</code> calls it
+        today; on window blur the engine clears its own key set instead.</li>
+      <li><strong>Pointer capture</strong> keeps <code>pointermove</code>/<code>pointerup</code> coming to the
+        control even when the finger leaves it; <code>pointercancel</code> is handled like
+        <code>pointerup</code>.</li>
+      <li><strong>Gestures are suppressed:</strong> controls set <code>touch-action: none</code>,
+        <code>contextmenu</code> is prevented, and the page disables selection and the tap highlight in
+        <code>index.html</code>.</li>
+    </ul>
+  </details>
+
+  <h3 id="platform-pause">Pause on focus loss</h3>
+  <p>
+    When the window blurs or the tab hides, <a data-src="src/platform/pause.ts">createPause</a> pushes a
+    transparent PAUSED scene. Because the loop only updates the top scene, everything underneath stops; audio is
+    suspended (<code>setAudioSuspended</code>) and play time stops accruing. Any button, or a tap on the
+    canvas, resumes.
+  </p>
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Running
+  Running --> Paused: blur or visibilitychange hidden (if booted and no error card)
+  state Paused {
+    [*] --> Disarmed
+    Disarmed --> Armed: all buttons released and more than 6 frames
+    Armed --> [*]: any button pressed
+  }
+  Paused --> Running: resume()
+  Paused --> Running: pointerdown on canvas</pre>
+  <details class="advanced">
+    <summary>Advanced: why "armed", and removing a scene that isn't on top</summary>
+    <ul>
+      <li><strong>The resume press must not act in the game.</strong> The overlay waits until every button is
+        released (and 6 frames have passed) before it listens, and the press that resumes is consumed by the
+        overlay's own update, so it can't also confirm a menu underneath.</li>
+      <li><strong>Something may push above the overlay</strong> (an async flow finishing while paused).
+        <code>resume()</code> therefore splices its scene out of <code>scenes.all()</code> wherever it is,
+        and falls back to <code>pop()</code> only if it is on top of a stack without <code>all()</code>.</li>
+      <li><strong>Disabled for automation</strong>: hidden test panes (<code>?timer</code>),
+        <code>?nopause</code> and e2e runs must never pause themselves.</li>
+    </ul>
+  </details>
+
+  <h3 id="platform-errors">The error screen</h3>
+  <p>
+    <a data-src="src/platform/errors.ts">installErrorScreen</a> logs every uncaught error and unhandled
+    rejection, but only shows the "Something wilted… Let's replant it." card when the game has actually
+    stopped. A glitch in a timer shouldn't end a session that could carry on.
+  </p>
+  <pre class="mermaid">flowchart TB
+  err["window error or unhandledrejection"] --> benign{"browser noise? (ResizeObserver loop, Script error, AbortError, interrupted play())"}
+  benign -->|yes| ignore["ignore"]
+  benign -->|no| log["console.error"] --> wait["remember ticks, wait 600 ms"]
+  wait --> hidden{"tab hidden and not ?timer?"}
+  hidden -->|yes| vis["re-check when visible again"]
+  hidden -->|no| moved{"ticks advanced?"}
+  moved -->|yes| carry["loop alive: keep playing"]
+  moved -->|no| card["draw the card: Z, Space, J, Enter or a tap reloads"]
+  boot["boot() catch"] --> fatal["errors.fatal(err)"] --> card</pre>
+  <p>
+    The card is drawn straight onto the canvas with a short upper-case error code in the corner for bug
+    reports. If even drawing fails, a plain DOM fallback (<code>.vr-fallback-error</code>) appears. Reload
+    listeners are attached after 400 ms so the key that caused the crash doesn't immediately reload.
+  </p>
+  <details class="advanced">
+    <summary>Advanced: liveness, not exceptions, decides</summary>
+    <ul>
+      <li><strong>Why ticks:</strong> an exception inside a scene's <code>update</code> kills the frame callback
+        (nothing reschedules it). Errors in promises or timers don't. Comparing the tick count before and after
+        600 ms is a cheap, reliable "is the loop dead?" test.</li>
+      <li><strong>Hidden tabs</strong> stop <code>requestAnimationFrame</code>, so a still tick count proves
+        nothing there; the check is deferred until the tab is visible (except under <code>?timer</code>, where
+        the loop runs on timeouts).</li>
+      <li><strong>A live loop after a boot failure</strong>: <code>onShow</code> in <code>main.ts</code> stops the
+        music, clears the stack and pushes a scene whose <code>draw</code> repaints the card, so the loop doesn't
+        paint over it.</li>
+    </ul>
+  </details>
+
+  <h3 id="platform-loading">The loading screen</h3>
+  <p>
+    <a data-src="src/platform/loading.ts">createLoadingScene</a> draws the logo (or "VERDANT REACH" in the font
+    until the logo loads) over a night-green field, and a vine that grows along the progress bar, putting out a
+    leaf every 9 pixels. <code>progress(done, total)</code> sets a target and the vine eases towards it by a
+    quarter of the gap each frame. <code>finish()</code> resolves only once the vine is full, plus a 180 ms
+    hold, so a fast load never flashes. Boot loads <code>title_logo</code> first so the screen can show it.
+  </p>
+
+  <h3 id="platform-font">The bitmap font</h3>
+  <p>
+    All text is drawn with an 8×8 bitmap font in the style of Gold, Silver and Crystal (2px vertical strokes,
+    7px cap height, one blank column for spacing). The glyphs are authored in
+    <a data-src="src/ui/font.ts">src/ui/font.ts</a> as ASCII art, eight per block:
+  </p>
+  <pre><code class="lang-ts">const BLOCKS: { chars: string; rows: string[] }[] = [
+  {
+    chars: "ABCDEFGH",
+    rows: [
+      "..###... ######.. ..####.. #####... #######. #######. ..####.. ##...##.",
+      ".##.##.. ##...##. .##..##. ##..##.. ##...... ##...... .##..##. ##...##.",
+      // …
+    ],
+  },
+  // …</code></pre>
+  <ul>
+    <li><strong>108 glyphs</strong>: A–Z, a–z, 0–9, punctuation, and symbols such as ♪ é … × ♂ ♀ arrows,
+      ▶ ▷ ▼ ▲ ◀, — @ · ♥ ✓.</li>
+    <li><strong>An atlas per colour</strong>: <code>glyphAtlas(color)</code> bakes every glyph into one canvas
+      the first time a colour is used; <code>drawBitmapText</code> then blits 8×8 cells (optionally at an
+      integer scale).</li>
+    <li><strong>Fallbacks</strong>: <code>ALIASES</code> map curly quotes, en dash, non-breaking space,
+      <code>É</code>, ▸/► and ⋯ to glyphs that exist; anything else draws <code>?</code> and logs once.</li>
+    <li><strong>Pure helpers</strong> (<code>measureText</code>, <code>wrapText</code>, <code>paragraphs</code>,
+      <code>formatText</code>) never touch the DOM, so they run under Vitest. Text is measured in code points
+      (<code>Array.from</code>), so é or ♪ is one column.</li>
+  </ul>
+
+  <h3 id="platform-textbox">The text box and its paging rules</h3>
+  <p>
+    <code>TEXTBOX</code> in <code>constants.ts</code> is <code>{ x: 0, y: 96, w: 160, h: 48, cols: 18, lines: 2 }</code>:
+    a full-width box at the bottom showing <strong>18 columns × 2 lines</strong>. Game code calls
+    <code>await ctx.ui.say(text)</code>; the <code>TextBox</code> class in
+    <a data-src="src/ui/kit.ts">src/ui/kit.ts</a> does the rest, the way Crystal does it:
+  </p>
+  <ol>
+    <li><strong>Formatting</strong>: <code>{PLAYER}</code>, <code>&lt;PLAYER&gt;</code> or <code>[PLAYER]</code>
+      become the player's name ("YOU" if empty), and the same for <code>RIVAL</code> (default "BRAM").
+      <code>opts.speaker</code> prefixes <code>"SPEAKER: "</code>.</li>
+    <li><strong>Pages</strong>: <code>paragraphs()</code> splits on a blank line (<code>"\n\n"</code>) or
+      <code>"\f"</code>. Each paragraph starts in a fresh, empty box.</li>
+    <li><strong>Lines</strong>: inside a paragraph, words wrap at 18 columns, <code>"\n"</code> forces a break,
+      and a word longer than 18 is split.</li>
+    <li><strong>Typing</strong>: characters appear at the text-speed option (slow ¼, mid ½, fast 1 character
+      per frame); holding A or B types 2 per frame. A blip SFX plays per visible character, at most every 4
+      frames.</li>
+    <li><strong>Scrolling</strong>: when line 2 fills and the paragraph continues, ▼ bobs; A or B scrolls
+      the box up one line over 4 frames and typing continues on the bottom line.</li>
+    <li><strong>End</strong>: on the last page the box waits for A or B, then <code>say</code> resolves.
+      <code>autoClose</code> closes 40 frames after the text finishes instead.</li>
+  </ol>
+  <pre><code class="lang-ts">export type TextSpeed = "slow" | "mid" | "fast";
+/** Characters revealed per frame (fractions accumulate). */
+const SPEED: Record&lt;TextSpeed, number&gt; = { slow: 1 / 4, mid: 1 / 2, fast: 1 };</code></pre>
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Typing
+  Typing --> Waiting: line 2 full and more lines follow
+  Typing --> Waiting: page done (not last page)
+  Typing --> Waiting: last page done (default)
+  Typing --> Closing: last page done (autoClose)
+  Typing --> Finished: last page done (waitLast false, menu prompts)
+  Waiting --> Scrolling: A or B, more lines in this paragraph
+  Waiting --> Typing: A or B, next page (fresh box)
+  Waiting --> Finished: A or B on the last page
+  Scrolling --> Typing: after 4 frames
+  Closing --> Finished: after 40 frames
+  Finished --> [*]</pre>
+  <details class="advanced">
+    <summary>Advanced: text-fit validation and the hand-off to menus</summary>
+    <ul>
+      <li><strong>Fit is checked at test time.</strong> <a data-src="src/world/validate.ts">src/world/validate.ts</a>
+        wraps every script line and fails when a word can't fit 18 columns. Note that it has its <em>own</em>
+        <code>wrapText</code> (string <code>.length</code>, no long-word splitting) rather than the font's; the
+        two agree for ASCII but can disagree for multi-code-unit characters. Keep them in step if you change
+        wrapping rules.</li>
+      <li><strong>The lingering box.</strong> After <code>say</code> finishes, the kit remembers the visible two
+        lines. A <code>choose()</code> without its own prompt, called within 80 ms, draws them under the menu, so
+        "Will you help?" stays on screen while YES/NO opens. The window is measured in wall-clock time
+        (<code>performance.now()</code>), not frames.</li>
+      <li><strong>Pressing A to advance while holding it</strong> also counts as "hold to type fast" on the next
+        page, which matches how players mash through text.</li>
+      <li><strong>Empty text</strong> becomes one empty page, so <code>say("")</code> still waits for A instead of
+        resolving instantly.</li>
+    </ul>
+  </details>
+
+  <h3 id="platform-menus">Menus, choose and YES/NO</h3>
+  <p>
+    <code>Menu</code> is a ▶-cursor list in a window. <code>ctx.ui.choose(options, opts)</code> wraps it in a
+    scene and resolves with the chosen index, or <code>-1</code> for B (unless <code>cancel: false</code>).
+    With a <code>prompt</code>, the prompt types into the text box first (<code>waitLast: false</code>), then
+    the menu appears. <code>yesNo(prompt)</code> is <code>choose(["YES", "NO"], …)</code> placed above the box
+    at the right.
+  </p>
+  <pre class="mermaid">sequenceDiagram
+  participant G as game code
+  participant K as ui.choose
+  participant T as prompt TextBox
+  participant M as Menu
+  G->>K: choose BOY / GIRL with prompt, cancel false, onCursor
+  K->>M: new Menu (cursor at 0), onCursor(0)
+  loop until prompt typed
+    K->>T: update()
+  end
+  loop every step
+    K->>M: update(): repeat up/down moves (wraps), cursor SFX
+    M-->>G: onCursor(index) when it moves
+  end
+  M-->>K: A returns index (B returns -1 if cancel allowed)
+  K-->>G: resolve(index)</pre>
+  <ul>
+    <li>Default size fits the longest option; rows are 16px apart (Crystal's spacing), switching to 8px when the
+      list would be taller than the screen. Default position is right-aligned just above the text box.</li>
+    <li>Up/down use <code>repeat()</code>, so holding scrolls; the list wraps unless <code>wrap: false</code>
+      (the title menu doesn't wrap).</li>
+    <li>A hollow ▷ cursor marks the remembered choice while a sub-window is open
+      (<code>draw(g, { cursor: false })</code>).</li>
+  </ul>
+
+  <h3 id="platform-naming">Name entry</h3>
+  <p>
+    <a data-src="src/ui/nameEntry.ts">nameEntry(ctx, opts)</a> is the Crystal-style letter grid used for the
+    player's name, the rival and nicknames. Four rows of nine characters (upper or lower case, plus
+    <code>- ' . ! ? &amp; é ♪ ×</code> and space), then a button row: lower/UPPER, DEL, END.
+  </p>
+  <table>
+    <thead><tr><th>Input</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td>D-pad</td><td>Move (wraps); on the button row, left/right hop between the three buttons</td></tr>
+      <tr><td>A</td><td>Type the letter, or press the button. When the name is full the cursor jumps to END</td></tr>
+      <tr><td>B</td><td>Delete the last character</td></tr>
+      <tr><td>START</td><td>Jump to END</td></tr>
+      <tr><td>SELECT</td><td>Toggle upper/lower case</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The editing rules live in the pure <code>NameModel</code> class (no leading space, a <code>max</code> of 7
+    for people and 10 for nicknames, trim on finish, and the default name if empty), so they are testable
+    without a canvas. The default player names are <code>DEFAULT_PLAYER_NAMES</code> in
+    <code>src/save</code>: SORREL for the boy, HAZEL for the girl.
+  </p>
+
+  <h3 id="platform-title">The title screen</h3>
+  <p>
+    <a data-src="src/ui/title.ts">createTitleScene</a> draws <code>assets/ui/title.png</code> (or a procedural
+    night valley with the Centuryheart's glowing spike), drifting pollen and the logo, then runs a small state
+    machine:
+  </p>
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> fadein
+  fadein --> press: fade done, or START/A skips it
+  press --> menu: START or A
+  menu --> press: B
+  menu --> fadeout: NEW GAME
+  menu --> continue: CONTINUE (shows the save summary)
+  continue --> menu: B
+  continue --> fadeout: A
+  menu --> busy: OPTIONS
+  busy --> menu: options closed (storeOptions)
+  fadeout --> [*]: runNewGame, or replace with the overworld</pre>
+  <p>
+    The menu lists CONTINUE only when a save exists, and then starts the cursor on it. Entering the title sets
+    <code>playClock.running = false</code> and starts the <code>title</code> music.
+  </p>
+
+  <h3 id="platform-newgame">The NEW GAME flow</h3>
+  <p>
+    <a data-src="src/ui/newgame.ts">runNewGame(ctx)</a> is a straight async script: a fresh
+    <code>ctx.state</code> (with options from <code>localStorage</code>), DR. VALE's short intro over portrait
+    windows, the boy/girl choice, the name, and then the world's new-game script on the overworld.
+  </p>
+  <pre class="mermaid">flowchart TB
+  a["ctx.state = newGameState(ctx), options = loadOptions(), beginNewGameSession()"] --> b["clearScenes, push intro scene, play herbarium music"]
+  b --> c["DR. VALE intro (ui.say), dandelion_bud portrait and cry"]
+  c --> d["show both looks side by side"]
+  d --> e["chooseLook: Are you a boy? Or are you a girl? (BOY first, no cancel)"]
+  e --> f["state.playerLook = look"]
+  f --> g["nameEntry: YOUR NAME?, max 7, default SORREL or HAZEL"]
+  g --> h["more intro lines that use the name"]
+  h --> i["stop music, fade to black"]
+  i --> j["clearScenes, push createOverworldScene(ctx, mode new)"]</pre>
+  <p>
+    The look choice is a normal <code>ui.choose</code> whose <code>onCursor</code> updates which portrait steps
+    in place, so the player sees the boy or the girl highlighted as the cursor moves:
+  </p>
+  <pre><code class="lang-ts">export async function chooseLook(ctx: GameContext, onCursor?: (index: number) =&gt; void): Promise&lt;PlayerLook&gt; {
+  const i = await ctx.ui.choose(LOOK_CHOICES.map((c) =&gt; c.label), {
+    prompt: "Are you a boy?\nOr are you a girl?", cancel: false, ...LOOK_MENU, onCursor,
+  });
+  return LOOK_CHOICES[i]?.look ?? "boy";
+}</code></pre>
+  <aside class="warn">
+    Never draw the player with the <code>player</code> or <code>player_back</code> keys directly. Use
+    <code>playerArt(ctx.state)</code> from <code>constants.ts</code>, which returns the boy's or the girl's
+    overworld sheet and battle back (and the boy's for saves made before the choice existed).
+  </aside>
+
+  <h3 id="platform-options">Options</h3>
+  <p>
+    The options screen is <a data-src="src/screens/options.ts">src/screens/options.ts</a> (reached through
+    <code>ctx.screens.options()</code> from the title or the START menu). Rows: TEXT SPEED (slow/mid/fast),
+    MUSIC and SOUND volume (0–10, drawn as ten seedlings), FOLLOWER and MOVE ANIMS (on/off), DONE.
+  </p>
+  <table>
+    <thead><tr><th>Setting</th><th>Stored in</th><th>Default</th></tr></thead>
+    <tbody>
+      <tr><td>Text speed, follower, move animations</td><td><code>state.options</code>, also <code>localStorage</code> <code>verdant-reach-options</code> (<code>storeOptions</code>)</td><td>mid, on, on</td></tr>
+      <tr><td>Music and sound volume</td><td><code>localStorage</code> <code>verdant-reach-volume</code> only (not in the save)</td><td>8 and 8</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Volumes are per-browser on purpose: a save moved to another machine shouldn't change how loud it is.
+    <code>createScreens</code> applies them in a microtask at startup; the audio service keeps them until a chip
+    exists. Options are reloaded into the state on NEW GAME and CONTINUE, so they behave as a browser preference
+    rather than part of a save file.
+  </p>
+
+  <h3 id="platform-audio">The chip synth</h3>
+  <p>
+    <a data-src="src/audio/engine.ts">src/audio/engine.ts</a> is a WebAudio take on the Game Boy's sound chip.
+    The <code>Chip</code> has the same four voices: two <strong>pulse</strong> channels (12.5/25/50/75% duty,
+    built as band-limited <code>PeriodicWave</code>s), a <strong>wave</strong> channel (a triangle-ish bass) and
+    an LFSR <strong>noise</strong> channel (white or metallic, plus kick/snare/hat/crash drums). Notes are
+    scheduled slightly ahead on the audio clock by a 25 ms timer (0.18 s lookahead, 1.5 s when the tab is hidden
+    and timers are throttled), so timing never depends on the frame rate.
+  </p>
+  <pre class="mermaid">flowchart LR
+  musicP["music Player"] --> musicBus
+  jingleP["jingle Player"] --> jingleBus["jingleBus x1.25"] --> musicBus["musicBus (music volume)"]
+  musicBus --> duck["duckGain (0.45 under cries)"] --> master
+  sfxP["SFX Player"] --> effectBus["effectBus x3.0"] --> sfxBus["sfxBus (sound volume)"]
+  cryP["cry Player"] --> cryBus["cryBus x2.8"] --> sfxBus
+  amb["ambience bed"] --> ambBus["ambienceBus x1"] --> sfxBus
+  sfxBus --> master["master x0.567"]
+  master --> comp["glue compressor (-12 dB)"] --> lim["limiter (-2 dB, 20:1)"] --> dest["speakers"]</pre>
+  <p>
+    Every sound is <strong>written as text</strong> in a compact MML-style format
+    (<a data-src="src/audio/song.ts">song.ts</a>): one string per channel, 48 ticks per quarter note, notes
+    like <code>c+8.</code>, octaves <code>o5</code>, volume <code>v12</code>, duty <code>@2</code>, envelope
+    <code>%n</code>, gate <code>q7</code>, vibrato <code>~10</code>, slides <code>p5</code>, repeats
+    <code>[ … ]n</code> and a loop point <code>L</code>. A jingle from <a data-src="src/audio/sfx.ts">sfx.ts</a>:
+  </p>
+  <pre><code class="lang-ts">  // Water, light and warm soil: a gentle rising figure that settles.
+  heal: j(120, {
+    p1: "v11 @1 q7 ~10 o5 g8 a8 b8 o6d4 c8 o5b8 o6c2",
+    p2: "v7 @1 q7 o5 e8 f+8 g8 b4 a8 g8 e2",
+    wave: "v14 q7 o3 c4. g4. o2 c2",
+  }),</code></pre>
+  <table>
+    <thead><tr><th>Kind</th><th>Count</th><th>Where</th><th>How it is made</th></tr></thead>
+    <tbody>
+      <tr><td>Music</td><td>41 (<code>MUSIC</code>)</td><td><a data-src="src/audio/music.ts">music.ts</a></td><td>A hand-written melody and chord chart per track; <a data-src="src/audio/arrange.ts">arrange.ts</a> voices the accompaniment (arpeggios, bass, drum grooves) into a four-channel song</td></tr>
+      <tr><td>Jingles</td><td>8 (<code>JINGLES</code>)</td><td><code>sfx.ts</code></td><td>Short non-looping fanfares (heal, caught, growth, mark, item_get, level_up, quest, sprouted) that pause the music</td></tr>
+      <tr><td>SFX</td><td>24 (<code>SFX</code>)</td><td><code>sfx.ts</code></td><td>Blips and impacts in the same format</td></tr>
+      <tr><td>Cries</td><td>one per species</td><td><a data-src="src/audio/cry.ts">cry.ts</a></td><td>Synthesised from the species id: the line seeds the timbre, the species its contour, later stages sit lower</td></tr>
+      <tr><td>Ambience</td><td>meadow, night, forest, town</td><td><a data-src="src/audio/ambience.ts">ambience.ts</a></td><td>Filtered noise and sine chirps under the music, chosen by the track and the clock</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="platform-audio-service">The audio service: music, jingles, SFX and cries</h3>
+  <p>
+    <code>createAudio()</code> in <a data-src="src/audio/index.ts">src/audio/index.ts</a> implements
+    <code>AudioService</code>. It is a full state machine even when silent: <code>playMusic</code> records the
+    current track whether or not sound is available, so the right music starts the moment audio unlocks.
+  </p>
+  <ul>
+    <li><strong><code>playMusic(id)</code></strong> is a no-op when that track is already playing, so maps can
+      call it freely on entry. It also picks the ambience bed for the track.</li>
+    <li><strong><code>playJingle(id)</code></strong> stops the music, remembers its position, plays the jingle
+      and resumes the music from that position (with a 0.25 s fade-in) when the last overlapping jingle ends.</li>
+    <li><strong><code>playCry(species)</code></strong> <dfn>ducks</dfn> the music: it lowers
+      <code>duckGain</code> to 0.45 while the cry plays and restores it after. Ducks are counted, so overlapping
+      cries don't restore early.</li>
+    <li><strong>Silence never blocks.</strong> When the context isn't running, <code>playSfx</code> does nothing
+      and <code>playJingle</code>/<code>playCry</code> resolve immediately, so scripts that
+      <code>await</code> a jingle never hang without sound.</li>
+    <li><strong>The mix</strong> (<a data-src="src/audio/mix.ts">mix.ts</a>) was set by rendering everything
+      offline (<code>e2e/audiomix.ts</code>) and comparing loudness: per-category trims, per-track
+      <code>MUSIC_TRIM</code>, per-effect <code>SFX_TRIM</code>.</li>
+  </ul>
+  <details class="advanced">
+    <summary>Advanced: scheduling, buses and adding sounds</summary>
+    <ul>
+      <li><strong>Lookahead scheduling</strong> means a note is committed up to 0.18 s before it sounds;
+        <code>stop(fade)</code> cuts the live sources and fades the player's own gain, so stops are click-free
+        but not sample-exact. Voices start at gain 0 because a default-1 <code>GainNode</code> leaked one
+        full-level sample before the envelope (an audible click on about 1 kick in 8).</li>
+      <li><strong>Jingles ride the music bus</strong> so they follow the music volume; cries and ambience ride
+        the SFX bus. Ducking sits on the music path only.</li>
+      <li><strong>Default volumes differ by layer.</strong> <code>DEFAULT_VOLUME</code> in <code>mix.ts</code> is
+        music 0.8, SFX 0.9, but the options screen's defaults are 8 and 8 (out of 10) and are applied at
+        startup, so a fresh browser plays SFX at 0.8.</li>
+      <li><strong>Adding a sound</strong>: add the id to <code>MUSIC</code>, <code>SFX</code> or
+        <code>JINGLES</code> in <code>src/contracts/ids.ts</code> (a contract change), then its definition; the
+        <code>Record&lt;MusicId, …&gt;</code> types make a missing definition a compile error. The tests in
+        <a data-src="src/audio/audio.test.ts">audio.test.ts</a> check that every music track parses, loops last 30–90 s and every melody bar is exactly one bar long. Try it in
+        <code>?dev=audio</code>, and re-measure the mix if it is long or loud.</li>
+    </ul>
+  </details>
+
+  <h3 id="platform-audio-unlock">The unlock rule, and why controllers can't unlock audio</h3>
+  <p>
+    Browsers' <dfn>autoplay policy</dfn> only lets a page start sound after a <dfn>user activation</dfn>: a
+    trusted key press, click, or the end of a tap. So the audio service creates its <code>AudioContext</code>
+    lazily, inside <code>unlock()</code>, which the game calls from several places:
+  </p>
+  <pre class="mermaid">sequenceDiagram
+  participant U as player
+  participant In as engine input
+  participant Sh as touch controls
+  participant W as window listeners
+  participant Au as audio.unlock()
+  U->>In: first mapped keydown
+  In->>Au: onFirstInput() (once)
+  U->>Sh: pointerdown on a control
+  Sh->>Au: onInteract()
+  U->>W: pointerup or touchend anywhere
+  W->>Au: unlock()
+  U->>In: gamepad button press
+  In->>Au: onFirstInput() on every new pad press
+  Au->>Au: create Chip(new AudioContext) once, apply volumes
+  Au->>Au: ctx.resume(), then start the current music and bed</pre>
+  <p>
+    <strong>Why a controller alone can't do it:</strong> a Gamepad API button press is not a user-activation
+    event in browsers, so an <code>AudioContext</code> created or resumed from it stays suspended. The engine
+    still calls <code>onFirstInput()</code> on every new pad press (the comment in <code>createInput</code>
+    says "asking again on each press is harmless"), so once the player has pressed a key or tapped once, the
+    next pad press succeeds. A pad-only player hears nothing until then.
+  </p>
+  <p>Touch is the other trap: mobile browsers grant permission on <code>pointerup</code>/<code>touchend</code>, not <code>pointerdown</code>, which is why <code>main.ts</code> adds those two window listeners:</p>
+  <pre><code class="lang-ts">    // Touch only grants audio permission on pointerup/touchend, not pointerdown.
+    const unlock = () =&gt; game.audio.unlock();
+    addEventListener("pointerup", unlock);
+    addEventListener("touchend", unlock);</code></pre>
+  <details class="advanced">
+    <summary>Advanced: suspend, resume and an Escape-key edge case</summary>
+    <ul>
+      <li><strong>Pause wins.</strong> <code>setAudioSuspended(audio, true)</code> suspends the context; while
+        suspended, <code>unlock()</code> creates the chip if needed but does not resume it, so a tap during the
+        PAUSED overlay can't start music under it.</li>
+      <li><strong>After <code>resume()</code></strong> the service restarts the current music from the saved
+        position and the ambience bed if it had none, which covers music requested while locked.</li>
+      <li><strong>Keyboard unlock is one-shot.</strong> <code>createInput</code> calls <code>onFirstInput</code>
+        only on the <em>first</em> mapped keydown. The HTML spec excludes the Escape key from user activation,
+        and Escape is mapped to B, so a keyboard-only player whose very first key is Escape may get a suspended
+        context that later key presses never resume (a click, tap or pad press would). If you touch this code,
+        consider calling <code>unlock()</code> on every trusted keydown until the context reports
+        <code>"running"</code>.</li>
+      <li><strong>Without WebAudio</strong> (tests, very old browsers) <code>unlock()</code> returns early and the
+        service stays a silent state machine; nothing else changes.</li>
+    </ul>
+  </details>
+</section>

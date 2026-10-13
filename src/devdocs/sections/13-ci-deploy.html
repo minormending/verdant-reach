@@ -1,0 +1,330 @@
+<section id="ci" data-title="CI and deploy" data-summary="The GitHub Actions pipeline, the Pages deploy, what blocks it, how to read a failed run, branches and commit style.">
+  <h2>CI and deploy</h2>
+
+  <p><dfn>CI</dfn> (continuous integration) is a machine that runs the checks on
+  every change so nobody has to remember to. <dfn>CD</dfn> (continuous deployment)
+  is the step after: if the checks pass, publish. Verdant Reach has one workflow,
+  <a data-src=".github/workflows/pages.yml">.github/workflows/pages.yml</a>, that
+  does both. Every push to <code>main</code> is tested, played through headless
+  and, only if everything passes, deployed to
+  <code>https://minormending.github.io/verdant-reach/</code>.</p>
+
+  <aside class="warn">The workflow runs <strong>only</strong> on pushes to
+  <code>main</code> and on a manual run (<code>workflow_dispatch</code>). There is
+  no pull-request or feature-branch trigger. Your branch is checked by you,
+  locally, before you merge; CI is the final gate, not a safety net for untested
+  branches.</aside>
+
+  <h3 id="ci-pipeline">The pipeline</h3>
+
+  <pre class="mermaid">flowchart LR
+  PUSH["push to main, or manual run"] --> BUILD
+  PUSH --> E2E
+  subgraph BUILD["job: build"]
+    direction TB
+    B1["checkout, Node 22, npm ci"] --> B2["Test: npm test"]
+    B2 --> B3["Release gate: npm run release-check"]
+    B3 --> B4["Build: npm run build"]
+    B4 --> B5["configure-pages, upload-pages-artifact dist"]
+  end
+  subgraph E2E["job: e2e, 90 min limit"]
+    direction TB
+    E1["checkout, Node 22, npm ci"] --> E2["playwright install --with-deps chromium"]
+    E2 --> E3["npm run e2e: 217 beats"]
+    E3 --> E4["always: upload e2e-report artifact"]
+  end
+  BUILD --> DEPLOY["job: deploy, needs build and e2e"]
+  E2E --> DEPLOY
+  DEPLOY --> SITE["GitHub Pages"]</pre>
+
+  <p>A <dfn>job</dfn> is a group of steps that runs on its own fresh virtual
+  machine (<code>ubuntu-latest</code>). Steps inside a job run in order and stop
+  at the first failure. Jobs run in parallel unless one <dfn>needs</dfn> another.
+  Here <code>build</code> and <code>e2e</code> start together, and
+  <code>deploy</code> waits for both.</p>
+
+  <table>
+    <thead><tr><th>Job</th><th>Steps</th><th>Time limit</th><th>Needs</th></tr></thead>
+    <tbody>
+      <tr><td><code>build</code></td><td>checkout, setup Node 22 with the npm cache, <code>npm ci</code>, Test, Release gate, Build (typecheck and bundle), configure Pages, upload <code>dist</code> as the Pages artifact</td><td>GitHub's default</td><td>none</td></tr>
+      <tr><td><code>e2e</code></td><td>checkout, setup Node 22, <code>npm ci</code>, install Chromium with its system libraries, the full playthrough, keep <code>e2e/last-report.json</code> as the <code>e2e-report</code> artifact (even on failure)</td><td><code>timeout-minutes: 90</code></td><td>none</td></tr>
+      <tr><td><code>deploy</code></td><td><code>actions/deploy-pages</code> in the <code>github-pages</code> environment</td><td>GitHub's default</td><td><code>[build, e2e]</code></td></tr>
+    </tbody>
+  </table>
+
+  <pre><code class="lang-yaml">on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a newer push supersedes a queued one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+# …
+  deploy:
+    needs: [build, e2e]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5</code></pre>
+
+  <p>The permissions are the minimum Pages needs: read the code, write Pages, and
+  an OIDC token (<code>id-token: write</code>) that proves to Pages the artifact
+  came from this workflow.</p>
+
+  <details class="advanced"><summary>Advanced: concurrency and timeouts</summary>
+    <p><code>concurrency: { group: pages, cancel-in-progress: true }</code> means
+    at most one run of this workflow is active. The comment says a newer push
+    "supersedes a queued one", but with <code>cancel-in-progress: true</code> it
+    also cancels a run that is <em>already running</em>, including a playthrough
+    40 minutes in. Two pushes ten minutes apart therefore deploy only the second;
+    the first shows as <em>cancelled</em>, not failed. That is what you want for a
+    deploy, but it means a run that never finished proves nothing about its
+    commit.</p>
+    <pre class="mermaid">sequenceDiagram
+  participant A as push A
+  participant GH as Actions, group pages
+  participant B as push B
+  A->>GH: run A starts build and e2e
+  B->>GH: run B queued
+  GH-->>A: run A cancelled
+  GH->>GH: run B runs build and e2e
+  GH->>GH: run B deploys</pre>
+    <p>There are two timeouts on the playthrough. The runner's own limit is
+    <code>max(75, 360 / speed)</code> minutes, so 75 at the default speed 8; the
+    job's limit is 90. The runner times out first, which matters: it still writes
+    the report and the <code>if: always()</code> upload keeps it. If the job limit
+    fired first, GitHub would kill the process and the report would be lost. Keep
+    the job limit above the runner's.</p>
+    <p>Each job runs <code>npm ci</code> on a clean machine with the
+    <code>package-lock.json</code> versions, Node 22 and Linux. A test that passes
+    on your Mac but depends on a newer Node, the local time zone or a file you
+    forgot to commit fails here.</p>
+  </details>
+
+  <h3 id="ci-deploy">GitHub Pages deploy</h3>
+
+  <p>GitHub Pages serves static files. The game is static files: <code>npm run
+  build</code> writes <code>dist/</code> with <code>index.html</code>, every other
+  page listed in <code>build.rolldownOptions.input</code> in
+  <a data-src="vite.config.ts">vite.config.ts</a> (the guide and the Tile Lab),
+  the bundled JavaScript and everything from <code>public/</code>, art included.
+  The build uses a relative base (<code>./</code>), so the site works under the
+  <code>/verdant-reach/</code> sub-path without any configuration.</p>
+
+  <pre class="mermaid">sequenceDiagram
+  participant Dev as developer
+  participant Git as GitHub main
+  participant B as build job
+  participant E as e2e job
+  participant D as deploy job
+  participant P as Pages site
+  Dev->>Git: git push origin main
+  Git->>B: start
+  Git->>E: start
+  B->>B: test, release-check, build
+  B->>Git: upload-pages-artifact dist
+  E->>E: 217-beat playthrough
+  B-->>D: success
+  E-->>D: success
+  D->>P: deploy-pages publishes the artifact
+  P-->>Dev: live at minormending.github.io/verdant-reach</pre>
+
+  <p>Dev-only code never reaches the site. The playthrough, the dev driver, the
+  <code>?seed</code> and <code>?speed</code> parameters and the <code>?dev=</code>
+  scenes are behind <code>import.meta.env.DEV</code>, which Vite sets to
+  <code>false</code> in a production build and then removes the dead code.</p>
+
+  <details class="advanced"><summary>Advanced: what is actually deployed, and rolling back</summary>
+    <p>The deploy job does not build anything. It publishes the artifact the
+    <code>build</code> job uploaded, so the site is exactly the <code>dist/</code>
+    that passed typecheck, tests and release-check in that run, and the
+    playthrough ran against the same commit's sources in parallel. Note that the
+    e2e job plays the <em>dev server</em> build, not <code>dist/</code>: a bug that
+    exists only in the production bundle (code behind
+    <code>import.meta.env.DEV</code>, the relative base) is not covered by the
+    playthrough. Open the live site after a release that touches boot, asset paths
+    or dev-only switches.</p>
+    <p>To roll back, push a revert commit to <code>main</code>. It goes through the
+    same gate, which is slower than clicking a button but means a rollback can
+    never ship something untested.</p>
+  </details>
+
+  <h3 id="ci-blockers">What blocks a deploy</h3>
+
+  <p>Because <code>deploy</code> needs both jobs, <em>any</em> red step anywhere
+  stops the site from changing. The live site keeps serving the last good
+  build.</p>
+
+  <pre class="mermaid">flowchart TB
+  P["push to main"] --> T{"npm test passes?"}
+  T -- no --> X["no deploy"]
+  T -- yes --> R{"release-check OK?"}
+  R -- no --> X
+  R -- yes --> BL{"typecheck and vite build pass?"}
+  BL -- no --> X
+  P --> E{"e2e: 217 beats, 0 failed, 0 issues, in time?"}
+  E -- no --> X
+  BL -- yes --> J{"both jobs green?"}
+  E -- yes --> J
+  J -- yes --> OK["deploy"]
+  J -- "cancelled by a newer push" --> X</pre>
+
+  <table>
+    <thead><tr><th>Blocker</th><th>Where it shows</th><th>Typical cause</th></tr></thead>
+    <tbody>
+      <tr><td>A failing unit test</td><td>build / Test</td><td>A data or map edit broke a band, a digest or the validator</td></tr>
+      <tr><td>A release-check offender</td><td>build / Release gate</td><td><code>TODO(text)</code> dialogue or placeholder art merged from a feature branch</td></tr>
+      <tr><td>A type error or bundling error</td><td>build / Build</td><td>Strict TypeScript; a missing import; a new page not wired into the build</td></tr>
+      <tr><td>A failed beat</td><td>e2e / Full playthrough</td><td>A story change the robot does not know about, or a real soft-lock</td></tr>
+      <tr><td>Any issue, even with all beats OK</td><td>e2e / Full playthrough</td><td>A <code>console.error</code>, a missing asset, overlong text, a long task</td></tr>
+      <tr><td>The wrong number of beats</td><td>e2e / Full playthrough</td><td>A beat was added or removed without updating the expected 217</td></tr>
+      <tr><td>Timeout</td><td>e2e</td><td>A hang the watchdog did not catch, or a very slow runner</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="ci-failed">Reading a failed run</h3>
+
+  <p>Start from the red step, not from the top of the log. The
+  <a data-src="e2e/run.mjs">runner</a> prints one line per beat
+  (<code>OK</code> or <code>FAIL</code>, the time in seconds, the name, a note),
+  one <code>ISSUE kind time @map@x,y: message</code> line per issue, and a final
+  count. With the GitHub CLI:</p>
+
+  <pre><code class="lang-bash">gh run list --workflow pages.yml --limit 5      # find the run
+gh run view &lt;run-id&gt; --log-failed               # only the failed steps' logs
+gh run download &lt;run-id&gt; --name e2e-report      # last-report.json
+
+# Which beats failed, and what went wrong?
+jq '.beats[] | select(.ok | not) | {name, note, map, pos}' last-report.json
+jq '.issues' last-report.json
+jq '.runner' last-report.json                   # speed, seed, elapsed, runner issues
+jq '.texts[-20:]' last-report.json              # the last 20 lines of dialogue</code></pre>
+
+  <pre class="mermaid">flowchart TB
+  RED["Which step is red?"] --> TST["build / Test"]
+  RED --> GATE["build / Release gate"]
+  RED --> BLD["build / Build"]
+  RED --> PLAY["e2e / Full playthrough"]
+  TST --> TST1["Read the failing test name, run npx vitest run that-file locally"]
+  GATE --> GATE1["Each offender line is path:line:column, fix or keep it on the branch"]
+  BLD --> BLD1["Run npm run build locally, fix the type error"]
+  PLAY --> P1["Download e2e-report, list failed beats and issues"]
+  P1 --> P2["Rerun locally with the same --seed, --headed to watch"]</pre>
+
+  <aside class="tip">Each beat in the report carries a screenshot
+  (<code>shot</code>, a PNG data URL). Paste the one from the failed beat into a
+  browser's address bar to see exactly what the screen showed.</aside>
+
+  <details class="advanced"><summary>Advanced: reproducing a CI failure</summary>
+    <p>The report's <code>runner.seed</code> and <code>runner.speed</code> are the
+    whole input. <code>npm run e2e -- --seed &lt;seed&gt; --speed &lt;speed&gt;</code>
+    replays the same battles. If it passes locally and fails in CI, compare
+    <code>runner.elapsedSeconds</code> and the <code>frame</code> stats: a much
+    slower CI run points at timing, not logic. If it fails locally right after a
+    jingle and passes in CI, see the stalled audio clock under
+    <a href="#testing-e2e-report">the playthrough</a>.</p>
+    <p>A manual re-run from the Actions page (or a <code>workflow_dispatch</code>)
+    rebuilds and redeploys the same commit; it does not need a new push. Use it for
+    a timing flake, never to "try again" on a deterministic failure.</p>
+  </details>
+
+  <h3 id="ci-branches">Branches and the release rule</h3>
+
+  <p><code>main</code> is the release branch: whatever is on it goes live as soon as
+  the pipeline passes. Everything else happens on feature branches named after the work:</p>
+
+  <table>
+    <thead><tr><th>Branch</th><th>Used for</th><th>Examples from history</th></tr></thead>
+    <tbody>
+      <tr><td><code>chN</code>, <code>postgame</code></td><td>A whole chapter: maps, story, trainers, e2e</td><td><code>ch9</code>, <code>ch11</code>, <code>postgame</code></td></tr>
+      <tr><td><code>artN/…</code>, <code>pg/…</code>, <code>art/…</code></td><td>An art or environment pass cut from a chapter branch</td><td><code>art11/env</code>, <code>pg/env</code>, <code>art/sign-snow</code></td></tr>
+      <tr><td><code>delegate/&lt;date&gt;-&lt;slug&gt;</code></td><td>A scoped task done by a delegated agent, reviewed before merge</td><td><code>delegate/2026-10-07-pg-e2e</code></td></tr>
+      <tr><td>Topic names</td><td>Fixes and features</td><td><code>fixes</code>, <code>guide</code>, <code>player-look</code>, <code>devdocs</code></td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">gitGraph
+  commit id: "main: previous chapter live"
+  branch chapter
+  checkout chapter
+  commit id: "maps, trainers, story"
+  commit id: "TODO(text) stand-ins"
+  branch env-pass
+  checkout env-pass
+  commit id: "environment art"
+  checkout chapter
+  merge env-pass
+  commit id: "writing pass"
+  commit id: "release-check OK"
+  checkout main
+  merge chapter id: "chapter live"</pre>
+
+  <p>The usual shape, simplified: a chapter branch carries placeholders while the
+  work is in progress, art passes branch from it and merge back, and the chapter
+  reaches <code>main</code> only once its writing pass has removed every
+  placeholder.</p>
+
+  <p><strong>The rule:</strong> <code>main</code> must pass <code>npm run
+  release-check</code>. Placeholders (stand-in dialogue, placeholder art) are fine
+  on a feature branch, where the playthrough runs with
+  <code>--allow-placeholders</code>, and must all be gone before the merge. In
+  practice, before merging to <code>main</code>:</p>
+
+  <ol>
+    <li><code>npm run typecheck</code>, <code>npm test</code> and <code>npm run build</code> pass.</li>
+    <li><code>npm run release-check</code> prints <code>release-check: OK</code>.</li>
+    <li><code>npm run e2e</code> passes without <code>--allow-placeholders</code> if gameplay changed.</li>
+    <li>If art changed: <code>build_all.py --regen</code> leaves <code>git status</code> clean.</li>
+    <li>The README's scope and features, and <code>AGENTS.md</code> where commands or counts changed, are updated in the same merge.</li>
+  </ol>
+
+  <h3 id="ci-commits">Commit style</h3>
+
+  <p>Commits are small and logical: one idea each, so a reviewer (or
+  <code>git bisect</code>) can understand and revert them one at a time. The
+  summary line is imperative, like a command ("Ask … at NEW GAME", not "Asked" or
+  "Asking"), and the body explains <em>why</em>, plus anything a reviewer could
+  not guess from the diff. A real example:</p>
+
+  <pre><code>Check the BOY choice in the e2e new game (217 beats)
+
+The playthrough now passes the boy/girl question by taking the cursor's
+default, BOY, so the rest of the run and its baselines are unchanged. A
+new beat confirms the question was asked, the look and default name were
+set (SORREL), and the overworld player walks with the boy's sheet. The
+GIRL path is covered by unit tests. The beat count moves to 217 in the
+runner, its tests, the workflow, AGENTS.md and the README.</code></pre>
+
+  <ul>
+    <li>Work done by a delegated agent is prefixed <code>delegate(codex): …</code>
+      and names the plan section it implements.</li>
+    <li>Commits written with an AI assistant end with a
+      <code>Co-Authored-By:</code> trailer.</li>
+    <li>Push to <code>main</code> only when typecheck, tests and the build pass: a
+      push deploys the site.</li>
+  </ul>
+
+  <details class="advanced"><summary>Advanced: why the gate is on main, not on branches</summary>
+    <p>The playthrough is too slow to run on every branch push, and feature
+    branches are allowed to be unfinished (that is what
+    <code>--allow-placeholders</code> is for). Putting the full gate on
+    <code>main</code> only keeps CI cheap and the rule simple: what is on
+    <code>main</code> is finished, tested and live. The cost is that a broken
+    branch is found late, which is why the merge checklist above is run locally
+    first.</p>
+    <p>If <code>main</code> ever goes red, the site stays on the last good build,
+    so nothing is lost for players; but every later push is blocked until it is
+    green again. Fix forward with a small commit rather than force-pushing:
+    rewriting <code>main</code>'s history breaks every branch cut from it.</p>
+  </details>
+</section>

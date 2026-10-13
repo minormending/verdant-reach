@@ -1,0 +1,783 @@
+<section id="world" data-title="The world and the overworld" data-summary="Maps as data, autotiling, movement and field tools, NPCs, encounters, roaming wanderers, and the validator that proves the world can be finished.">
+  <h2>The world and the overworld</h2>
+
+  <p>Verdant Reach splits the world in two. <a data-src="src/world/index.ts">src/world/</a> is <em>data</em>: every map, script and trainer, written as plain TypeScript objects. <a data-src="src/overworld/index.ts">src/overworld/</a> is the <em>engine</em> that reads that data and turns it into a walkable Game Boy screen. The two meet only through the shapes in <a data-src="src/contracts/world.ts">src/contracts/world.ts</a>.</p>
+
+  <p>This split is why a map can be added without touching engine code, and why the world can be checked by a test (<a href="#world-validate">the validator</a>) without opening a browser. If you remember one thing from this section: <strong>maps describe, the overworld decides.</strong></p>
+
+  <pre class="mermaid">flowchart LR
+  subgraph data["src/world (data)"]
+    M["maps/*.ts MapDef objects"]
+    S["scripts/*.ts ScriptCmd lists"]
+    T["trainers.ts"]
+    B["build.ts helpers"]
+  end
+  B --> M
+  B --> S
+  M --> W["WORLD: WorldData (world/index.ts)"]
+  S --> W
+  T --> W
+  W --> O["Overworld scene (src/overworld)"]
+  W --> V["validateWorld() (world/validate.ts)"]
+  W --> G["Guide and Tile Lab pages"]
+  V --> X["vitest: world.test.ts"]</pre>
+
+  <p><dfn>WORLD</dfn> is the single exported object (<code>WorldData</code>) built in <a data-src="src/world/index.ts">world/index.ts</a>. It holds <code>maps</code>, <code>scripts</code>, <code>trainers</code>, <code>quests</code>, the SEED GLIDE landing list (<code>glide</code>) and <code>newGame</code>, the starting position and script (the Herbarium roof at night, script <code>prologue</code>). Scripts from every chapter file are merged by <code>mergeScripts</code>, which throws on a duplicate id, so two writers can never silently overwrite each other's scene.</p>
+
+  <figure data-chart="warp-graph"><figcaption>Every map is a node and every warp an edge. Towns are hubs; interiors hang off them like leaves. The validator walks this same graph.</figcaption></figure>
+
+  <h3 id="world-mapdef">MapDef: a map is a data object</h3>
+
+  <p>A <dfn>MapDef</dfn> is everything the engine needs to know about one map. Here are the fields, grouped by job (the full type is in <a data-src="src/contracts/world.ts">contracts/world.ts</a>):</p>
+
+  <table>
+    <thead><tr><th>Group</th><th>Fields</th><th>What they do</th></tr></thead>
+    <tbody>
+      <tr><td>Identity</td><td><code>id</code>, <code>name</code>, <code>outdoor</code>, <code>dark</code></td><td><code>name</code> is the sign that slides in on outdoor maps. <code>outdoor</code> turns on the night tint. <code>dark</code> blacks out everything outside the player's light (GLOW).</td></tr>
+      <tr><td>Ground</td><td><code>tiles</code>, <code>legend</code>, <code>legendWhen</code>, <code>border</code></td><td>Rows of characters; the legend maps each character to a tile key. <code>border</code> is drawn past the edge (trees outdoors, <code>void</code> indoors).</td></tr>
+      <tr><td>Buildings</td><td><code>structures</code></td><td>Multi-tile images (houses, the windmill) placed on <code>@</code> cells. Solid except their door.</td></tr>
+      <tr><td>Exits</td><td><code>warps</code></td><td>Step-on (or push-out) teleports to another map, with an arrival tile and optional facing.</td></tr>
+      <tr><td>People</td><td><code>npcs</code></td><td>Characters, objects and trainers (<a href="#world-npcs">below</a>).</td></tr>
+      <tr><td>Text and events</td><td><code>signs</code>, <code>triggers</code>, <code>onEnter</code>, <code>onWhiteout</code></td><td>Signs speak when faced. Triggers run a script when stepped on. <code>onEnter</code> runs after every fade-in; <code>onWhiteout</code> runs after the player wilts out on this map.</td></tr>
+      <tr><td>Wild plants</td><td><code>encounters</code>, <code>encountersWhen</code>, <code>hidden</code></td><td>Grass, bog and water tables; flag-dependent tables; hidden items found with A.</td></tr>
+      <tr><td>Mood</td><td><code>music</code>, <code>musicWhen</code>, <code>ambient</code>, <code>time</code></td><td>Map music (with conditional tracks), particles, and a forced time of day.</td></tr>
+      <tr><td>Healing</td><td><code>healPoint</code></td><td>Where a whiteout sends you if you last healed here.</td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">classDiagram
+  class MapDef {
+    id, name, outdoor, dark
+    tiles: string[]
+    legend, legendWhen, border
+    music, musicWhen, ambient, time
+    onEnter, onWhiteout, healPoint
+  }
+  class NpcDef {
+    id, sprite, x, y, facing
+    movement, script, trainer, sight
+    visibleWhen, stateFlag, pushable
+  }
+  class Warp {
+    x, y, to, toX, toY, facing
+  }
+  class Trigger {
+    x, y, w, h, script, when
+  }
+  class EncounterTable {
+    rate
+    slots: EncounterSlot[]
+  }
+  MapDef "1" o-- "*" NpcDef : npcs
+  MapDef "1" o-- "*" Warp : warps
+  MapDef "1" o-- "*" Trigger : triggers
+  MapDef "1" o-- "0..3" EncounterTable : grass, bog, water</pre>
+
+  <p>Here is the top of a real map, <a data-src="src/world/maps/route_1.ts">route_1.ts</a> (shortened). Notice that the map is drawn as ASCII art: you can read the S-shaped lane (<code>:</code>), the tall-grass meadows (<code>,</code>), the ledge line (<code>v</code>) and the river (<code>~</code>) straight off the page.</p>
+
+  <pre><code class="lang-ts">export const route_1: MapDef = {
+  id: "route_1",
+  name: "ROUTE 1",
+  outdoor: true,
+  music: "route",
+  border: "tree",
+  legend: OUTDOOR,
+  ambient: "pollen",
+  tiles: [
+    "TTTTTTTTT::TTTTTTTTTTT", // 0
+    "TTTTTTTTH::HTTTTTTTTTT", // 1
+    "TTTTT.B*H::H.f.TTTTTTT", // 2
+    // …
+    "TT,,,::HvvvvvvvvvvvvvT", // 13
+    // …
+  ],
+  structures: [],
+  warps: [
+    { x: 9, y: 0, to: "hedgerow", toX: 12, toY: 19, facing: "up" },
+    { x: 10, y: 0, to: "hedgerow", toX: 13, toY: 19, facing: "up" },
+    // …
+  ],
+  npcs: [
+    // PIP's demo (story.ts): left, right x2, left x2, then left + down 5 along the lane.
+    { id: "pip", sprite: "pip", x: 12, y: 3, facing: "left", movement: "static", script: "pip_demo",
+      visibleWhen: when({ got_seed: true, pip_demo_done: false }) },
+    { id: "milo", sprite: "schoolkid", x: 16, y: 15, facing: "left", trainer: "schoolkid_milo", sight: 3 },
+    // …
+  ],
+  triggers: [
+    { x: 9, y: 2, w: 2, script: "pip_demo", when: when({ got_seed: true, pip_demo_done: false }) },
+  ],
+  encounters: {
+    grass: {
+      rate: 12,
+      slots: [
+        { species: "dandelion_bud", minLevel: 2, maxLevel: 4, weight: 35 },
+        { species: "sunflower_seedling", minLevel: 2, maxLevel: 4, weight: 25, time: "day" },
+        // …
+      ],
+    },
+  },
+};</code></pre>
+
+  <p>Coordinates are tile coordinates: <code>x</code> is the column (character index), <code>y</code> the row, both from 0 at the top-left. A tile is 16x16 pixels and the screen shows 10x9 tiles.</p>
+
+  <aside class="tip">Keep the column ruler comment (<code>// 0123456789…</code>) above the rows when you edit a map. Every coordinate in <code>warps</code>, <code>npcs</code> and <code>triggers</code> is counted against it, and an off-by-one is the most common map bug.</aside>
+
+  <h4 id="world-conditions">Conditions: Cond and when()</h4>
+
+  <p>Many fields take a <dfn>Cond</dfn>: a list of <code>{ flag, is }</code> pairs that must <em>all</em> hold. Flags are named booleans in <code>state.flags</code>, and a flag that was never set counts as <code>false</code>. Writing the list by hand is noisy, so <a data-src="src/world/build.ts">build.ts</a> has <code>when()</code>:</p>
+
+  <pre><code class="lang-ts">export const when = (spec: Record&lt;string, boolean&gt;): Cond =&gt;
+  Object.entries(spec).map(([f, is]) =&gt; ({ flag: f, is }));</code></pre>
+
+  <p>And the engine's check, in <a data-src="src/overworld/map.ts">overworld/map.ts</a>, is one line:</p>
+
+  <pre><code class="lang-ts">export function checkCond(cond: Cond | undefined, flags: Record&lt;string, boolean&gt;): boolean {
+  if (!cond) return true;
+  return cond.every((c) =&gt; (flags[c.flag] ?? false) === c.is);
+}</code></pre>
+
+  <p>There is no OR and no NOT beyond <code>is: false</code>. If you need "A or B", write two entries (two NPCs, two triggers) or branch inside a script.</p>
+
+  <p>Conditions appear on: <code>visibleWhen</code> (NPCs), <code>when</code> (triggers), and every <code>*When</code> list: <code>legendWhen</code>, <code>encountersWhen</code> and <code>musicWhen</code>. Those three lists all follow the rule <strong>first match wins</strong>, otherwise the plain field is used.</p>
+
+  <pre class="mermaid">flowchart TD
+  F["state.flags"] --> L{"legendWhen entries that match"}
+  L -->|"merged, earlier entries win per character"| TL["tile lookup"]
+  L -->|"none"| BL["base legend"]
+  BL --> TL
+  F --> E{"first encountersWhen that matches"}
+  E -->|"match"| ET["that table"]
+  E -->|"none"| EB["encounters"]
+  F --> MU{"first musicWhen that matches"}
+  MU -->|"match"| MT["that track"]
+  MU -->|"none"| MB["music"]
+  F --> NV{"visibleWhen"}
+  NV --> NPC["NPC drawn and solid?"]</pre>
+
+  <p>Real examples: the Sugarbush grove's tapped maples (<code>X</code>) become plain maples once <code>grove_cleared</code> is set (<code>legendWhen</code>); Bloom Lake swaps to a calm encounter table and drops its red-lake music once <code>lake_calmed</code> is set; the Palm House empties its grass (<code>encounters: {}</code>) during a Chapter 8 scene.</p>
+
+  <details class="advanced"><summary>Advanced: how legendWhen is applied, and its limits</summary>
+    <p><code>refreshLegend()</code> runs every frame (in <code>update</code> and <code>draw</code>) and is cheap because it builds a <dfn>signature</dfn> string from the active entries, cleared field-move cells and filled pits, and returns early when it hasn't changed. The signature also tells <a data-src="src/overworld/tilelayer.ts">TileLayer</a> when to rebuild its cached ground canvas. Matching entries are merged with <code>merged = { ...list[i].legend, ...merged }</code>, so for any one character the earliest matching entry wins.</p>
+    <p>The validator forbids a <code>legendWhen</code> from introducing a field-move tile or a pit, and requires every overridden character to exist in the base legend and be used in <code>tiles</code>. That keeps per-cell progress flags (<code>pruned_…</code>, <code>filled_…</code>) independent of story flags.</p>
+    <p>Important: the main reachability pass in <code>validateWorld</code> builds its grid from the <em>base</em> legend only. A <code>legendWhen</code> that turns a walkable character solid (or the other way) is not proved safe by the generic soft-lock check. Puzzles that rely on it (the Sugarbush valves, the Bramblegate hedge gates) have their own tests in <a data-src="src/world/puzzles.test.ts">puzzles.test.ts</a>. If you add a flag-driven wall, add a test like those.</p>
+  </details>
+
+  <h3 id="world-build">Build helpers: LEGEND, OUTDOOR and pickups()</h3>
+
+  <p>Every map shares one character legend, <code>LEGEND</code>, in <a data-src="src/world/build.ts">build.ts</a>. That is why a <code>T</code> is a tree and a <code>,</code> is tall grass on every map, which makes maps readable at a glance. A map can still extend or override it (<code>{ ...OUTDOOR, T: "aspen_tree" }</code> in the Elder Grove).</p>
+
+  <pre><code class="lang-ts">export const LEGEND: Record&lt;string, TileKey&gt; = {
+  ".": "grass",
+  ",": "tall_grass",
+  ":": "path",
+  "~": "water",
+  "v": "ledge_down",
+  "T": "tree",
+  "E": "mat_exit",
+  // …
+  "{": "ice",
+  "&lt;": "root_gap",
+  "&gt;": "root_bridge",
+  "ø": "pit",
+  "Ø": "filled_pit",
+};
+
+/** Outdoor maps: structure footprints sit on grass, so scenery with soft edges
+ *  (the well, the windmill, landmark trees) shows lawn rather than road. */
+export const OUTDOOR: Record&lt;string, TileKey&gt; = { ...LEGEND, "@": "grass" };</code></pre>
+
+  <p>The <code>@</code> character marks a structure footprint. The structure's image covers it, so the only question is what shows through transparent edges: path indoors (<code>LEGEND</code>), lawn outdoors (<code>OUTDOOR</code>).</p>
+
+  <p><code>pickups()</code> builds item balls. An <code>item_pickup</code> NPC with no script gives the item named by its id, says "found", and hides for good behind the flag <code>picked_&lt;map&gt;_&lt;npcId&gt;</code>:</p>
+
+  <pre><code class="lang-ts">export function pickups(list: { item: ItemId; x: number; y: number; n?: number }[]): NpcDef[] {
+  return list.map((p) =&gt; ({
+    id: p.n &amp;&amp; p.n &gt; 1 ? `${p.item}_${p.n}` : p.item,
+    sprite: "item_pickup", x: p.x, y: p.y, facing: "down", movement: "static",
+  }));
+}</code></pre>
+
+  <p>Use <code>n</code> when one map has two of the same item (<code>glass_pod</code> and <code>glass_pod_2</code>): NPC ids must be unique per map, and the picked flag is keyed by id. The file also holds the script shorthands (<code>say</code>, <code>flag</code>, <code>ifFlags</code>, <code>moveNpc</code>…) covered in <a href="#scripts">Scripts</a>, and <code>lockedDoor()</code> for a door with no interior.</p>
+
+  <details class="advanced"><summary>Advanced: legend characters and pickup ids</summary>
+    <ul>
+      <li><strong>One character, one code point.</strong> The runtime splits rows with <code>Array.from</code> (code points) while the validator's width check uses <code>row.length</code> (UTF-16 units). They agree for every character in <code>LEGEND</code>, including <code>ø</code> and <code>Ø</code>; an emoji or other astral character would make them disagree, so don't use one.</li>
+      <li><strong>Adding a character.</strong> Check it is free in <code>LEGEND</code> first: a clash silently changes every map that uses it. A tile used on one map only can go in that map's own legend instead.</li>
+      <li><strong>Pickup ids.</strong> <code>pickupItem()</code> in build.ts mirrors the engine's rule (strip a leading <code>item_</code> and a trailing <code>_N</code>), and the validator uses it to check every script-less pickup gives a real item. The engine's <code>pickup()</code> is more forgiving (it tries several candidates), but don't rely on that.</li>
+      <li><strong><code>lockedDoor()</code></strong> ends with <code>movePlayer("down")</code>, which ignores collision; it assumes the tile below the door is free, which the door rules already require.</li>
+    </ul>
+  </details>
+
+  <h3 id="world-autotile">Tiles, props and autotiling</h3>
+
+  <p>A <dfn>tile key</dfn> (<code>"water"</code>, <code>"ledge_down"</code>) names both a 16x16 image and a set of <dfn>tile props</dfn> in <code>TILES</code> (<a data-src="src/contracts/ids.ts">contracts/ids.ts</a>): <code>walk</code>, <code>water</code>, <code>slide</code>, <code>ledge</code>, <code>encounter</code>, <code>interact</code> and <code>fieldMove</code>. Movement reads only these props, never the art.</p>
+
+  <pre class="mermaid">flowchart LR
+  C["character in tiles[y][x]"] --> LO{"legendWhen override?"}
+  LO -->|"yes"| K["TileKey"]
+  LO -->|"no"| LG["legend[ch]"] --> K
+  K --> P{"pit and filled?"}
+  P -->|"yes"| FP["filled_pit"]
+  P -->|"no"| CL{"field-move cell cleared?"}
+  CL -->|"yes"| CT["cleared tile (bramble_stump, root_bridge)"]
+  CL -->|"no"| K2["tile as written"]
+  FP --> PR["TILES[key] props"]
+  CT --> PR
+  K2 --> PR
+  PR --> MV["movement, encounters"]
+  PR --> ART["art: autotile, alts"]</pre>
+
+  <p>That is <code>tileAt()</code> in <a data-src="src/overworld/map.ts">map.ts</a>. Outside the map it returns <code>border</code>; an unknown character logs a warning once and also returns the border.</p>
+
+  <h4 id="world-autotile-masks">Autotile masks</h4>
+
+  <p><dfn>Autotiling</dfn> picks an edge variant of a tile from its neighbours, so a pond gets a shoreline and a hedge joins into one run without anyone placing corner pieces by hand. Tiles are grouped in <code>AUTOTILE</code> (<a data-src="src/contracts/constants.ts">constants.ts</a>): <code>water</code>, <code>pond_lily</code>, <code>reeds</code> and <code>bridge</code> are all in the <code>"water"</code> group, so water flows under bridges and into reed beds.</p>
+
+  <p>For each cell the engine sets one bit per neighbour that is in the <strong>same group</strong>: N=1, E=2, S=4, W=8. A neighbour off the map counts as the same, so water touching the map edge doesn't draw a fake shore.</p>
+
+  <pre class="mermaid">flowchart TB
+  N["N neighbour bit 1"]
+  W["W neighbour bit 8"]
+  C(("cell"))
+  E["E neighbour bit 2"]
+  S["S neighbour bit 4"]
+  N --- C
+  W --- C
+  C --- E
+  C --- S</pre>
+
+  <pre><code class="lang-ts">export function autotileMask(m: MapRuntime, x: number, y: number): number {
+  const group = autotileGroup(tileAt(m, x, y));
+  if (!group) return -1;
+  const same = (nx: number, ny: number) =&gt; !inBounds(m, nx, ny) || autotileGroup(tileAt(m, nx, ny)) === group;
+  return (same(x, y - 1) ? MASK.N : 0)
+    | (same(x + 1, y) ? MASK.E : 0)
+    | (same(x, y + 1) ? MASK.S : 0)
+    | (same(x - 1, y) ? MASK.W : 0);
+}</code></pre>
+
+  <table>
+    <thead><tr><th>Mask</th><th>Same-group neighbours</th><th>Reads as (water)</th></tr></thead>
+    <tbody>
+      <tr><td>15</td><td>N E S W</td><td>Open water (the engine adds glints here)</td></tr>
+      <tr><td>14</td><td>E S W</td><td>Shore along the north edge</td></tr>
+      <tr><td>11</td><td>N E W</td><td>Shore along the south edge</td></tr>
+      <tr><td>6</td><td>E S</td><td>Top-left corner of a pond</td></tr>
+      <tr><td>5</td><td>N S</td><td>A one-tile-wide stream running north to south</td></tr>
+      <tr><td>0</td><td>none</td><td>A single puddle</td></tr>
+    </tbody>
+  </table>
+
+  <p>The image for mask <code>m</code> is <code>${key}@${m}.png</code>. Art may supply any subset of the 16 masks, so the resolver in <a data-src="src/overworld/autotile.ts">autotile.ts</a> falls back step by step:</p>
+
+  <pre class="mermaid">flowchart LR
+  A["autotiled tile, mask m"] --> V{"key@m.png exists?"}
+  V -->|"yes"| VD["draw the edge variant"]
+  V -->|"no"| ALT{"key~1..3.png exist?"}
+  N2["not autotiled (mask -1)"] --> ALT
+  ALT -->|"yes"| H["pick one by position hash (base tile weighted double)"]
+  ALT -->|"no"| BASE["draw key.png"]</pre>
+
+  <details class="advanced"><summary>Advanced: variation, animation and caching</summary>
+    <ul>
+      <li><strong>Edge variants beat ground variants.</strong> An alt (<code>~1</code>…<code>~3</code>) is only used when the cell would otherwise draw the plain base tile.</li>
+      <li><strong>Stable randomness.</strong> <code>pickAlt</code> uses <code>posHash(x, y)</code>, a 32-bit integer hash, never <code>Math.random</code>, so a field looks the same every visit and in the Tile Lab. It re-rolls once when it would repeat its west neighbour, which breaks up horizontal stripes.</li>
+      <li><strong>Animation never pops.</strong> An animated tile (with <code>__2.png</code>) only uses an alt that has its own second frame.</li>
+      <li><strong>Caching.</strong> <code>TileCatalog</code> memoises which alts exist per key. The ground is drawn into a cached layer that rebuilds only when the legend signature changes.</li>
+      <li><strong>Groups can lie on purpose.</strong> <code>vault_portal</code> is in the <code>"cliff"</code> group so the portal reads as rock until the stair breaks it. <code>stepping_stones</code> join the water group so the river flows round them. When you add a tile, choose its group by what it should <em>look</em> joined to, not by what it is.</li>
+    </ul>
+  </details>
+
+  <figure data-chart="map-sizes"><figcaption>Map sizes by kind. Routes are long (Route 6 is 30x60 tiles); interiors are small rooms, the smallest 9x8.</figcaption></figure>
+
+  <h3 id="world-overworld">The overworld scene</h3>
+
+  <p>The overworld is one big class, <code>Overworld</code>, created by <code>createOverworldScene(ctx, opts)</code> in <a data-src="src/overworld/index.ts">overworld/index.ts</a>. It is a <dfn>scene</dfn> on the engine's scene stack: it gets <code>update()</code> 60 times a second and <code>draw(g)</code> once per frame. Most of the pure rules live in small, unit-tested modules next to it (<code>map.ts</code>, <code>raft.ts</code>, <code>ice.ts</code>, <code>uproot.ts</code>, <code>encounters.ts</code>, <code>roaming.ts</code>, <code>follower.ts</code>); the class wires them together.</p>
+
+  <p>Two ideas explain most of the code:</p>
+  <ul>
+    <li><strong><code>busy</code> and <code>flow()</code>.</strong> Anything that takes time (a text box, a battle, a script, a warp fade) runs inside <code>flow(fn)</code>, which increments <code>busy</code>. While <code>busy &gt; 0</code> the player has no control and NPCs don't wander. When the last flow finishes, <code>settle()</code> tidies up: it clears a forgotten still, pans the camera back and fades in if a script left the screen black.</li>
+    <li><strong>The grid is the truth.</strong> An actor's <code>x, y</code> jump to the destination tile the moment a step <em>starts</em> (<code>Actor.begin</code>); the smooth 16-pixel slide is only drawing. So collision, sight lines and triggers always reason about whole tiles.</li>
+  </ul>
+
+  <pre class="mermaid">flowchart TD
+  U["update() each frame"] --> RL["refreshLegend"]
+  RL --> TK["tick NPCs, follower, player"]
+  TK --> AR{"player step just finished?"}
+  AR -->|"yes"| OA["onArrive()"]
+  AR -->|"no"| BZ
+  OA --> BZ{"busy or dead?"}
+  BZ -->|"yes"| STOP["return: a flow owns the screen"]
+  BZ -->|"no"| SEED{"a seed ready to sprout?"}
+  SEED -->|"yes"| SP["flow: sprout scene"]
+  SEED -->|"no"| NPCS["updateNpcs()"]
+  NPCS --> IN{"player standing still?"}
+  IN -->|"yes"| HI["handleInput()"]</pre>
+
+  <details class="advanced"><summary>Advanced: invariants of the scene loop</summary>
+    <ul>
+      <li><strong>Mutate state inside a flow.</strong> Long actions (talk, battle, warp) start with <code>void this.flow(...)</code> and return at once; the next frame sees <code>busy &gt; 0</code> and skips input. Starting async work outside <code>flow()</code> lets the player walk away mid-scene.</li>
+      <li><strong><code>dead</code></strong> is set in <code>exit()</code> so a flow that resolves after the scene was replaced (the title, after <code>endSlice</code>) doesn't touch a scene that is gone.</li>
+      <li><strong>Draw order is a Y-sort.</strong> Structures sort by the bottom of their footprint, characters by their feet, the follower just behind the player, so you walk behind roofs and in front of their bases. Tall grass is drawn again over the feet of anyone standing in it.</li>
+      <li><strong>Cost per frame</strong> is small and linear: NPC lookups are <code>Array.find</code> over the map's NPCs, the ground is a cached canvas, and <code>refreshLegend</code> exits early when its signature is unchanged. Maps carry tens of NPCs, not thousands; if that ever changes, index NPCs by tile.</li>
+      <li><strong>Missing map.</strong> Warping to an undefined map logs an error and stays on the current map (or falls back to the new-game map) instead of crashing.</li>
+    </ul>
+  </details>
+
+  <h4 id="world-movement">Movement and collision</h4>
+
+  <p><code>handleInput()</code> reads the d-pad. A quick tap turns in place (5 frames of grace before walking); holding walks. A walk step takes 8 frames. Holding B runs, ramping 6, 5 then 4 frames per tile over the first steps. START opens the menu and A interacts with the tile in front.</p>
+
+  <p>Every attempted step goes through a pure function that answers "what happens if something at (x, y) moves one tile this way?" On land that is <code>tryMove()</code>; with the raft in the bag, <code>tryRaftMove()</code> wraps it.</p>
+
+  <pre><code class="lang-ts">export function tryMove(
+  m: MapRuntime, x: number, y: number, dir: Dir,
+  occupied: (x: number, y: number) =&gt; boolean = () =&gt; false,
+): MoveResult {
+  const { dx, dy } = DIRS[dir];
+  const nx = x + dx;
+  const ny = y + dy;
+  if (!inBounds(m, nx, ny)) return { kind: "blocked", reason: "edge" };
+  const props = tileProps(tileAt(m, nx, ny));
+  if (props.ledge &amp;&amp; !m.solid.has(key(nx, ny))) {
+    if (dir !== props.ledge) return { kind: "blocked", reason: "ledge" };
+    const lx = nx + dx;
+    const ly = ny + dy;
+    if (!isWalkable(m, lx, ly)) return { kind: "blocked", reason: "wall" };
+    if (occupied(lx, ly)) return { kind: "blocked", reason: "occupied" };
+    return { kind: "ledge", x: lx, y: ly };
+  }
+  if (!isWalkable(m, nx, ny)) return { kind: "blocked", reason: "wall" };
+  if (occupied(nx, ny)) return { kind: "blocked", reason: "occupied" };
+  return { kind: "walk", x: nx, y: ny };
+}</code></pre>
+
+  <p><code>isWalkable</code> says yes for a structure's door, no for the rest of its footprint, and otherwise asks the tile's <code>walk</code> prop. A blocked move bumps (with a sound at most every 16 frames), unless the player is standing on a warp and pushing outward: that uses the warp. Exit mats only fire when you walk <em>down</em>, as in Crystal.</p>
+
+  <p>When a step finishes, <code>onArrive()</code> decides what the new tile does. The order matters, and it is the same every step:</p>
+
+  <pre class="mermaid">flowchart TD
+  A["step finished"] --> N["nursery boarders grow, party seeds count down, BURR catch-up counter"]
+  N --> W{"warp here? (mats: facing down)"}
+  W -->|"yes"| WF["useWarp: fade, loadMap, onEnter"]
+  W -->|"no"| I{"on ice?"}
+  I -->|"yes, and the slide continues"| SL["begin the next slide step"]
+  I -->|"no"| T{"trigger here, and its when holds?"}
+  T -->|"yes"| TS["run its script"]
+  T -->|"no"| TR{"an unbeaten trainer can see the player?"}
+  TR -->|"yes"| TB["trainer walks up, battle"]
+  TR -->|"no"| G{"grace steps left?"}
+  G -->|"yes"| GD["count one down"]
+  G -->|"no"| E["rollEncounter()"]
+  E -->|"hit"| WB["wild battle"]</pre>
+
+  <aside class="note">The <dfn>grace</dfn> counter is set to 3 after every battle, so you can't be ambushed on the very next step out of a fight.</aside>
+
+  <h4 id="world-field">Field mechanics</h4>
+
+  <p>Beyond plain walking, tile props and a few key items give the world its puzzles. Each is a small, pure module, which is what lets the validator reuse the exact same rules.</p>
+
+  <table>
+    <thead><tr><th>Mechanic</th><th>Tile or object</th><th>Rule</th><th>Code</th></tr></thead>
+    <tbody>
+      <tr><td>Ledge</td><td><code>ledge_down</code> (<code>v</code>)</td><td>Hop south only, landing two tiles on (16 frames). Blocks every other direction. A one-way shortcut.</td><td><a data-src="src/overworld/map.ts">map.ts</a></td></tr>
+      <tr><td>Ice</td><td><code>ice</code> (<code>{</code>), <code>slide: true</code></td><td>One input carries you to the next stop: off the ice, or the last ice tile before something blocks. A warp on ice stops the slide. No encounters on ice.</td><td><a data-src="src/overworld/ice.ts">ice.ts</a></td></tr>
+      <tr><td>Pits</td><td><code>pit</code> (<code>ø</code>)</td><td>Solid. Push a boulder into one and it becomes <code>filled_pit</code> for good (flag <code>filled_&lt;map&gt;_&lt;x&gt;_&lt;y&gt;</code>); the boulder is consumed.</td><td><a data-src="src/overworld/uproot.ts">uproot.ts</a></td></tr>
+      <tr><td>Water</td><td><code>water: true</code></td><td>Not walkable on foot. With the LILY RAFT you can ride it (<a href="#world-tools">RAFT</a>).</td><td><a data-src="src/overworld/raft.ts">raft.ts</a></td></tr>
+      <tr><td>Counters</td><td><code>counter</code></td><td>Pressing A at a counter talks to the NPC standing behind it.</td><td><a data-src="src/overworld/index.ts">index.ts</a></td></tr>
+      <tr><td>Talk triggers</td><td>a trigger on a solid <code>interact</code> tile</td><td>Can't be stepped on, so A runs it (the Relay's sensor posts).</td><td><a data-src="src/overworld/index.ts">index.ts</a></td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Standing
+  Standing --> Turning: tap a new direction
+  Turning --> Standing
+  Standing --> Walking: hold, tryMove = walk
+  Standing --> Running: hold B too
+  Standing --> Hopping: tryMove = ledge
+  Standing --> Bumping: blocked
+  Bumping --> Standing
+  Walking --> Sliding: landed on ice
+  Sliding --> Sliding: slide continues
+  Sliding --> Standing: stop tile
+  Standing --> Rafting: A on water, yes
+  Rafting --> Standing: step onto shore
+  Walking --> Standing: onArrive
+  Running --> Standing: onArrive
+  Hopping --> Standing: onArrive</pre>
+
+  <h3 id="world-tools">Field tools</h3>
+
+  <p>Crystal used HMs: moves a plant had to learn, wasting a move slot. Verdant Reach uses <dfn>field tools</dfn> instead: each is unlocked by a key item in the bag, and the move is "performed" by whichever party member is out (the follower, or the first plant that can battle). No move slots are spent.</p>
+
+  <table>
+    <thead><tr><th>Tool</th><th>Key item</th><th>What it does</th><th>Persistence</th></tr></thead>
+    <tbody>
+      <tr><td>PRUNE</td><td><code>pruning_shears</code></td><td>Face a bramble, press A, confirm: it becomes a <code>bramble_stump</code>.</td><td>Flag <code>pruned_&lt;map&gt;_&lt;x&gt;_&lt;y&gt;</code></td></tr>
+      <tr><td>ROOT BRIDGE</td><td><code>fig_root</code></td><td>A <code>root_gap</code> becomes a walkable <code>root_bridge</code>.</td><td>Flag <code>bridged_&lt;map&gt;_&lt;x&gt;_&lt;y&gt;</code></td></tr>
+      <tr><td>RAFT</td><td><code>lily_raft</code></td><td>A on water from land asks "Ride the LILY RAFT?". Then water steps roll water encounters; stepping onto walkable shore dismounts. The follower hides while you ride.</td><td><code>state.rafting</code> (kept by CONTINUE, cleared by travel and whiteout)</td></tr>
+      <tr><td>UPROOT</td><td><code>saxifrage</code></td><td>Face a <code>pushable</code> boulder NPC, confirm: it moves exactly one tile. No chain pushes. Into a pit, it fills it.</td><td>Boulders reset on every map entry; filled pits persist</td></tr>
+      <tr><td>GLOW</td><td><code>foxfire_lantern</code></td><td>On <code>dark</code> maps the player's light grows from radius 1 to 3. Lamp posts and glow pipes give radius 2.</td><td>Just owning the item</td></tr>
+      <tr><td>SEED GLIDE</td><td><code>glider_seed</code></td><td>From the START menu, outdoors, fly to any visited town's landing (<code>WORLD.glide</code>).</td><td>Flags <code>visited_&lt;town&gt;</code></td></tr>
+    </tbody>
+  </table>
+
+  <p>PRUNE and ROOT BRIDGE share one framework in <a data-src="src/overworld/fieldmove.ts">fieldmove.ts</a>: a tile prop names the move, the move names its key item, and a cleared cell reads as another tile forever.</p>
+
+  <pre class="mermaid">flowchart LR
+  A["A facing a tile"] --> P{"TILES[key].fieldMove?"}
+  P -->|"no"| OTHER["other interactions"]
+  P -->|"prune or rootbridge"| K{"key item in bag?"}
+  K -->|"no"| LK["say the locked line"]
+  K -->|"yes"| Y{"yes/no prompt"}
+  Y -->|"no"| X["nothing"]
+  Y -->|"yes"| H["user hops, sfx, particles"]
+  H --> FL["set flag move_map_x_y"]
+  FL --> RF["refreshLegend: cell reads as cleared tile"]</pre>
+
+  <pre><code class="lang-ts">export const FIELD_MOVE_FX: Record&lt;FieldMove, FieldMoveFx&gt; = {
+  prune: {
+    name: "PRUNE",
+    flag: "pruned",
+    cleared: "bramble_stump",
+    locked: "A thorny tangle. It needs PRUNING.",
+    prompt: "A thorny tangle. PRUNE it?",
+    sfx: "prune",
+    particles: "snip",
+  },
+  rootbridge: {
+    name: "ROOT BRIDGE",
+    flag: "bridged",
+    cleared: "root_bridge",
+    // …
+  },
+};</code></pre>
+
+  <aside class="tip">Adding another "tile you clear" tool is one entry in <code>FIELD_MOVE_FX</code>, one in <code>FIELD_MOVES</code> (contracts) and a <code>fieldMove</code> prop on its tile. Then add a gate to the validator's <code>PROGRESS_GATES</code> so it proves the item can be reached without the tool.</aside>
+
+  <details class="advanced"><summary>Advanced: the tricky edges of RAFT, UPROOT, GLOW and GLIDE</summary>
+    <ul>
+      <li><strong>Raft through warps.</strong> <code>useWarp</code> builds the destination map first and keeps <code>rafting</code> only if the arrival tile is water. Script warps and SEED GLIDE always land you on foot.</li>
+      <li><strong>Ice never mounts a raft.</strong> Sliding into water is blocked; mounting is always an explicit A plus a yes.</li>
+      <li><strong>Boulders are actors, pits are flags.</strong> Boulder positions live only in the current <code>Actor</code> list, which <code>loadMap</code> rebuilds from the MapDef. Leaving the room resets the puzzle. Filled pits live in flags and stay filled. Because of the reset, CONTINUE on a boulder map moves the player to the room's entrance (<a data-src="src/overworld/continue.ts">continue.ts</a>) instead of behind a stone that has gone back to its start.</li>
+      <li><strong>GLOW is drawing only at runtime.</strong> Nothing stops you walking in the dark; you just can't see. The validator is stricter on purpose: before the lantern is obtainable it treats dark tiles as solid, so every story path must be lamp-lit.</li>
+      <li><strong>SEED GLIDE needs evidence of a visit.</strong> <code>visitedGlideMaps()</code> infers the furthest town from the position, heal point, marks, items and story flags, so old saves made before <code>visited_*</code> flags still get their towns. It is a monotone "furthest chapter reached" scan over a linear route; a future non-linear town would need a different rule.</li>
+    </ul>
+  </details>
+
+  <h3 id="world-npcs">NPCs, movement and trainer sight</h3>
+
+  <p>An <dfn>NpcDef</dfn> is anything that stands on a tile and can be faced: people, animals, item balls, levers, boulders, berry bushes. The <code>sprite</code> and the <code>id</code> carry conventions the engine understands:</p>
+
+  <table>
+    <thead><tr><th>Convention</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>sprite: "item_pickup"</code> with no script</td><td>An item ball (<code>pickups()</code>); hides behind <code>picked_&lt;map&gt;_&lt;id&gt;</code>.</td></tr>
+      <tr><td><code>id: "bush:&lt;harvestId&gt;"</code>, sprite <code>harvest_bush</code></td><td>A berry bush, picked once per real calendar day (<code>harvest</code> op).</td></tr>
+      <tr><td><code>id: "lever:&lt;flag&gt;"</code> / <code>"valve:&lt;flag&gt;"</code>, or <code>stateFlag</code></td><td>Drawn in its UP row while the flag is true.</td></tr>
+      <tr><td><code>id: "boarder_1"</code> / <code>"boarder_2"</code></td><td>Draws the Nursery boarder in that slot as its party icon.</td></tr>
+      <tr><td><code>pushable: true</code></td><td>An UPROOT boulder.</td></tr>
+      <tr><td>sprite <code>cat</code>, <code>dog</code>, <code>bird</code></td><td>Ambient animal AI: dogs watch you, cats sometimes deign to, birds fly off when you get within 2 tiles and come back later.</td></tr>
+      <tr><td><code>trainer</code> instead of <code>script</code></td><td>The engine runs intro, battle and the <code>after</code> line itself.</td></tr>
+    </tbody>
+  </table>
+
+  <p>Visibility is evaluated live, every frame, from <code>visibleWhen</code>. An invisible NPC is neither drawn nor solid. The script ops <code>showNpc</code> and <code>hideNpc</code> set a temporary override that lasts until the map is reloaded.</p>
+
+  <aside class="warn"><code>hideNpc</code> is not saved. If a character should stay gone, set a flag and give the NPC a <code>visibleWhen</code> on it; use <code>hideNpc</code> only for the moment the scene ends. The PIP demo below does both.</aside>
+
+  <h4 id="world-npc-movement">Movement modes</h4>
+
+  <ul>
+    <li><code>static</code> (the default): never moves on its own.</li>
+    <li><code>look_around</code>: every 70 to 160 frames, faces a new random direction. A trainer re-checks its sight line each time it turns.</li>
+    <li><code>wander</code>: every 50 to 180 frames, tries one step in a random direction, but never more than 2 tiles from its home tile, and never onto a warp or a trigger.</li>
+  </ul>
+
+  <p>NPCs avoid the player, each other and the follower (<code>occupiedForNpc</code>). The player is only blocked by NPCs, never by the follower.</p>
+
+  <h4 id="world-sight">Trainer sight</h4>
+
+  <p>An unbeaten trainer (no <code>beat_&lt;trainerId&gt;</code> flag) looks along its facing direction for up to <code>sight</code> tiles (default 4). Anything unwalkable or another NPC in between blocks the line.</p>
+
+  <pre><code class="lang-ts">export function inSight(
+  m: MapRuntime, x: number, y: number, dir: Dir, range: number,
+  target: { x: number; y: number }, blocked: (x: number, y: number) =&gt; boolean,
+): number {
+  const { dx, dy } = DIRS[dir];
+  for (let i = 1; i &lt;= range; i++) {
+    const tx = x + dx * i;
+    const ty = y + dy * i;
+    if (tx === target.x &amp;&amp; ty === target.y) return i;
+    if (!isWalkable(m, tx, ty) || blocked(tx, ty)) return 0;
+  }
+  return 0;
+}</code></pre>
+
+  <pre class="mermaid">sequenceDiagram
+  participant P as Player
+  participant O as Overworld
+  participant T as Trainer NPC
+  participant B as Battle
+  P->>O: step finishes (onArrive)
+  O->>T: inSight(facing, sight)?
+  T-->>O: distance d
+  O->>T: emote "!"
+  O->>T: walk d-1 tiles toward the player
+  O->>P: turn to face the trainer
+  O->>O: say(trainer.intro)
+  O->>B: trainerBattle()
+  B-->>O: won
+  O->>O: flags.beat_trainerId = true
+  O->>O: award mark, unless a script gives it
+  Note over O: lost: whiteout()</pre>
+
+  <details class="advanced"><summary>Advanced: NPC invariants worth knowing</summary>
+    <ul>
+      <li><strong>Scripted moves ignore collision.</strong> The <code>moveNpc</code> and <code>movePlayer</code> host methods step along the path without checking walls (a cutscene must never stall). Nothing validates those paths, so walk them in the game after you write them.</li>
+      <li><strong>Trainers are checked after triggers.</strong> On a tile with a trigger, the trigger's script runs and the trainer check waits for the next step.</li>
+      <li><strong>NPC ids are per map.</strong> Script ops refer to NPCs by id on the <em>current</em> map. The validator only checks that the id exists on <em>some</em> map, so a typo that matches another map's NPC passes; the engine then logs <code>no npc "…"</code>.</li>
+      <li><strong>Set dressing must not gate.</strong> Bushes, Nursery boarders and quest NPCs are checked by <code>mustNotBlock</code>: with all of them standing, every tile reachable without them must still be reachable.</li>
+    </ul>
+  </details>
+
+  <h3 id="world-follower">The follower</h3>
+
+  <p>The <dfn>follower</dfn> is the lead Quickened walking one tile behind you, drawn with its 16x16 party icon (<a data-src="src/overworld/follower.ts">follower.ts</a>). It is the first healthy party member (a seed rolls along too), or the lead if all have wilted. It hides when the option is off or you are rafting.</p>
+
+  <ul>
+    <li>It always heads for the tile the player just left.</li>
+    <li>A straight two-tile gap (you hopped a ledge) is crossed with a hop; any other gap (a warp, a scripted teleport) pops it in at the target.</li>
+    <li>After a map load it is <dfn>tucked</dfn> into your tile, hidden, and pops out on your first step, as in HeartGold.</li>
+    <li>It never blocks you or scripts. Face it and press A to hear how it is doing (<code>followerLine</code>, based on friendship, HP, status, time and whether its species likes the hour).</li>
+    <li>It performs field tools when it is out.</li>
+  </ul>
+
+  <details class="advanced"><summary>Advanced: follower edge cases</summary>
+    <ul>
+      <li><strong>Queued steps catch up.</strong> If the player starts a new step before the follower finishes its last, the step is queued, then run faster (<code>dur - age</code>, at least 3 frames), so running never leaves it behind.</li>
+      <li><strong>It occupies two tiles mid-step.</strong> <code>occupies()</code> is true for the tile it is leaving as well as the one it is entering. Wanderers and animals use this to step around it.</li>
+      <li><strong>After the raft.</strong> On dismount it stays tucked until the player steps off a land tile, so it never appears to walk on water.</li>
+      <li><strong>Seeds and wilted leads.</strong> A Nursery seed rolls along as the follower and talking to it gives a hint about the steps left. A wilted lead is still shown, one pixel lower, if no one is healthy.</li>
+    </ul>
+  </details>
+
+  <h3 id="world-encounters">Wild encounters</h3>
+
+  <p>A step onto an encounter tile rolls once. The tile's props decide the <dfn>encounter kind</dfn>: <code>grass</code> (tall grass, snow), <code>bog</code>, or <code>water</code> (only while rafting). Ice never rolls. The table is <code>encountersWhen</code>'s first match, else <code>encounters</code>.</p>
+
+  <pre><code class="lang-ts">export function rollEncounter(
+  map: Pick&lt;MapDef, "encounters" | "encountersWhen"&gt;, tile: TileKey, tod: TimeOfDay, rng: () =&gt; number,
+  rafting = false,
+  flags: Record&lt;string, boolean&gt; = {},
+): { species: SpeciesId; level: number; kind: EncounterKind } | null {
+  const kind = encounterKindFor(tile, rafting);
+  if (!kind) return null;
+  const match = map.encountersWhen?.find((entry) =&gt; checkCond(entry.when, flags));
+  const table = (match ? match.encounters : map.encounters)?.[kind];
+  if (!table || table.rate &lt;= 0) return null;
+  if (rng() * 100 &gt;= table.rate) return null;
+  const slot = pickWeighted(filterSlots(table.slots, tod), rng);
+  if (!slot) return null;
+  return { species: slot.species, level: rollLevel(slot, rng), kind };
+}</code></pre>
+
+  <ul>
+    <li><strong>Rate</strong> is a percentage per step. Most grass tables use 12; the range in the game is 10 to 20.</li>
+    <li><strong>Slots</strong> are weighted, not percentages: on Route 1 by day the weights are 35+25+25+15+8 = 108, so a dandelion is 35/108, about 32%. Weights are relative, so adding a slot quietly lowers every other chance.</li>
+    <li><strong>Time</strong>: a slot's <code>time</code> is <code>"any"</code> (default), <code>"day"</code> (morning and day) or <code>"night"</code>. Time comes from <code>mapTime()</code>: the map's forced <code>time</code>, else the real clock (morning 4–10, day 10–18, night 18–4).</li>
+    <li><strong>Level</strong> is uniform between <code>minLevel</code> and <code>maxLevel</code> inclusive.</li>
+  </ul>
+
+  <pre class="mermaid">flowchart TD
+  S["step onto a tile"] --> K{"encounter kind?"}
+  K -->|"none, or ice"| NO["no battle"]
+  K -->|"grass, bog, water"| TB["table: first encountersWhen match, else encounters"]
+  TB --> R{"rng x 100 below rate?"}
+  R -->|"no"| NO
+  R -->|"yes"| F["keep slots active at this time, weight above 0"]
+  F --> P["weighted pick"]
+  P --> L["uniform level min..max"]
+  L --> RO{"a free roamer on this map and terrain? 1 in 4"}
+  RO -->|"yes"| WA["battle the Wanderer, level 60"]
+  RO -->|"no"| WB["battle the rolled plant"]</pre>
+
+  <figure data-chart="level-curve"><figcaption>Wild-encounter and trainer levels in story order (by chapter and map). Use it to see where a new route's levels should sit before you write its tables.</figcaption></figure>
+
+  <details class="advanced"><summary>Advanced: encounter invariants the validator enforces</summary>
+    <ul>
+      <li>Every table (base and conditional) must have at least one slot active by day and one by night, so time of day can never empty a patch of grass.</li>
+      <li>Any map with tall grass or snow must have a <code>grass</code> table; any map with bog must have a <code>bog</code> table.</li>
+      <li><code>minLevel</code> may not exceed <code>maxLevel</code>, and every species must exist in <code>SPECIES_IDS</code>.</li>
+      <li>Weights of 0 are filtered out, which is a handy way to switch a slot off in an <code>encountersWhen</code> copy.</li>
+      <li>Balance across the story is covered by <a data-src="src/battle/logic/balance.test.ts">balance.test.ts</a>; keep it green when you raise or lower a route's levels.</li>
+    </ul>
+  </details>
+
+  <h3 id="world-roaming">Roaming Wanderers and BURR's hitchhike</h3>
+
+  <p>After the game is cleared, three legendary <dfn>Wanderers</dfn> are let loose (flags <code>game_cleared</code> and <code>wanderers_free</code>). The rules are pure functions in <a data-src="src/overworld/roaming.ts">roaming.ts</a>; randomness and the calendar date are passed in, which makes them easy to test.</p>
+
+  <table>
+    <thead><tr><th>Wanderer</th><th>Where</th><th>How you meet it</th></tr></thead>
+    <tbody>
+      <tr><td>TUMBLEWEED</td><td>Route 10, 11 or 12</td><td>Replaces a grass encounter on its current map, 1 time in 4</td></tr>
+      <tr><td>COCONUT</td><td>Route 8 or Driftseed Isle</td><td>Replaces a water (raft) encounter on its current map, 1 time in 4</td></tr>
+      <tr><td>BURR</td><td>Hitches a ride onto any <code>route_N</code></td><td>Appears behind you as an NPC; talk to it</td></tr>
+    </tbody>
+  </table>
+
+  <p>The two roamers jump to a random map from their list on <em>every</em> map change, indoors included. All three are level 60, keep their HP and status between meetings (saved in <code>state.roamers</code> and <code>state.burr</code>), flee after their first complete turn, and if you knock one out it recovers on a later calendar day (<code>wandererWilted</code>).</p>
+
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Locked
+  Locked --> Free: game_cleared and wanderers_free
+  Free --> Free: map change, roamer moves
+  Free --> Battle: met
+  Battle --> Free: it flees, HP saved
+  Battle --> Wilted: HP reaches 0
+  Wilted --> Free: a later calendar day
+  Battle --> Caught: caught
+  Caught --> [*]</pre>
+
+  <p><strong>BURR</strong> (a burdock bur, which really does travel by sticking to passers-by) works differently. On each entry to an outdoor <code>route_N</code> map, while BURR is free, the game rolls 1 in 8. If it wins, BURR is placed on the first safe tile straight behind the player. On arrival that tile is usually the exit warp, so the win is kept as pending and BURR catches up after 3 steps.</p>
+
+  <pre class="mermaid">flowchart TD
+  E["enter a new map"] --> R{"outdoor route_N, BURR free, rng below 1/8?"}
+  R -->|"no"| X["no BURR"]
+  R -->|"yes"| B{"safe free tile right behind the player?"}
+  B -->|"yes"| H["burrHitch saved, NPC burr placed"]
+  B -->|"no"| PEND["burrPending: count steps"]
+  PEND --> C{"3 or more steps, not on a warp?"}
+  C -->|"yes, tile found up to 2 back"| H
+  C -->|"not yet"| PEND
+  H --> T["talk: wild battle, wanderer burr"]
+  H --> L["next map entry: hitch cleared"]</pre>
+
+  <p>A tile is "safe" (<code>burrTileSafe</code>) if it is walkable, isn't a warp, and has at least one exit that isn't a warp, so BURR can never stand where it would block a door or a dead-end mat.</p>
+
+  <details class="advanced"><summary>Advanced: immutability, saves and RNG draws</summary>
+    <ul>
+      <li>The roaming functions return new state objects (<code>{ ...state, roamers: { ...state.roamers } }</code>); the overworld merges them back with <code>Object.assign(ctx.state, …)</code>. Keep that style, since the tests compare before and after.</li>
+      <li><code>burrRoll</code> only draws from the RNG when BURR is free on an eligible map, so seeded e2e runs before the post-game see the same random stream as before BURR existed.</li>
+      <li>The wanderer's max HP uses fixed trainer DVs, so only current HP and status need saving.</li>
+      <li><code>burrHitch</code> is kept through SAVE and CONTINUE, then cleared on the next map entry. A hitch on a map that is no longer valid (not a route, not safe, occupied) is dropped at load.</li>
+      <li>A "day" is the local date string <code>YYYY-MM-DD</code>; a clock set backwards cannot revive a wilted Wanderer (<code>wilted &gt;= day</code> is skipped).</li>
+    </ul>
+  </details>
+
+  <h3 id="world-whiteout">Healing, whiteout and onEnter</h3>
+
+  <p>The <code>heal</code> script op heals the party and, if the current map has a <code>healPoint</code>, records it as <code>state.heal</code>. When you lose a battle you can't lose (<code>canLose</code> unset), <code>whiteout()</code> runs:</p>
+
+  <ol>
+    <li>Remember the losing map's <code>onWhiteout</code>.</li>
+    <li>Fade to black, drop half your money, heal the party.</li>
+    <li>Load <code>state.heal</code>, facing up, and fade in.</li>
+    <li>Run the losing map's <code>onWhiteout</code> script. The Council seats use this to reset a failed run.</li>
+  </ol>
+
+  <p><code>onEnter</code> runs after the fade-in on every arrival: warps, script warps (after the script fades back in), SEED GLIDE and CONTINUE. Write <code>onEnter</code> scripts to be safe to run many times, usually by wrapping the scene in an <code>ifFlags({ seen: false }, …)</code> and setting <code>seen</code> inside.</p>
+
+  <details class="advanced"><summary>Advanced: whiteout ordering and the built-in script</summary>
+    <ul>
+      <li><code>onWhiteout</code> is read <em>before</em> <code>loadMap</code> swaps to the healing map; otherwise the healing map's own script would run.</li>
+      <li><code>"whiteout"</code> is a reserved script id: <code>call</code> with it (or <code>runScript("whiteout")</code>) runs the recovery and throws <code>ScriptAbort</code>, so nothing after it runs. The validator accepts it although no such script exists in <code>WORLD.scripts</code>.</li>
+      <li>The heal point only changes through the <code>heal</code> op on a map with a <code>healPoint</code>. A new game starts with the player's home as its heal point, so a whiteout in the prologue goes home ("…and scurried back home!").</li>
+      <li>The Council uses <code>onWhiteout</code> to reset its run flags, including the engine's <code>beat_&lt;trainer&gt;</code> flags for the seats, so a lost run can't skip a seat next time (<code>COUNCIL_RUN_FLAGS</code> in ch11.ts).</li>
+    </ul>
+  </details>
+
+  <h3 id="world-validate">The world validator</h3>
+
+  <p><a data-src="src/world/validate.ts">validate.ts</a> is the reason the game can promise "no soft-locks". <code>validateWorld(WORLD)</code> returns a list of problems; <a data-src="src/world/world.test.ts">world.test.ts</a> expects it to be empty. It runs on the whole world in about a second, as part of <code>npm test</code>, so a bad warp fails CI before anyone plays it.</p>
+
+  <p>It reuses the engine's own rules (<code>slidePathFrom</code> for ice, <code>reachableBoulderTiles</code> for UPROOT, <code>glowField</code> for darkness) rather than re-implementing them, so the proof and the game can't drift apart.</p>
+
+  <h4 id="world-validate-what">What it proves</h4>
+
+  <table>
+    <thead><tr><th>Area</th><th>Checks</th></tr></thead>
+    <tbody>
+      <tr><td>Geometry</td><td>Rows all the same width; every character has a real tile; structures sit exactly on <code>@</code> cells and no <code>@</code> is left over; <code>legendWhen</code> only remaps characters the map uses.</td></tr>
+      <tr><td>Warps and doors</td><td>Warps stand on walkable tiles and land on walkable tiles (not on another warp); every door has a warp or a trigger; a door's interior exit comes back to the tile below the door; interior exits are mats or stairs.</td></tr>
+      <tr><td>References</td><td>Every script, trainer, item, species, music, sfx, jingle, still, mark, quest and NPC id named anywhere exists.</td></tr>
+      <tr><td>Reachability</td><td>Every warp, NPC, sign, trigger and hidden item can be reached (or faced) from some way into the map. Scenery without a door may not cut a map in two.</td></tr>
+      <tr><td>No soft-locks</td><td>From every reachable tile, some warp is still reachable, both before PRUNE and after.</td></tr>
+      <tr><td>Progression</td><td>Each field tool's key item is obtainable before the content that needs it (<a href="#world-validate-how">gates</a>); post-game maps can't be entered before <code>game_cleared</code>.</td></tr>
+      <tr><td>Text fit</td><td>Every <code>say</code> fits the 18-column box in at most 3 pages; no word is wider than a line (with <code>&lt;PLAYER&gt;</code> measured as 7 wide letters).</td></tr>
+      <tr><td>Encounters</td><td>Valid species and levels; never empty by day or by night; grass and bog tiles have tables.</td></tr>
+    </tbody>
+  </table>
+
+  <h4 id="world-validate-how">How it proves it</h4>
+
+  <p>Each map becomes a <dfn>Grid</dfn>: a walkability function built from the base legend and structure footprints, optionally with brambles cut, gaps bridged or water rideable. <code>flood()</code> is a breadth-first search over it that honours one-way ledges and ice slides. For soft-locks, <code>canReach()</code> runs the flood <em>backwards</em> from the warps, so one pass answers "can every tile still get out?" instead of one flood per tile.</p>
+
+  <pre><code class="lang-ts">// soft-lock: from every reachable tile some warp must still be reachable,
+// both before the PRUNING SHEARS (brambles solid) and after (brambles cut).
+if (map.warps.length) {
+  for (const [gg, from, when] of [[g, flood(g, starts), "before PRUNE"], [gp, reach, "with PRUNE"]] as const) {
+    // …
+    const canExit = canReach(exits, map.warps);
+    for (const k of from) {
+      if (!canExit.has(k)) {
+        errs.push(`${where} soft-lock ${when}: no exit from ${k}`);
+        break;
+      }
+    }
+  }
+} else errs.push(`${where} has no warps`);</code></pre>
+
+  <p>Progression is the clever part. <code>progress()</code> explores the whole world like a very patient player: start at <code>newGame</code>, flood the map, run every reachable NPC, trigger and <code>onEnter</code> script <em>statically</em> (collecting the flags they set, the items they give and the warps they make), follow warps to new maps, and repeat until nothing new turns up. That is a <dfn>least fixed point</dfn>.</p>
+
+  <pre class="mermaid">flowchart TD
+  S["start: newGame map and script"] --> Q["queue of maps with entry tiles"]
+  Q --> FL["flood the map with the gates enabled so far"]
+  FL --> SC["scan reachable NPC, trigger and onEnter scripts"]
+  SC --> EF["record effects: flags, item grants, warps, each with the flags it needs"]
+  EF --> RS{"any effect whose needs are now all met?"}
+  RS -->|"yes"| AP["apply: new flags, enable a gate, add warp arrivals"]
+  AP --> Q
+  RS -->|"no, queue empty"| DONE["fixed point: everything reachable"]
+  DONE --> CK["for each gate: explore again with it blocked and compare"]</pre>
+
+  <p>Each field tool is a <dfn>progress gate</dfn> with a policy:</p>
+
+  <table>
+    <thead><tr><th>Gate</th><th>Item</th><th>Policy</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>PRUNE</td><td><code>pruning_shears</code></td><td>optional</td><td>Brambles only guard optional loops, except from Route 12 on, where Chapter 10 needs PRUNE on its main road.</td></tr>
+      <tr><td>ROOT BRIDGE</td><td><code>fig_root</code></td><td>content</td><td>Anything behind a root gap needs a Fig Root that can be obtained without crossing one.</td></tr>
+      <tr><td>RAFT</td><td><code>lily_raft</code></td><td>content</td><td>Water-only content needs a reachable raft; decorative pools need nothing.</td></tr>
+      <tr><td>GLOW</td><td><code>foxfire_lantern</code></td><td>required</td><td>Before the lantern, dark maps must have a lamp-lit path.</td></tr>
+      <tr><td>UPROOT</td><td><code>saxifrage</code></td><td>required</td><td>Boulder rooms are solved from their reset layout with legal pushes only.</td></tr>
+    </tbody>
+  </table>
+
+  <p>To check a gate, the explorer runs a second time with that gate's item withheld and compares what each map can reach "before" with what it can reach "after". Content that only the gate opens, but which the story needs before the gate's item can be had, is an error, reported with the map and coordinate.</p>
+
+  <details class="advanced"><summary>Advanced: what the validator does not prove, and performance</summary>
+    <ul>
+      <li><strong>Static, optimistic scripts.</strong> The explorer takes every branch of every <code>if</code>, choice and battle as possible. It proves a path <em>exists</em>, not that a particular sequence of flags is consistent. Order-of-scenes bugs are what the 217-beat e2e playthrough is for.</li>
+      <li><strong>Scripted movement.</strong> <code>movePlayer</code>, <code>moveNpc</code> and camera paths are not checked against walls.</li>
+      <li><strong><code>legendWhen</code> walls.</strong> Ordinary reachability uses the base legend; flag-driven walls need their own puzzle test.</li>
+      <li><strong>Trainer lines</strong> are only checked for over-long words, not the 3-page limit that <code>say</code> gets.</li>
+      <li><strong>Caching.</strong> Grids and floods are cached by a per-map signature of the gates that actually affect that map, so unlocking the raft doesn't re-flood a desert. Boulder rooms use a BFS over layouts that stops as soon as every potentially reachable tile has been seen; keep boulder puzzles small (a handful of stones), as the state space grows quickly.</li>
+      <li><strong>Extending.</strong> A new tool is one more <code>ProgressGate</code> entry (<code>affects</code>, <code>terrain</code>, optional <code>reach</code>) and a <code>checkProgressWithout…</code> wrapper with a test. Reuse the runtime's pure movement function in <code>terrain</code>/<code>reach</code> rather than writing a second copy.</li>
+    </ul>
+  </details>
+
+  <h3 id="world-howto">Adding a map, step by step</h3>
+
+  <ol>
+    <li>Add the id to <code>MAP_IDS</code> in <a data-src="src/contracts/ids.ts">contracts/ids.ts</a> (the validator loops over this list, so a map that isn't listed isn't checked).</li>
+    <li>Create <code>src/world/maps/&lt;id&gt;.ts</code> exporting a <code>MapDef</code>. Copy a similar map; keep the column ruler.</li>
+    <li>Register it in <code>maps</code> in <a data-src="src/world/index.ts">world/index.ts</a>, and put its scripts in the chapter's script file.</li>
+    <li>Add warps both ways. A door's interior exit must land on the tile below the door.</li>
+    <li>Run <code>npx vitest run src/world</code>. Read every error: each names the map, the coordinate and the rule.</li>
+    <li>Walk it: <code>npm run dev</code>, then <code>/?dev=world</code> for the overview, and look at it in the Tile Lab.</li>
+  </ol>
+</section>

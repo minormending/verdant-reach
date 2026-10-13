@@ -1,0 +1,907 @@
+<section id="data" data-title="Contracts and game data" data-summary="The shared types in src/contracts, the JSON species, move and item files, their loaders, growth, breeding and sports.">
+  <h2>Contracts and game data</h2>
+
+  <p>Every module in Verdant Reach speaks one shared language: the ids, data shapes and runtime types in
+    <a data-src="src/contracts/index.ts">src/contracts/</a>. The game's content (130 plant species, 120 moves,
+    30 items) lives in plain JSON under <a data-src="src/data/species/oak.json">src/data/</a>. Small TypeScript
+    loaders check that JSON when the module loads and build one object, <code>DATA: GameData</code>. The battle
+    engine, the menus, the overworld and the strategy guide all read from it.</p>
+
+  <p>This section covers that shared language and the data built on it. It also covers the rules that live in
+    the data: how plants grow (evolve), what they learn, how two plants set a seed in the Nursery, and how
+    often a <dfn>sport</dfn> (this game's shiny) appears.</p>
+
+  <pre class="mermaid">flowchart LR
+  subgraph disk["On disk (JSON)"]
+    SL["species/LINE.json x57"]
+    MV["moves.json"]
+    IT["items.json"]
+  end
+  subgraph loaders["src/data loaders"]
+    SP["species.ts: speciesLineErrors + load()"]
+    MO["moves.ts: movesFileErrors"]
+    IM["items.ts: itemsFileErrors"]
+    TC["typeChart.ts"]
+    GR["growth.ts: expForLevel"]
+  end
+  SL --> SP
+  MV --> MO
+  IT --> IM
+  SP --> DATA["DATA: GameData (src/data/index.ts)"]
+  MO --> DATA
+  IM --> DATA
+  TC --> DATA
+  GR --> DATA
+  C["src/contracts: ids, shapes, types"] -.types.-> loaders
+  C -.types.-> DATA
+  DATA --> B["battle"]
+  DATA --> S["screens"]
+  DATA --> O["overworld + Nursery"]
+  DATA --> G["guide.html"]</pre>
+
+  <aside class="note">"Quickened" is the in-world word for a plant that has woken up and can battle. In code,
+    <code>Quickened</code> is the type of one owned creature (the Pokémon-instance equivalent), and
+    <code>Species</code> is the static description of a kind of plant.</aside>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-contracts">src/contracts: the shared language</h3>
+
+  <p><dfn>Contracts</dfn> are the types and constant lists that more than one module depends on. They belong
+    to the coordinator ("main") and are treated as frozen: an agent who needs a change asks for it rather than
+    editing the file (<a data-src="docs/ARCHITECTURE.md">ARCHITECTURE.md</a>). Keeping them small and stable is what
+    lets the engine, battle, data, world and art work proceed in parallel.</p>
+
+  <table>
+    <thead><tr><th>File</th><th>What it holds</th></tr></thead>
+    <tbody>
+      <tr><td><a data-src="src/contracts/ids.ts">ids.ts</a></td><td>Every id list: <code>TYPES</code>, <code>SPECIES_IDS</code>, <code>MAP_IDS</code>, <code>TILES</code>, <code>STATUSES</code>, <code>REQUIRED_ITEMS</code>, <code>MARKS</code>, music, sfx, stills, and the <code>Dir</code>/<code>Button</code> unions.</td></tr>
+      <tr><td><a data-src="src/contracts/data.ts">data.ts</a></td><td>Static data shapes: <code>Stats</code>, <code>Species</code>, <code>GrowthTrigger</code>, <code>POLLINATION_GROUPS</code>, <code>Move</code>, <code>MoveEffect</code>, <code>Item</code>, <code>ItemEffect</code>, <code>TypeChart</code>, <code>HerbariumEntry</code>, <code>GameData</code>.</td></tr>
+      <tr><td><a data-src="src/contracts/runtime.ts">runtime.ts</a></td><td>Live state and services: <code>Quickened</code>, <code>GameState</code>, <code>BattleRequest</code>, <code>BattleOutcome</code>, <code>Scene</code>, <code>SceneStack</code>, <code>Assets</code>, <code>AudioService</code>, <code>UiKit</code>, <code>GameContext</code>.</td></tr>
+      <tr><td><a data-src="src/contracts/world.ts">world.ts</a></td><td>Maps, scripts (<code>ScriptCmd</code>), <code>TrainerDef</code>, quests and <code>WorldData</code>. Covered by the world section.</td></tr>
+      <tr><td><a data-src="src/contracts/constants.ts">constants.ts</a></td><td>Screen and font sizes, the UI palette, time-of-day hours, and the logical asset-path helpers.</td></tr>
+      <tr><td><a data-src="src/contracts/index.ts">index.ts</a></td><td>Re-exports all five, so modules import from <code>"../contracts"</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h4>One list, two uses: <code>as const</code> arrays</h4>
+  <p>Most id lists are written once as a <code>readonly</code> array and the type is derived from it. The array
+    exists at runtime (the loaders use it to validate JSON) and the union type exists at compile time (the
+    compiler rejects a typo like <code>"wod"</code>). Nothing has to be kept in sync by hand.</p>
+  <pre><code class="lang-ts">export const TYPES = [
+  "wood", "fire", "water", "bug", "bloom", "ghost", "thorn", "frost", "dragon",
+] as const;
+export type TypeId = (typeof TYPES)[number];
+
+export const STATUSES = [
+  "blight",    // poison-like: chip damage each turn
+  "scorch",    // burn-like: chip damage, physical attack halved
+  "frostbite", // freeze-like: can't act until thawed
+  "dormant",   // sleep-like: can't act for 1-3 turns
+  "rootbound", // paralysis-like: speed down, may fail to act
+] as const;
+export type StatusId = (typeof STATUSES)[number];</code></pre>
+
+  <p>Items are the exception. The world and story scripts rely on a fixed set of item ids, so those are listed
+    in <code>REQUIRED_ITEMS</code>, but the data agent may add more without a contract change:</p>
+  <pre><code class="lang-ts">export type RequiredItemId = (typeof REQUIRED_ITEMS)[number];
+export type ItemId = RequiredItemId | (string &amp; {});
+export type MoveId = string;
+export type TrainerId = string;</code></pre>
+
+  <p>The core static shapes and how they relate:</p>
+  <pre class="mermaid">classDiagram
+  class GameData {
+    +Record species
+    +Record moves
+    +Record items
+    +TypeChart typeChart
+    +Record herbarium
+    +expForLevel(rate, level) number
+  }
+  class Species {
+    +SpeciesId id
+    +string name
+    +string line
+    +int stage
+    +TypeId[] types
+    +Stats baseStats
+    +growthRate
+    +number catchRate
+    +number baseExp
+    +Partial~Stats~ evYield
+    +activity
+    +growsInto
+    +learnset
+    +PollinationGroup[] pollination
+  }
+  class Move {
+    +MoveId id
+    +TypeId type
+    +category
+    +number power
+    +number accuracy
+    +number pp
+    +number priority
+    +MoveEffect[] effects
+  }
+  class Item {
+    +ItemId id
+    +pocket
+    +number price
+    +ItemEffect effect
+    +boolean usableInBattle
+    +boolean usableInField
+  }
+  class HerbariumEntry {
+    +SpeciesId species
+    +string scientificName
+    +string category
+    +number heightM
+    +number weightKg
+    +string entry
+  }
+  class GrowthTrigger {
+    &lt;&lt;union&gt;&gt;
+    +kind
+    +level
+    +friendship
+    +item
+  }
+  GameData "1" o-- "*" Species
+  GameData "1" o-- "*" Move
+  GameData "1" o-- "*" Item
+  GameData "1" o-- "*" HerbariumEntry
+  Species --> GrowthTrigger : growsInto.trigger
+  Species ..> Move : learnset
+  GrowthTrigger ..> Item : item trigger</pre>
+
+  <details class="advanced"><summary>Advanced: changing a contract safely</summary>
+    <ul>
+      <li><strong>Adding an id is a contract change; adding content under an existing id is not.</strong> The
+        comment at the top of <code>ids.ts</code> says so, and the tests enforce it from the other side: every id
+        in <code>SPECIES_IDS</code> must have exactly one species entry and one Herbarium page, so a new id
+        without data fails <code>npm test</code> straight away.</li>
+      <li><strong><code>SPECIES_IDS</code> order is load-bearing.</strong> The species loader re-orders
+        <code>DATA.species</code> to match it ("so iteration order is stable whatever the file layout"). The
+        Herbarium screen walks <code>SPECIES_IDS</code> directly, and anything iterating <code>DATA.species</code>
+        sees the same order, so where you insert an id is where the species appears in the Herbarium. New species
+        go at the end of their chapter's block.</li>
+      <li><strong><code>(string &amp; {})</code></strong> is a TypeScript idiom: it widens <code>ItemId</code> to
+        any string while stopping the compiler from collapsing the union to plain <code>string</code>, so editors
+        still autocomplete the required ids.</li>
+      <li><code>MoveId</code> and <code>TrainerId</code> are plain strings. Their existence is checked by tests
+        (<code>speciesFiles.test.ts</code> "only uses moves that exist", <code>world/validate.ts</code> for
+        trainers), not by the type system. That is the trade-off for keeping 120 move ids out of the frozen
+        contracts.</li>
+      <li>Some contract comments have fallen behind the code. <code>SPECIES_IDS</code> is still introduced as "The
+        playable roster (Prologue -&gt; Chapter 4)" although it now runs to the post-game, and
+        <code>GrowthTrigger</code>'s <code>cross_pollination</code> says "not reachable in slice" although NPC
+        trades now trigger it (<a href="#data-growth">growth</a>). Trust the code, not the comment.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-runtime">Runtime types: Quickened and GameState</h3>
+
+  <p>A <code>Species</code> never changes during play. A <code>Quickened</code> is one plant you own, and it
+    changes all the time: it gains EXP, takes damage, learns moves. The save file is mostly an array of these.</p>
+  <pre><code class="lang-ts">export interface Quickened {
+  uid: string;
+  species: SpeciesId;
+  nickname?: string;
+  level: number;
+  exp: number;
+  hp: number;                   // current
+  stats: Stats;                 // computed at current level (hp = max hp)
+  ivs: Stats;                   // 0..15 (Gen 2 DVs)
+  evs: Stats;
+  moves: { id: MoveId; pp: number }[]; // up to 4
+  status: StatusId | null;
+  friendship: number;           // 0..255
+  sport: boolean;               // shiny ("sport")
+  metAt?: { map: MapId; level: number };
+  // …
+  seed?: { steps: number };
+}</code></pre>
+
+  <table>
+    <thead><tr><th>Field</th><th>Meaning</th><th>Range / rule</th></tr></thead>
+    <tbody>
+      <tr><td><code>uid</code></td><td>Stable identity. Battle bookkeeping (EXP participants, dormant counters) is keyed by it, never by party index.</td><td><code>crypto.randomUUID()</code> when available</td></tr>
+      <tr><td><code>ivs</code></td><td><dfn>DVs</dfn> (Gen 2 "determinant values"), the per-individual genetic bonus to each stat.</td><td>0–15; <code>spa</code> and <code>spd</code> share one "special" DV; the HP DV is built from the others' low bits</td></tr>
+      <tr><td><code>evs</code></td><td><dfn>EVs</dfn> (effort values), earned by defeating species.</td><td>0–252 per stat, 510 total</td></tr>
+      <tr><td><code>stats</code></td><td>The computed stats, stored. <code>stats.hp</code> is max HP; <code>hp</code> is current HP.</td><td>see <a href="#data-evs">stats</a></td></tr>
+      <tr><td><code>friendship</code></td><td>Affection. Drives the <code>tending</code> growth trigger.</td><td>0–255; starts at 70 (120 for Nursery seeds)</td></tr>
+      <tr><td><code>sport</code></td><td>The colour mutation (shiny). Cosmetic only.</td><td>1 in 512 wild, 1 in 256 from seeds</td></tr>
+      <tr><td><code>seed</code></td><td>Present while the plant is still an unsprouted Nursery seed. Seeds can't battle and show as "SEED".</td><td>steps left to sprouting</td></tr>
+    </tbody>
+  </table>
+
+  <p><code>GameState</code> is the whole save: party (max 6), <code>box</code> (the specimen cabinet), bag
+    (<code>ItemId → qty</code>), story flags, marks (badges), the Herbarium's seen/caught lists, position, the last
+    greenhouse (<code>heal</code>, where a whiteout sends you), options, and the optional <code>nursery</code>.
+    <code>BattleRequest</code> and <code>BattleOutcome</code> are the battle module's input and output; see
+    <a href="#battle-lifecycle">the battle lifecycle</a>.</p>
+
+  <details class="advanced"><summary>Advanced: stored stats and old saves</summary>
+    <ul>
+      <li><strong>Stats are stored, not derived on read.</strong> <code>recalcStats</code>
+        (<a data-src="src/battle/logic/stats.ts">stats.ts</a>) runs on level-up, on growth and in the Nursery. The
+        save loader (<a data-src="src/save/index.ts">src/save/index.ts</a>) cleans seeds, the Nursery and
+        wanderers, but it does not recompute stats. So a base-stat edit reaches a plant in an existing save at its
+        next level-up or growth, not on load. <code>docs/DATA.md</code> says stats are "computed from its species
+        on load". On this branch that is not what the code does.</li>
+      <li><code>recalcStats</code> moves current HP by the change in max HP and keeps a healthy plant at 1 HP or
+        more. A wilted plant (hp 0) stays at 0, so growing or levelling never revives one.</li>
+      <li>Optional fields (<code>playerLook</code>, <code>nursery</code>, <code>hallOfFame</code>,
+        <code>seed</code>…) are optional so that older saves still type-check and load. That is why the contract
+        has no version bump: <code>GameState.version</code> is still <code>1</code>.</li>
+      <li>A Nursery boarder carries an extra <code>boardedLevel</code> (<code>Quickened &amp; { boardedLevel?: number }</code>),
+        and it is deleted when the boarder leaves. Intersection types like this keep side-data off the main contract.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-constants">Constants and asset paths</h3>
+
+  <p><a data-src="src/contracts/constants.ts">constants.ts</a> fixes the Game Boy Color frame: a 160×144 logical
+    screen (<code>SCREEN_W</code>, <code>SCREEN_H</code>), 16 px tiles, a 10×9 tile view, 60 fps, an 8×8 font and an
+    18-column × 2-line text box. <code>TIME_OF_DAY</code> sets morning at 4:00, day at 10:00 and night at 18:00
+    (real clock). The <code>UI</code> palette holds the Crystal-like window and HP-bar colours.</p>
+
+  <p>The path helpers build <dfn>logical asset paths</dfn>. Code asks for
+    <code>assets/species/oak_acorn/front.png</code>, and the art registry resolves that to whichever bundle or
+    art pack supplies it. The sport colouring is the same path with <code>?sport</code>:</p>
+  <pre><code class="lang-ts">export const speciesPath = (id: SpeciesId, kind: SpeciesSpriteKind, opts: { sport?: boolean } = {}) =&gt;
+  `assets/species/${id}/${kind}.png${opts.sport ? "?sport" : ""}`;</code></pre>
+  <p>This is why swapping art never touches gameplay data: the JSON refers to species ids, never to files.</p>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-species">Species files: <code>verdant.speciesline/2</code></h3>
+
+  <p>Species live in one JSON file per <dfn>line</dfn> (an evolution family) in
+    <a data-src="src/data/species/oak.json">src/data/species/&lt;line&gt;.json</a>, stages in order, each with its
+    Field Herbarium page. The file name is the line id. On this branch there are 57 line files holding 130
+    species: 57 at stage 1, 49 at stage 2 and 24 at stage 3.</p>
+
+  <pre><code class="lang-json">{
+  "format": "verdant.speciesline/2",
+  "line": "oak",
+  "pollination": ["woodland"],
+  "species": [
+    {
+      "id": "oak_acorn",
+      "name": "Oak Acorn",
+      "stage": 1,
+      "types": ["wood"],
+      "baseStats": { "hp": 52, "atk": 54, "def": 64, "spa": 42, "spd": 54, "spe": 44 },
+      "growthRate": "medium",
+      "catchRate": 45,
+      "baseExp": 64,
+      "evYield": { "def": 1 },
+      "activity": "any",
+      "growsInto": { "species": "oak_sapling", "trigger": { "kind": "vigor", "level": 16 } },
+      "learnset": [
+        [1, "vine_lash"],
+        [1, "sap_seal"],
+        [6, "root_tap"],
+        // …
+        [38, "timber"]
+      ],
+      "herbarium": {
+        "scientificName": "Quercus robur",
+        "category": "Acorn",
+        "heightM": 0.1,
+        "weightKg": 0.5,
+        "entry": "It sits very still, thinking long, slow thoughts. Patience runs in the family: a real oak seldom bears acorns before it is about 40.",
+        "fact": "English oak usually starts bearing acorns at ~40 years.",
+        "source": "https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/english-oak/"
+      }
+    }
+  ]
+}</code></pre>
+
+  <table>
+    <thead><tr><th>Field</th><th>Rule (checked by)</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td><code>pollination</code></td><td>Groups from <code>POLLINATION_GROUPS</code>; <code>[]</code> = can't set seed (loader)</td><td><a href="#data-nursery">Nursery</a></td></tr>
+      <tr><td><code>id</code></td><td>In <code>SPECIES_IDS</code>, defined exactly once (loader + test)</td><td>everything</td></tr>
+      <tr><td><code>name</code></td><td>1–12 characters (loader); unique (test)</td><td>menus, HUD</td></tr>
+      <tr><td><code>stage</code></td><td>1, 2 or 3 (loader); equals position in the file (test)</td><td>size class, seed species</td></tr>
+      <tr><td><code>types</code></td><td>1–2 of <code>TYPES</code></td><td>STAB, effectiveness</td></tr>
+      <tr><td><code>baseStats</code></td><td>Integers 1–255 (loader); totals 240–530, with named legendary exceptions (test)</td><td><a href="#data-evs">stat formula</a></td></tr>
+      <tr><td><code>growthRate</code></td><td><code>fast</code>, <code>medium</code> or <code>slow</code></td><td><a href="#data-exp">EXP curve</a>, seed steps</td></tr>
+      <tr><td><code>catchRate</code></td><td>Integer 3–255; lower is harder</td><td><a href="#battle-catching">catching</a></td></tr>
+      <tr><td><code>baseExp</code></td><td>Positive integer</td><td><a href="#battle-exp">EXP yield</a></td></tr>
+      <tr><td><code>evYield</code></td><td>Known stat keys, integer values</td><td><a href="#data-evs">EVs</a></td></tr>
+      <tr><td><code>activity</code></td><td><code>any</code>, <code>day</code> or <code>night</code> (photoperiod)</td><td>encounters, a 1.1× damage bonus in its time</td></tr>
+      <tr><td><code>growsInto</code></td><td>Optional; known species and trigger kind (loader); same line, next stage (test)</td><td><a href="#data-growth">growth</a></td></tr>
+      <tr><td><code>learnset</code></td><td><code>[level, move]</code> pairs, level ≥ 1 (loader); moves exist, sorted, ≥ 2 level-1 moves (test)</td><td><a href="#data-exp">learnsets</a></td></tr>
+      <tr><td><code>herbarium</code></td><td>Required, with <code>fact</code> and a URL <code>source</code></td><td><a href="#data-herbarium">Herbarium</a></td></tr>
+    </tbody>
+  </table>
+
+  <p>The data model as an entity-relationship diagram. A "line" exists only as a file and as the
+    <code>line</code> string on each species; the learnset and growth are embedded in the species record.</p>
+  <pre class="mermaid">erDiagram
+  LINE_FILE ||--|{ SPECIES : "holds stages 1..3"
+  LINE_FILE }o--o{ POLLINATION_GROUP : "pollination"
+  SPECIES ||--|| HERBARIUM_PAGE : "herbarium"
+  SPECIES ||--|{ LEARNSET_ENTRY : "learnset"
+  LEARNSET_ENTRY }o--|| MOVE : "move id"
+  SPECIES ||--o| GROWTH : "growsInto"
+  GROWTH }o--|| SPECIES : "next stage"
+  GROWTH }o--o| ITEM : "item trigger"
+  MOVE ||--o{ MOVE_EFFECT : "effects"
+  ITEM ||--|| ITEM_EFFECT : "effect"
+  LINE_FILE {
+    string format "verdant.speciesline/2"
+    string line PK "= file name"
+  }
+  SPECIES {
+    string id PK
+    string name
+    int stage
+    string types
+    int catchRate
+    int baseExp
+    string growthRate
+    string activity
+  }
+  LEARNSET_ENTRY {
+    int level
+    string move FK
+  }
+  GROWTH {
+    string species FK
+    string kind
+    int level
+    int friendship
+    string item FK
+  }
+  HERBARIUM_PAGE {
+    string scientificName
+    string category
+    float heightM
+    float weightKg
+    string entry
+    string fact
+    string source
+  }
+  MOVE {
+    string id PK
+    string type
+    string category
+    int power
+    int accuracy
+    int pp
+    int priority
+  }
+  ITEM {
+    string id PK
+    string pocket
+    int price
+    bool usableInBattle
+    bool usableInField
+  }</pre>
+
+  <figure data-chart="base-stat-totals"><figcaption>Base-stat total for every species, grouped by stage. Ordinary species sit between 240 and 530; the data test allows named exceptions for the legendaries and gifts (Elder 640, Methuselah 620, Centuryheart 600, the three wanderers 580).</figcaption></figure>
+
+  <figure data-chart="species-by-type"><figcaption>How many species carry each type, as primary and as secondary type.</figcaption></figure>
+
+  <details class="advanced"><summary>Advanced: the balance guard rails in the data tests</summary>
+    <p><a data-src="src/data/data.test.ts">data.test.ts</a> holds the cross-species rules the loader can't see:</p>
+    <ul>
+      <li>Every stage-1 species has a level-1 attacking move that shares one of its types, so a fresh catch always
+        has a STAB (same-type attack bonus) option.</li>
+      <li>Growth levels increase along a line (stage 2's level is above stage 1's), and the three starters grow at
+        16 and 32.</li>
+      <li>Stat totals: oak_acorn is pinned at 310, green_chili at 405, giant_water_lily at 525, as fixed reference
+        points. Round-3 two-stage lines sit at 250–320 and 400–470, with learnsets of at least 10 moves reaching
+        level 36 or more.</li>
+      <li>Growth rates on this branch: medium 95, slow 31, fast 4. Moving a whole line to <code>slow</code> means
+        25% more EXP at every level, which the balance tests won't catch (they build parties at fixed levels).</li>
+    </ul>
+    <p>Then the balance tests (<a href="#battle-tests">battle tests</a>) re-run boss fights with typical parties,
+      so a stat change that makes a leader too easy or too hard fails before it ships.</p>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-loading">Loaders and validation</h3>
+
+  <p>Each data file has a small loader that does three things:</p>
+  <ol>
+    <li><strong>Import at build time.</strong> <code>import.meta.glob("./species/*.json", { eager: true })</code> for
+      species, plain <code>import file from "./moves.json"</code> for moves and items. Vite inlines the JSON
+      into the bundle, so there is no runtime fetch and no loading state.</li>
+    <li><strong>Check the shape.</strong> A pure function (<code>speciesLineErrors</code>, <code>movesFileErrors</code>,
+      <code>itemsFileErrors</code>) returns a list of human-readable errors, empty when valid.</li>
+    <li><strong>Fail loudly or build the record.</strong> Any error throws at module load, naming the file and
+      field; otherwise the loader builds the <code>Record</code> that goes into <code>DATA</code>.</li>
+  </ol>
+
+  <pre><code class="lang-ts">/** Shape errors for one line file (empty when valid). Cross-file checks are in the data tests. */
+export function speciesLineErrors(file: string, d: SpeciesLineFile): string[] {
+  const errs: string[] = [];
+  const at = (where: string, msg: string) =&gt; errs.push(`${file}: ${where}: ${msg}`);
+  const isInt = (n: unknown) =&gt; typeof n === "number" &amp;&amp; Number.isInteger(n);
+  if (d.format !== "verdant.speciesline/2") at("format", `expected "verdant.speciesline/2"`);
+  if (`${d.line}.json` !== file) at("line", `must match the file name (${file})`);
+  // …
+  for (const [i, s] of (d.species ?? []).entries()) {
+    const w = `species[${i}] ${s.id ?? "?"}`;
+    if (!(SPECIES_IDS as readonly string[]).includes(s.id)) at(w, "id is not in SPECIES_IDS (src/contracts/ids.ts)");
+    // …
+    for (const k of STAT_KEYS) if (!isInt(s.baseStats?.[k]) || s.baseStats[k] &lt; 1 || s.baseStats[k] &gt; 255) at(w, `baseStats.${k} must be an integer 1-255`);
+    // …
+  }
+  return errs;
+}</code></pre>
+
+  <p>A typo produces a message like <code>oak.json: species[0] oak_acorn: baseStats.hp must be an integer 1-255</code>.
+    Because the check is a pure function that takes the parsed file, the tests can call it on a deliberately
+    broken copy and assert on the messages (<a data-src="src/data/speciesFiles.test.ts">speciesFiles.test.ts</a>,
+    "reports mistakes with the file and field").</p>
+
+  <pre class="mermaid">flowchart TD
+  A["import.meta.glob species/*.json"] --> B{"for each file"}
+  B --> C["speciesLineErrors(file, d)"]
+  C --> D["map each species to a Species record (line, pollination copied in)"]
+  D --> E{"id already seen?"}
+  E -- yes --> F["push 'defined twice'"]
+  E -- no --> G["store Species + HerbariumEntry"]
+  F --> B
+  G --> B
+  B -- done --> H{"any errors?"}
+  H -- yes --> X["throw Error: Invalid species data + every message"]
+  H -- no --> I["re-order by SPECIES_IDS"]
+  I --> J["export SPECIES, HERBARIUM"]</pre>
+
+  <p>Where each kind of mistake is caught:</p>
+  <pre class="mermaid">sequenceDiagram
+  participant Dev as Developer
+  participant L as Loader (module load)
+  participant T as npm test
+  participant CI as Pages workflow
+  Dev->>L: edits oak.json
+  L-->>Dev: shape error, page fails to start (dev server)
+  Dev->>T: npm test
+  T->>T: speciesFiles / dataFiles: well formed, every id once, moves exist
+  T->>T: data.test: names, growth, stat bands, signature moves
+  T->>T: balance.test: leader win-rate bands
+  T-->>Dev: red or green
+  Dev->>CI: push to main
+  CI->>CI: tests + build + headless playthrough
+  CI-->>Dev: deploy only if all pass</pre>
+
+  <table>
+    <thead><tr><th>Loader</th><th>Format</th><th>Notable shape rules</th></tr></thead>
+    <tbody>
+      <tr><td><a data-src="src/data/species.ts">species.ts</a></td><td><code>verdant.speciesline/2</code></td><td><code>line</code> equals the file name; known pollination groups; Herbarium <code>fact</code>/<code>source</code> required</td></tr>
+      <tr><td><a data-src="src/data/moves.ts">moves.ts</a></td><td><code>verdant.moves/1</code></td><td>lower_snake_case unique ids; name ≤ 12, description ≤ 36; power 0 exactly for status and fixed-damage moves; accuracy 1–100 or <code>null</code>; known effect kinds, statuses and stats</td></tr>
+      <tr><td><a data-src="src/data/items.ts">items.ts</a></td><td><code>verdant.items/1</code></td><td>name ≤ 13, description ≤ 36; pocket <code>items</code>/<code>pods</code>/<code>key</code>; whole-number price; known effect kind</td></tr>
+    </tbody>
+  </table>
+
+  <details class="advanced"><summary>Advanced: what the loader deliberately does not check</summary>
+    <ul>
+      <li><strong>Shape, not references.</strong> The species loader doesn't check that learnset moves exist in
+        <code>moves.json</code>, or that <code>growsInto</code> stays inside the line. Those are cross-file facts,
+        and they live in tests, which keeps each loader independent of the others' load order.</li>
+      <li><strong>Failing at import is intentional.</strong> A bad file throws during module evaluation, so the
+        whole game refuses to start in dev and the build's tests fail. The alternative (skip the bad species) would
+        surface later as a battle against a fallback "Wood, 50 in every stat" plant from
+        <a data-src="src/battle/logic/lookup.ts">lookup.ts</a>, which is much harder to trace.</li>
+      <li><strong>The runtime type drops two fields.</strong> <code>fact</code> and <code>source</code> are required
+        in the JSON but not copied into <code>HerbariumEntry</code>; they exist for review and tests. The source check
+        is the unanchored regex <code>/https?:\/\//</code>, so it proves a URL is present, not that it supports the
+        fact. Checking the fact is a human review step.</li>
+      <li><strong>Error lists, not first-error.</strong> Each function collects every problem, so one run of the
+        tests shows all mistakes in a file at once.</li>
+      <li>Length limits differ slightly between the contract comments and the loaders (the <code>Item</code> type
+        says "&lt;= 12 chars", the item loader allows 13). The loader is what is enforced.</li>
+      <li>Adding a field to the JSON means adding it in three places: the <code>SpeciesLineFile</code> interface, the
+        mapping in <code>load()</code> and (if shared) the <code>Species</code> contract. Forgetting the mapping step
+        drops the field silently.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-moves">Moves: <code>moves.json</code></h3>
+
+  <p>One list, one move per line, in order. Later chapters append, so keep new moves at the end. On this branch
+    there are 120 moves: 39 physical, 42 special and 39 status. Physical moves use Attack against Defence;
+    special moves use Special Attack against Special Defence. The split is per move, not per type (an updated
+    mechanic over Crystal).</p>
+  <pre><code class="lang-json">{ "id": "acorn_drop", "name": "Acorn Drop", "type": "wood", "category": "physical", "power": 60, "accuracy": 95, "pp": 20, "priority": 0, "effects": [{ "kind": "flinch", "chance": 20 }], "description": "Drops a hard acorn. May flinch." }</code></pre>
+
+  <p>Effects are a tagged union (<code>MoveEffect</code> in <a data-src="src/contracts/data.ts">data.ts</a>), so a
+    move can combine several. How each one behaves in battle is in <a href="#battle-effects">move effects</a>.</p>
+  <table>
+    <thead><tr><th>Kind</th><th>Fields</th><th>Moves using it</th></tr></thead>
+    <tbody>
+      <tr><td><code>stat</code></td><td><code>stat</code>, <code>stages</code>, <code>chance</code>, <code>target</code></td><td>53</td></tr>
+      <tr><td><code>status</code></td><td><code>status</code>, <code>chance</code>, <code>target</code></td><td>20</td></tr>
+      <tr><td><code>drain</code></td><td><code>fraction</code></td><td>8</td></tr>
+      <tr><td><code>flinch</code>, <code>high_crit</code>, <code>multi_hit</code></td><td><code>chance</code> / none / <code>min</code>, <code>max</code></td><td>6 each</td></tr>
+      <tr><td><code>heal</code></td><td><code>fraction</code>, optional <code>sunBonus</code></td><td>5</td></tr>
+      <tr><td><code>weather</code></td><td><code>weather</code>: sun, rain or frost</td><td>3 (Sun Flare, Rain Call, Cold Snap)</td></tr>
+      <tr><td><code>protect</code>, <code>always_hit</code>, <code>fixed_damage</code></td><td>none / none / <code>amount</code> (number or <code>"level"</code>)</td><td>2 each</td></tr>
+      <tr><td><code>recoil</code>, <code>root_tap</code></td><td><code>fraction</code> / none</td><td>1 each</td></tr>
+    </tbody>
+  </table>
+
+  <p>Four moves have non-zero priority: Curl Up and Lotus Effect at +4 (the protect moves), Quick Snap and
+    Vacuum Trap at +1.</p>
+
+  <aside class="warn">A new move also needs an animation family in <a data-src="src/battle/anims.ts">src/battle/anims.ts</a>.
+    The hints test checks that every move maps to one.</aside>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-items">Items: <code>items.json</code></h3>
+
+  <p>Thirty items in three pockets. The <code>effect</code> union decides what an item does; key items and growth
+    items use <code>{ "kind": "none" }</code> and are recognised by id instead.</p>
+  <table>
+    <thead><tr><th>Effect</th><th>Examples (price)</th><th>Handled by</th></tr></thead>
+    <tbody>
+      <tr><td><code>pod</code> (<code>catchMultiplier</code>)</td><td>Terrarium Pod ×1 ($200), Glass Pod ×1.5 ($600)</td><td><a href="#battle-catching">catching</a></td></tr>
+      <tr><td><code>heal</code> / <code>heal_full</code></td><td>Water Flask 20 HP ($300), Spring Water ($700), Rain Jar full ($1500), Wild Berry ($200)</td><td><a data-src="src/battle/logic/items.ts">items.ts</a> <code>applyItem</code></td></tr>
+      <tr><td><code>revive</code> (<code>fraction</code>)</td><td>Compost ($1500)</td><td><code>applyItem</code></td></tr>
+      <tr><td><code>cure_status</code> (optional <code>status</code>)</td><td>Neem Spray, any status ($250); Aloe Gel, Cloche, Rose Hip</td><td><code>applyItem</code></td></tr>
+      <tr><td><code>restore_pp</code></td><td>Plant Food ($1200)</td><td><code>applyItem</code></td></tr>
+      <tr><td><code>none</code></td><td>Growth items Ember Ash ($3000), Cold Snap; 16 key items</td><td><a href="#data-growth">growth</a>, scripts</td></tr>
+    </tbody>
+  </table>
+
+  <details class="advanced"><summary>Advanced: item edge cases</summary>
+    <ul>
+      <li><code>itemHasEffect</code> is the single "would this do anything?" check. <code>applyItem</code> calls it
+        first, so field and battle use give the same "It won't have any effect." answer, and a seed always refuses.</li>
+      <li><code>restore_pp</code> with <code>amount: 0</code> means "restore fully" (<code>e.amount &gt; 0 ? … : max</code>).</li>
+      <li>The bag caps a stack at 99 (<code>addItem</code>) and deletes the key when a count reaches 0, so
+        <code>bag[id]</code> being present means you own at least one.</li>
+      <li><code>cold_snap</code> is both a move id (it sets frost) and an item id (it grows Snowdrop Bulb). Moves and
+        items are separate records, so nothing collides, but searching the codebase for the id finds both.</li>
+      <li>Price 0 means it can't be bought or sold. Shops list stock explicitly, so price alone never puts an item
+        on sale.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-herbarium">Herbarium pages and sourced facts</h3>
+
+  <p>The <dfn>Field Herbarium</dfn> is the in-game encyclopedia (the Pokédex equivalent). Every page sits next to
+    its species in the line file. The project's binding rule is that every entry contains <strong>one true,
+    checkable fact about the real plant</strong>, stated plainly in <code>fact</code> and backed by a
+    <code>source</code> URL. Heights and weights are real ballparks for that growth stage. Medicinal and cultural
+    claims are not allowed.</p>
+
+  <pre class="mermaid">flowchart LR
+  W["Write entry: 2-4 short sentences"] --> F["State the one fact plainly in 'fact'"]
+  F --> S["Cite a URL that checks it in 'source'"]
+  S --> L{"Loader: fact, entry, names non-empty, source has http(s), height/weight positive"}
+  L -- fail --> E["Error names file + species"]
+  L -- pass --> T{"Test: DATA.herbarium entry matches the file, every SPECIES_ID has a page"}
+  T --> R["Human review: does the source say it?"]</pre>
+
+  <p>At runtime only the display fields reach <code>DATA.herbarium</code>: scientific name, category, height,
+    weight and entry. The Herbarium screen, the post-catch page and the guide all render from that record.</p>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-growth">Growth triggers</h3>
+
+  <p><dfn>Growth</dfn> is this game's word for evolution. A species may name its next stage with
+    <code>growsInto</code> and a trigger. The triggers mirror Gen 2's evolution methods with plant names:</p>
+  <pre><code class="lang-ts">export type GrowthTrigger =
+  | { kind: "vigor"; level: number }                     // level up
+  | { kind: "vigor_day"; level: number }                 // level up during morning/day
+  | { kind: "vigor_night"; level: number }               // level up at night
+  | { kind: "tending"; friendship: number }              // friendship &gt;= value on level up
+  | { kind: "item"; item: ItemId }                       // use item from the bag
+  | { kind: "cross_pollination" };                       // trade (not reachable in slice)</code></pre>
+
+  <table>
+    <thead><tr><th>Trigger</th><th>Count</th><th>Examples on this branch</th><th>Where it fires</th></tr></thead>
+    <tbody>
+      <tr><td><code>vigor</code></td><td>62</td><td>oak_acorn → oak_sapling at 16</td><td>after a battle, for plants that levelled</td></tr>
+      <tr><td><code>vigor_day</code></td><td>2</td><td>rose_bud at 18, sunflower_bud at 24</td><td>same, if the time is morning or day</td></tr>
+      <tr><td><code>vigor_night</code></td><td>3</td><td>foxglove_rosette at 18, moonflower_vine and orchid_spike at 22</td><td>same, if the time is night</td></tr>
+      <tr><td><code>tending</code></td><td>3</td><td>clover_sprout at friendship 120; apple_sapling and maple_sapling at 220</td><td>same, if friendship is high enough</td></tr>
+      <tr><td><code>item</code></td><td>2</td><td>lodgepole_cone + Ember Ash, snowdrop_bulb + Cold Snap</td><td>using the item from the party screen</td></tr>
+      <tr><td><code>cross_pollination</code></td><td>1</td><td>vanilla_vine → vanilla_orchid</td><td>receiving it in an NPC trade</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code class="lang-ts">export function growthTarget(data: GameData, q: Quickened, time: TimeOfDay): SpeciesId | null {
+  if (q.seed) return null;
+  const g = getSpecies(data, q.species).growsInto;
+  if (!g || !data.species[g.species]) return null;
+  const t = g.trigger;
+  switch (t.kind) {
+    case "vigor": return q.level &gt;= t.level ? g.species : null;
+    case "vigor_day": return q.level &gt;= t.level &amp;&amp; time !== "night" ? g.species : null;
+    case "vigor_night": return q.level &gt;= t.level &amp;&amp; time === "night" ? g.species : null;
+    case "tending": return q.friendship &gt;= t.friendship ? g.species : null;
+    default: return null;
+  }
+}</code></pre>
+
+  <pre class="mermaid">flowchart TD
+  subgraph battle["Battle ending (scene.ts)"]
+    B1["outcome is not 'lost'"] --> B2{"levelled this battle and not wilted?"}
+    B2 -- yes --> B3["growthTarget(q, worldTime)"]
+  end
+  subgraph party["Party screen: USE item"]
+    P1["itemGrowthTarget(q, item)"]
+  end
+  subgraph trade["NPC trade (tradeFlow.ts)"]
+    T1["crossPollinationTarget(received)"]
+  end
+  B3 -- species --> RG["runGrowth: flashing scene, B cancels"]
+  P1 -- species --> RG
+  T1 -- species --> RGT["runGrowth canCancel: false"]
+  RG --> AG["applyGrowth: change species, recalcStats"]
+  RGT --> AG
+  AG --> LM["learn moves the new form learns at this level"]</pre>
+
+  <p>A line's progression as a state machine. Pressing B during the growth scene cancels it, and the plant stays
+    in its current stage until the next time the trigger is checked.</p>
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Stage1 : caught, gifted or sprouted
+  Stage1 --> Stage2 : trigger met + growth scene not cancelled
+  Stage1 --> Stage1 : B pressed (cancel)
+  Stage2 --> Stage3 : trigger met
+  Stage2 --> Stage2 : B pressed (cancel)
+  Stage3 --> [*]</pre>
+
+  <details class="advanced"><summary>Advanced: growth timing rules and their edge cases</summary>
+    <ul>
+      <li><strong>Only plants that levelled are checked.</strong> The scene keeps a <code>leveled</code> set of uids.
+        A plant already past its growth level (a trade, a cancelled growth) grows at its next level-up in battle, not
+        at the next battle.</li>
+      <li><strong>"Day" includes morning.</strong> <code>vigor_day</code> passes for any time except night (4:00–18:00
+        on the real clock). The time is read again at the battle's end with <code>worldTime</code>, not taken from
+        when the battle started.</li>
+      <li><strong><code>tending</code> has no level requirement</strong>, but it is only checked after a battle
+        level-up. Friendship rises +5/+3/+2 per level (below 100 / below 200 / above), and falls 1 when your plant
+        wilts.</li>
+      <li><strong>No growth after a loss</strong>, and wilted plants never grow. Nursery boarders level up there but
+        never grow (<code>boarderExp</code> skips the check), as in Gen 2's Day Care.</li>
+      <li><code>growthTarget</code> also returns null if the target species is missing from <code>DATA</code>. This
+        keeps a half-added line from crashing.</li>
+      <li>Item growth is checked through <code>canGrowWith</code>, which the party screen also uses to show
+        Crystal's ABLE / NOT ABLE label. <code>isGrowthItem</code> recognises growth items even when nobody in the
+        party can use them.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-exp">EXP curves and learnsets</h3>
+
+  <p>Each species has a growth rate that picks one of three Gen 2 EXP curves. <code>expForLevel</code> returns the
+    total EXP needed to <em>reach</em> a level:</p>
+  <pre><code class="lang-ts">// Gen 2 experience curves. Our three rates map to:
+//   fast   -&gt; Gen 2 "fast"        4n^3 / 5
+//   medium -&gt; Gen 2 "medium fast" n^3
+//   slow   -&gt; Gen 2 "slow"        5n^3 / 4
+// Level 1 always needs 0 exp. Capped at level 100.
+export function expForLevel(rate: Species["growthRate"], level: number): number {
+  const n = Math.max(1, Math.min(100, Math.floor(level)));
+  if (n &lt;= 1) return 0;
+  const cube = n * n * n;
+  switch (rate) {
+    case "fast": return Math.floor((4 * cube) / 5);
+    case "medium": return cube;
+    case "slow": return Math.floor((5 * cube) / 4);
+  }
+}</code></pre>
+  <figure data-chart="exp-curves"><figcaption>Total EXP needed per level for the fast, medium and slow curves. Level 100 needs 800,000, 1,000,000 and 1,250,000 EXP.</figcaption></figure>
+
+  <p>A <dfn>learnset</dfn> is a list of <code>[level, move]</code> pairs. Level-1 entries are the starting moves.
+    When a Quickened is created at some level (a wild plant, a trainer's plant), it knows the moves it would have
+    learned by then:</p>
+  <pre><code class="lang-ts">export function movesAtLevel(species: Species, level: number, isAttack?: (id: MoveId) =&gt; boolean): MoveId[] {
+  const learned: MoveId[] = [];
+  const entries = species.learnset
+    .map((e, i) =&gt; ({ ...e, i }))
+    .filter((e) =&gt; e.level &lt;= level)
+    .sort((a, b) =&gt; a.level - b.level || a.i - b.i);
+  for (const e of entries) {
+    const at = learned.indexOf(e.move);
+    if (at &gt;= 0) learned.splice(at, 1);
+    learned.push(e.move);
+  }
+  const chosen = learned.slice(-4);
+  // … keeps at least two attacking moves when it has learned them
+  return chosen;
+}</code></pre>
+  <p>This is Gen 2's "last four moves learned" with one change: if the last four would leave fewer than two
+    attacking moves, it swaps the oldest status move for the most recent older attack. Status-heavy learnsets
+    would otherwise give wild and trainer plants a single attack, which no human player would choose.</p>
+  <p>Your own plants learn one level at a time instead: <code>movesLearnedAt(species, level)</code> lists the
+    moves for exactly that level, and the learn flow offers each one (see <a href="#battle-levelup">level-up</a>).</p>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-evs">Stats, DVs and EV yields</h3>
+
+  <p>Stats follow the Gen 2 formula, with EVs stored on the modern 0–252 scale:</p>
+  <pre><code class="lang-ts">//   HP    = floor(((Base + IV) * 2 + floor(EV / 4)) * L / 100) + L + 10
+//   Other = floor(((Base + IV) * 2 + floor(EV / 4)) * L / 100) + 5
+export function calcStat(key: StatKey, base: number, iv: number, ev: number, level: number): number {
+  const core = Math.floor((((base + iv) * 2 + Math.floor(ev / 4)) * level) / 100);
+  return key === "hp" ? core + level + 10 : core + 5;
+}</code></pre>
+  <p>Worked example: an Oak Acorn (base HP 52) at level 5 with an HP DV of 8 and no EVs has
+    floor((60 × 2) × 5 / 100) + 5 + 10 = 6 + 15 = <strong>21 HP</strong>.</p>
+
+  <p><strong>DVs</strong> are rolled 0–15 for Attack, Defence, Speed and Special. Special Attack and Special Defence
+    share the Special DV, and the HP DV is assembled from the low bit of each of the other four, exactly as on the
+    Game Boy. Trainers' plants use the fixed Gen 2 trainer DVs 9/8/8/8.</p>
+
+  <p><strong>EV yield</strong> (<code>evYield</code>) is what a species gives when defeated. On this branch all 130
+    species declare one: 49 give 1 point, 49 give 2 and 32 give 3. <code>gainEvs</code> adds it up to the 252 per
+    stat and 510 total caps.</p>
+
+  <details class="advanced"><summary>Advanced: EV and DV details</summary>
+    <ul>
+      <li>If a species had no <code>evYield</code>, <code>gainEvs</code> would give +1 in its highest base stat (the
+        first in <code>hp, atk, def, spa, spd, spe</code> order on a tie). No species relies on that fallback today.</li>
+      <li>EVs are given to <strong>every</strong> plant that receives an EXP share, including those that sat out
+        (<code>awardExp</code> calls <code>gainEvs</code> before checking <code>participant</code>). That is Gen 2's EXP
+        Share behaviour applied to the whole team.</li>
+      <li><code>floor(EV / 4)</code> at 252 EVs adds 63 to the core, the same maximum Gen 2's
+        <code>floor(ceil(sqrt(statExp)) / 4)</code> produced. At level 100 that is +63 to the stat; at level 50, +31.</li>
+      <li>Because the HP DV is derived, any code that changes DVs (the Nursery's <code>inheritIvs</code>) must rebuild
+        <code>hp</code> from the low bits too, or HP would disagree with the other four.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-nursery">Pollination groups and the Nursery</h3>
+
+  <p>The <dfn>Nursery Garden</dfn> in Glasshouse City is the Day Care: leave two plants and they may set a seed.
+    Whether they can depends on <dfn>pollination groups</dfn> (egg groups), declared once per line file:</p>
+  <pre><code class="lang-ts">export const POLLINATION_GROUPS = [
+  "meadow",     // open-field flowers, bee-pollinated (clover, dandelion, sunflower)
+  "woodland",   // trees, shrubs and woodland edge (oak, maple, holly, bramble)
+  "wetland",    // water and bog margins (lily, lotus, cattail)
+  "carnivore",  // carnivorous plants (flytrap, sundew, pitcher)
+  "garden",     // cultivated beds and orchards (pumpkin, chili, mint, rose, apple)
+  "tropical",   // glasshouse exotics (orchid, monstera, bird of paradise)
+  "spore",      // ferns: no flowers; they only pair with other ferns
+] as const;</code></pre>
+
+  <table>
+    <thead><tr><th>Group</th><th>Lines</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>meadow</td><td>14</td><td rowspan="6">Nine lines belong to two groups (e.g. foxglove meadow/woodland, pitcher carnivore/wetland, sunflower meadow/garden), which makes them bridges between groups.</td></tr>
+      <tr><td>woodland</td><td>14</td></tr>
+      <tr><td>garden</td><td>10</td></tr>
+      <tr><td>wetland</td><td>8</td></tr>
+      <tr><td>tropical</td><td>8</td></tr>
+      <tr><td>carnivore</td><td>5</td></tr>
+      <tr><td>spore</td><td>1</td><td>The fern line, alone.</td></tr>
+      <tr><td><code>[]</code></td><td>6</td><td>Can't set seed: centuryheart, elder, methuselah, tumbleweed, coconut, burr.</td></tr>
+    </tbody>
+  </table>
+
+  <p>The rules, from <a data-src="src/overworld/nursery.ts">src/overworld/nursery.ts</a> (pure logic, unit-tested;
+    the counter dialogue is in <code>nurseryFlow.ts</code>):</p>
+  <ul>
+    <li>Up to 2 boarders. Each gains 1 EXP per player step and can level up, but learns no moves and never grows.</li>
+    <li>Taking one back costs $100 plus $100 per level gained. The party must always keep one healthy non-seed plant.</li>
+    <li>Every 256 steps, if both boarders share a group: 50% chance of a seed for the same line, 20% for a shared group.</li>
+  </ul>
+
+  <pre><code class="lang-ts">/** Seed chance per 256-step check: 0.5 same line, 0.2 shared group, else 0. */
+export function compatibility(data: GameData, a: Quickened | undefined, b: Quickened | undefined): number {
+  if (!a || !b) return 0;
+  const sa = data.species[a.species];
+  const sb = data.species[b.species];
+  const ga = sa?.pollination ?? [];
+  const gb = sb?.pollination ?? [];
+  if (!ga.length || !gb.length || !ga.some((g) =&gt; gb.includes(g))) return 0;
+  return sa.line === sb.line ? 0.5 : 0.2;
+}</code></pre>
+
+  <pre class="mermaid">sequenceDiagram
+  participant P as Player
+  participant O as Overworld (each step)
+  participant N as nursery.ts
+  participant S as GameState
+  P->>N: board(party index) x2
+  N->>S: nursery.slots += boarder (boardedLevel saved)
+  loop every player step
+    O->>N: nurseryStep(state, data, rng)
+    N->>S: each boarder +1 EXP (may level)
+    N->>N: steps++ and at 256 reset to 0
+    alt 2 boarders, no seed waiting, rng below compatibility
+      N->>S: seedReady = true
+    end
+    O->>N: seedStep(party): seeds count down
+  end
+  P->>N: collectSeed (party has room)
+  N->>S: party += makeSeed(first boarder, second)
+  O->>N: seed reaches 0 steps
+  N->>S: sprout(): delete seed, mark seen + caught</pre>
+
+  <p>What a seed is made of (<code>makeSeed</code>):</p>
+  <ul>
+    <li><strong>Species:</strong> the stage-1 species of the <em>first-boarded</em> parent's line, at level 5.</li>
+    <li><strong>DVs:</strong> its own roll, then 3 of the 4 DVs (Attack, Defence, Speed, Special) each copied from a
+      random parent; HP DV rebuilt.</li>
+    <li><strong>Moves:</strong> its level-1 moves, plus one move both parents know that its learnset contains.</li>
+    <li><strong>Sport:</strong> a fresh 1-in-256 roll (twice the wild odds). Friendship 120.</li>
+    <li><strong>Sprouting:</strong> 600, 900 or 1200 steps in the party for fast, medium or slow growth rates.</li>
+  </ul>
+
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Boarding : two plants boarded
+  Boarding --> Boarding : 256 steps, roll failed
+  Boarding --> SeedReady : 256 steps, roll passed
+  SeedReady --> SeedInParty : collectSeed
+  state SeedInParty {
+    [*] --> Warm : more than 500 steps
+    Warm --> Moving : 150 to 500
+    Moving --> Cracking : 150 or fewer
+  }
+  SeedInParty --> Sprouted : steps reach 0
+  Sprouted --> [*]</pre>
+
+  <details class="advanced"><summary>Advanced: Nursery odds and invariants</summary>
+    <ul>
+      <li><strong>Expected wait.</strong> Checks happen only every 256 steps, so the expected wait for a seed is
+        256 / 0.5 = 512 steps for a same-line pair and 256 / 0.2 = 1,280 steps for a shared-group pair.</li>
+      <li><strong><code>seedReady</code> blocks further checks</strong>: there is at most one uncollected seed. The
+        step counter still resets every 256 steps.</li>
+      <li><strong>Order matters.</strong> <code>slots[0]</code> is the seed parent. Swapping who boards first changes
+        the species of the seed when the parents are from different lines.</li>
+      <li><code>stage1Of</code> looks for the line's <code>stage === 1</code> species first and falls back to walking
+        <code>growsInto</code> backwards (at most 4 hops), so a line file with a missing stage 1 still yields a sensible
+        seed.</li>
+      <li><code>makeSeed</code> calls <code>createQuickened</code>, which consumes one 1/512 sport roll from the RNG,
+        then overwrites <code>sport</code> with the 1/256 roll. With a seeded RNG, adding or removing a random call
+        here changes every later draw, so it shows up in seeded e2e replays.</li>
+      <li>Boarders' EXP is capped at the level-100 total, and <code>levelsGained</code> never goes negative, so the
+        fee is always at least $100.</li>
+      <li>A seed can't battle (<code>canFight</code> excludes it), gets no EXP share, and <code>qName</code> shows
+        "SEED" so the species stays a surprise.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="data-sports">Sports (shinies) and their odds</h3>
+
+  <p>A <dfn>sport</dfn> is a real horticultural term: a plant shoot with a natural mutation, often a new colour.
+    In Verdant Reach it is the shiny. The odds live in <a data-src="src/battle/logic/stats.ts">stats.ts</a>:</p>
+  <pre><code class="lang-ts">export const SPORT_ODDS = 512;
+// … in createQuickened:
+  const sport = rng() &lt; 1 / SPORT_ODDS;</code></pre>
+
+  <table>
+    <thead><tr><th>Source</th><th>Odds</th><th>Encounters for a 50% chance of at least one</th></tr></thead>
+    <tbody>
+      <tr><td>Wild and gift plants (<code>createQuickened</code>)</td><td>1 in 512</td><td>about 355</td></tr>
+      <tr><td>Nursery seeds (<code>SEED_SPORT_ODDS</code>)</td><td>1 in 256</td><td>about 177</td></tr>
+      <tr><td>Trainers' plants</td><td>never (<code>createTrainerQuickened</code> sets <code>false</code>)</td><td>n/a</td></tr>
+      <tr><td>Scripted wild battles</td><td>fixed by the script (<code>BattleRequest.wild.sport</code>), e.g. the crimson Giant Lily</td><td>n/a</td></tr>
+    </tbody>
+  </table>
+
+  <p>The chance of at least one sport in <em>n</em> tries is 1 − (511/512)<sup>n</sup>. A sport changes only
+    colour: its art is an exact swap of palette indexes 1–2 to the bundle's <code>sport</code> palette, each based
+    on a real cultivar (docs/SPORTS.md). Stats are unaffected, unlike Gen 2, where shininess was tied to DVs.</p>
+
+  <details class="advanced"><summary>Advanced: sports and determinism</summary>
+    <ul>
+      <li>Sport is an independent roll, not derived from DVs, so it can't be inferred from stats and doesn't constrain
+        them. The trade-off: there's no way to reproduce Gen 2's "shiny breeding" tricks, which is intended.</li>
+      <li>The roll is made after the DVs and before the uid in <code>createQuickened</code>. Seeded runs
+        (<code>?seed=N</code>, <code>npm run e2e -- --seed N</code>) reproduce sports exactly; reordering those calls
+        changes which encounter is a sport.</li>
+      <li>The battle scene plays a sparkle when a sport is sent out and passes <code>{ sport }</code> to every species
+        draw call; the Art Lab's sport toggle previews the palette without a battle.</li>
+    </ul>
+  </details>
+</section>

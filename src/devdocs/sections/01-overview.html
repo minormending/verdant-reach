@@ -1,0 +1,292 @@
+<section id="overview" data-title="Overview" data-summary="What Verdant Reach is, the stack and why, the repo layout, the four pages, and the game's own vocabulary.">
+  <h2>Overview</h2>
+  <p>
+    Verdant Reach is a Game Boy Color–style monster collector: Pokémon Crystal's structure with a set of
+    deliberately updated mechanics, in which every creature is a <strong>real plant</strong>. It runs in the
+    browser, renders a fixed 160×144 screen into one <code>&lt;canvas&gt;</code>, and ships with
+    <strong>zero runtime dependencies</strong>. This section is the map you need before anything else: what the
+    project is, why it is built the way it is, where things live, how to run it, and the game's own words for
+    familiar ideas.
+  </p>
+
+  <h3 id="overview-what">What the project is</h3>
+  <p>
+    The scope is the whole game: the Prologue through Chapter 11 (the Council, the ending and the credits) plus
+    a post-game. The live site is <code>https://minormending.github.io/verdant-reach/</code>, and it deploys
+    automatically on every push to <code>main</code>. The workflow
+    (<a data-src=".github/workflows/pages.yml">pages.yml</a>) has three jobs: <em>build</em> runs the tests, the
+    release gate and the production build; <em>e2e</em> plays the whole game headless; <em>deploy</em> waits for
+    both.
+  </p>
+  <pre class="mermaid">flowchart LR
+  push["push to main"] --> build
+  push --> e2e
+  subgraph build["job: build"]
+    ci1["npm ci"] --> test["npm test"] --> gate["npm run release-check"] --> bundle["npm run build"] --> upload["upload dist"]
+  end
+  subgraph e2e["job: e2e"]
+    ci2["npm ci"] --> pw["playwright install chromium"] --> play["npm run e2e (217 beats)"]
+  end
+  build --> deploy["job: deploy (GitHub Pages)"]
+  e2e --> deploy</pre>
+  <aside class="note">
+    Because a push to <code>main</code> is a release, the team rule is that <code>npm run typecheck</code>,
+    <code>npm test</code> and <code>npm run build</code> all pass before you push. The release gate
+    (<a data-src="tools/release-check.mjs">tools/release-check.mjs</a>) makes sure no placeholder tolerance used
+    by the e2e runner leaks into <code>src/</code>.
+  </aside>
+
+  <h3 id="overview-stack">The tech stack, and why</h3>
+  <table>
+    <thead><tr><th>Piece</th><th>What</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Build</td><td>Vite 8 (<code>vite.config.ts</code>), several HTML entry pages</td><td>Fast dev server with HMR, a production bundle with a relative base so it works from any subpath (GitHub Pages).</td></tr>
+      <tr><td>Language</td><td>TypeScript 7, <code>"strict": true</code> (<a data-src="tsconfig.json">tsconfig.json</a>)</td><td>Several agents build modules in parallel against shared contracts; the compiler is what holds those contracts together.</td></tr>
+      <tr><td>Rendering</td><td>Canvas 2D at a logical 160×144, integer-scaled</td><td>That is the Game Boy Color's screen. Every layout decision (8×8 font, 18×2 text box, 16px tiles, a 10×9-tile view) is pixel-exact.</td></tr>
+      <tr><td>Audio</td><td>A hand-written WebAudio chip synth (<code>src/audio</code>)</td><td>Chiptune that sounds like the hardware, with no sample files and no library.</td></tr>
+      <tr><td>Tests</td><td>Vitest 5, <code>*.test.ts</code> next to the code</td><td>Pure logic (battle maths, layout, wrapping, world validation, art bundles) is tested without a browser.</td></tr>
+      <tr><td>E2E</td><td>Playwright driving a real Chromium through the whole story</td><td>Proves there are no soft-locks from the Prologue to the post-game.</td></tr>
+      <tr><td>Art tools</td><td>Python (Pillow, NumPy) under <code>tools/art/</code></td><td>Deterministic sprite generators and checkers. Authoring only: never shipped.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    <a data-src="package.json">package.json</a> has <code>devDependencies</code> only (<code>typescript</code>,
+    <code>vite</code>, <code>vitest</code>, <code>playwright</code>) and no <code>dependencies</code> at all.
+    The shipped game is your code plus the browser. (The one exception is this documentation page, which loads
+    a pinned Mermaid build from a CDN at runtime to draw its diagrams; the game never does.)
+  </p>
+  <p>
+    <strong>Why no UI framework?</strong> The game draws everything itself into one canvas, so a DOM framework
+    has nothing to manage. What a framework would give you (components, state, lifecycle) is replaced by three
+    small engine ideas you will meet in <a href="#architecture">Architecture</a>: the
+    <dfn>scene stack</dfn>, the <dfn>GameContext</dfn> and the <dfn>UiKit</dfn>.
+  </p>
+  <details class="advanced">
+    <summary>Advanced: what the constraints cost, and what they buy</summary>
+    <ul>
+      <li><strong>Zero runtime dependencies</strong> means the input layer, the scene stack, the bitmap font, the
+        menus, the audio synth and a PNG/zip toolchain for the Tile Lab are all in-house. The pay-off is that
+        nothing upstream can change the game's behaviour, the bundle is small, and every system is readable in
+        one sitting. Adding a runtime package is a project decision, not a local one.</li>
+      <li><strong>A fixed 160×144 screen</strong> pushes constraints into content: dialogue must fit 18 columns
+        × 2 lines, and <a data-src="src/world/validate.ts">src/world/validate.ts</a> fails the test suite when a
+        script line can't fit. Scaling is done in <em>device</em> pixels (see
+        <a href="#platform-layout">layout</a>) so pixels stay square at fractional <code>devicePixelRatio</code>s.</li>
+      <li><strong>Strict TypeScript and shared id lists</strong> (<code>src/contracts/ids.ts</code>) turn typos
+        in content into compile errors: a map that names an unknown <code>MusicId</code> or species doesn't
+        build.</li>
+      <li><strong>Python in the repo</strong> is pinned (<code>tools/art/requirements.txt</code>) because a
+        Pillow or NumPy upgrade can change PNG bytes, and <code>build_all.py --regen</code> must leave
+        <code>git status</code> clean.</li>
+    </ul>
+  </details>
+
+  <h3 id="overview-layout">Repository layout</h3>
+  <p>The top level separates the shipped game from content tooling, tests and documents:</p>
+  <pre class="mermaid">flowchart TB
+  repo["verdant-reach/"]
+  repo --> pages["index.html, guide.html, tilelab.html, devdocs.html"]
+  repo --> src["src/ (all TypeScript)"]
+  repo --> pub["public/ (copied as-is)"]
+  repo --> tools["tools/ (Node + Python tooling)"]
+  repo --> e2e["e2e/ (headless playthrough)"]
+  repo --> docs["docs/ (design + story bible)"]
+  repo --> gh[".github/workflows/pages.yml"]
+  pub --> art["public/art/ (every sprite, tileset, pack)"]
+  pub --> icons["favicons, manifest, og-image"]
+  tools --> tart["tools/art/ (generators, QA, index.mjs)"]
+  tools --> rc["tools/release-check.mjs"]
+  src --> game["game runtime"]
+  src --> sites["guide, tilelab, devdocs"]</pre>
+  <p>Inside <code>src/</code>, each top-level folder is a module with an entry point (usually its <code>index.ts</code>):</p>
+  <table>
+    <thead><tr><th>Folder</th><th>What lives there</th><th>Entry point other code relies on</th></tr></thead>
+    <tbody>
+      <tr><td><code>src/main.ts</code></td><td>Boot: builds the context, starts the loop, picks the first scene</td><td>(none, it is the page's script)</td></tr>
+      <tr><td><code>src/contracts/</code></td><td>Shared ids, constants and data/runtime shapes: the common language</td><td><code>src/contracts/index.ts</code></td></tr>
+      <tr><td><code>src/engine/</code></td><td>Loop, input, gamepads, scene stack, context, gfx helpers, time, seeded randomness</td><td><code>createGameContext</code>, <code>core.ts</code></td></tr>
+      <tr><td><code>src/platform/</code></td><td>The page around the game: scaling, bezel, touch controls, fullscreen, pause, error card, loading</td><td><code>src/platform/index.ts</code> (only <code>main.ts</code> imports it)</td></tr>
+      <tr><td><code>src/ui/</code></td><td>Bitmap font, text box, menus, name entry, title, new game, credits</td><td><code>createUiKit</code> (<code>kit.ts</code>), <code>createTitleScene</code></td></tr>
+      <tr><td><code>src/audio/</code></td><td>Chip synth, songs, jingles, SFX, cries, ambience</td><td><code>createAudio()</code></td></tr>
+      <tr><td><code>src/overworld/</code></td><td>Maps, walking, NPCs, the script interpreter, field moves, encounters</td><td><code>createOverworldScene</code></td></tr>
+      <tr><td><code>src/battle/</code></td><td>The battle scene and pure battle logic (<code>logic/</code>)</td><td><code>createBattleScene</code>, <code>createQuickened</code>, <code>healParty</code></td></tr>
+      <tr><td><code>src/screens/</code></td><td>Menu screens: party, bag, Herbarium, summary, cabinet, shop, options</td><td><code>createScreens</code></td></tr>
+      <tr><td><code>src/data/</code></td><td>Species (one JSON per line), moves, items, type chart, growth curves</td><td><code>DATA</code></td></tr>
+      <tr><td><code>src/world/</code></td><td>Maps, story scripts, trainers, credits, and the world validator</td><td><code>WORLD</code></td></tr>
+      <tr><td><code>src/save/</code></td><td>New-game state and <code>localStorage</code> persistence</td><td><code>newGameState</code>, <code>createSave</code></td></tr>
+      <tr><td><code>src/art/</code></td><td>The art runtime (bundles, packs, palette swaps) and the Art Lab</td><td><code>createArtAssets</code></td></tr>
+      <tr><td><code>src/guide/</code></td><td>The strategy guide page, generated from the game's data</td><td><code>guide.html</code> → <code>src/guide/main.ts</code></td></tr>
+      <tr><td><code>src/tilelab/</code></td><td>The Tile Lab page: every map under swappable tiles, pack export</td><td><code>tilelab.html</code> → <code>src/tilelab/main.ts</code></td></tr>
+      <tr><td><code>src/devdocs/</code></td><td>This documentation: section fragments plus the page shell</td><td><code>devdocs.html</code></td></tr>
+    </tbody>
+  </table>
+  <details class="advanced">
+    <summary>Advanced: why the folders are cut this way</summary>
+    <p>
+      The project was built by several coding agents working in parallel, one per area (engine, battle,
+      data and audio, world, art), each owning its directories (<a data-src="docs/ARCHITECTURE.md">docs/ARCHITECTURE.md</a>,
+      "Ownership"). The cut follows those owners, which is why, for example, the options screen lives in
+      <code>src/screens/</code> while the text box lives in <code>src/ui/</code>. The rule "import other modules
+      only through their entry points, and shared types only from <code>src/contracts</code>" is what let them
+      work without stepping on each other. In practice there are deep imports (for example
+      <code>src/screens</code> reads <code>src/battle/logic/*</code> directly); see
+      <a href="#architecture-modules">module boundaries</a> for the real graph and how to change it safely.
+    </p>
+  </details>
+
+  <h3 id="overview-quickstart">Quick start</h3>
+  <p>From <a data-src="AGENTS.md">AGENTS.md</a>:</p>
+  <pre><code class="lang-bash">npm ci
+npm run dev                 # http://localhost:5173
+npm run typecheck           # strict tsc
+npm test                    # vitest, about 1670 tests: data, world validation, puzzles, balance, art bundles
+npm run build               # typecheck + production bundle (relative base, for GitHub Pages)
+npx playwright install chromium # first use: install the e2e browser
+npm run e2e                 # headless full playthrough, 217 beats, speed 8, seed 1, daytime
+npm run e2e -- --seed 42    # replay another RNG seed (unsigned 32-bit integer)
+npm run art:index           # REQUIRED after adding, removing or renaming any file under public/art/</code></pre>
+  <p>Useful first URLs on the dev server (all flags are listed in <a href="#architecture-dev">dev scenes and URL flags</a>):</p>
+  <ul>
+    <li><code>/</code>: the real game, title screen first.</li>
+    <li><code>/?dev=ui</code>: the UI showcase (font sheet, text box speeds, menus, name entry).</li>
+    <li><code>/?dev=battle</code>: a hub of fixture battles. <code>/?dev=audio</code>: a jukebox.</li>
+    <li><code>/?dev=world&amp;play=1&amp;map=route_1</code>: drop straight into a map.</li>
+    <li><code>/?dev=art</code>: the Art Lab.</li>
+  </ul>
+  <aside class="tip">
+    Before you finish any change, run <code>npm run typecheck</code>, <code>npm test</code> and
+    <code>npm run build</code>. If you touched anything under <code>public/art/</code>, also run
+    <code>npm run art:index</code>.
+  </aside>
+
+  <h3 id="overview-pages">The pages, and how Vite builds them</h3>
+  <p>
+    Each page is a plain HTML file whose only script is a TypeScript entry module. Vite treats every listed HTML
+    file as a separate input, bundles what each one imports, shares common chunks between them, and copies
+    <code>public/</code> into <code>dist/</code> unchanged.
+  </p>
+  <table>
+    <thead><tr><th>Page</th><th>Entry module</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td><code>index.html</code></td><td><a data-src="src/main.ts">src/main.ts</a></td><td>The game: one <code>&lt;canvas id="screen" width="160" height="144"&gt;</code> plus the bezel.</td></tr>
+      <tr><td><code>guide.html</code></td><td><a data-src="src/guide/main.ts">src/guide/main.ts</a></td><td>The strategy guide (walkthrough, Field Herbarium, moves, items, type chart), generated in the browser from <code>DATA</code> and <code>WORLD</code>.</td></tr>
+      <tr><td><code>tilelab.html</code></td><td><a data-src="src/tilelab/main.ts">src/tilelab/main.ts</a></td><td>The Tile Lab: every map drawn under the current tiles, tile and tileset swaps, art-pack export. Its "Walk around" button opens the game with <code>?tilelab=1</code>.</td></tr>
+      <tr><td><code>devdocs.html</code></td><td><code>src/devdocs/main.ts</code></td><td>This page: fragments in <code>src/devdocs/sections/</code>, loaded in file-name order by the page shell, with charts computed from the game's modules.</td></tr>
+    </tbody>
+  </table>
+  <p>The four inputs in <a data-src="vite.config.ts">vite.config.ts</a>:</p>
+  <pre><code class="lang-ts">export default defineConfig(({ command }) =&gt; ({
+  base: command === "build" ? "./" : "/",
+  plugins: [devdocsSource()],
+  build: {
+    rolldownOptions: {
+      input: {
+        main: fileURLToPath(new URL("./index.html", import.meta.url)),
+        guide: fileURLToPath(new URL("./guide.html", import.meta.url)),
+        tilelab: fileURLToPath(new URL("./tilelab.html", import.meta.url)),
+        devdocs: fileURLToPath(new URL("./devdocs.html", import.meta.url)),
+      },
+    },
+  },
+}));</code></pre>
+  <p>
+    The one plugin, <code>devdocsSource()</code>, serves a virtual module (<code>virtual:devdocs-source</code>)
+    with folder sizes, imports between <code>src/</code> folders and test counts for this page's charts. Only
+    <code>devdocs.html</code> imports it, so the game bundle never contains the source.
+  </p>
+  <pre class="mermaid">flowchart LR
+  ih["index.html"] --> m["src/main.ts"]
+  gh["guide.html"] --> g["src/guide/main.ts"]
+  th["tilelab.html"] --> t["src/tilelab/main.ts"]
+  dh["devdocs.html"] --> d["src/devdocs/main.ts"]
+  m --> shared["shared modules: contracts, data, world, art, overworld, ui"]
+  g --> shared
+  t --> shared
+  d --> shared
+  plug["devdocsSource plugin"] -->|"virtual:devdocs-source"| d
+  shared --> dist["dist/ (hashed JS chunks)"]
+  pubdir["public/ (art, icons)"] -->|"copied unchanged"| dist
+  dist -->|"fetched at runtime"| artjson["art/index.json + bundle JSON + PNGs"]</pre>
+  <details class="advanced">
+    <summary>Advanced: relative base, runtime fetches and code splitting</summary>
+    <ul>
+      <li><strong>Relative base.</strong> <code>base: "./"</code> for builds means every emitted URL is relative,
+        so the same <code>dist/</code> works at <code>/verdant-reach/</code> on Pages or from any folder. Runtime
+        art URLs are already relative (<code>art/…</code>), so only the HTML's root-absolute links need Vite's
+        rewriting. Never hard-code a leading <code>/</code> in a runtime fetch.</li>
+      <li><strong>Art is not bundled.</strong> The art registry fetches <code>art/index.json</code>, every bundle
+        JSON, and PNGs on demand from the copied <code>public/art/</code>. That is what makes art swappable
+        without a rebuild, and why <code>npm run art:index</code> must be re-run after file changes: an
+        un-indexed file is invisible.</li>
+      <li><strong>Lazy chunks.</strong> <code>main.ts</code> uses <code>import.meta.glob("./*/dev.ts")</code>
+        and dynamic <code>import()</code>s (the title, new game, overworld, the Tile Lab hook, e2e), so these
+        become separate chunks loaded only when used. Code guarded by <code>import.meta.env.DEV</code> (the
+        <code>window.__vr</code> handle, the dev driver, <code>?e2e</code>, <code>?seed</code>,
+        <code>?speed</code>) is removed from production builds.</li>
+    </ul>
+  </details>
+
+  <h3 id="overview-counts">The game in numbers</h3>
+  <p>The chart is computed from the game's own modules when the page loads, so it is never out of date:</p>
+  <figure data-chart="content-counts"><figcaption>Species, moves, items, maps, trainers, scripts and tests by area.</figcaption></figure>
+
+  <h3 id="overview-glossary">Glossary: the game's own words</h3>
+  <p>
+    Verdant Reach renames every Crystal system with an in-world reason
+    (<a data-src="docs/story/06-mechanics-in-world.md">docs/story/06-mechanics-in-world.md</a>). The code
+    mostly uses the game's words, so learn these first.
+  </p>
+  <table>
+    <thead><tr><th>Term</th><th>Crystal equivalent</th><th>Meaning, and where it shows up in code</th></tr></thead>
+    <tbody>
+      <tr><td><dfn>Quickened</dfn></td><td>Pokémon</td><td>A plant that woke up. The type <code>Quickened</code> (<a data-src="src/contracts/runtime.ts">runtime.ts</a>) is one owned creature: species, level, exp, stats, IVs, moves, status, friendship, <code>sport</code>.</td></tr>
+      <tr><td>The Quickening</td><td>(story)</td><td>The night the plants woke. Everyone blames the Centuryheart's bloom; the truth is the Elder Grove's alarm.</td></tr>
+      <tr><td><dfn>Field Herbarium</dfn></td><td>Pokédex</td><td>A botanist's journal: "seen" is sketched, "caught" is a pressed sample (<code>state.herbarium.seen / caught</code>). Every entry holds one true plant fact with a <code>source</code>. The FALLOWFIELD HERBARIUM is also the building where the game starts.</td></tr>
+      <tr><td><dfn>Growth</dfn></td><td>Evolution</td><td>A real life-stage change. <code>growsInto.trigger</code> is <code>vigor</code>, <code>vigor_day</code>, <code>vigor_night</code>, <code>tending</code> (friendship), <code>item</code> or <code>cross_pollination</code> (trade).</td></tr>
+      <tr><td><code>growthRate</code></td><td>EXP group</td><td>Not the same as Growth: the EXP curve (<code>fast</code>/<code>medium</code>/<code>slow</code>), as in the <code>exp-curves</code> chart.</td></tr>
+      <tr><td>Vigour</td><td>Level</td><td>How established the plant is. In code it is plain <code>level</code>.</td></tr>
+      <tr><td><dfn>Sport</dfn></td><td>Shiny</td><td>Horticulture's word for a natural mutation. <code>Quickened.sport</code>; art is an exact palette swap (<code>speciesPath(id, kind, { sport: true })</code>), based on a real cultivar.</td></tr>
+      <tr><td><dfn>Pollination</dfn></td><td>Egg groups</td><td><code>POLLINATION_GROUPS</code> (<a data-src="src/contracts/data.ts">data.ts</a>): meadow, woodland, wetland, carnivore, garden, tropical, spore. Two Quickened that share a group can set a seed in the Nursery Garden.</td></tr>
+      <tr><td>Nursery Garden / seed</td><td>Day Care / egg</td><td><code>state.nursery</code>; a party member can be an unsprouted <code>seed: { steps }</code> that counts down as you walk.</td></tr>
+      <tr><td><dfn>Pressed Marks</dfn></td><td>Badges</td><td>Mounted specimens from each Conservatory. <code>MARKS</code> lists 8 (<code>bramble_mark</code> … <code>resin_mark</code>); earned ones are in <code>state.marks</code>.</td></tr>
+      <tr><td><dfn>Conservatory</dfn></td><td>Gym</td><td>Numbered in the intended order; Conservatory 1 is Wood in Bramblegate. FLORA (Conservatory 3) is the early difficulty spike.</td></tr>
+      <tr><td>Greenhouse</td><td>Pokémon Centre</td><td>Healing. <code>state.heal</code> is the last greenhouse visited, where a whiteout sends you.</td></tr>
+      <tr><td>Wilted</td><td>Fainted</td><td>A Quickened at 0 HP (the matching SFX id is <code>wilt</code>). Wilted plants recover at a greenhouse.</td></tr>
+      <tr><td>Terrarium pod</td><td>Poké Ball</td><td><code>terrarium_pod</code>, <code>glass_pod</code>. A weakened plant <em>chooses</em> to root in it.</td></tr>
+      <tr><td>Specimen cabinet</td><td>PC box</td><td><code>state.box</code>, opened with <code>ctx.screens.cabinet()</code>.</td></tr>
+      <tr><td>Photoperiod</td><td>Day/night</td><td><code>Species.activity</code> is <code>any</code>, <code>day</code> or <code>night</code>; time of day comes from the real clock.</td></tr>
+      <tr><td>Field moves</td><td>HMs</td><td>PRUNE (Cut), UPROOT (Strength), RAFT (Surf), SEED GLIDE (Fly), GLOW (Flash), ROOT BRIDGE (Whirlpool/Waterfall). No move slots needed.</td></tr>
+      <tr><td>Wanderers</td><td>Roaming legendaries</td><td><code>RoamerId</code> (<code>tumbleweed</code>, <code>coconut</code>) plus the Burr; they flee after one full turn.</td></tr>
+      <tr><td>The Council</td><td>Elite Four</td><td>Chapter 11; each clear adds a <code>hallOfFame</code> snapshot.</td></tr>
+      <tr><td>Rootstock</td><td>Team Rocket</td><td>The villains, who grafted into the Elder Grove's roots and caused the Quickening.</td></tr>
+      <tr><td>Centuryheart</td><td>(story)</td><td>A giant once-a-century bloomer modelled on <em>Puya raimondii</em>; the title screen's flower spike.</td></tr>
+    </tbody>
+  </table>
+  <p>How the terms hang together in the save data (<code>GameState</code>):</p>
+  <pre class="mermaid">erDiagram
+  GAMESTATE ||--o{ QUICKENED : "party (max 6)"
+  GAMESTATE ||--o{ QUICKENED : "box (cabinet)"
+  GAMESTATE ||--o{ MARK : "marks"
+  GAMESTATE ||--|| HERBARIUM : "seen and caught"
+  GAMESTATE ||--o| NURSERY : "up to 2 boarders"
+  QUICKENED }o--|| SPECIES : "is a"
+  SPECIES ||--o| SPECIES : "growsInto"
+  SPECIES }o--o{ POLLINATION_GROUP : "pollination"
+  QUICKENED ||--o{ MOVE : "up to 4"</pre>
+  <details class="advanced">
+    <summary>Advanced: vocabulary traps in the code</summary>
+    <ul>
+      <li><strong>"growth"</strong> means evolution in screens and flows (<code>screens/flows/growth</code>,
+        the <code>growth</code> jingle) but <code>growthRate</code> is an EXP curve. Name new things after the
+        concept you mean.</li>
+      <li><strong>Trigger names</strong> keep the old <code>vigor</code> spelling even though the in-game word is
+        Vigour. Ids are stable once used in data and saves; don't "fix" them.</li>
+      <li><strong>Ids are contracts.</strong> Adding a species, Mark, music track or SFX means adding it to the
+        lists in <a data-src="src/contracts/ids.ts">src/contracts/ids.ts</a>, which every module compiles
+        against. Adding <em>content</em> under an existing id is not a contract change.</li>
+      <li><strong>Player look.</strong> The player is a boy or a girl (<code>state.playerLook</code>, missing in
+        old saves = boy). Always draw the player through <code>playerArt(state)</code>, never the
+        <code>player</code>/<code>player_back</code> keys directly, and keep dialogue about the player neutral.</li>
+    </ul>
+  </details>
+</section>

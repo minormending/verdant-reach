@@ -1,0 +1,295 @@
+<section id="pages" data-title="The other pages" data-summary="The guidebook, the Tile Lab and these developer docs: extra Vite pages built from the game's own modules, and the rule that the game must not depend on them.">
+  <h2>The other pages</h2>
+
+  <p>The site serves more than the game. Beside <code>index.html</code> there are pages that import the game's own TypeScript modules and draw from them:</p>
+  <table>
+    <thead><tr><th>Page</th><th>Code</th><th>For</th></tr></thead>
+    <tbody>
+      <tr><td><code>guide.html</code>, the guidebook</td><td><code>src/guide/</code></td><td>Players: a strategy guide with a walkthrough, map panels, bosses and the Herbarium</td></tr>
+      <tr><td><code>tilelab.html</code>, the Tile Lab</td><td><code>src/tilelab/</code></td><td>Artists: every map under the current tiles, tileset swaps, export as an art pack</td></tr>
+      <tr><td><code>devdocs.html</code>, these docs</td><td><code>src/devdocs/</code></td><td>Developers: this page, assembled from HTML fragments, with charts drawn from the game's data</td></tr>
+    </tbody>
+  </table>
+  <p>Why build them from the game's code instead of writing them separately? Because then they <strong>can't drift</strong>. A level, an encounter rate or a tile in the guide is computed from the same <code>WORLD</code>, <code>DATA</code> and art registry the game runs on. Change a trainer's team and the guide changes with it. There is no export step to forget.</p>
+
+  <pre class="mermaid">flowchart LR
+  subgraph Pages
+    IDX["index.html (game)"]
+    GD["guide.html"]
+    TL["tilelab.html"]
+    DD["devdocs.html"]
+  end
+  subgraph Shared["Shared modules"]
+    W["src/world (WORLD)"]
+    D["src/data (DATA)"]
+    A["src/art (registry)"]
+    O["src/overworld (map, tile drawing)"]
+    C["src/contracts"]
+  end
+  IDX --> W
+  IDX --> D
+  IDX --> A
+  IDX --> O
+  GD --> W
+  GD --> D
+  GD --> A
+  GD --> O
+  TL --> W
+  TL --> A
+  TL --> O
+  TL -->|"renderMap, h()"| GD
+  DD --> D
+  W --> C
+  A --> C</pre>
+
+  <h3 id="pages-vite">One Vite build, several pages</h3>
+  <p>Vite builds a <dfn>multi-page app</dfn> when <code>build.rolldownOptions.input</code> names more than one HTML file. Each HTML file is an <dfn>entry</dfn>; its <code>&lt;script type="module" src="…"&gt;</code> is where the bundler starts following imports. From <a data-src="vite.config.ts">vite.config.ts</a>:</p>
+  <pre><code class="lang-ts">export default defineConfig(({ command }) =&gt; ({
+  base: command === "build" ? "./" : "/",
+  build: {
+    rolldownOptions: {
+      input: {
+        main: fileURLToPath(new URL("./index.html", import.meta.url)),
+        guide: fileURLToPath(new URL("./guide.html", import.meta.url)),
+        tilelab: fileURLToPath(new URL("./tilelab.html", import.meta.url)),
+      },
+    },
+  },
+}));</code></pre>
+  <p><code>npm run build</code> then emits <code>dist/index.html</code>, <code>dist/guide.html</code> and <code>dist/tilelab.html</code> side by side. The developer docs page joins this list as one more entry. The base is relative (<code>./</code>), so every page works from the GitHub Pages subpath.</p>
+  <p>When two entries import the same module, the bundler doesn't copy it into both. It moves the shared code into a <dfn>shared chunk</dfn>, a separate JS file that both pages load. The browser caches it, so opening the guide after playing doesn't download <code>src/world</code> again.</p>
+  <pre class="mermaid">flowchart TB
+  M["main entry chunk"] --> S1["shared: contracts, art, world, data, overworld"]
+  G["guide entry chunk"] --> S1
+  T["tilelab entry chunk"] --> S1
+  T --> S2["shared: guide/mapRender, guide/dom"]
+  G --> S2
+  M -.->|"dynamic import, only with ?tilelab"| H["tilelab/hook chunk"]
+  M -.->|"dynamic import, only with ?dev=art"| AL["art/dev + Art Lab chunk"]</pre>
+
+  <h4 id="pages-vite-rule">The rule: the game must not depend on these pages</h4>
+  <p>The game must behave exactly the same whether or not any of these pages' code is loaded. Sharing goes one way: pages import game modules; game modules never import page modules. The single exception is opt-in and lazy:</p>
+  <pre><code class="lang-ts">// ?tilelab=1 (the Tile Lab's "Walk around" button): apply its saved tile
+// overrides in memory. Without the param this module is never loaded.
+if (new URLSearchParams(location.search).has("tilelab")) await (await import("./tilelab/hook")).applyStoredTileLab();</code></pre>
+  <pre class="mermaid">flowchart TD
+  B["boot(): createAssets()"] --> L["assets.loadAll()"]
+  L --> Q{"URL has ?tilelab ?"}
+  Q -->|"no"| F["loading.finish()"]
+  Q -->|"yes"| I["import('./tilelab/hook')"]
+  I --> AP["applyStoredTileLab(): IndexedDB to registry overrides"]
+  AP -->|"fails: log, carry on"| F
+  AP --> F
+  F --> DEV{"?dev= names a dev scene?"}
+  DEV -->|"yes"| DS["import src/name/dev.ts"]
+  DEV -->|"no"| TI["title screen"]</pre>
+  <aside class="warn">Never add a static <code>import</code> from <code>src/guide</code>, <code>src/tilelab</code> or <code>src/devdocs</code> to game code. It would pull page code (and its CSS) into the game bundle, and a bug on a page could then break the game. If a page needs something from the game, move it into a game module and import it from there.</aside>
+  <details class="advanced"><summary>Advanced: how the boundaries are enforced, and what to watch</summary>
+    <ul>
+      <li><strong>Dynamic imports are separate chunks.</strong> <code>import("./tilelab/hook")</code> and <code>import.meta.glob("./*/dev.ts")</code> (non-eager) each become a chunk fetched only when that code path runs. Run <code>grep -rn "guide/\|tilelab/\|devdocs/" src</code> outside those folders: the only hit should be the hook line in <code>src/main.ts</code>.</li>
+      <li><strong>Dev-only code is removed in production.</strong> Branches guarded by <code>import.meta.env.DEV</code>, such as <code>guide.html?preview=atlas</code> and the docs' <code>?fixture=1</code>, are dead code in a production build (the Tile Lab's "Walk here" button is hidden there too).</li>
+      <li><strong>Pure modules make sharing safe.</strong> <code>ArtCatalog</code>, <code>indexer.ts</code>, <code>plan.ts</code> and <code>pack.ts</code> touch no DOM and have no side effects at import time. A page can import them without starting anything. Watch for module-level side effects (a top-level <code>addEventListener</code>, a registry created on import) when you share a new module.</li>
+      <li><strong>Separate storage keys.</strong> Each page keeps its own preferences (<code>verdant.guide.theme</code>, <code>verdant.tilelab.theme</code>, <code>verdant.tilelab.tab</code>). The one shared key is <code>verdant.artPacks</code>, deliberately, so a pack switched on in the Art Lab also shows in the guide.</li>
+      <li><strong>The guide and the Tile Lab each create their own art registry</strong> with <code>createArtAssets()</code>. Pages share code, never in-memory state.</li>
+    </ul>
+  </details>
+
+  <h3 id="pages-guide">The guidebook (<code>guide.html</code>)</h3>
+  <p>The guide is a Prima-style strategy guide. Writers supply only the <strong>prose</strong> and say <strong>which</strong> map, trainer, plant or item to show. Every table, picture and number is generated in the browser from the game's modules.</p>
+  <table>
+    <thead><tr><th>Module</th><th>Job</th></tr></thead>
+    <tbody>
+      <tr><td><a data-src="src/guide/types.ts">types.ts</a></td><td>The content contract: <code>Section</code> and <code>Block</code></td></tr>
+      <tr><td><code>walkthrough/</code></td><td>The walkthrough in play order (<code>part1.ts</code>–<code>part3.ts</code>), combined as <code>WALKTHROUGH</code></td></tr>
+      <tr><td><a data-src="src/guide/indexer.ts">indexer.ts</a></td><td>Pure indexing over <code>WORLD</code> and <code>DATA</code>: what each map holds, and the reverse indexes (where each species and item is found)</td></tr>
+      <tr><td><a data-src="src/guide/mapRender.ts">mapRender.ts</a></td><td>Draws a whole map on one canvas with the overworld's own pieces</td></tr>
+      <tr><td><a data-src="src/guide/art.ts">art.ts</a></td><td>Pictures through the art registry, so <code>?art=classic</code> works here too</td></tr>
+      <tr><td><code>blocks.ts</code>, <code>reference.ts</code>, <code>front.ts</code></td><td>Rendering: blocks, the Herbarium, moves, items, type chart, cover and contents</td></tr>
+      <tr><td><code>main.ts</code>, <code>guide.css</code></td><td>The page shell: sticky bar, search, light and dark modes, print</td></tr>
+    </tbody>
+  </table>
+  <pre class="mermaid">flowchart LR
+  WT["WALKTHROUGH (prose + block refs)"] --> BG["buildGuide()"]
+  WD["WORLD + DATA"] --> IX["indexer: allMapFinds()"]
+  IX --> BG
+  BG --> GG["Guide object"]
+  GG --> RB["renderBlock()"]
+  RB --> MP["map panel"]
+  RB --> BC["boss card"]
+  RB --> SC["species / item card"]
+  MP --> MR["renderMap() via art registry"]</pre>
+
+  <h4 id="pages-guide-contract">The walkthrough content contract</h4>
+  <p>A section is <code>{ id, part, title, blocks }</code>. Sections with the same <code>part</code> ("Prologue", "Chapter 3") are grouped under one heading. Blocks are a discriminated union: the key that is present decides how the block renders.</p>
+  <pre><code class="lang-ts">export type Block =
+  /** A paragraph. Inline: **bold**; UPPER-CASE names as in the game. */
+  | { p: string }
+  /** A boxed hint (puzzle solutions, missables, strategy). */
+  | { tip: string; title?: string }
+  /** A bullet list. */
+  | { list: string[] }
+  /** "Before you leave" checklist. */
+  | { checklist: string[] }
+  // …
+  | { map: MapId; flags?: Record&lt;string, boolean&gt;; note?: string }
+  /** A boss card (leader, rival, admin, Council): portrait, full team with levels and moves, prize. */
+  | { boss: string; note?: string }
+  /** A highlighted creature (a gift, starter, legendary): sprite, types, stats and where to get it. */
+  | { species: SpeciesId; note?: string }
+  /** A highlighted key item (field tools such as the lantern or raft). */
+  | { item: ItemId; note?: string };</code></pre>
+  <aside class="tip">Never type a level, rate, team or price into a <code>p</code> block. Put a <code>{ map }</code>, <code>{ boss }</code>, <code>{ species }</code> or <code>{ item }</code> block where the reader needs it, and the number stays right forever.</aside>
+
+  <h4 id="pages-guide-indexer">The indexer</h4>
+  <p><code>mapFinds(world, data, id)</code> collects everything a map panel shows: wild encounters per method (grass, bog, water) with day and night percentages and every <code>encountersWhen</code> variant, items on the ground, hidden items and berry bushes, trainers, and everything the map's scripts give, sell, trade or fight. Script effects are found by walking the scripts, following <code>call</code> and every branch:</p>
+  <pre><code class="lang-ts">/** Every op reachable from a script (following `call`s and every branch). */
+export function walkScript(
+  world: Pick&lt;WorldData, "scripts"&gt;, scriptId: string, visit: (op: ScriptCmd, when: string[], scriptId: string) =&gt; void,
+  ctx: LabelContext = {},
+): void {
+  const seen = new Set&lt;string&gt;();
+  const run = (id: string, when: string[]) =&gt; {
+    if (seen.has(id)) return;
+    seen.add(id);
+    // …
+        if (op.op === "call") run(op.script, w);
+        for (const b of branches(op, ctx)) if (b.cmds.length) walk(b.cmds, b.label ? [...w, b.label] : w);
+    // …
+  };
+  run(scriptId, []);
+}</code></pre>
+  <p>The <code>when</code> list is how the guide labels conditional finds: an item given only after a flag is set is listed with that condition.</p>
+
+  <h4 id="pages-guide-coverage">The coverage test</h4>
+  <p><a data-src="src/guide/walkthrough.test.ts">walkthrough.test.ts</a> keeps the guide honest. It checks that section ids are unique and well formed, that every block names a map, trainer, species or item that exists, that text blocks aren't empty, and that <strong>every map with wild plants, trainers or items has a map panel</strong> somewhere:</p>
+  <pre><code class="lang-ts">/** Maps with encounters, trainers or items that no walkthrough `map` block shows. */
+export function uncoveredMaps(sections: Section[]): string[] {
+  const covered = new Set(blocks(sections).flatMap(({ b }) =&gt; ("map" in b ? [b.map] : [])));
+  return allMapFinds(WORLD, DATA).filter((f) =&gt; mapHasContent(f) &amp;&amp; !covered.has(f.map)).map((f) =&gt; f.map);
+}</code></pre>
+  <p>So adding a new route with trainers fails <code>npm test</code> until someone writes its walkthrough section. A sanity test also checks that, with an empty walkthrough, more than 40 maps would be uncovered, so the rule can't silently pass by matching nothing.</p>
+
+  <pre class="mermaid">sequenceDiagram
+  participant P as Page
+  participant IO as IntersectionObserver
+  participant MR as renderMap
+  participant R as ArtRegistry
+  P->>IO: observe each map panel (800px margin)
+  IO-->>P: panel near the viewport
+  P->>MR: renderMap(def, flags)
+  MR->>R: loadAll(tile, structure, character paths)
+  R-->>MR: images ready
+  MR-->>P: canvas with markers
+  Note over P: Print draws every pending map first</pre>
+
+  <details class="advanced"><summary>Advanced: story state, rendering and dev previews</summary>
+    <ul>
+      <li><strong>Unset flags read false</strong>, as in a new game. <code>{ map: "route_9", flags: { game_cleared: true } }</code> applies <code>legendWhen</code>, NPC <code>visibleWhen</code> and the active encounter table for that state. Trainers and item balls still show unless <code>flags</code> names their condition, because they are the guide's subjects.</li>
+      <li><strong>The map picture is the game's renderer, not a copy.</strong> <code>renderMap</code> calls <code>buildMap</code>, <code>refreshLegend</code>, <code>autotileMask</code>, <code>drawCell</code>, <code>drawStructure</code> and <code>drawCharacter</code> from <code>src/overworld</code>, Y-sorted as in the game. A rendering bug in the guide is usually a bug in the game.</li>
+      <li><strong>Lazy and printable.</strong> Pictures render when scrolled within 800px. <code>renderAllPending()</code> draws the rest before <code>print()</code>, and <code>beforeprint</code> opens every <code>&lt;details&gt;</code>.</li>
+      <li><strong>Pictures as URLs.</strong> <code>artUrl()</code> returns the bundle file itself when no cutting or recolouring is needed (lazy-loadable, printable), else a data URL of the registry's cut canvas.</li>
+      <li><strong><code>guide.html?preview=atlas</code></strong> (dev only) appends a stand-in part with a panel for every map and a sample of every block type, which is useful while writing.</li>
+    </ul>
+  </details>
+
+  <h3 id="pages-tilelab">The Tile Lab (<code>tilelab.html</code>)</h3>
+  <p>The Tile Lab is for trying tileset swaps on the <em>whole world</em> before committing to them. Everything lives in memory and in IndexedDB. Nothing is written to <code>public/art/</code> until you install an export by hand.</p>
+  <ul>
+    <li><strong>The atlas</strong> (<code>atlas.ts</code>) draws every map with the guide's <code>renderMap</code>, lazily as cards scroll into view. Click a card for a large view with zoom, pan and hover names. <strong>Hold to compare</strong> (or hold <kbd>C</kbd>) shows the art without the lab's changes.</li>
+    <li><strong>The Tiles tab</strong> shows every <code>TileKey</code>, grouped by its owning tileset, with its usage (<code>usage.ts</code>: map rows, <code>legend</code>, <code>legendWhen</code>, the border, field-move results).</li>
+    <li><strong>The Tilesets tab</strong> previews installed packs, replaces whole sheets, and maps an external sheet.</li>
+  </ul>
+
+  <h4 id="pages-tilelab-swaps">Three ways to swap</h4>
+  <table>
+    <thead><tr><th>Swap</th><th>Input</th><th>Becomes</th></tr></thead>
+    <tbody>
+      <tr><td>Single tile</td><td>16x16</td><td>the base (optionally also every alt and mask)</td></tr>
+      <tr><td></td><td>32x16</td><td>base frames 1 and 2</td></tr>
+      <tr><td></td><td>64x64 (autotiled keys)</td><td>masks 0–15 as a 4x4 grid; mask 15 also becomes the base</td></tr>
+      <tr><td></td><td>128x64 (autotiled keys)</td><td>two such grids: frames 1 and 2</td></tr>
+      <tr><td>Whole sheet</td><td>a PNG laid out like the tileset's current sheet</td><td>every key reads its old cells from the new sheet</td></tr>
+      <tr><td>External mapping</td><td>any 16px-grid sheet</td><td>cells you assign per key and slot, saved as <code>verdant.tilelab-mapping/1</code> JSON</td></tr>
+    </tbody>
+  </table>
+  <p>When several apply to one key, the order is: a single-tile swap, then the mapping, then a replaced sheet, then the current art. In code, <code>effectiveEdits()</code> lays the single-tile edits over the mapping's edits, and <code>planTileset()</code> applies the result over art cut from the replaced sheet.</p>
+
+  <pre class="mermaid">flowchart LR
+  ST["LabState: edits, sheets, mapping, packs"] --> EE["effectiveEdits()"]
+  EE --> PA["planAll()"]
+  PA --> TP["TilesetPlan per touched tileset"]
+  TP --> IN["installLab(): registry patches"]
+  TP --> PT["packTree() + validatePack()"]
+  PT --> ZP["exportZip(): id.zip"]
+  ST --> DB[("IndexedDB verdant.tilelab")]
+  DB --> HK["game ?tilelab=1 hook"]
+  HK --> IN</pre>
+  <p>The key design decision: a <code>TilesetPlan</code> <em>is</em> an art-pack tileset in the format of <a href="#art-packs">art packs</a>. The in-browser preview and the exported pack are the same data, so what you see in the lab is what you get after installing.</p>
+
+  <h4 id="pages-tilelab-install">How a plan reaches the registry</h4>
+  <pre><code class="lang-ts">export async function installLab(reg: ArtRegistry, state: LabState): Promise&lt;Installed&gt; {
+  await reg.ready();
+  reg.clearOverrides();
+  const packs = state.packs.filter((p) =&gt; reg.index.packs[p]);
+  if (packs.join(",") !== reg.activePacks().join(",")) reg.setActivePacks(packs);
+  const base = reg.fork(reg.activePacks());
+  await base.loadAll(pathsToLoad(base.catalog, state));
+  const plans = planAll(registrySource(base), state);
+  for (const p of plans) {
+    const v = reg.bundle("tilesets", p.id);
+    if (!v) continue;
+    reg.overrideFile(v.layers[0].dir + LAB_SHEET, rgbaToCanvas(p.sheet));
+    reg.patchBundle("tilesets", p.id, { ...p.json, sheet: LAB_SHEET });
+  }
+  return { plans, base };
+}</code></pre>
+  <p>Each touched tileset gets a lab-layer JSON patch whose <code>sheet</code> is <code>tilelab-sheet.png</code>, a file that exists only as an in-memory override. The <code>base</code> fork, with the same packs and no edits, is the "before" side of hold-to-compare.</p>
+
+  <h4 id="pages-tilelab-export">Export and the game hook</h4>
+  <p><strong>Export</strong> writes <code>&lt;id&gt;.zip</code>: a <code>README.md</code>, the pack folder (<code>&lt;id&gt;/pack.json</code>, <code>tilesets/&lt;tileset&gt;/tileset.json</code> and <code>sheet.png</code>), per-tile PNGs named the way <code>art.py explode</code> names them (so you can bake them into the base with <code>art.py pack</code>), and the mapping JSON, if any. Before writing, the pack is checked with <code>src/art/validate.ts</code>, the same rules as <code>npm test</code>.</p>
+  <pre class="mermaid">sequenceDiagram
+  participant TL as Tile Lab
+  participant DB as IndexedDB
+  participant G as Game tab
+  TL->>DB: saveState(state)
+  TL->>G: open index.html?tilelab=1
+  G->>G: boot, loadAll()
+  G->>DB: loadState()
+  DB-->>G: state (or null)
+  G->>G: installLab(activeArt(), state)
+  Note over G: walk the world with the lab's tiles, in memory only</pre>
+  <details class="advanced"><summary>Advanced: the in-memory sheet trick, sparse versus full plans, and failure modes</summary>
+    <ul>
+      <li><strong>Why the in-memory sheet resolves.</strong> The lab-layer patch defines <code>tiles</code>, so for edited keys the defining layer is <code>@lab</code>. <code>findFile</code> skips the lab layer and finds <code>tilelab-sheet.png</code> in no index listing, so it returns the base folder's URL with <code>listed: false</code>. <code>installLab</code> registered its override at exactly that URL (<code>v.layers[0].dir + LAB_SHEET</code>), and <code>fileNow(url)</code> checks overrides first. No resolver change was needed.</li>
+      <li><strong>Sparse versus full.</strong> With single-tile edits only, the plan's sheet holds just the edited keys' images (deduplicated by <code>CellPacker</code>) and <code>tiles</code> names only those keys, with their untouched alts and masks copied in, because a pack's <code>tiles.&lt;key&gt;</code> replaces the whole key. With a replaced sheet, <code>tiles</code> names <em>every</em> key of the tileset and edited keys go in extra rows below, because a layer that defines <code>tiles</code> reads its own sheet.</li>
+      <li><strong>A dependency-free ZIP.</strong> <code>zip.ts</code> writes store-only ZIPs (CRC-32, no compression, no ZIP64) and stored-block zlib streams, so PNGs can be encoded without a compressor. That keeps the zero-runtime-dependencies rule.</li>
+      <li><strong>Storage can fail.</strong> Every IndexedDB call in <code>store.ts</code> resolves rather than throws. Without IndexedDB (private windows, blocked storage) the lab still works but forgets on reload. In the game, <code>applyStoredTileLab()</code> catches everything and carries on with the normal art.</li>
+      <li><strong>Limits.</strong> Thumbnails are smoothly downscaled; the large view is pixel-exact. Maps draw frame 1 of animated tiles. Structures, characters and species are out of scope (use the <a href="#art-lab">Art Lab</a>).</li>
+    </ul>
+  </details>
+
+  <h3 id="pages-devdocs">These developer docs (<code>devdocs.html</code>)</h3>
+  <p>This page follows the same pattern. Writers only write HTML <dfn>fragments</dfn> in <code>src/devdocs/sections/</code> (<code>10-art.html</code>, <code>11-pages.html</code>…), following <code>src/devdocs/CONTRACT.md</code>. The shell loads them in file-name order, builds the navigation, renders the Mermaid diagrams, highlights code and draws the charts from the game's own modules, so a chart such as <code>bundle-kinds</code> always reflects the current build.</p>
+  <pre><code class="lang-ts">const raw = import.meta.glob&lt;string&gt;("./sections/*.html", { query: "?raw", eager: true, import: "default" });
+
+const toFragments = (mods: Record&lt;string, string&gt;): Fragment[] =&gt;
+  Object.keys(mods)
+    .sort()
+    .map((key) =&gt; ({ file: key.slice(key.lastIndexOf("/") + 1), html: mods[key] }));</code></pre>
+  <pre class="mermaid">flowchart LR
+  FR["sections/*.html (?raw, eager)"] --> SO["sort by file name"]
+  SO --> VA["validateFragments()"]
+  VA --> SH["page shell"]
+  SH --> NAV["table of contents"]
+  SH --> MM["Mermaid diagrams"]
+  SH --> CH["charts from game modules"]
+  SH --> HL["code highlighting"]</pre>
+  <p>The fragments are bundled at build time as strings (<code>?raw</code>), so there is no runtime fetch. The <code>nn-</code> prefix decides the order.</p>
+  <details class="advanced"><summary>Advanced: validating fragments</summary>
+    <ul>
+      <li><code>src/devdocs/validate.ts</code> scans fragments as plain strings (no DOM), so the same checks can run in the browser and in Vitest. It rejects elements outside an allow-list (an unknown tag is usually an unescaped <code>&lt;</code> in a code block, like <code>Array&lt;string&gt;</code>), forbids scripts, styles and form controls, checks ids, and reports <code>#</code> links that point nowhere across all fragments.</li>
+      <li>Chart names come from <code>CHART_NAMES</code> in <code>names.ts</code>, which deliberately imports nothing from the game so the validator stays cheap. Use only names from that list.</li>
+      <li>Dev only: <code>devdocs.html?fixture=1</code> appends untracked stand-in sections from <code>src/devdocs/fixture.local/</code>; production builds drop that branch.</li>
+    </ul>
+  </details>
+</section>

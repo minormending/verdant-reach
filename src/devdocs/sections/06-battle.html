@@ -1,0 +1,796 @@
+<section id="battle" data-title="Battles" data-summary="src/battle: pure turn logic vs. the scene, the turn pipeline, damage, statuses, AI, catching, EXP, trainers and whiteout.">
+  <h2>Battles</h2>
+
+  <p>Battles are split into two layers that never mix. <a data-src="src/battle/logic/battle.ts">src/battle/logic/</a>
+    is pure TypeScript: no canvas, no audio, no timers. Given a battle state, two chosen actions and a random-number
+    function, <code>resolveTurn</code> mutates the state and returns an <dfn>event log</dfn>, a list of things that
+    happened ("text", "hp went from 31 to 12", "wilt"). The <dfn>scene</dfn>
+    (<a data-src="src/battle/scene.ts">scene.ts</a>, with <a data-src="src/battle/hud.ts">hud.ts</a>,
+    <a data-src="src/battle/fx.ts">fx.ts</a>, <a data-src="src/battle/movefx.ts">movefx.ts</a> and
+    <a data-src="src/battle/anims.ts">anims.ts</a>) shows the menus and plays that log back as text, animations
+    and HP bars.</p>
+
+  <p>The split exists so the rules can be tested and simulated at full speed. Thousands of AI-against-AI battles run
+    in the test suite in seconds (<a href="#battle-tests">balance tests</a>), and a seeded RNG makes every one
+    reproducible.</p>
+
+  <pre class="mermaid">flowchart LR
+  OW["Overworld / script"] -- "BattleRequest" --> CTX["ctx.battle(req)"]
+  CTX --> SC["BattleScene (scene.ts)"]
+  subgraph logic["src/battle/logic (pure)"]
+    BT["battle.ts: resolveTurn"]
+    DM["damage.ts: calcDamage"]
+    AI["ai.ts: chooseFoeAction"]
+    CP["capture.ts: attemptCapture, tryRun"]
+    EX["exp.ts: yield, share, level-up, growth"]
+    ST["stats.ts / trainer.ts: createQuickened"]
+  end
+  subgraph view["Presentation"]
+    HUD["hud.ts: HP/EXP boxes, backdrops"]
+    FX["fx.ts + movefx.ts: particles"]
+    AN["anims.ts: move to animation family"]
+  end
+  SC --> logic
+  BT --> DM
+  SC --> view
+  SC -- "BattleOutcome" --> OW</pre>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-layers">State vs. scene</h3>
+
+  <p>The logic layer's whole world is one <code>BattleState</code>:</p>
+  <pre><code class="lang-ts">export interface BattleState {
+  data: GameData;
+  sides: [SideState, SideState];
+  weather: { kind: Weather; turns: number } | null;
+  time?: TimeOfDay;
+  wild: boolean;
+  /** Display name of the foe trainer, e.g. "WARDEN HOLLIS" (trainer battles). */
+  foeTrainer?: string;
+  /** Items the foe trainer still has. */
+  foeItems: Record&lt;string, number&gt;;
+  turn: number;
+  /** Dormant counters by Quickened uid. */
+  dormant: Record&lt;string, number&gt;;
+  /** Player uids that faced the current foe (exp participants). */
+  participants: Set&lt;string&gt;;
+}</code></pre>
+  <p>Each side holds its party, the index of the active plant, and <dfn>volatile</dfn> state, which lasts only while
+    that plant stays in: stat stages, Root Tap, protecting, the protect chain and flinch. Switching out wipes it
+    (<code>newVolatile()</code>). Side 0 is always the player, side 1 the foe.</p>
+
+  <p>The two languages between the layers:</p>
+  <pre><code class="lang-ts">export type Action =
+  | { kind: "move"; slot: number } // slot -1 = Struggle
+  | { kind: "switch"; index: number }
+  | { kind: "item"; item: ItemId }
+  | { kind: "none" };
+
+export type BattleEvent =
+  | { t: "text"; text: string }
+  | { t: "anim"; side: Side; move: MoveId; type: TypeId; category: Move["category"]; selfTarget: boolean }
+  | { t: "hp"; side: Side; from: number; to: number; kind: HpKind; eff?: number; crit?: boolean }
+  | { t: "status"; side: Side; status: StatusId | null }
+  | { t: "stat"; side: Side; up: boolean }
+  | { t: "residual"; side: Side; kind: StatusId | "root_tap" | "frost" }
+  | { t: "wilt"; side: Side }
+  | { t: "weather"; weather: Weather | null }
+  | { t: "switch_out"; side: Side }
+  | { t: "switch_in"; side: Side; index: number }
+  | { t: "miss"; side: Side }
+  | { t: "item"; side: Side; item: ItemId };</code></pre>
+
+  <pre class="mermaid">sequenceDiagram
+  participant P as Player (input)
+  participant S as BattleScene
+  participant A as ai.ts
+  participant L as battle.ts
+  participant V as HUD + fx
+  P->>S: picks FIGHT, slot 2
+  S->>A: chooseFoeAction(state, aiKind, rng)
+  A-->>S: Action
+  S->>L: resolveTurn(state, pAction, fAction, rng)
+  L->>L: mutates HP, status, PP in place
+  L-->>S: BattleEvent[]
+  loop each event
+    S->>V: playOne(event): text box, move anim, drain HP bar
+  end
+  S->>S: afterTurn(): wilts, EXP, next foe, outcome</pre>
+
+  <details class="advanced"><summary>Advanced: why an event log, and what it costs</summary>
+    <ul>
+      <li><strong>The state runs ahead of the screen.</strong> <code>resolveTurn</code> finishes the whole turn
+        synchronously, so by playback time a plant may already be at 0 HP. The HUD therefore keeps its own "shown"
+        values (<code>HudView.hp</code>, <code>.level</code>, <code>.status</code>) and animates them from the
+        <code>hp</code> events' <code>from</code>/<code>to</code>. On <code>switch_out</code>, <code>active</code>
+        already points at the newcomer, so the scene reads the outgoing plant from <code>HudView.q</code>.</li>
+      <li><strong>Anything time-sensitive is captured before playback.</strong> For wanderers (roaming legendaries)
+        the scene records <code>wandererWiltedAt = new Date()</code> right after resolution, because playback and EXP
+        can run past midnight and the wanderer's recovery is per calendar day.</li>
+      <li><strong>Determinism.</strong> All randomness goes through the injected <code>Rng</code>
+        (<a data-src="src/battle/logic/rng.ts">rng.ts</a>: <code>randInt</code>, <code>chance</code>, <code>pct</code>,
+        <code>seeded</code> mulberry32, <code>sequence</code> for scripted tests). Cosmetic randomness in
+        <code>fx.ts</code> uses <code>Math.random()</code> on purpose, so particles never shift the battle stream.</li>
+      <li><strong>Crash policy.</strong> If <code>main()</code> throws, the scene logs and finishes with
+        <code>"fled"</code> for a wild battle and <code>"won"</code> for a trainer battle. It would rather skip a
+        story fight than soft-lock the game. A bug in a trainer battle can therefore look like a win (and set
+        <code>beat_&lt;id&gt;</code>), so check the console for <code>[battle] crashed</code>.</li>
+      <li><strong>Defensive lookups.</strong> <code>getSpecies</code>, <code>getMove</code> and <code>getItem</code> in
+        <a data-src="src/battle/logic/lookup.ts">lookup.ts</a> return a plain fallback and warn once for unknown ids,
+        a leftover from when data and battle were built in parallel. The data tests make that path unreachable in
+        practice.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-lifecycle">A battle from start to finish</h3>
+
+  <p>Code asks for a battle with a <code>BattleRequest</code> (wild species and level, or a trainer id, plus
+    <code>canLose</code>, an optional <code>wanderer</code> and a backdrop) and gets back a
+    <code>BattleOutcome</code>: <code>"won"</code>, <code>"lost"</code>, <code>"fled"</code> or <code>"caught"</code>.
+    The scene's <code>main()</code> is one async loop:</p>
+  <pre><code class="lang-ts">    while (!outcome) {
+      const choice = await this.chooseAction();
+      if (choice.kind === "fled") { outcome = "fled"; break; }
+      if (choice.kind === "caught") { outcome = "caught"; break; }
+      const pAction: Action = choice.kind === "move" ? { kind: "move", slot: choice.slot }
+        : choice.kind === "switch" ? { kind: "switch", index: choice.index } : { kind: "none" };
+      const fAction = chooseFoeAction(this.s, this.aiKind, ctx.rng);
+      const events = resolveTurn(this.s, pAction, fAction, ctx.rng);
+      // …
+      await this.play(events);
+      outcome = await this.afterTurn();
+    }</code></pre>
+
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Intro : preload art, banner, send-out
+  Intro --> ChooseAction
+  ChooseAction --> Resolve : FIGHT or switch
+  ChooseAction --> Resolve : BAG item used, failed pod, failed run (Action none)
+  ChooseAction --> Caught : pod holds
+  ChooseAction --> Fled : run succeeds
+  Resolve --> Playback : BattleEvent[]
+  Playback --> AfterTurn
+  AfterTurn --> Won : wild foe wilted, or trainer has none left
+  AfterTurn --> Lost : no healthy plant left
+  AfterTurn --> Fled : wanderer flees
+  AfterTurn --> ForcedSwitch : your plant wilted
+  AfterTurn --> NextFoe : trainer sends the next one
+  AfterTurn --> ChooseAction : nothing to do
+  ForcedSwitch --> ChooseAction
+  ForcedSwitch --> Fled : wild, chose to run
+  NextFoe --> ChooseAction : optional SHIFT switch first
+  Won --> Ending
+  Lost --> Ending
+  Fled --> Ending
+  Caught --> Ending
+  Ending --> [*] : growth checks, fade out</pre>
+
+  <p><code>afterTurn</code> handles the foe's wilt first (EXP is awarded at once, as in Crystal), then your wilt,
+    then the wanderer's flee check, then replacements. Before a trainer's next plant comes out you may switch
+    ("SHIFT" mode): "<em>BRAM is about to use…</em>".</p>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-turn">The turn pipeline</h3>
+
+  <p><code>resolveTurn</code> runs three phases. Switches and foe items go first, then the two moves in priority and
+    speed order, then end-of-turn residuals.</p>
+  <pre class="mermaid">sequenceDiagram
+  participant S as Scene
+  participant R as resolveTurn
+  participant M as executeMove
+  participant E as endOfTurn
+  S->>R: player action, foe action
+  R->>R: turn++
+  Note over R: 1. switches (player then foe), foe item use
+  R->>R: doSwitch / foeUseItem
+  Note over R: 2. order movers: priority, then effective speed, tie 50/50
+  R->>M: first mover (skipped if user or target is wilted)
+  M-->>R: hits, effects, wilts appended to events
+  R->>M: second mover (first = false, so no flinch)
+  M-->>R: events
+  Note over R: 3. residuals in mover order
+  R->>E: blight/scorch, Root Tap, weather countdown, frost chip
+  E-->>R: events, protect and flinch cleared
+  R-->>S: BattleEvent[]
+  S->>S: afterTurn: wilt to EXP, switch, outcome</pre>
+
+  <pre><code class="lang-ts">  // 2. Moves by priority, then speed, random tiebreak.
+  const movers: Side[] = ([0, 1] as Side[]).filter((sd) =&gt; actions[sd].kind === "move");
+  // …
+  movers.sort((a, b) =&gt; {
+    const pd = prio(b) - prio(a);
+    if (pd !== 0) return pd;
+    const sd = effectiveSpeed(s, b) - effectiveSpeed(s, a);
+    if (sd !== 0) return sd;
+    return 0;
+  });
+  if (movers.length === 2 &amp;&amp; prio(movers[0]) === prio(movers[1]) &amp;&amp;
+      effectiveSpeed(s, movers[0]) === effectiveSpeed(s, movers[1]) &amp;&amp; rng() &lt; 0.5) {
+    movers.reverse();
+  }</code></pre>
+
+  <p><dfn>Effective speed</dfn> is the Speed stat times its stage multiplier, halved if ROOTBOUND, floored. Stage
+    multipliers follow Gen 2: +n gives (2 + n) / 2, −n gives 2 / (2 + n), clamped to ±6 (so +6 is 4×, −6 is ¼×).
+    Accuracy and evasion use thirds instead: (3 + n) / 3 and 3 / (3 + n).</p>
+
+  <details class="advanced"><summary>Advanced: turn-order details and asymmetries</summary>
+    <ul>
+      <li><strong>Player items never reach <code>resolveTurn</code>.</strong> The scene applies a medicine from the bag
+        itself (<code>applyItem</code>), then sends <code>{ kind: "none" }</code>. A failed pod and a failed run do the
+        same. Only the foe's item goes through the <code>"item"</code> action (<code>foeUseItem</code>), so the foe's
+        use is part of the event log and the player's is not.</li>
+      <li><strong>A wilted target ends the turn for the other mover.</strong> The move loop skips a mover when either
+        the user or the target has 0 HP, so a slower plant whose foe was knocked out doesn't use even a self-targeting
+        move.</li>
+      <li><strong>Flinch needs moving first.</strong> <code>executeMove</code> gets <code>first = !acted.has(other)</code>;
+        the flinch effect only applies when the target hasn't acted yet this turn and damage was dealt.</li>
+      <li><strong>Priority is read from the chosen slot</strong>; Struggle (slot −1) is priority 0. The protect moves
+        (Curl Up, Lotus Effect) are +4, Quick Snap and Vacuum Trap +1.</li>
+      <li><strong>EXP participants</strong> are a <code>Set</code> of uids. Every player switch-in adds to it; a new foe
+        (switch or send-out) resets it to whoever is facing that foe. That is how "everyone who faced it" is tracked
+        without a per-turn history.</li>
+      <li>End-of-turn order is the mover order, then any side that didn't move. In a double wilt from residuals, the
+        faster side's residual resolves first.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-move">Executing one move</h3>
+
+  <p><code>executeMove</code> is the heart of the battle: it checks whether the user can act, spends PP, rolls
+    accuracy, deals damage and applies effects, in Gen 2 order.</p>
+  <pre class="mermaid">flowchart TD
+  A["canAct?"] --> A1{"DORMANT"}
+  A1 -- "counter reaches 0" --> A1w["wakes up, acts"]
+  A1 -- "still asleep" --> X["turn lost (protect chain reset)"]
+  A1w --> A2
+  A1 -- "not dormant" --> A2{"FROSTBITE"}
+  A2 -- "own fire attack or 20%" --> A2t["thaws, acts"]
+  A2 -- "else" --> X
+  A2t --> A3
+  A2 -- "no" --> A3{"flinched?"}
+  A3 -- yes --> X
+  A3 -- no --> A4{"ROOTBOUND and 25%?"}
+  A4 -- yes --> X
+  A4 -- no --> B["spend 1 PP (or Struggle)"]
+  B --> C{"targets foe and foe protecting?"}
+  C -- yes --> X2["protected itself"]
+  C -- no --> D{"accuracy roll (unless null / always_hit)"}
+  D -- miss --> X3["attack missed"]
+  D -- hit --> E["anim event"]
+  E --> F{"damaging or fixed?"}
+  F -- yes --> G["roll hits, crit, calcDamage per hit"]
+  G --> H["drain / recoil"]
+  F -- no --> I
+  H --> I["checkWilt(target)"]
+  I --> J["status, stat, flinch, heal, weather, Root Tap, protect"]
+  J --> K["checkWilt(user)"]</pre>
+
+  <p>Accuracy combines the move's accuracy with the stage difference:
+    <code>accuracy × accStageMult(clamp(userAccuracy − targetEvasion))</code>. A move with
+    <code>accuracy: null</code> or an <code>always_hit</code> effect skips the roll. Moves that target only the user
+    (most status moves) skip it too, and so does protect.</p>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-damage">The damage formula</h3>
+
+  <p><a data-src="src/battle/logic/damage.ts">damage.ts</a> follows Gen 2's order of operations, flooring after each
+    step:</p>
+  <pre><code class="lang-ts">/**
+ * Gen 2 order of operations:
+ *   base = floor(floor(floor(2L/5 + 2) * P * A / D) / 50)
+ *   x2 crit, +2, weather, photoperiod, STAB 1.5, type, random 85..100%.
+ * A crit ignores the attacker's negative stages and the defender's positive ones.
+ * Scorch halves physical attack.
+ */
+export function calcDamage(inp: DamageInput): DamageResult {
+  // …
+  let A = Math.floor(attacker.stats[ak] * statStageMult(aStage));
+  const D = Math.max(1, Math.floor(defender.stats[dk] * statStageMult(dStage)));
+  if (move.category === "physical" &amp;&amp; attacker.status === "scorch") A = Math.floor(A / 2);
+  A = Math.max(1, A);
+
+  let dmg = Math.floor(Math.floor(Math.floor((2 * attacker.level) / 5 + 2) * move.power * A / D) / 50);
+  if (inp.crit) dmg *= 2;
+  dmg += 2;
+  if (!inp.typeless) dmg = Math.floor(dmg * weatherMult(inp.weather, move.type));
+  dmg = Math.floor(dmg * photoperiodMult(aSpecies.activity, inp.time));
+  if (stab) dmg = Math.floor(dmg * 1.5);
+  dmg = Math.floor(dmg * effectiveness);
+  dmg = Math.floor((dmg * Math.max(85, Math.min(100, inp.roll))) / 100);
+  return { damage: Math.max(1, dmg), effectiveness, stab };
+}</code></pre>
+
+  <table>
+    <thead><tr><th>Step</th><th>Multiplier</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Stats</td><td>A / D</td><td>Physical: atk vs def. Special: spa vs spd. Stages applied; SCORCH halves physical A.</td></tr>
+      <tr><td>Critical hit</td><td>×2</td><td>17/256 normally; 1/8 for <code>high_crit</code> moves (Gen 2 stage table 17/256, 1/8, 1/4, 85/256, 1/2).</td></tr>
+      <tr><td>Weather</td><td>×1.5 / ×0.5</td><td>Sun: fire ×1.5, water ×0.5. Rain: water ×1.5, fire ×0.5. Frost: frost ×1.5.</td></tr>
+      <tr><td>Photoperiod</td><td>×1.1</td><td>A <code>day</code> species attacking by morning or day, or a <code>night</code> species at night.</td></tr>
+      <tr><td><dfn>STAB</dfn></td><td>×1.5</td><td>Same-type attack bonus: the move's type is one of the attacker's types.</td></tr>
+      <tr><td>Type</td><td>0.25 to 4</td><td>Product of the chart entry against each defending type.</td></tr>
+      <tr><td>Random roll</td><td>85–100%</td><td><code>randInt(rng, 85, 100)</code>, 16 equally likely values.</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Worked example.</strong> A level-10 plant with 20 Attack uses Vine Lash (power 40, wood, STAB) on a
+    water plant with 18 Defence. floor(2·10/5 + 2) = 6; floor(6 · 40 · 20 / 18) = 266; floor(266 / 50) = 5; +2 = 7;
+    STAB floor(10.5) = 10; super effective ×2 = 20; roll 85–100% gives <strong>17 to 20</strong>. A critical hit
+    doubles the 5 before the +2: 12 → 18 → 36 → <strong>30 to 36</strong>.</p>
+
+  <figure data-chart="damage-spread"><figcaption>The damage roll spread for a sample attack: the 85–100% range, and how STAB and type effectiveness stretch it.</figcaption></figure>
+
+  <h4>The type chart</h4>
+  <p>Nine types, with plant logic first and Gen 2 feel second: wood drinks water, fire burns wood, bug plants eat the
+    pollinators flowers depend on. The design notes for every entry are the comment at the top of
+    <a data-src="src/data/typeChart.ts">typeChart.ts</a>. There are <strong>no immunities</strong> ("every plant is made
+    of living cells"), so the lowest single-type multiplier is 0.5 and a dual type ranges from 0.25 to 4.</p>
+  <pre><code class="lang-ts">export const TYPE_CHART: TypeChart = {
+  wood:   { water: 2, thorn: 2, fire: 0.5, wood: 0.5, bug: 0.5, dragon: 0.5 },
+  fire:   { wood: 2, bug: 2, frost: 2, fire: 0.5, water: 0.5, thorn: 0.5, dragon: 0.5 },
+  water:  { fire: 2, thorn: 2, water: 0.5, wood: 0.5, dragon: 0.5 },
+  // …
+  dragon: { dragon: 2, ghost: 2, bloom: 0.5 },
+};</code></pre>
+  <figure data-chart="type-chart"><figcaption>The full type-effectiveness heatmap: attacking type (rows) against defending type (columns). Missing entries are 1.</figcaption></figure>
+
+  <details class="advanced"><summary>Advanced: numeric edge cases in damage</summary>
+    <ul>
+      <li><strong>Floors compound.</strong> Because every step floors, multiplier order changes results at low
+        damage. STAB-then-type (Gen 2's order) can differ by a point from type-then-STAB. Don't "simplify" the chain
+        into one product: the damage tests pin exact values.</li>
+      <li><strong>Minimum 1.</strong> Any hit that lands does at least 1 damage, even 0.25× at level 2.</li>
+      <li><strong>Crits and stages.</strong> A crit ignores the attacker's <em>negative</em> stages and the defender's
+        <em>positive</em> ones, but keeps the attacker's boosts and the defender's drops. It doesn't remove SCORCH's
+        halving.</li>
+      <li><strong>Struggle</strong> (used when every move is out of PP) is "typeless": no STAB, no chart and no weather,
+        but the photoperiod bonus still applies, and 1/4 recoil. Its <code>type</code> field is <code>"wood"</code>
+        only to satisfy the <code>Move</code> shape, and code identifies it by id.</li>
+      <li><strong>Fixed damage</strong> (Wither = the user's level, Fossil Print = 40) bypasses the formula, the chart
+        and crits entirely.</li>
+      <li><strong>Three copies of the effectiveness loop</strong> exist: <code>typeEffectiveness</code> in damage.ts,
+        a private <code>effectivenessOf</code> in battle.ts and <code>typeMultiplier</code> in hints.ts. They agree
+        today. If you ever add immunities (a 0 entry), change all three, and note that the <code>eff === 0</code>
+        "It doesn't affect…" branches are currently unreachable.</li>
+      <li>The AI's <code>expectedDamage</code> calls the same <code>calcDamage</code> with <code>roll: 92</code> and
+        no crit, so the AI's estimate is always the true midpoint.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-status">Status conditions</h3>
+
+  <p>Five statuses replace Gen 2's, with plant names. A plant has at most one; it persists after battle (it's stored on
+    the <code>Quickened</code>) until cured, healed at a greenhouse, or the plant wilts.</p>
+  <table>
+    <thead><tr><th>Status (HUD)</th><th>Gen 2 analogue</th><th>Effect</th><th>Immune</th></tr></thead>
+    <tbody>
+      <tr><td>BLIGHT (BLT)</td><td>poison</td><td>Loses 1/8 max HP at end of turn.</td><td>none</td></tr>
+      <tr><td>SCORCH (SCR)</td><td>burn</td><td>Loses 1/16 max HP at end of turn; physical Attack halved.</td><td>fire types</td></tr>
+      <tr><td>FROSTBITE (FRB)</td><td>freeze</td><td>Can't act. Each attempt: 20% to thaw, or thaws using its own damaging fire move. A fire hit on it also thaws it.</td><td>frost types; anyone while the sun is out</td></tr>
+      <tr><td>DORMANT (DRM)</td><td>sleep</td><td>Can't act until a 1–3 counter runs out (see below).</td><td>none</td></tr>
+      <tr><td>ROOTBOUND (RTB)</td><td>paralysis</td><td>Effective speed halved; 25% chance each turn it can't move.</td><td>none</td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Healthy
+  Healthy --> Afflicted : inflictStatus (no status yet, not immune)
+  Afflicted --> Afflicted : second status fails ("But it failed!")
+  state Afflicted {
+    [*] --> Blight
+    [*] --> Scorch
+    [*] --> Frostbite
+    [*] --> Dormant
+    [*] --> Rootbound
+  }
+  Afflicted --> Healthy : cure item, greenhouse heal, thaw, wake
+  Afflicted --> Wilted : HP reaches 0 (status cleared)
+  Healthy --> Wilted : HP reaches 0
+  Wilted --> Healthy : Compost / heal</pre>
+
+  <details class="advanced"><summary>Advanced: DORMANT counting and other status subtleties</summary>
+    <ul>
+      <li><strong>DORMANT skips 0–2 turns, not 1–3.</strong> <code>inflictStatus</code> sets
+        <code>s.dormant[uid] = randInt(1, 3)</code>. On each attempt to act, <code>canAct</code> subtracts 1; when it
+        reaches 0 the plant wakes <em>and acts that same turn</em>. A counter of 1 therefore costs no turns at all.
+        The test "dormant lasts 1-3 turns" asserts exactly this (<code>skipped === turns - 1</code>), so it's
+        intended. The comment in <code>ids.ts</code> ("can't act for 1-3 turns") reads as if it were stricter.</li>
+      <li><strong>The counter lives on the battle, the status on the plant.</strong> A plant still DORMANT when a battle
+        ends keeps the status; in the next battle there is no counter, so <code>canAct</code> rolls a fresh 1–3 and
+        subtracts 1 straight away.</li>
+      <li><strong>Sun prevents frostbite but doesn't cure it.</strong> <code>statusImmune</code> checks the weather only
+        when a status is being inflicted.</li>
+      <li><strong>Secondary vs. primary.</strong> On a damaging move a status effect is a secondary roll
+        (<code>chance</code>) and is skipped if the target wilted. On a status move it's the main effect: failures are
+        announced ("is already blighted!", "It doesn't affect…"), and a <code>chance</code> below 100 can fail with
+        "But it failed!".</li>
+      <li><strong>Frost weather</strong> chips 1/16 max HP from every non-frost plant at the end of each turn while it
+        continues, but not on the turn it ends.</li>
+      <li>Status raises the catch value: +10 for DORMANT and FROSTBITE, +5 for the others
+        (<a href="#battle-catching">catching</a>).</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-effects">Move effects</h3>
+
+  <p>Each <code>MoveEffect</code> (see <a href="#data-moves">moves.json</a>) is handled in <code>executeMove</code>
+    or <code>endOfTurn</code>:</p>
+  <table>
+    <thead><tr><th>Effect</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>status</code></td><td>Inflict a status on the foe or self, with a percent <code>chance</code>.</td></tr>
+      <tr><td><code>stat</code></td><td>Change a stage by ±<code>stages</code> (clamped to ±6). "Rose", "sharply rose" (≥ 2), "fell", "harshly fell".</td></tr>
+      <tr><td><code>drain</code></td><td>Heal the user by <code>fraction</code> of damage dealt (minimum 1): "Drew sap from…".</td></tr>
+      <tr><td><code>recoil</code></td><td>The user takes <code>fraction</code> of damage dealt (minimum 1).</td></tr>
+      <tr><td><code>multi_hit</code></td><td>2–5 hits use Gen 2's 3/8, 3/8, 1/8, 1/8 distribution; other ranges are uniform. Stops early if the target wilts.</td></tr>
+      <tr><td><code>flinch</code></td><td>The target loses its action this turn, only if the user moved first.</td></tr>
+      <tr><td><code>high_crit</code></td><td>Crit stage 1 (1/8 instead of 17/256).</td></tr>
+      <tr><td><code>heal</code></td><td>Restore <code>fraction</code> of max HP. With <code>sunBonus</code> (Photosynthesise): 2/3 in sun, 1/4 in rain or frost.</td></tr>
+      <tr><td><code>weather</code></td><td>Set sun, rain or frost for 5 turns; fails if that weather is already up.</td></tr>
+      <tr><td><code>root_tap</code></td><td>Leech Seed: each end of turn the target loses 1/8 max HP and the opposing active plant heals by the HP actually lost. Wood types are unaffected.</td></tr>
+      <tr><td><code>protect</code></td><td>Block foe-targeted moves this turn. Success chance 1/2<sup>chain</sup> for consecutive uses.</td></tr>
+      <tr><td><code>fixed_damage</code></td><td>A set amount, or the user's level.</td></tr>
+      <tr><td><code>always_hit</code></td><td>Skip the accuracy roll.</td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Clear
+  Clear --> Sun : Sun Flare
+  Clear --> Rain : Rain Call
+  Clear --> Frost : Cold Snap
+  Sun --> Rain : Rain Call
+  Rain --> Sun : Sun Flare
+  Sun --> Clear : 5 end-of-turns
+  Rain --> Clear : 5 end-of-turns
+  Frost --> Clear : 5 end-of-turns
+  note right of Frost : non-frost plants lose 1/16 each turn</pre>
+
+  <details class="advanced"><summary>Advanced: effect interactions</summary>
+    <ul>
+      <li><strong>Weather counts the turn it's set.</strong> <code>turns: 5</code> is decremented at the end of the same
+        turn, so the weather is active for that turn and four more; "The sunlight faded." prints at the fifth end of
+        turn.</li>
+      <li><strong>Drain and recoil come before the target's wilt</strong>, as in Gen 2, so a KO still heals the user.
+        Both need <code>dealt &gt; 0</code> and a living user.</li>
+      <li><strong>Protect chain.</strong> <code>protectChain</code> rises on each success and resets on a failure, on
+        any non-protect move, or when the user can't act. With +4 priority, protect nearly always goes first.</li>
+      <li><strong>Root Tap</strong> is volatile: switching the tapped plant out clears it. If the drainer has wilted,
+        the target still loses HP but nobody heals.</li>
+      <li>Status moves that change nothing print "But it failed!" via the <code>anyEffect</code> flag, so a new effect
+        kind must set <code>anyEffect = true</code> when it does something, or every use will also print a failure.</li>
+      <li>Adding a new effect kind touches four places: the <code>MoveEffect</code> union (a contract change), the
+        <code>EFFECTS</code> list in <a data-src="src/data/moves.ts">moves.ts</a>, the switch in
+        <code>executeMove</code>, and <code>scoreMove</code> in ai.ts (or the smart AI will value it at 0).</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-ai">Foe AI</h3>
+
+  <p><a data-src="src/battle/logic/ai.ts">ai.ts</a> has three levels. Wild plants always use <code>"wild"</code>;
+    trainers declare <code>ai: "basic" | "smart"</code> in their <code>TrainerDef</code> (the default is basic, used by
+    route trainers and Rootstock grunts; leaders, the rival and admins such as SHEARS are smart).</p>
+  <table>
+    <thead><tr><th>Kind</th><th>How it picks</th></tr></thead>
+    <tbody>
+      <tr><td><code>wild</code></td><td>A uniformly random move with PP left.</td></tr>
+      <tr><td><code>basic</code></td><td>A weighted random pick: super-effective 1.6, not very effective 0.7, neutral 1; a status-inflicting move on an already-statused target 0.2.</td></tr>
+      <tr><td><code>smart</code></td><td>Scores every move (<code>scoreMove</code>), may use an item or switch, then mostly takes the best score.</td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">flowchart TD
+  S["smart AI turn"] --> H{"HP at most 1/4 and has a heal item?"}
+  H -- "75%" --> HI["use best heal item"]
+  H -- else --> C{"DORMANT or FROSTBITE and has a cure?"}
+  C -- "50%" --> CI["use cure item"]
+  C -- else --> SC["score every usable move"]
+  SC --> SW{"best score below 25 and matchup below 0?"}
+  SW -- "a party member is 0.5+ better, 35%" --> SWI["switch to it"]
+  SW -- else --> RU{"runner-up within 85% of best?"}
+  RU -- "25%" --> R2["use runner-up"]
+  RU -- else --> R1["use best"]</pre>
+
+  <p><code>scoreMove</code> adds up: expected damage as a share of the target's HP (×100), +40 × accuracy for a likely
+    KO and +15 more if it also has priority; status values (DORMANT 60, FROSTBITE 55, ROOTBOUND 45, BLIGHT 40, SCORCH
+    35, +15 for SCORCH against a physical attacker); stat changes 28 while there's room (stage below ±2), else 3, and
+    less for self-boosts when below half HP; heals when more than half HP is missing; drain +12 below 60% HP; recoil
+    −8; weather +30 if it boosts one of its own moves, else 4; Root Tap +35 on a non-wood target; protect +8 unless it
+    just protected.</p>
+
+  <details class="advanced"><summary>Advanced: what the AI knows and how it is used</summary>
+    <ul>
+      <li><strong>Full information.</strong> The AI reads the real state: your exact HP, status and stages. It doesn't
+        model hidden information, which is the usual trade-off for a small, predictable AI.</li>
+      <li><code>matchupScore</code> is best outgoing type multiplier − worst incoming multiplier + HP fraction. Switching
+        is only considered when the best move is weak, which keeps smart trainers from switching every turn.</li>
+      <li>The same <code>chooseFoeAction</code> drives the player side in the simulator by swapping the two sides
+        (<code>mirrored</code> in simulate.test.ts). That's why it only ever reads <code>active(s, 1)</code> as "me".</li>
+      <li>A switch is chosen but performed by <code>resolveTurn</code> phase 1, so a switching foe takes your move on
+        its new plant.</li>
+      <li>The items a smart trainer can use are a per-battle copy of <code>TrainerDef.items</code>
+        (<code>foeItems</code>). Rematches clone that list (<code>cloneRematch</code>), so the first fight never drains
+        the second.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-catching">Catching with pods</h3>
+
+  <p>A <dfn>pod</dfn> is this game's Poké Ball: a Terrarium Pod (×1) or a Glass Pod (×1.5). In wild battles you can
+    throw one at any time (an updated mechanic). Trainers block it ("Don't be a thief!"), and the pod isn't used up.
+    <a data-src="src/battle/logic/capture.ts">capture.ts</a> uses the Gen 2 catch value <em>a</em>:</p>
+  <pre><code class="lang-ts">export function catchValue(target: Quickened, catchRate: number, podMultiplier: number): number {
+  const M = Math.max(1, target.stats.hp);
+  const H = Math.max(0, Math.min(M, target.hp));
+  let a = Math.floor(((3 * M - 2 * H) * catchRate * podMultiplier) / (3 * M));
+  if (target.status === "dormant" || target.status === "frostbite") a += 10;
+  else if (target.status) a += 5;
+  return Math.max(1, Math.min(255, a));
+}
+
+/** Probability that a single wobble check passes: (a/255)^(1/4). */
+export function shakeProbability(a: number): number {
+  return Math.pow(Math.max(1, Math.min(255, a)) / 255, 0.25);
+}</code></pre>
+  <p>Four wobble checks must pass, so the overall chance is ((a/255)<sup>1/4</sup>)<sup>4</sup> = <strong>a / 255</strong>,
+    and a ≥ 255 always holds. The number of wobbles shown is how many checks passed (0–3).</p>
+
+  <p>A <dfn>critical capture</dfn> is rolled first. Its chance is (a/255) × multiplier / 6, where the multiplier
+    grows with the number of species you've caught: 0 below 1, 0.5 from 1, 1 from 5, 1.5 from 10, 2 from 20, 2.5 from
+    30. A critical capture does a single wobble check, so it succeeds with (a/255)<sup>1/4</sup>, far better than
+    a/255.</p>
+
+  <p><strong>Worked example.</strong> A catch rate 45 plant with 40 max HP. At full HP with a Terrarium Pod,
+    a = floor(40 · 45 / 120) = 15, so 15/255 ≈ 5.9%. At 1 HP, a = 44 (17.3%). At 1 HP and DORMANT with a Glass Pod,
+    a = 66 + 10 = 76: a normal catch is 29.8%. With 12 species caught, the critical chance is 76/255 × 1.5 / 6 ≈ 7.5%,
+    and a critical capture holds 73.9% of the time, so the overall chance is about <strong>33%</strong>.</p>
+
+  <figure data-chart="catch-curve"><figcaption>Catch probability against remaining HP for a low, a middle and a high catch rate from the species data, healthy and DORMANT, with a Terrarium Pod (critical captures not included).</figcaption></figure>
+
+  <pre class="mermaid">flowchart TD
+  T["throwPod(item)"] --> TR{"trainer battle?"}
+  TR -- yes --> NO["blocked, pod kept"]
+  TR -- no --> U["consume pod, a = catchValue"]
+  U --> A255{"a at least 255?"}
+  A255 -- yes --> OK["caught, 3 wobbles"]
+  A255 -- no --> CR{"critical capture roll"}
+  CR -- yes --> C1{"one check passes?"}
+  C1 -- yes --> OK
+  C1 -- no --> BR["breaks free"]
+  CR -- no --> W["up to 4 checks, stop at first failure"]
+  W -- "all pass" --> OK
+  W -- "fails" --> BR
+  OK --> REG["Herbarium page if first catch, nickname"]
+  REG --> PL{"party below 6?"}
+  PL -- yes --> PA["join party"]
+  PL -- no --> BX["sent to the CABINET (box)"]
+  BR --> FT["foe gets a free turn (Action none)"]</pre>
+
+  <h4>Running away</h4>
+  <p>Gen 2's escape rule: always escape if your speed is at least the foe's; otherwise
+    F = floor(yourSpeed × 32 / (floor(foeSpeed / 4) mod 256)) + 30 × previous failed attempts, and you escape if
+    F &gt; 255 or a 0–255 roll is below F. Running uses raw Speed stats, without stages. You can never run from a
+    trainer.</p>
+
+  <details class="advanced"><summary>Advanced: capture edge cases</summary>
+    <ul>
+      <li>The critical capture counter is <code>herbarium.caught.length</code>, which counts species, not plants, so
+        catching duplicates doesn't raise it.</li>
+      <li>A caught plant keeps its current HP and status, gets <code>metAt</code>, and has its friendship raised to at
+        least 70.</li>
+      <li><code>catchProbability(a)</code> (used by the catch-curve chart above) returns <code>a / 255</code> up to floating
+        point and ignores critical captures, so in-game odds are a little higher once you've caught a few species.</li>
+      <li>Wanderers (roaming legendaries) are level 60 with trainer DVs and keep their HP and status between meetings.
+        They flee after the first complete turn, so the realistic plan is a status move or a pod on turn one.</li>
+      <li>When your plant wilts in a wild battle, "Use next QUICKENED?" answered NO tries to run with the first healthy
+        plant's Speed, and failed tries count toward the +30 bonus.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-exp">EXP: yield and the share rule</h3>
+
+  <p>When a foe wilts, the scene awards EXP at once:</p>
+  <pre><code class="lang-ts">/** Gen 2 yield: floor(baseExp * level / 7), x1.5 against trainers. */
+export function expYield(data: GameData, defeated: Quickened, trainer: boolean): number {
+  const sp = getSpecies(data, defeated.species);
+  let e = Math.floor((sp.baseExp * defeated.level) / 7);
+  if (trainer) e = Math.floor(e * 1.5);
+  return Math.max(1, e);
+}
+
+/**
+ * Every healthy participant gets the full yield. Healthy party members that
+ * sat out get 50%. Wilted members and level-100s get nothing.
+ */
+export function distributeExp(party: Quickened[], participants: Set&lt;string&gt;, base: number): ExpShare[] {
+  const out: ExpShare[] = [];
+  party.forEach((q, index) =&gt; {
+    if (q.hp &lt;= 0 || q.seed || q.level &gt;= MAX_LEVEL) return;
+    const participant = participants.has(q.uid);
+    const amount = participant ? base : Math.max(1, Math.floor(base / 2));
+    out.push({ index, amount, participant });
+  });
+  // Participants first, in party order (as Crystal announces them).
+  return out.sort((a, b) =&gt; Number(b.participant) - Number(a.participant) || a.index - b.index);
+}</code></pre>
+
+  <p>This is an updated mechanic: in Crystal only participants gained EXP (unless one held an EXP Share). Here the
+    whole team grows, but the plants that fought grow twice as fast. Example: a wild Oak Acorn (base EXP 64) at level 5
+    yields floor(320 / 7) = 45 to each participant and 22 to everyone else; from a trainer it's 67 and 33.</p>
+
+  <pre class="mermaid">flowchart LR
+  F["foe wilts"] --> Y["expYield: baseExp x level / 7, x1.5 if trainer"]
+  Y --> D{"for each party member"}
+  D -- "wilted, seed or level 100" --> Z["nothing"]
+  D -- "faced this foe" --> P["full share"]
+  D -- "sat out" --> H["half share, min 1"]
+  P --> EV["gainEvs"]
+  H --> EV
+  EV --> G["gainExp: level-ups"]
+  G --> L["levelUp: stat window, learn moves"]</pre>
+
+  <figure data-chart="exp-curves"><figcaption>EXP needed per level for the fast, medium and slow growth rates. Divide a gap by a typical yield to see how many battles a level costs.</figcaption></figure>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-levelup">Level-up, move learning and growth after battle</h3>
+
+  <p><code>gainExp</code> adds EXP (capped at the level-100 total) and levels up as many times as needed. For each new
+    level it recomputes stats, adds friendship (+5 below 100, +3 below 200, +2 above), and reports the moves learned at
+    exactly that level. It does not teach them: the scene runs the learn flow for each.</p>
+  <pre class="mermaid">sequenceDiagram
+  participant S as BattleScene
+  participant X as exp.ts
+  participant UI as learn / growth flows
+  S->>X: gainExp(q, amount)
+  X-->>S: LevelUp[] with oldStats, newStats, newMoves
+  loop each LevelUp
+    S->>S: "grew to level N!" + level_up jingle
+    S->>S: stat window (gains, then totals)
+    loop each new move
+      S->>UI: learnMoveFlow: learn, or forget one of 4, or stop
+    end
+  end
+  Note over S: battle ends (not lost)
+  loop plants that levelled and are not wilted
+    S->>X: growthTarget(q, worldTime)
+    X-->>S: species or null
+    S->>UI: runGrowth (B cancels)
+    UI->>X: applyGrowth: new species, recalcStats
+    UI->>UI: learn moves the new form gets at this level
+  end</pre>
+
+  <details class="advanced"><summary>Advanced: friendship and growth bookkeeping</summary>
+    <ul>
+      <li><strong>Friendship −1 on your own wilt is applied in the scene's <code>wiltAnim</code></strong>, not in the
+        logic layer. Simulations (simulate.ts, balance tests) therefore never lower friendship, and moving that line
+        into an animation-skipping path would silently drop it.</li>
+      <li>Growth waits for the end of the battle, as in Crystal, so a plant that passes its growth level mid-battle
+        fights on as its old form. Only the <code>leveled</code> set is checked; see
+        <a href="#data-growth">growth triggers</a>.</li>
+      <li>A full move list returns <code>"full"</code> from <code>tryLearn</code>; the flow then offers to forget a move
+        and loops "Stop learning…?" until you decide. <code>"known"</code> moves are skipped silently.</li>
+      <li>A level-100 plant gets no EXP share and so no EVs from that defeat.</li>
+    </ul>
+  </details>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-trainers">Trainers, rivals and rematches</h3>
+
+  <p>Every trainer is a <code>TrainerDef</code> in <a data-src="src/world/trainers.ts">src/world/trainers.ts</a>
+    (the world section covers placement):</p>
+  <pre><code class="lang-ts">export interface TrainerDef {
+  id: TrainerId;
+  name: string;                 // e.g. "HOLLIS"
+  className: string;            // e.g. "WARDEN", "GARDENER"
+  portrait: TrainerPortraitKey;
+  /** Grafted members keep their level but use stats from five levels lower. */
+  team: { species: SpeciesId; level: number; moves?: MoveId[]; grafted?: boolean }[];
+  prize: number;                // money on win
+  intro: string;                // said before battle (overworld)
+  defeat: string;               // said in battle when beaten
+  after: string;                // said when talked to afterwards
+  ai: "basic" | "smart";
+  items?: { item: ItemId; qty: number }[]; // leaders may use healing items
+  music?: "battle_trainer" | "battle_leader" | "battle_rootstock" | "battle_mercer" | "battle_keeper";
+  mark?: MarkId;                // leaders award a mark
+}</code></pre>
+
+  <ul>
+    <li><strong>Building the team.</strong> <code>createTrainerQuickened</code> creates each member at its level with
+      the fixed trainer DVs 9/8/8/8, no sport, and the listed <code>moves</code> if given (else the level-appropriate
+      set). A <code>grafted</code> member (one wearing a graft collar, like Bram's starter) keeps its level, moves and EXP value but uses the
+      stats of a plant five levels lower.</li>
+    <li><strong>Prize and defaults.</strong> The <code>trainer()</code> helper sets <code>prize</code> to the team's
+      top level × 20, <code>ai</code> to basic and music to <code>battle_trainer</code> unless overridden. The prize is
+      paid in <code>trainerVictory</code>.</li>
+    <li><strong>After the win.</strong> The script layer (<code>trainerBattle</code> in
+      <a data-src="src/overworld/script.ts">script.ts</a>) sets the flag <code>beat_&lt;trainerId&gt;</code> and awards
+      the trainer's <code>mark</code> if no script awards it.</li>
+  </ul>
+
+  <h4>The rival's starter</h4>
+  <p>BRAM always holds the starter strong against yours. Each rival battle exists in three variants named after
+    <em>his</em> line, and the story script picks one with <code>COUNTER</code>:</p>
+  <pre><code class="lang-ts">/** The line strong against the given one. */
+export const COUNTER: Record&lt;StarterLine, StarterLine&gt; = { oak: "chili", chili: "lily", lily: "oak" };
+// … in the story script:
+    byStarter((line) =&gt; [{ op: "battle", trainer: `rival_1_${COUNTER[line]}`, canLose: true }]),</code></pre>
+  <pre class="mermaid">flowchart LR
+  P{"player's starter"} -- oak --> C["rival_N_chili"]
+  P -- chili --> L["rival_N_lily"]
+  P -- lily --> O["rival_N_oak"]</pre>
+  <p><strong>Rematches.</strong> After the game is cleared, the Council can be fought again: <code>cloneRematch</code>
+    copies each trainer as <code>&lt;id&gt;_rematch</code>, every member 8 levels higher, with fresh copies of move and
+    item lists and new lines (Rowan's prize becomes $5000).</p>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-whiteout">Losing: whiteout</h3>
+
+  <p>A battle returns <code>"lost"</code> when no healthy, non-seed plant is left. Story battles with
+    <code>canLose: true</code> (like the first rival fight) just continue the script. Otherwise the overworld runs
+    <code>whiteout()</code>:</p>
+  <pre class="mermaid">sequenceDiagram
+  participant B as Battle
+  participant O as Overworld
+  participant S as GameState
+  B-->>O: "lost"
+  O->>O: fade to black, stop music
+  O->>S: money -= floor(money / 2)
+  O->>S: healParty (HP, PP, status)
+  O->>O: loadMap(state.heal), the last greenhouse used
+  O->>O: run the losing map's onWhiteout script, if any
+  Note over O: a script that started the battle is aborted (ScriptAbort "whiteout")</pre>
+  <p>"<em>PLAYER dropped $N in the scramble…</em>" then "<em>…and scurried back to the greenhouse!</em>" (or home, if
+    you've never healed elsewhere).</p>
+
+  <!-- ===================================================================== -->
+  <h3 id="battle-tests">Balance tests and the simulator</h3>
+
+  <p>Because the logic layer is pure, the test suite can play real battles with the real data. Two files matter most
+    (<a href="#testing-balance">the testing section</a> covers them in depth):</p>
+  <ul>
+    <li><a data-src="src/battle/logic/simulate.test.ts">simulate.test.ts</a> is a <dfn>soak test</dfn>: 300 seeded
+      battles between random parties of every species at levels 3–42, wild and trainer (some members grafted), with the
+      smart AI playing your side and the basic or smart AI the foe's. After every turn it checks invariants: HP within 0..max and finite, PP never negative,
+      stages within ±6, and every battle ends within 200 turns.</li>
+    <li><a data-src="src/battle/logic/balance.test.ts">balance.test.ts</a> builds a party typical of each story
+      milestone (the starter at an expected level, plus catches available by then) and plays 200–300 seeded fights
+      against each leader and rival, with a greedy "human-like" player that picks the best expected-damage move and never
+      uses items or switches on purpose. Every starter must win more than 25% of the time, and leaders have bands: Flora
+      (the early spike) must average below 75%, Morrow above Flora's average and below 88%, Saguaro 72–90%, Reyes
+      65–75% and below Saguaro.</li>
+  </ul>
+  <p><a data-src="src/battle/logic/simulate.ts">simulate.ts</a> (<code>simulateTrainerRun</code>) chains fights the
+    way runtime does, keeping HP, status and PP between rooms and healing only between fights. The Council-run tests use
+    it to check the whole gauntlet.</p>
+
+  <pre class="mermaid">flowchart LR
+  E["edit stats, moves or a team"] --> T["npm test"]
+  T --> SO["simulate.test: invariants hold"]
+  T --> BA["balance.test: win rates in bands"]
+  BA -- "outside band" --> F["fail: retune before shipping"]
+  BA -- "inside" --> OK["green"]
+  SO --> OK</pre>
+
+  <details class="advanced"><summary>Advanced: reading and tuning the balance tests</summary>
+    <ul>
+      <li>The tests log each win rate (<code>console.log</code>), so a near-miss is visible before it fails. Run
+        <code>npx vitest run src/battle/logic/balance.test.ts</code> to see them.</li>
+      <li>The sim player is deliberately pessimistic (no items, no deliberate switches), so a 25% floor corresponds to a
+        comfortably winnable fight for a human. The bands guard <em>shape</em> (Morrow easier than Flora, Reyes harder than
+        Saguaro) as much as absolute difficulty.</li>
+      <li>Results are deterministic (<code>seeded(99)</code>), so a change in any random call order (a new roll in
+        <code>createQuickened</code>, a new AI <code>chance</code>) moves every win rate a little. If a band fails by a
+        hair after a refactor that shouldn't change balance, check for a new RNG draw first.</li>
+      <li>Balance fixtures build the foe with <code>calcTrainerStats</code> and the team's explicit moves, matching
+        runtime, but pass <code>foeItems: {}</code> so single-fight bands don't depend on item luck.</li>
+    </ul>
+  </details>
+</section>

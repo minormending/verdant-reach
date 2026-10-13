@@ -1,0 +1,469 @@
+<section id="scripts" data-title="Story scripts" data-summary="ScriptCmd ops and the interpreter, flags and conditions, the text-box rules, battles, gifts, quests, chapter files, and one real scene traced from trigger to flags.">
+  <h2>Story scripts</h2>
+
+  <p>Every cutscene, conversation, shop and gift in Verdant Reach is a <dfn>script</dfn>: a plain array of commands (<code>ScriptCmd[]</code>) stored in <code>WORLD.scripts</code> under a <dfn>script id</dfn>. Scripts are data, not code. They can't call functions or loop; they say lines, set flags, branch on flags and ask the engine to do things.</p>
+
+  <p>Why data? Three reasons. Writers can work on scenes without touching the engine. The validator can read every script and check it (text fit, references, which items a scene gives) without running the game. And the interpreter can run on a fake host in unit tests, so a scene's logic is testable in milliseconds.</p>
+
+  <pre class="mermaid">flowchart LR
+  subgraph world["src/world (data)"]
+    SC["scripts/*.ts maps/*.ts scripts"]
+  end
+  SC --> W["WORLD.scripts id to ScriptCmd[]"]
+  W --> I["interpreter overworld/script.ts"]
+  I --> H["ScriptHost (the overworld)"]
+  I --> UI["ctx.ui: say, choose, yesNo"]
+  I --> ST["ctx.state: flags, bag, party"]
+  H --> SCN["movement, fades, warps, camera, battles"]
+  W --> V["validateWorld()"]</pre>
+
+  <h3 id="scripts-ops">ScriptCmd ops</h3>
+
+  <p>A <dfn>ScriptCmd</dfn> is an object with an <code>op</code> field naming what it does, defined as a TypeScript union in <a data-src="src/contracts/world.ts">contracts/world.ts</a>. There are 56 ops. A few, straight from the contract:</p>
+
+  <pre><code class="lang-ts">export type ScriptCmd =
+  | { op: "say"; text: string; speaker?: string }        // auto-wrapped, paged
+  | { op: "choice"; prompt?: string; options: string[]; branches: ScriptCmd[][] }
+  | { op: "yesno"; prompt: string; yes: ScriptCmd[]; no: ScriptCmd[] }
+  | { op: "if"; when: Cond; then: ScriptCmd[]; else?: ScriptCmd[] }
+  | { op: "ifTime"; time: TimeOfDay[]; then: ScriptCmd[]; else?: ScriptCmd[] }
+  | { op: "setFlag"; flag: string; value?: boolean }      // default true
+  | { op: "giveItem"; item: ItemId; qty?: number }
+  // …
+  | { op: "battle"; trainer: TrainerId; canLose?: boolean } // sets flag `beat_&lt;trainer&gt;` on win
+  | { op: "wildBattle"; species: SpeciesId; level: number; sport?: boolean; canLose?: boolean }
+  | { op: "ifLastBattle"; result: BattleOutcome; then: ScriptCmd[]; else?: ScriptCmd[] }
+  // …
+  | { op: "call"; script: ScriptId }
+  // …
+  | { op: "end" };</code></pre>
+
+  <table>
+    <thead><tr><th>Family</th><th>Ops</th></tr></thead>
+    <tbody>
+      <tr><td>Text and choices</td><td><code>say</code>, <code>choice</code>, <code>yesno</code></td></tr>
+      <tr><td>Branches</td><td><code>if</code>, <code>ifTime</code>, <code>ifLastBattle</code>, <code>ifHasItem</code>, <code>ifPartyHas</code>, <code>ifCaught</code>, <code>ifCaughtCount</code>, <code>ifMarks</code>, <code>ifNurserySeed</code></td></tr>
+      <tr><td>Game state</td><td><code>setFlag</code>, <code>giveItem</code>, <code>takeItem</code>, <code>giveMoney</code>, <code>giveSpecies</code>, <code>giveMark</code>, <code>heal</code>, <code>harvest</code>, <code>startQuest</code>, <code>completeQuest</code>, <code>hallOfFame</code></td></tr>
+      <tr><td>Battles</td><td><code>battle</code>, <code>wildBattle</code></td></tr>
+      <tr><td>Staging</td><td><code>warp</code>, <code>movePlayer</code>, <code>moveNpc</code>, <code>face</code>, <code>showNpc</code>, <code>hideNpc</code>, <code>emote</code>, <code>camera</code>, <code>cameraReset</code>, <code>wait</code>, <code>fade</code>, <code>shake</code>, <code>flash</code>, <code>ambient</code></td></tr>
+      <tr><td>Pictures and sound</td><td><code>showSpecies</code>, <code>hideSpecies</code>, <code>still</code>, <code>stillClear</code>, <code>music</code>, <code>restoreMusic</code>, <code>sfx</code>, <code>jingle</code></td></tr>
+      <tr><td>Screens and systems</td><td><code>shop</code>, <code>openCabinet</code>, <code>nameRival</code>, <code>nursery</code>, <code>trade</code>, <code>credits</code></td></tr>
+      <tr><td>Flow</td><td><code>call</code>, <code>end</code>, <code>endSlice</code></td></tr>
+    </tbody>
+  </table>
+
+  <figure data-chart="script-ops"><figcaption>Every ScriptCmd op and how often it appears across all scripts. <code>say</code> dwarfs everything; <code>if</code> and <code>setFlag</code> come next, because most scenes are "if this hasn't happened yet, play it and remember".</figcaption></figure>
+
+  <details class="advanced"><summary>Advanced: optional host methods and op history</summary>
+    <p>Ops were added in rounds (the contract marks "Round 3" and "Round 4" groups). Later presentation ops call <em>optional</em> host methods (<code>host.camera?.(…)</code>, <code>host.still?.(…)</code>, <code>host.flash?.(…)</code>), so a minimal test host that doesn't implement them simply skips those commands. State-changing ops never go through optional methods: a script's effect on flags, the bag and the party is the same on every host, which is what makes the chapter tests meaningful.</p>
+  </details>
+
+  <h3 id="scripts-interpreter">The interpreter</h3>
+
+  <p>The interpreter is <a data-src="src/overworld/script.ts">overworld/script.ts</a>. It is small: <code>runScript</code> resolves a script id (or takes an inline list), <code>exec</code> runs commands one after another, and <code>step</code> is one big <code>switch</code> on <code>op</code>. Every command is <code>await</code>ed, so a <code>say</code> waits for the player to press A, a <code>moveNpc</code> waits for the walk to finish, and a <code>battle</code> waits for the whole fight.</p>
+
+  <pre><code class="lang-ts">export async function runScript(
+  host: ScriptHost, script: ScriptId | ScriptCmd[], state: ScriptState = { depth: 0 },
+): Promise&lt;void&gt; {
+  if (script === WHITEOUT_SCRIPT) {
+    await host.whiteout();
+    throw new ScriptAbort("whiteout");
+  }
+  try {
+    await exec(host, resolve(host, script), state);
+  } catch (e) {
+    if (e instanceof ScriptEnd) return;
+    throw e;
+  }
+}
+
+async function exec(host: ScriptHost, cmds: ScriptCmd[] | undefined, st: ScriptState): Promise&lt;void&gt; {
+  if (!cmds) return;
+  for (const cmd of cmds) await step(host, cmd, st);
+}</code></pre>
+
+  <p>And a slice of <code>step</code>, showing how branches simply pick which list to <code>exec</code> next:</p>
+
+  <pre><code class="lang-ts">switch (cmd.op) {
+  case "say":
+    return ctx.ui.say(cmd.text, cmd.speaker ? { speaker: cmd.speaker } : undefined);
+  case "choice": {
+    const i = await ctx.ui.choose(cmd.options, { prompt: cmd.prompt, cancel: false });
+    return exec(host, cmd.branches[i &lt; 0 ? cmd.options.length - 1 : i], st);
+  }
+  case "yesno":
+    return exec(host, (await ctx.ui.yesNo(cmd.prompt)) ? cmd.yes : cmd.no, st);
+  case "if":
+    return exec(host, checkCond(cmd.when, flags) ? cmd.then : cmd.else, st);
+  case "ifTime":
+    return exec(host, timeMatches(cmd.time, mapTime(host.map(), ctx.timeOfDay)) ? cmd.then : cmd.else, st);
+  case "setFlag":
+    flags[cmd.flag] = cmd.value ?? true;
+    return;
+  // …
+}</code></pre>
+
+  <h4 id="scripts-host">The ScriptHost</h4>
+
+  <p>The interpreter never touches the map, the camera or actors directly. It calls a <dfn>ScriptHost</dfn>: an interface with methods like <code>warp</code>, <code>movePlayer</code>, <code>moveNpc</code>, <code>face</code>, <code>fade</code>, <code>battle</code>, <code>whiteout</code> and <code>still</code>. In the game, the overworld builds the host (<code>makeHost()</code> in <a data-src="src/overworld/index.ts">overworld/index.ts</a>). In tests, <a data-src="src/overworld/script.test.ts">script.test.ts</a> passes a fake host made of spies. This is a <dfn>port</dfn>: a seam where the real world plugs in.</p>
+
+  <pre class="mermaid">sequenceDiagram
+  participant OW as Overworld
+  participant RS as runScript
+  participant H as ScriptHost
+  participant UI as ctx.ui
+  OW->>OW: flow(): busy++ (player locked)
+  OW->>RS: runScript(host, "pip_demo")
+  RS->>H: emote("pip", "!")
+  H-->>RS: after 40 frames
+  RS->>UI: say(text, speaker PIP)
+  UI-->>RS: player pressed A on the last line
+  RS->>H: moveNpc("pip", ["left"])
+  H-->>RS: walk finished
+  RS->>RS: setFlag pip_demo_done
+  RS-->>OW: done
+  OW->>OW: busy--, settle(): camera, fade, stills</pre>
+
+  <h4 id="scripts-starts">Where scripts start</h4>
+
+  <pre class="mermaid">flowchart TD
+  NG["NEW GAME: WORLD.newGame.script"] --> F
+  NPC["A on an NPC with script"] --> F
+  TR["step on a trigger, when holds"] --> F
+  TT["A on a talk trigger (sensor post)"] --> F
+  OE["map onEnter, after each fade-in"] --> F
+  OW["map onWhiteout, after recovery"] --> F
+  DEV["dev URL: opts.script"] --> F
+  F["flow(): lock control"] --> RS["runScript"]</pre>
+
+  <details class="advanced"><summary>Advanced: control flow, aborts and errors</summary>
+    <ul>
+      <li><strong><code>call</code> is a subroutine</strong> that shares the caller's state (<code>ScriptState</code>), so <code>ifLastBattle</code> after a <code>call</code> sees a battle fought inside it. Calls nest at most 16 deep, then throw.</li>
+      <li><strong><code>end</code> stops the whole run, callers included.</strong> It throws <code>ScriptEnd</code>, which only <code>runScript</code> catches; <code>call</code> doesn't. So an <code>end</code> inside a called script also ends the script that called it. Prefer an <code>if</code> around the rest of the script when you mean "return".</li>
+      <li><strong><code>ScriptAbort</code></strong> is thrown after a whiteout (a lost battle without <code>canLose</code>, or <code>call: "whiteout"</code>) and after <code>endSlice</code>. <code>flow()</code> swallows it quietly; any other error is logged with <code>console.error</code> and control still comes back. A broken script never freezes the game.</li>
+      <li><strong>Unknown ops and ids warn, never crash.</strong> An unknown script id runs as an empty list; an unknown op logs and is skipped. The validator turns both into test failures, so they never ship.</li>
+      <li><strong>No compile-time exhaustiveness.</strong> <code>step</code> ends in a <code>default</code> that warns, so TypeScript won't tell you if you add an op to the union and forget its <code>case</code>. See the checklist below.</li>
+      <li><strong>Re-entrancy.</strong> <code>flow()</code> counts, so a script that triggers another flow (a warp with an <code>onEnter</code>) nests correctly; <code>settle()</code> runs only when the count returns to zero. A script warp made while the screen is already black defers the destination's <code>onEnter</code> until the script fades back in.</li>
+    </ul>
+  </details>
+
+  <h3 id="scripts-flags">Flags and conditions</h3>
+
+  <p>A <dfn>flag</dfn> is a named boolean in <code>state.flags</code>, saved with the game. Unset means <code>false</code>. Flags are how the world remembers: <code>got_starter</code>, <code>pip_demo_done</code>, <code>lake_calmed</code>. Names are snake_case. Some are set by the engine, not scripts:</p>
+
+  <table>
+    <thead><tr><th>Flag</th><th>Set when</th></tr></thead>
+    <tbody>
+      <tr><td><code>beat_&lt;trainerId&gt;</code></td><td>A trainer battle is won (sight, talk or <code>battle</code> op)</td></tr>
+      <tr><td><code>picked_&lt;map&gt;_&lt;npcId&gt;</code></td><td>An item ball is picked up</td></tr>
+      <tr><td><code>hidden_&lt;map&gt;_&lt;x&gt;_&lt;y&gt;</code></td><td>A hidden item is found</td></tr>
+      <tr><td><code>pruned_…</code>, <code>bridged_…</code>, <code>filled_…</code></td><td>A field tool clears a cell</td></tr>
+      <tr><td><code>quest_&lt;id&gt;_started</code>, <code>quest_&lt;id&gt;_done</code></td><td><code>startQuest</code>, <code>completeQuest</code></td></tr>
+      <tr><td><code>visited_&lt;town&gt;</code></td><td>Entering a map that proves a town was reached (SEED GLIDE)</td></tr>
+      <tr><td><code>wanderer_caught_&lt;id&gt;</code></td><td>A Wanderer is caught</td></tr>
+    </tbody>
+  </table>
+
+  <p>In script files you rarely write the raw objects. The shorthands in <a data-src="src/world/build.ts">build.ts</a> read like prose:</p>
+
+  <pre><code class="lang-ts">export const say = (text: string, speaker?: string): ScriptCmd =&gt;
+  speaker ? { op: "say", text, speaker } : { op: "say", text };
+export const flag = (name: string, value = true): ScriptCmd =&gt;
+  value ? { op: "setFlag", flag: name } : { op: "setFlag", flag: name, value };
+export const ifFlags = (spec: Record&lt;string, boolean&gt;, then: ScriptCmd[], els?: ScriptCmd[]): ScriptCmd =&gt;
+  els ? { op: "if", when: when(spec), then, else: els } : { op: "if", when: when(spec), then };
+export const ifNight = (then: ScriptCmd[], els: ScriptCmd[]): ScriptCmd =&gt;
+  ({ op: "ifTime", time: ["night"], then, else: els });</code></pre>
+
+  <p>The most common pattern in the whole game is the <dfn>once-only scene</dfn>: check a "done" flag, play the scene, set the flag at the end. It makes <code>onEnter</code> and triggers safe to fire again.</p>
+
+  <pre><code class="lang-ts">ch9_arrival: [
+  ifFlags({ ch8_done: true, ch9_arrived: false }, [
+    camera(15, 17, 60),
+    say("THISTLEDOWN, on the desert's edge. Tumbleweed country."),
+    say("A dry wind blows through the square. It smells of dust and warm stone."),
+    flag("ch9_arrived"),
+    flag("visited_thistledown"),
+    call("ch9_tumbleweed"),
+    cameraReset(),
+  ]),
+],</code></pre>
+
+  <details class="advanced"><summary>Advanced: flag hygiene</summary>
+    <ul>
+      <li><strong>Flags are forever.</strong> Nothing deletes a flag; <code>setFlag</code> with <code>value: false</code> stores <code>false</code>. Use that to reset a repeatable sequence, as the Council does with <code>COUNCIL_RUN_FLAGS</code>.</li>
+      <li><strong>Acquisition flags don't give items.</strong> Field-tool gates key on flags like <code>got_raft</code> and <code>got_saxifrage</code>, but the validator only counts a <code>giveItem</code> as granting the tool. Always give the item and set the flag together.</li>
+      <li><strong>Positive conditions drive the proof.</strong> The progression explorer treats a flag as reachable once some reachable script sets it to true. A condition like <code>{ x: false }</code> is assumed satisfiable (flags start false), so an <code>else</code> that only runs after a flag is set is explored only as far as that flag is reachable.</li>
+      <li><strong>Engine-owned names.</strong> Don't hand-set <code>beat_*</code>, <code>picked_*</code> or <code>hidden_*</code> flags except to reset them; their meaning is defined by engine code.</li>
+    </ul>
+  </details>
+
+  <h3 id="scripts-say">say() and the text-box rules</h3>
+
+  <p>The text box is Crystal's: <strong>18 columns by 2 lines</strong> of an 8x8 font (<code>TEXTBOX</code> in <a data-src="src/contracts/constants.ts">constants.ts</a>). <code>ctx.ui.say</code> wraps the text at word boundaries and types it out. When two lines are full it waits for A, then scrolls up one line, as on a Game Boy.</p>
+
+  <pre class="mermaid">flowchart LR
+  T["say(text, speaker)"] --> P["prefix: SPEAKER: text"]
+  P --> R["replace tokens: PLAYER and RIVAL names"]
+  R --> W["wrap at 18 columns"]
+  W --> B["type out 2 lines, wait for A, scroll"]
+  T -.->|"at test time"| V["validator: expand tokens to 7 wide letters, wrap, count pages of 2 lines"]
+  V --> OK{"3 pages or fewer, no word over 18?"}
+  OK -->|"no"| ERR["test failure with the line"]</pre>
+
+  <ul>
+    <li><strong>Speaker prefix.</strong> <code>say("Gotcha!", "PIP")</code> displays <code>PIP: Gotcha!</code>. The prefix counts toward the length. Narration has no speaker.</li>
+    <li><strong>Tokens.</strong> <code>&lt;PLAYER&gt;</code> and <code>&lt;RIVAL&gt;</code> are replaced with the names (the UI also accepts <code>{PLAYER}</code> and <code>[PLAYER]</code>, but world data uses the angle form, which is what the validator measures). Names are at most 7 letters, so the validator measures each token as <code>WWWWWWW</code>.</li>
+    <li><strong>At most 3 pages.</strong> A page is 2 wrapped lines, so one <code>say</code> holds at most 6 lines. Longer thoughts are several <code>say</code>s: one idea per box (<a data-src="docs/STYLE.md">STYLE.md</a> §5).</li>
+    <li><strong>Upper-case names</strong> in dialogue: DR. VALE, BRAM, the HERBARIUM.</li>
+    <li><strong>The player is a boy or a girl</strong> (<code>state.playerLook</code>), so keep lines about the player neutral.</li>
+  </ul>
+
+  <p>The validator's check, from <a data-src="src/world/validate.ts">validate.ts</a>:</p>
+
+  <pre><code class="lang-ts">case "say": {
+  for (const line of wrapText(expandTokens(c.text))) {
+    if (line.length &gt; TEXTBOX.cols) errs.push(`${at} word too long: "${line}"`);
+  }
+  const shown = (c.speaker ? `${c.speaker}: ` : "") + expandTokens(c.text);
+  const pages = Math.ceil(wrapText(shown).length / TEXTBOX.lines);
+  if (pages &gt; 3) errs.push(`${at} ${pages} pages: "${c.text}"`);
+  break;
+}</code></pre>
+
+  <aside class="tip">The error message quotes the whole line. Fix it by splitting into two <code>say</code>s at a natural beat, not by squeezing words: the box reads best with short sentences.</aside>
+
+  <details class="advanced"><summary>Advanced: two wrappers, and what they disagree on</summary>
+    <p>The validator has its own <code>wrapText</code> rather than importing the UI's (<a data-src="src/ui/font.ts">ui/font.ts</a>), so world tests don't load DOM code. They agree on normal text. They differ on a single word longer than 18 characters: the UI hard-breaks it, the validator reports it. They also differ on page breaks: the UI treats a form feed or a blank line as a new page, while the validator only counts lines. Avoid both in world text and the two stay in step.</p>
+    <p>Trainer <code>intro</code>, <code>defeat</code> and <code>after</code> lines go through the same word check but not the 3-page check, so keep them short by hand.</p>
+  </details>
+
+  <h3 id="scripts-branches">Branches: calls, ifLastBattle and ifTime</h3>
+
+  <p>Every branching op has a <code>then</code> list and an optional <code>else</code>. They differ only in the question asked:</p>
+
+  <table>
+    <thead><tr><th>Op</th><th>Asks</th></tr></thead>
+    <tbody>
+      <tr><td><code>if</code></td><td>Does the <code>Cond</code> hold (all flags as given)?</td></tr>
+      <tr><td><code>ifTime</code></td><td>Is the map's time of day one of these? (A map's forced <code>time</code> beats the clock.)</td></tr>
+      <tr><td><code>ifLastBattle</code></td><td>Did the last battle in this run end <code>won</code>, <code>lost</code>, <code>fled</code> or <code>caught</code>?</td></tr>
+      <tr><td><code>ifHasItem</code></td><td>Is at least <code>qty</code> (default 1) in the bag?</td></tr>
+      <tr><td><code>ifPartyHas</code>, <code>ifCaught</code></td><td>Is any of these species in the party, or ever caught?</td></tr>
+      <tr><td><code>ifCaughtCount</code></td><td>Have at least N species been caught?</td></tr>
+      <tr><td><code>ifMarks</code></td><td>Have all of these marks been earned?</td></tr>
+      <tr><td><code>ifNurserySeed</code></td><td>Is a seed waiting at the Nursery?</td></tr>
+    </tbody>
+  </table>
+
+  <p><code>call</code> runs another script by id, then carries on. Chapter files use it to share pieces: <code>ch9_arrival</code> calls <code>ch9_tumbleweed</code>, and the same script is also the talk script of the tumbleweed NPC in the square, so whichever happens first plays it (its own <code>tumbleweed_seen</code> check stops it playing twice). A special id, <code>"whiteout"</code>, runs the whiteout recovery and aborts.</p>
+
+  <h3 id="scripts-battles">Battles: battle and wildBattle</h3>
+
+  <p><code>battle</code> fights a trainer from <a data-src="src/world/trainers.ts">trainers.ts</a>; <code>wildBattle</code> fights a set species and level: the sport GIANT WATER LILY in Chapter 7, the ELDER in Chapter 10 and METHUSELAH in the post-game, all with <code>canLose</code>. Both record the result for <code>ifLastBattle</code>.</p>
+
+  <pre class="mermaid">flowchart TD
+  B["battle trainer"] --> TB["trainerBattle(): host.battle"]
+  TB --> R{"result"}
+  R -->|"won"| F["flag beat_trainer"]
+  F --> MK{"trainer has a mark, no script gives it?"}
+  MK -->|"yes"| GM["giveMark"]
+  MK -->|"no"| LB
+  GM --> LB["lastBattle = result"]
+  R -->|"lost, fled"| LB
+  LB --> L{"lost and not canLose?"}
+  L -->|"yes"| WO["whiteout, ScriptAbort: the rest never runs"]
+  L -->|"no"| NEXT["next command"]</pre>
+
+  <p>The first rival battle is the textbook case: it may be lost, and the story carries on either way.</p>
+
+  <pre><code class="lang-ts">byStarter((line) =&gt; [{ op: "battle", trainer: `rival_1_${COUNTER[line]}`, canLose: true }]),
+{ op: "ifLastBattle", result: "won", then: [
+  // …</code></pre>
+
+  <aside class="warn">Without <code>canLose</code>, losing sends the player to the last heal point and <strong>nothing after the battle runs</strong>. Put the flag that marks a scene done <em>after</em> the battle, so a loss lets the player try again. The Council seats in <a data-src="src/world/scripts/ch11.ts">ch11.ts</a> go further: the win is recorded by an <code>ifLastBattle: "won"</code> branch that calls the seat's <code>_after</code> script.</aside>
+
+  <details class="advanced"><summary>Advanced: marks, outcomes and sight battles</summary>
+    <ul>
+      <li><strong>Marks are awarded once, by one owner.</strong> After a won leader battle, <code>trainerBattle</code> gives the trainer's <code>mark</code> only if no script anywhere contains a <code>giveMark</code> for it (<code>scriptsAwardMark</code> scans all scripts on each win). So if a leader's scene gives the mark itself, the engine stays out of the way.</li>
+      <li><strong><code>ifLastBattle</code> only sees battles in this run.</strong> A trainer who spots you from the grass fights outside any script, so there is no "last battle" for a later script to read; use the <code>beat_&lt;trainer&gt;</code> flag instead.</li>
+      <li><strong><code>fled</code> and <code>caught</code></strong> only come from wild battles. A <code>wildBattle</code> with <code>canLose</code> needs branches for every outcome that matters, or the scene continues as if nothing happened.</li>
+      <li><strong>After every battle</strong> the overworld sets 3 grace steps, restores the map music and fades back in, except after a non-<code>canLose</code> loss, where whiteout fades in instead.</li>
+    </ul>
+  </details>
+
+  <h3 id="scripts-gifts">Gifts, trades and shops</h3>
+
+  <table>
+    <thead><tr><th>Op</th><th>What the player sees</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>giveItem</code></td><td>"&lt;PLAYER&gt; received 2 GLASS PODS!" plus the pocket line, with the item jingle</td><td>Bag counts cap at 999. <code>takeItem</code> is silent.</td></tr>
+      <tr><td><code>giveMoney</code></td><td>Nothing</td><td>Silent on purpose: the script announces it (quests use a <code>pay()</code> helper). Money is clamped to 0..999999.</td></tr>
+      <tr><td><code>giveSpecies</code></td><td>"received X!", nickname prompt</td><td>Marks it seen and caught. Goes to the box if the party has 6.</td></tr>
+      <tr><td><code>giveMark</code></td><td>"received the ROSE MARK!"</td><td>Never awarded twice.</td></tr>
+      <tr><td><code>trade</code></td><td>Party picker, confirm, "X joined you!"</td><td>Offers only eligible party members (a species in <code>wants</code>, not a seed). Runs <code>then</code> after the swap and any trade growth, else <code>else</code>.</td></tr>
+      <tr><td><code>shop</code></td><td>The shop screen with <code>stock</code></td><td>Prices come from item data.</td></tr>
+      <tr><td><code>harvest</code></td><td>"picked 2 WILD BERRIES!" or "bare twigs"</td><td>Once per real calendar day per bush.</td></tr>
+      <tr><td><code>heal</code></td><td>The heal jingle</td><td>Also records the map's <code>healPoint</code> for whiteouts.</td></tr>
+    </tbody>
+  </table>
+
+  <details class="advanced"><summary>Advanced: the checks behind gifts and trades</summary>
+    <ul>
+      <li>The validator rejects unknown items, species, marks, shop stock and trade species, a trade level outside 1 to 60, and a trade nickname over 10 characters.</li>
+      <li>Every <code>harvest</code> must name a bush that exists as an NPC <code>bush:&lt;id&gt;</code>, and every bush's script must harvest its own id. Bush ids must be unique across the whole world, because the picked date is stored per id.</li>
+      <li>Harvest days use the player's local date, so changing the device clock changes when bushes refill. That is accepted, as in Crystal's real-time clock.</li>
+      <li><code>giveSpecies</code> records <code>metAt</code> (map and level) and adds to both seen and caught, so a gift counts toward Herbarium totals and <code>ifCaughtCount</code>.</li>
+    </ul>
+  </details>
+
+  <h3 id="scripts-stills">Stills, credits and the Hall of Fame</h3>
+
+  <p>A <dfn>still</dfn> is a full-screen 160x144 story illustration. <code>still</code> fades the map out and the picture in; text boxes draw over it; <code>stillClear</code> fades back. Keep them rare (one to three boxes each). If a script forgets <code>stillClear</code>, <code>settle()</code> clears it when the scene ends. If the art is missing, the still is skipped with one warning, so scripts still read.</p>
+
+  <p>The ending in <a data-src="src/world/scripts/ch11.ts">ch11.ts</a> strings the end-game ops together:</p>
+
+  <pre><code class="lang-ts">{ op: "stillClear" }, { op: "hallOfFame" }, { op: "credits" },
+flag("game_cleared"), flag("council_run", false),</code></pre>
+
+  <p><code>hallOfFame</code> appends a snapshot of the party (species, level, nickname) to <code>state.hallOfFame</code>, one entry per clear. <code>credits</code> rolls the cast from <a data-src="src/world/credits.ts">credits.ts</a>; B skips, and the script then continues. <code>endSlice</code> (the old vertical-slice ending) offers a save, shows "to be continued" and returns to the title.</p>
+
+  <h3 id="scripts-quests">Quests</h3>
+
+  <p>Side quests live in <a data-src="src/world/scripts/quests.ts">quests.ts</a>. A <dfn>QuestDef</dfn> is display data for the NOTES screen: a title (16 characters at most), giver, area, ordered steps and a reward line. Each step is ticked when its <code>doneWhen</code> condition holds, so a step can be any flag, including a hidden-item flag.</p>
+
+  <pre><code class="lang-ts">lost_climber: {
+  id: "lost_climber", title: "LOST CLIMBER", giver: "MOUNTAINEER, ROUTE 9", area: "route_9",
+  steps: [
+    { text: "Find the lost CLIMBER PACK.", doneWhen: [{ flag: "hidden_route_9_8_8", is: true }] },
+    { text: "Return it to the MOUNTAINEER.", doneWhen: isDone("lost_climber") },
+  ],
+  reward: "2 RAIN JARS + COLD SNAP",
+},</code></pre>
+
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> None
+  None --> Started: startQuest, toast NEW NOTE
+  Started --> Started: giver reminds
+  Started --> Done: completeQuest, toast and quest jingle
+  None --> Done: completeQuest (goal already met)
+  Done --> Done: after-line, no reward again</pre>
+
+  <p>Every giver handles four states (not started, started, goal met, done). The file's helper <code>byQuest</code> branches on them in the right order: done first, then started, then fresh. After <code>completeQuest</code> a giver always says one more line, so the jingle never ends a script with no box open.</p>
+
+  <details class="advanced"><summary>Advanced: quest invariants</summary>
+    <ul>
+      <li><code>startQuest</code> is a no-op once a quest is started or done, so a giver can call it every time without stacking toasts. <code>completeQuest</code> sets both flags, which lets a quest be finished in one visit.</li>
+      <li><code>QUEST_GIVERS</code> in <a data-src="src/world/validate.ts">validate.ts</a> pins the early quests' giver NPC ids, maps and script ids, and quest NPCs are checked never to block a path (<code>mustNotBlock</code>).</li>
+      <li>Quest scripts deliberately never <code>face</code>, <code>emote</code> or move the quest NPC by id; talking already turns an NPC to the player, and this keeps the scripts valid wherever the NPC is placed.</li>
+      <li>A <code>doneWhen</code> can point at any flag the engine sets, such as <code>hidden_route_9_8_8</code>. If you move that hidden item, the quest step breaks silently: grep for the old flag.</li>
+    </ul>
+  </details>
+
+  <h3 id="scripts-chapters">How chapters are structured</h3>
+
+  <p>Scripts are grouped by story chapter in <a data-src="src/world/scripts/story.ts">src/world/scripts/</a>. Each file exports one <code>Scripts</code> record, and <code>world/index.ts</code> merges them all (a duplicate id throws at load).</p>
+
+  <table>
+    <thead><tr><th>File</th><th>Covers</th></tr></thead>
+    <tbody>
+      <tr><td><code>story.ts</code></td><td>Prologue and Chapter 1: the bloom, the starter, FENNIMORE, PIP's demo, the theft, rival battle 1</td></tr>
+      <tr><td><code>act1.ts</code></td><td>Chapters 2 and 3: HOLLIS, Sugarbush, the grove and SHEARS, NELL</td></tr>
+      <tr><td><code>ch4.ts</code> … <code>ch11.ts</code></td><td>One file per chapter, through the Council and the ending</td></tr>
+      <tr><td><code>postgame.ts</code></td><td>Post-game events and repeat Council runs</td></tr>
+      <tr><td><code>quests.ts</code></td><td>Side-quest scripts and the <code>QUESTS</code> table</td></tr>
+      <tr><td>early <code>maps/*.ts</code></td><td>Flavour NPCs for Chapters 1 to 4 live beside their map as <code>export const scripts</code></td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">flowchart LR
+  ST["story.ts"] --> MS["mergeScripts()"]
+  A1["act1.ts"] --> MS
+  CH["ch4.ts .. ch11.ts"] --> MS
+  PG["postgame.ts"] --> MS
+  QU["quests.ts"] --> MS
+  MP["maps/*.ts scripts"] --> MS
+  MS -->|"duplicate id: throw"| X["load error"]
+  MS --> WS["WORLD.scripts"]
+  CHT["scripts/chN.test.ts"] -.->|"run scenes on a fake host"| WS</pre>
+
+  <p>A chapter file opens with a comment naming its design doc and the voice rules, defines a few local helpers (<code>call</code>, <code>camera</code>, <code>byStarter</code> for lines that depend on the starter), then the scripts, roughly in story order. Chapters 4 to 11 and the post-game have a matching <code>*.test.ts</code> beside them that checks their flags and scenes.</p>
+
+  <details class="advanced"><summary>Advanced: keeping chapters independent</summary>
+    <ul>
+      <li>Merge order doesn't matter (ids are unique), so a chapter can be added or split without touching the others beyond <code>world/index.ts</code>.</li>
+      <li>Script ops address NPCs by id on whatever map is current when the op runs. A script called from two maps must only name NPCs both maps have, or guard with <code>if</code>.</li>
+      <li>Keep chapter helpers (<code>byStarter</code>, <code>camera</code>, <code>call</code>) local to the file. Shared helpers belong in build.ts only when three or more chapters need them.</li>
+      <li>A chapter test drives the real <code>WORLD</code> scripts through the interpreter with a fake host and checks the flags after each scene, which catches ordering mistakes the static validator can't.</li>
+    </ul>
+  </details>
+
+  <h3 id="scripts-example">Worked example: PIP's catching demo</h3>
+
+  <p>Let's trace one real scene from the first flag to the last. It spans three files: <a data-src="src/world/scripts/story.ts">story.ts</a>, <a data-src="src/world/maps/route_1.ts">route_1.ts</a>, and the Bramblegate and Sugarbush maps.</p>
+
+  <p><strong>1. The flag that arms it.</strong> In his Hedgerow house, talking to FENNIMORE runs <code>fennimore</code>, which gives the Centuryheart seed and ends with <code>flag("got_seed")</code>.</p>
+
+  <p><strong>2. The trigger and the NPC wait for it.</strong> On Route 1 the lane is two tiles wide at row 2. A trigger covers both tiles, and PIP stands nearby, both gated on the same condition:</p>
+
+  <pre><code class="lang-ts">{ id: "pip", sprite: "pip", x: 12, y: 3, facing: "left", movement: "static", script: "pip_demo",
+  visibleWhen: when({ got_seed: true, pip_demo_done: false }) },
+// …
+triggers: [
+  { x: 9, y: 2, w: 2, script: "pip_demo", when: when({ got_seed: true, pip_demo_done: false }) },
+],</code></pre>
+
+  <p>Before FENNIMORE, PIP is invisible (and not solid) and the trigger is inert. Afterwards, the Hedgerow exit lands the player on (9,1) or (10,1) facing south, so the very first step onto Route 1 lands on (9,2) or (10,2), and <code>onArrive</code> finds the trigger. PIP also has <code>script: "pip_demo"</code>, so walking up and talking to him plays the same scene.</p>
+
+  <p><strong>3. The scene runs.</strong> Shortened from <code>story.ts</code>:</p>
+
+  <pre><code class="lang-ts">pip_demo: [
+  emote("pip", "!"),
+  face("pip", "toPlayer"),
+  say("You're DR. VALE's new botanist! I'm PIP! I know facts!", PIP),
+  moveNpc("pip", "left"),
+  say("Have you caught one yet? No? Watch! Watch watch watch!", PIP),
+  // … pod throw: sfx and waits …
+  { op: "jingle", id: "caught" },
+  emote("pip", "♪"),
+  say("Gotcha! A LION'S TOOTH! That's a baby DANDELION!", PIP),
+  // … three tips and a true fact …
+  say("DR. VALE has pods at the HERBARIUM. Ask her! Bye, &lt;PLAYER&gt;!", PIP),
+  moveNpc("pip", "left", ...steps("down", 5)),
+  { op: "hideNpc", npc: "pip" },
+  flag("pip_demo_done"),
+],</code></pre>
+
+  <p><strong>4. The flag closes it and opens what comes next.</strong> <code>hideNpc</code> hides PIP right now; <code>pip_demo_done</code> keeps him hidden forever (his <code>visibleWhen</code> fails) and switches the trigger off. The same flag is the <code>visibleWhen</code> for PIP's later appearances in Bramblegate and Sugarbush.</p>
+
+  <pre class="mermaid">sequenceDiagram
+  participant F as fennimore script
+  participant FL as state.flags
+  participant R1 as Route 1 trigger and PIP
+  participant S as pip_demo
+  participant LT as PIP in Bramblegate, Sugarbush
+  F->>FL: got_seed = true
+  Note over R1: when got_seed and not pip_demo_done
+  R1->>S: player steps on 9,2 or 10,2
+  S->>S: emote, say, moveNpc, sfx, jingle
+  S->>R1: hideNpc pip (until reload)
+  S->>FL: pip_demo_done = true
+  FL-->>R1: trigger off, PIP hidden for good
+  FL-->>LT: visibleWhen pip_demo_done: PIP appears</pre>
+
+  <aside class="note">The flag is set on the <strong>last</strong> line. If the player could be interrupted mid-scene (a battle they could lose), setting it last means the scene replays rather than being lost.</aside>
+
+  <details class="advanced"><summary>Advanced: how the validator sees this scene</summary>
+    <p>The progression explorer reads <code>fennimore</code> statically and records "sets <code>got_seed</code>". When it later floods Route 1, it sees the trigger and PIP are available once <code>got_seed</code> is true, scans <code>pip_demo</code>, and records "sets <code>pip_demo_done</code>, needs <code>got_seed</code>". At the fixed point both flags are known reachable, so the Bramblegate PIP counts as reachable too. The text check runs over every <code>say</code>: "PIP: " plus the line must fit 6 lines, with <code>&lt;PLAYER&gt;</code> measured 7 wide.</p>
+  </details>
+
+  <h3 id="scripts-extend">Adding a new op safely</h3>
+
+  <ol>
+    <li>Add the variant to <code>ScriptCmd</code> in <a data-src="src/contracts/world.ts">contracts/world.ts</a> (contracts change deliberately; keep it minimal).</li>
+    <li>Add its <code>case</code> to <code>step()</code> in <a data-src="src/overworld/script.ts">script.ts</a>. If it needs the map or actors, add a method to <code>ScriptHost</code> and implement it in <code>makeHost()</code>.</li>
+    <li>If it has nested command lists, add it to <code>childLists()</code> (script.ts), <code>eachCmd()</code> and the <code>commands()</code> switch inside <code>progress()</code> (validate.ts). Otherwise the validator won't see inside it, and the text and reachability checks silently skip those lines.</li>
+    <li>Add reference checks to <code>checkCmds</code> in <code>validateWorld</code> (unknown ids should fail tests).</li>
+    <li>Write a test in <a data-src="src/overworld/script.test.ts">script.test.ts</a> with the fake host.</li>
+  </ol>
+</section>

@@ -1,0 +1,424 @@
+<section id="engine" data-title="The engine" data-summary="The fixed-step loop, input from keyboard, touch and gamepads, asset loading, drawing helpers, time of day and seeded randomness.">
+  <h2>The engine</h2>
+  <p>
+    <code>src/engine/</code> is small on purpose. It owns the things every scene relies on and nothing
+    game-specific:
+  </p>
+  <table>
+    <thead><tr><th>File</th><th>What it owns</th></tr></thead>
+    <tbody>
+      <tr><td><a data-src="src/engine/core.ts">core.ts</a></td><td>The canvas, <code>KEYMAP</code> and <code>createInput</code>, the scene stack, the asset store, <code>runLoop</code>, <code>clearScenes</code></td></tr>
+      <tr><td><a data-src="src/engine/context.ts">context.ts</a></td><td><code>createGameContext</code>, <code>timeOfDayFor</code>, <code>playClock</code></td></tr>
+      <tr><td><a data-src="src/engine/gamepad.ts">gamepad.ts</a></td><td>Controller profiles and polling through the Gamepad API</td></tr>
+      <tr><td><a data-src="src/engine/gfx.ts">gfx.ts</a></td><td>Drawing with a missing-art fallback, <code>Timers</code>, <code>Fader</code>, <code>Shaker</code></td></tr>
+      <tr><td><a data-src="src/engine/time.ts">time.ts</a></td><td>Map-scoped time of day (<code>mapTime</code>, <code>worldTime</code>)</td></tr>
+      <tr><td><a data-src="src/engine/random.ts">random.ts</a></td><td>Dev seeds and independent random streams</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="engine-loop">The fixed-step loop</h3>
+  <p>
+    A <dfn>fixed-step loop</dfn> advances the game in equal slices of time (here 1000/60 ms, one
+    <dfn>step</dfn>) no matter how fast the display refreshes. Real elapsed time goes into an
+    <dfn>accumulator</dfn>; while it holds at least one step, the loop runs one update and subtracts a step.
+    Drawing happens once per animation frame. The result: a 60 Hz, 120 Hz or 144 Hz monitor all play at the
+    same speed, and every animation, text speed and timer can be counted in steps ("frames" in the code).
+  </p>
+  <pre class="mermaid">flowchart TB
+  raf["requestAnimationFrame(now) or setTimeout under ?timer"] --> acc["acc += min(250, now - last)"]
+  acc --> fast{"dev ?speed above 1?"}
+  fast -->|yes| batch["run update() speed times, acc = 0"]
+  fast -->|no| check{"acc holds a whole step?"}
+  check -->|yes| upd["update(): poll, top.update, endFrame, onTick"]
+  upd --> sub["acc -= step"] --> check
+  check -->|no| draw["find lowest scene to draw (skip transparent), clear to black, draw upwards"]
+  batch --> draw
+  draw --> again["schedule(frame)"]</pre>
+  <p>From <a data-src="src/engine/core.ts#L131">core.ts</a>:</p>
+  <pre><code class="lang-ts">  let acc = 0;
+  let last = performance.now();
+  const update = () =&gt; {
+    input.poll();
+    scenes.top()?.update(step);
+    input.endFrame();
+    onTick(step);
+  };
+  const frame = (now: number) =&gt; {
+    acc += Math.min(250, now - last);
+    last = now;
+    // Preserve the normal accumulator exactly at speed 1. Accelerated dev
+    // frames run a fixed batch, with input edges consumed after each step.
+    if (speed &gt; 1) {
+      for (let i = 0; i &lt; speed; i++) update();
+      acc = 0;
+    } else {
+      while (acc &gt;= step) {
+        update();
+        acc -= step;
+      }
+    }
+    const all = scenes.all();
+    let from = all.length - 1;
+    while (from &gt; 0 &amp;&amp; all[from].transparent) from--;
+    g.fillStyle = "#000";
+    g.fillRect(0, 0, SCREEN_W, SCREEN_H);
+    for (let i = Math.max(0, from); i &lt; all.length; i++) all[i].draw(g);
+    schedule(frame);
+  };</code></pre>
+  <ul>
+    <li><strong>Order inside one step:</strong> read controllers (<code>poll</code>), update the top scene,
+      clear this step's press edges (<code>endFrame</code>), then the tick callback (play time, the error
+      screen's tick count).</li>
+    <li><strong><code>?speed=N</code></strong> (dev only, 1–16) runs exactly N steps per drawn frame and ignores
+      the clock; the e2e runner uses speed 8.</li>
+    <li><strong><code>?timer</code></strong> schedules frames with <code>setTimeout(…, 1000 / FPS)</code>, because
+      browsers throttle <code>requestAnimationFrame</code> in hidden or embedded panes.</li>
+  </ul>
+  <details class="advanced">
+    <summary>Advanced: invariants, performance and failure modes</summary>
+    <ul>
+      <li><strong>The 250 ms clamp</strong> caps catch-up at 15 steps per frame. After a stall (a GC pause, a tab
+        coming back) the game slows briefly instead of fast-forwarding through seconds of gameplay or spiralling
+        (updates taking longer than the time they simulate).</li>
+      <li><strong><code>dt</code> is always the constant step.</strong> Scenes receive <code>update(step)</code>
+        and most ignore it, counting frames instead. Never multiply by wall-clock deltas in game logic: it
+        breaks determinism under <code>?seed</code> and <code>?speed</code>.</li>
+      <li><strong>Speed batching ignores refresh rate.</strong> <code>?speed=8</code> on a 120 Hz display is 16×
+        real time. That is fine for e2e (Chromium headless) but don't use it to judge feel.</li>
+      <li><strong>Draw is once per frame, update can be zero times.</strong> On a 120 Hz screen about every other
+        frame draws without an update, so <code>draw</code> must be pure: no state changes, no randomness. Code
+        that animates "per draw" will run at different speeds on different monitors (the screens kit counts
+        updates for this reason).</li>
+      <li><strong>Exceptions kill the loop.</strong> <code>schedule(frame)</code> is the last line, so a throw in
+        any <code>update</code> or <code>draw</code> stops rescheduling. The error screen notices that
+        <code>ticks</code> stopped and shows the card (<a href="#platform-errors">errors</a>).</li>
+      <li><strong>Input edges at speed &gt; 1</strong> are consumed after <em>each</em> batched step, so a single
+        key press is seen by exactly one update, as at speed 1.</li>
+    </ul>
+  </details>
+
+  <h3 id="engine-input">Input: keyboard, touch and gamepads</h3>
+  <p>
+    The game has eight <dfn>buttons</dfn>, the Game Boy's: <code>up</code>, <code>down</code>,
+    <code>left</code>, <code>right</code>, <code>a</code>, <code>b</code>, <code>start</code>, <code>select</code>
+    (<code>Button</code> in <code>ids.ts</code>). Everything a player can press becomes one of these. Three
+    sources feed them, and the game cannot tell them apart:
+  </p>
+  <pre class="mermaid">flowchart LR
+  kb["physical keyboard"] -->|"keydown / keyup (e.code)"| km["KEYMAP"]
+  touch["on-screen controls (platform/touch.ts)"] -->|"sendKey: synthetic KeyboardEvent"| km
+  km --> keys["keys: Set of Button"]
+  pads["navigator.getGamepads()"] --> prof["profileFor(pad): STANDARD, 8BitDo raw, generic raw"]
+  prof --> pb["padButtons(pad)"] -->|"poll() each step"| pad["pad: Set of Button"]
+  keys --> edges["down (press edges) + holdFrames"]
+  pad --> edges
+  edges --> api["Input: pressed, held, repeat"]
+  api --> scene["top scene update()"]
+  km -. "first key" .-> unlock["audio.unlock()"]
+  pb -. "every new pad press" .-> unlock</pre>
+  <p>The keyboard map, also read by the guide's controls table (<a data-src="src/engine/core.ts#L26">core.ts</a>):</p>
+  <pre><code class="lang-ts">export const KEYMAP: Record&lt;string, Button&gt; = {
+  ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
+  KeyW: "up", KeyS: "down", KeyA: "left", KeyD: "right",
+  KeyZ: "a", Space: "a", KeyJ: "a",
+  KeyX: "b", Backspace: "b", Escape: "b", KeyK: "b",
+  Enter: "start", ShiftLeft: "select", ShiftRight: "select",
+};</code></pre>
+  <p>The three questions a scene can ask:</p>
+  <table>
+    <thead><tr><th>Method</th><th>True when</th><th>Use it for</th></tr></thead>
+    <tbody>
+      <tr><td><code>pressed(b)</code></td><td>The button went down during this step (an <dfn>edge</dfn>)</td><td>Confirming, cancelling, opening a menu</td></tr>
+      <tr><td><code>held(b)</code></td><td>The button is down on the keyboard or any pad</td><td>Walking, running with B, fast text</td></tr>
+      <tr><td><code>repeat(b)</code></td><td>On the press, then every 6 steps once held more than 18 steps</td><td>Menu cursors that auto-repeat</td></tr>
+    </tbody>
+  </table>
+  <p>
+    In numbers: <code>holdFrames</code> grows by one in every <code>endFrame</code>, and <code>repeat</code>
+    returns true when <code>n &gt; 18 &amp;&amp; n % 6 === 0</code>, so the first repeat fires 24 steps (0.4 s)
+    after the press, then 10 times a second.
+  </p>
+  <pre class="mermaid">sequenceDiagram
+  participant W as window events
+  participant I as createInput
+  participant L as loop step
+  participant S as top scene
+  W->>I: keydown KeyZ (not already held)
+  I->>I: down.add("a"), keys.add("a")
+  L->>I: poll() (pads: new presses also go into down)
+  L->>S: update(): pressed("a") is true
+  L->>I: endFrame(): down.clear(), holdFrames["a"] = 1
+  L->>S: next step: pressed("a") false, held("a") true
+  W->>I: keyup KeyZ
+  I->>I: keys.delete("a"), holdFrames cleared</pre>
+  <h4 id="engine-gamepad">Gamepads</h4>
+  <p>
+    <a data-src="src/engine/gamepad.ts">gamepad.ts</a> maps buttons <strong>by position</strong>, Game Boy
+    style: the right face button is A, the bottom one is B. On Nintendo-layout pads (8BitDo, Switch Pro) the
+    labels match; on an Xbox-layout pad, A is the button marked B. Browsers report a pad either with the W3C
+    <code>"standard"</code> mapping or raw (<code>""</code>), so <code>profileFor</code> picks one of three
+    profiles:
+  </p>
+  <pre><code class="lang-ts">/** W3C standard mapping: 0 bottom, 1 right, 2 left, 3 top, 8 back, 9 start, 12-15 D-pad. */
+const STANDARD: Profile = {
+  buttons: { 1: "a", 3: "a", 0: "b", 2: "b", 8: "select", 9: "start", 12: "up", 13: "down", 14: "left", 15: "right" },
+  stick: [0, 1],
+};
+
+/** 8BitDo pads in D-input mode (vendor 2dc8): the D-pad is axes 0/1. */
+const EIGHTBITDO_RAW: Profile = {
+  buttons: { 0: "a", 4: "a", 1: "b", 3: "b", 10: "select", 11: "start" },
+  stick: [0, 1],
+};
+
+/** Unknown raw pads: the usual DirectInput order. */
+const GENERIC_RAW: Profile = {
+  buttons: { 0: "a", 1: "b", 8: "select", 9: "start" },
+  stick: [0, 1],
+};</code></pre>
+  <pre class="mermaid">flowchart TB
+  pad["a connected pad"] --> std{"mapping === standard?"}
+  std -->|yes| S["STANDARD"]
+  std -->|no| eb{"id matches 8bitdo or 2dc8?"}
+  eb -->|yes| E["EIGHTBITDO_RAW"]
+  eb -->|no| G["GENERIC_RAW"]
+  S --> btn["buttons: pressed or value above 0.5"]
+  E --> btn
+  G --> btn
+  btn --> stick["stick axes beyond 0.5 = D-pad"]
+  stick --> hat{"raw pad with more than 9 axes?"}
+  hat -->|yes| h9["hatDirections(axes[9])"]
+  hat -->|no| out["Set of Button"]
+  h9 --> out</pre>
+  <p>
+    <code>readGamepads()</code> unions every connected pad, so two controllers work at once, and returns an
+    empty set where the API is missing (tests, old browsers). <code>PAD_LABELS</code> provides the
+    help-text names ("A (right face button)").
+  </p>
+  <details class="advanced">
+    <summary>Advanced: input edge cases and how to extend</summary>
+    <ul>
+      <li><strong>No double presses across sources.</strong> A press only becomes an edge if the button wasn't
+        already held by the <em>other</em> source (<code>isHeld</code> checks keys and pads), so holding Z and
+        pressing the pad's A doesn't press twice.</li>
+      <li><strong>OS key repeat is ignored</strong> for edges: a repeated <code>keydown</code> finds the button
+        already held. Menu repeat is the engine's own <code>repeat()</code>, which is frame-counted and
+        therefore identical on every machine.</li>
+      <li><strong>Blur clears the keyboard</strong> (<code>keys.clear()</code>, <code>holdFrames.clear()</code>),
+        because a <code>keyup</code> that happens while another window has focus never arrives. Pads need no
+        such fix: they are re-read every step.</li>
+      <li><strong>Only mapped keys call <code>preventDefault</code></strong>, so browser shortcuts keep working,
+        and the shell's F (fullscreen) is not a game button.</li>
+      <li><strong>Polling is per step</strong>, not per frame, so a pad press shorter than one step (16.7 ms)
+        can be missed; that is below what a human produces.</li>
+      <li><strong>Adding a controller profile:</strong> add a <code>Profile</code>, a matcher in
+        <code>profileFor</code> (before the generic fallback), and cases in
+        <a data-src="src/engine/gamepad.test.ts">gamepad.test.ts</a>; <code>padButtons</code> takes a plain
+        <code>PadState</code>, so tests need no browser. <code>createInput</code> also accepts a
+        <code>readPads</code> function for the same reason.</li>
+      <li><strong>Hat switches:</strong> Chrome reports some DirectInput hats as one axis in eight steps from -1
+        (up) clockwise; values beyond ±1.05 mean centred. <code>hatDirections</code> turns that into one or two
+        directions.</li>
+    </ul>
+  </details>
+
+  <h3 id="engine-assets">Loading assets</h3>
+  <p>
+    Code never loads files directly. It asks for a <dfn>logical asset path</dfn> built by a helper in
+    <code>constants.ts</code>, such as <code>speciesPath("oak_acorn", "front")</code> →
+    <code>assets/species/oak_acorn/front.png</code>, and the <dfn>art registry</dfn>
+    (<a data-src="src/art/registry.ts">src/art/registry.ts</a>, returned by <code>createAssets()</code>)
+    resolves it to a file in a swappable <dfn>bundle</dfn> under <code>public/art/</code>, applying any active
+    <dfn>art packs</dfn>, sheet cells and sport palettes. Details of the format are in docs/ART.md; this is the
+    engine's view of it.
+  </p>
+  <pre class="mermaid">flowchart TB
+  call["assets.image(logical path)"] --> ready{"registry ready (index.json + bundle JSON loaded)?"}
+  ready -->|no| kick["start ready(), return undefined"]
+  ready -->|yes| cache{"derived image cached?"}
+  cache -->|yes| hit["return canvas or image"]
+  cache -->|no| res{"catalog.resolve(path)"}
+  res -->|"no bundle provides it"| none["return undefined (isMissing = true)"]
+  res -->|"file URL"| file{"file loaded?"}
+  file -->|no| lazy["loadFile(url) in background, return undefined"]
+  file -->|yes| derive["cut sheet cell / recolour sport, cache, return"]</pre>
+  <table>
+    <thead><tr><th>Method</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>image(path)</code></td><td>The image if ready; otherwise <code>undefined</code> and a lazy load starts</td></tr>
+      <tr><td><code>has(path)</code></td><td>Loaded and ready to draw now</td></tr>
+      <tr><td><code>exists(path)</code></td><td>Some bundle provides it, loaded or not, and it hasn't failed</td></tr>
+      <tr><td><code>isMissing(path)</code></td><td>Known not to resolve, or its file failed (engine extension, <code>EngineAssets</code>)</td></tr>
+      <tr><td><code>loadAll(paths?, onProgress?)</code></td><td>Preload; with no paths, everything the registry provides (what boot does)</td></tr>
+      <tr><td><code>speciesAnim(id)</code></td><td>The species bundle's <code>anim</code> after packs are applied</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Packs come from <code>?art=a,b</code> (which wins, even when empty) or else <code>localStorage</code> key
+    <code>verdant.artPacks</code>.
+  </p>
+  <details class="advanced">
+    <summary>Advanced: what can go wrong</summary>
+    <ul>
+      <li><strong><code>image()</code> can return <code>undefined</code> on any call</strong>, even after boot (a
+        newly enabled pack, a lab override). Draw code must tolerate it: <code>drawImagePath</code> draws nothing
+        while loading and the magenta box only once the file is known missing.</li>
+      <li><strong>A missing <code>index.json</code></strong> is not fatal: the registry warns and treats every
+        <code>assets/</code> path as a legacy file. An un-indexed new PNG is silently absent until
+        <code>npm run art:index</code>; the bundle tests catch required frames.</li>
+      <li><strong>Derived images are cached per logical path</strong> and the cache is cleared on every
+        <code>rebuild()</code> (pack switch, override). Holding on to a returned canvas across a pack switch
+        draws stale art.</li>
+      <li><strong>Fetches use <code>cache: "no-cache"</code></strong> for JSON, so art edits show up on reload
+        without hashed filenames.</li>
+    </ul>
+  </details>
+
+  <h3 id="engine-gfx">Drawing helpers</h3>
+  <p><a data-src="src/engine/gfx.ts">gfx.ts</a> collects the helpers most scenes share:</p>
+  <ul>
+    <li><code>drawImagePath(g, assets, path, sx, sy, sw, sh, dx, dy, dw?, dh?)</code> draws part of an image
+      at rounded integer coordinates and returns <code>false</code> when it isn't available.
+      <code>drawMissing</code> draws the magenta-and-purple checker and logs the path once.</li>
+    <li><code>Timers.frames(n)</code> returns a promise that resolves after <code>n</code> calls to
+      <code>tick()</code>: "wait 20 frames" in a cut-scene.</li>
+    <li><code>Fader</code> animates a full-screen black or white overlay; <code>to(target, frames)</code> returns
+      a promise. It quantises into four steps like a GBC palette fade:</li>
+  </ul>
+  <pre><code class="lang-ts">  draw(g: CanvasRenderingContext2D, w: number, h: number) {
+    if (this.level &lt;= 0) return;
+    // Quantise into 4 steps like a GBC palette fade.
+    const steps = Math.ceil(this.level * 4) / 4;
+    g.globalAlpha = steps;
+    g.fillStyle = this.color === "black" ? "#000000" : "#f8f8f8";
+    g.fillRect(0, 0, w, h);
+    g.globalAlpha = 1;
+  }</code></pre>
+  <ul>
+    <li><code>Shaker</code> gives a short screen shake as <code>{ x, y }</code> offsets per frame.</li>
+  </ul>
+  <details class="advanced">
+    <summary>Advanced: frame-driven promises</summary>
+    <ul>
+      <li><strong>Someone must tick them.</strong> <code>Timers</code>, <code>Fader</code> and <code>Shaker</code>
+        only advance when the owning scene calls <code>tick()</code> in its <code>update</code>. Because only the
+        top scene updates, a cut-scene paused under the PAUSED overlay (or a text box) stops exactly where it
+        is. That is the design, not a bug.</li>
+      <li><strong><code>Fader.to</code> resolves the previous pending fade</strong> immediately when a new one
+        starts, so overlapping fades never leave an awaiter hanging. Switching colour mid-fade restarts from
+        clear.</li>
+      <li><strong><code>Timers.frames(0)</code></strong> resolves at once; fractional counts are rounded.</li>
+    </ul>
+  </details>
+
+  <h3 id="engine-time">Time of day</h3>
+  <p>
+    As in Crystal, time of day comes from the player's real clock: <code>TIME_OF_DAY</code> in
+    <code>constants.ts</code> is <code>{ morningStart: 4, dayStart: 10, nightStart: 18 }</code>, and
+    <code>timeOfDayFor(hour)</code> in <a data-src="src/engine/context.ts">context.ts</a> maps an hour to
+    <code>"morning" | "day" | "night"</code>. <code>?time=morning|day|night</code> overrides it.
+  </p>
+  <pre class="mermaid">stateDiagram-v2
+  direction LR
+  night --> morning: hour 4
+  morning --> day: hour 10
+  day --> night: hour 18</pre>
+  <p>
+    A map can force its own time (<code>MapDef.time</code>, for example the Prologue's night on the Herbarium
+    roof). Anything that happens <em>on</em> a map (tint and lights, encounters, <code>ifTime</code> in scripts,
+    music, battle backdrops, growth) should use <a data-src="src/engine/time.ts">time.ts</a>:
+  </p>
+  <pre><code class="lang-ts">/** The time of day on a map: its forced `time`, else the clock. */
+export function mapTime(def: Pick&lt;MapDef, "time"&gt; | undefined, clock: () =&gt; TimeOfDay): TimeOfDay {
+  return def?.time ?? clock();
+}
+
+/** The time of day where the player is standing. */
+export function worldTime(ctx: Pick&lt;GameContext, "world" | "state" | "timeOfDay"&gt;): TimeOfDay {
+  const id = ctx.state?.position?.map;
+  return mapTime(id ? ctx.world?.maps?.[id] : undefined, () =&gt; ctx.timeOfDay());
+}</code></pre>
+  <details class="advanced">
+    <summary>Advanced: clock subtleties</summary>
+    <ul>
+      <li><strong><code>ctx.timeOfDay()</code> reads the clock on every call</strong>, so crossing 18:00
+        mid-session changes encounters and tint at the next check. The <code>?time</code> override is read once,
+        when the context is created.</li>
+      <li><strong><code>?time</code> works in production</strong> (unlike <code>?seed</code>), so it is safe to
+        give players and testers.</li>
+      <li><strong>The ambience bed has its own clock</strong>: <code>clockTimeOfDay()</code> in
+        <code>audio/ambience.ts</code> repeats the same thresholds and override but does not see
+        <code>MapDef.time</code>. A forced-night map gets night ambience only if its music implies it (as
+        <code>prologue_bloom</code> does). If you change the thresholds, change both.</li>
+      <li><strong>Calendar days</strong> (berry regrowth in <code>harvested</code>, wanderer recovery) are stored
+        as local <code>YYYY-MM-DD</code> strings, separate from time of day.</li>
+    </ul>
+  </details>
+
+  <h3 id="engine-random">Seeded randomness</h3>
+  <p>
+    Normally the game uses <code>Math.random</code>. For reproducible runs, dev builds accept
+    <code>?seed=N</code> (an unsigned 32-bit integer). A seed does not just seed one generator: it creates
+    several <dfn>random streams</dfn>, each derived from the seed and a name, so that drawing a particle can
+    never change a critical hit. <a data-src="src/engine/random.ts">random.ts</a> in full:
+  </p>
+  <pre><code class="lang-ts">import { seeded, type Rng } from "../battle/logic/rng";
+
+/** URL seeds are unsigned 32-bit integers, and never apply to production. */
+export function devSeed(): number | null {
+  if (!import.meta.env.DEV || typeof location === "undefined") return null;
+  const value = new URLSearchParams(location.search).get("seed");
+  if (value === null || !/^\d+$/.test(value)) return null;
+  const seed = Number(value);
+  return Number.isInteger(seed) &amp;&amp; seed &gt;= 0 &amp;&amp; seed &lt;= 0xffffffff ? seed : null;
+}
+
+/** Stable independent streams: cosmetic/NPC draws cannot shift battle rolls. */
+export function randomStream(seed: number, name: string): Rng {
+  let hash = seed &gt;&gt;&gt; 0;
+  for (const char of name) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619) &gt;&gt;&gt; 0;
+  return seeded(hash);
+}
+
+/** Covers legacy direct draws (save ids, dev battles, particles and audio).
+ * Keep these separate from ctx.rng so drawing a particle cannot change a crit. */
+export function installDevRandom(): void {
+  const seed = devSeed();
+  if (seed !== null) Math.random = randomStream(seed, "direct");
+}</code></pre>
+  <pre class="mermaid">flowchart TB
+  seed["?seed=N (dev only)"] --> h["randomStream(seed, name): FNV-style hash of name, then mulberry32"]
+  h --> direct["'direct': replaces Math.random (particles, audio, save ids)"]
+  h --> world["'world': ctx.rng (overworld: encounters, NPCs)"]
+  h --> bt["'battle:trainer:ID' per trainer"]
+  h --> bw["'battle:wild:SPECIES:LEVEL' per wild opponent"]
+  bt --> battle["createBattleScene with ctx plus that rng"]
+  bw --> battle</pre>
+  <p>
+    Battle streams are created on first use and kept in a <code>Map</code>, so a rematch with the same trainer
+    continues that trainer's stream. The e2e runner defaults to <code>--seed 1</code> and records the seed in
+    its report; <code>npm run e2e -- --seed 42</code> replays another one.
+  </p>
+  <details class="advanced">
+    <summary>Advanced: determinism trade-offs</summary>
+    <ul>
+      <li><strong>Why streams:</strong> with one shared generator, any extra draw (an NPC idling a frame longer,
+        a new particle effect) shifts every later battle roll, and a seeded e2e failure stops reproducing after
+        an unrelated change. Named streams isolate battles from the overworld, and each opponent from the
+        others.</li>
+      <li><strong>Remaining coupling:</strong> within the <code>"world"</code> stream, encounter rolls still
+        depend on how many draws came before, and the overworld's NPC, pet and bird AI draw from that same
+        stream every step, so the wild encounter you get depends on timing. Only the battle itself is
+        isolated. A wild battle's stream is keyed by species and level, so two
+        different encounters with the same species and level share a stream.</li>
+      <li><strong>Production ignores the seed</strong> (<code>import.meta.env.DEV</code> is false), so a seed in
+        a live URL does nothing. Without a seed, <code>ctx.rng</code> <em>is</em> <code>Math.random</code>.</li>
+      <li><strong>Adding a stream:</strong> call <code>randomStream(seed, "your-name")</code> once and pass the
+        <code>Rng</code> down; pure logic should take an <code>Rng</code> parameter (as all of
+        <code>battle/logic</code> does) so tests can use <code>seeded()</code> or <code>sequence()</code>.</li>
+      <li><strong>Cries are deterministic too</strong>, but independently: <code>audio/cry.ts</code> has its own
+        copy of the string hash and mulberry32, seeded by the line and species id, so a species always sounds
+        the same with or without <code>?seed</code>.</li>
+    </ul>
+  </details>
+</section>

@@ -1,0 +1,742 @@
+<section id="recipes" data-title="Recipes" data-summary="Step-by-step: add a species, a map, an NPC, a trainer, a move or item, a script op, a save field, a tile, or a new page.">
+  <h2>Recipes</h2>
+
+  <p>These are the common changes, written as checklists. Each one names the
+  exact files to touch and the tests that will catch a mistake, so you can work
+  in small steps and let the tests tell you what you missed. Two habits make all
+  of them easier:</p>
+
+  <ul>
+    <li><strong>Start from the id.</strong> Most content begins with an id in
+      <a data-src="src/contracts/ids.ts">src/contracts/ids.ts</a>
+      (<code>SPECIES_IDS</code>, <code>MAP_IDS</code>, <code>TILES</code>…).
+      Those lists are <dfn>contracts</dfn>: types every module shares. Once the id
+      exists, TypeScript and the tests point at every place that still needs
+      it.</li>
+    <li><strong>Copy a neighbour.</strong> Find the most similar existing species,
+      map or trainer and copy its shape. Then run <code>npm test</code> early and
+      often.</li>
+  </ul>
+
+  <pre class="mermaid">flowchart LR
+  IDS["contracts: ids.ts, world.ts, runtime.ts"] --> DATA["src/data JSON"]
+  IDS --> WORLD["src/world maps, scripts, trainers"]
+  IDS --> ART["public/art bundles"]
+  IDS --> ENGINE["src/overworld, src/battle, src/save"]
+  DATA --> TESTS["npm test"]
+  WORLD --> TESTS
+  ART --> TESTS
+  ENGINE --> TESTS
+  TESTS --> E2E["npm run e2e when story or flow changed"]</pre>
+
+  <aside class="note"><code>src/contracts/</code> is owned by the coordinator
+  and changed deliberately. Adding an id to a list is routine; changing a shape
+  (a new field on <code>MapDef</code>, a new <code>ScriptCmd</code> op) is a
+  contract change, so keep it minimal and say why in the commit.</aside>
+
+  <h3 id="recipes-species">Add a species</h3>
+
+  <p>A <dfn>species</dfn> is one stage of a plant line (oak acorn, oak sapling,
+  great oak). Its gameplay data and its art live apart: data in JSON under
+  <code>src/data/species/</code>, art in a bundle under
+  <code>public/art/species/&lt;id&gt;/</code>. Swapping art never changes
+  gameplay, and editing data never changes art.</p>
+
+  <pre class="mermaid">flowchart TB
+  A["1. id in SPECIES_IDS"] --> B["2. data and Herbarium page in src/data/species/line.json"]
+  B --> C["3. encounters in src/world/maps"]
+  C --> D["4. art: tools/art/crystal/line.py, build.py line --sheet"]
+  D --> E["5. npm run art:index"]
+  E --> F["6. npm test"]
+  F --> G["7. check in game with ?dev=world and play=1"]</pre>
+
+  <ol>
+    <li><strong>Id.</strong> Add it to <code>SPECIES_IDS</code> in
+      <a data-src="src/contracts/ids.ts">ids.ts</a>, next to its line.</li>
+    <li><strong>Data.</strong> Add an entry to the line's file in
+      <code>src/data/species/</code> (a new line gets a new file with its
+      <code>pollination</code> groups). Stages go in order. The format is in
+      <code>docs/DATA.md</code>. The <code>herbarium</code> page must hold one
+      true, checkable fact about the real plant, stated in <code>fact</code> and
+      cited in <code>source</code>.</li>
+    <li><strong>Encounters.</strong> Put it in a map's <code>encounters</code>
+      table (grass, bog or water), with day and night coverage, or give it
+      through a script (<code>giveSpecies</code>, <code>wildBattle</code>,
+      <code>trade</code>).</li>
+    <li><strong>Art.</strong> Draw it in a <code>tools/art/crystal/&lt;line&gt;.py</code>
+      module (copy a similar line), then run
+      <code>.venv/bin/python tools/art/crystal/build.py &lt;line&gt; --sheet</code>.
+      The rule checker must report 0 errors (four-colour palette, white share,
+      no faces, an intro animation). Add its sport (shiny) in
+      <code>docs/SPORTS.md</code>.</li>
+    <li><strong>Index.</strong> <code>npm run art:index</code> after adding files
+      under <code>public/art/</code>.</li>
+    <li><strong>Check.</strong> <code>npm test</code>, then
+      <code>/?dev=world&amp;play=1&amp;map=route_1&amp;species=&lt;id&gt;&amp;level=40</code>
+      to see its battle intro.</li>
+  </ol>
+
+  <p>A real entry, from <a data-src="src/data/species/oak.json">oak.json</a>:</p>
+
+  <pre><code class="lang-json">{
+  "id": "oak_acorn",
+  "name": "Oak Acorn",
+  "stage": 1,
+  "types": ["wood"],
+  "baseStats": { "hp": 52, "atk": 54, "def": 64, "spa": 42, "spd": 54, "spe": 44 },
+  "growthRate": "medium",
+  "catchRate": 45,
+  "baseExp": 64,
+  "evYield": { "def": 1 },
+  "activity": "any",
+  "growsInto": { "species": "oak_sapling", "trigger": { "kind": "vigor", "level": 16 } },
+  "learnset": [
+    [1, "vine_lash"],
+    [1, "sap_seal"],
+    [6, "root_tap"],
+    // …
+  ],
+  "herbarium": {
+    "scientificName": "Quercus robur",
+    "category": "Acorn",
+    "heightM": 0.1,
+    "weightKg": 0.5,
+    "entry": "It sits very still, thinking long, slow thoughts. Patience runs in the family: a real oak seldom bears acorns before it is about 40.",
+    "fact": "English oak usually starts bearing acorns at ~40 years.",
+    "source": "https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/english-oak/"
+  }
+}</code></pre>
+
+  <table>
+    <thead><tr><th>Mistake</th><th>Caught by</th></tr></thead>
+    <tbody>
+      <tr><td>Id in <code>SPECIES_IDS</code> but no data, or data defined twice</td><td><a data-src="src/data/speciesFiles.test.ts">speciesFiles.test.ts</a> ("defines every species in SPECIES_IDS exactly once")</td></tr>
+      <tr><td>A bad field (stat out of 1–255, unknown type, missing source)</td><td>The loader in <a data-src="src/data/species.ts">species.ts</a>, which names file and field</td></tr>
+      <tr><td>Name over 12 characters, stat total out of band, unknown learnset move, growth leaves the line</td><td><a data-src="src/data/data.test.ts">data.test.ts</a></td></tr>
+      <tr><td>Encounter names an unknown species, or the table is empty at night</td><td>The world validator (<a data-src="src/world/world.test.ts">world.test.ts</a>)</td></tr>
+      <tr><td>Missing front, back or icon, or the wrong size</td><td><a data-src="src/art/bundles.test.ts">bundles.test.ts</a> ("every required logical path resolves")</td></tr>
+      <tr><td>Forgot <code>npm run art:index</code></td><td><code>bundles.test.ts</code> ("index.json matches the folders")</td></tr>
+      <tr><td>A leader using it is now too easy or too hard</td><td><a href="#testing-balance">the balance bands</a></td></tr>
+    </tbody>
+  </table>
+
+  <figure data-chart="species-by-type"><figcaption>Species per type: check where a new plant fills a gap.</figcaption></figure>
+
+  <details class="advanced"><summary>Advanced: changing an existing species</summary>
+    <p>A Quickened's stats are recomputed from its species on load, so changing
+    base stats also changes creatures in players' existing saves. Ids are
+    forever: renaming one breaks saves (party, box, Herbarium) and art folders.
+    Add a new id instead. The learnset order matters for the starting moves (all
+    level-1 entries) and for trainers without explicit <code>moves</code>, whose
+    moves come from the learnset at their level, so a learnset edit can move a
+    balance band.</p>
+  </details>
+
+  <h3 id="recipes-map">Add a map and connect it with warps</h3>
+
+  <p>A <dfn>map</dfn> is a grid of characters plus a legend that turns each
+  character into a tile. A <dfn>warp</dfn> is a cell that moves the player to a
+  cell on another map. Doors and exits come in pairs, and the validator checks
+  both halves.</p>
+
+  <ol>
+    <li><strong>Id.</strong> Add it to <code>MAP_IDS</code> in
+      <a data-src="src/contracts/ids.ts">ids.ts</a>.</li>
+    <li><strong>File.</strong> Create <code>src/world/maps/&lt;id&gt;.ts</code>
+      exporting a <code>MapDef</code>. Use the shared <code>LEGEND</code> (indoors)
+      or <code>OUTDOOR</code> from <a data-src="src/world/build.ts">build.ts</a>.</li>
+    <li><strong>Register.</strong> Import it in
+      <a data-src="src/world/index.ts">src/world/index.ts</a> and add it to the
+      <code>maps</code> record (TypeScript insists, because the record is
+      <code>Record&lt;MapId, MapDef&gt;</code>). If the file exports
+      <code>scripts</code>, add them to <code>mapScripts</code>.</li>
+    <li><strong>Warps both ways.</strong> A door warp on the outside map, and an
+      exit on the inside map that lands on the tile <em>below</em> the door.</li>
+    <li><strong>Check.</strong> <code>npm test</code>, then
+      <code>/?dev=world&amp;map=&lt;id&gt;</code>, which lists validator problems
+      and tints unreachable tiles red.</li>
+  </ol>
+
+  <p>A whole small interior, <a data-src="src/world/maps/thistledown_house.ts">thistledown_house.ts</a>:</p>
+
+  <pre><code class="lang-ts">export const thistledown_house: MapDef = {
+  id: "thistledown_house", name: "HOUSE", outdoor: false, music: "herbarium",
+  border: "void", legend: LEGEND,
+  tiles: [
+    "WWOOWWOOW",
+    "WKKwwwKpW",
+    "WwwwDwwwW",
+    "WpwwDwwwW",
+    "WwwwrwwwW",
+    "WYwwrwwpW",
+    "WwwwrwwwW",
+    "WWWWEWWWW",
+  ],
+  structures: [],
+  warps: [{ x: 4, y: 7, to: "thistledown", toX: 5, toY: 6, facing: "down" }],
+  npcs: [
+    { id: "stone_botanist", sprite: "stone_botanist", x: 3, y: 4, facing: "down", movement: "static", script: "q_window_panes" },
+    { id: "resident", sprite: "villager_b", x: 6, y: 3, facing: "left", movement: "look_around", script: "ch9_house_resident" },
+  ],
+  signs: [], triggers: [],
+};</code></pre>
+
+  <p>And its partner on the town map, in <a data-src="src/world/maps/thistledown.ts">thistledown.ts</a>:</p>
+
+  <pre><code class="lang-ts">{ x: 5, y: 5, to: "thistledown_house", toX: 4, toY: 6, facing: "up" },</code></pre>
+
+  <pre class="mermaid">flowchart LR
+  subgraph town["thistledown (outdoor)"]
+    DOOR["door warp at 5,5"]
+    BELOW["5,6: the tile below the door"]
+  end
+  subgraph house["thistledown_house (indoor)"]
+    INSIDE["4,6: floor above the mat"]
+    MAT["exit mat E at 4,7"]
+  end
+  DOOR -- "walk in" --> INSIDE
+  MAT -- "step on the mat" --> BELOW</pre>
+
+  <table>
+    <thead><tr><th>Rule</th><th>Validator error if broken</th></tr></thead>
+    <tbody>
+      <tr><td>Every row has the same length; every character is in the legend</td><td><code>row y has length …</code>, <code>char 'x' has no valid tile</code></td></tr>
+      <tr><td>A warp sits on a walkable cell and lands on one</td><td><code>warp at x,y is not walkable</code>, <code>warp lands on solid …</code></td></tr>
+      <tr><td>A door's interior has a way back, landing below the door</td><td><code>door … has no way back</code>, <code>exit lands at …, expected below door …</code></td></tr>
+      <tr><td>Interior exits are on <code>mat_exit</code> or stairs</td><td><code>interior warp at x,y is on …, expected mat_exit/stairs</code></td></tr>
+      <tr><td>Every structure door has a warp or a locked-door trigger</td><td><code>door of … leads nowhere</code></td></tr>
+      <tr><td>Something leads in, and nothing traps the player</td><td><code>has no way in</code>, <code>soft-lock before PRUNE: no exit from x,y</code></td></tr>
+      <tr><td>Tall grass, snow or bog has an encounter table</td><td><code>tall grass at x,y but no grass encounters</code></td></tr>
+    </tbody>
+  </table>
+
+  <figure data-chart="warp-graph"><figcaption>Every map and warp: a new map should join this graph with at least one edge in each direction.</figcaption></figure>
+
+  <details class="advanced"><summary>Advanced: maps already frozen by digests</summary>
+    <p>Maps from Chapters 6 to 11 and the post-game are pinned by
+    <a href="#testing-environment">environment digest tests</a>. Adding a warp to
+    one of them changes its digest. That is an intended gameplay change, so
+    re-pin the digest with a comment saying which warp you added and why. Keep the
+    existing property order in edited objects. A map added to the e2e route (a
+    new required stop) also needs a beat in <code>e2e/playthrough.ts</code>.</p>
+  </details>
+
+  <h3 id="recipes-npc">Add an NPC with a script and a flag</h3>
+
+  <p>An <dfn>NPC</dfn> is anything on a map that can be talked to: people,
+  signs-with-faces, levers, item balls. Its <code>script</code> is a list of
+  <code>ScriptCmd</code> operations run when the player presses A facing it. A
+  <dfn>flag</dfn> is a named boolean in the save (<code>state.flags</code>),
+  snake_case, false until set; flags are how the story remembers.</p>
+
+  <ol>
+    <li><strong>Place the NPC</strong> in the map's <code>npcs</code>: a unique
+      <code>id</code> on that map, a <code>sprite</code> from
+      <code>CHARACTERS</code>, a walkable cell, and a <code>script</code> id.
+      Use <code>visibleWhen</code> to show it only in some story states.</li>
+    <li><strong>Write the script</strong> in the chapter's script file
+      (<code>src/world/scripts/chN.ts</code>) with the helpers from
+      <a data-src="src/world/build.ts">build.ts</a>: <code>say</code>,
+      <code>flag</code>, <code>ifFlags</code>, <code>moveNpc</code>…</li>
+    <li><strong>Fit the text box:</strong> 18 columns by 2 lines, at most 3 pages
+      per <code>say</code>, UPPER-CASE names in dialogue, and lines about the
+      player that work for a boy or a girl.</li>
+    <li><strong>Check:</strong> <code>npm test</code>, then walk up to it in the
+      dev scene.</li>
+  </ol>
+
+  <p>A real pair from Chapter 9. The NPC in
+  <a data-src="src/world/maps/thistledown.ts">thistledown.ts</a> is visible only
+  until its flag is set:</p>
+
+  <pre><code class="lang-ts">npcs: [{ id: "tumbleweed_sighting", sprite: "tumbleweed_roll", x: 3, y: 17, facing: "right", script: "ch9_tumbleweed", visibleWhen: when({ tumbleweed_seen: false }) }],</code></pre>
+
+  <p>and its script in <a data-src="src/world/scripts/ch9.ts">scripts/ch9.ts</a>
+  plays once, then sets the flag so it never plays again:</p>
+
+  <pre><code class="lang-ts">ch9_tumbleweed: [
+  ifFlags({ ch9_arrived: true, tumbleweed_seen: false }, [
+    say("Something pale and round comes bowling across the square. A tumbleweed."),
+    // (3,17) -&gt; (30,17): scripted movement carries it beyond the east edge.
+    moveNpc("tumbleweed_sighting", ...steps("right", 27)),
+    { op: "hideNpc", npc: "tumbleweed_sighting" },
+    flag("tumbleweed_seen"),
+    say("Then it's gone, into the scrub. Odd. There's no wind just now."),
+  ]),
+],</code></pre>
+
+  <pre class="mermaid">sequenceDiagram
+  participant P as player
+  participant O as overworld scene
+  participant S as runScript
+  participant U as ctx.ui
+  participant F as state.flags
+  P->>O: press A facing the NPC
+  O->>S: run the NPC's script id
+  S->>F: if: ch9_arrived true, tumbleweed_seen false?
+  S->>U: say, wait for the player
+  S->>O: moveNpc, hideNpc
+  S->>F: setFlag tumbleweed_seen
+  O->>O: visibleWhen now false, the NPC stays hidden</pre>
+
+  <table>
+    <thead><tr><th>Mistake</th><th>Caught by</th></tr></thead>
+    <tbody>
+      <tr><td>Script id has no script</td><td>Validator: <code>npc … script … missing</code></td></tr>
+      <tr><td>NPC with neither script nor trainer</td><td>Validator: <code>npc … has nothing to say</code></td></tr>
+      <tr><td>NPC on a wall, a warp or a door; duplicate id on the map</td><td>Validator</td></tr>
+      <tr><td>A script moves or hides an NPC id that exists nowhere</td><td>Validator: <code>[script …] unknown npc …</code></td></tr>
+      <tr><td>Word over 18 columns, more than 3 pages</td><td>Validator; the e2e <code>text-overflow</code> issue</td></tr>
+      <tr><td>Two scripts with the same id</td><td><code>mergeScripts</code> throws <code>duplicate script id</code> at load</td></tr>
+      <tr><td>The NPC blocks the only path</td><td>Validator: reachability and soft-lock checks</td></tr>
+    </tbody>
+  </table>
+
+  <details class="advanced"><summary>Advanced: flags as the story's state machine</summary>
+    <p>Flags default to false and there is no list of them anywhere: a typo
+    (<code>tumbleweed_sen</code>) is a new flag that is never set, and nothing
+    fails until the story hangs. Grep for the flag's other uses before you rely on
+    it, and prefer the chapter's established names (<code>chN_arrived</code>,
+    <code>&lt;thing&gt;_done</code>). The engine sets one family itself:
+    <code>beat_&lt;trainerId&gt;</code> after a won trainer battle. Story
+    progression that gates a key item belongs in the validator's progress gates
+    (<code>PROGRESS_GATES</code> in <a data-src="src/world/validate.ts">validate.ts</a>),
+    so the "item before it is needed" proof covers it.</p>
+  </details>
+
+  <h3 id="recipes-trainer">Add a trainer</h3>
+
+  <p>A <dfn>trainer</dfn> is an NPC who battles. The definition (team, prize,
+  lines) lives in <a data-src="src/world/trainers.ts">src/world/trainers.ts</a>;
+  the map only places them. The engine runs the whole encounter: it spots the
+  player in the trainer's <dfn>line of sight</dfn>, says the intro, battles, and
+  sets <code>beat_&lt;id&gt;</code> on a win.</p>
+
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Waiting
+  Waiting --> Spotted: player enters the sight line
+  Waiting --> Spotted: player talks to them
+  Spotted --> Battle: intro line
+  Battle --> Beaten: won, sets beat_id, prize, mark if a leader
+  Battle --> Waiting: lost, whiteout to the last greenhouse
+  Beaten --> Beaten: talk shows the after line</pre>
+
+  <ol>
+    <li><strong>Define</strong> it with the <code>trainer()</code> helper in the
+      right chapter's array in <code>trainers.ts</code>. The prize defaults to
+      the top level x 20, the AI to <code>basic</code>, the music to
+      <code>battle_trainer</code>.</li>
+    <li><strong>Place</strong> an NPC with <code>trainer: "&lt;id&gt;"</code> and
+      a <code>sight</code> (default 4 tiles) facing an open lane.</li>
+    <li><strong>Leaders</strong> also get <code>mark</code>, usually
+      <code>ai: "smart"</code>, <code>items</code> and a balance milestone in
+      <a data-src="src/battle/logic/balance.test.ts">balance.test.ts</a>.</li>
+    <li><strong>Scripted battles</strong> (rivals, villains) use
+      <code>{ op: "battle", trainer }</code> in a script instead of an NPC
+      trainer.</li>
+  </ol>
+
+  <pre><code class="lang-ts">trainer("hiker_dale", "DALE", "HIKER", "hiker", [T("unfurling_fern", 19), T("holly", 20), T("bramble_berry", 20)], {
+  intro: "Nobody's walked this lane in months. Who sent you?",
+  defeat: "Lost my footing!",
+  after: "Holly grows fewer prickles up high, where nothing can nibble it.",
+}),</code></pre>
+
+  <pre><code class="lang-ts">// src/world/maps/route_5.ts
+{ id: "dale", sprite: "hiker", x: 20, y: 14, facing: "left", trainer: "hiker_dale", sight: 3 },</code></pre>
+
+  <table>
+    <thead><tr><th>Mistake</th><th>Caught by</th></tr></thead>
+    <tbody>
+      <tr><td>Unknown species, item or mark; empty team; id mismatch</td><td>Validator, trainers block</td></tr>
+      <tr><td>Intro, defeat or after line has a word over 18 columns</td><td>Validator</td></tr>
+      <tr><td>The NPC names a trainer that does not exist</td><td>Validator: <code>trainer … missing</code></td></tr>
+      <tr><td>After walking up to the player, the trainer stands where it seals off a warp, trigger, sign or NPC</td><td><a data-src="src/world/trainers_block.test.ts">trainers_block.test.ts</a></td></tr>
+      <tr><td>A leader outside its band</td><td><a href="#testing-balance">balance.test.ts</a></td></tr>
+      <tr><td>A Chapter 6+ map's NPC list changed</td><td>That chapter's environment digest (re-pin with a reason)</td></tr>
+    </tbody>
+  </table>
+
+  <details class="advanced"><summary>Advanced: sight lanes, variants and rematches</summary>
+    <p>A trainer who spots the player walks up to them and <em>stays</em> where
+    the battle happened. <a data-src="src/world/trainers_block.test.ts">trainers_block.test.ts</a>
+    simulates every spot each trainer could end up in (one tile short of each cell
+    in its sight line) and fails if that would seal off a warp, trigger, sign or
+    NPC the player could reach from where they were spotted. Give trainers a lane
+    that is open on both sides, or shorten <code>sight</code>.</p>
+    <p>BRAM's battles exist in three variants, one per starter
+    (<code>rival_5_&lt;line&gt;</code>), and scripts pick one with a
+    <code>byStarter</code> helper that branches on <code>got_starter_*</code>
+    flags. Post-game rematches are clones made by <code>cloneRematch</code> in
+    <a data-src="src/world/rematches.ts">rematches.ts</a>: id
+    <code>&lt;id&gt;_rematch</code>, every level raised, arrays copied so the
+    first run's team is never shared. A team member marked
+    <code>grafted</code> keeps its level but uses stats from five levels lower
+    (the story's graft collar).</p>
+  </details>
+
+  <figure data-chart="level-curve"><figcaption>Wild and trainer levels along the story: a new trainer should sit on this curve for where they stand.</figcaption></figure>
+
+  <h3 id="recipes-move-item">Add a move or an item</h3>
+
+  <p>Both live in plain JSON and are checked at build time by small loaders that
+  name the entry and field on a mistake.</p>
+
+  <h4 id="recipes-move">A move</h4>
+  <ol>
+    <li>Append one line to <a data-src="src/data/moves.json">src/data/moves.json</a>
+      (later chapters append; keep new moves at the end).</li>
+    <li>Give it an animation in <code>MOVE_ANIMS</code> in
+      <a data-src="src/battle/anims.ts">src/battle/anims.ts</a>.</li>
+    <li>Teach it: add <code>[level, "id"]</code> to learnsets, or list it in a
+      trainer member's <code>moves</code>.</li>
+  </ol>
+
+  <pre><code class="lang-json">{ "id": "acorn_drop", "name": "Acorn Drop", "type": "wood", "category": "physical", "power": 60, "accuracy": 95, "pp": 20, "priority": 0, "effects": [{ "kind": "flinch", "chance": 20 }], "description": "Drops a hard acorn. May flinch." },</code></pre>
+  <pre><code class="lang-ts">acorn_drop: S("heavy_drop", "acorn"),</code></pre>
+
+  <h4 id="recipes-item">An item</h4>
+  <ol>
+    <li>Append to <a data-src="src/data/items.json">src/data/items.json</a>:
+      name up to 13 characters, description up to 36, a <code>pocket</code>
+      and an <code>effect</code>.</li>
+    <li>If the story <em>requires</em> it (a key item, a pod), also add it to
+      <code>REQUIRED_ITEMS</code> in <code>ids.ts</code>; required items need a
+      16x16 icon in an image set, which the bundle test enforces.</li>
+    <li>Hand it out: a <code>giveItem</code> in a script, a <code>shop</code>
+      stock, a hidden item, or an item ball (an <code>item_pickup</code> NPC whose
+      id is the item id).</li>
+  </ol>
+
+  <pre><code class="lang-json">{ "id": "water_flask", "name": "Water Flask", "pocket": "items", "price": 300, "description": "A long cool drink. Restores 20 HP.", "effect": { "kind": "heal", "amount": 20 }, "usableInBattle": true, "usableInField": true },</code></pre>
+
+  <table>
+    <thead><tr><th>Mistake</th><th>Caught by</th></tr></thead>
+    <tbody>
+      <tr><td>Bad field, unknown effect kind, duplicate id</td><td><a data-src="src/data/dataFiles.test.ts">dataFiles.test.ts</a> (the loaders' errors)</td></tr>
+      <tr><td>Move has no animation family</td><td><a data-src="src/battle/hints.test.ts">hints.test.ts</a> ("every move has an explicit animation family")</td></tr>
+      <tr><td>Description wraps to more than two 18-column lines</td><td><a data-src="src/data/data.test.ts">data.test.ts</a></td></tr>
+      <tr><td>A learnset names a move that does not exist</td><td><code>data.test.ts</code>, <code>speciesFiles.test.ts</code></td></tr>
+      <tr><td>A script gives, takes or sells an unknown item</td><td>Validator: <code>unknown item</code>, <code>unknown shop item</code></td></tr>
+      <tr><td>A required item has no icon</td><td><a data-src="src/art/bundles.test.ts">bundles.test.ts</a></td></tr>
+    </tbody>
+  </table>
+
+  <details class="advanced"><summary>Advanced: a new effect kind</summary>
+    <p>An existing effect kind (<code>flinch</code>, <code>stat</code>,
+    <code>drain</code>…) is data only. A <em>new</em> kind is code: add it to
+    <code>MoveEffect</code> in <a data-src="src/contracts/data.ts">src/contracts/data.ts</a>
+    (a contract change), to the loader's <code>EFFECTS</code> list in
+    <a data-src="src/data/moves.ts">src/data/moves.ts</a>, implement it in the
+    battle logic with a unit test, and teach the e2e battle driver and the
+    balance <code>greedy</code> policy how to value it if it deals damage. Any new
+    random roll shifts every balance rate slightly (see
+    <a href="#testing-balance">determinism</a>).</p>
+  </details>
+
+  <h3 id="recipes-scriptop">Add a ScriptCmd op, end to end</h3>
+
+  <p>A <dfn>ScriptCmd op</dfn> is one instruction in the story language
+  (<code>say</code>, <code>giveItem</code>, <code>warp</code>…). Adding one
+  touches four layers, and the order matters: contract, interpreter, validator,
+  tests.</p>
+
+  <pre class="mermaid">flowchart LR
+  C["1. Contract: add the op to the ScriptCmd union in src/contracts/world.ts"] --> I["2. Interpreter: a case in step() in src/overworld/script.ts"]
+  I --> H["ScriptHost method, if the engine must do something"]
+  I --> W{"Does the op hold nested command lists?"}
+  W -- yes --> WK["3. Walkers: childLists in script.ts, eachCmd in validate.ts, walkScript in src/guide/indexer.ts"]
+  W -- no --> V
+  WK --> V["4. Validator: a case in checkCmds for every id it names"]
+  V --> T["5. Tests: script.test.ts with a fake host, a validator test on a cloned WORLD"]</pre>
+
+  <ol>
+    <li><strong>Contract.</strong> Add a member to <code>ScriptCmd</code> in
+      <a data-src="src/contracts/world.ts">src/contracts/world.ts</a>, with a
+      one-line comment saying what it does.</li>
+    <li><strong>Interpreter.</strong> Add a <code>case</code> to <code>step()</code>
+      in <a data-src="src/overworld/script.ts">src/overworld/script.ts</a>. Return
+      the promise if the script should wait for it. If it needs the engine (camera,
+      actors, screens), add a method to <code>ScriptHost</code> and implement it
+      in the overworld scene.</li>
+    <li><strong>Walkers.</strong> If the op contains command lists (like
+      <code>if</code> or <code>yesno</code>), every static walker must descend into
+      them, or the validator and the guide silently skip their contents.</li>
+    <li><strong>Validator.</strong> In <code>checkCmds</code> in
+      <a data-src="src/world/validate.ts">validate.ts</a>, check every id the op
+      names (species, items, maps, music…).</li>
+    <li><strong>Tests.</strong> A case in
+      <a data-src="src/overworld/script.test.ts">script.test.ts</a> runs the op
+      against a fake host and checks its effect; a validator test breaks a cloned
+      <code>WORLD</code> and expects the new error.</li>
+  </ol>
+
+  <p>How the interpreter dispatches, and what happens to an op it does not know:</p>
+
+  <pre><code class="lang-ts">async function step(host: ScriptHost, cmd: ScriptCmd, st: ScriptState): Promise&lt;void&gt; {
+  const { ctx } = host;
+  const flags = ctx.state.flags;
+  switch (cmd.op) {
+    case "say":
+      return ctx.ui.say(cmd.text, cmd.speaker ? { speaker: cmd.speaker } : undefined);
+    // …
+    case "jingle":
+      return ctx.audio.playJingle(cmd.id);
+    // …
+    case "end":
+      throw new ScriptEnd();
+    default: {
+      const unknown = cmd as { op?: string };
+      console.warn(`[script] unknown op "${unknown.op}"`);
+    }
+  }
+}</code></pre>
+
+  <figure data-chart="script-ops"><figcaption>Every ScriptCmd op and how often the world's scripts use it.</figcaption></figure>
+
+  <details class="advanced"><summary>Advanced: nothing forces you to finish</summary>
+    <p>The <code>default</code> branch logs a warning instead of asserting
+    <code>never</code>, so TypeScript will <em>not</em> fail when you add a member
+    to the union and forget the interpreter case; the game will just warn and skip
+    it. The validator's <code>switch</code> has no default at all. Grep for an
+    existing op of the same shape (for a branching op, <code>"ifNurserySeed"</code>)
+    and visit every hit. The playthrough's console hook turns the runtime warning
+    into a <code>console.warn</code> issue, so an unhandled op used in the story
+    fails <code>npm run e2e</code>; an op used only in side content will not be
+    caught that way.</p>
+    <p>An op that awaits something that might never resolve (an animation, a
+    sound) is a soft-lock risk. Give it a bounded duration, and remember the
+    playthrough's <a href="#testing-e2e-detectors">watchdog</a> treats an unresolved
+    promise as a lock.</p>
+  </details>
+
+  <h3 id="recipes-save">Add a save field, with migration</h3>
+
+  <p>The save is the <code>GameState</code> object
+  (<a data-src="src/contracts/runtime.ts">src/contracts/runtime.ts</a>) wrapped
+  in a versioned <dfn>envelope</dfn> (<code>{ v, savedAt, gameId, state }</code>)
+  in <code>localStorage</code>. Players have saves from older builds, so every
+  new field must load sensibly from a save that does not have it.</p>
+
+  <pre class="mermaid">sequenceDiagram
+  participant LS as localStorage
+  participant R as createSave().read
+  participant M as migrate
+  participant N as normalizeState
+  participant G as game
+  R->>LS: getItem verdant-reach-save
+  LS-->>R: JSON text
+  R->>M: envelope with v
+  M-->>R: same envelope, or null if v is newer than SAVE_VERSION
+  R->>N: env.state and a fresh newGameState fallback
+  N-->>R: GameState, every field cleaned or defaulted
+  R-->>G: CONTINUE</pre>
+
+  <p>Most fields are <dfn>additive</dfn>: the version stays 1, the field is
+  optional or defaulted, and old saves get a safe value. The player's look is the
+  model to copy:</p>
+
+  <ol>
+    <li><strong>Type.</strong> Add the field to <code>GameState</code>, optional
+      if old saves lack it, with a comment saying what an old save means.</li>
+    <li><strong>New game.</strong> Set its starting value in
+      <code>newGameState</code> in <a data-src="src/save/index.ts">src/save/index.ts</a>.</li>
+    <li><strong>Load.</strong> Copy and clean it in <code>normalizeState</code>.
+      Never trust the stored value: validate its type and range.</li>
+    <li><strong>Test</strong> in <a data-src="src/save/save.test.ts">save.test.ts</a>:
+      a round trip, a save without the field, and a junk value.</li>
+  </ol>
+
+  <pre><code class="lang-ts">// GameState, src/contracts/runtime.ts
+/** Chosen at NEW GAME. Optional: saves from before the choice load as "boy". */
+playerLook?: PlayerLook;
+
+// newGameState, src/save/index.ts
+playerLook: "boy",
+
+// normalizeState, src/save/index.ts
+// Additive v1 migration: saves from before the look choice play as the boy.
+playerLook: r.playerLook === "girl" ? "girl" : "boy",</code></pre>
+
+  <pre><code class="lang-ts">const old = fallback() as Partial&lt;GameState&gt;;
+delete old.playerLook;
+storage.setItem(SAVE_KEY, JSON.stringify({ v: 1, savedAt: 0, gameId: "old", state: old }));
+expect(createSave(fallback, storage, fallback).read()!.playerLook).toBe("boy");
+const junk = { ...fallback(), playerLook: "plant" } as unknown;
+expect(normalizeState(junk, fallback())!.playerLook).toBe("boy");</code></pre>
+
+  <p>A change old saves cannot absorb (renaming or restructuring a field) needs a
+  real version bump: raise <code>SAVE_VERSION</code>, change the
+  <code>version: 1</code> type, and add a step to <code>migrate</code>:</p>
+
+  <pre><code class="lang-ts">/** Upgrade older envelopes to the current version. */
+function migrate(env: SaveEnvelope): SaveEnvelope | null {
+  if (typeof env.v !== "number" || env.v &gt; SAVE_VERSION) return null;
+  // v1 is the first version; future migrations go here (env.v === 1 -&gt; 2, ...).
+  return env;
+}</code></pre>
+
+  <details class="advanced"><summary>Advanced: the field that silently vanishes</summary>
+    <p><code>normalizeState</code> builds a <em>new</em> object field by field; it
+    does not spread the stored state. A required field you forget there is a type
+    error, but an <em>optional</em> field is not: the game saves it, and CONTINUE
+    drops it without a word. Always add the round-trip test. Story progress that
+    is just a boolean belongs in <code>flags</code>, which needs no save change at
+    all.</p>
+    <p>A save from a newer build (<code>v</code> above <code>SAVE_VERSION</code>)
+    is refused rather than half-loaded, so a player who opens an older deploy does
+    not corrupt their file. Keep that rule when you add migrations.</p>
+  </details>
+
+  <h3 id="recipes-tile">Add a tileset key</h3>
+
+  <p>A <dfn>tile key</dfn> (<code>grass</code>, <code>ice</code>,
+  <code>cable_trunk</code>) names one 16x16 terrain type and its behaviour. Its
+  picture comes from a <dfn>tileset bundle</dfn>: a sheet PNG plus a
+  <code>tileset.json</code> that maps keys to cells on the sheet.</p>
+
+  <pre class="mermaid">flowchart TB
+  K["1. TILES in ids.ts: key and TileProps"] --> A["2. optional: AUTOTILE group in constants.ts"]
+  K --> L["3. a legend character in build.ts or the map's legend"]
+  K --> B["4. art: a cell in some tileset's sheet.png and tileset.json"]
+  B --> I["5. npm run art:index if you added files"]
+  L --> M["6. use it in a map"]
+  I --> T["7. npm test: bundles and validator"]
+  M --> T</pre>
+
+  <ol>
+    <li><strong>Key.</strong> Add it to <code>TILES</code> in
+      <a data-src="src/contracts/ids.ts">ids.ts</a> with its
+      <code>TileProps</code>: <code>walk</code>, and any of <code>slide</code>,
+      <code>encounter</code>, <code>water</code>, <code>ledge</code>,
+      <code>interact</code>, <code>fieldMove</code>.</li>
+    <li><strong>Autotiling</strong> (optional). If it should join its neighbours
+      (paths, water edges, walls), add it to <code>AUTOTILE</code> in
+      <a data-src="src/contracts/constants.ts">constants.ts</a>, possibly sharing
+      an existing group.</li>
+    <li><strong>Legend.</strong> Give it a character in <code>LEGEND</code> in
+      <a data-src="src/world/build.ts">build.ts</a>, or in one map's own
+      <code>legend</code>.</li>
+    <li><strong>Art.</strong> Add it to exactly one tileset's
+      <code>tiles</code> in <code>public/art/tilesets/&lt;set&gt;/tileset.json</code>
+      (from that set's generator under <code>tools/art/</code>, or by hand),
+      and preview it in the Tile Lab (<code>tilelab.html</code>).</li>
+  </ol>
+
+  <p>A small real tileset, <code>public/art/tilesets/relay/tileset.json</code>:</p>
+
+  <pre><code class="lang-json">{
+  "format": "verdant.tileset/1",
+  "id": "relay",
+  "name": "Root Relay",
+  "tileSize": 16,
+  "sheet": "sheet.png",
+  "columns": 16,
+  "tiles": {
+    "cable_floor": { "base": 0, "alts": [1, 2] },
+    "console": { "base": [3, 4] },
+    "server_rack": { "base": [5, 6] },
+    "sensor_post": { "base": 7 }
+  },
+  "credits": "Generated pixel art for Verdant Reach (Round 4, Chapter 4 environment).",
+  "source": { "kind": "generated", "tool": "tools/art/env4/tilesets.py" }
+}</code></pre>
+
+  <p><code>base</code> is a cell index, or two for a two-frame animation;
+  <code>alts</code> are ground variations; <code>masks</code> (not shown) are
+  autotile variants keyed 0–15. The format is in <code>docs/ART.md</code> §4.</p>
+
+  <table>
+    <thead><tr><th>Mistake</th><th>Caught by</th></tr></thead>
+    <tbody>
+      <tr><td>Key has no art, or the cell is the wrong size</td><td><a data-src="src/art/bundles.test.ts">bundles.test.ts</a> (every <code>assets/tiles/&lt;key&gt;.png</code> must resolve at 16x16)</td></tr>
+      <tr><td>Two tilesets define the same key</td><td><code>bundles.test.ts</code> ("every TileKey is defined by at most one tileset")</td></tr>
+      <tr><td>A map uses a character with no tile</td><td>Validator: <code>char 'x' has no valid tile</code></td></tr>
+      <tr><td>A new encounter tile without an encounter table</td><td>Validator</td></tr>
+      <tr><td>Swapping tiles on a frozen map changes a cell's role</td><td>That chapter's <a href="#testing-environment">environment digest</a></td></tr>
+    </tbody>
+  </table>
+
+  <figure data-chart="bundle-kinds"><figcaption>Art bundles by kind: tilesets sit beside species, structures, characters and image sets.</figcaption></figure>
+
+  <details class="advanced"><summary>Advanced: behaviour versus looks</summary>
+    <p>Prefer a new key with the <em>same</em> <code>TileProps</code> as the tile
+    it replaces when the change is cosmetic (<code>sign_snow</code> behaves exactly
+    like <code>sign</code>). The environment tests compare roles, so such a swap
+    passes; a key with new behaviour is a gameplay change and needs the validator,
+    the overworld (<code>src/overworld/map.ts</code>) and possibly the guide's map
+    renderer to understand it. A few behaviours are tied to a key's <em>name</em>
+    rather than its props (<code>mat_exit</code>, <code>pit</code>,
+    <code>sign</code>, <code>mailbox</code>), so grep for the name of the tile you
+    imitate.</p>
+    <p>The game must still run with missing art (it draws a magenta box and logs
+    once), which is why the bundle test, not a crash, is what stops a missing tile
+    from shipping. In the playthrough, that log becomes a <code>missing-asset</code>
+    issue.</p>
+  </details>
+
+  <h3 id="recipes-page">Add a page like the guide</h3>
+
+  <p>The site has several pages built from the same code: the game
+  (<code>index.html</code>), the strategy guide (<code>guide.html</code>) and the
+  Tile Lab (<code>tilelab.html</code>). Each is a separate Vite entry that imports
+  the game's own modules, so its numbers can never drift from the game.</p>
+
+  <pre class="mermaid">flowchart LR
+  HTML["newpage.html at the repo root"] --> MAIN["src/newpage/main.ts"]
+  MAIN --> MODS["game modules through their entry points: DATA, WORLD, src/art"]
+  CFG["vite.config.ts: build.rolldownOptions.input"] --> HTML
+  CFG --> DIST["dist/newpage.html, shared chunks"]
+  DIST --> PAGES["deployed with the game"]</pre>
+
+  <ol>
+    <li><strong>HTML.</strong> Create <code>&lt;name&gt;.html</code> at the
+      repository root with a mount element and one module script, like
+      <a data-src="guide.html">guide.html</a>.</li>
+    <li><strong>Code.</strong> Put the page in <code>src/&lt;name&gt;/</code>, with
+      <code>main.ts</code> as its entry and its CSS beside it. Import game modules
+      only through their entry points (<code>DATA</code> from
+      <code>src/data</code>, <code>WORLD</code> from <code>src/world</code>).</li>
+    <li><strong>Build.</strong> Add the page to
+      <code>build.rolldownOptions.input</code> in
+      <a data-src="vite.config.ts">vite.config.ts</a>. Without this, the page works
+      in <code>npm run dev</code> but is missing from <code>dist/</code> and the
+      live site.</li>
+    <li><strong>Test.</strong> Keep logic pure and test it next to the code (the
+      guide's <a data-src="src/guide/indexer.test.ts">indexer.test.ts</a> indexes
+      <code>WORLD</code> without a browser).</li>
+    <li><strong>Link and document</strong> it from the README.</li>
+  </ol>
+
+  <pre><code>&lt;body&gt;
+  &lt;div id="guide"&gt;&lt;p class="boot"&gt;Opening the guide…&lt;/p&gt;&lt;/div&gt;
+  &lt;noscript&gt;&lt;p&gt;The Verdant Reach guide is built from the game's data in your browser. Please enable JavaScript.&lt;/p&gt;&lt;/noscript&gt;
+  &lt;script type="module" src="/src/guide/main.ts"&gt;&lt;/script&gt;
+&lt;/body&gt;</code></pre>
+
+  <pre><code class="lang-ts">export default defineConfig(({ command }) =&gt; ({
+  base: command === "build" ? "./" : "/",
+  build: {
+    rolldownOptions: {
+      input: {
+        main: fileURLToPath(new URL("./index.html", import.meta.url)),
+        guide: fileURLToPath(new URL("./guide.html", import.meta.url)),
+        tilelab: fileURLToPath(new URL("./tilelab.html", import.meta.url)),
+      },
+    },
+  },
+}));</code></pre>
+
+  <details class="advanced"><summary>Advanced: what a second page costs the game</summary>
+    <p>Pages share code with the game, so the bundler splits common modules
+    into shared chunks. The game's own entry and behaviour do not change, but a
+    page that imports something heavy only it needs should load it lazily
+    (<code>import()</code>), as the game does for the Tile Lab hook and the dev
+    scenes. A page must never import <code>e2e/</code> or dev-only modules
+    statically, or they would ship. Use root-absolute paths
+    (<code>/src/…</code>, <code>/favicon.svg</code>) in the HTML only: Vite rewrites
+    those for the relative <code>./</code> base, while runtime asset paths stay
+    relative (<code>assets/…</code>) so the site works under
+    <code>/verdant-reach/</code>.</p>
+  </details>
+</section>

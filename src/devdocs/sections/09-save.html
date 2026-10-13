@@ -1,0 +1,299 @@
+<section id="save" data-title="Saving and loading" data-summary="The save envelope in localStorage, every GameState field, additive migrations, failure handling, CONTINUE, and how to add a field without breaking old saves.">
+  <h2>Saving and loading</h2>
+
+  <p>Everything the game needs to resume lives in one object, <dfn>GameState</dfn> (<a data-src="src/contracts/runtime.ts">contracts/runtime.ts</a>), held at <code>ctx.state</code>. Saving writes it to the browser's <code>localStorage</code>; loading reads it back, repairs anything missing or damaged, and hands it to the overworld. The code is all in <a data-src="src/save/index.ts">src/save/index.ts</a>, about 300 lines, and has no DOM dependencies beyond the storage object, which tests replace with an in-memory fake.</p>
+
+  <p>The guiding rule: <strong>a save from any earlier build must always load.</strong> Players don't re-download a save file; it simply sits in their browser while the game updates under it on every push to <code>main</code>.</p>
+
+  <h3 id="save-format">The save format and envelope</h3>
+
+  <p>A save is a <dfn>save envelope</dfn>: the state, wrapped with a format version, a timestamp and a game id. It is stored as JSON under one key. Options are also stored on their own under a second key, so they survive NEW GAME and apply on the title screen.</p>
+
+  <pre><code class="lang-ts">export const SAVE_KEY = "verdant-reach-save";
+export const OPTIONS_KEY = "verdant-reach-options";
+export const SAVE_VERSION = 1;
+
+export interface SaveEnvelope {
+  v: number;
+  savedAt: number;      // epoch ms
+  gameId: string;       // distinguishes "another save file" on overwrite
+  state: GameState;
+}</code></pre>
+
+  <pre class="mermaid">flowchart LR
+  GS["ctx.state GameState"] --> ENV["SaveEnvelope v, savedAt, gameId, state"]
+  ENV --> J["JSON.stringify"]
+  J --> K1["localStorage verdant-reach-save"]
+  GS --> OPT["state.options"]
+  OPT --> K2["localStorage verdant-reach-options"]
+  K1 --> META["meta(): name, marks, caught, play time, date"]
+  META --> TITLE["title CONTINUE window and the SAVE window"]</pre>
+
+  <ul>
+    <li><code>v</code> is the <dfn>envelope version</dfn>. It has been 1 since the first save; changes so far have all been additive (see <a href="#save-migrations">migrations</a>).</li>
+    <li><code>gameId</code> is a random id made when a game starts (<code>beginNewGameSession</code>). If you start a NEW GAME and then save over a file from a different game, the ids differ and the game asks "There is already a save file. Is it OK to overwrite?".</li>
+    <li>There is exactly one save slot.</li>
+  </ul>
+
+  <details class="advanced"><summary>Advanced: the game id's life cycle</summary>
+    <ul>
+      <li>A fresh id is made when the module loads and again by <code>beginNewGameSession()</code> at NEW GAME.</li>
+      <li><code>read()</code> adopts the envelope's id, so after CONTINUE your next save matches and doesn't ask to overwrite your own game.</li>
+      <li>The check compares ids only; it says nothing about which save is "newer". The SAVE window shows the stored file's summary so the player can decide.</li>
+    </ul>
+  </details>
+
+  <h3 id="save-state">GameState fields</h3>
+
+  <pre class="mermaid">classDiagram
+  class GameState {
+    version: 1
+    playerName, playerLook, rivalName
+    money
+    party: Quickened[] max 6
+    box: Quickened[]
+    bag: ItemId to qty
+    flags: name to boolean
+    marks, herbarium
+    position, rafting, heal
+    playTimeMs, options
+  }
+  class Postgame {
+    hallOfFame
+    roamers, burr
+    wandererWilted, burrHitch
+  }
+  class Systems {
+    harvested: id to date
+    nursery: slots, steps, seedReady
+  }
+  GameState *-- Postgame
+  GameState *-- Systems</pre>
+
+  <table>
+    <thead><tr><th>Field</th><th>Holds</th><th>On an older save</th></tr></thead>
+    <tbody>
+      <tr><td><code>playerName</code>, <code>rivalName</code></td><td>Names (7 letters at most)</td><td>Empty or missing: SORREL and BRAM</td></tr>
+      <tr><td><code>playerLook</code></td><td><code>"boy"</code> or <code>"girl"</code>, chosen at NEW GAME</td><td>Missing or junk: <code>"boy"</code></td></tr>
+      <tr><td><code>money</code></td><td>Whole, non-negative</td><td>Bad: the new-game amount; negative: 0</td></tr>
+      <tr><td><code>party</code>, <code>box</code></td><td>Quickened plants; the party is cut to 6</td><td>Missing: empty. Seed countdowns are repaired.</td></tr>
+      <tr><td><code>bag</code>, <code>flags</code></td><td>Item counts; story flags</td><td>Missing: empty</td></tr>
+      <tr><td><code>marks</code>, <code>herbarium</code></td><td>Earned marks; seen and caught species</td><td>Missing: empty</td></tr>
+      <tr><td><code>position</code></td><td>Map, x, y, facing</td><td><strong>Required.</strong> No position, or an unknown map: the save is rejected.</td></tr>
+      <tr><td><code>rafting</code></td><td>Riding the LILY RAFT</td><td>Missing: on foot</td></tr>
+      <tr><td><code>heal</code></td><td>Last healing point</td><td>Unknown map: the new-game heal point</td></tr>
+      <tr><td><code>playTimeMs</code></td><td>Play time; counted while the overworld runs</td><td>Missing: 0</td></tr>
+      <tr><td><code>options</code></td><td>Text speed, follower, battle animations</td><td>Cleaned; toggles default to on</td></tr>
+      <tr><td><code>harvested</code></td><td>Berry bush id to the date it was last picked</td><td>Only well-formed <code>YYYY-MM-DD</code> entries are kept</td></tr>
+      <tr><td><code>nursery</code></td><td>Up to 2 boarders, a step counter, a seed flag</td><td>Optional; damaged parts fall back to fresh values</td></tr>
+      <tr><td><code>hallOfFame</code></td><td>One party snapshot per Council clear</td><td>Optional; only whole valid teams are kept, never a fabricated clear</td></tr>
+      <tr><td><code>roamers</code>, <code>burr</code>, <code>wandererWilted</code>, <code>burrHitch</code></td><td>Wanderer HP, status, location; the wilt date; BURR's hitch spot</td><td>Missing: healthy, unreleased Wanderers at their first map</td></tr>
+    </tbody>
+  </table>
+
+  <aside class="note">What is <em>not</em> saved is just as deliberate: boulder positions (puzzles reset on entry), <code>hideNpc</code> overrides, the camera, and which wild plant you were about to meet. Anything that must survive a reload has to be a flag or a field here.</aside>
+
+  <details class="advanced"><summary>Advanced: shape choices in GameState</summary>
+    <ul>
+      <li><code>version: 1</code> is a literal type, so code can't accidentally write another number into the state; the real format version lives on the envelope.</li>
+      <li>Records (<code>bag</code>, <code>flags</code>, <code>harvested</code>) rather than arrays keep JSON small and lookups O(1), and make "missing" mean "zero" or "false" for free.</li>
+      <li>Some things are derived rather than stored (quest step ticks, which towns SEED GLIDE offers, a Wanderer's max HP), so they can't disagree with the data after a change. Party members do store their computed <code>stats</code>, which the battle code keeps current.</li>
+      <li>Optional fields (<code>hallOfFame</code>, <code>nursery</code>, <code>rafting</code>, <code>burrHitch</code>) are only added by <code>normalizeState</code> when the stored value is present and valid, so an old save never gains, say, an empty Hall of Fame that would read as a clear.</li>
+    </ul>
+  </details>
+
+  <h3 id="save-flow">Writing and reading</h3>
+
+  <p><code>createSave(getState, storage, fallback)</code> returns the save service that the engine puts on <code>ctx.save</code>. <code>write()</code> wraps the current state in an envelope; <code>read()</code> unwraps, migrates and normalises.</p>
+
+  <pre><code class="lang-ts">return {
+  write() {
+    const state = getState();
+    const env: SaveEnvelope = { v: SAVE_VERSION, savedAt: Date.now(), gameId: currentGameId, state };
+    storage?.setItem(SAVE_KEY, JSON.stringify(env));
+    storeOptions(state.options, storage);
+  },
+  read() {
+    const env = readEnvelope();
+    if (!env) return null;
+    const state = normalizeState(env.state, fallback());
+    if (state) currentGameId = env.gameId ?? currentGameId;
+    return state;
+  },
+  exists: () =&gt; readEnvelope() !== null,
+  clear: () =&gt; storage?.removeItem(SAVE_KEY),
+  // …
+};</code></pre>
+
+  <p>The only way a player saves is START, then SAVE (and the old end-of-slice offer). Both go through <code>saveDialog()</code> in <a data-src="src/ui/widgets.ts">ui/widgets.ts</a>. There is no autosave.</p>
+
+  <pre class="mermaid">sequenceDiagram
+  participant P as Player
+  participant D as saveDialog
+  participant S as ctx.save
+  participant LS as localStorage
+  P->>D: START, SAVE
+  D->>P: Would you like to save the game?
+  P-->>D: YES
+  D->>S: envelope()
+  alt another game's save is there
+    D->>P: Is it OK to overwrite?
+    P-->>D: YES
+  end
+  D->>P: SAVING... DON'T TURN OFF THE POWER.
+  D->>S: write()
+  S->>LS: setItem(SAVE_KEY, JSON)
+  alt setItem throws (storage full)
+    D->>P: The save failed!
+  else ok
+    D->>P: PLAYER saved the game.
+  end</pre>
+
+  <p>Reading goes through three gates. Each can say "no save", and none can crash:</p>
+
+  <pre class="mermaid">flowchart TD
+  G["storage.getItem(SAVE_KEY)"] --> E{"present?"}
+  E -->|"no"| N["null: no save"]
+  E -->|"yes"| P{"JSON.parse ok?"}
+  P -->|"no"| W["console.warn, null"]
+  P -->|"yes"| M{"migrate(): v is a number, not newer than SAVE_VERSION?"}
+  M -->|"no"| N
+  M -->|"yes"| NS{"normalizeState(): position on a known map?"}
+  NS -->|"no"| N
+  NS -->|"yes"| R["repaired GameState"]</pre>
+
+  <h3 id="save-migrations">Migrations: old saves get defaults</h3>
+
+  <p>Verdant Reach migrates <em>additively</em>. Instead of bumping the version and writing a converter for each change, every field added since version 1 is either optional in the type or given a default by <code>normalizeState()</code>. Old saves simply lack the field and get the default; new saves carry it. The version stays 1.</p>
+
+  <p>The boy/girl choice is the cleanest example. Saves from before the choice have no <code>playerLook</code>, and they must keep playing as the boy they always were:</p>
+
+  <pre><code class="lang-ts">return {
+  version: 1,
+  playerName: typeof r.playerName === "string" &amp;&amp; r.playerName ? r.playerName : DEFAULT_PLAYER_NAME,
+  // Additive v1 migration: saves from before the look choice play as the boy.
+  playerLook: r.playerLook === "girl" ? "girl" : "boy",
+  rivalName: typeof r.rivalName === "string" &amp;&amp; r.rivalName ? r.rivalName : DEFAULT_RIVAL_NAME,
+  money: typeof r.money === "number" &amp;&amp; isFinite(r.money) ? Math.max(0, Math.floor(r.money)) : fallback.money,
+  party: cleanSeeds(arr(r.party, []).slice(0, 6)),
+  ...(hallOfFame !== undefined ? { hallOfFame } : {}),
+  // …
+  harvested: cleanHarvested(r.harvested) ?? {},
+  ...(r.nursery !== undefined &amp;&amp; cleanNursery(r.nursery) ? { nursery: cleanNursery(r.nursery) } : {}),
+};</code></pre>
+
+  <p>Notice the pattern: compare against the one value that means "new behaviour" (<code>=== "girl"</code>), so missing, misspelled and hand-edited values all fall back to the old behaviour. Read sites agree: <code>playerArt(state)</code> in <a data-src="src/contracts/constants.ts">constants.ts</a> also treats anything but <code>"girl"</code> as the boy.</p>
+
+  <p>Bigger structures get a dedicated cleaner: <code>cleanNursery</code>, <code>cleanSeeds</code>, <code>cleanHarvested</code>, <code>cleanHallOfFame</code>, <code>cleanWanderers</code>. Each keeps what is well formed and replaces the rest with fresh values.</p>
+
+  <p><code>migrate()</code> is where a real version change would go. Today it only rejects envelopes it can't understand:</p>
+
+  <pre><code class="lang-ts">/** Upgrade older envelopes to the current version. */
+function migrate(env: SaveEnvelope): SaveEnvelope | null {
+  if (typeof env.v !== "number" || env.v &gt; SAVE_VERSION) return null;
+  // v1 is the first version; future migrations go here (env.v === 1 -&gt; 2, ...).
+  return env;
+}</code></pre>
+
+  <details class="advanced"><summary>Advanced: when an additive migration is not enough</summary>
+    <ul>
+      <li><strong>Renaming or removing a field</strong> (or a flag, an item id, a map id) breaks old saves silently: the old value is still in storage under the old name. Either keep reading the old name in <code>normalizeState</code>, or bump <code>SAVE_VERSION</code> and convert in <code>migrate()</code>, with a test that loads a literal old envelope.</li>
+      <li><strong>Map ids are load-bearing.</strong> <code>normalizeState</code> rejects a save whose <code>position.map</code> isn't in <code>MAP_IDS</code>. Renaming a map strands every save made on it.</li>
+      <li><strong>Defaults must be honest.</strong> <code>cleanHallOfFame</code> never invents a clear, and <code>cleanWanderers</code> gives old saves healthy, <em>unreleased</em> Wanderers (release still needs the story flags). A default should describe what an old player actually did.</li>
+      <li><strong>Normalise at the boundary only.</strong> The rest of the game trusts <code>ctx.state</code> to be well formed. Party members themselves are not deeply validated (only their seed countdowns), because only the game writes them.</li>
+      <li><strong>Envelope metadata is read raw.</strong> <code>meta()</code> reads the envelope without normalising, so the CONTINUE window shows exactly what is stored (an empty name stays empty there, though the loaded game uses SORREL).</li>
+    </ul>
+  </details>
+
+  <h3 id="save-failure">Storage and failure handling</h3>
+
+  <p>Browser storage can be missing (some private modes, sandboxed frames), full, or hold junk. Each case has a defined outcome:</p>
+
+  <table>
+    <thead><tr><th>Situation</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td>Accessing <code>localStorage</code> throws</td><td><code>defaultStorage()</code> returns <code>null</code>; every read finds no save; writes do nothing.</td></tr>
+      <tr><td><code>setItem</code> throws (quota)</td><td><code>write()</code> throws; <code>saveDialog</code> catches it, logs, and says "The save failed! There may be no room left in this browser's storage."</td></tr>
+      <tr><td>Stored text isn't JSON</td><td><code>readEnvelope</code> warns and returns <code>null</code>: treated as no save.</td></tr>
+      <tr><td>Envelope from a newer build (<code>v &gt; 1</code>)</td><td>Treated as no save.</td></tr>
+      <tr><td>Position on an unknown map</td><td><code>read()</code> returns <code>null</code>.</td></tr>
+      <tr><td>Options unreadable</td><td>Ignored; text speed falls back to <code>"mid"</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <details class="advanced"><summary>Advanced: failure modes worth knowing before you touch this</summary>
+    <ul>
+      <li><strong>No storage, false success.</strong> When storage is <code>null</code>, <code>write()</code> is a silent no-op (<code>storage?.setItem</code>), so the dialog still says "saved the game". Only a throwing <code>setItem</code> is reported.</li>
+      <li><strong>CONTINUE can show and then do nothing.</strong> The title decides to show CONTINUE from <code>meta()</code>, which only needs a readable envelope. If <code>normalizeState</code> then rejects it (unknown map), <code>continueGame</code> quietly returns to the menu.</li>
+      <li><strong>A newer save can be overwritten without warning.</strong> <code>envelope()</code> returns <code>null</code> for <code>v &gt; SAVE_VERSION</code>, so the overwrite prompt (which compares game ids) never fires. Only matters if a build with a higher version ships and is then rolled back.</li>
+      <li><strong>Options have two homes.</strong> They are written into the save and to <code>OPTIONS_KEY</code>. On CONTINUE the title replaces the save's copy with <code>loadOptions()</code>, so the most recent options win, even if they were changed on the title screen of another game.</li>
+      <li><strong>Size.</strong> The state is small (well under a megabyte even with a full box), far below typical quotas; flags grow by one entry per story beat and per cleared field cell.</li>
+    </ul>
+  </details>
+
+  <h3 id="save-continue">CONTINUE</h3>
+
+  <pre class="mermaid">flowchart TD
+  T["title: meta() found a save"] --> C["player picks CONTINUE"]
+  C --> R["ctx.save.read()"]
+  R -->|"null"| BACK["back to the menu"]
+  R -->|"GameState"| O["options = loadOptions()"]
+  O --> S["ctx.state = loaded"]
+  S --> OV["createOverworldScene(mode: continue)"]
+  OV --> CP{"saved on a boulder map?"}
+  CP -->|"yes"| EN["start at the room's entrance"]
+  CP -->|"no"| SP["start at the saved tile"]
+  EN --> F["fade in, run the map's onEnter"]
+  SP --> F</pre>
+
+  <p>Two details from the overworld make CONTINUE safe:</p>
+  <ul>
+    <li><strong>Boulder rooms.</strong> Boulders reset when a map loads, so standing where you saved might now be behind a stone. <code>continuePosition()</code> (<a data-src="src/overworld/continue.ts">continue.ts</a>) moves you to the room's entrance instead.</li>
+    <li><strong>onEnter runs.</strong> Unlike a NEW GAME, CONTINUE runs the map's <code>onEnter</code> after the fade-in, so map scripts must be safe to run again (the once-only flag pattern in <a href="#scripts-flags">Scripts</a>).</li>
+  </ul>
+
+  <p>The raft and BURR's hitch survive CONTINUE on purpose: <code>loadMap</code> keeps <code>rafting</code> on the first load, and <code>burrHitch</code> is only cleared on the next real map change.</p>
+
+  <details class="advanced"><summary>Advanced: CONTINUE invariants</summary>
+    <ul>
+      <li><code>continuePosition()</code> throws if a boulder room's first exit map has no warp back into it. That would be a world bug; <a data-src="src/world/uproot.test.ts">uproot.test.ts</a> calls it for every boulder room so a bad room fails in CI, not at a player's CONTINUE.</li>
+      <li>The overworld's constructor uses the continue position only in <code>mode: "continue"</code>; NEW GAME and dev scenes start exactly at <code>state.position</code>.</li>
+      <li>Roamers don't move on CONTINUE (they move on map <em>changes</em>), but wilted Wanderers are checked for recovery on that first load.</li>
+    </ul>
+  </details>
+
+  <h3 id="save-new">A new game</h3>
+
+  <p><code>newGameState(ctx)</code> builds the starting state: position and script from <code>WORLD.newGame</code>, 3000 money, the player's home as the first heal point (if it has a <code>healPoint</code>), fresh Wanderers, and options loaded from <code>OPTIONS_KEY</code>. It is also the <code>fallback</code> that <code>normalizeState</code> borrows defaults from.</p>
+
+  <h3 id="save-add-field">How to add a field safely</h3>
+
+  <pre class="mermaid">flowchart TD
+  A["need to remember something new"] --> Q1{"is it one yes/no fact about the story?"}
+  Q1 -->|"yes"| FLAG["use a flag: no save change at all"]
+  Q1 -->|"no"| T["add it to GameState in contracts/runtime.ts, optional or with a doc comment on its default"]
+  T --> N["newGameState(): give it its starting value"]
+  N --> NZ["normalizeState(): read it defensively, default when missing or malformed"]
+  NZ --> BIG{"nested object or list?"}
+  BIG -->|"yes"| CL["write a cleanX() that keeps only well-formed parts"]
+  BIG -->|"no"| RD
+  CL --> RD["read sites: tolerate the default too"]
+  RD --> TS["save.test.ts: load a literal old envelope without the field, and a junk value"]
+  TS --> E2E["npm test, then CONTINUE an old save in the browser"]</pre>
+
+  <ol>
+    <li><strong>Prefer a flag.</strong> Most story memory is a flag in <code>state.flags</code>, which needs no save change.</li>
+    <li><strong>Add the field</strong> to <code>GameState</code> in <a data-src="src/contracts/runtime.ts">contracts/runtime.ts</a>. Make it optional (<code>?</code>) unless every save will have it after normalisation, and say in the comment what an older save means.</li>
+    <li><strong>Start it</strong> in <code>newGameState()</code>.</li>
+    <li><strong>Repair it</strong> in <code>normalizeState()</code>: check the type, clamp numbers, drop unknown ids. Never trust that the stored value has the shape you wrote.</li>
+    <li><strong>Test the old shape</strong> in <a data-src="src/save/save.test.ts">save.test.ts</a>: build an envelope with the field deleted, and one with a junk value, and check both load. The existing <code>playerLook</code> and nursery tests are good templates.</li>
+    <li><strong>Leave <code>SAVE_VERSION</code> alone</strong> unless you are renaming or restructuring existing data. Then bump it and convert in <code>migrate()</code>.</li>
+  </ol>
+
+  <pre><code class="lang-ts">const old = fallback() as Partial&lt;GameState&gt;;
+delete old.playerLook;
+storage.setItem(SAVE_KEY, JSON.stringify({ v: 1, savedAt: 0, gameId: "old", state: old }));
+expect(createSave(fallback, storage, fallback).read()!.playerLook).toBe("boy");
+const junk = { ...fallback(), playerLook: "plant" } as unknown;
+expect(normalizeState(junk, fallback())!.playerLook).toBe("boy");</code></pre>
+</section>

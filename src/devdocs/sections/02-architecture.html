@@ -1,0 +1,447 @@
+<section id="architecture" data-title="Architecture" data-summary="Boot, the GameContext and its services, scenes and the scene stack, module boundaries, dev scenes and URL flags.">
+  <h2>Architecture</h2>
+  <p>
+    The runtime has three moving parts. A <dfn>GameContext</dfn> (<code>ctx</code>) holds every service and
+    the game state, and is passed to everything. A <dfn>scene stack</dfn> holds what is on screen: the overworld
+    at the bottom, a text box or menu on top of it. A fixed-step <dfn>run loop</dfn> updates the top scene 60
+    times a second and draws the stack. This section follows a page load from the first line of
+    <a data-src="src/main.ts">src/main.ts</a> to the title screen, then explains each part.
+  </p>
+
+  <h3 id="architecture-boot">Boot sequence</h3>
+  <p>
+    <code>boot()</code> in <a data-src="src/main.ts">src/main.ts</a> is the only code that runs on page load.
+    It builds the pieces in dependency order, starts the loop early so the loading screen can animate, loads
+    the art, and only then pushes the first real scene.
+  </p>
+  <pre class="mermaid">sequenceDiagram
+  participant B as Browser
+  participant M as main.ts boot()
+  participant E as engine
+  participant P as platform
+  participant A as assets (art registry)
+  participant S as scene stack
+  B->>M: load module
+  M->>E: installDevRandom() (dev ?seed only)
+  M->>E: createCanvas(), createSceneStack()
+  M->>P: platformFlags(), installErrorScreen()
+  M->>E: createInput(onFirstInput = audio.unlock)
+  M->>A: createAssets() (starts fetching index.json)
+  M->>E: createGameContext({ input, scenes, assets })
+  M->>P: createShell(), createPause(), pauseOnFocusLoss()
+  M->>S: push(loading scene)
+  M->>E: runLoop(g, scenes, input, onTick)
+  M->>A: loadAll([title_logo])
+  M->>A: loadAll() with progress
+  M->>S: await loading.finish(), pop()
+  alt ?dev=module and src/module/dev.ts exists
+    M->>S: push(await mod.default(ctx))
+  else
+    M->>S: push(createTitleScene(ctx))
+  end
+  M->>M: booted = true (pause is now allowed)</pre>
+  <p>The heart of it, from <a data-src="src/main.ts#L63">main.ts</a>:</p>
+  <pre><code class="lang-ts">    // Logo first, so the loading screen can show it, then everything else.
+    const loading = createLoadingScene(assets);
+    scenes.push(loading);
+    runLoop(g, scenes, input, (dt) =&gt; {
+      ticks++;
+      if (playClock.running &amp;&amp; !pause.paused) game.state.playTimeMs += dt;
+    });
+    await assets.loadAll([uiPath("title_logo")]);
+    // The whole art registry: every bundle (and any legacy file not yet migrated).
+    await assets.loadAll(undefined, (d, t) =&gt; loading.progress(d, t));
+    // …
+    await loading.finish();
+    scenes.pop();
+
+    const params = new URLSearchParams(location.search);
+    const dev = params.get("dev");
+    const loader = dev ? devModules[`./${dev}/dev.ts`] : undefined;
+    if (dev &amp;&amp; !loader) console.warn(`[dev] no dev scene at src/${dev}/dev.ts`);
+    if (loader) {
+      const mod = await loader();
+      scenes.push(await mod.default(game));
+    } else {
+      const { createTitleScene } = await import("./ui/title");
+      scenes.push(createTitleScene(game));
+    }
+    booted = true;</code></pre>
+  <details class="advanced">
+    <summary>Advanced: why the order matters</summary>
+    <ul>
+      <li><strong>The error screen goes in first</strong>, before anything that can throw, and the whole boot is
+        wrapped in <code>try { … } catch (err) { errors.fatal(err); }</code>. A crash while building the context
+        still shows the "Something wilted…" card rather than a black canvas.</li>
+      <li><strong>The loop starts before loading finishes.</strong> The loading scene is a normal scene, so it
+        needs the loop to animate. The <code>onTick</code> callback also feeds <code>ticks</code>, which the error
+        screen uses to tell a dead loop from a live one.</li>
+      <li><strong><code>booted</code> gates pausing.</strong> <code>createPause</code> gets
+        <code>allowed: () =&gt; booted &amp;&amp; !errors.shown</code>, so a blur during loading never pushes a
+        PAUSED scene on top of the loading scene (whose <code>pop()</code> would then remove the wrong scene).</li>
+      <li><strong>Audio unlock listeners</strong> go on <code>pointerup</code> and <code>touchend</code> because
+        touch only grants audio permission on those events (see <a href="#platform-audio-unlock">the unlock rule</a>).</li>
+      <li><strong>Dev handles.</strong> In dev builds, <code>window.__vr = { ctx, scenes, pause }</code> exposes
+        the running game to the console and to the e2e driver, and <code>overworld/devDriver</code> installs
+        itself. <code>?e2e=&lt;suite&gt;</code> loads <code>e2e/playthrough</code> after boot. None of this exists
+        in production.</li>
+      <li><strong>An unknown <code>?dev</code></strong> only warns and falls through to the title screen, so a
+        typo never leaves you on a blank page.</li>
+    </ul>
+  </details>
+
+  <h3 id="architecture-context">The GameContext and its services</h3>
+  <p>
+    <code>GameContext</code> is declared in <a data-src="src/contracts/runtime.ts">src/contracts/runtime.ts</a>
+    and assembled by <code>createGameContext</code> in <a data-src="src/engine/context.ts">src/engine/context.ts</a>.
+    It is the one object that every scene, screen and script receives; nothing reaches another module's
+    internals except through it (or its entry point).
+  </p>
+  <pre class="mermaid">classDiagram
+  class GameContext {
+    state: GameState
+    data: GameData
+    world: WorldData
+    input: Input
+    scenes: SceneStack
+    assets: Assets
+    audio: AudioService
+    ui: UiKit
+    screens: Screens
+    save
+    rng() number
+    timeOfDay() TimeOfDay
+    battle(req) Promise~BattleOutcome~
+  }
+  class SceneStack {
+    push(scene)
+    pop() Scene
+    replace(scene)
+    top() Scene
+    run(factory) Promise~T~
+  }
+  class Input {
+    pressed(b) boolean
+    held(b) boolean
+    repeat(b) boolean
+  }
+  class AudioService {
+    playMusic(id)
+    stopMusic(fadeFrames)
+    playSfx(id)
+    playJingle(id) Promise
+    playCry(species) Promise
+    unlock()
+    setVolume(music, sfx)
+  }
+  class UiKit {
+    say(text, opts) Promise
+    choose(options, opts) Promise~number~
+    yesNo(prompt) Promise~boolean~
+    drawText()
+    drawWindow()
+  }
+  GameContext --> SceneStack
+  GameContext --> Input
+  GameContext --> AudioService
+  GameContext --> UiKit</pre>
+  <table>
+    <thead><tr><th>Field</th><th>Made by</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td><code>state</code></td><td><code>newGameState(ctx)</code> (<code>src/save</code>)</td><td>The whole save: party, box, bag, flags, position, options, play time. Replaced wholesale on NEW GAME and CONTINUE.</td></tr>
+      <tr><td><code>data</code></td><td><code>DATA</code> (<code>src/data</code>)</td><td>Species, moves, items, type chart, EXP curves. Read-only.</td></tr>
+      <tr><td><code>world</code></td><td><code>WORLD</code> (<code>src/world</code>)</td><td>Maps, scripts, trainers, the new-game start. Read-only.</td></tr>
+      <tr><td><code>input</code></td><td><code>createInput</code> (<code>engine/core.ts</code>)</td><td>Buttons: <code>pressed</code> (this step), <code>held</code>, <code>repeat</code> (menu key repeat).</td></tr>
+      <tr><td><code>scenes</code></td><td><code>createSceneStack</code></td><td>What is on screen; see below.</td></tr>
+      <tr><td><code>assets</code></td><td><code>createAssets</code> → the art registry</td><td>Logical asset paths resolved to bundle images.</td></tr>
+      <tr><td><code>audio</code></td><td><code>createAudio()</code> (<code>src/audio</code>)</td><td>Music, jingles, SFX, cries. Silent until unlocked.</td></tr>
+      <tr><td><code>ui</code></td><td><code>createUiKit(ctx)</code> (<code>ui/kit.ts</code>)</td><td>Text box, menus, YES/NO, text and window drawing.</td></tr>
+      <tr><td><code>screens</code></td><td><code>createScreens(ctx)</code> (<code>src/screens</code>)</td><td>Party, bag, Herbarium, summary, cabinet, shop, options.</td></tr>
+      <tr><td><code>save</code></td><td><code>createSave(…)</code></td><td><code>write</code>, <code>read</code>, <code>exists</code>, <code>clear</code> against <code>localStorage</code>.</td></tr>
+      <tr><td><code>rng</code></td><td>context</td><td><code>Math.random</code>, or the seeded <code>"world"</code> stream under <code>?seed</code>.</td></tr>
+      <tr><td><code>timeOfDay</code></td><td>context</td><td>The real clock (morning/day/night), or <code>?time</code>.</td></tr>
+      <tr><td><code>battle</code></td><td>context</td><td>Runs a battle scene and resolves with <code>"won" | "lost" | "fled" | "caught"</code>.</td></tr>
+    </tbody>
+  </table>
+  <pre><code class="lang-ts">export function createGameContext(deps: { input: Input; scenes: SceneStack; assets: Assets }): GameContext {
+  const override = timeOverride();
+  const seed = devSeed();
+  const battleStreams = new Map&lt;string, () =&gt; number&gt;();
+  const ctx = {
+    ...deps,
+    state: undefined as unknown as GameState,
+    data: DATA,
+    world: WORLD,
+    audio: createAudio(),
+    rng: seed === null ? Math.random : randomStream(seed, "world"),
+    timeOfDay: (): TimeOfDay =&gt; override ?? timeOfDayFor(new Date().getHours()),
+    battle: (req) =&gt; deps.scenes.run((done) =&gt; {
+      if (seed === null) return createBattleScene(ctx, req, done);
+      // …
+    }),
+  } as GameContext;
+  ctx.ui = createUiKit(ctx);
+  ctx.screens = createScreens(ctx);
+  ctx.save = createSave(() =&gt; ctx.state, undefined, () =&gt; newGameState(ctx));
+  ctx.state = newGameState(ctx);
+  return ctx;
+}</code></pre>
+  <p>
+    Notice the two-phase build: the plain services go into the object literal, then <code>ui</code>,
+    <code>screens</code> and <code>save</code> are added afterwards because they need <code>ctx</code> itself.
+    <code>save</code> takes a <em>getter</em> (<code>() =&gt; ctx.state</code>) rather than the state object, so it
+    always saves whatever state is current.
+  </p>
+  <details class="advanced">
+    <summary>Advanced: invariants and traps</summary>
+    <ul>
+      <li><strong>Never cache <code>ctx.state</code>.</strong> NEW GAME (<code>runNewGame</code>) and CONTINUE
+        (the title's <code>continueGame</code>) assign a new object to <code>ctx.state</code>. Hold
+        <code>ctx</code> and read <code>ctx.state</code> when you need it.</li>
+      <li><strong>Battles get a shallow copy under <code>?seed</code>.</strong> The seeded path calls
+        <code>createBattleScene({ ...ctx, rng }, req, done)</code>. Mutating <code>state</code> through the copy
+        works (same object); <em>reassigning</em> a field on the copy would not reach the real <code>ctx</code>.
+        Battle code must only mutate.</li>
+      <li><strong><code>playClock</code></strong> is a module-level flag in <code>engine/context.ts</code>, not a
+        context field. The overworld's <code>enter()</code> sets it, the title clears it, and play time accrues
+        only while it is set and the game isn't paused.</li>
+      <li><strong>Construction order.</strong> <code>createScreens</code> applies the saved volumes in a
+        <code>queueMicrotask</code> ("once audio exists"), i.e. after <code>createGameContext</code> has
+        returned. Adding a service that needs <code>ctx.ui</code> or <code>ctx.screens</code>
+        at construction time means placing it after them.</li>
+      <li><strong>Extending the context</strong> is a contract change (<code>GameContext</code> lives in
+        <code>src/contracts</code>). Prefer a function in your module that takes <code>ctx</code>; add a field only
+        when many modules need the same service.</li>
+    </ul>
+  </details>
+
+  <h3 id="architecture-scenes">Scenes and the scene stack</h3>
+  <p>A <dfn>scene</dfn> is anything that updates and draws (<a data-src="src/contracts/runtime.ts">runtime.ts</a>):</p>
+  <pre><code class="lang-ts">export interface Scene {
+  /** If true, the scene below is drawn first (menus, text boxes over the map). */
+  transparent?: boolean;
+  enter?(): void;
+  exit?(): void;
+  update(dt: number): void;
+  draw(g: CanvasRenderingContext2D): void;
+}</code></pre>
+  <p>The stack has two rules that explain almost everything about how the game feels:</p>
+  <ol>
+    <li><strong>Only the top scene updates.</strong> When a text box is on top of the overworld, the overworld is
+      frozen: no walking, no NPC timers. That is also how pausing works.</li>
+    <li><strong>Drawing starts at the highest opaque scene.</strong> The loop walks down from the top past
+      <code>transparent</code> scenes and draws from there upwards, so a menu appears over the map.</li>
+  </ol>
+  <p>
+    The most important method is <code>run</code>. It pushes a scene and returns a <code>Promise</code> that
+    resolves when the scene calls <code>done(result)</code>. This turns "show a text box and wait for A" into an
+    ordinary <code>await</code>, which is why story scripts, menus and battles read like straight-line code
+    (from <a data-src="src/engine/core.ts#L91">core.ts</a>):
+  </p>
+  <pre><code class="lang-ts">    run&lt;T&gt;(factory: (done: (r: T) =&gt; void) =&gt; Scene) {
+      return new Promise&lt;T&gt;((resolve) =&gt; {
+        let scene: Scene;
+        scene = factory((r) =&gt; {
+          const i = stack.lastIndexOf(scene);
+          if (i &gt;= 0) { stack.splice(i, 1); scene.exit?.(); }
+          resolve(r);
+        });
+        api.push(scene);
+      });
+    },</code></pre>
+  <pre class="mermaid">sequenceDiagram
+  participant O as Overworld script
+  participant K as ctx.ui (UiKit)
+  participant S as scene stack
+  participant T as TextBox scene
+  participant L as run loop
+  O->>K: await say("Hello!")
+  K->>S: run(factory)
+  S->>T: push (top, transparent)
+  loop every step
+    L->>T: update() (overworld is frozen)
+    L->>S: draw overworld, then text box
+  end
+  T->>S: done() after the last page and A
+  S->>S: splice TextBox out, exit()
+  S-->>O: promise resolves, script continues</pre>
+  <p>The typical flows through the stack:</p>
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> Loading
+  Loading --> Title: art loaded
+  Loading --> DevScene: ?dev=module
+  Title --> NewGame: NEW GAME
+  Title --> Overworld: CONTINUE (replace)
+  Title --> Options: OPTIONS
+  Options --> Title
+  NewGame --> Overworld: clearScenes + push (mode new)
+  state Overworld {
+    [*] --> Walking
+    Walking --> TextBox: ui.say
+    TextBox --> Walking
+    Walking --> Menu: ui.choose / START menu
+    Menu --> Screens: party, bag, Herbarium…
+    Screens --> Menu
+    Menu --> Walking
+    Walking --> Battle: ctx.battle (scenes.run)
+    Battle --> Walking: won / fled / caught
+    Battle --> Whiteout: lost
+    Whiteout --> Walking: at the last greenhouse
+  }
+  Overworld --> Title: end of story (clearScenes)
+  Overworld --> Paused: blur / tab hidden
+  Paused --> Overworld: any button</pre>
+  <details class="advanced">
+    <summary>Advanced: lifecycle edge cases</summary>
+    <ul>
+      <li><strong><code>enter()</code> runs only on push.</strong> When the battle above the overworld is removed,
+        the overworld is <em>revealed</em> but gets no callback. A scene that must react to regaining the top
+        has to do it in the code that awaited the child (the overworld's <code>battle()</code> restores music
+        and fades in after <code>await ctx.battle(...)</code>).</li>
+      <li><strong><code>done</code> removes the scene wherever it is</strong>, not necessarily from the top
+        (<code>lastIndexOf</code> + <code>splice</code>). The pause overlay relies on the same trick.</li>
+      <li><strong>A <code>run</code> scene removed by someone else never resolves.</strong>
+        <code>clearScenes</code> (used by NEW GAME and the end of the story) pops everything; any promise still
+        awaiting a popped <code>run</code> scene stays pending forever. That is intended when abandoning a
+        flow, but never <code>pop()</code> a <code>run</code> scene by hand if someone awaits it.</li>
+      <li><strong>Calling <code>done</code> twice</strong> splices nothing the second time (the scene is no
+        longer found) but still calls <code>resolve</code>, which is harmless for promises. Flows such as
+        <code>runFlowScene</code> still guard with a <code>finished</code> flag.</li>
+      <li><strong>Throwing in <code>update</code> or <code>draw</code></strong> escapes the frame callback, so the
+        loop stops scheduling itself and the error card appears (see <a href="#platform-errors">errors</a>).
+        Async flows should catch: the overworld's <code>flow()</code> is documented "Errors never escape."</li>
+      <li><strong>Async work that waits on frames</strong> (<code>Timers.frames</code>, <code>Fader.to</code>)
+        only progresses while the owning scene is on top and ticking them; that is a feature (pause freezes
+        cut-scenes) but means a scene must not await its own timers while a child it pushed is on top.</li>
+    </ul>
+  </details>
+
+  <h3 id="architecture-modules">Module boundaries and contracts</h3>
+  <p>
+    <dfn>Contracts</dfn> are the shared language: everything one module needs to know about another's data or
+    services, and nothing else. They live in <code>src/contracts/</code> and are re-exported from its
+    <code>index.ts</code>, so the usual import is <code>import { … } from "../contracts"</code>.
+  </p>
+  <table>
+    <thead><tr><th>File</th><th>Holds</th></tr></thead>
+    <tbody>
+      <tr><td><a data-src="src/contracts/ids.ts">ids.ts</a></td><td>Every id list as a <code>const</code> array plus its type: <code>TYPES</code>, <code>SPECIES_IDS</code>, <code>MAP_IDS</code>, <code>TILES</code>, <code>MUSIC</code>, <code>SFX</code>, <code>JINGLES</code>, <code>MARKS</code>, <code>STILLS</code>, <code>Button</code>…</td></tr>
+      <tr><td><a data-src="src/contracts/constants.ts">constants.ts</a></td><td>Screen size, <code>FPS</code>, <code>TEXTBOX</code>, the UI palette, <code>TIME_OF_DAY</code>, the logical asset path helpers, <code>AUTOTILE</code>, <code>playerArt</code>.</td></tr>
+      <tr><td><a data-src="src/contracts/data.ts">data.ts</a></td><td>Static data shapes: <code>Species</code>, <code>Stats</code>, moves, items, <code>GrowthTrigger</code>, <code>POLLINATION_GROUPS</code>, <code>GameData</code>.</td></tr>
+      <tr><td><a data-src="src/contracts/world.ts">world.ts</a></td><td>Maps, scripts (<code>ScriptCmd</code>), trainers, <code>WorldData</code>, <code>TimeOfDay</code>.</td></tr>
+      <tr><td><a data-src="src/contracts/runtime.ts">runtime.ts</a></td><td>Live shapes and services: <code>Quickened</code>, <code>GameState</code>, <code>Scene</code>, <code>SceneStack</code>, <code>Input</code>, <code>Assets</code>, <code>AudioService</code>, <code>UiKit</code>, <code>Screens</code>, <code>GameContext</code>.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The rule (<a data-src="docs/ARCHITECTURE.md">docs/ARCHITECTURE.md</a>): import other modules
+    <strong>only through their entry points</strong>, and shared types only from <code>src/contracts</code>.
+    The intended shape is a star around the contracts with <code>engine/context.ts</code> as the only place that
+    wires everything together:
+  </p>
+  <pre class="mermaid">flowchart TB
+  main["main.ts"] --> ctxf["engine/context.ts"]
+  main --> platform["platform"]
+  ctxf --> data["data (DATA)"]
+  ctxf --> world["world (WORLD)"]
+  ctxf --> audio["audio (createAudio)"]
+  ctxf --> battle["battle (createBattleScene)"]
+  ctxf --> screens["screens (createScreens)"]
+  ctxf --> ui["ui/kit (createUiKit)"]
+  ctxf --> save["save (newGameState, createSave)"]
+  main -. "dynamic import" .-> title["ui/title"]
+  title -. "dynamic import" .-> overworld["overworld"]
+  contracts[("contracts")]
+  data --> contracts
+  world --> contracts
+  audio --> contracts
+  battle --> contracts
+  screens --> contracts
+  ui --> contracts
+  overworld --> contracts
+  platform --> contracts</pre>
+  <p>The real import graph between top-level folders, computed from the source:</p>
+  <figure data-chart="module-graph"><figcaption>Source modules under src/ and the imports between top-level folders.</figcaption></figure>
+  <details class="advanced">
+    <summary>Advanced: where the graph departs from the rule, and how to change it safely</summary>
+    <ul>
+      <li><strong>Deep imports exist.</strong> For example <code>screens</code> imports
+        <code>battle/logic/*</code> (exp, items, lookup, stats), <code>engine/random.ts</code> imports
+        <code>seeded</code> from <code>battle/logic/rng</code>, <code>platform</code> imports
+        <code>drawText</code>/<code>drawWindow</code> from <code>ui/kit</code>, and <code>overworld</code> imports
+        several <code>ui/*</code> files. They are pure helpers, but they are coupling the contracts don't show.</li>
+      <li><strong>Folder-level cycles exist:</strong> <code>battle ⇄ screens</code>, <code>overworld ⇄ ui</code>,
+        <code>overworld ⇄ save</code>, <code>world ⇄ overworld</code> and <code>engine ⇄ ui</code> (context
+        imports <code>ui/kit</code>; <code>ui</code> imports <code>engine/gfx</code>). ES modules tolerate cycles
+        of functions, but a cycle that touches a top-level value evaluated at import time (<code>DATA</code>,
+        <code>WORLD</code>, a <code>const</code> table) can hit the temporal dead zone and throw
+        "Cannot access before initialization". Keep top-level work out of modules that sit on a cycle, or break
+        the cycle with a dynamic <code>import()</code> as <code>main.ts</code>, <code>ui/title.ts</code> and
+        <code>ui/newgame.ts</code> do for the overworld.</li>
+      <li><strong>Contracts are frozen by convention.</strong> Adding an id to a list in <code>ids.ts</code> is a
+        contract change; adding content under an existing id is not. Keep contract types minimal: a field
+        added to <code>GameState</code> is a save-format change and needs a migration in
+        <code>src/save</code> (old saves must still load; see how <code>playerLook</code> is optional).</li>
+      <li><strong>New cross-module needs</strong>: export from the provider's <code>index.ts</code>, not from a
+        deep file, so the provider can refactor freely.</li>
+    </ul>
+  </details>
+
+  <h3 id="architecture-dev">Dev scenes and URL flags</h3>
+  <p>
+    A <dfn>dev scene</dfn> lets you start the game straight into one module with fixture data.
+    <code>?dev=&lt;dir&gt;</code> loads <code>src/&lt;dir&gt;/dev.ts</code>, whose default export is
+    <code>(ctx: GameContext) =&gt; Scene | Promise&lt;Scene&gt;</code>. <code>main.ts</code> finds them with
+    <code>import.meta.glob("./*/dev.ts")</code>, so adding a module's dev scene is just creating the file.
+  </p>
+  <pre class="mermaid">flowchart LR
+  url["?dev=battle"] --> glob{"devModules has ./battle/dev.ts?"}
+  glob -->|yes| load["await loader()"] --> scene["push(await mod.default(ctx))"]
+  glob -->|no| warn["console.warn"] --> title["push(createTitleScene(ctx))"]
+  none["no ?dev"] --> title</pre>
+  <table>
+    <thead><tr><th>Dev scene</th><th>What it shows</th><th>Extra params</th></tr></thead>
+    <tbody>
+      <tr><td><code>?dev=ui</code></td><td>UI showcase: font sheet, text box at each speed, menus, YES/NO, name entry, trainer card, SAVE, TO BE CONTINUED, title</td><td></td></tr>
+      <tr><td><code>?dev=audio</code></td><td>Jukebox: LEFT/RIGHT category, UP/DOWN entry, A plays, B stops music, SELECT cycles music volume</td><td></td></tr>
+      <tr><td><code>?dev=battle</code></td><td>A hub of fixture battles, or straight into one</td><td><code>mode=wild|trainer|leader|rootstock</code>, <code>species</code>, <code>level</code>, <code>trainer</code>, <code>backdrop</code>, <code>lv</code></td></tr>
+      <tr><td><code>?dev=overworld</code></td><td>Fixture test maps, or a real map</td><td><code>map</code>, <code>x</code>, <code>y</code>, <code>look=girl</code>, <code>fixture=nursery</code></td></tr>
+      <tr><td><code>?dev=screens</code></td><td>Each menu screen with a fixture party and bag</td><td><code>open=party|bag|herbarium|summary|cabinet|shop|options|growth|nickname</code>, <code>freeze</code></td></tr>
+      <tr><td><code>?dev=world</code></td><td>A full-map overview (no page shell), or a playtest</td><td><code>map</code>, <code>scale</code>, <code>grid</code>; <code>play=new</code> or <code>play=1</code> with <code>map</code>, <code>x</code>, <code>y</code>, <code>flags=a,b</code>, <code>name</code>, <code>look=girl</code></td></tr>
+      <tr><td><code>?dev=art</code></td><td>The Art Lab: browse bundles, preview animations and sports, Compare tab, drop-in PNG swaps</td><td>hash routes such as <code>#compare/&lt;id&gt;/classic</code></td></tr>
+    </tbody>
+  </table>
+  <p>Flags that work with any scene:</p>
+  <table>
+    <thead><tr><th>Flag</th><th>Effect</th><th>Builds</th><th>Read in</th></tr></thead>
+    <tbody>
+      <tr><td><code>?seed=N</code></td><td>Seeded, independent random streams (0–4294967295)</td><td>dev only</td><td><code>engine/random.ts</code></td></tr>
+      <tr><td><code>?speed=N</code></td><td>Run N update steps per frame (1–16)</td><td>dev only</td><td><code>engine/core.ts</code></td></tr>
+      <tr><td><code>?timer</code></td><td>Drive the loop with <code>setTimeout</code> instead of <code>requestAnimationFrame</code>; also disables pause-on-blur</td><td>all</td><td><code>engine/core.ts</code>, <code>platform/index.ts</code></td></tr>
+      <tr><td><code>?time=morning|day|night</code></td><td>Override the real clock</td><td>all</td><td><code>engine/context.ts</code>, <code>audio/ambience.ts</code></td></tr>
+      <tr><td><code>?art=a,b</code></td><td>Activate art packs (e.g. <code>classic</code>, <code>traced</code>); empty value = none</td><td>all</td><td><code>art/registry.ts</code></td></tr>
+      <tr><td><code>?touch=1</code> / <code>?touch=0</code></td><td>Force the on-screen controls on or off</td><td>all</td><td><code>platform/shell.ts</code></td></tr>
+      <tr><td><code>?nopause</code></td><td>Never pause on focus loss</td><td>all</td><td><code>platform/index.ts</code></td></tr>
+      <tr><td><code>?e2e=&lt;suite&gt;</code></td><td>Run the automated playthrough; also disables pause-on-blur</td><td>dev only</td><td><code>main.ts</code></td></tr>
+      <tr><td><code>?tilelab=1</code></td><td>Apply the Tile Lab's saved tile overrides in memory</td><td>all</td><td><code>main.ts</code> → <code>tilelab/hook</code></td></tr>
+    </tbody>
+  </table>
+  <details class="advanced">
+    <summary>Advanced: dev scenes in production, and flag gating</summary>
+    <ul>
+      <li><strong><code>?dev</code> is not gated on <code>import.meta.env.DEV</code>.</strong> The glob is lazy,
+        so every <code>dev.ts</code> becomes its own chunk in <code>dist/</code> and loads only when asked for.
+        That is deliberate for the Art Lab ("Works in dev and in the production build"), but it means fixture
+        code ships. Never put secrets or destructive actions in a dev scene.</li>
+      <li><strong>Gating differs per flag.</strong> <code>?seed</code>, <code>?speed</code> and
+        <code>?e2e</code> are dev-only; <code>?time</code>, <code>?timer</code>, <code>?art</code>,
+        <code>?touch</code> and <code>?nopause</code> also work on the live site, which is handy for bug reports
+        ("does it happen with <code>?time=day</code>?").</li>
+      <li><strong>Platform flags</strong> (<code>platformFlags</code>) switch off the shell for the
+        <code>?dev=world</code> overview (a plain document) and switch off pause-on-blur for hidden test panes
+        and e2e runs, which must never pause themselves.</li>
+      <li><strong>Writing a dev scene</strong>: build fixtures on a fresh <code>ctx.state</code>, return a scene
+        (or a promise of one), and keep it out of the production flow; <code>src/screens/kit/devhook.ts</code>
+        shows how a dev scene can freeze the loop and step exact frames for screenshots.</li>
+    </ul>
+  </details>
+</section>

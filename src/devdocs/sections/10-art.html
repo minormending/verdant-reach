@@ -1,0 +1,464 @@
+<section id="art" data-title="The art system" data-summary="Swappable art bundles under public/art, the index, art packs and how one logical path resolves, required art, the Crystal creature rules, the Python tools and the Art Lab.">
+  <h2>The art system</h2>
+
+  <p>Every picture in Verdant Reach (each creature, tile, building, walking character, portrait, item icon and story still) lives under <code>public/art/</code> as a <dfn>bundle</dfn>: a folder holding one JSON file and the PNGs it names. Game code never opens those files directly. It asks for a <dfn>logical path</dfn> such as <code>assets/species/oak_acorn/front.png</code>, and the <dfn>art registry</dfn> (<a data-src="src/art/registry.ts">registry.ts</a>) works out which file, which part of it and which colours to hand back.</p>
+
+  <p>Why the extra step? It means the art can be swapped without touching code. You can replace a folder, turn on an <dfn>art pack</dfn> that overrides some bundles (<code>?art=classic</code>), or patch a bundle in memory in the Art Lab, and the game, the guidebook and the Tile Lab all see the change. The format is the contract between three groups: the TypeScript runtime, the Python generators in <code>tools/art/</code>, and anyone who edits a PNG by hand.</p>
+
+  <pre class="mermaid">flowchart LR
+  G["Game code"] -->|"ctx.assets.image(path)"| R["ArtRegistry"]
+  R --> C["ArtCatalog (pure)"]
+  C -->|"url, rect, recolor"| R
+  R -->|"fetch PNG once"| F[("public/art/")]
+  R -->|"cut and recoloured canvas"| G
+  T["tools/art (Python)"] -->|"writes bundles"| F
+  I["npm run art:index"] -->|"index.json"| F</pre>
+
+  <aside class="note">There is <strong>no build step for art</strong>. The browser reads bundles straight from <code>public/art/</code>, so you can redraw a PNG, reload the page and see it in the game. The one thing that needs a command is adding, removing or renaming a file: run <code>npm run art:index</code> afterwards (<a href="#art-index">below</a>).</aside>
+
+  <h3 id="art-bundles">Bundles and their formats</h3>
+
+  <p>There are five bundle kinds. Each kind has its own folder and a JSON file whose name marks the folder as a bundle. <a data-src="src/art/format.ts">format.ts</a> defines them as TypeScript types, and <a data-src="tools/art/index.mjs">index.mjs</a> keeps its own copy of the table for Node:</p>
+
+  <pre><code class="lang-ts">/** Bundle kinds, named after their folders under public/art/. */
+export const BUNDLE_KINDS = ["species", "tilesets", "structures", "characters", "sets"] as const;
+
+/** The JSON file that marks a bundle folder, and its `format` string. */
+export const BUNDLE_JSON: Record&lt;BundleKind, { file: string; format: string }&gt; = {
+  species: { file: "species.json", format: "verdant.species/1" },
+  tilesets: { file: "tileset.json", format: "verdant.tileset/1" },
+  structures: { file: "structure.json", format: "verdant.structure/1" },
+  characters: { file: "character.json", format: "verdant.character/1" },
+  sets: { file: "set.json", format: "verdant.imageset/1" },
+};</code></pre>
+
+  <table>
+    <thead><tr><th>Kind</th><th>Folder</th><th>Holds</th><th>Fixed sizes</th></tr></thead>
+    <tbody>
+      <tr><td>species</td><td><code>species/&lt;id&gt;/</code></td><td>One creature: 1–8 front frames, a back and 1–2 icons, a 4-colour <code>palette</code>, a <code>sport</code> (shiny) palette and an optional <code>anim</code></td><td>front 56x56, back 48x48, icon 16x16</td></tr>
+      <tr><td>tilesets</td><td><code>tilesets/&lt;id&gt;/</code></td><td>A sheet of 16x16 cells, plus a key map from each <code>TileKey</code> to its cells</td><td><code>columns × 16</code> wide</td></tr>
+      <tr><td>structures</td><td><code>structures/&lt;key&gt;/</code></td><td>One multi-tile building or scenery object</td><td><code>(w×16) x (h×16)</code>, from <code>STRUCTURES</code></td></tr>
+      <tr><td>characters</td><td><code>characters/&lt;key&gt;/</code></td><td>One overworld walk sheet: 4 directions × stand / stepA / stepB</td><td>48x64</td></tr>
+      <tr><td>sets</td><td><code>sets/&lt;id&gt;/</code></td><td>Flat images served under one <code>logicalDir</code>: portraits, items, ui, stills</td><td>per entry (<code>size</code>)</td></tr>
+    </tbody>
+  </table>
+
+  <figure data-chart="bundle-kinds"><figcaption>Art bundles by kind. Species dominate the base tree, but only 4 sets hold every portrait, item icon, UI image and still.</figcaption></figure>
+
+  <pre class="mermaid">flowchart TB
+  A["public/art/"] --> IX["index.json (generated)"]
+  A --> SP["species/oak_acorn/"]
+  A --> TS["tilesets/terrain/"]
+  A --> ST["structures/herbarium/"]
+  A --> CH["characters/vale/"]
+  A --> SE["sets/items/"]
+  A --> PK["packs/classic/"]
+  SP --> SP1["species.json + front.png, back.png, icon.png"]
+  TS --> TS1["tileset.json + sheet.png"]
+  PK --> PK1["pack.json + species/... (any subset)"]</pre>
+
+  <h4 id="art-bundles-species">A species bundle</h4>
+  <p>Here is the real Venus flytrap bundle, <code>public/art/species/venus_flytrap/species.json</code> (credits and notes shortened):</p>
+  <pre><code class="lang-json">{
+  "format": "verdant.species/1",
+  "id": "venus_flytrap",
+  "palette": ["#181818", "#a82838", "#90d048", "#f8f8f8"],
+  "sport": ["#181818", "#601830", "#d83840", "#f8f8f8"],
+  "frames": {
+    "front": ["front.png", "front__2.png", "front__3.png", "front__4.png", "front__5.png", "front__6.png"],
+    "back": ["back.png"],
+    "icon": ["icon.png", "icon__2.png"]
+  },
+  "anim": { "intro": [[0, 6], [1, 6], [2, 20], [3, 4], [4, 5], [3, 4], [4, 5], [3, 8], [5, 6], [0, 2]], "idle": [[0, 120], [1, 10]] },
+  "credits": "Original pixel art for Verdant Reach, hand-pixelled in tools/art/crystal/flytrap.py. …",
+  "source": { "kind": "generated", "tool": "tools/art/crystal/flytrap.py" },
+  "notes": "Gesture: the jaws gape, gape wider, HOLD (20 ticks), SNAP shut … Sport: 'Akai Ryu'."
+}</code></pre>
+  <ul>
+    <li><strong>Indexed colour.</strong> <code>palette</code> has exactly 4 colours, darkest first. Every opaque pixel in every frame must be one of them, and alpha is only 0 or 255. This rule is what makes recolours and sports possible: a pixel's colour <em>is</em> its palette index.</li>
+    <li><strong><code>sport</code></strong> is the shiny palette. Rendering a sport replaces <code>palette[i]</code> with <code>sport[i]</code> pixel for pixel, so a sport needs no extra images.</li>
+    <li><strong><code>anim</code></strong> lists <code>[frame, ticks]</code> steps at 60 fps. The flytrap's intro adds up to 66 ticks (1.1 s) and ends on frame 0.</li>
+    <li><strong><code>source</code></strong> says where the pixels came from. A <code>generated</code> bundle may be rewritten by its tool; an <code>edited</code> or <code>imported</code> one never is.</li>
+  </ul>
+
+  <h4 id="art-bundles-tileset">A tileset bundle</h4>
+  <p>A tileset is one sheet PNG cut into 16px cells, numbered left to right, top to bottom. Cell <code>n</code> is at <code>x = (n % columns) * 16</code>, <code>y = floor(n / columns) * 16</code>. The <code>tiles</code> map gives each <code>TileKey</code> a <dfn>ref</dfn>: one cell number (a still tile) or a list of 1–2 cells (animation frames 1 and 2). From <code>public/art/tilesets/terrain/tileset.json</code>:</p>
+  <pre><code class="lang-json">{
+  "format": "verdant.tileset/1",
+  "id": "terrain",
+  "name": "Terrain",
+  "tileSize": 16,
+  "sheet": "sheet.png",
+  "columns": 16,
+  "tiles": {
+    "grass": { "base": 0, "alts": [1, 2, 3] },
+    "flowers": { "base": [4, 5] },
+    "tall_grass": {
+      "base": [16, 17],
+      "masks": {
+        "0": [32, 48],
+        "1": [33, 49],
+        …</code></pre>
+  <ul>
+    <li><code>alts</code> (up to 3) are ground variations, picked per cell by a position hash so a field of grass doesn't look stamped.</li>
+    <li><code>masks</code> are <dfn>autotile</dfn> variants keyed <code>"0"</code>–<code>"15"</code>. Each bit says a same-group neighbour is present: N=1, E=2, S=4, W=8. Mask 5 (N+S) is a vertical run, mask 15 is fully surrounded. A missing mask falls back to <code>base</code>.</li>
+    <li>Which tiles join which group is gameplay, so it stays in <code>AUTOTILE</code> in the contracts. A tileset only supplies pictures.</li>
+  </ul>
+  <pre class="mermaid">flowchart LR
+  N["N neighbour = 1"] --> M["mask = N + E + S + W"]
+  E["E neighbour = 2"] --> M
+  S["S neighbour = 4"] --> M
+  W["W neighbour = 8"] --> M
+  M --> L["look up tiles.key.masks[mask]"]
+  L -->|"missing"| B["use base"]</pre>
+
+  <h4 id="art-bundles-others">Structures, characters and image sets</h4>
+  <pre><code class="lang-json">{ "format": "verdant.structure/1", "id": "herbarium", "image": "structure.png", "size": [6, 4], … }
+
+{ "format": "verdant.character/1", "id": "vale", "sheet": "sheet.png", "frame": [16, 16],
+  "rows": ["down", "up", "left", "right"], "columns": ["stand", "stepA", "stepB"], … }
+
+{ "format": "verdant.imageset/1", "id": "items", "logicalDir": "assets/items",
+  "images": { "aloe_gel": { "file": "aloe_gel.png", "size": [16, 16], "source": { "kind": "generated", "tool": "tools/art/cast4/items4.py" } }, … } }</code></pre>
+  <p>An image set maps a whole logical directory to one bundle: <code>portraits</code> serves <code>assets/trainers</code>, <code>items</code> serves <code>assets/items</code>, <code>ui</code> serves <code>assets/ui</code> and <code>stills</code> serves <code>assets/stills</code>. Each entry may carry its own <code>source</code>, so a generator can skip one hand-edited icon in a set it otherwise owns.</p>
+
+  <details class="advanced"><summary>Advanced: format invariants and how to extend them</summary>
+    <ul>
+      <li><strong>Each <code>TileKey</code> has exactly one owner.</strong> The catalog indexes tile owners by scanning tilesets in id order and keeping the first, but <code>validateArt</code> reports a duplicate as an error, so in practice ownership is unique. Group keys by theme (terrain, nature, town, city…) so a pack can swap a whole look at once.</li>
+      <li><strong>Forward compatibility.</strong> Readers ignore fields they don't know, and writers may add optional ones. Renaming or repurposing a field needs a new <code>format</code> version (<code>verdant.species/2</code>), because old readers would silently misread it.</li>
+      <li><strong>File names are free.</strong> The JSON names every file, so <code>front.png</code> is only the default tools write. Logical paths never depend on file names, only on ids and frame kinds.</li>
+      <li><strong>Animated masks.</strong> If <code>base</code> has 2 frames, every mask should too. <code>refCells(ref)[frame - 1]</code> returns <code>undefined</code> for a missing second frame, and the path then fails to resolve, so the renderer falls back down its chain (see <a href="#art-required">required art</a>).</li>
+      <li><strong>Unparseable JSON provides nothing.</strong> The catalog drops a bundle whose JSON isn't an object; the validator is what reports it. A typo in one bundle therefore shows up as missing art plus a test failure, not a crash.</li>
+    </ul>
+  </details>
+
+  <h3 id="art-index">The index (<code>npm run art:index</code>)</h3>
+
+  <p>A browser cannot list a directory over HTTP. So that the registry knows which bundles exist and which files each folder holds, <a data-src="tools/art/index.mjs">tools/art/index.mjs</a> (Node, zero dependencies) scans <code>public/art/</code> and writes <code>public/art/index.json</code>:</p>
+  <pre><code class="lang-json">{
+  "format": "verdant.artindex/1",
+  "species":    { "&lt;id&gt;": ["front.png", ...] },
+  "tilesets":   { ... }, "structures": { ... }, "characters": { ... }, "sets": { ... },
+  "packs": { "&lt;pack_id&gt;": { "name", "description", "author", "species": { ... }, ... } },
+  "legacy": ["assets/tiles/grass.png", ...]
+}</code></pre>
+  <p>The index lists <em>file names</em>, not JSON contents. The registry fetches every bundle JSON itself. That gives a simple rule:</p>
+  <table>
+    <thead><tr><th>You changed…</th><th>Re-index?</th></tr></thead>
+    <tbody>
+      <tr><td>pixels in an existing PNG</td><td>No</td></tr>
+      <tr><td>a bundle's JSON (palette, anim, tile refs)</td><td>No</td></tr>
+      <tr><td>added, removed or renamed a file or a bundle folder</td><td><strong>Yes</strong>, <code>npm run art:index</code></td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">sequenceDiagram
+  participant P as Page
+  participant R as ArtRegistry
+  participant S as Server
+  P->>R: createArtAssets()
+  R->>S: GET art/index.json
+  S-->>R: bundle ids and file lists
+  R->>S: GET every bundle JSON (in parallel)
+  S-->>R: species.json, tileset.json, ...
+  R->>R: new ArtCatalog(raw, packs)
+  P->>R: loadAll() (game boot)
+  R->>S: GET each PNG the catalog provides
+  P->>R: image(path) every frame
+  R-->>P: cached canvas</pre>
+
+  <details class="advanced"><summary>Advanced: staleness, stray folders and the no-index mode</summary>
+    <ul>
+      <li><code>src/art/bundles.test.ts</code> rebuilds the index in memory with <code>buildIndex()</code> and compares it to the file on disk, so a forgotten <code>art:index</code> fails <code>npm test</code>. <code>node tools/art/index.mjs --check</code> does the same from the shell.</li>
+      <li><code>strayFolders()</code> finds folders under a kind directory with no bundle JSON. They are not indexed (the runtime would never see them), the script warns, and a test requires the list to be empty.</li>
+      <li><code>formatIndex()</code> writes one line per bundle in sorted order, so a diff of <code>index.json</code> shows exactly which bundles gained or lost files.</li>
+      <li>If <code>index.json</code> can't be loaded, the registry logs a warning and sets <code>indexLoaded = false</code>. The catalog is built with <code>legacy: null</code>, which means "try every unowned <code>assets/…</code> path as a plain file". That is the Round 4 migration fallback. <code>public/assets/</code> has since been deleted and <code>legacy</code> is empty, but the code path remains, so a broken index degrades to missing art rather than a crash.</li>
+    </ul>
+  </details>
+
+  <h3 id="art-resolve">Logical paths and how one resolves</h3>
+
+  <p>Logical paths come from helpers in <code>src/contracts/constants.ts</code> (<code>speciesPath</code>, <code>tilePath</code>, <code>portraitPath</code>…), so game code never builds them by hand. <a data-src="src/art/paths.ts">paths.ts</a> parses them with four regular expressions:</p>
+  <table>
+    <thead><tr><th>Logical path</th><th>Resolves to</th></tr></thead>
+    <tbody>
+      <tr><td><code>assets/species/&lt;id&gt;/&lt;kind&gt;.png</code> (front, front__2 … front__8, back, icon, icon__2)</td><td>that species' <code>frames[...]</code> entry</td></tr>
+      <tr><td><code>…/&lt;kind&gt;.png?sport</code></td><td>the same frame, recoloured to <code>sport</code></td></tr>
+      <tr><td><code>assets/tiles/&lt;key&gt;.png</code>, <code>&lt;key&gt;__2.png</code></td><td>the owning tileset's <code>base</code>, frame 1 / 2</td></tr>
+      <tr><td><code>assets/tiles/&lt;key&gt;~&lt;n&gt;.png</code></td><td><code>alts[n-1]</code></td></tr>
+      <tr><td><code>assets/tiles/&lt;key&gt;@&lt;mask&gt;.png</code></td><td><code>masks[mask]</code> (and <code>__2</code> for frame 2)</td></tr>
+      <tr><td><code>assets/structures/&lt;key&gt;.png</code>, <code>assets/characters/&lt;key&gt;.png</code></td><td>that bundle's <code>image</code> / <code>sheet</code></td></tr>
+      <tr><td><code>assets/{trainers,items,ui,stills}/&lt;k&gt;.png</code></td><td>entry <code>&lt;k&gt;</code> of the set whose <code>logicalDir</code> matches</td></tr>
+    </tbody>
+  </table>
+
+  <h4 id="art-resolve-layers">Layers and the shallow merge</h4>
+  <p><a data-src="src/art/catalog.ts">ArtCatalog</a> is pure: no DOM and no Node, so the game, the Art Lab and the Node bundle test all share it. It groups every raw bundle by <code>kind/id</code> into a stack of <dfn>layers</dfn>, bottom-up:</p>
+  <pre class="mermaid">flowchart BT
+  L0["Layer 0: base bundle (public/art/species/oak_acorn/)"] --> L1["Layer 1: first active pack"]
+  L1 --> L2["Layer 2: later pack (wins)"]
+  L2 --> LAB["Top: @lab (in-memory JSON patch)"]
+  LAB --> MG["merged JSON (what the game sees)"]</pre>
+  <p>Packs are ordered by their position in the active list, so in <code>?art=a,b</code> pack <code>b</code> wins. The merge is <dfn>shallow</dfn>: a higher layer's top-level field replaces the lower one outright. Tilesets' <code>tiles</code> and sets' <code>images</code> are merged one level deeper, which is what lets a pack override a single tile or a single icon:</p>
+  <pre><code class="lang-ts">/** Merge one layer's JSON over the accumulated JSON. */
+function mergeJson(kind: BundleKind, under: Record&lt;string, unknown&gt;, over: Record&lt;string, unknown&gt;): Record&lt;string, unknown&gt; {
+  const out: Record&lt;string, unknown&gt; = { ...under, ...over };
+  const deep = kind === "tilesets" ? "tiles" : kind === "sets" ? "images" : null;
+  if (deep &amp;&amp; isObj(under[deep]) &amp;&amp; isObj(over[deep])) out[deep] = { ...(under[deep] as object), ...(over[deep] as object) };
+  return out;
+}</code></pre>
+  <p>JSON merges, but <strong>files resolve separately</strong>: <code>findFile</code> walks from the top layer down and takes the first layer whose folder (as listed in the index) holds that file name. A pack that ships only <code>front.png</code> replaces that one frame and reads the rest from the base folder.</p>
+
+  <h4 id="art-resolve-flow">Resolving one logical path</h4>
+  <pre class="mermaid">flowchart TD
+  A["image(path)"] --> RDY{"registry ready?"}
+  RDY -->|"no"| U["start loading, return undefined"]
+  RDY -->|"yes"| D{"in derived cache?"}
+  D -->|"yes"| OUT["return canvas"]
+  D -->|"no"| P["parseLogical(path)"]
+  P -->|"null"| MISS["missing: null"]
+  P --> OWN{"a bundle owns the subject?"}
+  OWN -->|"no"| LEG{"legacy file listed?"}
+  LEG -->|"no"| MISS
+  LEG -->|"yes"| URL
+  OWN -->|"species"| SP["frames[list][index], target palette (sport?)"]
+  OWN -->|"tile"| TL["base / alt / mask ref, cell for the frame, tileSheet()"]
+  OWN -->|"structure, character, set"| ONE["file named in merged JSON"]
+  SP --> FF["findFile: top layer down"]
+  ONE --> FF
+  TL --> URL["Resolution: url + rect + recolor"]
+  FF --> URL
+  URL --> LD{"PNG loaded?"}
+  LD -->|"no"| LOAD["loadFile(url), return undefined"]
+  LD -->|"yes"| CUT["derive: cut rect, recolour"]
+  CUT --> OUT</pre>
+  <p>Two caches make this cheap enough to call every frame. The catalog memoises <code>resolve(path)</code>, and the registry keeps <code>derived</code>, the finished canvas per path. Both are thrown away whenever packs or overrides change (<code>rebuild()</code> makes a new catalog and bumps <code>version</code>).</p>
+
+  <h4 id="art-resolve-tiles">Single-tile versus whole-sheet overrides</h4>
+  <p>A tileset pack can do two different things, and the catalog tells them apart by whether the pack's JSON defines its own <code>tiles</code>:</p>
+  <pre class="mermaid">flowchart TD
+  K["tile key, defined last at layer d"] --> UP{"a layer above d without its own tiles has the sheet file?"}
+  UP -->|"yes"| WHOLE["read that sheet (whole-sheet swap)"]
+  UP -->|"no"| DOWN["findFile from d downward"]
+  DOWN --> SPARSE["the defining layer's own sheet (single-tile override)"]</pre>
+  <ul>
+    <li><strong>Single-tile override.</strong> The pack's <code>tileset.json</code> has <code>"tiles": { "grass": { … } }</code> and its own small <code>sheet.png</code>. Thanks to the deep merge only <code>grass</code> changes; its cells are numbered in the pack's sheet, while every other key keeps reading the base sheet.</li>
+    <li><strong>Whole-sheet swap.</strong> The pack ships <code>sheet.png</code> with a <code>tileset.json</code> that does not define <code>tiles</code>. Every key keeps its base cell numbers but reads them from the pack's sheet, so the new sheet must use the same layout.</li>
+  </ul>
+
+  <h4 id="art-resolve-colour">Palette-only recolours and sports</h4>
+  <p>A species image is drawn in the palette of the layer it came from. <code>resolveSpecies</code> builds a <code>Recolor</code> from that layer's palette to the merged palette, or to <code>sport</code> for a <code>?sport</code> path. <code>makeRecolor</code> returns <code>null</code> when the two match, so ordinary frames are never copied:</p>
+  <pre><code class="lang-ts">const f = this.findFile(v, name);
+const recolor = makeRecolor(this.paletteAt(v, f.layer), target) ?? undefined;</code></pre>
+  <p>Hence a <dfn>palette-only pack</dfn>: a pack species JSON with a new <code>palette</code> and no <code>frames</code> recolours the base images index by index. The <code>traced</code> pack does this for <code>red_chili</code>; its folder holds only <code>species.json</code>.</p>
+
+  <details class="advanced"><summary>Advanced: resolver edge cases</summary>
+    <ul>
+      <li><strong>Shallow means whole fields.</strong> A pack that sets <code>frames</code> replaces all three lists, not just <code>front</code>. A pack whose art predates the base's <code>anim</code> must set <code>"anim": null</code>, or the base intro would index frames the pack doesn't have. The <code>classic</code> pack does this for every species.</li>
+      <li><strong>A tile key's definition is replaced whole.</strong> The deep merge stops at <code>tiles.&lt;key&gt;</code>: a pack that overrides <code>grass</code> must restate its <code>alts</code> and <code>masks</code>, or they vanish. The Tile Lab's planner copies untouched alts and masks in for exactly this reason.</li>
+      <li><strong>Geometry follows the sheet.</strong> <code>columns</code> and <code>tileSize</code> are read at <code>max(d, sheet layer)</code>, so a whole-sheet pack may also change <code>columns</code>.</li>
+      <li><strong>Sports need matching lengths.</strong> If <code>sport</code> is missing or a different length from <code>palette</code>, a <code>?sport</code> path resolves to <code>null</code> (missing), not to the normal colours. Sports never fall back to legacy files.</li>
+      <li><strong><code>listed: false</code></strong> means no layer's index entry holds the file. The resolution still points at the lowest real layer's folder, where the file will probably 404. The Tile Lab relies on this: it registers an in-memory override at exactly that URL (see <a href="#pages-tilelab">the Tile Lab</a>).</li>
+      <li><strong>The <code>@lab</code> layer has no files.</strong> <code>findFile</code> skips it, so lab patches change JSON only, and file swaps go through <code>overrideFile(url)</code> in the registry.</li>
+      <li><strong>Recolouring is exact.</strong> <code>recolorRgba</code> maps whole RGB values and skips alpha 0. A pixel that isn't one of the palette colours is left alone. The validator forbids such pixels, but if one slips through it shows up as a stray dot in sports.</li>
+    </ul>
+  </details>
+
+  <h3 id="art-packs">Art packs</h3>
+  <p>A pack is a folder under <code>public/art/packs/&lt;id&gt;/</code> with a <code>pack.json</code> and any subset of the base tree:</p>
+  <pre><code class="lang-json">{
+  "format": "verdant.pack/1",
+  "id": "classic",
+  "name": "CLASSIC (PRE-CRYSTAL)",
+  "description": "A snapshot of all 65 species as they were drawn before the Crystal-rule rollout: …",
+  …
+}</code></pre>
+  <table>
+    <thead><tr><th>Pack</th><th>What it is</th><th>Try it</th></tr></thead>
+    <tbody>
+      <tr><td><code>classic</code></td><td>The 65 species as drawn before the Crystal rule (old palettes, selout outlines, idle frames), with <code>"anim": null</code>. It is the rollback and the Art Lab's default comparison.</td><td><code>?art=classic</code></td></tr>
+      <tr><td><code>traced</code></td><td>17 species: the original photo-traced fronts and backs of five lines, plus palette-only overrides for <code>chili_blossom</code> and <code>red_chili</code>.</td><td><code>?art=traced</code></td></tr>
+    </tbody>
+  </table>
+  <pre class="mermaid">flowchart TD
+  S["page boot: requestedPacks()"] --> Q{"URL has ?art= ?"}
+  Q -->|"yes (even empty)"| URLP["split on commas"]
+  Q -->|"no"| LS["localStorage verdant.artPacks"]
+  URLP --> F["drop ids not in index.packs (warn)"]
+  LS --> F
+  F --> CAT["ArtCatalog(raw, packs)"]</pre>
+  <details class="advanced"><summary>Advanced: switching packs live, and forks</summary>
+    <ul>
+      <li><code>setActivePacks(ids, persist)</code> rebuilds the catalog in place and notifies <code>onChange</code> listeners. The PNG cache (<code>files</code>) survives, so switching back and forth fetches nothing twice.</li>
+      <li><code>fork(packs)</code> makes a read-only registry that shares the loaded files but has its own catalog, with other packs and no lab edits. The Art Lab's Compare tab and the Tile Lab's "hold to compare" both use one.</li>
+      <li><code>?art=</code> with an empty value wins over localStorage. That gives you a link that always shows the base art, whatever the viewer toggled before.</li>
+      <li>Pack ids are validated against <code>index.packs</code>, so a pack folder that isn't indexed is silently unavailable (apart from the console warning). Run <code>npm run art:index</code> after adding one.</li>
+    </ul>
+  </details>
+
+  <h3 id="art-required">Required art and placeholders</h3>
+  <p><a data-src="src/art/required.ts">required.ts</a> lists every logical path the contracts need: a front, back and icon for each id in <code>SPECIES_IDS</code>, every <code>TILES</code> key (plus frame 2 of <code>water</code>, <code>tall_grass</code> and <code>flowers</code>), every structure, character, trainer portrait, required item icon, Pressed Mark, UI image and still, each with its expected size. <code>bundles.test.ts</code> fails, grouped by kind, if any of them doesn't resolve at the right size.</p>
+  <p>That raises a problem: you can't add a new species id until its art exists, and its art might take days. The answer is <a data-src="tools/art/placeholder.py">placeholder.py</a>. It writes a grey blob with a "?" in the Crystal palette, with notes starting <code>PLACEHOLDER</code> (set images are marked by <code>tool: tools/art/placeholder.py</code>). <a data-src="tools/release-check.mjs">release-check</a> then refuses both markers anywhere in <code>public/art/</code>:</p>
+  <pre><code class="lang-ts">if (key === "notes" &amp;&amp; typeof child === "string" &amp;&amp; child.startsWith("PLACEHOLDER")) {
+  offenders.push(`${path}: ${childLocation} starts with PLACEHOLDER`);
+}
+// Set images (item icons, UI) carry no notes: placeholder.py marks them by tool.
+if (key === "tool" &amp;&amp; child === "tools/art/placeholder.py") {
+  offenders.push(`${path}: ${childLocation} is placeholder art`);
+}</code></pre>
+  <pre class="mermaid">flowchart LR
+  ID["add id to contracts"] --> PH["placeholder.py species id"]
+  PH --> IX["npm run art:index"]
+  IX --> T["npm test passes (feature branch)"]
+  T --> REAL["real art replaces the placeholder"]
+  REAL --> RC["npm run release-check"]
+  RC -->|"OK"| MAIN["merge to main"]
+  RC -->|"PLACEHOLDER found"| REAL</pre>
+  <aside class="warn"><code>main</code> must pass <code>npm run release-check</code>. Placeholders live only on feature branches.</aside>
+  <p>At runtime, missing art never crashes the game. Each drawer has a fallback. <code>drawCell</code> in <a data-src="src/overworld/tilelayer.ts">tilelayer.ts</a> tries the variant path, then the plain key, then draws a hand-coded stand-in tile with a magenta corner pip. Trainer portraits fall back to a drawn placeholder and log one warning per path.</p>
+  <details class="advanced"><summary>Advanced: "pending" versus "missing"</summary>
+    <p><code>image(path)</code> returns <code>undefined</code> both while a PNG is still loading and when it will never exist. Renderers that care ask <code>isMissing(path)</code>: true only once the path is known not to resolve, or its file failed to load (and isn't overridden). The tile layer uses that to tell "draw a fallback and keep it" from "draw a fallback now, but redraw this cell when the file arrives". If it treated pending as missing, the first frames after boot would bake placeholders into the cached tile layer.</p>
+  </details>
+
+  <h3 id="art-crystal">The Crystal creature rules</h3>
+  <p>Every creature is drawn under the <dfn>Crystal rule</dfn> (docs/CREATURES.md), named after the Game Boy Color game whose sprite discipline it borrows. The pre-Crystal art is kept as the <code>classic</code> pack. These rules bind every species, and <code>tools/art/crystal/kit.py</code> checks them:</p>
+  <table>
+    <thead><tr><th>Index</th><th>Role</th><th>Colour</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>the full outline, deepest crevices, seams, cast shadow</td><td>always <code>#181818</code></td></tr>
+      <tr><td>1</td><td>the species' dark tone: shading <em>and</em> a second hue (the flytrap's trap red)</td><td>species' choice</td></tr>
+      <tr><td>2</td><td>the species' light tone: usually most of the body</td><td>species' choice</td></tr>
+      <tr><td>3</td><td>highlights only</td><td>always <code>#f8f8f8</code></td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li><strong>A full black outline, no selout.</strong> A colour pixel touching transparency is an outline gap.</li>
+    <li><strong>White share:</strong> 5–20% of a front (backs and icons at least 3%). Approved <code>WHITE_PARTS</code> (white clover, moonflower, the dandelion clock, chili blossom, giant water lily) may reach 35%. <code>EXCEPTIONS</code> (the sunflower line) keep a gold third hue in index 3. Both need a reason in <code>notes</code>.</li>
+    <li><strong>The sport swaps only indexes 1–2</strong> and is based on a real cultivar.</li>
+    <li><strong>No faces.</strong> Plants never get eyes or mouths. A black dot with a white glint reads as an eye, and a dark slit reads as a mouth, so check every frame at 1x.</li>
+    <li><strong>Never copy, trace or import</strong> a Nintendo or Game Freak sprite.</li>
+  </ul>
+  <h4 id="art-crystal-anim">The entrance animation</h4>
+  <p>Every species has an <code>anim.intro</code> of 3–6 front frames lasting 36–72 ticks and ending on frame 0, in which only its <dfn>signature part</dfn> moves (the flytrap snaps, the fern uncurls). An optional <code>idle</code> holds frame 0 for 90–150 ticks, then twitches. <a data-src="src/art/anim.ts">anim.ts</a> turns "ticks since the creature appeared" into a frame:</p>
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> intro: appears
+  intro --> idle: t reaches intro length
+  intro --> hold: no idle
+  idle --> idle: loop
+  hold --> hold: frame 0
+  note right of intro: frame and ticks steps at 60 fps</pre>
+  <pre><code class="lang-ts">export function animState(anim: SpeciesAnim, t: number, opts: { intro?: boolean } = {}): AnimState {
+  const tt = Math.max(0, Math.floor(t));
+  const introLen = opts.intro ? stepsLength(anim.intro) : 0;
+  if (anim.intro &amp;&amp; tt &lt; introLen) {
+    const step = stepAt(anim.intro, tt);
+    return { phase: "intro", frame: anim.intro[step][0], step };
+  }
+  const idleLen = stepsLength(anim.idle);
+  if (anim.idle &amp;&amp; idleLen &gt; 0) {
+    const step = stepAt(anim.idle, (tt - introLen) % idleLen);
+    return { phase: "idle", frame: anim.idle[step][0], step };
+  }
+  return { phase: "hold", frame: 0, step: -1 };
+}</code></pre>
+  <details class="advanced"><summary>Advanced: validator versus runtime, and the moving boxes</summary>
+    <ul>
+      <li><strong>Two views of <code>anim</code>.</strong> <code>checkSpeciesAnim</code> (used by the validator) reports every malformed step. <code>parseSpeciesAnim</code> (used at runtime) drops bad steps and appends <code>[0, 1]</code> if an intro doesn't end on frame 0, so a bad bundle fails the tests but still plays in the game.</li>
+      <li><strong>Any <code>anim</code> object opts out of the legacy ping-pong.</strong> Even <code>{}</code> just holds frame 0; only <code>undefined</code> or <code>null</code> brings back the old "first ≤3 frames ping-pong" idle.</li>
+      <li><strong>Moving boxes.</strong> <code>write_species(moving=[…])</code> records end-exclusive boxes in <code>tools/art/crystal/moving/&lt;id&gt;.json</code>. The kit checks that frames differ only inside them, and QA's <code>anim_signature</code> warns when under 80% of changed pixels fall inside them. That is what "only the signature part moves" means in practice.</li>
+      <li><strong>The 56x56 box must fit the largest frame.</strong> If the flared frame clips, shrink frame 0, not the gesture.</li>
+    </ul>
+  </details>
+
+  <h3 id="art-tools">The Python tools (<code>tools/art</code>)</h3>
+  <p>The generators are <em>authoring tools</em>, not the source of truth: <code>public/art/</code> is. They use a pinned virtualenv (<code>tools/art/requirements.txt</code>: Pillow, NumPy, SciPy). The pins matter, because a different Pillow can change PNG bytes.</p>
+  <pre><code class="lang-bash">python3 -m venv .venv &amp;&amp; .venv/bin/pip install -r tools/art/requirements.txt
+.venv/bin/python tools/art/build_all.py            # validate the art and rebuild the index
+.venv/bin/python tools/art/build_all.py --regen    # re-run every generator; must leave git clean
+.venv/bin/python tools/art/crystal/build.py &lt;line&gt; [--sheet]   # rebuild one creature line, with a review sheet
+.venv/bin/python tools/art/crystal/kit.py &lt;ids...&gt;             # run the rule checker and write a review sheet</code></pre>
+  <table>
+    <thead><tr><th>Tool</th><th>Job</th></tr></thead>
+    <tbody>
+      <tr><td><code>artkit/</code></td><td>The library: <code>emit</code> (the only way generators write bundles), deterministic <code>save_png</code> / <code>save_json</code>, <code>bundles</code>, <code>sheets</code>, <code>palette</code>, a Python <code>Resolver</code> and <code>validate</code></td></tr>
+      <tr><td><code>art.py</code></td><td>CLI: list, validate, show, explode a tileset into per-tile PNGs and <code>pack</code> them back, swap species frames, re-palette, new species from a template, contact sheets, <code>resolve</code> a logical path</td></tr>
+      <tr><td><code>build_all.py</code></td><td>Runs the <code>BUILDERS</code> list in order, then rebuilds the index and validates</td></tr>
+      <tr><td><code>crystal/</code></td><td>One module per creature line (<code>oak.py</code>, <code>flytrap.py</code>…), the shared <code>kit.py</code> and <code>build.py</code></td></tr>
+      <tr><td><code>env4</code>–<code>env12</code>, <code>envpg</code></td><td>Per-chapter environment: tilesets and structures (<code>envpg</code> is the post-game)</td></tr>
+      <tr><td><code>cast4</code>–<code>cast11</code>, <code>castpg</code>, <code>castgirl</code></td><td>Per-chapter cast: walk sheets, portraits, item icons, UI, Marks, stills; <code>castgirl</code> is the girl player</td></tr>
+      <tr><td><code>placeholder.py</code></td><td>Stand-in art for new ids (above)</td></tr>
+      <tr><td><code>qa/</code></td><td>Read-only QA: <code>npm run qa:art</code> and <code>npm run qa:maps</code></td></tr>
+    </tbody>
+  </table>
+  <pre class="mermaid">flowchart LR
+  BA["build_all.py --regen"] --> B1["tiles, structures"]
+  B1 --> B2["characters (after tiles)"]
+  B2 --> B3["portraits, items, ui, stills"]
+  B3 --> CR["crystal: one process per line"]
+  CR --> EC["env4 ... envpg, cast4 ... castgirl"]
+  EC --> IDX["index.rebuild()"]
+  IDX --> VAL["validate()"]
+  VAL -->|"errors"| FAIL["exit 1"]
+  VAL -->|"clean"| OK["git status must be clean"]</pre>
+  <h4 id="art-tools-determinism">Why <code>--regen</code> must leave git clean</h4>
+  <p>A regen reproduces every <code>generated</code> bundle byte for byte. If it changes a file you didn't mean to change, either a generator isn't deterministic or someone hand-edited a <code>generated</code> bundle without marking it <code>edited</code>. Three mechanisms make this hold:</p>
+  <pre><code class="lang-py">def save_png(path: Path | str, img: Image.Image | np.ndarray) -&gt; Path:
+    """Write an RGBA PNG (colour type 6, no metadata). Only rewrites the file
+    when the bytes differ, so mtimes stay put on a no-op regen."""
+    p = Path(path)
+    data = png_bytes(to_rgba(img))
+    if p.exists() and p.read_bytes() == data:
+        return p
+    …</code></pre>
+  <ul>
+    <li>PNGs carry no metadata (no timestamps) and JSON is formatted stably.</li>
+    <li><code>emit</code> skips any bundle or set entry whose <code>source.kind</code> is <code>edited</code> or <code>imported</code>, and keeps hand-kept metadata (<code>sport</code>, <code>credits</code>, <code>notes</code>).</li>
+    <li>The libraries are pinned, so the same drawing code gives the same bytes on any machine.</li>
+  </ul>
+  <h4 id="art-tools-qa">QA: the kit checker, <code>qa:art</code> and <code>qa:maps</code></h4>
+  <ul>
+    <li><strong><code>crystal/kit.py</code></strong> is the rule checker: 4-colour palettes, black and white in indexes 0 and 3, sport ≠ palette, frame sizes and counts, white share, outline gaps, orphans, intro length (36–72) and moving boxes. Errors must be 0.</li>
+    <li><strong><code>npm run qa:art</code></strong> (<code>tools/art/qa/qa.py</code>) adds heuristics: <code>face_risk</code>, <code>size_class</code>, <code>stage_progression</code>, <code>clone_risk</code> (perceptual hashes), tile <code>seam</code>, <code>autotile_edges</code> and <code>grid_artifact</code>. It never writes art. <code>npm run qa:art:changed</code> (<code>--all --changed origin/main</code>) is the gate: only <em>changed</em> bundles can fail it.</li>
+    <li><strong><code>npm run qa:maps</code></strong> (Vitest, <code>tools/art/qa/maps.ts</code>) measures, for every standable tile on every outdoor map, whether the 10x9 camera view contains a landmark. Towns warn below 85%, other routes below 60%.</li>
+  </ul>
+  <details class="advanced"><summary>Advanced: builder order, process isolation and the QA baseline</summary>
+    <ul>
+      <li><strong>Order is data.</strong> Some builders read shipped art: <code>characters</code> runs after <code>tiles</code> because the hedge gate samples the hedge tile, <code>env8</code> recolours water, and <code>env9</code> draws props over <code>wall</code>, <code>cable_floor</code> and <code>paving</code>. The comments in <code>BUILDERS</code> say why; keep them when you add a line.</li>
+      <li><strong>One interpreter per creature line.</strong> <code>crystal/build.py</code> runs each line's <code>build()</code> in its own Python process, because the archived <code>species_a</code>–<code>species_f</code> folders reuse module names like <code>kit</code> and <code>oak</code>. Never <code>sys.path.insert</code> a <code>species_*</code> folder; old shape code loads through <code>kit.legacy("species_x/file.py")</code>.</li>
+      <li><strong>Missing versus error.</strong> <code>build_all.py</code> rebuilds the index and fails on validation errors. Required paths nobody provides yet only fail with <code>--strict</code>; the TypeScript bundle test is the stricter gate.</li>
+      <li><strong>The QA baseline is red on purpose.</strong> The shipped roster predates the QA thresholds (45 <code>size_class</code> failures at calibration). <code>--all</code> exits 0 regardless, so the report stays visible without blocking unrelated work. Don't relax a threshold to make it green.</li>
+    </ul>
+  </details>
+
+  <h3 id="art-lab">The Art Lab (<code>?dev=art</code>)</h3>
+  <p>The Art Lab is a full-window DOM tool mounted over the game canvas. It is a <dfn>dev scene</dfn>: <code>src/main.ts</code> finds <code>src/art/dev.ts</code> through <code>import.meta.glob("./*/dev.ts")</code> and loads it only when the URL says <code>?dev=art</code>. It works in production builds too.</p>
+  <table>
+    <thead><tr><th>Tab</th><th>Shows</th></tr></thead>
+    <tbody>
+      <tr><td>Species, Tilesets, Structures, Chars, Sets</td><td>Every bundle, with palette swatches, a sport toggle, animation previews (▶ Intro, idle loop, a timeline of steps) and a 4x4 autotile mask preview. Drop a PNG on a frame to swap it live.</td></tr>
+      <tr><td>Packs</td><td>Toggle packs (saved in <code>localStorage["verdant.artPacks"]</code>)</td></tr>
+      <tr><td>Checks</td><td>The §9 validation, run in the browser</td></tr>
+      <tr><td>Compare</td><td><code>#compare/&lt;species&gt;/&lt;pack&gt;</code>: base versus pack side by side at 1x/2x/4x, normal and sport</td></tr>
+    </tbody>
+  </table>
+  <pre class="mermaid">sequenceDiagram
+  participant U as You
+  participant L as Art Lab
+  participant R as ArtRegistry
+  participant G as Game views
+  U->>L: drop a PNG on front frame 2
+  L->>R: overrideFile(url, img)
+  R->>R: clear derived cache, version++
+  R-->>L: onChange listeners
+  L->>G: redraw with the new frame
+  Note over R: memory only, nothing written to disk</pre>
+  <aside class="tip">To check a creature in context, open <code>/?dev=world&amp;play=1&amp;map=route_1&amp;species=&lt;id&gt;&amp;level=40</code> for its battle intro, and <code>/?dev=art#compare/&lt;id&gt;/classic</code> to compare it with the old art.</aside>
+  <details class="advanced"><summary>Advanced: what the lab's validation can and can't see</summary>
+    <ul>
+      <li><code>registry.validate()</code> loads every listed PNG and runs the same <code>validateArt</code> as the Node test, minus the index-versus-folder check (a browser can't list folders).</li>
+      <li>Lab JSON patches count, except a species <code>palette</code> patch. That is a live recolour of unchanged pixels, so it is validated as the original pixels with the original palette.</li>
+      <li>The Compare tab uses <code>fork()</code> and ignores the pack toggles, so "base versus classic" stays meaningful whatever is switched on.</li>
+      <li>The lab exposes <code>window.__artLab = { lab, reg }</code> for poking around from the console.</li>
+    </ul>
+  </details>
+</section>
