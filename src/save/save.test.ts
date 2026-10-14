@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GameState, WorldData } from "../contracts";
 import {
-  DEFAULT_PLAYER_NAME, DEFAULT_PLAYER_NAMES, OPTIONS_KEY, SAVE_KEY, battleAnimsOn, beginNewGameSession, createSave, followerOn, formatPlayTime, loadOptions,
-  newGameState, normalizeState, storeOptions,
+  DEFAULT_PLAYER_NAME, DEFAULT_PLAYER_NAMES, GAME_SPEEDS, OPTIONS_KEY, SAVE_KEY, battleAnimsOn, beginNewGameSession, cleanOptions, createSave, followerOn,
+  formatPlayTime, gameSpeedOf, loadOptions, newGameState, normalizeState, storeOptions,
 } from "./index";
 
 const world = {
@@ -326,5 +326,45 @@ describe("save migration: route rematch wins", () => {
     const fallback = newGameState({ world });
     const state = { ...fallback, trainerRematches: { hiker_gus: 5 } } as GameState;
     expect(normalizeState(JSON.parse(JSON.stringify(state)), fallback)!.trainerRematches).toEqual({ hiker_gus: 5 });
+  });
+});
+
+describe("save migration: GAME SPEED", () => {
+  const old = (options: object) => ({ v: 1, savedAt: 1, gameId: "g", state: {
+    version: 1, playerName: "SAGE", rivalName: "BRAM", money: 500, party: [], box: [], bag: {}, flags: {},
+    marks: [], herbarium: { seen: [], caught: [] }, position: { map: "route_1", x: 1, y: 2, facing: "up" },
+    heal: { map: "player_home", x: 3, y: 5 }, playTimeMs: 10, options,
+  } });
+  const load = (env: object, storage = memoryStorage()) => {
+    storage.setItem(SAVE_KEY, JSON.stringify(env));
+    return createSave(() => newGameState({ world }), storage, () => newGameState({ world })).read()!;
+  };
+
+  it("plays a save from before GAME SPEED at x1", () => {
+    const loaded = load(old({ textSpeed: "fast" }));
+    expect(loaded.options).toEqual({ textSpeed: "fast" });
+    expect(gameSpeedOf(loaded.options)).toBe(1);
+    expect(gameSpeedOf(undefined)).toBe(1);
+  });
+
+  it.each(GAME_SPEEDS)("keeps x%i through write, CONTINUE (normalizeState) and the stored options", (n) => {
+    const storage = memoryStorage();
+    const state = newGameState({ world });
+    state.options = { textSpeed: "mid", gameSpeed: n };
+    createSave(() => state, storage, () => newGameState({ world })).write();
+    const loaded = createSave(() => state, storage, () => newGameState({ world })).read()!;
+    expect(loaded.options.gameSpeed).toBe(n);
+    expect(normalizeState(JSON.parse(JSON.stringify(state)), newGameState({ world }))!.options.gameSpeed).toBe(n);
+    expect(loadOptions(storage).gameSpeed).toBe(n);
+  });
+
+  it("drops invalid speeds and keeps the other options", () => {
+    for (const bad of [0, 5, 2.5, "4", null, -1]) {
+      expect(gameSpeedOf(load(old({ textSpeed: "slow", follower: false, gameSpeed: bad })).options)).toBe(1);
+      expect(cleanOptions({ textSpeed: "slow", follower: false, gameSpeed: bad })).toEqual({ textSpeed: "slow", follower: false });
+    }
+    // A bad value falls back to the other copy (the stored options), like the toggles.
+    expect(cleanOptions({ gameSpeed: 9 }, { textSpeed: "mid", gameSpeed: 3 })).toEqual({ textSpeed: "mid", gameSpeed: 3 });
+    expect(cleanOptions({ gameSpeed: 1 }, { textSpeed: "mid", gameSpeed: 3 })).toEqual({ textSpeed: "mid", gameSpeed: 1 });
   });
 });

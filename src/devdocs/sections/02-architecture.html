@@ -30,7 +30,7 @@
   M->>E: createGameContext({ input, scenes, assets })
   M->>P: createShell(), createPause(), pauseOnFocusLoss()
   M->>S: push(loading scene)
-  M->>E: runLoop(g, scenes, input, onTick)
+  M->>E: runLoop(g, scenes, input, onTick, gameSpeed)
   M->>A: loadAll([title_logo])
   M->>A: loadAll() with progress
   M->>S: await loading.finish(), pop()
@@ -40,14 +40,15 @@
     M->>S: push(createTitleScene(ctx))
   end
   M->>M: booted = true (pause is now allowed)</pre>
-  <p>The heart of it, from <a data-src="src/main.ts#L63">main.ts</a>:</p>
+  <p>The heart of it, from <a data-src="src/main.ts#L72">main.ts</a>:</p>
   <pre><code class="lang-ts">    // Logo first, so the loading screen can show it, then everything else.
     const loading = createLoadingScene(assets);
     scenes.push(loading);
+    // dt is real time (a step divided by GAME SPEED), so play time counts the wall clock.
     runLoop(g, scenes, input, (dt) =&gt; {
       ticks++;
       if (playClock.running &amp;&amp; !pause.paused) game.state.playTimeMs += dt;
-    });
+    }, () =&gt; gameSpeedOf(game.state?.options));
     await assets.loadAll([uiPath("title_logo")]);
     // The whole art registry: every bundle (and any legacy file not yet migrated).
     await assets.loadAll(undefined, (d, t) =&gt; loading.progress(d, t));
@@ -236,7 +237,7 @@
     The most important method is <code>run</code>. It pushes a scene and returns a <code>Promise</code> that
     resolves when the scene calls <code>done(result)</code>. This turns "show a text box and wait for A" into an
     ordinary <code>await</code>, which is why story scripts, menus and battles read like straight-line code
-    (from <a data-src="src/engine/core.ts#L91">core.ts</a>):
+    (from <a data-src="src/engine/core.ts#L109">core.ts</a>):
   </p>
   <pre><code class="lang-ts">    run&lt;T&gt;(factory: (done: (r: T) =&gt; void) =&gt; Scene) {
       return new Promise&lt;T&gt;((resolve) =&gt; {

@@ -13,6 +13,7 @@ import {
   createLoadingScene, createPause, createShell, installErrorScreen, pauseOnFocusLoss, platformFlags,
 } from "./platform";
 import { registerOffline } from "./platform/offline/register";
+import { gameSpeedOf } from "./save";
 
 // Dev server and e2e build only (see testHooks() in src/engine/testHooks.ts).
 // Spelled out rather than calling testHooks() so the public production build
@@ -71,10 +72,11 @@ async function boot() {
     // Logo first, so the loading screen can show it, then everything else.
     const loading = createLoadingScene(assets);
     scenes.push(loading);
+    // dt is real time (a step divided by GAME SPEED), so play time counts the wall clock.
     runLoop(g, scenes, input, (dt) => {
       ticks++;
       if (playClock.running && !pause.paused) game.state.playTimeMs += dt;
-    });
+    }, () => gameSpeedOf(game.state?.options));
     await assets.loadAll([uiPath("title_logo")]);
     // The whole art registry: every bundle (and any legacy file not yet migrated).
     await assets.loadAll(undefined, (d, t) => loading.progress(d, t));

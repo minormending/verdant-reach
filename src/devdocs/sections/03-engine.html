@@ -1,4 +1,4 @@
-<section id="engine" data-title="The engine" data-summary="The fixed-step loop, input from keyboard, touch and gamepads, asset loading, drawing helpers, time of day and seeded randomness.">
+<section id="engine" data-title="The engine" data-summary="The fixed-step loop and GAME SPEED, input from keyboard, touch and gamepads, asset loading, drawing helpers, time of day and seeded randomness.">
   <h2>The engine</h2>
   <p>
     <code>src/engine/</code> is small on purpose. It owns the things every scene relies on and nothing
@@ -13,6 +13,7 @@
       <tr><td><a data-src="src/engine/gfx.ts">gfx.ts</a></td><td>Drawing with a missing-art fallback, <code>Timers</code>, <code>Fader</code>, <code>Shaker</code></td></tr>
       <tr><td><a data-src="src/engine/time.ts">time.ts</a></td><td>Map-scoped time of day (<code>mapTime</code>, <code>worldTime</code>)</td></tr>
       <tr><td><a data-src="src/engine/random.ts">random.ts</a></td><td>Dev seeds and independent random streams</td></tr>
+      <tr><td><a data-src="src/engine/speed.ts">speed.ts</a></td><td>GAME SPEED for millisecond timing: <code>loopSpeed</code>, <code>scaledMs</code>, <code>gameClockMs</code></td></tr>
     </tbody>
   </table>
 
@@ -26,65 +27,100 @@
   </p>
   <pre class="mermaid">flowchart TB
   raf["requestAnimationFrame(now) or setTimeout under ?timer"] --> acc["acc += min(250, now - last)"]
-  acc --> fast{"dev ?speed above 1?"}
-  fast -->|yes| batch["run update() speed times, acc = 0"]
+  acc --> sp["speed(): dev ?speed=N, else GAME SPEED 1-4 (read every frame)"]
+  sp --> fast{"dev ?speed above 1?"}
+  fast -->|yes| batch["run update() N times, acc = 0"]
   fast -->|no| check{"acc holds a whole step?"}
-  check -->|yes| upd["update(): poll, top.update, endFrame, onTick"]
+  check -->|yes| upd["update() GAME SPEED times: poll, top.update, endFrame, onTick"]
   upd --> sub["acc -= step"] --> check
   check -->|no| draw["find lowest scene to draw (skip transparent), clear to black, draw upwards"]
   batch --> draw
   draw --> again["schedule(frame)"]</pre>
-  <p>From <a data-src="src/engine/core.ts#L131">core.ts</a>:</p>
-  <pre><code class="lang-ts">  let acc = 0;
-  let last = performance.now();
+  <p>
+    The timing lives in <code>createStepper</code>, apart from the browser, so tests can drive it by hand. From
+    <a data-src="src/engine/core.ts#L165">core.ts</a>:
+  </p>
+  <pre><code class="lang-ts">export function createStepper(step: number, update: () =&gt; void, speed: () =&gt; LoopSpeed) {
+  let acc = 0;
+  return (elapsed: number): number =&gt; {
+    acc += Math.min(250, elapsed);
+    const { steps, fixed } = speed();
+    let ran = 0;
+    if (fixed) {
+      for (; ran &lt; steps; ran++) update();
+      acc = 0;
+      return ran;
+    }
+    while (acc &gt;= step) {
+      for (let i = 0; i &lt; steps; i++, ran++) update();
+      acc -= step;
+    }
+    return ran;
+  };
+}</code></pre>
+  <p><code>runLoop</code> supplies one step and the speed for each frame (<a data-src="src/engine/core.ts#L191">core.ts</a>):</p>
+  <pre><code class="lang-ts">  const speed = (): LoopSpeed =&gt; {
+    const n = dev ?? Math.max(1, Math.min(4, Math.floor(gameSpeed()) || 1));
+    current = { steps: n, fixed: dev !== null &amp;&amp; dev &gt; 1 };
+    setLoopSpeed(n);
+    // Menu auto-repeat keeps its real-time feel under GAME SPEED; ?speed keeps the old counts.
+    input.setRepeatScale?.(dev === null ? n : 1);
+    return current;
+  };
+  // Input edges are consumed after each step, so a press is seen by exactly one update.
   const update = () =&gt; {
     input.poll();
     scenes.top()?.update(step);
     input.endFrame();
-    onTick(step);
-  };
-  const frame = (now: number) =&gt; {
-    acc += Math.min(250, now - last);
-    last = now;
-    // Preserve the normal accumulator exactly at speed 1. Accelerated dev
-    // frames run a fixed batch, with input edges consumed after each step.
-    if (speed &gt; 1) {
-      for (let i = 0; i &lt; speed; i++) update();
-      acc = 0;
-    } else {
-      while (acc &gt;= step) {
-        update();
-        acc -= step;
-      }
-    }
-    const all = scenes.all();
-    let from = all.length - 1;
-    while (from &gt; 0 &amp;&amp; all[from].transparent) from--;
-    g.fillStyle = "#000";
-    g.fillRect(0, 0, SCREEN_W, SCREEN_H);
-    for (let i = Math.max(0, from); i &lt; all.length; i++) all[i].draw(g);
-    schedule(frame);
+    advanceGameClock(step);
+    onTick(step / current.steps);
   };</code></pre>
   <ul>
     <li><strong>Order inside one step:</strong> read controllers (<code>poll</code>), update the top scene,
-      clear this step's press edges (<code>endFrame</code>), then the tick callback (play time, the error
-      screen's tick count).</li>
-    <li><strong><code>?speed=N</code></strong> (dev and e2e builds only, 1–16) runs exactly N steps per drawn frame and ignores
-      the clock; the e2e runner uses speed 8.</li>
+      clear this step's press edges (<code>endFrame</code>), advance the game clock, then the tick callback
+      (play time, the error screen's tick count).</li>
+    <li><strong><dfn>GAME SPEED</dfn></strong> (OPTIONS, x1 to x4, saved as <code>state.options.gameSpeed</code>)
+      runs that many updates for every step of real time. Walking, text, menus, fades, flashes, shakes and
+      battle animations all count steps, so they all speed up with no code of their own. <code>main.ts</code>
+      passes <code>() =&gt; gameSpeedOf(game.state?.options)</code>, read every frame, so a change applies at once.</li>
+    <li><strong><code>?speed=N</code></strong> (dev and e2e builds only, 1–16) takes precedence: it runs exactly N
+      steps per drawn frame and ignores the clock; the e2e runner uses speed 8. The public build ignores it.</li>
     <li><strong><code>?timer</code></strong> schedules frames with <code>setTimeout(…, 1000 / FPS)</code>, because
       browsers throttle <code>requestAnimationFrame</code> in hidden or embedded panes.</li>
   </ul>
+  <h4 id="engine-speed">What GAME SPEED does not change</h4>
+  <table>
+    <thead><tr><th>Thing</th><th>Why it stays real-time</th></tr></thead>
+    <tbody>
+      <tr><td>Play time</td><td><code>onTick</code> gets <code>step / speed</code> per update: one real step per N updates</td></tr>
+      <tr><td>Time of day, berry days, wanderer recovery, save dates</td><td>Read from <code>new Date()</code> / <code>Date.now()</code>, never from steps</td></tr>
+      <tr><td>Music tempo</td><td>Scheduled on the audio clock; only a flow's <em>wait</em> on a sound shrinks (below)</td></tr>
+      <tr><td>Menu auto-repeat</td><td><code>setRepeatScale(N)</code> stretches <code>repeat()</code>'s counts by N, so holding a direction still repeats 10 times a second</td></tr>
+    </tbody>
+  </table>
+  <p>
+    The few things timed in milliseconds go through <a data-src="src/engine/speed.ts">speed.ts</a>:
+    <code>scaledMs(ms)</code> turns a wait written for x1 into real ms at the current speed, and
+    <code>gameClockMs()</code> is a clock that advances one step per update (the overworld's toasts use it).
+    The audio service gets <code>scaledMs</code> from <code>createGameContext</code>: an awaited jingle or cry
+    resolves when it ends or after its length through <code>scaledMs</code>, whichever is first
+    (<code>awaitSound</code> in <a data-src="src/audio/index.ts">audio/index.ts</a>). The sound plays on to its end
+    and the music resumes after it, so at x4 an item-get jingle holds the flow for a quarter of its length
+    instead of stalling it.
+  </p>
   <details class="advanced">
     <summary>Advanced: invariants, performance and failure modes</summary>
     <ul>
-      <li><strong>The 250 ms clamp</strong> caps catch-up at 15 steps per frame. After a stall (a GC pause, a tab
-        coming back) the game slows briefly instead of fast-forwarding through seconds of gameplay or spiralling
-        (updates taking longer than the time they simulate).</li>
+      <li><strong>The 250 ms clamp</strong> caps catch-up at 15 steps per frame (times GAME SPEED). After a stall
+        (a GC pause, a tab coming back) the game slows briefly instead of fast-forwarding through seconds of
+        gameplay or spiralling (updates taking longer than the time they simulate).</li>
       <li><strong><code>dt</code> is always the constant step.</strong> Scenes receive <code>update(step)</code>
         and most ignore it, counting frames instead. Never multiply by wall-clock deltas in game logic: it
-        breaks determinism under <code>?seed</code> and <code>?speed</code>.</li>
-      <li><strong>Speed batching ignores refresh rate.</strong> <code>?speed=8</code> on a 120 Hz display is 16×
-        real time. That is fine for e2e (Chromium headless) but don't use it to judge feel.</li>
+        breaks determinism under <code>?seed</code>, <code>?speed</code> and GAME SPEED. Anything new timed in
+        real ms must use <code>scaledMs</code> or <code>gameClockMs</code>, or it will lag behind at x4.</li>
+      <li><strong>GAME SPEED follows the clock; <code>?speed</code> batching ignores refresh rate.</strong> x2 is
+        2× real time on any display, because it multiplies the accumulator's steps. <code>?speed=8</code> on a
+        120 Hz display is 16× real time. That is fine for e2e (Chromium headless) but don't use it to judge feel.</li>
       <li><strong>Draw is once per frame, update can be zero times.</strong> On a 120 Hz screen about every other
         frame draws without an update, so <code>draw</code> must be pure: no state changes, no randomness. Code
         that animates "per draw" will run at different speeds on different monitors (the screens kit counts
@@ -92,8 +128,12 @@
       <li><strong>Exceptions kill the loop.</strong> <code>schedule(frame)</code> is the last line, so a throw in
         any <code>update</code> or <code>draw</code> stops rescheduling. The error screen notices that
         <code>ticks</code> stopped and shows the card (<a href="#platform-errors">errors</a>).</li>
-      <li><strong>Input edges at speed &gt; 1</strong> are consumed after <em>each</em> batched step, so a single
-        key press is seen by exactly one update, as at speed 1.</li>
+      <li><strong>Input edges at any speed</strong> are consumed after <em>each</em> step, so a single key press
+        is seen by exactly one update, as at x1: one press moves a menu cursor one notch.</li>
+      <li><strong>Overlapping jingles.</strong> Because a flow can move on before a jingle ends, it can reach the
+        next jingle first; a new jingle stops the one still finishing (a 50 ms fade), and the music resumes once,
+        after the last. Tests: <a data-src="src/engine/speed.test.ts">speed.test.ts</a> (loop, play time, presses,
+        repeat) and <a data-src="src/audio/speed.test.ts">audio/speed.test.ts</a> (awaited sounds at x4).</li>
     </ul>
   </details>
 
@@ -116,7 +156,7 @@
   api --> scene["top scene update()"]
   km -. "every new key press" .-> unlock["audio.unlock()"]
   pb -. "every new pad press" .-> unlock</pre>
-  <p>The keyboard map, also read by the guide's controls table (<a data-src="src/engine/core.ts#L26">core.ts</a>):</p>
+  <p>The keyboard map, also read by the guide's controls table (<a data-src="src/engine/core.ts#L29">core.ts</a>):</p>
   <pre><code class="lang-ts">export const KEYMAP: Record&lt;string, Button&gt; = {
   ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
   KeyW: "up", KeyS: "down", KeyA: "left", KeyD: "right",
@@ -130,13 +170,14 @@
     <tbody>
       <tr><td><code>pressed(b)</code></td><td>The button went down during this step (an <dfn>edge</dfn>)</td><td>Confirming, cancelling, opening a menu</td></tr>
       <tr><td><code>held(b)</code></td><td>The button is down on the keyboard or any pad</td><td>Walking, running with B, fast text</td></tr>
-      <tr><td><code>repeat(b)</code></td><td>On the press, then every 6 steps once held more than 18 steps</td><td>Menu cursors that auto-repeat</td></tr>
+      <tr><td><code>repeat(b)</code></td><td>On the press, then every 6 steps once held more than 18 steps (both times GAME SPEED)</td><td>Menu cursors that auto-repeat</td></tr>
     </tbody>
   </table>
   <p>
     In numbers: <code>holdFrames</code> grows by one in every <code>endFrame</code>, and <code>repeat</code>
-    returns true when <code>n &gt; 18 &amp;&amp; n % 6 === 0</code>, so the first repeat fires 24 steps (0.4 s)
-    after the press, then 10 times a second.
+    returns true when <code>n &gt; 18 * repeatScale &amp;&amp; n % (6 * repeatScale) === 0</code>, so the first
+    repeat fires 24 steps (0.4 s) after the press, then 10 times a second. <code>repeatScale</code> is GAME SPEED
+    (1 under <code>?speed</code>), which keeps those times in real seconds at x2–x4.
   </p>
   <pre class="mermaid">sequenceDiagram
   participant W as window events
@@ -281,7 +322,8 @@ const GENERIC_RAW: Profile = {
       at rounded integer coordinates and returns <code>false</code> when it isn't available.
       <code>drawMissing</code> draws the magenta-and-purple checker and logs the path once.</li>
     <li><code>Timers.frames(n)</code> returns a promise that resolves after <code>n</code> calls to
-      <code>tick()</code>: "wait 20 frames" in a cut-scene.</li>
+      <code>tick()</code>: "wait 20 frames" in a cut-scene. Being counted in steps, these waits (and the fades
+      and shakes below) speed up with GAME SPEED by themselves.</li>
     <li><code>Fader</code> animates a full-screen black or white overlay; <code>to(target, frames)</code> returns
       a promise. It quantises into four steps like a GBC palette fade:</li>
   </ul>

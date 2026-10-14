@@ -66,6 +66,7 @@ export interface GameState {
     textSpeed: "slow" | "mid" | "fast";
     follower?: boolean;         // lead Quickened walks behind the player (default true)
     battleAnims?: boolean;      // move animations on/off (default true)
+    gameSpeed?: 1 | 2 | 3 | 4;  // GAME SPEED: fixed steps per real step (default 1)
   };
   /** harvestId -> ISO date (YYYY-MM-DD) last picked. */
   harvested?: Record<string, string>;

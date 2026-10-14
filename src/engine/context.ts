@@ -11,6 +11,7 @@ import { createScreens } from "../screens";
 import { createUiKit } from "../ui/kit";
 import { createSave, newGameState } from "../save";
 import { devSeed, randomStream } from "./random";
+import { scaledMs } from "./speed";
 
 /** Play time only accrues while the overworld (or something above it) is running. */
 export const playClock = { running: false };
@@ -40,7 +41,8 @@ export function createGameContext(deps: { input: Input; scenes: SceneStack; asse
     state: undefined as unknown as GameState,
     data: DATA,
     world: WORLD,
-    audio: createAudio(),
+    // Awaited jingles and cries end no later than GAME SPEED's timing.
+    audio: createAudio({ scaleMs: scaledMs }),
     rng: seed === null ? Math.random : randomStream(seed, "world"),
     timeOfDay: (): TimeOfDay => override ?? timeOfDayFor(new Date().getHours()),
     battle: (req) => deps.scenes.run((done) => {

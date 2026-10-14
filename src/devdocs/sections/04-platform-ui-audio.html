@@ -424,12 +424,13 @@ const SPEED: Record&lt;TextSpeed, number&gt; = { slow: 1 / 4, mid: 1 / 2, fast: 
   <p>
     The options screen is <a data-src="src/screens/options.ts">src/screens/options.ts</a> (reached through
     <code>ctx.screens.options()</code> from the title or the START menu). Rows: TEXT SPEED (slow/mid/fast),
-    MUSIC and SOUND volume (0–10, drawn as ten seedlings), FOLLOWER and MOVE ANIMS (on/off), DONE.
+    GAME SPEED (×1 to ×4; the loop reads it every frame, <a href="#engine-loop">the loop</a>), MUSIC and SOUND
+    volume (0–10, drawn as ten seedlings), FOLLOWER and MOVE ANIMS (on/off), DONE.
   </p>
   <table>
     <thead><tr><th>Setting</th><th>Stored in</th><th>Default</th></tr></thead>
     <tbody>
-      <tr><td>Text speed, follower, move animations</td><td><code>state.options</code>, also <code>localStorage</code> <code>verdant-reach-options</code> (<code>storeOptions</code>)</td><td>mid, on, on</td></tr>
+      <tr><td>Text speed, game speed, follower, move animations</td><td><code>state.options</code>, also <code>localStorage</code> <code>verdant-reach-options</code> (<code>storeOptions</code>)</td><td>mid, ×1, on, on</td></tr>
       <tr><td>Music and sound volume</td><td><code>localStorage</code> <code>verdant-reach-volume</code> only (not in the save)</td><td>8 and 8</td></tr>
     </tbody>
   </table>

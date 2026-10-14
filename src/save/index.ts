@@ -61,6 +61,9 @@ export function cleanOptions(raw: unknown, fallback: GameState["options"] = { te
   const battleAnims = typeof o.battleAnims === "boolean" ? o.battleAnims : fallback.battleAnims;
   if (follower !== undefined) out.follower = follower;
   if (battleAnims !== undefined) out.battleAnims = battleAnims;
+  // Additive v1 migration: saves and stored options from before GAME SPEED have none (x1).
+  const gameSpeed = isGameSpeed(o.gameSpeed) ? o.gameSpeed : fallback.gameSpeed;
+  if (gameSpeed !== undefined) out.gameSpeed = gameSpeed;
   return out;
 }
 
@@ -71,6 +74,13 @@ export function loadOptions(storage: StorageLike | null = defaultStorage()): Gam
   } catch { /* ignore */ }
   return { textSpeed: "mid" };
 }
+
+/** GAME SPEED choices (OPTIONS): x1 to x4. */
+export const GAME_SPEEDS = [1, 2, 3, 4] as const;
+export type GameSpeed = (typeof GAME_SPEEDS)[number];
+const isGameSpeed = (v: unknown): v is GameSpeed => (GAME_SPEEDS as readonly unknown[]).includes(v);
+/** The GAME SPEED option, 1 when unset or invalid. */
+export const gameSpeedOf = (o: GameState["options"] | undefined): GameSpeed => (isGameSpeed(o?.gameSpeed) ? o.gameSpeed : 1);
 
 /** Option toggles that default to on when unset. */
 export const followerOn = (o: GameState["options"] | undefined) => o?.follower !== false;

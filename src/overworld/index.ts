@@ -13,6 +13,7 @@ import { createQuickened, healParty } from "../battle";
 import { playClock } from "../engine/context";
 import { mapTime } from "../engine/time";
 import { clearScenes } from "../engine/core";
+import { gameClockMs } from "../engine/speed";
 import { Fader, Shaker, Timers, drawImagePath } from "../engine/gfx";
 import { drawWindow } from "../ui/kit";
 import { nameEntry } from "../ui/nameEntry";
@@ -1215,11 +1216,12 @@ class Overworld implements Scene {
     await this.timers.frames(24);
   }
 
-  /** One toast at a time, oldest first; timed in real milliseconds so text boxes above don't freeze them. */
+  /** One toast at a time, oldest first; timed on the game clock (milliseconds that follow GAME
+   *  SPEED and keep running under text boxes, which freeze the overworld's own frame count). */
   private drawToasts(g: CanvasRenderingContext2D) {
     const t = this.toasts[0];
     if (!t || this.transition.kind) return;
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+    const now = gameClockMs();
     if (t.at < 0) t.at = now;
     const ms = now - t.at;
     if (ms > TOAST_MS.in + TOAST_MS.hold + TOAST_MS.out) { this.toasts.shift(); return; }

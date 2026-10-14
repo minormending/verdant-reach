@@ -83,8 +83,8 @@ export interface SaveEnvelope {
       <tr><td><code>position</code></td><td>Map, x, y, facing</td><td><strong>Required.</strong> No position, or an unknown map: the save is rejected.</td></tr>
       <tr><td><code>rafting</code></td><td>Riding the LILY RAFT</td><td>Missing: on foot</td></tr>
       <tr><td><code>heal</code></td><td>Last healing point</td><td>Unknown map: the new-game heal point</td></tr>
-      <tr><td><code>playTimeMs</code></td><td>Play time; counted while the overworld runs</td><td>Missing: 0</td></tr>
-      <tr><td><code>options</code></td><td>Text speed, follower, battle animations</td><td>Cleaned; toggles default to on</td></tr>
+      <tr><td><code>playTimeMs</code></td><td>Play time; counted in real time while the overworld runs (at any GAME SPEED)</td><td>Missing: 0</td></tr>
+      <tr><td><code>options</code></td><td>Text speed, game speed (<code>gameSpeed</code>, 1–4), follower, battle animations</td><td>Cleaned; toggles default to on; a missing or invalid <code>gameSpeed</code> plays at x1 (<code>gameSpeedOf</code>)</td></tr>
       <tr><td><code>harvested</code></td><td>Berry bush id to the date it was last picked</td><td>Only well-formed <code>YYYY-MM-DD</code> entries are kept</td></tr>
       <tr><td><code>nursery</code></td><td>Up to 2 boarders, a step counter, a seed flag</td><td>Optional; damaged parts fall back to fresh values</td></tr>
       <tr><td><code>trainerRematches</code></td><td>Route rematches won, per trainer id; the next rematch is +(wins + 1) levels</td><td>Optional; missing means none won. Only whole, non-negative counts are kept (<code>cleanTrainerRematches</code>)</td></tr>

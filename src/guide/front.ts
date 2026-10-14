@@ -101,6 +101,7 @@ export function howToPlay(g: Guide): HTMLElement {
         h("h3", "Controls"),
         controls(),
         h("p.small", "On phones and tablets an on-screen pad appears. Press F for fullscreen."),
+        h("p.small", "OPTIONS has GAME SPEED ×1 to ×4: walking, text, menus and battles run faster; play time and the clock stay real."),
         h("p.small", "At NEW GAME, DR. VALE asks whether you're a boy or a girl, then your name; you play as the one you choose."),
       ),
       h("div.card",

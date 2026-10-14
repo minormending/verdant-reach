@@ -45,6 +45,11 @@ start sound, so press a key or click once if the game is silent.
 
 On phones and tablets, an on-screen D-pad and buttons appear automatically.
 
+**OPTIONS** (on the title screen or in the START menu): TEXT SPEED, **GAME
+SPEED** (×1 to ×4: walking, text, menus, transitions and battle animations all
+run that much faster; play time, the real-time clock and the music's tempo
+don't change), MUSIC and SOUND volume, the FOLLOWER, and MOVE ANIMS.
+
 **Play offline:** open the game once with a connection and wait for "Ready to
 play offline" at the bottom of the screen; the whole game (and the guidebook)
 is then stored on the device, so it opens and plays with no connection, keeping
@@ -83,6 +88,7 @@ night. Add `?time=morning|day|night` to the URL to override it.
   - **Item growth:** EMBER ASH opens a sealed lodgepole cone, the way real fire-cones need fire to release their seed, and a COLD SNAP wakes a snowdrop bulb that needs a winter before it grows. The FOXFIRE LANTERN lights dark maps.
   - **The CRIMSON LILY:** a one-off crimson giant water lily waiting on Bloom Lake's islet. Catch it or lose it for good.
   - Party (with move reordering), bag, a pressed-specimen Field Herbarium, storage cabinet, shop and options.
+  - **GAME SPEED ×1 to ×4** in OPTIONS speeds up everything you watch (walking, text, menus, transitions, battles) while play time, the day/night clock and the music stay real-time.
   - Saving, whiteout, real-time day and night with lamp-lit nights, and ambient particles (pollen, leaves, fireflies, mist).
   - **Side content:** fifteen side quests tracked in a NOTES log, a market trade (swap a vanilla vine for the trader's POLLY, which blooms into a vanilla orchid on arrival), 39 hidden items, and berry and rose-hip bushes that regrow each real day.
   - **Your lead Quickened follows you** around the overworld (toggle in OPTIONS).
