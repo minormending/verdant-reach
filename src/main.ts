@@ -23,14 +23,19 @@ const TEST_HOOKS = import.meta.env.DEV || import.meta.env.MODE === "e2e";
 const devModules = import.meta.glob<{ default: (ctx: GameContext) => Scene | Promise<Scene> }>("./*/dev.ts");
 
 async function boot() {
-  // Public build only: store the game for offline play (src/platform/offline/).
-  registerOffline();
   installDevRandom();
   const { canvas, g } = createCanvas();
   const flags = platformFlags();
   let ticks = 0;
   let ctx: GameContext | undefined;
   const scenes = createSceneStack();
+  // Public build only: store the game for offline play and take new releases
+  // (src/platform/offline/). A downloaded update reloads the page only while
+  // nothing would be lost: still loading, or on the bare title screen.
+  let titleScene: Scene | undefined;
+  let phase: "loading" | "title" | "other" = "loading";
+  registerOffline(() => phase === "loading"
+    || (phase === "title" && scenes.all().length === 1 && scenes.top() === titleScene));
 
   const errors = installErrorScreen({
     canvas, g,
@@ -95,10 +100,13 @@ async function boot() {
     if (dev && !loader) console.warn(`[dev] no dev scene at src/${dev}/dev.ts`);
     if (loader) {
       const mod = await loader();
+      phase = "other";
       scenes.push(await mod.default(game));
     } else {
       const { createTitleScene } = await import("./ui/title");
-      scenes.push(createTitleScene(game));
+      titleScene = createTitleScene(game);
+      phase = "title";
+      scenes.push(titleScene);
     }
     booted = true;
 
