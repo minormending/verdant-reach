@@ -44,6 +44,14 @@ Xbox-layout pad, A is the button marked B. Browsers don't let a controller
 start sound, so press a key or click once if the game is silent.
 
 On phones and tablets, an on-screen D-pad and buttons appear automatically.
+
+**Play offline:** open the game once with a connection and wait for "Ready to
+play offline" at the bottom of the screen; the whole game (and the guidebook)
+is then stored on the device, so it opens and plays with no connection, keeping
+the same save. On iPhone, a home-screen icon keeps its own save separate from
+Safari's, so pick one and stay with it. Updates download quietly the next time
+you're online (src/platform/offline/).
+
 Press **F** (or the corner button) for fullscreen. Time of day follows your
 real clock: morning 4–10, day 10–18, night 18–4. Some plants only appear at
 night. Add `?time=morning|day|night` to the URL to override it.

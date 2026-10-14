@@ -12,6 +12,7 @@ import { setAudioSuspended } from "./audio";
 import {
   createLoadingScene, createPause, createShell, installErrorScreen, pauseOnFocusLoss, platformFlags,
 } from "./platform";
+import { registerOffline } from "./platform/offline/register";
 
 // Dev server and e2e build only (see testHooks() in src/engine/testHooks.ts).
 // Spelled out rather than calling testHooks() so the public production build
@@ -21,6 +22,8 @@ const TEST_HOOKS = import.meta.env.DEV || import.meta.env.MODE === "e2e";
 const devModules = import.meta.glob<{ default: (ctx: GameContext) => Scene | Promise<Scene> }>("./*/dev.ts");
 
 async function boot() {
+  // Public build only: store the game for offline play (src/platform/offline/).
+  registerOffline();
   installDevRandom();
   const { canvas, g } = createCanvas();
   const flags = platformFlags();

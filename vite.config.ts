@@ -1,8 +1,10 @@
+import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import { sourceStats } from "./src/devdocs/charts/sourceStats.ts";
+import { precacheList, swSource } from "./src/platform/offline/precache.ts";
 
 // Production builds use a relative base so the game works from any subpath,
 // such as GitHub Pages (https://<user>.github.io/verdant-reach/). Every
@@ -41,6 +43,38 @@ function devdocsSource(): Plugin {
     load(loadId) {
       if (loadId !== resolved) return undefined;
       return `export default ${JSON.stringify(sourceStats(walk(join(root, "src"), [])))};`;
+    },
+  };
+}
+
+/**
+ * Builds only: writes sw.js (src/platform/offline/sw.template.js) into the
+ * output folder after everything else is written, listing every built file
+ * so the service worker can store the whole game for offline play. The
+ * version is the build time plus a hash of every file, so any change makes a
+ * new cache. src/platform/offline/register.ts registers it in the public build.
+ */
+function offlineCache(): Plugin {
+  let outDir = "";
+  const walk = (dir: string, out: string[]) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full, out);
+      else if (entry.isFile()) out.push(relative(outDir, full).split("\\").join("/"));
+    }
+    return out;
+  };
+  return {
+    name: "offline-cache",
+    apply: "build",
+    configResolved(config) { outDir = config.build.outDir.startsWith("/") ? config.build.outDir : join(config.root, config.build.outDir); },
+    closeBundle() {
+      const files = precacheList(walk(outDir, []));
+      const hash = createHash("sha1");
+      for (const f of files) if (f !== "./") hash.update(f).update(readFileSync(join(outDir, f)));
+      const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15);
+      const template = readFileSync(join(root, "src/platform/offline/sw.template.js"), "utf8");
+      writeFileSync(join(outDir, "sw.js"), swSource(template, files, `${stamp}-${hash.digest("hex").slice(0, 10)}`));
     },
   };
 }
@@ -106,7 +140,7 @@ function trainerEditorSave(): Plugin {
 
 export default defineConfig(({ command }) => ({
   base: command === "build" ? "./" : "/",
-  plugins: [devdocsSource(), trainerEditorSave()],
+  plugins: [devdocsSource(), trainerEditorSave(), offlineCache()],
   build: {
     rolldownOptions: {
       input: {
