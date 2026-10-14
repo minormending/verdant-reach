@@ -76,7 +76,9 @@ build. The runner fixes time to day and defaults to `--seed 1`. It prints the se
 and records it in the report; use `--seed N` to reproduce another run. Dev and e2e URLs
 also accept `?seed=N` (0–4294967295); the public build ignores it. Seeded battle and
 driver-fixture streams are independent of cosmetic draws and NPC idle time.
-Without a seed, the game uses its usual randomness.
+Without a seed, the game uses its usual randomness. A lost must-win fight (a
+leader, boss, grunt or junior) is a `WARN`, not a failure: the run trains with
+route rematches near it, heals and retries up to three times (`e2e/must-win.ts`).
 
 ## The art system (read docs/ART.md)
 

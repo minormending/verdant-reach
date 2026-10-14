@@ -20,12 +20,13 @@ afterEach(() => {
 
 async function runMocked(options: {
   failBeat?: boolean; issue?: boolean; beats?: number; startupError?: boolean; buildError?: boolean; headed?: boolean; seed?: number;
-  dev?: boolean; noBuild?: boolean;
+  dev?: boolean; noBuild?: boolean; warning?: boolean;
 } = {}) {
   const report = {
     suite: "full", finished: true,
     beats: Array.from({ length: options.beats ?? 218 }, (_, i) => ({ name: `beat ${i}`, t: i, ok: !(options.failBeat && i === 0) })),
     issues: options.issue ? [{ kind: "test", msg: "problem", t: 1 }] : [],
+    ...(options.warning ? { warnings: [{ kind: "must-win", msg: "ROOK: attempt 1 lost; trained and retrying", where: "sanguine_greenhouse@5,4", t: 2 }] } : {}),
     texts: [],
   };
   const writeFile = vi.fn().mockResolvedValue(undefined);
@@ -85,6 +86,14 @@ it("saves the full report and succeeds only for all 218 passing beats", async ()
   expect(saved.seed).toBe(1);
   expect(saved.runner.seed).toBe(1);
   expect(launch).toHaveBeenCalledWith({ headless: true });
+});
+
+it("prints warnings (a retried must-win fight) without failing the run", async () => {
+  const { saved } = await runMocked({ warning: true });
+  expect(process.exitCode).toBe(0);
+  expect(saved.warnings).toHaveLength(1);
+  expect(console.log).toHaveBeenCalledWith(expect.stringMatching(/^WARN must-win 2s @sanguine_greenhouse@5,4: ROOK: attempt 1 lost/));
+  expect(console.log).toHaveBeenCalledWith(expect.stringContaining("218 beats, 0 failed, 0 issues, 1 warnings"));
 });
 
 it.each([0, 42, 4294967295])("records override seed %i for replay", async (seed) => {

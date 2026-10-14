@@ -473,10 +473,34 @@ npm run e2e -- --dev                          # the dev server, for quick local 
     <li><code>strongestMove</code> scores every legal move with the game's own
       <code>calcDamage</code> (type chart, STAB, weather, stages) at a fixed roll,
       so it never consumes a random number and cannot change the battle's
-      outcome by thinking.</li>
+      outcome by thinking. Damage past the foe's HP counts for nothing, so a sure
+      knockout beats a riskier overkill, and a recoil move that would wilt the
+      user is a last resort.</li>
     <li><code>healingItem</code> uses medicine only when HP is below a third, and
-      only medicine the story already gave: the driver never creates items.</li>
+      only medicine the story already gave: the driver never creates items. It
+      skips a heal that cannot help: when the plant moves first and a sure hit
+      finishes the foe, or when even the healed HP would fall to the foe's
+      strongest hit. Seeded simulations of the late bosses chose this rule over
+      healing whenever one hit could wilt (that version spent the jars too early).</li>
   </ul>
+
+  <h4 id="testing-e2e-must-win">Must-win battles</h4>
+
+  <p>Leaders, ROOTSTOCK's bosses and grunts, Conservatory juniors, BRAM's second
+  battle and the other fights the story cannot pass without are wrapped in
+  <code>mustWin</code> (<a data-src="e2e/must-win.ts">e2e/must-win.ts</a>).
+  Seeds shift what the party meets along the way, so even the helper can lose
+  ROOK on an unlucky run. A real player who whites out trains and tries again, and
+  so does the robot: the whiteout is a <dfn>warning</dfn> (printed as
+  <code>WARN</code>, never a failure), then <code>trainingPlan</code> picks the
+  nearest GREENHOUSE in a visited town and up to three beaten route trainers near
+  the fight for <a href="#testing-e2e">route rematches</a> (wild grass when none is
+  in reach), and the fight is tried again, up to three attempts. Only then does
+  it fail, with an issue naming who won and where. Retries walk back on their own
+  (the Grove's lanes, the lodge's bookcase, stones that re-entry resets) and
+  never record beats, so the beat count is the same either way. The Council and
+  the post-game rematches are not wrapped: the party is compressed to level 100
+  there, and a Council loss resets the whole run by design.</p>
 
   <p>To keep the story moving, the run adds an over-levelled helper (level 48 by
   default, flagged <code>e2e</code>) after the starter and heals it between beats.
@@ -539,7 +563,7 @@ npm run e2e -- --dev                          # the dev server, for quick local 
   <p>The runner writes <code>e2e/last-report.json</code> (git-ignored) on success,
   failure, timeout and Ctrl-C alike. It holds <code>beats</code> (name, ok, time,
   map, position, new flags, note, screenshot as a data URL), <code>issues</code>,
-  every line of dialogue in <code>texts</code>, every <code>battles</code> request
+  <code>warnings</code> (whiteouts and must-win retries, which do not fail the run), every line of dialogue in <code>texts</code>, every <code>battles</code> request
   and outcome, frame-time stats, and <code>runner</code> (target
   <code>production</code> or <code>dev</code>, speed, seed, elapsed time, runner
   issues). The exit code is 0 only when all of this holds:</p>

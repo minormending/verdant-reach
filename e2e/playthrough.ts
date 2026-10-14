@@ -48,7 +48,7 @@ import { createQuickened, healParty } from "../src/battle";
 import { active, type BattleState } from "../src/battle/logic/battle";
 import { devSeed, randomStream } from "../src/engine/random";
 import { testHooks } from "../src/engine/testHooks";
-import { Menu, TextBox } from "../src/screens/kit/widgets";
+import { ListView, Menu, TextBox } from "../src/screens/kit/widgets";
 import { Menu as FieldMenu } from "../src/ui/kit";
 import { glowField } from "../src/overworld/glow";
 import { partyScreen } from "../src/screens/party";
@@ -57,8 +57,10 @@ import { inBounds, isWalkable, tileAt, triggerAt, tryMove, warpAt, type MapRunti
 import { tryRaftMove } from "../src/overworld/raft";
 import { slidePath } from "../src/overworld/ice";
 import { SEED_CHECK_STEPS } from "../src/overworld/nursery";
+import { availableGlideDestinations, canGlide } from "../src/overworld/glide";
 import { AdvanceBudget, dialogueProgress, GameplayTasks, NO_PROGRESS_MS, ProgressWatchdog } from "./detectors";
 import { healingItem, strongestMove } from "./battle-driver";
+import { describeLoss, mustWin as retryMustWin, trainingPlan, type Loss } from "./must-win";
 
 // ---------------------------------------------------------------------------
 // Handles on the running game
@@ -176,6 +178,8 @@ export const report = {
   finished: false,
   beats: [] as Beat[],
   issues: [] as Issue[],
+  /** Recovered trouble (a whiteout before a retried must-win fight): printed, never a failure. */
+  warnings: [] as Issue[],
   texts: [] as { t: number; map?: string; text: string; speaker?: string }[],
   battles: [] as { request: BattleRequest; outcome?: BattleOutcome; turns?: number }[],
   frame: { samples: 0, total: 0, worst: 0, over8: 0, longTasks: 0 },
@@ -201,11 +205,22 @@ export function beat(name: string, ok = true, note?: string): Beat {
   const newFlags = flags.filter((f) => !lastFlags.has(f));
   lastFlags = new Set(flags);
   const o = ow();
+  if (o) seenMaps.add(o.mapId);
   const b: Beat = { name, ok, t: now(), map: o?.mapId, pos: o ? `${o.player.x},${o.player.y}` : undefined, newFlags, note, shot: snapshot() };
   report.beats.push(b);
   console.log(`[e2e] ${ok ? "OK  " : "FAIL"} ${name} (${b.t}s) ${b.map ?? ""} ${b.pos ?? ""} +flags[${newFlags.join(",")}]${note ? " — " + note : ""}`);
   return b;
 }
+
+/** A warning: worth reading in the report, but the run can still pass. */
+function warn(kind: string, msg: string) {
+  const w = { kind, msg: msg.slice(0, 300), where: where(), t: now() };
+  report.warnings.push(w);
+  console.log(`[e2e] WARN ${kind}: ${w.msg} @ ${w.where}`);
+}
+
+/** Every lost battle that sent the party back to a GREENHOUSE (a deliberate loss excepted). */
+const whiteouts: Loss[] = [];
 
 function issue(kind: string, msg: string) {
   const i = { kind, msg: msg.slice(0, 300), where: where(), t: now() };
@@ -251,7 +266,7 @@ function hookScenes() {
           // Story battles may spend awarded medicine. Targeted checks (notably
           // deliberate whiteouts and pod throws) keep their existing policy.
           const item = !deliberatelyLosing && (report.suite === "full" || report.suite === "story")
-            ? healingItem(ctx().data, ctx().state.bag, active(s, 0)) : null;
+            ? healingItem(ctx().data, ctx().state.bag, active(s, 0), s) : null;
           medicine = item ? { item, active: s.sides[0].active } : null;
           target = switchAgainstWanderers && (sc as BattleView).req.wanderer ? 2 : item || captureItem() ? 1 : 0;
         } else if (menu.options[0] === ctx().data.moves[active(s, 0).moves[0]?.id]?.name.toUpperCase()) {
@@ -301,6 +316,15 @@ export function instrument() {
     report.battles.push(entry);
     entry.outcome = await battle(request);
     entry.turns = battleStates.get(request)?.turn;
+    // The overworld whites out right after this returns: record it while the losing map is current.
+    if (entry.outcome === "lost" && !request.canLose && !deliberatelyLosing) {
+      const trainer = request.trainerDef ?? (request.trainer ? ctx().world.trainers[request.trainer] : undefined);
+      const opponent = trainer ? `${trainer.className} ${trainer.name}`
+        : `wild ${ctx().data.species[request.wild?.species as SpeciesId]?.name.toUpperCase() ?? request.wild?.species ?? "?"}`;
+      const loss = { opponent, map: ow()?.mapId, t: now() };
+      whiteouts.push(loss);
+      warn("whiteout", describeLoss(loss));
+    }
     // A crashed battle is never a pass, even where a beat accepts any outcome.
     if (entry.outcome === "error") issue("battle-error", `${request.kind} ${request.trainer ?? request.wild?.species ?? "?"} crashed`);
     return entry.outcome;
@@ -494,10 +518,14 @@ export function installSpeedDriver() {
 export async function advance(maxPresses = 400, done: () => boolean = idle): Promise<boolean> {
   const watchdog = new ProgressWatchdog();
   const budget = new AdvanceBudget(maxPresses);
+  const lost = whiteouts.length;
   let presses = 0;
   for (;;) {
     await sleep(120);
     if (done()) { await sleep(150); if (done()) return true; }
+    // A whiteout ends the caller's plan: stop once the party wakes at the GREENHOUSE
+    // rather than mashing on towards a goal that can no longer happen.
+    if (whiteouts.length > lost && idle()) return false;
     if (!budget.spend(battleScene())) break;
     presses++;
     if (expectName) {
@@ -730,17 +758,21 @@ function route(from: MapId, to: MapId): MapId[] | null {
   return path;
 }
 
-/** Travel to a map through its warps. */
-export async function nav(target: MapId, avoid: MapId[] = []): Promise<boolean> {
+/** Maps the run has stood on: training after a whiteout only goes where it has been. */
+const seenMaps = new Set<MapId>();
+
+/** Travel to a map through its warps (`quiet`: report no issue if it can't). */
+export async function nav(target: MapId, avoid: MapId[] = [], quiet = false): Promise<boolean> {
   for (let guard = 0; guard < 30; guard++) {
     await settle();
     const o = ow();
     if (!o) return false;
     // The overworld scene is one object whose mapId changes: keep the id.
     const here = o.mapId;
+    seenMaps.add(here);
     if (here === target) return true;
     const path = route(here, target);
-    if (!path) { issue("nav", `no warp route ${here} -> ${target}`); return false; }
+    if (!path) { if (!quiet) issue("nav", `no warp route ${here} -> ${target}`); return false; }
     const next = path[0];
     const ws = o.map.def.warps.filter((w) => w.to === next);
     let moved = false;
@@ -787,7 +819,7 @@ export async function nav(target: MapId, avoid: MapId[] = []): Promise<boolean> 
       if (ow()?.mapId !== here) { moved = true; break; }
     }
     if (!moved) {
-      issue("nav", `stuck on ${here} trying to reach ${next} (towards ${target})`);
+      if (!quiet) issue("nav", `stuck on ${here} trying to reach ${next} (towards ${target})`);
       return false;
     }
     await settle();
@@ -933,6 +965,108 @@ async function expectFlag(name: string, f: string, note?: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Must-win battles (e2e/must-win.ts): a whiteout warns, trains and retries
+// ---------------------------------------------------------------------------
+
+/**
+ * Win a fight the story cannot go on without. Attempt 1 is the story's own
+ * path; after a whiteout the run trains near `near` (route rematches, else
+ * wild grass), heals at the nearest GREENHOUSE and calls `attempt(n)` again,
+ * which must walk back itself. Retries never record beats, so the beat count
+ * is the same either way. Fails with the real reason after the last attempt.
+ */
+export function mustWin(label: string, near: MapId, attempt: (n: number) => Promise<boolean>): Promise<boolean> {
+  return retryMustWin(label, attempt, {
+    losses: () => whiteouts,
+    train: () => trainNear(near),
+    warn: (msg) => warn("must-win", msg),
+    fail: (msg) => issue("must-win", msg),
+  });
+}
+
+/** One training round near a lost fight: heal, up to three route rematches
+ * (or wild battles if none are in reach), heal again. Real battles only. */
+async function trainNear(near: MapId): Promise<string> {
+  const plan = trainingPlan(ctx().world, ctx().state.flags, near, seenMaps);
+  const done: string[] = [];
+  const heal = async () => {
+    if (plan.heal && await travel(plan.heal) && await talkTo("keeper", true)) done.push(`healed at ${plan.heal}`);
+  };
+  await heal();
+  const lost = whiteouts.length;
+  const yes: [RegExp, boolean] = [/Up for a rematch/, true];
+  answers.unshift(yes);
+  try {
+    for (const t of plan.trainers) {
+      if (whiteouts.length > lost || !(await travel(t.map))) break;
+      const before = report.battles.length;
+      await talkTo(t.npc, true);
+      const fight = report.battles.slice(before).filter((b) => b.request.trainer === t.trainer).at(-1);
+      done.push(`${t.trainer} rematch ${fight?.outcome ?? "not fought"}`);
+    }
+  } finally { answers.splice(answers.indexOf(yes), 1); }
+  if (!plan.trainers.length && plan.wild && whiteouts.length === lost && await travel(plan.wild)) {
+    done.push(`${await wildTraining(3)} wild battles on ${plan.wild}`);
+  }
+  await heal();
+  return done.join(", ") || "nothing in reach";
+}
+
+/** Walk between two neighbouring tall-grass tiles until `battles` wild battles end. */
+async function wildTraining(battles: number): Promise<number> {
+  const o = ow();
+  if (!o) return 0;
+  const m = o.map as unknown as MapRuntime, map = o.mapId, p = o.player;
+  const pairs: [number, number, number, number][] = [];
+  m.def.tiles.forEach((row, y) => [...row].forEach((_, x) => {
+    if (tileAt(m, x, y) === "tall_grass" && tileAt(m, x + 1, y) === "tall_grass") pairs.push([x, y, x + 1, y]);
+  }));
+  pairs.sort((a, b) => Math.abs(a[0] - p.x) + Math.abs(a[1] - p.y) - (Math.abs(b[0] - p.x) + Math.abs(b[1] - p.y)));
+  const start = report.battles.length, lost = whiteouts.length;
+  for (const [ax, ay, bx, by] of pairs.slice(0, 4)) {
+    if (!(await walkToQuiet(ax, ay))) continue;
+    for (let steps = 0; steps < 400 && report.battles.length - start < battles
+      && whiteouts.length === lost && ow()?.mapId === map; steps++) {
+      if (!(await walkTo(...(onTile(ax, ay) ? [bx, by] as const : [ax, ay] as const)))) break;
+      await settle();
+    }
+    break;
+  }
+  return report.battles.length - start;
+}
+
+/** nav, but GLIDE first (the real START menu) when a visited town is much closer to the target. */
+async function travel(target: MapId): Promise<boolean> {
+  const here = ow()?.mapId;
+  if (!here) return false;
+  const path = route(here, target);
+  if (path && path.length > 4 && (ctx().state.bag.glider_seed ?? 0) > 0) {
+    const outdoor = [here, ...path].find((m) => ctx().world.maps[m]?.outdoor);
+    if (outdoor && await nav(outdoor, [], true) && canGlide(ctx().state, ctx().world.maps[outdoor], false)) {
+      const hops = (from: MapId) => route(from, target)?.length ?? Infinity;
+      const town = availableGlideDestinations(ctx().world, ctx().state)
+        .sort((a, b) => hops(a.map) - hops(b.map))[0];
+      if (town && hops(town.map) + 2 < hops(outdoor) && !(await glideTo(town.map))) {
+        for (let i = 0; i < 8 && !idle(); i++) { await press("b"); await sleep(300); }
+      }
+    }
+  }
+  return nav(target, [], true);
+}
+
+/** A walking loop's whiteout recovery: at most two walks back per loop. */
+const recovery = () => ({ seen: whiteouts.length, left: 2 });
+
+/** After a new whiteout in a walking loop, walk back to `map` and carry on. */
+async function backAfterWhiteout(map: MapId, r: { seen: number; left: number }): Promise<boolean> {
+  if (whiteouts.length === r.seen || r.left <= 0) return false;
+  r.seen = whiteouts.length;
+  r.left--;
+  warn("whiteout", `walking back to ${map} after ${describeLoss(whiteouts.at(-1)!)}`);
+  return travel(map);
+}
+
+// ---------------------------------------------------------------------------
 // Party helpers
 // ---------------------------------------------------------------------------
 
@@ -1075,9 +1209,12 @@ export async function storyPlaythrough(opts: { boost: number; starter: "oak" | "
   if (!flag("beat_hollis")) {
     await nav("bramblegate");
     beat("arrived in bramblegate", true, `party=${party()}`);
-    await nav("bramblegate_conservatory");
-    if (!(await solvePuzzle("hollis"))) issue("puzzle", "could not reach HOLLIS");
-    await talkTo("hollis");
+    await mustWin("HOLLIS", "bramblegate_conservatory", async () => {
+      await nav("bramblegate_conservatory");
+      if (!(await solvePuzzle("hollis"))) issue("puzzle", "could not reach HOLLIS");
+      await talkTo("hollis");
+      return flag("beat_hollis");
+    });
     await expectFlag("HOLLIS: bramble mark", "beat_hollis", `marks=${JSON.stringify(st().marks ?? "")}`);
   }
   if (!flag("saw_grunt_bg")) {
@@ -1087,13 +1224,16 @@ export async function storyPlaythrough(opts: { boost: number; starter: "oak" | "
   }
 
   if (!flag("beat_grunt_r3")) {
-    await nav("route_3");
-    await settle();
-    if (!flag("beat_grunt_r3")) {
-      const o = ow()!;
-      if (o.map.def.triggers.some((t) => t.script === "r3_grunt")) await trigger("r3_grunt");
-      else if (o.npcs.some((n) => n.id === "grunt" && o.visible(n))) await talkTo("grunt");
-    }
+    await mustWin("ROUTE 3 grunt", "route_3", async () => {
+      await nav("route_3");
+      await settle();
+      if (!flag("beat_grunt_r3")) {
+        const o = ow()!;
+        if (o.map.def.triggers.some((t) => t.script === "r3_grunt")) await trigger("r3_grunt");
+        else if (o.npcs.some((n) => n.id === "grunt" && o.visible(n))) await talkTo("grunt");
+      }
+      return flag("beat_grunt_r3");
+    });
     await expectFlag("route 3 grunt", "beat_grunt_r3");
   }
 
@@ -1101,38 +1241,49 @@ export async function storyPlaythrough(opts: { boost: number; starter: "oak" | "
   if (!flag("grove_cleared")) {
     await nav("sugarbush");
     beat("arrived in sugarbush");
-    await nav("sugarbush_grove");
-    for (const g of ["grunt1", "grunt2", "grunt3"]) {
-      const o = ow()!;
-      const n = o.npcs.find((a) => a.id === g);
-      if (n && o.visible(n) && n.def?.trainer && !flag(`beat_${n.def.trainer}`)) await talkTo(g);
-    }
-    // The step-on trigger in front of SHEARS may already have run the whole scene.
-    if (!flag("grove_cleared") && !(await talkTo("shears", true)) && !flag("grove_cleared")) {
-      issue("soft-lock", "SHEARS unreachable after the grove grunts (a beaten trainer blocks the path?); re-entering the grove");
-      await nav("sugarbush");
+    await mustWin("SUGARBUSH GROVE: the grunts and SHEARS", "sugarbush_grove", async () => {
       await nav("sugarbush_grove");
-      await talkTo("shears");
-    }
+      for (const g of ["grunt1", "grunt2", "grunt3"]) {
+        const o = ow();
+        const n = o?.npcs.find((a) => a.id === g);
+        if (o?.mapId === "sugarbush_grove" && n && o.visible(n) && n.def?.trainer && !flag(`beat_${n.def.trainer}`)) await talkTo(g);
+      }
+      if (ow()?.mapId !== "sugarbush_grove") return false; // whited out
+      // The step-on trigger in front of SHEARS may already have run the whole scene.
+      if (!flag("grove_cleared") && !(await talkTo("shears", true)) && !flag("grove_cleared")) {
+        issue("soft-lock", "SHEARS unreachable after the grove grunts (a beaten trainer blocks the path?); re-entering the grove");
+        await nav("sugarbush");
+        await nav("sugarbush_grove");
+        await talkTo("shears");
+      }
+      return flag("grove_cleared");
+    });
     await expectFlag("SHEARS: grove cleared", "grove_cleared");
   }
   if (!flag("rival_2_done")) {
-    await nav("sugarbush");
-    await settle();
-    if (!flag("rival_2_done")) {
-      const o = ow()!;
-      const tr = o.map.def.triggers.find((t) => t.script === "rival_2");
-      if (tr) await trigger("rival_2");
-      else if (o.npcs.some((n) => n.id === "bram" && o.visible(n))) await talkTo("bram");
-    }
+    // Unlike his other battles, BRAM's second must be won.
+    await mustWin("rival battle 2", "sugarbush", async () => {
+      await nav("sugarbush");
+      await settle();
+      if (!flag("rival_2_done")) {
+        const o = ow()!;
+        const tr = o.map.def.triggers.find((t) => t.script === "rival_2");
+        if (tr) await trigger("rival_2");
+        else if (o.npcs.some((n) => n.id === "bram" && o.visible(n))) await talkTo("bram");
+      }
+      return flag("rival_2_done");
+    });
     await expectFlag("rival battle 2", "rival_2_done");
   }
 
   if (!flag("beat_nell")) {
-    await nav("sugarbush_conservatory");
-    if (!(await solvePuzzle("nell"))) issue("puzzle", "could not reach NELL");
     // NELL's talk runs the chain: battle, mark, then VALE's call, which now sends us east.
-    await talkTo("nell");
+    await mustWin("NELL", "sugarbush_conservatory", async () => {
+      await nav("sugarbush_conservatory");
+      if (!(await solvePuzzle("nell"))) issue("puzzle", "could not reach NELL");
+      await talkTo("nell");
+      return flag("beat_nell");
+    });
     await expectFlag("NELL: sundew mark", "beat_nell");
     await expectFlag("VALE's call: take the seed to the ROOT RELAY", "ch4_started");
   }
@@ -1152,9 +1303,18 @@ async function rematchRoute1() {
   const base = ctx().world.trainers[id];
   const before = report.battles.length;
   const yes: [RegExp, boolean] = [/Up for a rematch/, true];
+  const won = (from: number) => report.battles.slice(from).some((b) => b.request.trainer === id && b.outcome === "won");
   answers.unshift(yes);
-  try { await talkTo("milo"); } finally { answers.splice(answers.indexOf(yes), 1); }
-  const fight = report.battles.slice(before).find((b) => b.request.trainer === id);
+  try {
+    await mustWin("ROUTE 1: MILO's rematch", "route_1", async (n) => {
+      if (n > 1) await nav("route_1");
+      const from = report.battles.length;
+      await talkTo("milo");
+      return won(from);
+    });
+  } finally { answers.splice(answers.indexOf(yes), 1); }
+  // A lost rematch does not count, so the winning one is still at +1.
+  const fight = report.battles.slice(before).filter((b) => b.request.trainer === id).at(-1);
   const fielded = fight && battleStates.get(fight.request)?.sides[1].party.map((q) => q.level);
   const levels = fielded ?? fight?.request.trainerDef?.team.map((m) => m.level);
   const expected = base.team.map((m) => m.level + 1);
@@ -1251,9 +1411,12 @@ async function chapter4(_opts: { boost: number; starter: "oak" | "chili" | "lily
 
   // Conservatory 3.
   if (!flag("beat_flora")) {
-    await nav("glasshouse_conservatory");
-    if (!(await solvePuzzle("flora"))) issue("puzzle", "could not reach FLORA");
-    await talkTo("flora");
+    await mustWin("FLORA VANCE", "glasshouse_conservatory", async () => {
+      await nav("glasshouse_conservatory");
+      if (!(await solvePuzzle("flora"))) issue("puzzle", "could not reach FLORA");
+      await talkTo("flora");
+      return flag("beat_flora");
+    });
     await expectFlag("FLORA VANCE: rose mark", "beat_flora", `marks=${JSON.stringify(st().marks ?? "")}`);
   }
 
@@ -1350,10 +1513,17 @@ async function chapter5() {
   await expectFlag("CONSERVATORY 4: lever A", "cons4_lever_a");
   await talkTo("lever:cons4_lever_b");
   await expectFlag("CONSERVATORY 4: lever B", "cons4_lever_b");
-  const crossed = await walkTo(7, 3);
+  const crossed = await mustWin("CONSERVATORY 4: the juniors on the path", "cedarhallow_conservatory", async () => {
+    await nav("cedarhallow_conservatory");
+    return await walkTo(7, 3) && onTile(7, 3) && flag("beat_jr_lantern") && flag("beat_jr_nightshade");
+  });
   beat("CONSERVATORY 4: the path through the pits", crossed && onTile(7, 3)
     && flag("beat_jr_lantern") && flag("beat_jr_nightshade"));
-  await talkTo("morrow");
+  await mustWin("MORROW", "cedarhallow_conservatory", async (n) => {
+    if (n > 1) { await nav("cedarhallow_conservatory"); await walkTo(7, 3); }
+    await talkTo("morrow");
+    return flag("beat_morrow");
+  });
   beat("MORROW: pipe mark", flag("beat_morrow") && st().marks.includes("pipe_mark"));
 
   const exit = ow()?.map.def.warps.find((w) => w.to === "cedarhallow");
@@ -1390,7 +1560,13 @@ async function chapter6() {
   beat("the doctor leaves on the grey boat", flag("ch6_doctor_met")
     && !!doctor && !ow()!.visible(doctor) && seedBefore > 0 && bag("centuryheart_seed") === seedBefore);
   for (const grunt of ["grunt_dock_1", "grunt_dock_2"]) {
-    if (!flag(`beat_${grunt}`)) await talkTo(grunt);
+    if (!flag(`beat_${grunt}`)) {
+      await mustWin(`the docks: ${grunt}`, "saltmarsh_harbour", async () => {
+        await nav("saltmarsh_harbour");
+        await talkTo(grunt);
+        return flag(`beat_${grunt}`);
+      });
+    }
     await expectFlag(`the docks: ${grunt}`, `beat_${grunt}`);
   }
   await talkTo("reyes_point");
@@ -1419,25 +1595,34 @@ async function chapter6() {
     issue("trade", "the caught VANILLA VINE is not in the party");
   }
 
-  await nav("driftseed_conservatory");
-  let pushed = 0;
-  const pushes = report.texts.length;
   // Approach each stone from the left, push into its right-hand pocket, then
-  // climb the cleared corridor. Re-entering would reset all three actors.
-  for (const [id, y] of [["boulder_1", 12], ["boulder_2", 8], ["boulder_3", 4]] as const) {
-    if (!(await walkTo(6, y))) break;
-    await face("right");
-    await press("a");
-    await sleep(250);
-    await settle();
-    const boulder = ow()?.npcs.find((n) => n.id === id);
-    if (boulder?.x !== 8 || boulder.y !== y) break;
-    pushed++;
-  }
-  const summit = await walkTo(7, 3);
+  // climb the cleared corridor. Re-entering resets all three actors, so a
+  // retry after a junior's whiteout pushes them all again.
+  let pushed = 0, pushes = report.texts.length;
+  const climb = async () => {
+    await nav("driftseed_conservatory");
+    pushed = 0;
+    pushes = report.texts.length;
+    for (const [id, y] of [["boulder_1", 12], ["boulder_2", 8], ["boulder_3", 4]] as const) {
+      if (!(await walkTo(6, y))) break;
+      await face("right");
+      await press("a");
+      await sleep(250);
+      await settle();
+      const boulder = ow()?.npcs.find((n) => n.id === id);
+      if (boulder?.x !== 8 || boulder.y !== y) break;
+      pushed++;
+    }
+    return await walkTo(7, 3) && onTile(7, 3);
+  };
+  const summit = await mustWin("CONSERVATORY 6: the juniors on the climb", "driftseed_conservatory", climb);
   beat("CONSERVATORY 6: UPROOT the three boulders", pushed === 3 && summit && onTile(7, 3)
     && report.texts.slice(pushes).filter((t) => t.text === "[?] UPROOT it?").length === 3);
-  await talkTo("saguaro");
+  await mustWin("SAGUARO", "driftseed_conservatory", async (n) => {
+    if (n > 1 && !(await climb())) return false;
+    await talkTo("saguaro");
+    return flag("beat_saguaro");
+  });
   beat("SAGUARO: cactus mark", flag("beat_saguaro") && st().marks.includes("cactus_mark"));
   beat("SAGUARO: the CACTUS SAP", flag("got_sap") && bag("cactus_sap") === 1);
 
@@ -1467,12 +1652,21 @@ async function chapter6() {
 
   await nav("saltmarsh_conservatory");
   const pools = report.texts.length;
-  await talkTo("lever:cons5_gate");
+  await mustWin("CONSERVATORY 5: the juniors by the sluice", "saltmarsh_conservatory", async (n) => {
+    if (n > 1) await nav("saltmarsh_conservatory");
+    if (!flag("cons5_gate")) await talkTo("lever:cons5_gate");
+    return flag("cons5_gate") && ow()?.mapId === "saltmarsh_conservatory";
+  });
   beat("CONSERVATORY 5: raft to the sluice lever", ow()?.mapId === "saltmarsh_conservatory"
     && flag("cons5_gate") && report.texts.slice(pools).some((t) => /Ride the LILY RAFT/.test(t.text)));
-  const reached = await walkTo(7, 3);
+  const toReyes = async () => { await nav("saltmarsh_conservatory"); return await walkTo(7, 3) && onTile(7, 3); };
+  const reached = await mustWin("CONSERVATORY 5: the juniors past the gate", "saltmarsh_conservatory", toReyes);
   beat("CONSERVATORY 5: raft through the open gate", reached && onTile(7, 3) && !st().rafting);
-  await talkTo("reyes");
+  await mustWin("REYES", "saltmarsh_conservatory", async (n) => {
+    if (n > 1 && !(await toReyes())) return false;
+    await talkTo("reyes");
+    return flag("beat_reyes");
+  });
   beat("REYES: mangrove mark", flag("beat_reyes") && st().marks.includes("mangrove_mark"));
 
   const exit = ow()?.map.def.warps.find((w) => w.to === "saltmarsh_harbour");
@@ -1488,6 +1682,12 @@ async function chapter6() {
 // ---------------------------------------------------------------------------
 // Chapter 7: LARCHMERE, BLOOM LAKE and the ROOTSTOCK HIDEOUT
 // ---------------------------------------------------------------------------
+
+/** Back into HIDEOUT B1 the only way in: through the lodge's sliding bookcase. */
+async function enterHideout(): Promise<boolean> {
+  if (ow()?.mapId?.startsWith("rootstock_hideout_")) return true;
+  return await nav("larchmere_lodge") && await trigger("ch7_bookcase") && ow()?.mapId === "rootstock_hideout_1";
+}
 
 async function chapter7() {
   ctx().state.options.textSpeed = "fast";
@@ -1543,20 +1743,34 @@ async function chapter7() {
     && (lilyBattle?.outcome !== "caught" || !!lily?.sport), `outcome=${lilyBattle?.outcome}, caught sport=${lily?.sport ?? false}`);
 
   await nav("larchmere_lodge");
-  if (!flag("lodge_grunt_seen")) await trigger("ch7_lodge_grunt");
+  await mustWin("LAKESIDE LODGE grunt", "larchmere_lodge", async (n) => {
+    if (n > 1) await nav("larchmere_lodge");
+    if (!flag("lodge_grunt_seen")) await trigger("ch7_lodge_grunt");
+    return flag("beat_grunt_lodge");
+  });
   await talkTo("lodge_keeper");
   beat("LAKESIDE LODGE: the nervous keeper and grunt", flag("lodge_grunt_seen") && flag("beat_grunt_lodge"));
   await trigger("ch7_bookcase");
   beat("the bookcase reveals HIDEOUT B1", flag("lodge_stair_open") && ow()?.mapId === "rootstock_hideout_1");
   for (const n of [1, 2, 3]) {
-    if (!flag(`beat_grunt_b1_${n}`)) await talkTo(`grunt_b1_${n}`);
+    if (!flag(`beat_grunt_b1_${n}`)) {
+      await mustWin(`HIDEOUT B1: grunt ${n}`, "rootstock_hideout_1", async (k) => {
+        if (k > 1 && !(await enterHideout())) return false;
+        await talkTo(`grunt_b1_${n}`);
+        return flag(`beat_grunt_b1_${n}`);
+      });
+    }
     await talkTo(`emitter_${n}`);
     beat(`HIDEOUT B1: signal emitter ${n} off`, flag(`beat_grunt_b1_${n}`) && flag(`emitter_${n}_off`));
   }
   await nav("rootstock_hideout_2");
   beat("the lower hideout stairs open", flag("emitters_off") && ow()?.mapId === "rootstock_hideout_2");
   before = report.texts.length;
-  await talkTo("calloway");
+  await mustWin("DR. CALLOWAY", "rootstock_hideout_2", async (n) => {
+    if (n > 1 && !(await enterHideout() && await nav("rootstock_hideout_2"))) return false;
+    await talkTo("calloway");
+    return flag("beat_calloway");
+  });
   beat("DR. CALLOWAY: the grafted ace", flag("beat_calloway") && flag("calloway_escaped")
     && report.texts.slice(before).some((t) => /strains at its GRAFT COLLAR!/.test(t.text)));
   await trigger("ch7_files");
@@ -1578,13 +1792,21 @@ async function chapter7() {
   // goto plans between slide stops. All three long traversals below are one
   // arrow input each; the overworld carries the player across the ice.
   const iceStops = [[2, 14], [13, 14], [13, 10], [2, 10], [2, 6], [13, 6], [13, 4], [7, 3]] as const;
-  let slid = true;
-  for (const [x, y] of iceStops) {
-    if (!(await walkTo(x, y)) || !onTile(x, y)) { slid = false; break; }
-  }
+  const slide = async () => {
+    await nav("larchmere_conservatory");
+    for (const [x, y] of iceStops) {
+      if (!(await walkTo(x, y)) || !onTile(x, y)) return false;
+    }
+    return true;
+  };
+  const slid = await mustWin("CONSERVATORY 7: the juniors on the ice", "larchmere_conservatory", slide);
   beat("CONSERVATORY 7: slide across the ICE floor", slid && onTile(7, 3));
   const coldBefore = bag("cold_snap");
-  await talkTo("signe");
+  await mustWin("SIGNE", "larchmere_conservatory", async (n) => {
+    if (n > 1 && !(await slide())) return false;
+    await talkTo("signe");
+    return flag("beat_signe");
+  });
   beat("SIGNE: snowdrop mark", flag("beat_signe") && st().marks.includes("snowdrop_mark"));
   beat("SIGNE: the COLD SNAP", flag("got_cold_snap_signe") && bag("cold_snap") === coldBefore + 1);
   const growthCold = bag("cold_snap");
@@ -1626,19 +1848,31 @@ async function chapter8() {
   beat("PALM HOUSE: ODELL's RELAY KEYCARD", flag("got_keycard") && bag("relay_keycard") === 1);
   await nav("glasshouse_city");
   for (const id of ["grunt_r0_1", "grunt_r0_2"]) {
-    if (!flag(`beat_${id}`)) await talkTo(id);
+    if (!flag(`beat_${id}`)) await mustWin(`ROOT RELAY: ${id}`, "glasshouse_city", async () => {
+      await nav("glasshouse_city");
+      await talkTo(id);
+      return flag(`beat_${id}`);
+    });
   }
   beat("ROOT RELAY: the door grunts", flag("beat_grunt_r0_1") && flag("beat_grunt_r0_2"));
 
   await nav("glasshouse_relay");
   for (const id of ["grunt_r1_1", "grunt_r1_2"]) {
-    if (!flag(`beat_${id}`)) await talkTo(id);
+    if (!flag(`beat_${id}`)) await mustWin(`ROOT RELAY: ${id}`, "glasshouse_relay", async () => {
+      await nav("glasshouse_relay");
+      await talkTo(id);
+      return flag(`beat_${id}`);
+    });
   }
   beat("ROOT RELAY 1F: the lobby grunts", ow()?.mapId === "glasshouse_relay"
     && flag("beat_grunt_r1_1") && flag("beat_grunt_r1_2"));
   await nav("relay_2f");
   for (const id of ["grunt_r2_1", "grunt_r2_2", "grunt_r2_3"]) {
-    if (!flag(`beat_${id}`)) await talkTo(id);
+    if (!flag(`beat_${id}`)) await mustWin(`ROOT RELAY: ${id}`, "relay_2f", async () => {
+      await nav("relay_2f");
+      await talkTo(id);
+      return flag(`beat_${id}`);
+    });
   }
   beat("SERVER HALL 2F: the three grunts", ow()?.mapId === "relay_2f"
     && [1, 2, 3].every((n) => flag(`beat_grunt_r2_${n}`)));
@@ -1653,7 +1887,11 @@ async function chapter8() {
   beat("PATCH BAY: BRAM holds the stairwell", flag("ch8_bram_met") && !flag("relay_patched")
     && report.battles.length === before);
   for (const id of ["grunt_r3_1", "grunt_r3_2"]) {
-    if (!flag(`beat_${id}`)) await talkTo(id);
+    if (!flag(`beat_${id}`)) await mustWin(`ROOT RELAY: ${id}`, "relay_3f", async () => {
+      await nav("relay_3f");
+      await talkTo(id);
+      return flag(`beat_${id}`);
+    });
   }
   beat("PATCH BAY 3F: the two grunts", flag("beat_grunt_r3_1") && flag("beat_grunt_r3_2"));
   // Each trigger faces the actual solid console and presses A. Check every
@@ -1669,8 +1907,12 @@ async function chapter8() {
 
   await nav("relay_roof");
   before = report.battles.length;
-  await trigger("ch8_wren");
-  const wren = report.battles.slice(before).find((battle) => battle.request.trainer === "wren");
+  await mustWin("WREN on the RELAY ROOF", "relay_roof", async () => {
+    await nav("relay_roof");
+    await trigger("ch8_wren");
+    return flag("beat_wren");
+  });
+  const wren = report.battles.slice(before).filter((battle) => battle.request.trainer === "wren").at(-1);
   beat("RELAY ROOF: WREN cuts the broadcast", wren?.outcome === "won"
     && flag("beat_wren") && flag("broadcast_off") && !flag("ch8_takeover"));
   const roof = ow();
@@ -1700,22 +1942,38 @@ async function chapter8() {
 // Chapter 9: THISTLEDOWN and SANGUINE RIDGE
 // ---------------------------------------------------------------------------
 
-/** Push the three stones north into their pits using the real UPROOT prompt. */
+/** Push the three stones north into their pits using the real UPROOT prompt.
+ * Filled pits persist but re-entering resets the stones (as in the Seed
+ * Vault), so on a return after a whiteout a stone whose pit is already filled
+ * is pushed aside off the lane instead: the first east, the others west. */
 export async function solveSanguinePits(): Promise<boolean> {
   const before = report.texts.length;
-  for (const [id, y] of [["boulder_1", 15], ["boulder_2", 11], ["boulder_3", 7]] as const) {
-    if (ow()?.mapId !== "sanguine_conservatory" || !(await walkTo(8, y + 1))) return false;
+  let pushes = 0;
+  for (const [id, y, side] of [["boulder_1", 15, "right"], ["boulder_2", 11, "left"], ["boulder_3", 7, "left"]] as const) {
+    const o = ow();
+    if (o?.mapId !== "sanguine_conservatory") return false;
+    const stone = o.npcs.find((n) => n.id === id);
+    if (flag(`filled_sanguine_conservatory_8_${y - 1}`)) {
+      if (!stone || !o.visible(stone) || stone.x !== 8) continue;
+      pushes++;
+      if (!(await vaultPush(side === "right" ? 7 : 9, y, side))) return false;
+      const moved = ow()?.npcs.find((n) => n.id === id);
+      if (moved?.x === 8) return false;
+      continue;
+    }
+    pushes++;
+    if (!(await walkTo(8, y + 1))) return false;
     await face("up");
     await press("a");
     await sleep(250);
     await settle();
-    const o = ow();
-    const stone = o?.npcs.find((n) => n.id === id);
-    if (!o || (stone && o.visible(stone)) || !flag(`filled_sanguine_conservatory_8_${y - 1}`)
-      || tileAt(o.map as unknown as MapRuntime, 8, y - 1) !== "filled_pit") return false;
+    const after = ow();
+    const pushed = after?.npcs.find((n) => n.id === id);
+    if (!after || (pushed && after.visible(pushed)) || !flag(`filled_sanguine_conservatory_8_${y - 1}`)
+      || tileAt(after.map as unknown as MapRuntime, 8, y - 1) !== "filled_pit") return false;
   }
-  return await walkTo(8, 3) && onTile(8, 3)
-    && report.texts.slice(before).filter((t) => t.text === "[?] UPROOT it?").length === 3;
+  return ow()?.mapId === "sanguine_conservatory" && await walkTo(8, 3) && onTile(8, 3)
+    && report.texts.slice(before).filter((t) => t.text === "[?] UPROOT it?").length === pushes;
 }
 
 /** Stand west of the actual gap and confirm ROOT BRIDGE with A/YES. */
@@ -1771,8 +2029,10 @@ async function chapter9() {
     && !!canyon && !!rival && !canyon.visible(rival));
   // Either BRAM result is valid. If no opponent was defeated, finish the
   // plant's EXP through another real encounter rather than changing species.
+  const back = recovery();
   for (let steps = 0; steps < 1000 && stone?.species === "lithops_pair"; steps++) {
     const [x, y] = onTile(3, 35) ? [4, 35] : [3, 35];
+    if (ow()?.mapId !== "route_11" && !(await backAfterWhiteout("route_11", back))) break;
     if (ow()?.mapId !== "route_11" || !(await walkTo(x, y))) break;
     await settle();
     refreshHelper();
@@ -1790,10 +2050,20 @@ async function chapter9() {
   beat("SANGUINE RIDGE: arrived by the canyon", ow()?.mapId === "sanguine_ridge"
     && flag("visited_sanguine_ridge") && flag("rival_5_done"));
   await nav("sanguine_conservatory");
-  beat("CONSERVATORY 8: UPROOT the three boulders into pits", await solveSanguinePits());
+  const pits = () => [14, 10, 6].every((y) => flag(`filled_sanguine_conservatory_8_${y}`));
+  // The juniors stand by the pit lane (EMBER and SCALE, sight 1).
+  beat("CONSERVATORY 8: UPROOT the three boulders into pits", await mustWin("CONSERVATORY 8: the juniors by the pits",
+    "sanguine_conservatory", async (n) => {
+      if (n > 1) await nav("sanguine_conservatory");
+      return await solveSanguinePits() && pits();
+    }));
   const rookBefore = report.battles.length;
-  await talkTo("rook");
-  const rook = report.battles.slice(rookBefore).find((b) => b.request.trainer === "rook");
+  await mustWin("ROOK", "sanguine_conservatory", async (n) => {
+    if (n > 1 && !(await nav("sanguine_conservatory") && await solveSanguinePits())) return false;
+    await talkTo("rook");
+    return flag("beat_rook");
+  });
+  const rook = report.battles.slice(rookBefore).filter((b) => b.request.trainer === "rook").at(-1);
   beat("ROOK: resin mark", rook?.outcome === "won" && flag("beat_rook") && st().marks.includes("resin_mark"));
   beat("ROOK: the FIG ROOT", flag("got_fig_root") && bag("fig_root") === 1);
 
@@ -1953,10 +2223,38 @@ export async function chapter10() {
     beat("SANGUINE RIDGE: the west gate opens", false, "Chapter 9 did not continue into the overworld");
     return;
   }
-  const defeated = async (ids: string[]) => {
-    for (const id of ids) if (!flag(`beat_${id}`)) await talkTo(id);
+  // Every trainer here must be beaten. A retry after a whiteout walks back the
+  // way the story came (`approach`), which for the Grove means its lanes again.
+  const defeated = async (ids: string[], approach?: () => Promise<boolean>) => {
+    const map = ow()?.mapId ?? "route_12";
+    for (const id of ids) {
+      if (flag(`beat_${id}`)) continue;
+      const tr = ctx().world.trainers[id];
+      await mustWin(tr ? `${tr.className} ${tr.name}` : id, map, async (n) => {
+        if (n > 1 && !(await (approach ? approach() : nav(map)))) return false;
+        await talkTo(id);
+        return flag(`beat_${id}`);
+      });
+    }
     return ids.every((id) => flag(`beat_${id}`));
   };
+  /** Walk from outside back into the Grove: ring 1, ring 2's south or (listening
+   * through its lanes) north side, ring 3 or the heart. */
+  const grove = (ring: "1" | "2s" | "2n" | "3" | "heart") => async () => {
+    const order = ["1", "2s", "2n", "3", "heart"];
+    const upTo = (r: string) => order.indexOf(ring) >= order.indexOf(r);
+    return await nav("elder_grove_1")
+      && (!upTo("2s") || await nav("elder_grove_2"))
+      && (!upTo("2n") || await solveGroveLanes())
+      && (!upTo("3") || await nav("elder_grove_3"))
+      && (!upTo("heart") || await nav("elder_grove_heart"));
+  };
+  const leader = (label: string, id: string, approach: () => Promise<boolean>) =>
+    mustWin(label, ow()?.mapId ?? "elder_grove_1", async (n) => {
+      if (n > 1 && !(await approach())) return false;
+      await talkTo(id);
+      return flag(`beat_${id}`);
+    });
   const won = (before: number, id: string) => report.battles.slice(before)
     .some((b) => b.request.trainer === id && b.outcome === "won");
   await nav("sanguine_ridge");
@@ -1995,21 +2293,21 @@ export async function chapter10() {
   beat("GROVE GATE: defeat the three guards", await defeated(["grunt_arb_1", "grunt_arb_2", "grunt_arb_3"]));
 
   await nav("elder_grove_1");
-  const ring1 = await defeated(["grunt_g1_1", "grunt_g1_2"]), shearsBefore = report.battles.length;
-  await talkTo("shears_2");
+  const ring1 = await defeated(["grunt_g1_1", "grunt_g1_2"], grove("1")), shearsBefore = report.battles.length;
+  await leader("SHEARS in ring 1", "shears_2", grove("1"));
   beat("RING 1: SHEARS yields", ring1 && won(shearsBefore, "shears_2")
     && flag("beat_shears_2") && flag("shears_2_yielded"));
   await nav("elder_grove_2");
   // Defeat the entry grunt before solving; the northern grunt is beyond the lanes.
-  await defeated(["grunt_g2_1"]);
+  await defeated(["grunt_g2_1"], grove("2s"));
   beat("RING 2: listen through the shifting lanes", await solveGroveLanes());
-  const ring2 = await defeated(["grunt_g2_2"]), callowayBefore = report.battles.length;
-  await talkTo("calloway_2");
+  const ring2 = await defeated(["grunt_g2_2"], grove("2n")), callowayBefore = report.battles.length;
+  await leader("CALLOWAY in ring 2", "calloway_2", grove("2n"));
   beat("RING 2: CALLOWAY yields", ring2 && flag("beat_grunt_g2_1") && won(callowayBefore, "calloway_2")
     && flag("beat_calloway_2") && flag("calloway_2_yielded"));
   await nav("elder_grove_3");
-  const ring3 = await defeated(["grunt_g3_1", "grunt_g3_2"]), wrenBefore = report.battles.length;
-  await talkTo("wren_2");
+  const ring3 = await defeated(["grunt_g3_1", "grunt_g3_2"], grove("3")), wrenBefore = report.battles.length;
+  await leader("WREN in ring 3", "wren_2", grove("3"));
   beat("RING 3: WREN yields", ring3 && won(wrenBefore, "wren_2") && flag("beat_wren_2") && flag("wren_2_yielded"));
   // beat() refreshes the helper. Spend HP/PP as a fixture to distinguish
   // Bram's real heal from that convenience; inspect it before recording a beat.
@@ -2023,7 +2321,8 @@ export async function chapter10() {
 
   await nav("elder_grove_heart");
   const mercerBefore = report.battles.length, seedBefore = bag("centuryheart_seed"), plantingTexts = report.texts.length;
-  await talkTo("mercer");
+  // The heart's two grunts stand on the way to MERCER: the retry covers them too.
+  await leader("MERCER THORNE", "mercer", grove("heart"));
   beat("MERCER THORNE: defeat the grafting team", won(mercerBefore, "mercer") && flag("beat_mercer"));
   const heart = ow();
   beat("CENTURYHEART: plant the seed; the Quickened choose to stay awake", flag("centuryheart_planted")
@@ -2430,28 +2729,44 @@ export async function postgame() {
 
 /**
  * Free a slot with real cabinet STORE input, keeping the helper in slot 0.
- * The menus are driven by timed key presses, which a slow CI machine can
- * outrun, so a failed attempt backs out to the overworld and tries again.
+ * Timed presses can outrun a slow CI machine (a lost DOWN once stored the
+ * helper instead), so every A waits until the real cursor (the cabinet's
+ * list and menus, observed as they update) is on the right row.
  */
 export async function makePartyRoom(): Promise<boolean> {
   if (ctx().state.party.length < 6) return true;
   const st = ctx().state;
   const last = st.party.at(-1)!;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (!(await walkTo(1, 4))) return false; // shared GREENHOUSE cabinet layout
-    await face("up");
-    await press("a");
-    await sleep(700);
-    await press("a"); // cabinet greeting -> menu
-    await sleep(700);
-    await press("a"); // STORE -> party list
-    await sleep(700);
-    for (let i = 0; i < st.party.length - 1; i++) { await press("down", 60); await sleep(140); }
-    for (let i = 0; i < 6 && st.party.includes(last); i++) { await press("a"); await sleep(700); }
-    for (let i = 0; i < 8 && !idle(); i++) { await press("b"); await sleep(400); }
-    await settle();
-    if (st.party.length < 6 && st.box.includes(last)) return true;
-  }
+  let list: ListView | null = null, menu: Menu | null = null;
+  const listUpdate = ListView.prototype.update, menuUpdate = Menu.prototype.update;
+  ListView.prototype.update = function (input) { list = this; return listUpdate.call(this, input); };
+  Menu.prototype.update = function (input) { menu = this; return menuUpdate.call(this, input); };
+  const live = () => menu as Menu | null;
+  const storeList = () => list as ListView | null;
+  try {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (!(await walkTo(1, 4))) return false; // shared GREENHOUSE cabinet layout
+      await face("up");
+      list = null;
+      menu = null;
+      await press("a"); // "opened the SPECIMEN CABINET."
+      for (let i = 0; i < 40 && st.party.includes(last); i++) {
+        await sleep(250);
+        const m = live(), l = storeList();
+        if (m && m.options.join("/") === "STORE/SUMMARY/CANCEL" && l && st.party[l.index] === last) {
+          await press(m.index === 0 ? "a" : "up"); // Do what with it? STORE
+        } else if (l && l.count() === st.party.length + 1) {
+          const target = st.party.indexOf(last);
+          await press(l.index === target ? "a" : l.index < target ? "down" : "up");
+        } else if (m && m.options.join("/") === "STORE/WITHDRAW/CANCEL") {
+          await press(m.index === 0 ? "a" : "up");
+        } else await press("a"); // the greeting
+      }
+      for (let i = 0; i < 12 && !idle(); i++) { await press("b"); await sleep(400); }
+      await settle();
+      if (st.party.length < 6 && st.box.includes(last)) return true;
+    }
+  } finally { ListView.prototype.update = listUpdate; Menu.prototype.update = menuUpdate; }
   issue("cabinet", "could not store a party member before the story catch");
   return false;
 }
@@ -2481,9 +2796,11 @@ export async function catchCoastalPlant(line: string, map: MapId, tiles: [[numbe
   const pods = st.bag[pod];
   captureLine = line;
   capturePod = pod;
+  const back = recovery();
   try {
     for (let steps = 0; steps < 1000 && !caught() && (st.bag[pod] ?? 0) > 0; steps++) {
       const [x, y] = onTile(...tiles[0]) ? tiles[1] : tiles[0];
+      if (ow()?.mapId !== map && !(await backAfterWhiteout(map, back))) break;
       if (ow()?.mapId !== map || !(await walkTo(x, y))) break;
       await settle();
       refreshHelper();
@@ -2505,9 +2822,11 @@ async function catchFireFollower(line: "fireweed" | "lodgepole") {
   st.bag["terrarium_pod"] = Math.max(st.bag["terrarium_pod"] ?? 0, 30);
   const pods = st.bag["terrarium_pod"];
   captureLine = line;
+  const back = recovery();
   try {
     // These neighbouring tiles are both grass in the southern clearing.
     for (let steps = 0; steps < 500 && !caught() && (st.bag["terrarium_pod"] ?? 0) > 0; steps++) {
+      if (ow()?.mapId !== "burnt_stand" && !(await backAfterWhiteout("burnt_stand", back))) break;
       if (ow()?.mapId !== "burnt_stand" || !(await walkTo(onTile(6, 21) ? 7 : 6, 21))) break;
       await settle();
       refreshHelper();

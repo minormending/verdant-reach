@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import type { MapId } from "../src/contracts";
+import type { BattleOutcome, BattleRequest, MapId } from "../src/contracts";
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -14,7 +14,7 @@ afterEach(() => {
 
 /** Run the real overworld and modal screens against the e2e keyboard driver.
  * No browser is needed: only drawing and asset/audio loading are omitted. */
-async function setup(map: MapId, x: number, y: number, rafting = false) {
+async function setup(map: MapId, x: number, y: number, rafting = false, battle?: (req: BattleRequest) => Promise<BattleOutcome>) {
   vi.stubGlobal("location", { search: "?speed=8&seed=1&time=day&allowTodo" });
   const listeners = new Map<string, (event: KeyboardEvent) => void>();
   vi.stubGlobal("addEventListener", (name: string, fn: (event: KeyboardEvent) => void) => listeners.set(name, fn));
@@ -34,6 +34,8 @@ async function setup(map: MapId, x: number, y: number, rafting = false) {
   const ctx = createGameContext({ input, scenes, assets: {
     loadAll: async () => {}, exists: () => false, image: () => null,
   } });
+  // A battle stub installed before instrument() keeps the e2e's outcome bookkeeping (whiteouts).
+  if (battle) ctx.battle = battle;
   ctx.state.position = { map, x, y, facing: "up" };
   if (rafting) ctx.state.rafting = true;
   ctx.state.options.textSpeed = "fast";
@@ -568,6 +570,55 @@ it.each(["won", "lost"] as const)("walks the east gate, tumbleweed and BRAM's %s
     expect(ctx.state.flags.slice_done).toBe(true);
     expect(field.player).toMatchObject({ x: 25, y: 9 });
     expect(ctx.state.position.map).toBe("sanguine_ridge");
+    expect(e2e.report.issues).toEqual([]);
+  } finally { stop(); }
+});
+
+it("retries ROOK after a whiteout: heals at the ridge GREENHOUSE, rematches ROUTE 11, then wins", async () => {
+  let rookFights = 0;
+  const battle = vi.fn(async (req: BattleRequest): Promise<BattleOutcome> => req.trainer === "rook" && ++rookFights === 1 ? "lost" : "won");
+  const { ctx, e2e, stop } = await setup("sanguine_ridge", 6, 12, false, battle);
+  const { createQuickened } = await import("../src/battle");
+  ctx.state.party = [createQuickened(ctx.data, "red_chili", 48, () => 0.5)];
+  ctx.state.money = 10000;
+  // Fixtures: the earlier chapter, the beaten juniors and route
+  // trainers, and the ridge GREENHOUSE as the last heal point.
+  const route11 = ["climber_red", "climber_ochre", "ranger_flint", "ranger_shale"];
+  Object.assign(ctx.state.flags, { ch9_arrived: true, rival_5_done: true, visited_sanguine_ridge: true,
+    beat_jr_ember: true, beat_jr_scale: true,
+    ...Object.fromEntries(route11.map((id) => [`beat_${id}`, true])) });
+  ctx.state.heal = { map: "sanguine_greenhouse", x: 5, y: 4 };
+  vi.spyOn(ctx.assets, "image").mockReturnValue({} as HTMLImageElement);
+  const drive = async <T>(action: () => Promise<T>): Promise<T> => {
+    let done = false;
+    const task = action().finally(() => { done = true; });
+    for (let i = 0; i < 20 && !done; i++) await vi.advanceTimersByTimeAsync(60_000);
+    return task;
+  };
+  try {
+    expect(await drive(() => e2e.nav("route_11"))).toBe(true);
+    expect(await drive(() => e2e.nav("sanguine_conservatory"))).toBe(true);
+    expect(await drive(() => e2e.solveSanguinePits())).toBe(true);
+    // Filled pits persist: a second call after a whiteout has nothing left to push.
+    expect(await drive(() => e2e.solveSanguinePits())).toBe(true);
+    const won = await drive(() => e2e.mustWin("ROOK", "sanguine_conservatory", async (n) => {
+      if (n > 1 && !(await e2e.nav("sanguine_conservatory") && await e2e.solveSanguinePits())) return false;
+      await e2e.talkTo("rook");
+      return !!ctx.state.flags.beat_rook;
+    }));
+    expect(won).toBe(true);
+    const fights = battle.mock.calls.map(([req]) => req.trainer);
+    expect(fights.filter((id) => id === "rook")).toHaveLength(2);
+    // Training between the two: rematches at +1 level against the ranger nearest the ridge first.
+    const rematches = battle.mock.calls.filter(([req]) => route11.includes(req.trainer ?? ""));
+    expect(rematches.length).toBeGreaterThan(0);
+    expect(rematches[0][0].trainer).toBe("ranger_shale");
+    expect(rematches[0][0].trainerDef?.team.map((m) => m.level)).toEqual(ctx.world.trainers.ranger_shale.team.map((m) => m.level + 1));
+    expect(ctx.state.trainerRematches?.ranger_shale).toBe(1);
+    expect(ctx.state.flags).toMatchObject({ beat_rook: true, got_fig_root: true });
+    expect(ctx.state.money).toBeLessThanOrEqual(5000); // the whiteout dropped half
+    expect(e2e.report.warnings.map((w) => w.kind)).toEqual(["whiteout", "must-win"]);
+    expect(e2e.report.warnings[1].msg).toMatch(/^ROOK: attempt 1 lost to WARDEN ROOK on sanguine_conservatory .*healed at sanguine_greenhouse/);
     expect(e2e.report.issues).toEqual([]);
   } finally { stop(); }
 });

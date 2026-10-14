@@ -62,6 +62,7 @@ let page;
 let report;
 let printed = 0;
 let printedIssues = 0;
+let printedWarnings = 0;
 const runnerIssues = [];
 const interrupt = (signal) => {
   process.exitCode = signal === "SIGINT" ? 130 : 143;
@@ -81,6 +82,12 @@ function printProgress(current) {
     console.error(`ISSUE ${issue.kind} ${issue.t}s @${issue.where ?? "?"}: ${issue.msg}`);
   }
   printedIssues = current.issues.length;
+  // Warnings (a whiteout before a retried must-win fight) are reported, never failures.
+  const warnings = current.warnings ?? [];
+  for (const warning of warnings.slice(printedWarnings)) {
+    console.log(`WARN ${warning.kind} ${warning.t}s @${warning.where ?? "?"}: ${warning.msg}`);
+  }
+  printedWarnings = warnings.length;
 }
 
 try {
@@ -149,7 +156,7 @@ try {
     console.error(`Could not write report: ${error}`);
     process.exitCode ||= 1;
   }
-  console.log(`${report.beats.length} beats, ${report.beats.filter((b) => !b.ok).length} failed, ${report.issues.length + runnerIssues.length} issues; total ${elapsedSeconds}s`);
+  console.log(`${report.beats.length} beats, ${report.beats.filter((b) => !b.ok).length} failed, ${report.issues.length + runnerIssues.length} issues, ${report.warnings?.length ?? 0} warnings; total ${elapsedSeconds}s`);
   // Close only resources created above; attempt both even if one close fails.
   const cleanup = await Promise.allSettled([browser?.close(), server?.close()]);
   for (const result of cleanup) {

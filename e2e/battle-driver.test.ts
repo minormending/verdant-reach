@@ -3,7 +3,7 @@ import { DATA } from "../src/data";
 import { createBattleState } from "../src/battle/logic/battle";
 import { createQuickened } from "../src/battle/logic/stats";
 import { seeded } from "../src/battle/logic/rng";
-import { healingItem, strongestMove } from "./battle-driver";
+import { foeThreat, healingItem, hitDamage, strongestMove } from "./battle-driver";
 
 function battle() {
   const rng = seeded(1);
@@ -51,4 +51,49 @@ describe("battle driver", () => {
     expect(healingItem(DATA, { rain_jar: 1, water_flask: 2 }, q)).toBe("rain_jar");
     expect(healingItem(DATA, {}, q)).toBeNull();
   });
+
+  it("prefers a sure knockout to a stronger but less accurate overkill", () => {
+    const s = battle();
+    const base = Object.values(DATA.moves)[0];
+    s.data = { ...DATA, moves: {
+      ...DATA.moves,
+      sure: { ...base, id: "sure", name: "Sure", type: "fire", category: "special", power: 60, accuracy: 100, effects: [] },
+      wild: { ...base, id: "wild", name: "Wild", type: "fire", category: "special", power: 120, accuracy: 70, effects: [] },
+    } };
+    s.sides[0].party[0].moves = [{ id: "wild", pp: 5 }, { id: "sure", pp: 5 }];
+    const foe = s.sides[1].party[0];
+    foe.hp = 5; // either move knocks it out: accuracy decides
+    expect(strongestMove(s)).toBe(1);
+    foe.hp = foe.stats.hp; // neither does: the bigger expected hit wins
+    expect(hitDamage(s, 0, s.data.moves.wild) * 0.7).toBeGreaterThan(hitDamage(s, 0, s.data.moves.sure));
+    expect(strongestMove(s)).toBe(0);
+  });
+
+  it("keeps a recoil move that would wilt the user as a last resort", () => {
+    const s = battle();
+    s.sides[0].party[0].moves = [{ id: "timber", pp: 5 }, { id: "wither", pp: 15 }];
+    expect(strongestMove(s)).toBe(0); // healthy: TIMBER's power is worth its recoil
+    s.sides[0].party[0].hp = 1;
+    expect(strongestMove(s)).toBe(1);
+    s.sides[0].party[0].moves[1].pp = 0;
+    expect(strongestMove(s)).toBe(0);
+  });
+
+  it("skips medicine when its own sure hit finishes the foe first, or when healing cannot outlast one hit", () => {
+    const s = battle();
+    const me = s.sides[0].party[0], foe = s.sides[1].party[0];
+    const bag = { rain_jar: 1 };
+    me.hp = Math.floor(me.stats.hp / 4);
+    expect(healingItem(DATA, bag, me, s)).toBe("rain_jar"); // low and the foe stands
+    expect(foeThreat(s)).toBeGreaterThan(0);
+    foe.hp = 1; // the faster helper's sure hit ends it first
+    expect(healingItem(DATA, bag, me, s)).toBeNull();
+    expect(healingItem(DATA, bag, me)).toBe("rain_jar"); // the plain rule ignores the battle
+    foe.hp = foe.stats.hp;
+    foe.level = 100;
+    foe.stats = { ...foe.stats, spa: 999, atk: 999 };
+    expect(foeThreat(s)).toBeGreaterThan(me.stats.hp); // even full HP falls to one hit
+    expect(healingItem(DATA, bag, me, s)).toBeNull();
+  });
 });
+
