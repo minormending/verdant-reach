@@ -49,8 +49,11 @@ On phones and tablets, an on-screen D-pad and buttons appear automatically.
 play offline" at the bottom of the screen; the whole game (and the guidebook)
 is then stored on the device, so it opens and plays with no connection, keeping
 the same save. On iPhone, a home-screen icon keeps its own save separate from
-Safari's, so pick one and stay with it. Updates download quietly the next time
-you're online (src/platform/offline/).
+Safari's, so pick one and stay with it. A new release downloads quietly the next
+time you're online; once it's stored, the game switches to it on the title screen
+(mid-game, tap "New version ready" or just reopen the game later). Each open page
+uses one release throughout, so its code and art always match
+(src/platform/offline/).
 
 Press **F** (or the corner button) for fullscreen. Time of day follows your
 real clock: morning 4–10, day 10–18, night 18–4. Some plants only appear at
