@@ -1,27 +1,34 @@
-<section id="testing" data-title="Testing" data-summary="The test pyramid: vitest by area, the balance simulator, environment digests, the world validator, the headless playthrough and release-check.">
+<section id="testing" data-title="Testing" data-summary="The test pyramid: vitest by area, the balance simulator, environment digests, the world validator, the smoke test, the headless playthrough and release-check.">
   <h2>Testing</h2>
 
   <p>Verdant Reach has no QA team, so the tests stand in for one. They are
   organised as a <dfn>test pyramid</dfn>: many small, fast tests at the bottom
   that check one function at a time, a middle layer of checks that sweep the
-  whole game's data (every map, every boss, every art bundle), and at the top a
-  single slow test that plays the entire game from NEW GAME to the post-game in
-  a real browser. A separate gate, <code>release-check</code>, makes sure no
-  placeholder text or art reaches <code>main</code>.</p>
+  whole game's data (every map, every boss, every art bundle), and at the top
+  two browser tests: a <dfn>smoke test</dfn> of a few minutes that plays the most
+  important paths and gates every deploy, and a single slow test that plays the
+  entire game from NEW GAME to the post-game, every night. A separate gate,
+  <code>release-check</code>, makes sure no placeholder text or art reaches
+  <code>main</code>.</p>
 
   <pre class="mermaid">flowchart TB
-  E2E["Headless playthrough: 1 run, 218 beats (npm run e2e)"]
+  E2E["Headless playthrough: 1 run, 218 beats, nightly (npm run e2e)"]
+  SMOKE["Smoke test: 26 beats, a few minutes, every deploy (npm run e2e:smoke)"]
   WIDE["Whole-game checks: world validator, environment digests, balance bands, art bundles"]
   UNIT["Unit tests: about 1,670 vitest tests in 139 files, next to the code (npm test)"]
   RC["release-check: no placeholders on main"]
-  E2E --- WIDE
+  E2E --- SMOKE
+  SMOKE --- WIDE
   WIDE --- UNIT
   RC -.-|gate in CI| WIDE</pre>
 
   <p>Why this shape? A unit test that fails names the broken function in a
   second. The playthrough takes most of an hour and only tells you <em>where</em>
   the game got stuck, so it is the last line of defence, not the first. If the
-  playthrough is the only test that catches a bug, a cheaper test is missing.</p>
+  playthrough is the only test that catches a bug, a cheaper test is missing.
+  That is also why a deploy waits only for the smoke test: it covers the paths
+  every player takes (and every page) in minutes, and the full playthrough
+  catches the rest overnight.</p>
 
   <table>
     <thead><tr><th>Command</th><th>What it runs</th><th>When to run it</th></tr></thead>
@@ -30,7 +37,8 @@
       <tr><td><code>npm test</code></td><td><code>vitest run --testTimeout=20000</code>: every <code>*.test.ts</code> in <code>src/</code>, <code>e2e/</code> and <code>tools/</code></td><td>Every change</td></tr>
       <tr><td><code>npm run release-check</code></td><td><a data-src="tools/release-check.mjs">tools/release-check.mjs</a></td><td>Before merging to <code>main</code></td></tr>
       <tr><td><code>npm run build</code></td><td>Typecheck, then the Vite production bundle</td><td>Every change</td></tr>
-      <tr><td><code>npm run e2e</code></td><td><a data-src="e2e/run.mjs">e2e/run.mjs</a>: the full playthrough in headless Chromium</td><td>Story, map, battle or UI-flow changes; always before a release</td></tr>
+      <tr><td><code>npm run e2e:smoke</code></td><td><a data-src="e2e/run.mjs">e2e/run.mjs</a> <code>--smoke</code>: <a href="#testing-smoke">the smoke test</a> in headless Chromium, about 2 minutes</td><td>Every gameplay change; CI runs it before each game deploy</td></tr>
+      <tr><td><code>npm run e2e</code></td><td><a data-src="e2e/run.mjs">e2e/run.mjs</a>: the full playthrough in headless Chromium</td><td>Story, map, battle or UI-flow changes; before a risky release (CI runs it nightly)</td></tr>
     </tbody>
   </table>
 
@@ -56,7 +64,7 @@
       <tr><td>Puzzles and field moves</td><td>Split between <code>src/world/</code> and <code>src/overworld/</code></td><td>Ice slides, rafting, boulder pits, root bridges, dark rooms, lever puzzles stay solvable</td><td><a data-src="src/world/puzzles.test.ts">puzzles.test.ts</a>, <a data-src="src/overworld/ice.test.ts">ice.test.ts</a>, <a data-src="src/world/uproot.test.ts">uproot.test.ts</a></td></tr>
       <tr><td>Art bundles</td><td>3 in <code>src/art/</code></td><td>Every logical asset path resolves at the right size; <code>index.json</code> matches the folders; each tile key belongs to one tileset</td><td><a data-src="src/art/bundles.test.ts">bundles.test.ts</a></td></tr>
       <tr><td>UI flows</td><td>27 in <code>src/overworld/</code>, 7 in <code>src/screens/</code>, 3 in <code>src/ui/</code></td><td>Multi-step flows (Nursery, trade, raft, growth items, the START menu, NEW GAME, credits) run to the end with scripted input</td><td><a data-src="src/overworld/nurseryFlow.test.ts">nurseryFlow.test.ts</a>, <a data-src="src/screens/flows/growth.test.ts">growth.test.ts</a>, <a data-src="src/ui/newgame.test.ts">newgame.test.ts</a></td></tr>
-      <tr><td>The playthrough's own parts</td><td>8 in <code>e2e/</code></td><td>The runner's exit codes, the battle driver, the detectors and the field-input helpers, without a browser</td><td><a data-src="e2e/detectors.test.ts">detectors.test.ts</a>, <a data-src="e2e/runner.test.ts">runner.test.ts</a>, <a data-src="e2e/field-input.test.ts">field-input.test.ts</a></td></tr>
+      <tr><td>The playthrough's own parts</td><td>9 in <code>e2e/</code></td><td>The runner's exit codes (full and smoke), the battle driver, the detectors, the field-input helpers and the smoke fixtures, without a browser</td><td><a data-src="e2e/detectors.test.ts">detectors.test.ts</a>, <a data-src="e2e/runner.test.ts">runner.test.ts</a>, <a data-src="e2e/field-input.test.ts">field-input.test.ts</a>, <a data-src="e2e/fixtures.test.ts">fixtures.test.ts</a></td></tr>
       <tr><td>Everything else</td><td>engine, save, audio, guide, Tile Lab, tools</td><td>Seeded randomness, save round trips, the guide's indexer, Tile Lab packing, the release gate</td><td><a data-src="src/save/save.test.ts">save.test.ts</a>, <a data-src="src/guide/indexer.test.ts">indexer.test.ts</a>, <a data-src="tools/release-check.test.ts">release-check.test.ts</a></td></tr>
     </tbody>
   </table>
@@ -393,14 +401,15 @@ if (map.warps.length) {
   <table>
     <thead><tr><th>Runner flag</th><th>Default</th><th>Effect</th></tr></thead>
     <tbody>
+      <tr><td><code>--smoke</code></td><td>off</td><td>Play <a href="#testing-smoke">the smoke test</a> instead of the full playthrough</td></tr>
       <tr><td><code>--dev</code></td><td>off</td><td>Play the dev server (<code>createServer</code> with <a data-src="e2e/vite.config.ts">e2e/vite.config.ts</a>, no HMR) instead of the production build: no build step, quicker to iterate on</td></tr>
       <tr><td><code>--no-build</code></td><td>off</td><td>Serve the existing <code>dist-e2e/</code> without rebuilding (not with <code>--dev</code>)</td></tr>
       <tr><td><code>--speed N</code></td><td>8</td><td>Game ticks per frame, 1–16 (<code>?speed=N</code>, ignored by the public build)</td></tr>
       <tr><td><code>--seed N</code></td><td>1</td><td>RNG seed, 0–4294967295 (<code>?seed=N</code>); printed and stored in the report</td></tr>
       <tr><td><code>--headed</code></td><td>off</td><td>Show the browser window, to watch it play</td></tr>
       <tr><td><code>--allow-placeholders</code></td><td>off</td><td>Adds <code>&amp;allow&#84;odo</code>: tolerate dialogue that starts with <code>TODO&#40;text):</code> (feature branches only)</td></tr>
-      <tr><td><code>--timeout-min N</code></td><td>max(75, 360 / speed)</td><td>Wall-clock limit for the whole run</td></tr>
-      <tr><td><code>--report PATH</code></td><td><code>e2e/last-report.json</code></td><td>Write the report elsewhere (for parallel runs)</td></tr>
+      <tr><td><code>--timeout-min N</code></td><td>max(75, 360 / speed); 20 with <code>--smoke</code></td><td>Wall-clock limit for the whole run</td></tr>
+      <tr><td><code>--report PATH</code></td><td><code>e2e/last-report.json</code>; <code>e2e/last-smoke-report.json</code> with <code>--smoke</code></td><td>Write the report elsewhere (for parallel runs)</td></tr>
     </tbody>
   </table>
 
@@ -413,7 +422,8 @@ if (map.warps.length) {
   and <code>?e2e=check:&lt;name&gt;</code> for one targeted check from the
   <code>CHECKS</code> table instead of the full run.</p>
 
-  <pre><code class="lang-bash">npm run e2e                                   # what CI runs: the production build, speed 8, seed 1, headless
+  <pre><code class="lang-bash">npm run e2e                                   # what the nightly CI run plays: the production build, speed 8, seed 1, headless
+npm run e2e:smoke                             # the deploy gate (same build, speed and seed)
 npm run e2e -- --seed 42                      # another seed
 npm run e2e -- --speed 6 --seed 1 --headed    # watch it play
 npm run e2e -- --dev                          # the dev server, for quick local debugging</code></pre>
@@ -568,8 +578,15 @@ npm run e2e -- --dev                          # the dev server, for quick local 
   <code>production</code> or <code>dev</code>, speed, seed, elapsed time, runner
   issues). The exit code is 0 only when all of this holds:</p>
 
-  <pre><code class="lang-js">const failures = report.beats.filter((b) =&gt; !b.ok).length;
-if (report.beats.length !== 218) runnerIssues.push(`Expected all 218 beats; received ${report.beats.length}`);
+  <pre><code class="lang-js">if (!smoke) {
+  // …
+  report = await play(url);
+  if (report.beats.length !== 218) runnerIssues.push(`Expected all 218 beats; received ${report.beats.length}`);
+} else {
+  // … every phase, then the pages
+  if (report.beats.length !== SMOKE_BEATS) runnerIssues.push(`Expected all ${SMOKE_BEATS} smoke beats; received ${report.beats.length}`);
+}
+const failures = report.beats.filter((b) =&gt; !b.ok).length;
 process.exitCode = failures === 0 &amp;&amp; report.issues.length === 0 &amp;&amp; runnerIssues.length === 0 ? 0 : 1;</code></pre>
 
   <aside class="tip">In a headed run, open the browser console:
@@ -604,13 +621,98 @@ process.exitCode = failures === 0 &amp;&amp; report.issues.length === 0 &amp;&am
   J -- yes --> AUD["Audio clock stuck: trust CI, restart the audio service"]
   J -- no --> BUG["Real bug: read the beat note, issues and the last texts"]</pre>
     <p>The beat count 218 is written in several places: <code>e2e/run.mjs</code>,
-    <code>e2e/runner.test.ts</code>, the workflow step name, <code>AGENTS.md</code>
+    <code>e2e/runner.test.ts</code>, the step name in <code>playthrough.yml</code>, <code>AGENTS.md</code>
     and the README. Adding or removing a beat means updating all of them in the same
-    commit, or the runner reports "Expected all 218 beats".</p>
+    commit, or the runner reports "Expected all 218 beats". The smoke test's
+    counts live in one place, <code>SMOKE_PHASES</code> in
+    <a data-src="e2e/smoke-plan.mjs">e2e/smoke-plan.mjs</a> (the total is
+    computed), plus the 26 quoted in the docs.</p>
     <p>Before adding a <code>sleep</code> to make a beat pass, find what the beat
     is waiting <em>for</em> and wait on that state (<code>waitFor</code>,
     <code>advance(…, done)</code>). Fixed sleeps are the main source of
     load-sensitivity.</p>
+  </details>
+
+  <h3 id="testing-smoke">The smoke test</h3>
+
+  <p>The full playthrough is too slow to wait for on every deploy, so a deploy
+  waits for the <dfn>smoke test</dfn> instead: <code>npm run e2e:smoke</code>
+  (<code>e2e/run.mjs --smoke</code>). It shares everything with the playthrough
+  (the runner, the <code>vite build --mode e2e</code> production build,
+  <code>vite preview</code>, the key driver, the battle driver, the detectors and
+  seed 1) and plays only the paths every player takes, in about two minutes on a
+  laptop. It records 26 beats in six parts. Each game phase is one page load of
+  <code>?e2e=smoke:&lt;phase&gt;</code> in the same browser tab, so a save written
+  in one phase is there for the next, exactly as after a real reload.</p>
+
+  <table>
+    <thead><tr><th>Phase</th><th>Starts from</th><th>Beats</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr><td><code>story</code></td><td>A cleared save</td><td>11</td><td>The title boots with no console errors; NEW GAME through the BOY/GIRL choice, naming and the prologue; the starter, FENNIMORE's seed, PIP's demo, the theft and rival battle 1, won; SAVE through START &gt; SAVE</td></tr>
+      <tr><td><code>continue</code></td><td>The story phase's save</td><td>2</td><td>CONTINUE from the title restores the game: name, look, money, position, party (levels, HP, EXP, moves), bag, flags and marks all match what was saved</td></tr>
+      <tr><td><code>rematch</code></td><td>Fixture: MILO beaten once</td><td>3</td><td>A route rematch, won, with MILO's team at +1 and the win counted</td></tr>
+      <tr><td><code>leader</code></td><td>Fixture: at the BRAMBLEGATE CONSERVATORY door</td><td>3</td><td>The lever puzzle, the juniors and HOLLIS, won, with the bramble mark</td></tr>
+      <tr><td><code>whiteout</code></td><td>Fixture: a lone Lv 5 starter on ROUTE 1</td><td>3</td><td>Losing a battle sends the player to the last heal point, healed and poorer</td></tr>
+      <tr><td>pages</td><td>Fresh tabs</td><td>4</td><td><code>guide.html</code> (walkthrough and map canvases), <code>tilelab.html</code>, <code>devdocs.html</code> (every chart scrolled into view and drawn) and <code>trainereditor.html</code> (the shipped trainers validate) load with no console errors from the site</td></tr>
+    </tbody>
+  </table>
+
+  <pre class="mermaid">flowchart LR
+  RUN["run.mjs --smoke"] --> S1["smoke:story"]
+  S1 -- "save in localStorage" --> S2["smoke:continue"]
+  S2 --> S3["smoke:rematch"]
+  S3 --> S4["smoke:leader"]
+  S4 --> S5["smoke:whiteout"]
+  S5 --> PG["guide, tilelab, devdocs, trainereditor"]
+  FX["e2e/fixtures.ts"] -. "prepared saves" .-> S3
+  FX -.-> S4
+  FX -.-> S5
+  PG --> FILE["e2e/last-smoke-report.json"]</pre>
+
+  <p>The in-page side is <a data-src="e2e/smoke.ts">e2e/smoke.ts</a>, which
+  <code>src/main.ts</code> imports instead of the playthrough when the suite starts
+  with <code>smoke:</code> (dev and e2e builds only, like the playthrough). It
+  reuses the playthrough's own helpers (<code>newGameFromTitle</code>,
+  <code>nav</code>, <code>talkTo</code>, <code>rematchRoute1</code>,
+  <code>solvePuzzle</code>, and the <code>save</code>, <code>continue</code> and
+  <code>whiteout</code> checks) rather than copying them. The phase list, the
+  beat count of each phase and the page checks are in
+  <a data-src="e2e/smoke-plan.mjs">e2e/smoke-plan.mjs</a>; the runner fails a
+  phase that reports a different number of beats.</p>
+
+  <p><dfn>Prepared states</dfn> come from
+  <a data-src="e2e/fixtures.ts">e2e/fixtures.ts</a>. A fixture is a short recipe,
+  not a copied save file: it starts from the game's own
+  <code>newGameState</code>, sets the story flags of Chapter 1, builds the party
+  with <code>createQuickened</code> from a seeded stream, and puts the player on
+  the arrival tile of a real warp. The phase writes it with the game's save code
+  and loads it through the title's CONTINUE, so the save format and the
+  overworld's continue path are exercised too.</p>
+
+  <details class="advanced"><summary>Advanced: why the fixtures can't rot silently</summary>
+    <p>A copied save file goes stale quietly: rename a flag or move an NPC and
+    the old save still loads, into a state the story can no longer reach.
+    <code>buildFixture</code> instead checks each assumption against the live
+    world data and throws a <code>FixtureError</code> that names every one that
+    no longer holds: each flag must still be set by some <code>setFlag</code>,
+    battle or trainer NPC (<code>settableFlags</code>); the warp and the heal
+    point must exist; MILO must still be a route rematch trainer
+    (<code>isRematchTrainer</code>) and HOLLIS must still award a mark.
+    <a data-src="e2e/fixtures.test.ts">fixtures.test.ts</a> builds every fixture
+    in <code>npm test</code>, so a story change that breaks one fails the unit
+    tests, before a browser starts.</p>
+    <p>To add a phase: add its function to <code>PHASES</code> in
+    <code>smoke.ts</code>, add <code>{ name, beats }</code> to
+    <code>SMOKE_PHASES</code>, and, if it needs a prepared state, a recipe in
+    <code>FIXTURES</code>. Keep the whole suite within a few minutes on CI;
+    anything longer belongs in the full playthrough.</p>
+    <p>Console errors are checked twice in the game phases: the in-page
+    instrumentation (as in the playthrough) once the title is up, and the
+    runner's Playwright <code>console</code> listener from the first byte, which
+    catches errors while the game boots. On the other pages, an error about
+    another site's resource (the developer docs load Mermaid from a CDN and fall
+    back to the diagram source) is kept in the report's <code>notes</code>
+    rather than failing the run.</p>
   </details>
 
   <h3 id="testing-release">release-check</h3>

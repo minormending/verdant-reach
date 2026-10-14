@@ -1,0 +1,47 @@
+# The full headless playthrough (npm run e2e: 218 beats, the Prologue through
+# the post-game) of the production build, nightly and on demand. Deploys don't
+# wait for it (they run the smoke test, pages.yml); run it from the Actions tab
+# (Run workflow) or locally before a risky release. It never deploys.
+name: Full playthrough
+
+on:
+  schedule:
+    # 07:23 UTC every day: a quiet hour (late night in the Americas), off the
+    # top of the hour when GitHub's scheduler is busiest.
+    - cron: "23 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Its own group, so it never cancels or waits on a deploy. A manual run queues
+# behind a running one instead of cancelling it most of the way through.
+concurrency:
+  group: playthrough
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install the e2e browser
+        run: npx playwright install --with-deps chromium
+      # Plays the production pipeline: e2e/run.mjs runs `vite build --mode e2e`
+      # (into dist-e2e/, with the test hooks that mode enables) and serves it
+      # with `vite preview`.
+      - name: Full playthrough of the production build (218 beats through the post-game, headless)
+        run: npm run e2e
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-report
+          path: e2e/last-report.json
+          if-no-files-found: ignore

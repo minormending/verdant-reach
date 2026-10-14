@@ -1,5 +1,11 @@
-# Typecheck, test, build, play the whole production build headless (e2e), then deploy to GitHub Pages
-# on every push to main. The deploy waits for both the build and the playthrough.
+# Test, build and deploy to GitHub Pages on every push to main.
+#   changes  decides whether the push can affect the game (see the fast lane below)
+#   build    unit tests, release-check, typecheck + bundle, Pages artifact
+#   smoke    the smoke e2e of the production build (npm run e2e:smoke, a few minutes);
+#            skipped in the fast lane
+#   deploy   needs build and, unless the fast lane skipped it, smoke
+# The full 218-beat playthrough is not part of a deploy: it runs nightly and on
+# demand in playthrough.yml.
 name: Deploy to GitHub Pages
 
 on:
@@ -19,6 +25,75 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The fast lane: a push whose files ALL match the list below can't change the
+  # game, so it deploys after the build job alone. Anything else runs the smoke
+  # test, and so does every case the diff can't vouch for: a manual run, a
+  # force-push, a missing or all-zero `before` (the branch's first push), a
+  # `before` this repo can't fetch, an empty diff, or a `before` that never
+  # passed this workflow (a failed or cancelled run: its game changes were never
+  # smoke-tested, so they can't ride along on a docs-only push).
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read   # read this workflow's past runs (gh api)
+    outputs:
+      smoke: ${{ steps.decide.outputs.smoke }}
+    steps:
+      # Trees only: the diff needs file names, not contents.
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:none
+          sparse-checkout: .github
+      - name: Decide (fast lane or smoke test)
+        id: decide
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          FORCED: ${{ github.event.forced }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          # Files that can't affect the game: docs, Markdown, the guidebook, the
+          # developer docs, the Tile Lab, the Trainer Editor and art review sheets.
+          # (The game loads the Tile Lab and Trainer Editor hooks only with
+          # ?tilelab / ?trainerlab; see src/main.ts.)
+          SAFE='^(docs/|src/(guide|devdocs|tilelab|trainereditor)/|tools/art/review/)|\.md$|^(guide|devdocs|tilelab|trainereditor)\.html$'
+          smoke=true
+          if [ "$EVENT" != "push" ]; then
+            why="$EVENT run"
+          elif [ "$FORCED" = "true" ]; then
+            why="force-push"
+          elif [ -z "$BEFORE" ] || [ -z "${BEFORE//0/}" ]; then
+            why="no previous commit (before='$BEFORE')"
+          elif ! git fetch --quiet --no-tags --depth=1 --filter=blob:none origin "$BEFORE"; then
+            why="previous commit $BEFORE could not be fetched"
+          elif ! passed=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/pages.yml/runs" \
+              -f head_sha="$BEFORE" -f status=success -f per_page=1 --jq '.total_count'); then
+            why="could not look up the run for $BEFORE"
+          elif [ "${passed:-0}" = "0" ]; then
+            why="$BEFORE never passed this workflow (failed or cancelled)"
+          elif ! changed=$(git diff --name-only --no-renames "$BEFORE" "$GITHUB_SHA"); then
+            why="git diff failed"
+          elif [ -z "$changed" ]; then
+            why="no files changed"
+          else
+            game=$(printf '%s\n' "$changed" | grep -Ev "$SAFE" || true)
+            if [ -z "$game" ]; then
+              smoke=false
+              why="fast lane: only docs and tool pages changed"
+            else
+              why="game files changed: $(printf '%s\n' "$game" | head -n 5 | paste -sd, -)"
+            fi
+          fi
+          echo "smoke=$smoke" >> "$GITHUB_OUTPUT"
+          echo "smoke=$smoke: $why"
+          {
+            echo "### Smoke test: $([ "$smoke" = true ] && echo runs || echo skipped)"
+            echo "$why"
+            if [ -n "${changed:-}" ]; then echo; echo '```'; printf '%s\n' "$changed" | head -n 50; echo '```'; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -39,9 +114,11 @@ jobs:
         with:
           path: dist
 
-  e2e:
+  smoke:
+    needs: changes
+    if: needs.changes.outputs.smoke == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -51,21 +128,31 @@ jobs:
       - run: npm ci
       - name: Install the e2e browser
         run: npx playwright install --with-deps chromium
-      # Plays the production pipeline: e2e/run.mjs runs `vite build --mode e2e`
-      # (into dist-e2e/, with the test hooks that mode enables) and serves it
-      # with `vite preview`. Building here keeps this job parallel to `build`.
-      - name: Full playthrough of the production build (218 beats through the post-game, headless)
-        run: npm run e2e
+      # e2e/run.mjs --smoke builds dist-e2e/ (`vite build --mode e2e`), serves it
+      # with `vite preview` and plays the phases of e2e/smoke-plan.mjs, then
+      # opens the other pages. Building here keeps this job parallel to `build`.
+      - name: Smoke test of the production build (new game to rival 1, save/continue, rematch, leader, whiteout, other pages)
+        run: npm run e2e:smoke
       - name: Keep the report
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: e2e-report
-          path: e2e/last-report.json
+          name: smoke-report
+          path: e2e/last-smoke-report.json
           if-no-files-found: ignore
 
+  # A skipped job makes its dependants skip too, so deploy overrides the default
+  # with !cancelled() and states the rule itself. A skipped smoke counts only when
+  # `changes` ran and chose the fast lane (if `changes` failed, smoke is skipped
+  # too, and that must not deploy).
   deploy:
-    needs: [build, e2e]
+    needs: [changes, build, smoke]
+    if: >-
+      ${{ !cancelled()
+      && needs.changes.result == 'success'
+      && needs.build.result == 'success'
+      && (needs.smoke.result == 'success'
+      || (needs.smoke.result == 'skipped' && needs.changes.outputs.smoke == 'false')) }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

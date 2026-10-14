@@ -98,11 +98,13 @@ async function boot() {
     booted = true;
 
     // Dev and e2e builds only: ?e2e=<suite> runs the automated playthrough
-    // (e2e/playthrough.ts, started by e2e/run.mjs; docs/DEVDOCS.md § testing).
+    // (e2e/playthrough.ts) or, for ?e2e=smoke:<phase>, the smoke suite
+    // (e2e/smoke.ts); both are started by e2e/run.mjs (docs/DEVDOCS.md § testing).
     if (TEST_HOOKS && params.get("e2e")) {
-      const e2e = await import("../e2e/playthrough");
+      const suite = params.get("e2e")!;
+      const e2e = suite.startsWith("smoke:") ? await import("../e2e/smoke") : await import("../e2e/playthrough");
       (window as unknown as { __e2e: unknown }).__e2e = e2e;
-      void e2e.autorun(params.get("e2e")!);
+      void e2e.autorun(suite);
     }
   } catch (err) {
     errors.fatal(err);

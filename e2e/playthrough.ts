@@ -3251,3 +3251,7 @@ export async function autorun(suite: string): Promise<void> {
   }
   await run(suite);
 }
+
+// Shared with the smoke suite (e2e/smoke.ts, `npm run e2e:smoke`), which plays
+// short stretches with the same helpers instead of copying them.
+export { boostParty, counter, ctx, expectFlag, flag, newGameFromTitle, ow, rematchRoute1, settle, sleep, solvePuzzle, stack, waitFor, waitForGame };
