@@ -83,8 +83,13 @@ async function boot() {
       if (playClock.running && !pause.paused) game.state.playTimeMs += dt;
     }, () => gameSpeedOf(game.state?.options));
     await assets.loadAll([uiPath("title_logo")]);
-    // The whole art registry: every bundle (and any legacy file not yet migrated).
-    await assets.loadAll(undefined, (d, t) => loading.progress(d, t));
+    // Everything but creature art before the title: UI, characters, tiles and
+    // structures (~250 files). The ~1,000 creature images load in the
+    // background once the title is up; battles and menus that need one first
+    // load it on demand (the battle scene preloads its own plants). Waiting
+    // for all ~1,600 files here took minutes on some phones.
+    const isCreatureArt = (p: string) => p.startsWith("assets/species/");
+    await assets.loadAll(undefined, (d, t) => loading.progress(d, t), (p) => !isCreatureArt(p));
     // ?tilelab=1 (the Tile Lab's "Walk around" button): apply its saved tile
     // overrides in memory. Without the param this module is never loaded.
     if (new URLSearchParams(location.search).has("tilelab")) await (await import("./tilelab/hook")).applyStoredTileLab();
@@ -109,6 +114,8 @@ async function boot() {
       scenes.push(titleScene);
     }
     booted = true;
+    // The creature art, now the title is up (see above).
+    void assets.loadAll(undefined, undefined, isCreatureArt);
 
     // Dev and e2e builds only: ?e2e=<suite> runs the automated playthrough
     // (e2e/playthrough.ts) or, for ?e2e=smoke:<phase>, the smoke suite

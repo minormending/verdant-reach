@@ -85,6 +85,7 @@ self.addEventListener("install", (event) => {
       rescan();
     } catch (err) {
       await caches.delete(CACHE);
+      opened.delete(CACHE);
       void tell({ type: "offline-failed", reason: String(err) });
       throw err;
     }
@@ -104,26 +105,47 @@ self.addEventListener("activate", (event) => {
     // Drop incomplete releases (except one still installing: this one is complete by now)
     // and everything but the newest KEEP complete ones.
     const keep = new Set([...complete].sort().reverse().slice(0, KEEP));
-    for (const name of ours) if (!keep.has(name)) await caches.delete(name);
+    for (const name of ours) if (!keep.has(name)) { await caches.delete(name); opened.delete(name); }
     rescan();
     await self.clients.claim();
   })());
 });
 
-async function matchIn(name, req) {
-  const cache = await caches.open(name);
-  // ignoreSearch: ?tilelab=1 and the like are the same file. ignoreVary: servers
-  // send "Vary: Origin", and module scripts carry an Origin header the stored
-  // copies were fetched without.
-  return (await cache.match(req, { ignoreSearch: true, ignoreVary: true })) ?? undefined;
+// Opened caches, so each request doesn't reopen one.
+const opened = new Map();
+function openCache(name) {
+  let c = opened.get(name);
+  if (!c) { c = caches.open(name); opened.set(name, c); }
+  return c;
+}
+
+/**
+ * Look a file up by its exact address, with any query string removed by hand
+ * (?tilelab=1 and the like are the same file). This matters for speed: the
+ * game loads ~2,000 art files at boot, and `ignoreSearch` makes every lookup
+ * scan the whole cache, which took minutes on a phone. ignoreVary: servers
+ * send "Vary: Origin", and module scripts carry an Origin header the stored
+ * copies were fetched without.
+ */
+async function matchIn(name, url) {
+  const cache = await openCache(name);
+  return (await cache.match(url, { ignoreVary: true })) ?? undefined;
+}
+
+function withoutSearch(url) {
+  const u = new URL(url);
+  u.search = "";
+  u.hash = "";
+  return u.href;
 }
 
 /** The page's own release first, then the others newest first. */
 async function lookup(req, first) {
+  const url = withoutSearch(typeof req === "string" ? req : req.url);
   const order = await completeCaches();
   if (first && order.includes(first)) order.splice(order.indexOf(first), 1), order.unshift(first);
   for (const name of order) {
-    const hit = await matchIn(name, req);
+    const hit = await matchIn(name, url);
     if (hit) return { hit, name };
   }
   return undefined;

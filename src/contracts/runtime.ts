@@ -147,7 +147,7 @@ export interface Assets {
   /** Provided by some bundle (or legacy file), whether or not it has loaded yet. */
   exists(path: string): boolean;
   /** Preload. With no `paths`, loads the whole art registry (every bundle). */
-  loadAll(paths?: string[], onProgress?: (done: number, total: number) => void): Promise<void>;
+  loadAll(paths?: string[], onProgress?: (done: number, total: number) => void, filter?: (path: string) => boolean): Promise<void>;
   /** The species bundle's `anim` (after art packs are applied), if it has one. */
   speciesAnim?(id: import("./ids").SpeciesId): SpeciesAnim | undefined;
 }

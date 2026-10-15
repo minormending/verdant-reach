@@ -32,6 +32,8 @@ export interface ArtRegistryOptions {
 
 interface FileEntry { img?: HTMLImageElement; failed?: boolean; wait?: Promise<void> }
 
+/** Image files loading at once in loadAll (see there). */
+const LOAD_CONCURRENCY = 48;
 const hasDom = typeof document !== "undefined" && typeof Image !== "undefined";
 
 /** Packs requested by the page: `?art=` wins (even empty), then localStorage. */
@@ -194,9 +196,15 @@ export class ArtRegistry implements Assets {
     return Array.isArray(list) ? list.length : 0;
   }
 
-  async loadAll(paths?: string[], onProgress?: (done: number, total: number) => void): Promise<void> {
+  /**
+   * Load paths (all provided paths when omitted, narrowed by `filter`).
+   * At most LOAD_CONCURRENCY files are in flight at once: starting ~1,600
+   * image loads together swamps a phone (and its service worker), so a
+   * bounded queue finishes sooner.
+   */
+  async loadAll(paths?: string[], onProgress?: (done: number, total: number) => void, filter?: (path: string) => boolean): Promise<void> {
     await this.ready();
-    const list = paths ?? this.catalog.provides();
+    const list = (paths ?? this.catalog.provides()).filter((p) => !filter || filter(p));
     const urls = new Set<string>();
     for (const p of list) {
       const res = this.catalog.resolve(p);
@@ -205,7 +213,14 @@ export class ArtRegistry implements Assets {
     let done = 0;
     const total = urls.size;
     if (!total) { onProgress?.(1, 1); return; }
-    await Promise.all([...urls].map((u) => this.loadFile(u).then(() => onProgress?.(++done, total))));
+    const queue = [...urls];
+    const worker = async () => {
+      for (let u = queue.shift(); u !== undefined; u = queue.shift()) {
+        await this.loadFile(u);
+        onProgress?.(++done, total);
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(LOAD_CONCURRENCY, queue.length) }, worker));
   }
 
   // ---- files -----------------------------------------------------------------
