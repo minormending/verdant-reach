@@ -6,6 +6,8 @@
 
 **[Developer docs](https://minormending.github.io/verdant-reach/devdocs.html)**: how the game is built, from the engine loop to the battle formulas, scripts, art bundles, tests and deploy, with diagrams and live charts drawn from the code ([docs/DEVDOCS.md](docs/DEVDOCS.md)).
 
+**[Privacy policy for the Android app](https://minormending.github.io/verdant-reach/privacy/verdant-reach-mobile.html)**: the native idle version of Verdant Reach (Google Play) has no accounts, ads or tracking; the page explains its only network use, game updates (`public/privacy/`).
+
 ![Verdant Reach: battles, the Field Herbarium, story stills and the creature roster](docs/showcase/round3.png)
 
 A Game Boy Color–style monster collector in which every creature is a real
