@@ -182,7 +182,7 @@ export const PART_1: Section[] = [
       { p: "From BRAMBLEGATE's north arch the road bends west into a hedged lane, where HIKER GUS waits. It turns north along the east shore of a lily pond, past FLORIST PETRA, then squeezes through the **WOODLAND PASS**, a cleft between cliffs. A ROOTSTOCK grunt pretending to be a \"surveyor\" blocks the pass. Stepping up to him starts a battle you must win (NETTLE SHOOT 9 and BRAMBLE BUD 10). Beyond is the **NIGHT MEADOW**, where BIRDWATCHER OWEN watches the path, and then the road north to SUGARBUSH." },
       { map: "route_3" },
       { tip: "The **SPRING WATER** you can see past the trees on the pond's east side sits in a pocket between two ledges. Just north of PETRA, where the path opens east, walk onto the plateau and go south to its bottom edge. Hop the ledge down into the pocket, take the SPRING WATER, then hop the next ledge south back onto the road.", title: "The ledge pocket" },
-      { tip: "In the middle of the meadow is a ring of mushrooms. You can walk on mushrooms, so step into the ring and press A facing its empty centre: a hidden **RAIN JAR**. The meadowkeeper standing next to it hints that folk used to leave gifts in the middle.", title: "The fairy ring" },
+      { tip: "In the middle of the meadow is a ring of mushrooms. You can walk on mushrooms, so step into the ring and press A facing its empty centre: a hidden **RAIN JAR**. The meadowkeeper standing next to it hints that the middle is worth checking.", title: "The fairy ring" },
       { list: [
         "**COMPOST**: tucked in the tall grass at the meadow's north-east corner.",
         "**TERRARIUM POD**: in the grass field west of GUS's hedged lane.",

@@ -256,7 +256,7 @@ const sapRun: ScriptCmd[] = [
   ifFlags({ grove_cleared: true }, [
     byQuest("sap_run", {
       fresh: [
-        say("The sap's running! Forty buckets boil down to one of syrup."),
+        say("Sap in autumn! Most years we wait for spring. Forty buckets make one of syrup."),
         say("The first jar of the year goes to HEDGEROW's BAKER. Always has."),
         say("Only I can't leave the boil. Would you run it down for me?"),
         { op: "yesno", prompt: "Carry the SYRUP JAR?", yes: [

@@ -61,7 +61,7 @@ const EARLY_LINES: Record<string, Lines> = {
   florist_petra: {
     intro: "Every bouquet needs a thorn or two. Care to test mine?",
     defeat: "My arrangement! Ruined!",
-    after: "Brambles are cousins of the WILD ROSE. Thorns run in the family!",
+    after: "Brambles are cousins of the WILD ROSE. Prickles run in the family!",
   },
   birdwatcher_owen: {
     intro: "Owls, moths and me. The night shift! You in?",

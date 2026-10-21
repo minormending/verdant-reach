@@ -95,6 +95,6 @@ export const sugarbush_grove: MapDef = {
 
 export const scripts: Scripts = {
   grove_bird: [
-    { op: "say", text: "A woodpecker drums on a maple, testing the bark where the taps were." },
+    { op: "say", text: "A sapsucker drills neat rows of holes in a maple, then sips the sap." },
   ],
 };

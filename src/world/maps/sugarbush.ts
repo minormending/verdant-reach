@@ -133,7 +133,7 @@ export const scripts: Scripts = {
   ],
   sb_syrupmaker: [
     ifFlags({ grove_cleared: true }, [
-      say("The sap's running! Forty buckets boil down to one of syrup."),
+      say("Sap in autumn! Most years we wait for spring. Forty buckets make one of syrup."),
       say("Sweet work, and slow. Like everything worth doing."),
     ], [
       say("No sap, no syrup. Strangers tapped the QUICKENED maples and took it all."),
@@ -151,7 +151,7 @@ export const scripts: Scripts = {
   sb_pip: [
     ifFlags({ grove_cleared: true }, [
       say("<PLAYER>! Maple leaves turn red when the tree stops making green!"),
-      say("The red was hiding underneath all summer. Isn't that amazing?"),
+      say("The yellow was hiding all summer, and the red is brand new. Isn't that amazing?"),
     ], [
       say("<PLAYER>! Maple seeds are called samaras. They spin like helicopters!"),
       say("Spinning slows their fall, so the wind carries them far away."),

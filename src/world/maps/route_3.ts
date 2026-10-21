@@ -153,7 +153,8 @@ export const scripts: Scripts = {
       say("The MOONFLOWERS sleep till evening, twisted shut like paper straws."),
     ]),
     say("That mushroom ring grows outward a little every year. Older than me, that one."),
-    say("Folk used to leave gifts in the middle. Some still do."),
+    say("The real fungus lives underground. The mushrooms only mark its edge."),
+    say("I always check the middle, though."),
   ],
   r3_stuck_hiker: [
     ifFlags({ beat_grunt_r3: true }, [
@@ -165,7 +166,7 @@ export const scripts: Scripts = {
   ],
   r3_pondwatcher: [
     ifNight([
-      say("Water lilies close at night and open again at sunrise. Every day!"),
+      say("Water lilies open each morning and close at dusk. Each flower lasts a few days."),
     ], [
       say("See that SPRING WATER past the trees? I can't work out how to get it."),
       say("Maybe from up on the ledge? I'm not allowed near ledges."),
@@ -173,7 +174,7 @@ export const scripts: Scripts = {
   ],
   r3_owl: [
     ifNight([
-      say("A tawny owl on the old stump. Its head turns right round to follow you."),
+      say("A tawny owl on the old stump. Its head swivels nearly all the way round to follow you."),
     ], [
       say("A tuft of grey feathers on the stump. Something sleeps up in the trees."),
     ]),
