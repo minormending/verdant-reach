@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy for Verdant Focus</title>
+<style>
+:root { color-scheme: light dark; --bg: #fbf8f1; --text: #25301f; --muted: #5d6a55; --link: #2c6e3a; --rule: #d9d2bf; --code: #eee7d4; }
+@media (prefers-color-scheme: dark) { :root { --bg: #151c14; --text: #e6ecdf; --muted: #a2b09a; --link: #8fd19e; --rule: #2e3a2b; --code: #232e21; } }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 42rem; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 1.7rem; line-height: 1.25; margin: 0 0 .75rem; }
+h2 { font-size: 1.25rem; line-height: 1.3; margin: 2.2rem 0 .5rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+p, li { overflow-wrap: break-word; }
+ul { padding-left: 1.3rem; }
+li { margin: .4rem 0; }
+a { color: var(--link); }
+code { background: var(--code); padding: .05em .3em; border-radius: 4px; font-size: .92em; }
+h1 + p { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>Privacy Policy for Verdant Focus</h1>
+<p><strong>App:</strong> Verdant Focus (Android; package <code>com.minormending.verdantfocus</code>)<br>
+<strong>Publisher:</strong> Kevin Ramdath<br>
+<strong>Contact:</strong> <a href="mailto:kkramdath@gmail.com">kkramdath@gmail.com</a><br>
+<strong>Effective date:</strong> 1 November 2026</p>
+<h2>The short version</h2>
+<p>Verdant Focus has no accounts, no ads, no analytics, no tracking, no subscriptions and no in-app purchases, and we never receive your name, email, location or focus history. Your focus history and your plants are saved on your own device. The only thing the app does on the internet is check for app updates (new content, fixes) from Expo's update service. That check carries a random installation identifier that is not linked to you. We do not sell or share personal information.</p>
+<h2>What the app stores on your device</h2>
+<ul>
+<li><strong>Your focus history.</strong> Each focus session (its date, start time, length, tag, plant and result), your plants, Dew, goals, streaks, letters read, settings and the time of your last session are saved in the app's private storage on your device. The app uses them to show your stats and to grow your plants. This data stays on your device; the update check described below does not include it. You can erase it at any time with <strong>Options &gt; Delete save</strong>, or by clearing the app's storage or uninstalling the app.</li>
+<li><strong>Your name</strong> is whatever you type when you first open the app (up to 10 characters). It is used only inside the app, in letters, and stays in your save.</li>
+<li><strong>Export history.</strong> <strong>Options &gt; Export history</strong> creates a CSV file of your sessions (date, start, minutes, tag, plant, result). The file is created only when you tap it, and it is handed to the Android share sheet, where you choose where it goes (for example Files, Drive or your email app). The app itself sends it nowhere, and we never receive it.</li>
+<li><strong>The home-screen widget.</strong> The Pocket Pal widget needs a small summary on your device: the name of the plant you are growing, its picture, today's minutes against your goal, and the taps you made on its buttons. The app writes it to the device's private storage and the widget reads it from there. It stays on your device and never goes to any server.</li>
+<li><strong>Device backups.</strong> Your phone's operating system may include an app's private data in its own backup (for example Android's backup to your Google account, if you have it switched on). That is handled by your device and its maker under your device settings and their policies, not by Verdant Focus. Turning device backup off in your settings, or deleting the save in the app, stops or removes it.</li>
+</ul>
+<h2>Strict mode</h2>
+<p>In Strict mode, a session does not count if you leave the app for more than a few seconds. To tell leaving the app from locking your phone, the app checks only whether the screen is on or locked at the moment you leave. It does <strong>not</strong> see which other app you opened, it does not read or record your app usage, and it needs no special access to your phone. Gentle mode does none of this.</p>
+<h2>Notifications</h2>
+<p>Verdant Focus can show reminders: a session is complete, a break is over, an ongoing "Focusing until..." note during a session, a warning when you leave the app in Strict mode, a daily reminder at a time you pick, and a note when a streak is at risk. They are <strong>local notifications</strong>: the app schedules them on your device, using times it works out from your own sessions and settings, and your phone shows them when the time comes. No notification server is involved and nothing is sent to you or from you over the internet. The app asks for notification permission at the end of the first-run introduction, after explaining why, and you can change or revoke it at any time in the app's Options (one switch for each kind) or in your phone's settings.</p>
+<h2>Network use and links</h2>
+<ul>
+<li><strong>App updates (the only network use of the app itself).</strong> Verdant Focus can fetch small update bundles (the app's content, code and art) so that new content and fixes reach you without a new version from the store. It checks when the app starts and when you return to it, and downloads an update in the background if there is one. The service that provides them is <strong>Expo's update service</strong> (EAS Update, at <code>u.expo.dev</code>, with the file hosts it points to), run by Expo. Each check or download is an ordinary HTTPS request. It carries:
+<ul>
+<li>the platform (Android);</li>
+<li>the app's runtime version (an identifier of the app's native build, not of you) and the update channel it follows;</li>
+<li>the identifiers of the update that is running, the one built into the app, and any recent updates that failed to start;</li>
+<li>if the app failed to start last time, a short technical error message about that failure, so that a bad update can be rolled back;</li>
+<li>a <strong>random installation identifier</strong> (see below); and</li>
+<li>what any internet request reveals: your IP address and the device's user agent.</li>
+</ul>
+<p>It contains no name, email, advertising ID, location, contacts, notification token, focus history or other app data (your save is never sent), and we do not use it to identify or track you.</p></li>
+<li><strong>The installation identifier.</strong> The update software creates a random identifier (a UUID) the first time it runs and keeps it in the app's private storage for as long as the app stays installed. Expo uses it to count how many installations receive an update and to keep the update service working. It is not derived from your device, your accounts or your advertising ID, and it is not linked to your name or any other detail about you; we cannot tell who it belongs to. Uninstalling the app removes it, and a new one is created if you install again. (If Android's own device backup restores the app's data to a phone, the identifier may be restored with it. Clearing the app's storage removes it.)</li>
+<li><strong>Expo is our service provider.</strong> Expo receives these requests on our behalf, only to deliver updates to the app. We do not use the identifier for advertising or analytics and we do not give it to anyone else. How Expo handles the requests it receives is described in Expo's privacy policy: <a href="https://expo.dev/privacy">https://expo.dev/privacy</a>.</li>
+<li><strong>No other network use.</strong> The app contacts no other server: no account system, no advertising or analytics code, no crash-reporting service, and no push-notification service. Its art, fonts, sounds, plants and letters are on your device, and you can use it offline. Updates to the app itself (a new store version) are delivered by Google Play.</li>
+<li><strong>Links you tap.</strong> <strong>Options &gt; About</strong> has links to send feedback (it opens your email app with a message addressed to us, which you write and send yourself), to rate the app on Google Play, to our other apps on Google Play, and to this policy. Each plant fact also shows a source link, which opens that web page in your browser. All of these open in your phone's email app, the Play Store or your browser only if you tap them. Those are separate services with their own privacy practices.</li>
+</ul>
+<p>If we add another feature that uses the network, we will update this policy before that version is released.</p>
+<h2>Permissions</h2>
+<p>The app asks your phone for only what the features above need: showing notifications, vibrating for haptic feedback (which you can switch off in Options), starting after a restart so that reminders and the widget keep working, and keeping the screen awake during a session (a setting you can switch off). It uses the internet connection for the update check above. It does not ask for your location, contacts, camera, microphone, photos, files, usage access, access to other apps or advertising ID.</p>
+<h2>Children</h2>
+<p>The app's content is mild (pixel-art plants, no violence, no chat, no user-to-user contact) and it asks for no personal information from anyone. It is a study and work timer for teens and adults and is not directed to children under 13 (see the store listing for the age range it is aimed at). The one identifier it sends, the random installation identifier used by the update check, is not linked to a person and is not used for advertising, profiling or tracking. If you are a parent and have a question, or believe a child under 13 has used the app, write to <a href="mailto:kkramdath@gmail.com.">kkramdath@gmail.com.</a> To remove a child's data from the device, use <strong>Options &gt; Delete save</strong> or uninstall the app.</p>
+<h2>Your choices and rights</h2>
+<p>We hold no account, name, email or focus history about you, so there is nothing of that kind to access, correct or export from us. Your save is yours, on your device: <strong>Options &gt; Export history</strong> gives you a copy of your sessions, and <strong>Options &gt; Delete save</strong> or uninstalling removes it. The random installation identifier is stored on your device and removed when you uninstall the app (or clear its storage); it is not linked to you, so we cannot look it up for a request, and any copy of the update requests that Expo keeps is governed by Expo's privacy policy. If you do not want the app to contact the update service, you can uninstall it, or use it with the internet turned off for the app in your phone's settings; the app itself works offline. For any privacy question, write to <a href="mailto:kkramdath@gmail.com.">kkramdath@gmail.com.</a></p>
+<h2>Changes to this policy</h2>
+<p>If the app changes in a way that affects privacy, this page will be updated and the "Effective date" changed, and the change will be described in the release notes of the version that introduces it.</p>
+<h2>Contact</h2>
+<p>Kevin Ramdath, <a href="mailto:kkramdath@gmail.com">kkramdath@gmail.com</a></p>
+</main>
+</body>
+</html>
